@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Plus,
   Eye,
@@ -180,13 +181,20 @@ const statusBadgeConfig: Record<string, { status: "success" | "warning" | "info"
   UNUSED: { status: "info", label: "Belum Terpakai" },
 };
 
-export default function DownPaymentPage() {
+function DownPaymentContent() {
   const toast = useDnaToast();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<string>("sample");
   const [records, setRecords] = useState<DpRecord[]>(INITIAL_DP_DATA);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<DpRecord | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateOpen(true);
+    }
+  }, [searchParams]);
 
   // Form State
   const [formCategory, setFormCategory] = useState<DpCategory>("sample");
@@ -346,20 +354,21 @@ export default function DownPaymentPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-4">KODE & TANGGAL</th>
-                <th className="py-3 px-4">KLIEN & BRAND</th>
-                <th className="py-3 px-4">NO. REFERENSI</th>
-                <th className="py-3 px-4">REKENING PENERIMA</th>
-                <th className="py-3 px-4 text-right">TOTAL DITERIMA</th>
-                <th className="py-3 px-4 text-right">TERPAKAI / SISA</th>
-                <th className="py-3 px-4 text-center">STATUS</th>
-                <th className="py-3 px-4 text-right">AKSI</th>
+                <th className="py-3 px-3">DP No</th>
+                <th className="py-3 px-3">Customer</th>
+                <th className="py-3 px-3 text-center">Kategori</th>
+                <th className="py-3 px-3">Date</th>
+                <th className="py-3 px-3 text-right">Amount</th>
+                <th className="py-3 px-3">Applied To</th>
+                <th className="py-3 px-3 text-right">Remaining Balance</th>
+                <th className="py-3 px-3 text-center">Status</th>
+                <th className="py-3 px-3 text-right">#</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
               {filteredRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-slate-400">
+                  <td colSpan={9} className="text-center py-12 text-slate-400">
                     <Wallet className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
                     <p className="font-semibold text-slate-600">Tidak ada data uang muka pada kategori ini</p>
                     <p className="text-xs text-slate-400">Pilih tab lain atau klik tombol Terima Uang Muka Baru.</p>
@@ -368,61 +377,58 @@ export default function DownPaymentPage() {
               ) : (
                 filteredRecords.map((dp) => (
                   <tr key={dp.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-4">
-                      <DnaCell.Text primary={dp.code} secondary={dp.date} />
+                    <td className="py-3.5 px-3 font-mono font-semibold text-blue-600 text-xs whitespace-nowrap">
+                      {dp.code}
                     </td>
-                    <td className="py-3.5 px-4">
-                      <DnaCell.Avatar name={dp.customerName} subtext={dp.brandName} />
+                    <td className="py-3.5 px-3 font-semibold text-slate-900 text-xs whitespace-nowrap">
+                      {dp.customerName}
                     </td>
-                    <td className="py-3.5 px-4">
-                      <span className="font-mono text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">
-                        {dp.refNumber}
+                    <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 uppercase">
+                        {dp.category}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-700">
-                        <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{dp.bankAccount}</span>
-                      </div>
+                    <td className="py-3.5 px-3 text-slate-600 text-xs whitespace-nowrap">
+                      {dp.date}
                     </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <span className="font-bold text-slate-900">
-                        Rp {dp.amount.toLocaleString("id-ID")}
-                      </span>
+                    <td className="py-3.5 px-3 text-right font-mono font-bold text-slate-900 text-xs whitespace-nowrap">
+                      Rp {dp.amount.toLocaleString("id-ID")}
                     </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <p className="font-bold text-emerald-600 text-xs">
-                        Sisa: Rp {dp.remainingAmount.toLocaleString("id-ID")}
-                      </p>
-                      <p className="text-[11px] text-slate-400">
-                        Terpakai: Rp {dp.usedAmount.toLocaleString("id-ID")}
-                      </p>
+                    <td className="py-3.5 px-3 font-mono text-xs text-slate-700 whitespace-nowrap">
+                      {dp.refNumber || "—"}
                     </td>
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-3 text-right font-mono font-bold text-emerald-600 text-xs whitespace-nowrap">
+                      Rp {dp.remainingAmount.toLocaleString("id-ID")}
+                    </td>
+                    <td className="py-3.5 px-3 text-center whitespace-nowrap">
                       <DnaCell.Badge
                         status={statusBadgeConfig[dp.status]?.status || "default"}
                         label={statusBadgeConfig[dp.status]?.label || dp.status}
                       />
                     </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <DnaCell.Actions
-                        onView={() => setSelectedRecord(dp)}
-                        extraActions={
-                          <button
-                            type="button"
-                            onClick={() => {
-                              toast.info(
-                                "Alokasi DP",
-                                `Alokasikan saldo ${dp.code} sebesar Rp ${dp.remainingAmount.toLocaleString("id-ID")} ke Faktur Penjualan.`
-                              );
-                            }}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border-none bg-transparent cursor-pointer"
-                            title="Alokasikan ke Faktur"
-                          >
-                            <ArrowUpRight className="w-3.5 h-3.5" />
-                          </button>
-                        }
-                      />
+                    <td className="py-3.5 px-3 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedRecord(dp)}
+                        >
+                          Lihat
+                        </DnaButton>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toast.info(
+                              "Alokasi DP",
+                              `Alokasikan saldo ${dp.code} sebesar Rp ${dp.remainingAmount.toLocaleString("id-ID")} ke Faktur Penjualan.`
+                            );
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border-none bg-transparent cursor-pointer"
+                          title="Alokasikan ke Faktur"
+                        >
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -645,5 +651,13 @@ export default function DownPaymentPage() {
         </form>
       </DnaModal>
     </div>
+  );
+}
+
+export default function DownPaymentPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Memuat Uang Muka Penjualan...</div>}>
+      <DownPaymentContent />
+    </Suspense>
   );
 }

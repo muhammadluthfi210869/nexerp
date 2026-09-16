@@ -15,6 +15,7 @@ interface TaskModalProps {
   onSave: (taskData: Omit<Task, 'id' | 'createdAt'>) => void;
   members: Member[];
   initialTask?: Task | null;
+  defaultAssignee?: string;
 }
 
 export const TaskModal: React.FC<TaskModalProps> = ({
@@ -22,12 +23,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   onClose,
   onSave,
   members,
-  initialTask
+  initialTask,
+  defaultAssignee
 }) => {
   const [name, setName] = useState('');
   const [type, setType] = useState<TaskType>('Daily');
   const [project, setProject] = useState('');
-  const [assignee, setAssignee] = useState(members[0]?.name || 'Gusti');
+  const [assignee, setAssignee] = useState(defaultAssignee || members[0]?.name || 'Gusti');
   const [brand, setBrand] = useState(initialTask?.brand || 'Dreamlab');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
@@ -55,7 +57,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       setName('');
       setType('Daily');
       setProject('');
-      setAssignee(members[0]?.name || 'Gusti');
+      setAssignee(defaultAssignee || members[0]?.name || 'Gusti');
       setBrand('Dreamlab');
       const today = new Date().toISOString().split('T')[0];
       setStartDate(today);
@@ -66,7 +68,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       setCaption('');
       setBrief('');
     }
-  }, [initialTask, isOpen, members]);
+  }, [initialTask, isOpen, members, defaultAssignee]);
 
   if (!isOpen) return null;
 

@@ -8,6 +8,7 @@ import { TaskOverview } from '../reports/workspace/components/TaskOverview';
 import { MemberProfileView } from '../reports/workspace/components/MemberProfileView';
 import { TaskModal, TaskDetailModal, MemberEditModal } from '../reports/workspace/components/Modals';
 import { api } from '@/lib/api';
+import { useDnaToast } from '@/components/dna/DnaToast';
 
 interface ManagementTaskWorkspaceProps {
   initialMemberSlug?: string;
@@ -15,6 +16,7 @@ interface ManagementTaskWorkspaceProps {
 
 export default function ManagementTaskWorkspace({ initialMemberSlug }: ManagementTaskWorkspaceProps) {
   const router = useRouter();
+  const toast = useDnaToast();
 
   // Pure database states (no mock fallbacks)
   const [members, setMembers] = useState<Member[]>([]);
@@ -178,12 +180,15 @@ export default function ManagementTaskWorkspace({ initialMemberSlug }: Managemen
       if (createdTask?.id) {
         const mapped = mapApiTask(createdTask);
         setTasks(prev => [mapped, ...prev]);
+        toast.success(`Task "${taskData.name}" berhasil dibuat.`);
       } else {
         await refreshData();
+        toast.success(`Task "${taskData.name}" berhasil disimpan.`);
       }
       setIsTaskModalOpen(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save task to database:', err);
+      toast.error('Gagal membuat task: ' + (err.response?.data?.message || err.response?.data?.detail || err.message || 'Terjadi kesalahan'));
       await refreshData();
     }
   };
@@ -352,6 +357,7 @@ export default function ManagementTaskWorkspace({ initialMemberSlug }: Managemen
         onClose={() => setIsTaskModalOpen(false)}
         onSave={handleSaveTask}
         members={members}
+        defaultAssignee={currentMember?.name || members[0]?.name}
       />
 
       <TaskDetailModal

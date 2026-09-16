@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -65,14 +66,21 @@ const statusLabelMap: Record<string, string> = {
   CANCELLED: "Ditolak / Batal",
 };
 
-export default function SampleSalesPage() {
+function SampleSalesContent() {
   const toast = useDnaToast();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [detailOrder, setDetailOrder] = useState<SampleOrder | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateOpen(true);
+    }
+  }, [searchParams]);
 
   // Form state
   const [formCustomer, setFormCustomer] = useState("");
@@ -349,67 +357,49 @@ export default function SampleSalesPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-4">KODE & TANGGAL</th>
-                <th className="py-3 px-4">KLIEN & BRAND</th>
-                <th className="py-3 px-4">PRODUK & SPESIFIKASI</th>
-                <th className="py-3 px-4">FORMULATOR / R&D</th>
-                <th className="py-3 px-4 text-right">QTY & BIAYA SAMPLE</th>
-                <th className="py-3 px-4 text-center">STATUS LAB</th>
-                <th className="py-3 px-4 text-right">AKSI</th>
+                <th className="py-3 px-3 w-10 text-center">#</th>
+                <th className="py-3 px-3">Kode</th>
+                <th className="py-3 px-3">Tanggal</th>
+                <th className="py-3 px-3">Pelanggan</th>
+                <th className="py-3 px-3">Nama Produk</th>
+                <th className="py-3 px-3 text-center">Rev</th>
+                <th className="py-3 px-3">Formulator</th>
+                <th className="py-3 px-3">Catatan Formulasi</th>
+                <th className="py-3 px-3 text-right">Total</th>
+                <th className="py-3 px-3 text-center">Status</th>
+                <th className="py-3 px-3 text-right">#</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
               {filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-slate-400">
+                  <td colSpan={11} className="text-center py-12 text-slate-400">
                     <Package className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
                     <p className="font-semibold text-slate-600">Tidak ada sample ditemukan</p>
                     <p className="text-xs text-slate-400">Coba sesuaikan kata kunci pencarian atau filter status.</p>
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map((sample) => (
+                filteredOrders.map((sample, idx) => (
                   <tr key={sample.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-4">
-                      <DnaCell.Text
-                        primary={sample.code}
-                        secondary={sample.createdAt}
-                      />
+                    <td className="py-3 px-3 text-center text-slate-400 font-mono text-xs">{idx + 1}</td>
+                    <td className="py-3 px-3 font-mono font-semibold text-blue-600 text-xs whitespace-nowrap">{sample.code}</td>
+                    <td className="py-3 px-3 text-slate-600 text-xs whitespace-nowrap">{sample.createdAt}</td>
+                    <td className="py-3 px-3 font-semibold text-slate-900 text-xs whitespace-nowrap">{sample.customerName}</td>
+                    <td className="py-3 px-3 text-slate-800 text-xs whitespace-nowrap">{sample.productName}</td>
+                    <td className="py-3 px-3 text-center font-mono text-xs text-slate-700">1</td>
+                    <td className="py-3 px-3 text-slate-700 text-xs whitespace-nowrap">{sample.formulator || "R&D Lab"}</td>
+                    <td className="py-3 px-3 text-slate-600 text-xs max-w-xs truncate" title={sample.notes}>{sample.notes || "—"}</td>
+                    <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 text-xs whitespace-nowrap">
+                      Rp {sample.unitPrice.toLocaleString("id-ID")}
                     </td>
-                    <td className="py-3.5 px-4">
-                      <DnaCell.Avatar
-                        name={sample.customerName}
-                        subtext={sample.brandName || "Maklon Client"}
-                      />
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <DnaCell.Text
-                        primary={sample.productName}
-                        secondary={`${sample.physicalForm || "Serum"} • ${sample.volumeNetto || "30 ml"}`}
-                      />
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-700">
-                        <Beaker className="w-3.5 h-3.5 text-blue-500" />
-                        <span>{sample.formulator || "R&D Lab"}</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 mt-0.5">Target: {sample.targetDate}</p>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <p className="font-bold text-slate-900">
-                        Rp {sample.unitPrice.toLocaleString("id-ID")}
-                      </p>
-                      <p className="text-[11px] text-emerald-600 font-medium">
-                        Qty: {sample.qty} botol (Offset Rp {sample.sampleFeeOffset?.toLocaleString("id-ID")})
-                      </p>
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3 px-3 text-center whitespace-nowrap">
                       <DnaCell.Badge
                         status={statusBadgeMap[sample.status] || "default"}
                         label={statusLabelMap[sample.status] || sample.status}
                       />
                     </td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3 px-3 text-right whitespace-nowrap">
                       <DnaCell.Actions
                         onView={() => setDetailOrder(sample)}
                         extraActions={
@@ -664,5 +654,13 @@ export default function SampleSalesPage() {
         </form>
       </DnaModal>
     </div>
+  );
+}
+
+export default function SampleSalesPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Memuat Penjualan Sample...</div>}>
+      <SampleSalesContent />
+    </Suspense>
   );
 }

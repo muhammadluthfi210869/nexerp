@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import {
@@ -90,48 +90,39 @@ export default function CollectionsPage() {
           <DnaTable className="w-full text-left text-[12px]">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
               <tr>
-                <th className="px-4 py-3">No. Faktur AR</th>
-                <th className="px-4 py-3">Brand & Klien</th>
-                <th className="px-4 py-3">Jatuh Tempo</th>
-                <th className="px-4 py-3 text-right">Tagihan Tertunggak</th>
-                <th className="px-4 py-3 text-center">Hari Overdue</th>
-                <th className="px-4 py-3">Komitmen Janji Bayar</th>
-                <th className="px-4 py-3">Catatan Penagihan Terakhir</th>
-                <th className="px-4 py-3 text-center">Status</th>
+                <th className="px-3 py-3">Invoice No</th>
+                <th className="px-3 py-3">Customer</th>
+                <th className="px-3 py-3 text-center">Days Overdue</th>
+                <th className="px-3 py-3">Last Contact Date</th>
+                <th className="px-3 py-3">Next Action Date</th>
+                <th className="px-3 py-3">PIC BusDev</th>
+                <th className="px-3 py-3 text-center">Status Collection</th>
+                <th className="px-3 py-3">Notes</th>
+                <th className="px-3 py-3 text-right">#</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {records.map((r) => (
-                <tr key={r.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3">
-                    <DnaCell.Code value={r.invoiceNo} />
+                <tr key={r.id} className="hover:bg-slate-50/60 transition-colors text-xs">
+                  <td className="px-3 py-3 font-mono font-semibold text-blue-600 whitespace-nowrap">
+                    {r.invoiceNo}
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-slate-900">{r.brandName}</div>
-                    <div className="text-[11px] text-slate-400">
-                      {r.customerName} • {r.picPhone}
-                    </div>
+                  <td className="px-3 py-3 font-semibold text-slate-900 whitespace-nowrap">
+                    {r.customerName}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{r.dueDate}</td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-rose-600">
-                    {formatRupiah(r.amountDue)}
-                  </td>
-                  <td className="px-4 py-3 text-center font-mono font-bold text-rose-600">
+                  <td className="px-3 py-3 text-center font-mono font-bold text-rose-600 whitespace-nowrap">
                     +{r.daysOverdue} Hari
                   </td>
-                  <td className="px-4 py-3">
-                    {r.promiseToPayDate ? (
-                      <span className="font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md text-[11px]">
-                        {r.promiseToPayDate}
-                      </span>
-                    ) : (
-                      <span className="text-slate-400 text-[11px]">Belum Ada Janji</span>
-                    )}
+                  <td className="px-3 py-3 text-slate-600 whitespace-nowrap font-mono">
+                    {r.lastContactDate}
                   </td>
-                  <td className="px-4 py-3 text-slate-600 max-w-xs truncate" title={r.notes}>
-                    {r.notes}
+                  <td className="px-3 py-3 whitespace-nowrap font-mono text-slate-700">
+                    {r.promiseToPayDate || "—"}
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-3 py-3 text-slate-700 whitespace-nowrap">
+                    Irma Safarina
+                  </td>
+                  <td className="px-3 py-3 text-center whitespace-nowrap">
                     <DnaBadge
                       variant={
                         r.status === "PROMISED"
@@ -145,6 +136,14 @@ export default function CollectionsPage() {
                     >
                       {r.status}
                     </DnaBadge>
+                  </td>
+                  <td className="px-3 py-3 text-slate-600 max-w-xs truncate" title={r.notes}>
+                    {r.notes}
+                  </td>
+                  <td className="px-3 py-3 text-right whitespace-nowrap">
+                    <DnaButton variant="ghost" size="sm">
+                      Follow Up
+                    </DnaButton>
                   </td>
                 </tr>
               ))}

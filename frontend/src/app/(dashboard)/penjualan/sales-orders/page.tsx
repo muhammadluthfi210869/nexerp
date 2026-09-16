@@ -16,7 +16,8 @@
  * - DnaModal for Buat SO (dengan multi-line item cart & deadline per PIC) dan Detail Inspeksi
  */
 
-import React, { useState, useMemo, Suspense } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   FileSpreadsheet,
   Plus,
@@ -196,6 +197,7 @@ const INITIAL_SALES_ORDERS: SalesOrderItem[] = [
 
 function SalesOrdersContent() {
   const toast = useDnaToast();
+  const searchParams = useSearchParams();
   const [orders, setOrders] = useState<SalesOrderItem[]>(INITIAL_SALES_ORDERS);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
@@ -205,6 +207,12 @@ function SalesOrdersContent() {
   // Modals
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedDetail, setSelectedDetail] = useState<SalesOrderItem | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateOpen(true);
+    }
+  }, [searchParams]);
 
   // Form State
   const [codeType, setCodeType] = useState<"SHORT" | "FULL">("SHORT");
@@ -435,45 +443,42 @@ function SalesOrdersContent() {
           <table className="w-full text-left border-collapse text-[12px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                <th className="p-3.5">KODE SO</th>
-                <th className="p-3.5">PELANGGAN & BRAND</th>
-                <th className="p-3.5">TANGGAL</th>
-                <th className="p-3.5">KATEGORI</th>
-                <th className="p-3.5">DEADLINE FINAL</th>
-                <th className="p-3.5 text-right">TOTAL NILAI (RP)</th>
-                <th className="p-3.5 text-center">STATUS</th>
-                <th className="p-3.5 text-center">GATEKEEPER DO</th>
-                <th className="p-3.5 text-right">AKSI</th>
+                <th className="p-3 w-10 text-center">#</th>
+                <th className="p-3">KODE SO</th>
+                <th className="p-3">TANGGAL</th>
+                <th className="p-3">PELANGGAN</th>
+                <th className="p-3">KATEGORI</th>
+                <th className="p-3">BRAND</th>
+                <th className="p-3">PEMBUAT</th>
+                <th className="p-3">DEADLINE PER PIC</th>
+                <th className="p-3 text-right">GRAND TOTAL</th>
+                <th className="p-3 text-center">STATUS</th>
+                <th className="p-3 text-right">#</th>
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.map((so) => (
+              {filteredOrders.map((so, idx) => (
                 <tr
                   key={so.id}
                   onClick={() => setSelectedDetail(so)}
-                  className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 cursor-pointer group"
+                  className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 cursor-pointer group text-xs"
                 >
-                  <td className="p-3.5">
-                    <DnaCell.Code value={so.soCode} />
-                  </td>
-                  <td className="p-3.5">
-                    <DnaCell.Text primary={so.customerName} secondary={so.brandName} />
-                  </td>
-                  <td className="p-3.5">
-                    <DnaCell.Date value={so.orderDate} />
-                  </td>
-                  <td className="p-3.5">
+                  <td className="p-3 text-center text-slate-400 font-mono">{idx + 1}</td>
+                  <td className="p-3 font-mono font-semibold text-blue-600 whitespace-nowrap">{so.soCode}</td>
+                  <td className="p-3 text-slate-600 whitespace-nowrap">{so.orderDate}</td>
+                  <td className="p-3 font-semibold text-slate-900 whitespace-nowrap">{so.customerName}</td>
+                  <td className="p-3 whitespace-nowrap">
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
                       {so.category.replace(/_/g, " ")}
                     </span>
                   </td>
-                  <td className="p-3.5">
-                    <DnaCell.Date value={so.deadlineFinal} />
+                  <td className="p-3 font-medium text-slate-800 whitespace-nowrap">{so.brandName}</td>
+                  <td className="p-3 text-slate-700 whitespace-nowrap">Irma Safarina (BusDev)</td>
+                  <td className="p-3 text-slate-600 whitespace-nowrap font-mono">{so.deadlineFinal}</td>
+                  <td className="p-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                    {formatCurrency(so.grandTotal)}
                   </td>
-                  <td className="p-3.5 text-right">
-                    <DnaCell.Currency value={so.grandTotal} />
-                  </td>
-                  <td className="p-3.5 text-center">
+                  <td className="p-3 text-center whitespace-nowrap">
                     <DnaCell.Badge
                       status={
                         so.approvalStatus === "COMPLETED"
@@ -487,35 +492,34 @@ function SalesOrdersContent() {
                       label={so.approvalStatus}
                     />
                   </td>
-                  <td className="p-3.5 text-center">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleGatekeeper(so);
-                      }}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black tracking-tight border transition-all cursor-pointer ${
-                        so.gatekeeperStatus === "RELEASED"
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
-                          : "bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100"
-                      }`}
-                      title="Klik untuk toggle status gatekeeper pengiriman"
-                    >
-                      {so.gatekeeperStatus === "RELEASED" ? (
-                        <>
-                          <Unlock className="w-3 h-3" />
-                          RELEASED
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-3 h-3" />
-                          HELD
-                        </>
-                      )}
-                    </button>
-                  </td>
-                  <td className="p-3.5 text-right">
-                    <DnaCell.Actions onView={() => setSelectedDetail(so)} />
+                  <td className="p-3 text-right whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleGatekeeper(so)}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black tracking-tight border transition-all cursor-pointer ${
+                          so.gatekeeperStatus === "RELEASED"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                            : "bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100"
+                        }`}
+                        title="Toggle gatekeeper pengiriman"
+                      >
+                        {so.gatekeeperStatus === "RELEASED" ? (
+                          <>
+                            <Unlock className="w-3 h-3" />
+                            RELEASED
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-3 h-3" />
+                            HELD
+                          </>
+                        )}
+                      </button>
+                      <DnaButton variant="ghost" size="sm" onClick={() => setSelectedDetail(so)}>
+                        Detail
+                      </DnaButton>
+                    </div>
                   </td>
                 </tr>
               ))}

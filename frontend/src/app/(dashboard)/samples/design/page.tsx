@@ -1,32 +1,27 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { unwrapResponse } from "@/lib/unwrap-response";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
-  Sparkles,
+  Palette,
   Plus,
   Search,
   Filter,
   FileSpreadsheet,
   Eye,
   Calendar,
-  User,
-  Building2,
   Clock,
   CheckCircle2,
   AlertTriangle,
   Upload,
   FileText,
-  Tag,
   Check,
   XCircle,
   Image as ImageIcon,
   ExternalLink,
   ShieldCheck,
-  Layers,
-  Palette
+  X,
+  Camera
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -36,199 +31,219 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
-  DnaModal,
-  DnaTabNav,
   useDnaToast
 } from "@/components/dna";
+import { Input } from "@/components/ui/input";
 
 interface PackagingDesign {
   id: string;
   designCode: string;
   salesOrderCode: string;
-  clientName: string;
-  brandName: string;
-  productName: string;
-  designerPic: string;
-  bpomNotificationNumber: string; // Nomor Notifikasi BPOM NA
-  batchNumber: string; // Batch Number cetak
-  expiredDate: string; // Exp Date cetak
-  revisionVersion: string; // V1.0, V1.1, V2.0
-  artworkFileUrl: string;
-  mockupImageUrl: string;
-  busdevApprovalStatus: "PENDING" | "APPROVED" | "REJECTED";
-  purchaseApprovalStatus: "PENDING" | "APPROVED" | "REJECTED";
-  overallStatus: "DRAFT" | "PENDING_APPROVAL" | "APPROVED_PRINT_READY" | "REVISION_REQUESTED";
-  overallStatusLabel: string;
-  createdDate: string;
+  brandProduct: string;
+  designerPic: string; // Mas Edi (Creative Lead)
+  batchNumber: string;
+  expiredDate: string;
+  revisionVersion: string; // V1.0, V2.0
+  bpomNumber: string; // NA18260100488
+  busdevApproval: "PENDING" | "APPROVED" | "REJECTED";
+  purchaseApproval: "PENDING" | "APPROVED" | "REJECTED";
+  packagingPhoto: string;
   notes?: string;
+  fileUrl?: string;
 }
 
-const MOCK_DESIGNS: PackagingDesign[] = [
+const INITIAL_DESIGNS: PackagingDesign[] = [
   {
     id: "des-01",
-    designCode: "DSN-202603-001",
-    salesOrderCode: "SO-202603-0041",
-    clientName: "PT Cantika Glow Nusantara",
-    brandName: "GlowAura Skin",
-    productName: "Brightening Glow Serum 10% Niacinamide 30ml",
+    designCode: "DSN-2026-001",
+    salesOrderCode: "SO-2026-0041",
+    brandProduct: "GlowAura Skin - Brightening Serum 30ml",
     designerPic: "Mas Edi (Creative Lead)",
-    bpomNotificationNumber: "NA18260100488",
     batchNumber: "LOT-FG-2609-001",
     expiredDate: "2028-09-01",
     revisionVersion: "V2.0",
-    artworkFileUrl: "https://drive.google.com/file/d/artwork-serum-v2.pdf",
-    mockupImageUrl: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400",
-    busdevApprovalStatus: "APPROVED",
-    purchaseApprovalStatus: "APPROVED",
-    overallStatus: "APPROVED_PRINT_READY",
-    overallStatusLabel: "Print Ready (Siap Cetak Percetakan)",
-    createdDate: "2026-03-08",
-    notes: "Sudah sinkron ukuran label 85x35mm dan inner box foil emas 35x35x105mm."
+    bpomNumber: "NA18260100488",
+    busdevApproval: "APPROVED",
+    purchaseApproval: "APPROVED",
+    packagingPhoto: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=200",
+    notes: "Ukuran label 85x35mm dan inner box foil emas 35x35x105mm terverifikasi.",
+    fileUrl: "https://drive.google.com/artwork-serum-v2.pdf"
   },
   {
     id: "des-02",
-    designCode: "DSN-202603-002",
-    salesOrderCode: "SO-202603-0044",
-    clientName: "PT Miracle Beauty Lab",
-    brandName: "MiracleSkin",
-    productName: "Ceramide 5X Barrier Repair Moisturizer 50g",
-    designerPic: "Siti Creative",
-    bpomNotificationNumber: "NA18260100512",
+    designCode: "DSN-2026-002",
+    salesOrderCode: "SO-2026-0044",
+    brandProduct: "MiracleSkin - Barrier Repair Moisturizer 50g",
+    designerPic: "Mas Edi (Creative Lead)",
     batchNumber: "LOT-FG-2609-002",
     expiredDate: "2028-09-15",
     revisionVersion: "V1.0",
-    artworkFileUrl: "https://drive.google.com/file/d/artwork-moist-v1.pdf",
-    mockupImageUrl: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400",
-    busdevApprovalStatus: "APPROVED",
-    purchaseApprovalStatus: "PENDING",
-    overallStatus: "PENDING_APPROVAL",
-    overallStatusLabel: "Menunggu Approval Purchase Kemas",
-    createdDate: "2026-03-07",
-    notes: "Menunggu konfirmasi diameter stiker tutup pot cream 50mm dari vendor kemasan."
+    bpomNumber: "NA18260100512",
+    busdevApproval: "APPROVED",
+    purchaseApproval: "PENDING",
+    packagingPhoto: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=200",
+    notes: "Menunggu konfirmasi ketersediaan jar akrilik frosted dari supplier.",
+    fileUrl: "https://drive.google.com/artwork-moist-v1.pdf"
   },
   {
     id: "des-03",
-    designCode: "DSN-202603-003",
-    salesOrderCode: "SO-202603-0048",
-    clientName: "CV Derma Estetika Mandiri",
-    brandName: "DermaPure",
-    productName: "AHA BHA PHA Exfoliating Toner 100ml",
+    designCode: "DSN-2026-003",
+    salesOrderCode: "SO-2026-0049",
+    brandProduct: "AcneClear Lab - Soothing Cica Gel 30gr",
     designerPic: "Mas Edi (Creative Lead)",
-    bpomNotificationNumber: "NA18260100533",
     batchNumber: "LOT-FG-2609-003",
     expiredDate: "2028-08-20",
-    revisionVersion: "V1.1",
-    artworkFileUrl: "https://drive.google.com/file/d/artwork-toner-v1.pdf",
-    mockupImageUrl: "https://images.unsplash.com/photo-1608248597359-25166299b9cf?w=400",
-    busdevApprovalStatus: "PENDING",
-    purchaseApprovalStatus: "PENDING",
-    overallStatus: "PENDING_APPROVAL",
-    overallStatusLabel: "Menunggu Review Dual Approval",
-    createdDate: "2026-03-06",
-    notes: "Klien mengganti posisi logo halal dan barcode BPOM."
+    revisionVersion: "V1.2",
+    bpomNumber: "NA18260100604",
+    busdevApproval: "PENDING",
+    purchaseApproval: "PENDING",
+    packagingPhoto: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=200",
+    notes: "Revisi teks klaim dermatologis sesuai arahan tim Regulasi BPOM.",
+    fileUrl: "https://drive.google.com/artwork-gel-v12.pdf"
+  },
+  {
+    id: "des-04",
+    designCode: "DSN-2026-004",
+    salesOrderCode: "SO-2026-0052",
+    brandProduct: "Royal Glow - Hydrating Lip Tint Peptide 5ml",
+    designerPic: "Creative Team",
+    batchNumber: "LOT-FG-2609-004",
+    expiredDate: "2028-10-10",
+    revisionVersion: "V1.0",
+    bpomNumber: "NA18260100718",
+    busdevApproval: "APPROVED",
+    purchaseApproval: "APPROVED",
+    packagingPhoto: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=200",
+    notes: "Packaging vial doe-foot applicator siap cetak sablon UV.",
+    fileUrl: "https://drive.google.com/artwork-liptint-v1.pdf"
   }
 ];
 
-export default function PackagingDesignPage() {
-  const toast = useDnaToast();
-  const queryClient = useQueryClient();
-
-  const [activeTab, setActiveTab] = useState("all");
+function DesignManageContent() {
+  const searchParams = useSearchParams();
+  const [designs, setDesigns] = useState<PackagingDesign[]>(INITIAL_DESIGNS);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDesign, setSelectedDesign] = useState<PackagingDesign | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [picFilter, setPicFilter] = useState("ALL");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedDesign, setSelectedDesign] = useState<PackagingDesign | null>(null);
+  const toast = useDnaToast();
 
-  // Create Form State (SCR-134)
-  const [createForm, setCreateForm] = useState({
-    salesOrderCode: "SO-202603-0041",
-    clientName: "",
-    brandName: "",
-    productName: "",
+  // Create Form State
+  const [formData, setFormData] = useState({
+    salesOrderCode: "SO-2026-0055",
+    brandProduct: "",
     designerPic: "Mas Edi (Creative Lead)",
-    bpomNotificationNumber: "NA182601...",
-    batchNumber: "LOT-2026...",
-    expiredDate: "2028-12-31",
+    bpomNumber: "",
+    batchNumber: "LOT-FG-2609-005",
+    expiredDate: "2028-11-01",
     revisionVersion: "V1.0",
-    artworkFileUrl: "",
-    mockupImageUrl: "",
     notes: ""
   });
 
-  // Queries
-  const { data: rawDesigns, isLoading } = useQuery({
-    queryKey: ["rnd-packaging-designs"],
-    queryFn: async () => {
-      try {
-        const res = await api.get("/rnd/designs");
-        return unwrapResponse(res.data) as PackagingDesign[];
-      } catch (e) {
-        return null;
-      }
+  // Handle URL action=create
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateModalOpen(true);
     }
-  });
-
-  const designs: PackagingDesign[] = useMemo(() => {
-    if (rawDesigns && Array.isArray(rawDesigns) && rawDesigns.length > 0) {
-      return rawDesigns;
-    }
-    return MOCK_DESIGNS;
-  }, [rawDesigns]);
+  }, [searchParams]);
 
   // Filtering
   const filteredDesigns = useMemo(() => {
     return designs.filter((d) => {
-      if (activeTab === "pending" && d.overallStatus !== "PENDING_APPROVAL") return false;
-      if (activeTab === "approved" && d.overallStatus !== "APPROVED_PRINT_READY") return false;
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        !searchQuery ||
+        d.designCode.toLowerCase().includes(q) ||
+        d.salesOrderCode.toLowerCase().includes(q) ||
+        d.brandProduct.toLowerCase().includes(q) ||
+        d.bpomNumber.toLowerCase().includes(q) ||
+        d.designerPic.toLowerCase().includes(q);
 
-      if (searchQuery.trim() !== "") {
-        const q = searchQuery.toLowerCase();
-        return (
-          d.designCode.toLowerCase().includes(q) ||
-          d.salesOrderCode.toLowerCase().includes(q) ||
-          d.clientName.toLowerCase().includes(q) ||
-          d.brandName.toLowerCase().includes(q) ||
-          d.productName.toLowerCase().includes(q) ||
-          d.bpomNotificationNumber.toLowerCase().includes(q) ||
-          d.designerPic.toLowerCase().includes(q)
-        );
-      }
-      return true;
+      const matchesStatus =
+        statusFilter === "ALL" ||
+        (statusFilter === "APPROVED" && d.busdevApproval === "APPROVED" && d.purchaseApproval === "APPROVED") ||
+        (statusFilter === "PENDING" && (d.busdevApproval === "PENDING" || d.purchaseApproval === "PENDING")) ||
+        (statusFilter === "REJECTED" && (d.busdevApproval === "REJECTED" || d.purchaseApproval === "REJECTED"));
+
+      const matchesPic =
+        picFilter === "ALL" || d.designerPic.includes(picFilter);
+
+      return matchesSearch && matchesStatus && matchesPic;
     });
-  }, [designs, activeTab, searchQuery]);
+  }, [designs, searchQuery, statusFilter, picFilter]);
 
-  // KPIs
-  const totalDesigns = designs.length;
-  const pendingApprovalCount = designs.filter(d => d.overallStatus === "PENDING_APPROVAL").length;
-  const approvedReadyCount = designs.filter(d => d.overallStatus === "APPROVED_PRINT_READY").length;
+  // KPIs (1:1 G-SERP Row 134)
+  const totalBerjalan = designs.length;
+  const menungguApproval = designs.filter(
+    (d) => d.busdevApproval === "PENDING" || d.purchaseApproval === "PENDING"
+  ).length;
+  const disetujui = designs.filter(
+    (d) => d.busdevApproval === "APPROVED" && d.purchaseApproval === "APPROVED"
+  ).length;
+  const perluRevisi = designs.filter(
+    (d) => d.busdevApproval === "REJECTED" || d.purchaseApproval === "REJECTED"
+  ).length;
 
-  const handleCreateDesign = () => {
-    if (!createForm.clientName || !createForm.productName) {
-      toast.warning("Form Belum Lengkap", "Nama Klien dan Nama Produk wajib diisi.");
+  const handleSaveDesign = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.brandProduct || !formData.bpomNumber) {
+      toast.warning("Lengkapi Data", "Brand/Produk dan Nomor BPOM wajib diisi.");
       return;
     }
-    toast.success("Desain Kemasan Disimpan", "Dokumen desain kemasan baru berhasil didaftarkan dan diteruskan ke BusDev & Purchase untuk dual-approval.");
+
+    const newDesign: PackagingDesign = {
+      id: `des-${Date.now()}`,
+      designCode: `DSN-2026-${String(designs.length + 1).padStart(3, "0")}`,
+      salesOrderCode: formData.salesOrderCode,
+      brandProduct: formData.brandProduct,
+      designerPic: formData.designerPic,
+      batchNumber: formData.batchNumber,
+      expiredDate: formData.expiredDate,
+      revisionVersion: formData.revisionVersion,
+      bpomNumber: formData.bpomNumber,
+      busdevApproval: "PENDING",
+      purchaseApproval: "PENDING",
+      packagingPhoto: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=200",
+      notes: formData.notes
+    };
+
+    setDesigns([newDesign, ...designs]);
     setIsCreateModalOpen(false);
+    setFormData({
+      salesOrderCode: "SO-2026-0056",
+      brandProduct: "",
+      designerPic: "Mas Edi (Creative Lead)",
+      bpomNumber: "",
+      batchNumber: "LOT-FG-2609-006",
+      expiredDate: "2028-11-01",
+      revisionVersion: "V1.0",
+      notes: ""
+    });
+    toast.success("Desain Berhasil Dibuat", "Desain diteruskan ke BusDev & Purchase untuk dual-approval.");
   };
 
-  const handleDualApproval = (id: string, role: "BUSDEV" | "PURCHASE", isApproved: boolean) => {
-    toast.success(
-      isApproved ? `Approval ${role} Berhasil` : `Desain Ditolak oleh ${role}`,
-      `Status approval desain kemasan oleh ${role} telah berhasil diperbarui.`
+  const handleApproval = (id: string, role: "BUSDEV" | "PURCHASE", approved: boolean) => {
+    setDesigns(
+      designs.map((d) => {
+        if (d.id === id) {
+          return {
+            ...d,
+            [role === "BUSDEV" ? "busdevApproval" : "purchaseApproval"]: approved ? "APPROVED" : "REJECTED"
+          };
+        }
+        return d;
+      })
     );
-    setIsDetailModalOpen(false);
-  };
-
-  const getStatusBadge = (status: PackagingDesign["overallStatus"]) => {
-    switch (status) {
-      case "APPROVED_PRINT_READY":
-        return <DnaBadge variant="success">PRINT READY (APPROVED)</DnaBadge>;
-      case "PENDING_APPROVAL":
-        return <DnaBadge variant="warning">MENUNGGU DUAL APPROVAL</DnaBadge>;
-      case "REVISION_REQUESTED":
-        return <DnaBadge variant="danger">REVISI DESAIN</DnaBadge>;
-      default:
-        return <DnaBadge variant="neutral">{status}</DnaBadge>;
+    toast.success(
+      approved ? `Approval ${role} Disetujui` : `Desain Ditolak oleh ${role}`,
+      `Status approval desain kemasan diperbarui.`
+    );
+    if (selectedDesign && selectedDesign.id === id) {
+      setSelectedDesign({
+        ...selectedDesign,
+        [role === "BUSDEV" ? "busdevApproval" : "purchaseApproval"]: approved ? "APPROVED" : "REJECTED"
+      });
     }
   };
 
@@ -236,165 +251,175 @@ export default function PackagingDesignPage() {
     <DnaPageContainer>
       {/* 1. Header Page */}
       <DnaPageHeader
-        title="Kelola Desain & Kemasan Pra-Produksi"
-        description="Pemeriksaan kelayakan cetak kemasan (Artwork Packaging, No. Notifikasi BPOM NA, Batch Number, Exp Date) dan verifikasi Dual Approval BusDev & Purchase (Poin 68-74)."
-        badge={<DnaBadge variant="neutral">SCR-133 & SCR-134</DnaBadge>}
+        title="Kelola Desain & Kemasan"
+        description="Pemeriksaan kelayakan cetak kemasan maklon kosmetik, nomor notifikasi BPOM NA, batch/exp date, dan Dual Approval BusDev & Purchase (Poin 68-74)."
         breadcrumbs={[
-          { label: "R&D & Pra-Produksi", href: "/rnd/dashboard" },
-          { label: "Kelola Desain", href: "/rnd/design" }
+          { label: "Operasional", href: "/dashboard-rnd" },
+          { label: "Pra Produksi", href: "/design-manage" },
+          { label: "Kelola Desain", href: "/design-manage" }
         ]}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton
               variant="secondary"
-              onClick={() => toast.success("Export Berhasil", "Data rekap desain kemasan berhasil diunduh ke Excel.")}
+              onClick={() => toast.success("Export Excel", "Data rekapitulasi desain kemasan berhasil diunduh.")}
             >
-              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
               Export Excel
             </DnaButton>
             <DnaButton variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Buat / Revisi Desain (SCR-134)
+              <Plus className="w-4 h-4 mr-1.5" />
+              + Buat Desain Baru
             </DnaButton>
           </div>
         }
       />
 
-      {/* 2. KPI Cards */}
+      {/* 2. 4 KPI Cards (1:1 G-SERP Row 134) */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          label="TOTAL DESAIN KEMASAN"
-          value={`${totalDesigns} Artwork`}
+          label="TOTAL DESAIN BERJALAN"
+          value={`${totalBerjalan} Desain`}
           subValue="Dokumen Kemasan Terdaftar"
           icon={<Palette className="w-5 h-5 text-blue-600" />}
         />
         <DnaStatCard
           label="MENUNGGU APPROVAL"
-          value={`${pendingApprovalCount} Desain`}
+          value={`${menungguApproval} Desain`}
           subValue="Dual-Gate BusDev & Purchase"
           icon={<Clock className="w-5 h-5 text-amber-600" />}
         />
         <DnaStatCard
-          label="PRINT READY (SIAP CETAK)"
-          value={`${approvedReadyCount} Selesai`}
-          subValue="Lolos Verifikasi BPOM & Purchase"
+          label="DESAIN DISETUJUI"
+          value={`${disetujui} Siap Cetak`}
+          subValue="Lolos Verifikasi BPOM & Cetak"
           icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
         />
         <DnaStatCard
-          label="INTEGRITAS REGULATORI"
-          value="100% Valid"
-          subValue="Sinkron No. Notifikasi BPOM"
-          icon={<ShieldCheck className="w-5 h-5 text-indigo-600" />}
+          label="DESAIN PERLU REVISI"
+          value={`${perluRevisi} Revisi`}
+          subValue="Catatan Revisi Artwork"
+          icon={<AlertTriangle className="w-5 h-5 text-rose-600" />}
         />
       </DnaKpiGrid>
 
-      {/* 3. Tabs */}
-      <DnaTabNav
-        tabs={[
-          { id: "all", label: `Semua Desain (${totalDesigns})` },
-          { id: "pending", label: `Menunggu Approval (${pendingApprovalCount})` },
-          { id: "approved", label: `Print Ready (${approvedReadyCount})` }
-        ]}
-        activeTab={activeTab}
-        onChange={setActiveTab}
-      />
-
-      {/* 4. DataTable Card (SCR-133) */}
+      {/* 3. DataTable (1:1 G-SERP Row 134 — EXACT 12 COLUMNS) */}
       <DnaDataTableCard
-        title="Daftar Desain Kemasan & Status Dual Approval"
-        description="Pengecekan spesifikasi cetak kemasan maklon kosmetik sesuai ketentuan BPOM dan CPKB."
+        title="Daftar Desain Kemasan & Status Approval"
+        description="Spesifikasi cetak kemasan maklon kosmetik sesuai nomor registrasi BPOM dan standar CPKB."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari No Desain, SO, Klien, Brand, No BPOM, PIC..."
+        searchPlaceholder="Cari kode desain, SO, brand/produk, BPOM, PIC..."
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 font-bold text-slate-700 focus:outline-none"
+            >
+              <option value="ALL">Semua Status Approval</option>
+              <option value="APPROVED">Disetujui (Print Ready)</option>
+              <option value="PENDING">Menunggu Approval</option>
+              <option value="REJECTED">Perlu Revisi</option>
+            </select>
+            <select
+              value={picFilter}
+              onChange={(e) => setPicFilter(e.target.value)}
+              className="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 font-bold text-slate-700 focus:outline-none"
+            >
+              <option value="ALL">Semua PIC Desain</option>
+              <option value="Mas Edi">Mas Edi (Creative Lead)</option>
+              <option value="Creative Team">Creative Team</option>
+            </select>
+          </div>
+        }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-slate-50 border-b border-slate-200 font-bold text-slate-600 uppercase tracking-wider text-[10.5px]">
               <tr>
-                <th className="py-3 px-4">No. Desain & SO</th>
-                <th className="py-3 px-4">Klien & Brand</th>
-                <th className="py-3 px-4">Produk & PIC Desain</th>
-                <th className="py-3 px-4">No. Notifikasi BPOM</th>
-                <th className="py-3 px-4">Batch & Exp Date</th>
-                <th className="py-3 px-4 text-center">Revisi</th>
-                <th className="py-3 px-4">Approval BusDev</th>
-                <th className="py-3 px-4">Approval Purchase</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
+                <th className="py-3 px-3 text-center w-10">#</th>
+                <th className="py-3 px-3 w-28">Kode Desain</th>
+                <th className="py-3 px-3 w-28">Sales Order</th>
+                <th className="py-3 px-3">Brand / Produk</th>
+                <th className="py-3 px-3 w-36">PIC Desain</th>
+                <th className="py-3 px-3 w-28">No. Batch</th>
+                <th className="py-3 px-3 w-24">Expired Date</th>
+                <th className="py-3 px-3 text-center w-20">Versi Revisi</th>
+                <th className="py-3 px-3 w-32">Status BPOM</th>
+                <th className="py-3 px-3 text-center w-36">Approval (BD & PO)</th>
+                <th className="py-3 px-3 text-center w-20">Foto Kemasan</th>
+                <th className="py-3 px-3 text-center w-16">#</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredDesigns.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-400">
-                    <Palette className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                  <td colSpan={12} className="py-8 text-center text-slate-400">
                     Tidak ada dokumen desain kemasan yang sesuai.
                   </td>
                 </tr>
               ) : (
-                filteredDesigns.map((row) => (
+                filteredDesigns.map((row, idx) => (
                   <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4">
-                      <p className="font-mono text-xs font-bold text-slate-900">{row.designCode}</p>
-                      <span className="font-mono text-[10px] text-slate-500 font-normal">{row.salesOrderCode}</span>
-                    </td>
-                    <td className="py-3 px-4 text-xs">
-                      <p className="font-semibold text-slate-800">{row.clientName}</p>
-                      <span className="font-mono text-[10px] text-indigo-600 font-bold">{row.brandName}</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <p className="font-semibold text-slate-900 text-xs">{row.productName}</p>
-                      <span className="text-[11px] text-slate-500">PIC: {row.designerPic}</span>
-                    </td>
-                    <td className="py-3 px-4 font-mono font-bold text-slate-800">
-                      {row.bpomNotificationNumber}
-                    </td>
-                    <td className="py-3 px-4 text-xs font-mono">
-                      <p className="font-bold text-indigo-700">{row.batchNumber}</p>
-                      <p className="text-[10px] text-slate-500">Exp: {row.expiredDate}</p>
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <span className="inline-block font-mono text-[11px] font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-slate-800">
+                    <td className="py-3 px-3 text-center text-slate-400 font-bold">{idx + 1}</td>
+                    <td className="py-3 px-3 font-mono font-bold text-blue-600">{row.designCode}</td>
+                    <td className="py-3 px-3 font-mono font-bold text-slate-800">{row.salesOrderCode}</td>
+                    <td className="py-3 px-3 font-semibold text-slate-900">{row.brandProduct}</td>
+                    <td className="py-3 px-3 text-slate-700 font-medium">{row.designerPic}</td>
+                    <td className="py-3 px-3 font-mono text-slate-700">{row.batchNumber}</td>
+                    <td className="py-3 px-3 font-mono text-slate-600">{row.expiredDate}</td>
+                    <td className="py-3 px-3 text-center">
+                      <span className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded font-mono font-bold text-slate-800">
                         {row.revisionVersion}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      {row.busdevApprovalStatus === "APPROVED" ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                          <Check className="w-3 h-3" /> Approved
+                    <td className="py-3 px-3 font-mono text-slate-800 font-bold">{row.bpomNumber}</td>
+                    <td className="py-3 px-3 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            row.busdevApproval === "APPROVED"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : row.busdevApproval === "PENDING"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-rose-100 text-rose-800"
+                          }`}
+                          title="Approval BusDev"
+                        >
+                          BD: {row.busdevApproval}
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                          <Clock className="w-3 h-3" /> Pending
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            row.purchaseApproval === "APPROVED"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : row.purchaseApproval === "PENDING"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-rose-100 text-rose-800"
+                          }`}
+                          title="Approval Purchase"
+                        >
+                          PO: {row.purchaseApproval}
                         </span>
-                      )}
+                      </div>
                     </td>
-                    <td className="py-3 px-4">
-                      {row.purchaseApprovalStatus === "APPROVED" ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                          <Check className="w-3 h-3" /> Approved
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                          <Clock className="w-3 h-3" /> Pending
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
-                      {getStatusBadge(row.overallStatus)}
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <DnaButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedDesign(row);
-                          setIsDetailModalOpen(true);
-                        }}
-                        title="Lihat Artwork & Otorisasi Approval"
+                    <td className="py-3 px-3 text-center">
+                      <button
+                        onClick={() => setSelectedDesign(row)}
+                        className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-blue-600 inline-flex items-center justify-center"
+                        title="Lihat Foto Kemasan Acuan"
                       >
-                        <Eye className="w-4 h-4 text-slate-600" />
-                      </DnaButton>
+                        <Camera className="w-4 h-4" />
+                      </button>
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <button
+                        onClick={() => setSelectedDesign(row)}
+                        className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                        title="Detail & Dual Approval"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -404,219 +429,240 @@ export default function PackagingDesignPage() {
         </div>
       </DnaDataTableCard>
 
-      {/* 5. Modal Buat / Revisi Desain (SCR-134) */}
-      <DnaModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        title="Buat / Revisi Desain Kemasan (SCR-134)"
-        description="Input spesifikasi artwork kemasan, nomor notifikasi BPOM, dan upload file acuan."
-        size="lg"
-        footer={
-          <div className="flex items-center justify-end gap-2 w-full">
-            <DnaButton variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
-              Batal
-            </DnaButton>
-            <DnaButton variant="primary" onClick={handleCreateDesign}>
-              Submit Approval ke BusDev & Purchase
-            </DnaButton>
-          </div>
-        }
-      >
-        <div className="space-y-4 text-xs">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Sales Order Acuan *</label>
-              <select
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-                value={createForm.salesOrderCode}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, salesOrderCode: e.target.value }))}
-              >
-                <option value="SO-202603-0041">SO-202603-0041 - PT Cantika Glow (Serum 30ml)</option>
-                <option value="SO-202603-0044">SO-202603-0044 - PT Miracle Beauty (Cream 50g)</option>
-                <option value="SO-202603-0048">SO-202603-0048 - CV Derma Estetika (Toner 100ml)</option>
-              </select>
+      {/* 4. Modal Buat Desain Baru (SCR-135 / ?action=create) */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-bold text-slate-800 text-base">Buat / Revisi Desain Kemasan</h3>
+                <p className="text-xs text-slate-500">Pendaftaran dokumen artwork kemasan maklon kosmetik (Poin 71-74)</p>
+              </div>
+              <button onClick={() => setIsCreateModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">PIC Desain *</label>
-              <input
-                type="text"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-                value={createForm.designerPic}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, designerPic: e.target.value }))}
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Nama Klien / Perusahaan *</label>
-              <input
-                type="text"
-                placeholder="PT Cantika Glow Nusantara"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-                value={createForm.clientName}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, clientName: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Nama Brand / Merk *</label>
-              <input
-                type="text"
-                placeholder="GlowAura Skin"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-                value={createForm.brandName}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, brandName: e.target.value }))}
-              />
-            </div>
-          </div>
+            <form onSubmit={handleSaveDesign} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">
+                    Nomor Sales Order <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    required
+                    value={formData.salesOrderCode}
+                    onChange={(e) => setFormData({ ...formData, salesOrderCode: e.target.value })}
+                    className="h-8 text-xs font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">
+                    PIC Desain <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    value={formData.designerPic}
+                    onChange={(e) => setFormData({ ...formData, designerPic: e.target.value })}
+                    className="w-full h-8 text-xs bg-white border border-slate-200 rounded-lg px-2 font-medium"
+                  >
+                    <option value="Mas Edi (Creative Lead)">Mas Edi (Creative Lead)</option>
+                    <option value="Creative Team">Creative Team</option>
+                  </select>
+                </div>
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Nomor Notifikasi BPOM *</label>
-              <input
-                type="text"
-                placeholder="NA182601..."
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-                value={createForm.bpomNotificationNumber}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, bpomNotificationNumber: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Batch Number Cetak *</label>
-              <input
-                type="text"
-                placeholder="LOT-2026..."
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-                value={createForm.batchNumber}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, batchNumber: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Expired Date *</label>
-              <input
-                type="date"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-                value={createForm.expiredDate}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, expiredDate: e.target.value }))}
-              />
-            </div>
-          </div>
+              <div>
+                <label className="font-bold text-slate-600 block mb-1">
+                  Brand & Nama Produk <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  required
+                  placeholder="Contoh: GlowAura - Brightening Serum 30ml"
+                  value={formData.brandProduct}
+                  onChange={(e) => setFormData({ ...formData, brandProduct: e.target.value })}
+                  className="h-8 text-xs"
+                />
+              </div>
 
-          <div className="p-4 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center p-6 text-center space-y-2 hover:border-blue-500 bg-slate-50">
-            <Upload className="w-8 h-8 text-blue-600" />
-            <p className="font-semibold text-slate-800">Upload File Artwork (PDF / AI / High-Res PNG)</p>
-            <p className="text-[11px] text-slate-500">Maksimal ukuran file 50 MB</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">
+                    Nomor BPOM NA <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    required
+                    placeholder="NA182601..."
+                    value={formData.bpomNumber}
+                    onChange={(e) => setFormData({ ...formData, bpomNumber: e.target.value })}
+                    className="h-8 text-xs font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">
+                    Batch Number <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    required
+                    value={formData.batchNumber}
+                    onChange={(e) => setFormData({ ...formData, batchNumber: e.target.value })}
+                    className="h-8 text-xs font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">
+                    Expired Date <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="date"
+                    required
+                    value={formData.expiredDate}
+                    onChange={(e) => setFormData({ ...formData, expiredDate: e.target.value })}
+                    className="h-8 text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">Versi Revisi</label>
+                  <Input
+                    value={formData.revisionVersion}
+                    onChange={(e) => setFormData({ ...formData, revisionVersion: e.target.value })}
+                    className="h-8 text-xs font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">Upload Acuan Kemasan</label>
+                  <Input type="file" className="h-8 text-xs" />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-600 block mb-1">Catatan Tambahan</label>
+                <Input
+                  placeholder="Informasi foil, ukuran die-cut, atau catatan finishing..."
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="h-8 text-xs"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <DnaButton type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+                  Kembali
+                </DnaButton>
+                <DnaButton type="submit" variant="primary">
+                  Simpan Draft & Ajukan Approval
+                </DnaButton>
+              </div>
+            </form>
           </div>
         </div>
-      </DnaModal>
+      )}
 
-      {/* 6. Modal Detail & Dual Approval Gate */}
-      <DnaModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        title={selectedDesign ? `Artwork Kemasan: ${selectedDesign.designCode}` : "Detail Desain"}
-        description="Verifikasi parameter kemasan dan otorisasi persetujuan BusDev & Purchase (Poin 74)."
-        size="lg"
-        footer={
-          <div className="flex items-center justify-between w-full">
-            <div className="text-xs">
-              <span className="font-bold text-slate-700">Status: </span>
-              {selectedDesign && getStatusBadge(selectedDesign.overallStatus)}
+      {/* 5. Modal Detail & Dual Approval BusDev & Purchase */}
+      {selectedDesign && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-bold text-slate-800 text-base">{selectedDesign.brandProduct}</h3>
+                <p className="text-xs font-mono text-blue-600">{selectedDesign.designCode} • {selectedDesign.salesOrderCode}</p>
+              </div>
+              <button onClick={() => setSelectedDesign(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <DnaButton variant="secondary" onClick={() => setIsDetailModalOpen(false)}>
+            <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+              <div>
+                <span className="text-slate-400 font-bold block">Nomor BPOM NA:</span>
+                <span className="font-mono font-bold text-slate-900">{selectedDesign.bpomNumber}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold block">Batch / Exp Date:</span>
+                <span className="font-mono text-slate-800">{selectedDesign.batchNumber} / {selectedDesign.expiredDate}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold block">PIC Desain:</span>
+                <span className="font-medium text-slate-800">{selectedDesign.designerPic}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold block">Versi Revisi:</span>
+                <span className="font-mono font-bold text-indigo-600">{selectedDesign.revisionVersion}</span>
+              </div>
+              <div className="col-span-2">
+                <span className="text-slate-400 font-bold block">Catatan Produksi & Cetak:</span>
+                <span className="text-slate-700">{selectedDesign.notes || "-"}</span>
+              </div>
+            </div>
+
+            {/* Dual Approval Gatekeeper */}
+            <div className="border border-slate-200 rounded-xl p-3.5 space-y-3">
+              <span className="text-xs font-bold text-slate-800 block">Dual Approval Gatekeeper (Poin 68-74):</span>
+              <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg">
+                <div>
+                  <span className="font-bold text-xs text-slate-700">1. Approval BusDev:</span>
+                  <p className="text-[11px] text-slate-500">Status: {selectedDesign.busdevApproval}</p>
+                </div>
+                <div className="flex gap-1.5">
+                  <DnaButton
+                    size="sm"
+                    variant={selectedDesign.busdevApproval === "APPROVED" ? "primary" : "outline"}
+                    onClick={() => handleApproval(selectedDesign.id, "BUSDEV", true)}
+                  >
+                    Approve
+                  </DnaButton>
+                  <DnaButton
+                    size="sm"
+                    variant={selectedDesign.busdevApproval === "REJECTED" ? "danger" : "outline"}
+                    onClick={() => handleApproval(selectedDesign.id, "BUSDEV", false)}
+                  >
+                    Reject
+                  </DnaButton>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg">
+                <div>
+                  <span className="font-bold text-xs text-slate-700">2. Approval Purchase:</span>
+                  <p className="text-[11px] text-slate-500">Status: {selectedDesign.purchaseApproval}</p>
+                </div>
+                <div className="flex gap-1.5">
+                  <DnaButton
+                    size="sm"
+                    variant={selectedDesign.purchaseApproval === "APPROVED" ? "primary" : "outline"}
+                    onClick={() => handleApproval(selectedDesign.id, "PURCHASE", true)}
+                  >
+                    Approve
+                  </DnaButton>
+                  <DnaButton
+                    size="sm"
+                    variant={selectedDesign.purchaseApproval === "REJECTED" ? "danger" : "outline"}
+                    onClick={() => handleApproval(selectedDesign.id, "PURCHASE", false)}
+                  >
+                    Reject
+                  </DnaButton>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <DnaButton variant="outline" onClick={() => setSelectedDesign(null)}>
                 Tutup
               </DnaButton>
-
-              {selectedDesign && selectedDesign.overallStatus !== "APPROVED_PRINT_READY" && (
-                <>
-                  <DnaButton
-                    variant="primary"
-                    onClick={() => handleDualApproval(selectedDesign.id, "BUSDEV", true)}
-                  >
-                    <Check className="w-4 h-4 mr-1" /> Approve BusDev
-                  </DnaButton>
-                  <DnaButton
-                    variant="primary"
-                    onClick={() => handleDualApproval(selectedDesign.id, "PURCHASE", true)}
-                  >
-                    <Check className="w-4 h-4 mr-1" /> Approve Purchase
-                  </DnaButton>
-                </>
-              )}
             </div>
           </div>
-        }
-      >
-        {selectedDesign && (
-          <div className="space-y-6">
-            {/* Header info */}
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-slate-500">Produk & Brand</span>
-                  <p className="text-sm font-bold text-slate-900">{selectedDesign.productName} ({selectedDesign.brandName})</p>
-                </div>
-                <div>{getStatusBadge(selectedDesign.overallStatus)}</div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t border-slate-200 text-xs">
-                <div>
-                  <span className="text-slate-500">No. Notifikasi BPOM:</span>
-                  <p className="font-mono font-bold text-indigo-700">{selectedDesign.bpomNotificationNumber}</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">Batch Number:</span>
-                  <p className="font-mono font-bold text-slate-800">{selectedDesign.batchNumber}</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">Expired Date:</span>
-                  <p className="font-mono font-bold text-slate-800">{selectedDesign.expiredDate}</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">Versi Revisi:</span>
-                  <p className="font-mono font-bold text-slate-800">{selectedDesign.revisionVersion}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Dual Approval Status Box */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-4 rounded-xl border border-slate-200 space-y-2 bg-white">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-800 uppercase">1. Approval BusDev (Klien)</span>
-                  {selectedDesign.busdevApprovalStatus === "APPROVED" ? (
-                    <DnaBadge variant="success">APPROVED</DnaBadge>
-                  ) : (
-                    <DnaBadge variant="warning">PENDING</DnaBadge>
-                  )}
-                </div>
-                <p className="text-slate-500 text-[11px]">Memverifikasi kesesuaian logo, klaim manfaat, teks bahasa, dan nomor BPOM NA.</p>
-              </div>
-
-              <div className="p-4 rounded-xl border border-slate-200 space-y-2 bg-white">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-800 uppercase">2. Approval Purchase Kemas</span>
-                  {selectedDesign.purchaseApprovalStatus === "APPROVED" ? (
-                    <DnaBadge variant="success">APPROVED</DnaBadge>
-                  ) : (
-                    <DnaBadge variant="warning">PENDING</DnaBadge>
-                  )}
-                </div>
-                <p className="text-slate-500 text-[11px]">Memverifikasi dimensi pisau pond inner box, ukuran die-cut stiker, dan spesifikasi vendor cetak.</p>
-              </div>
-            </div>
-
-            {selectedDesign.notes && (
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                <span className="font-bold text-slate-700">Catatan Desainer & Spesifikasi Cetak:</span>
-                <p className="text-slate-600 mt-0.5">{selectedDesign.notes}</p>
-              </div>
-            )}
-          </div>
-        )}
-      </DnaModal>
+        </div>
+      )}
     </DnaPageContainer>
+  );
+}
+
+export default function DesignManagePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-slate-400">Memuat Kelola Desain...</div>}>
+      <DesignManageContent />
+    </Suspense>
   );
 }

@@ -80,6 +80,79 @@ const nextConfig: NextConfig = {
       { source: "/sales-category/create", destination: "/master/goods?tab=categories&action=create" },
       { source: "/sales-target", destination: "/penjualan/sales-target" },
       { source: "/sales-target/create", destination: "/penjualan/sales-target?action=create" },
+
+      // =========================================================================
+      // FASE 2: COMMERCIAL, CRM & BUSSDEV PARITY (26/26 URLs — 0 404s)
+      // =========================================================================
+      // 1. Buku Tamu (Guest Book)
+      { source: "/guest-book", destination: "/penjualan/guest-book" },
+      { source: "/guest-book/create", destination: "/penjualan/guest-book?action=create" },
+
+      // 2. Client Manager & Pipelines
+      { source: "/client-sample", destination: "/penjualan/client-manager?tab=sample" },
+      { source: "/client-repeat-order", destination: "/penjualan/client-manager?tab=ro" },
+      { source: "/client-lost", destination: "/penjualan/lost" },
+
+      // 3. Leads Management
+      { source: "/leads", destination: "/penjualan/crm-leads" },
+      { source: "/leads/create", destination: "/penjualan/crm-leads?action=create" },
+
+      // 4. Sales Orders & Kontrak Maklon
+      { source: "/sales", destination: "/penjualan/sales-orders" },
+      { source: "/sales/create", destination: "/penjualan/sales-orders?action=create" },
+
+      // 5. Down Payment (DP Penjualan)
+      { source: "/sales-down-payment", destination: "/penjualan/down-payment" },
+      { source: "/sales-down-payment/create", destination: "/penjualan/down-payment?action=create" },
+
+      // 6. Faktur Penjualan (Sales Invoice) & Pembayaran
+      { source: "/sales-invoice", destination: "/penjualan/faktur-penjualan" },
+      { source: "/sales-payment", destination: "/penjualan/bayar-penjualan" },
+
+      // 7. Retur Penjualan
+      { source: "/sales-return", destination: "/penjualan/retur-penjualan" },
+      { source: "/sales-return/create", destination: "/penjualan/retur-penjualan?action=create" },
+      { source: "/sales-return-in", destination: "/penjualan/sales-return-in" },
+
+      // 8. Permintaan & Penjualan Sample Maklon
+      { source: "/sales-sample", destination: "/penjualan/sample-sales" },
+      { source: "/sales-sample/create", destination: "/penjualan/sample-sales?action=create" },
+      { source: "/sales-sample-payment", destination: "/penjualan/sample-fee" },
+
+      // 9. Collections & AR Follow-Up
+      { source: "/collections", destination: "/finance/collections" },
+
+      // 10. Costing & Pra Produksi
+      { source: "/job-order-costing", destination: "/penjualan/job-order-costing" },
+
+      // 11. Laporan BusDev & Financial Summary
+      { source: "/report-follow-up-customer", destination: "/reports/busdev-follow-up" },
+      { source: "/report-guest-book", destination: "/reports/guest-book" },
+      { source: "/report-sales-summary", destination: "/reports/sales-summary" },
+
+      // =========================================================================
+      // FASE 3: R&D, FORMULASI, HKI & DESAIN KEMASAN (11/11 URLs — 0 404s)
+      // =========================================================================
+      // 1. Dashboard R&D & Sample
+      { source: "/dashboard-rnd", destination: "/rnd/dashboard" },
+      { source: "/dashboard-sample", destination: "/penjualan/pipeline-rnd" },
+
+      // 2. Batch Record Pra-Produksi
+      { source: "/batch-record", destination: "/production/batch-records" },
+      { source: "/batch-record/create", destination: "/production/batch-records?action=create" },
+
+      // 3. Kelola Desain & Kemasan
+      { source: "/design-manage", destination: "/samples/design" },
+      { source: "/design-manage/create", destination: "/samples/design?action=create" },
+
+      // 4. Formulasi R&D
+      { source: "/formulation", destination: "/samples/formula" },
+      { source: "/formulation-adjustment", destination: "/samples/formula?mode=adjustment" },
+      { source: "/formulation-manage", destination: "/samples/formula?mode=manage" },
+
+      // 5. Permintaan HPP (COGS Request)
+      { source: "/request-cogs", destination: "/finance/cogs-request-rnd" },
+      { source: "/request-cogs/create", destination: "/finance/cogs-request-rnd?action=create" },
     ];
   },
 };

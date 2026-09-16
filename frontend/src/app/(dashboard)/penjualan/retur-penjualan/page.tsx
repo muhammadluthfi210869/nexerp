@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -62,20 +63,20 @@ const INITIAL_RETURNS: SalesReturn[] = [
     totalValue: 3250000,
     returnType: "POTONG_TAGIHAN",
     status: "PROSES",
-    reason: "Segel pump bocor mikro saat ekspedisi ke gudang klien.",
+    reason: "Kemasan sekunder mengalami dent (penyok) saat logistik ekspedisi.",
   },
   {
     id: "ret-02",
-    returnCode: "RET-202602-004",
-    soNumber: "SO-2026-003",
+    returnCode: "RET-202603-002",
+    soNumber: "SO-2026-002",
     customerName: "CV Aura Natural Skincare",
     brandName: "AuraGlow Botanical",
-    returnDate: "2026-02-28",
-    warehouseName: "Gudang Barang Jadi Utama (GBJ-01)",
-    productName: "Centella Soothing Moisturizer Gel",
-    qtyReturned: 100,
-    unitPrice: 15000,
-    totalValue: 1500000,
+    returnDate: "2026-03-04",
+    warehouseName: "Gudang Retur Pabrik (RET-02)",
+    productName: "Centella Soothing Toner 100ml",
+    qtyReturned: 80,
+    unitPrice: 22000,
+    totalValue: 1760000,
     returnType: "GANTI_BARANG",
     status: "SELESAI",
     reason: "Label kemasan primer miring pada batch awal.",
@@ -111,13 +112,20 @@ const returnTypeLabels: Record<string, string> = {
   REFUND: "Pengembalian Dana",
 };
 
-export default function ReturPenjualanPage() {
+function ReturPenjualanContent() {
   const toast = useDnaToast();
+  const searchParams = useSearchParams();
   const [returns, setReturns] = useState<SalesReturn[]>(INITIAL_RETURNS);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [detailReturn, setDetailReturn] = useState<SalesReturn | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateOpen(true);
+    }
+  }, [searchParams]);
 
   // Form State
   const [formSoNumber, setFormSoNumber] = useState("");
@@ -281,56 +289,43 @@ export default function ReturPenjualanPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-4">KODE & TANGGAL</th>
-                <th className="py-3 px-4">KLIEN & SO</th>
-                <th className="py-3 px-4">PRODUK & GUDANG TUJUAN</th>
-                <th className="py-3 px-4 text-right">QTY & NILAI RETUR</th>
-                <th className="py-3 px-4 text-center">METODE RETUR</th>
-                <th className="py-3 px-4 text-center">STATUS QC</th>
-                <th className="py-3 px-4 text-right">AKSI</th>
+                <th className="py-3 px-3 w-10 text-center">#</th>
+                <th className="py-3 px-3">Tanggal</th>
+                <th className="py-3 px-3">Kode Retur</th>
+                <th className="py-3 px-3">No. Faktur</th>
+                <th className="py-3 px-3">Pelanggan</th>
+                <th className="py-3 px-3 text-right">Total</th>
+                <th className="py-3 px-3 text-center">Status</th>
+                <th className="py-3 px-3 text-right">#</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
               {filteredReturns.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-slate-400">
+                  <td colSpan={8} className="text-center py-12 text-slate-400">
                     <RotateCcw className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
                     <p className="font-semibold text-slate-600">Tidak ada klaim retur ditemukan</p>
                     <p className="text-xs text-slate-400">Sesuaikan filter atau catat retur baru.</p>
                   </td>
                 </tr>
               ) : (
-                filteredReturns.map((ret) => (
+                filteredReturns.map((ret, idx) => (
                   <tr key={ret.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-4">
-                      <DnaCell.Text primary={ret.returnCode} secondary={ret.returnDate} />
+                    <td className="py-3.5 px-3 text-center text-slate-400 font-mono text-xs">{idx + 1}</td>
+                    <td className="py-3.5 px-3 text-slate-600 text-xs whitespace-nowrap">{ret.returnDate}</td>
+                    <td className="py-3.5 px-3 font-mono font-semibold text-blue-600 text-xs whitespace-nowrap">{ret.returnCode}</td>
+                    <td className="py-3.5 px-3 font-mono text-slate-700 text-xs whitespace-nowrap">{ret.soNumber}</td>
+                    <td className="py-3.5 px-3 font-semibold text-slate-900 text-xs whitespace-nowrap">{ret.customerName}</td>
+                    <td className="py-3.5 px-3 text-right font-mono font-bold text-slate-900 text-xs whitespace-nowrap">
+                      Rp {ret.totalValue.toLocaleString("id-ID")}
                     </td>
-                    <td className="py-3.5 px-4">
-                      <DnaCell.Avatar name={ret.customerName} subtext={`SO: ${ret.soNumber}`} />
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <DnaCell.Text primary={ret.productName} secondary={ret.warehouseName} />
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <p className="font-bold text-slate-900">
-                        Rp {ret.totalValue.toLocaleString("id-ID")}
-                      </p>
-                      <p className="text-[11px] text-rose-600 font-medium">
-                        {ret.qtyReturned.toLocaleString("id-ID")} pcs @ Rp {ret.unitPrice.toLocaleString("id-ID")}
-                      </p>
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      <span className="text-xs font-semibold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md">
-                        {returnTypeLabels[ret.returnType] || ret.returnType}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-3 text-center whitespace-nowrap">
                       <DnaCell.Badge
                         status={statusBadgeConfig[ret.status]?.status || "default"}
                         label={statusBadgeConfig[ret.status]?.label || ret.status}
                       />
                     </td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3.5 px-3 text-right whitespace-nowrap">
                       <DnaCell.Actions
                         onView={() => setDetailReturn(ret)}
                         extraActions={
@@ -552,5 +547,13 @@ export default function ReturPenjualanPage() {
         </form>
       </DnaModal>
     </div>
+  );
+}
+
+export default function ReturPenjualanPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Memuat Retur Penjualan...</div>}>
+      <ReturPenjualanContent />
+    </Suspense>
   );
 }

@@ -261,17 +261,18 @@ function LostContent() {
           <table className="w-full text-left border-collapse text-[12px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                <th className="p-3.5">BRAND & PRODUK</th>
-                <th className="p-3.5">PELANGGAN</th>
-                <th className="p-3.5">PIC BUSDEV</th>
-                <th className="p-3.5 text-right">EST. VALUE DEAL</th>
-                <th className="p-3.5">TGL SAMPLE</th>
-                <th className="p-3.5 text-center">ALASAN LOST</th>
-                <th className="p-3.5 text-right">AKSI</th>
+                <th className="p-3 w-10 text-center">NO</th>
+                <th className="p-3">BRAND & PRODUK</th>
+                <th className="p-3">PELANGGAN</th>
+                <th className="p-3">PIC BD</th>
+                <th className="p-3 text-right">EST. VALUE DEAL</th>
+                <th className="p-3">TGL SAMPLE</th>
+                <th className="p-3 text-center">STATUS SAMPLE</th>
+                <th className="p-3 text-center">STATUS LOST</th>
               </tr>
             </thead>
             <tbody>
-              {filteredProspects.map((item) => {
+              {filteredProspects.map((item, idx) => {
                 const reason = REASON_LABELS[item.lostReason] || {
                   label: item.lostReason,
                   status: "neutral",
@@ -280,28 +281,23 @@ function LostContent() {
                   <tr
                     key={item.id}
                     onClick={() => setSelectedProspect(item)}
-                    className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 cursor-pointer group"
+                    className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 cursor-pointer group text-xs"
                   >
-                    <td className="p-3.5">
-                      <DnaCell.Text primary={item.brandName} secondary={item.productName} />
+                    <td className="p-3 text-center text-slate-400 font-mono">{idx + 1}</td>
+                    <td className="p-3 font-semibold text-slate-900 whitespace-nowrap">{item.brandName}</td>
+                    <td className="p-3 text-slate-800 whitespace-nowrap">{item.clientName}</td>
+                    <td className="p-3 text-slate-700 whitespace-nowrap">{item.bdName}</td>
+                    <td className="p-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                      {formatCurrency(item.estimatedValue)}
                     </td>
-                    <td className="p-3.5">
-                      <DnaCell.Text primary={item.clientName} />
+                    <td className="p-3 text-slate-600 whitespace-nowrap font-mono">{item.sampleDate}</td>
+                    <td className="p-3 text-center whitespace-nowrap">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                        {item.sampleStatus}
+                      </span>
                     </td>
-                    <td className="p-3.5">
-                      <DnaCell.Avatar name={item.bdName} />
-                    </td>
-                    <td className="p-3.5 text-right">
-                      <DnaCell.Currency value={item.estimatedValue} />
-                    </td>
-                    <td className="p-3.5">
-                      <DnaCell.Date value={item.sampleDate} />
-                    </td>
-                    <td className="p-3.5 text-center">
+                    <td className="p-3 text-center whitespace-nowrap">
                       <DnaCell.Badge label={reason.label} status={reason.status} />
-                    </td>
-                    <td className="p-3.5 text-right">
-                      <DnaCell.Actions onView={() => setSelectedProspect(item)} />
                     </td>
                   </tr>
                 );
@@ -318,44 +314,38 @@ function LostContent() {
           <table className="w-full text-left border-collapse text-[12px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                <th className="p-3.5">NAMA PELANGGAN & BRAND</th>
-                <th className="p-3.5 text-right">LIFETIME VALUE (LTV)</th>
-                <th className="p-3.5 text-center">TOTAL TRANSAKSI</th>
-                <th className="p-3.5">ORDER TERAKHIR</th>
-                <th className="p-3.5 text-center">JEDA TIDAK ORDER</th>
-                <th className="p-3.5">ALASAN DORMANT</th>
-                <th className="p-3.5 text-right">AKSI</th>
+                <th className="p-3 w-10 text-center">NO</th>
+                <th className="p-3">NAMA PELANGGAN</th>
+                <th className="p-3 text-right">LIFETIME VALUE</th>
+                <th className="p-3 text-center">TOTAL TRANSAKSI</th>
+                <th className="p-3">TGL TERAKHIR ORDER</th>
+                <th className="p-3 text-center">JEDA TIDAK ORDER</th>
+                <th className="p-3 text-center">STATUS</th>
               </tr>
             </thead>
             <tbody>
-              {filteredChurn.map((item) => (
+              {filteredChurn.map((item, idx) => (
                 <tr
                   key={item.id}
                   onClick={() => setSelectedChurn(item)}
-                  className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 cursor-pointer group"
+                  className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 cursor-pointer group text-xs"
                 >
-                  <td className="p-3.5">
-                    <DnaCell.Text primary={item.clientName} secondary={item.brandName} />
+                  <td className="p-3 text-center text-slate-400 font-mono">{idx + 1}</td>
+                  <td className="p-3 font-semibold text-slate-900 whitespace-nowrap">{item.clientName}</td>
+                  <td className="p-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                    {formatCurrency(item.lifetimeValue)}
                   </td>
-                  <td className="p-3.5 text-right">
-                    <DnaCell.Currency value={item.lifetimeValue} />
-                  </td>
-                  <td className="p-3.5 text-center font-bold text-slate-800 text-xs">
+                  <td className="p-3 text-center font-bold text-slate-800 text-xs whitespace-nowrap">
                     {item.totalOrders}x Order
                   </td>
-                  <td className="p-3.5">
-                    <DnaCell.Date value={item.lastOrderDate} />
-                  </td>
-                  <td className="p-3.5 text-center">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-black bg-rose-50 text-rose-700 border border-rose-200">
+                  <td className="p-3 text-slate-600 whitespace-nowrap font-mono">{item.lastOrderDate}</td>
+                  <td className="p-3 text-center whitespace-nowrap">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 font-mono">
                       {item.inactivityMonths} Bulan
                     </span>
                   </td>
-                  <td className="p-3.5">
-                    <DnaCell.Text primary={item.churnReason} />
-                  </td>
-                  <td className="p-3.5 text-right">
-                    <DnaCell.Actions onView={() => setSelectedChurn(item)} />
+                  <td className="p-3 text-center whitespace-nowrap">
+                    <DnaCell.Badge label="Dormant" status="danger" />
                   </td>
                 </tr>
               ))}

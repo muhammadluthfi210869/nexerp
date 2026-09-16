@@ -186,7 +186,13 @@ export class CanonicalMarketingService {
       async (db) => {
         this.assertDateOrder(dto.startDate, dto.dueDate);
         const assigneeUser = await this.ensureActiveUser(db, dto.assigneeId, 'assigneeId');
-        if (!isMarketingManager(viewer) && assigneeUser.id !== viewer.id) {
+        const isSelf =
+          assigneeUser.id === viewer.id ||
+          (Boolean(assigneeUser.email) &&
+            Boolean(viewer.email) &&
+            assigneeUser.email?.split('@')[0].toLowerCase() ===
+              viewer.email?.split('@')[0].toLowerCase());
+        if (!isMarketingManager(viewer) && !isSelf) {
           throw new ForbiddenException({
             code: 'TASK_ASSIGN_FORBIDDEN',
             message: 'Member hanya dapat membuat task untuk dirinya sendiri.',
@@ -1368,7 +1374,7 @@ export class CanonicalMarketingService {
         status: 'ACTIVE',
         deletedAt: null,
       },
-      select: { id: true, fullName: true },
+      select: { id: true, fullName: true, email: true },
     });
     if (!found) {
       const member = await db.marketingTeamMember.findFirst({
@@ -1384,7 +1390,7 @@ export class CanonicalMarketingService {
       if (member?.userId) {
         found = await db.user.findFirst({
           where: { id: member.userId, status: 'ACTIVE', deletedAt: null },
-          select: { id: true, fullName: true },
+          select: { id: true, fullName: true, email: true },
         });
       }
     }

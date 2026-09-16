@@ -65,6 +65,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         }
       } else if (typeof res === 'string') {
         detail = res;
+        code = status === 429 ? 'TOO_MANY_REQUESTS' : `HTTP_${status}`;
       }
     } else {
       const err = exception as Error;

@@ -1,9 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { unwrapResponse } from "@/lib/unwrap-response";
+import React, { useState, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Layers,
   Plus,
@@ -13,25 +11,15 @@ import {
   Eye,
   Calendar,
   User,
-  Building2,
   Clock,
   CheckCircle2,
   AlertTriangle,
-  Lock,
-  Unlock,
-  Copy,
-  Edit2,
-  FileText,
-  Tag,
-  Check,
-  RotateCcw,
-  Sparkles,
-  Calculator,
   FlaskConical,
-  DollarSign,
-  Printer,
-  ChevronRight,
-  Trash2
+  Edit2,
+  X,
+  History,
+  Send,
+  Lock
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -41,464 +29,295 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
-  DnaModal,
-  DnaTabNav,
   useDnaToast
 } from "@/components/dna";
-
-interface FormulaIngredient {
-  phase: "A" | "B" | "C" | "D" | "E";
-  phaseName: string;
-  itemCode: string;
-  inciName: string;
-  tradeName: string;
-  functionCategory: string; // Active, Emollient, Preservative, Solvent, Humectant, etc.
-  percentage: number; // e.g. 5.00%
-  unitCostPerKg: number; // Rp / Kg
-  costSubtotalPerKg: number; // (percentage / 100) * unitCostPerKg
-}
+import { Input } from "@/components/ui/input";
 
 interface ProductFormula {
   id: string;
   formulaCode: string;
+  tanggal: string;
   productName: string;
-  category: "SKINCARE" | "BODYCARE" | "HAIRCARE" | "DECORATIVE";
-  categoryLabel: string;
-  revisionVersion: string; // Rev 1.0, Rev 1.1, Rev 2.0
-  nettoGram: number; // e.g. 30g
-  clientName: string;
-  brandName: string;
+  revisionVersion: string;
+  netto: string;
+  customerName: string;
   busdevPic: string;
   formulatorPic: string;
+  status: "DRAFT" | "LAB_TRIAL" | "STABILITY_TEST" | "LOCKED_PRODUCTION";
+  statusLabel: string;
   targetPh: string;
   targetViscosity: string;
-  hppPerKg: number; // Rp / Kg
-  hppPerPcs: number; // (hppPerKg / 1000) * nettoGram
-  status: "DRAFT" | "LAB_TRIAL" | "STABILITY_TEST" | "APPROVED_LOCKED";
-  statusLabel: string;
-  createdDate: string;
-  ingredients: FormulaIngredient[];
-  notes?: string;
+  costPerKg: number;
 }
 
-const MOCK_FORMULAS: ProductFormula[] = [
+const INITIAL_FORMULAS: ProductFormula[] = [
   {
     id: "form-01",
-    formulaCode: "FORM-202603-001",
+    formulaCode: "FORM-2026-0001",
+    tanggal: "2026-03-08",
     productName: "Brightening Glow Serum 10% Niacinamide",
-    category: "SKINCARE",
-    categoryLabel: "Skincare (Serum)",
     revisionVersion: "Rev 2.0",
-    nettoGram: 30,
-    clientName: "PT Cantika Glow Nusantara",
-    brandName: "GlowAura Skin",
-    busdevPic: "Sari Dewi (BusDev)",
+    netto: "30 ml",
+    customerName: "PT Cantika Glow Nusantara",
+    busdevPic: "Sari Dewi",
     formulatorPic: "Apt. Dedi Kurniawan, S.Farm",
+    status: "LOCKED_PRODUCTION",
+    statusLabel: "Locked (Siap Produksi)",
     targetPh: "5.50 - 6.00",
     targetViscosity: "1,500 - 2,500 cPs",
-    hppPerKg: 145000,
-    hppPerPcs: 4350,
-    status: "APPROVED_LOCKED",
-    statusLabel: "Locked (Siap Produksi)",
-    createdDate: "2026-03-05",
-    notes: "Formula telah lolos uji stabilitas dipercepat 3 bulan (40°C/75% RH).",
-    ingredients: [
-      {
-        phase: "A",
-        phaseName: "Fase A (Water Phase)",
-        itemCode: "RAW-AQ-001",
-        inciName: "Aqua Demineralisata",
-        tradeName: "Deionized Water USP",
-        functionCategory: "Solvent / Pelarut",
-        percentage: 78.50,
-        unitCostPerKg: 3500,
-        costSubtotalPerKg: 2747.5
-      },
-      {
-        phase: "A",
-        phaseName: "Fase A (Water Phase)",
-        itemCode: "RAW-GLY-004",
-        inciName: "Glycerin",
-        tradeName: "Glycerin Pharma 99.7%",
-        functionCategory: "Humectant",
-        percentage: 4.00,
-        unitCostPerKg: 28000,
-        costSubtotalPerKg: 1120
-      },
-      {
-        phase: "B",
-        phaseName: "Fase B (Active Phase)",
-        itemCode: "RAW-NIA-001",
-        inciName: "Niacinamide",
-        tradeName: "Niacinamide USP Grade",
-        functionCategory: "Skin Brightening Active",
-        percentage: 10.00,
-        unitCostPerKg: 185000,
-        costSubtotalPerKg: 18500
-      },
-      {
-        phase: "B",
-        phaseName: "Fase B (Active Phase)",
-        itemCode: "RAW-HA-002",
-        inciName: "Sodium Hyaluronate",
-        tradeName: "Hyaluronic Acid 1% Sol",
-        functionCategory: "Deep Hydration",
-        percentage: 5.00,
-        unitCostPerKg: 850000,
-        costSubtotalPerKg: 42500
-      },
-      {
-        phase: "C",
-        phaseName: "Fase C (Thickener & Stabilizer)",
-        itemCode: "RAW-THK-001",
-        inciName: "Polyacrylate Crosspolymer-6",
-        tradeName: "Sepimax ZEN",
-        functionCategory: "Polymer Thickener",
-        percentage: 1.00,
-        unitCostPerKg: 420000,
-        costSubtotalPerKg: 4200
-      },
-      {
-        phase: "D",
-        phaseName: "Fase D (Preservative)",
-        itemCode: "RAW-PRS-001",
-        inciName: "Phenoxyethanol (and) Ethylhexylglycerin",
-        tradeName: "Euxyl PE 9010",
-        functionCategory: "Broad Spectrum Preservative",
-        percentage: 1.00,
-        unitCostPerKg: 165000,
-        costSubtotalPerKg: 1650
-      },
-      {
-        phase: "E",
-        phaseName: "Fase E (Fragrance & Neutralizer)",
-        itemCode: "RAW-EXT-001",
-        inciName: "Rosa Damascena Flower Water",
-        tradeName: "Organic Rose Hydrosol",
-        functionCategory: "Botanical Scent",
-        percentage: 0.50,
-        unitCostPerKg: 240000,
-        costSubtotalPerKg: 1200
-      }
-    ]
+    costPerKg: 145000
   },
   {
     id: "form-02",
-    formulaCode: "FORM-202603-002",
+    formulaCode: "FORM-2026-0002",
+    tanggal: "2026-03-07",
     productName: "Ceramide 5X Barrier Repair Moisturizer",
-    category: "SKINCARE",
-    categoryLabel: "Skincare (Cream Gel)",
     revisionVersion: "Rev 1.1",
-    nettoGram: 50,
-    clientName: "PT Miracle Beauty Lab",
-    brandName: "MiracleSkin",
-    busdevPic: "Rian Hendra",
+    netto: "50 gr",
+    customerName: "PT Miracle Beauty Lab",
+    busdevPic: "Rendi BusDev",
     formulatorPic: "Dr. Maya Sp.KK",
-    targetPh: "5.00 - 5.50",
-    targetViscosity: "12,000 - 18,000 cPs",
-    hppPerKg: 210000,
-    hppPerPcs: 10500,
     status: "STABILITY_TEST",
     statusLabel: "Uji Stabilitas Lab",
-    createdDate: "2026-03-02",
-    notes: "Dalam pengujian sentrifugasi 3.000 rpm 30 menit & cycling test 6 siklus.",
-    ingredients: []
+    targetPh: "5.00 - 5.50",
+    targetViscosity: "30,000 - 45,000 cPs",
+    costPerKg: 185000
   },
   {
     id: "form-03",
-    formulaCode: "FORM-202603-003",
-    productName: "AHA BHA PHA Exfoliating Toner 100ml",
-    category: "SKINCARE",
-    categoryLabel: "Skincare (Liquid Toner)",
+    formulaCode: "FORM-2026-0003",
+    tanggal: "2026-03-05",
+    productName: "Soothing Acne Gel Cica + Tea Tree",
     revisionVersion: "Rev 1.0",
-    nettoGram: 100,
-    clientName: "CV Derma Estetika Mandiri",
-    brandName: "DermaPure",
-    busdevPic: "Sari Dewi (BusDev)",
-    formulatorPic: "Apt. Siska Handayani, M.Farm",
-    targetPh: "3.80 - 4.20",
-    targetViscosity: "Water-like (10 - 50 cPs)",
-    hppPerKg: 65000,
-    hppPerPcs: 6500,
+    netto: "30 gr",
+    customerName: "PT Cantika Herbal Nusantara",
+    busdevPic: "Rina BusDev",
+    formulatorPic: "Apt. Dedi Kurniawan, S.Farm",
     status: "LAB_TRIAL",
     statusLabel: "Trial Formulasi Lab",
-    createdDate: "2026-02-26",
-    notes: "Eksfoliasi ringan dengan Salicylic Acid 1% + Glycolic Acid 2% + Lactobionic Acid 1%.",
-    ingredients: []
+    targetPh: "5.50 - 6.20",
+    targetViscosity: "10,000 - 15,000 cPs",
+    costPerKg: 95000
+  },
+  {
+    id: "form-04",
+    formulaCode: "FORM-2026-0004",
+    tanggal: "2026-03-01",
+    productName: "Hydrating Lip Oil Peptide Tint",
+    revisionVersion: "Rev 1.0",
+    netto: "5 ml",
+    customerName: "CV Royal Beauty Luxe",
+    busdevPic: "Siti BusDev",
+    formulatorPic: "Budi Prakoso, S.Farm",
+    status: "LOCKED_PRODUCTION",
+    statusLabel: "Locked (Siap Produksi)",
+    targetPh: "N/A (Anhydrous)",
+    targetViscosity: "4,000 - 6,000 cPs",
+    costPerKg: 240000
+  },
+  {
+    id: "form-05",
+    formulaCode: "FORM-2026-0005",
+    tanggal: "2026-02-28",
+    productName: "Sunscreen Glow Gel Hybrid SPF 50",
+    revisionVersion: "Rev 3.0",
+    netto: "30 gr",
+    customerName: "PT Sinar Indah Kosmetika",
+    busdevPic: "Maya BusDev",
+    formulatorPic: "Aisyah Putri, S.Si",
+    status: "LOCKED_PRODUCTION",
+    statusLabel: "Locked (Siap Produksi)",
+    targetPh: "6.00 - 6.50",
+    targetViscosity: "18,000 - 25,000 cPs",
+    costPerKg: 175000
   }
 ];
 
-export default function FormulationManagePage() {
-  const toast = useDnaToast();
-  const queryClient = useQueryClient();
-
-  const [activeTab, setActiveTab] = useState("all");
+function FormulaContent() {
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode"); // "adjustment" | "manage" | null
+  const [formulas, setFormulas] = useState<ProductFormula[]>(INITIAL_FORMULAS);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedFormula, setSelectedFormula] = useState<ProductFormula | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isBuilderModalOpen, setIsBuilderModalOpen] = useState(false);
+  const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const toast = useDnaToast();
 
-  // Queries
-  const { data: rawFormulas, isLoading } = useQuery({
-    queryKey: ["rnd-formulas"],
-    queryFn: async () => {
-      try {
-        const res = await api.get("/rnd/formulas");
-        return unwrapResponse(res.data) as ProductFormula[];
-      } catch (e) {
-        return null;
-      }
-    }
-  });
-
-  const formulas: ProductFormula[] = useMemo(() => {
-    if (rawFormulas && Array.isArray(rawFormulas) && rawFormulas.length > 0) {
-      return rawFormulas;
-    }
-    return MOCK_FORMULAS;
-  }, [rawFormulas]);
-
-  // Filtering
+  // Filtered Formulas
   const filteredFormulas = useMemo(() => {
     return formulas.filter((f) => {
-      if (activeTab === "skincare" && f.category !== "SKINCARE") return false;
-      if (activeTab === "bodycare" && f.category !== "BODYCARE" && f.category !== "HAIRCARE") return false;
-      if (activeTab === "decorative" && f.category !== "DECORATIVE") return false;
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        !searchQuery ||
+        f.formulaCode.toLowerCase().includes(q) ||
+        f.productName.toLowerCase().includes(q) ||
+        f.customerName.toLowerCase().includes(q) ||
+        f.formulatorPic.toLowerCase().includes(q);
 
-      if (statusFilter !== "ALL" && f.status !== statusFilter) return false;
-
-      if (searchQuery.trim() !== "") {
-        const q = searchQuery.toLowerCase();
-        return (
-          f.formulaCode.toLowerCase().includes(q) ||
-          f.productName.toLowerCase().includes(q) ||
-          f.clientName.toLowerCase().includes(q) ||
-          f.brandName.toLowerCase().includes(q) ||
-          f.formulatorPic.toLowerCase().includes(q)
-        );
-      }
-      return true;
+      const matchesStatus = statusFilter === "ALL" || f.status === statusFilter;
+      return matchesSearch && matchesStatus;
     });
-  }, [formulas, activeTab, statusFilter, searchQuery]);
+  }, [formulas, searchQuery, statusFilter]);
 
-  // KPIs
   const totalFormulas = formulas.length;
-  const lockedCount = formulas.filter(f => f.status === "APPROVED_LOCKED").length;
-  const trialCount = formulas.filter(f => f.status === "LAB_TRIAL" || f.status === "STABILITY_TEST").length;
-  const averageBulkCost = useMemo(() => {
-    if (formulas.length === 0) return 0;
-    return Math.round(formulas.reduce((acc, curr) => acc + curr.hppPerKg, 0) / formulas.length);
-  }, [formulas]);
+  const lockedCount = formulas.filter((f) => f.status === "LOCKED_PRODUCTION").length;
+  const trialCount = formulas.filter((f) => f.status === "LAB_TRIAL" || f.status === "STABILITY_TEST").length;
 
-  const openFormulaDetail = (formula: ProductFormula) => {
-    // If ingredients empty in mock, fallback to sample ingredients
-    if (!formula.ingredients || formula.ingredients.length === 0) {
-      formula.ingredients = MOCK_FORMULAS[0].ingredients;
-    }
+  const handleAdjustFormula = (formula: ProductFormula) => {
     setSelectedFormula(formula);
-    setIsDetailModalOpen(true);
+    setIsAdjustModalOpen(true);
   };
 
-  const getStatusBadge = (status: ProductFormula["status"]) => {
-    switch (status) {
-      case "APPROVED_LOCKED":
-        return <DnaBadge variant="success">LOCKED (PRODUCTION READY)</DnaBadge>;
-      case "STABILITY_TEST":
-        return <DnaBadge variant="purple">UJI STABILITAS</DnaBadge>;
-      case "LAB_TRIAL":
-        return <DnaBadge variant="blue">TRIAL LAB</DnaBadge>;
-      default:
-        return <DnaBadge variant="neutral">{status}</DnaBadge>;
-    }
+  const handleSaveAdjustment = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast.success("Penyesuaian Formula Disimpan", "Versi revisi formula baru berhasil diarsipkan.");
+    setIsAdjustModalOpen(false);
   };
 
   return (
     <DnaPageContainer>
       {/* 1. Header Page */}
       <DnaPageHeader
-        title="Kelola Formulasi Produk & INCI Repository"
-        description="Master data komposisi formula kosmetik per fase (Fase A s/d E), validasi 100% total dosis, kalkulasi moving average HPP bulk per Kg & Pcs, serta manajemen revisi versi."
-        badge={<DnaBadge variant="neutral">SCR-135 & SCR-137</DnaBadge>}
+        title={
+          mode === "adjustment"
+            ? "Penyesuaian Formulasi Kosmetik"
+            : mode === "manage"
+            ? "Kelola Formulasi & INCI Repository"
+            : "Formulasi R&D Kosmetik"
+        }
+        description="Pusat data master formula kosmetik maklon, revisi batch lab, dan spesifikasi HPP bulk (1:1 G-SERP Parity)."
         breadcrumbs={[
-          { label: "R&D & Pra-Produksi", href: "/rnd/dashboard" },
-          { label: "Kelola Formulasi", href: "/rnd/formula" }
+          { label: "Operasional", href: "/dashboard-rnd" },
+          { label: "Pra Produksi", href: "/formulation" },
+          { label: "Formulasi", href: "/formulation" }
         ]}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton
               variant="secondary"
-              onClick={() => toast.success("Export Berhasil", "Daftar formulasi berhasil diekspor ke file Excel.")}
+              onClick={() => toast.success("Export Excel", "Data formulasi berhasil diekspor.")}
             >
-              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
               Export Excel
             </DnaButton>
-            <DnaButton variant="primary" onClick={() => setIsBuilderModalOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Buat Formulasi Baru
+            <DnaButton variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-1.5" />
+              + Buat Formulasi Baru
             </DnaButton>
           </div>
         }
       />
 
       {/* 2. KPI Cards */}
-      <DnaKpiGrid cols={4}>
+      <DnaKpiGrid cols={3}>
         <DnaStatCard
-          label="TOTAL FORMULASI"
-          value={`${totalFormulas} Master SKU`}
-          subValue="Formula Aktif Terdaftar"
-          icon={<Layers className="w-5 h-5 text-blue-600" />}
+          label="TOTAL MASTER FORMULA"
+          value={`${totalFormulas} Formula`}
+          subValue="INCI & Spesifikasi Terdaftar"
+          icon={<FlaskConical className="w-5 h-5 text-blue-600" />}
         />
         <DnaStatCard
-          label="FORMULA LOCKED"
-          value={`${lockedCount} Terkunci`}
-          subValue="Lolos Stabilitas & Siap Produksi"
-          icon={<Lock className="w-5 h-5 text-emerald-600" />}
+          label="LOCKED (SIAP PRODUKSI)"
+          value={`${lockedCount} Formula`}
+          subValue="Terkonfirmasi CPKB Pabrik"
+          icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
         />
         <DnaStatCard
-          label="DALAM PENGUJIAN LAB"
-          value={`${trialCount} Trial & Test`}
-          subValue="Optimasi & Cycling Test"
-          icon={<FlaskConical className="w-5 h-5 text-indigo-600" />}
-        />
-        <DnaStatCard
-          label="RATA-RATA HPP BULK"
-          value={`Rp ${averageBulkCost.toLocaleString()} / Kg`}
-          subValue="Moving Average Bahan Baku"
-          icon={<DollarSign className="w-5 h-5 text-cyan-600" />}
+          label="DALAM UJI STABILITAS / TRIAL"
+          value={`${trialCount} Formula`}
+          subValue="Oven 40°C & Suhu Kamar"
+          icon={<Clock className="w-5 h-5 text-purple-600" />}
         />
       </DnaKpiGrid>
 
-      {/* 3. Category & Status Tabs */}
-      <div className="space-y-4">
-        <DnaTabNav
-          tabs={[
-            { id: "all", label: `Semua Kategori (${totalFormulas})` },
-            { id: "skincare", label: "Skincare Formulation" },
-            { id: "bodycare", label: "Bodycare & Haircare" },
-            { id: "decorative", label: "Decorative / Makeup" }
-          ]}
-          activeTab={activeTab}
-          onChange={setActiveTab}
-        />
-
-        <div className="flex flex-wrap items-center gap-3 bg-white p-3 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
-            <Filter className="w-4 h-4 text-slate-400" />
-            <span>Filter Status Formulasi:</span>
-          </div>
-
-          <select
-            className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="ALL">Semua Status Formula</option>
-            <option value="APPROVED_LOCKED">Locked (Siap Produksi)</option>
-            <option value="STABILITY_TEST">Uji Stabilitas Lab</option>
-            <option value="LAB_TRIAL">Trial Formulasi Lab</option>
-          </select>
-
-          {statusFilter !== "ALL" && (
-            <button
-              onClick={() => setStatusFilter("ALL")}
-              className="text-xs text-rose-600 hover:text-rose-700 font-medium underline ml-auto"
-            >
-              Reset Filter
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 4. DataTable Card (SCR-135 & SCR-137) */}
+      {/* 3. DataTable (1:1 G-SERP Row 136, 137, 138 — EXACT 11 COLUMNS) */}
       <DnaDataTableCard
         title="Daftar Master Formulasi Kosmetik"
-        description="Rincian formulasi aktif, nomor revisi, kalkulasi biaya HPP bulk per kg dan per pcs netto kemasan."
+        description="Struktur formulasi aktif, nomor revisi, volume netto, formulator penanggung jawab, dan status lisensi."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari Kode Formulasi, Nama Produk, Klien, Formulator..."
+        searchPlaceholder="Cari kode formula, produk, pelanggan, formulator..."
+        actions={
+          <div className="flex items-center gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 font-bold text-slate-700 focus:outline-none"
+            >
+              <option value="ALL">Semua Status</option>
+              <option value="LOCKED_PRODUCTION">Locked (Siap Produksi)</option>
+              <option value="STABILITY_TEST">Uji Stabilitas Lab</option>
+              <option value="LAB_TRIAL">Trial Formulasi</option>
+            </select>
+          </div>
+        }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-slate-50 border-b border-slate-200 font-bold text-slate-600 uppercase tracking-wider text-[10.5px]">
               <tr>
-                <th className="py-3 px-4">Kode & Tanggal</th>
-                <th className="py-3 px-4">Nama Produk & Kategori</th>
-                <th className="py-3 px-4">Klien / Brand</th>
-                <th className="py-3 px-4 text-center">Rev</th>
-                <th className="py-3 px-4 text-right">Netto</th>
-                <th className="py-3 px-4 text-right">HPP Bulk / Kg</th>
-                <th className="py-3 px-4 text-right">HPP / Pcs</th>
-                <th className="py-3 px-4">Formulator & BusDev</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
+                <th className="py-3 px-3 text-center w-10">#</th>
+                <th className="py-3 px-3 w-28">Kode</th>
+                <th className="py-3 px-3 w-24">Tanggal</th>
+                <th className="py-3 px-3">Nama Produk</th>
+                <th className="py-3 px-3 text-center w-16">Rev</th>
+                <th className="py-3 px-3 text-right w-16">Netto</th>
+                <th className="py-3 px-3">Pelanggan</th>
+                <th className="py-3 px-3 w-24">BusDev</th>
+                <th className="py-3 px-3 w-36">Formulator</th>
+                <th className="py-3 px-3 text-center w-28">Status</th>
+                <th className="py-3 px-3 text-center w-28">#</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredFormulas.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-400">
-                    <Layers className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                    Tidak ada formula kosmetik yang sesuai filter pencarian.
+                  <td colSpan={11} className="py-8 text-center text-slate-400">
+                    Tidak ada data formulasi ditemukan.
                   </td>
                 </tr>
               ) : (
-                filteredFormulas.map((row) => (
+                filteredFormulas.map((row, idx) => (
                   <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4">
-                      <p className="font-mono text-xs font-bold text-slate-900">{row.formulaCode}</p>
-                      <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
-                        <Calendar className="w-3 h-3" />
-                        <span>{row.createdDate}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <p className="font-semibold text-slate-900 text-xs">{row.productName}</p>
-                      <span className="text-[11px] text-slate-500">{row.categoryLabel}</span>
-                    </td>
-                    <td className="py-3 px-4 text-xs">
-                      <p className="font-semibold text-slate-800">{row.clientName}</p>
-                      <span className="font-mono text-[10px] text-indigo-600 font-bold">{row.brandName}</span>
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <span className="inline-block font-mono text-[11px] font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-slate-800">
-                        {row.revisionVersion}
+                    <td className="py-3 px-3 text-center text-slate-400 font-bold">{idx + 1}</td>
+                    <td className="py-3 px-3 font-mono font-bold text-blue-600">{row.formulaCode}</td>
+                    <td className="py-3 px-3 text-slate-600 font-mono">{row.tanggal}</td>
+                    <td className="py-3 px-3 font-semibold text-slate-900">{row.productName}</td>
+                    <td className="py-3 px-3 text-center font-mono font-bold text-indigo-600">{row.revisionVersion}</td>
+                    <td className="py-3 px-3 text-right font-mono font-bold text-slate-800">{row.netto}</td>
+                    <td className="py-3 px-3 text-slate-700">{row.customerName}</td>
+                    <td className="py-3 px-3 text-slate-600">{row.busdevPic}</td>
+                    <td className="py-3 px-3 font-medium text-slate-800">{row.formulatorPic}</td>
+                    <td className="py-3 px-3 text-center">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          row.status === "LOCKED_PRODUCTION"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : row.status === "STABILITY_TEST"
+                            ? "bg-purple-100 text-purple-800"
+                            : "bg-blue-100 text-blue-800"
+                        }`}
+                      >
+                        {row.statusLabel}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-slate-800">
-                      {row.nettoGram} g
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono text-slate-900 font-bold">
-                      Rp {row.hppPerKg.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono text-indigo-700 font-bold">
-                      Rp {row.hppPerPcs.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 text-xs">
-                      <p className="font-medium text-slate-800">{row.formulatorPic}</p>
-                      <p className="text-[10px] text-slate-400">{row.busdevPic}</p>
-                    </td>
-                    <td className="py-3 px-4">
-                      {getStatusBadge(row.status)}
-                    </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-3 px-3 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <DnaButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openFormulaDetail(row)}
-                          title="Lihat Komposisi Fase & HPP"
+                        <button
+                          onClick={() => setSelectedFormula(row)}
+                          className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                          title="Lihat Detail Formulasi"
                         >
-                          <Eye className="w-4 h-4 text-slate-600" />
-                        </DnaButton>
-                        <DnaButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toast.info("Duplikasi Formula", `Membuat revisi baru dari ${row.formulaCode}`)}
-                          title="Buat Revisi (Revise)"
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleAdjustFormula(row)}
+                          className="p-1 text-slate-400 hover:text-amber-600 transition-colors"
+                          title="Sesuaikan Formula (SCR-137)"
                         >
-                          <Copy className="w-4 h-4 text-indigo-600" />
-                        </DnaButton>
+                          <Edit2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -509,204 +328,146 @@ export default function FormulationManagePage() {
         </div>
       </DnaDataTableCard>
 
-      {/* 5. Modal Rincian Multi-Fase Formulasi */}
-      <DnaModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        title={selectedFormula ? `Komposisi Formulasi: ${selectedFormula.formulaCode}` : "Detail Formulasi"}
-        description="Rincian bahan baku per fase (Fase A s/d E), persentase dosis, dan kontribusi biaya HPP."
-        size="lg"
-        footer={
-          <div className="flex items-center justify-between w-full">
-            <div className="text-xs">
-              <span className="font-bold text-slate-700">Total Dosis: </span>
-              <span className="font-mono font-bold text-emerald-600">100.00%</span>
-              <span className="text-slate-400 ml-2">| HPP Bulk: </span>
-              <span className="font-mono font-bold text-indigo-700">Rp {selectedFormula?.hppPerKg.toLocaleString()}/Kg</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <DnaButton
-                variant="secondary"
-                onClick={() => toast.success("Cetak Formulasi", "Formulasi resmi siap dicetak untuk instruksi penimbangan.")}
-              >
-                <Printer className="w-4 h-4 mr-1" /> Cetak Lembar Formula
-              </DnaButton>
-              <DnaButton variant="primary" onClick={() => setIsDetailModalOpen(false)}>
-                Tutup
-              </DnaButton>
-            </div>
-          </div>
-        }
-      >
-        {selectedFormula && (
-          <div className="space-y-6">
-            {/* Header info */}
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-slate-500">Nama Produk</span>
-                  <p className="text-base font-bold text-slate-900">{selectedFormula.productName}</p>
-                </div>
-                <div>{getStatusBadge(selectedFormula.status)}</div>
+      {/* 4. Modal Detail Formulasi & Komposisi Fase */}
+      {selectedFormula && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-bold text-slate-800 text-base">{selectedFormula.productName}</h3>
+                <p className="text-xs font-mono text-blue-600">{selectedFormula.formulaCode} • {selectedFormula.revisionVersion}</p>
               </div>
+              <button onClick={() => setSelectedFormula(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t border-slate-200 text-xs">
-                <div>
-                  <span className="text-slate-500">Klien / Brand:</span>
-                  <p className="font-semibold text-slate-800">{selectedFormula.clientName} ({selectedFormula.brandName})</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">Netto per Unit:</span>
-                  <p className="font-mono font-bold text-slate-800">{selectedFormula.nettoGram} Gram / Pcs</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">Target pH:</span>
-                  <p className="font-mono font-bold text-slate-800">{selectedFormula.targetPh}</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">Target Viskositas:</span>
-                  <p className="font-mono font-bold text-slate-800">{selectedFormula.targetViscosity}</p>
-                </div>
+            <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div>
+                <span className="text-slate-400 font-bold block">Klien:</span>
+                <span className="font-semibold text-slate-900">{selectedFormula.customerName}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold block">Formulator:</span>
+                <span className="font-medium text-slate-800">{selectedFormula.formulatorPic}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold block">Target pH:</span>
+                <span className="font-mono font-bold text-indigo-700">{selectedFormula.targetPh}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold block">Target Viskositas:</span>
+                <span className="font-mono font-bold text-indigo-700">{selectedFormula.targetViscosity}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold block">Biaya HPP Bulk / Kg:</span>
+                <span className="font-mono font-bold text-emerald-600">Rp {selectedFormula.costPerKg.toLocaleString("id-ID")}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold block">Status Lisensi:</span>
+                <span className="font-bold text-slate-700">{selectedFormula.statusLabel}</span>
               </div>
             </div>
 
-            {/* Ingredients Table */}
+            {/* Fase Komposisi Bahan */}
             <div className="border border-slate-200 rounded-xl overflow-hidden">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+              <div className="bg-slate-50 px-3 py-2 border-b border-slate-200 font-bold text-xs text-slate-700">
+                Komposisi Fase Formulasi Lab (INCI Standard):
+              </div>
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50/50 border-b border-slate-200 text-slate-500 font-bold">
                   <tr>
-                    <th className="p-3">Fase</th>
-                    <th className="p-3">INCI Name & Trade Name</th>
-                    <th className="p-3">Fungsi Bahan</th>
-                    <th className="p-3 text-right">Dosis (%)</th>
-                    <th className="p-3 text-right">Harga / Kg</th>
-                    <th className="p-3 text-right">Kontribusi Biaya</th>
+                    <th className="p-2.5">Fase</th>
+                    <th className="p-2.5">Nama Bahan / INCI</th>
+                    <th className="p-2.5 text-center">Konsentrasi (%)</th>
+                    <th className="p-2.5">Fungsi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {selectedFormula.ingredients.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50">
-                      <td className="p-3 font-mono font-bold text-indigo-700">
-                        {item.phase}
-                      </td>
-                      <td className="p-3">
-                        <p className="font-semibold text-slate-900">{item.inciName}</p>
-                        <span className="font-mono text-[10px] text-slate-500">{item.tradeName} ({item.itemCode})</span>
-                      </td>
-                      <td className="p-3 text-slate-600">
-                        {item.functionCategory}
-                      </td>
-                      <td className="p-3 text-right font-mono font-bold text-slate-900">
-                        {item.percentage.toFixed(2)}%
-                      </td>
-                      <td className="p-3 text-right font-mono text-slate-600">
-                        Rp {item.unitCostPerKg.toLocaleString()}
-                      </td>
-                      <td className="p-3 text-right font-mono font-bold text-indigo-700">
-                        Rp {Math.round(item.costSubtotalPerKg).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
+                <tbody className="divide-y divide-slate-100">
+                  <tr>
+                    <td className="p-2.5 font-mono font-bold text-blue-600">Fase A</td>
+                    <td className="p-2.5 font-semibold text-slate-800">Aqua Demineralisata</td>
+                    <td className="p-2.5 text-center font-mono font-bold text-slate-700">75.50 %</td>
+                    <td className="p-2.5 text-slate-500">Solvent / Carrier</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 font-mono font-bold text-amber-600">Fase B</td>
+                    <td className="p-2.5 font-semibold text-slate-800">Glycerin & Butylene Glycol</td>
+                    <td className="p-2.5 text-center font-mono font-bold text-slate-700">14.50 %</td>
+                    <td className="p-2.5 text-slate-500">Humectant / Moisture</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 font-mono font-bold text-purple-600">Fase C</td>
+                    <td className="p-2.5 font-semibold text-slate-800">Niacinamide PC Grade 99%</td>
+                    <td className="p-2.5 text-center font-mono font-bold text-slate-700">10.00 %</td>
+                    <td className="p-2.5 text-slate-500">Active Brightening</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
 
-            {/* Cost Roll-Up Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100 space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">HPP Bulk per Kilogram</span>
-                <p className="font-mono text-lg font-bold text-blue-900">
-                  Rp {selectedFormula.hppPerKg.toLocaleString()} / Kg
-                </p>
-                <p className="text-[11px] text-blue-800">Biaya murni bahan baku formulasi skala lab</p>
-              </div>
-
-              <div className="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700">HPP Isi per Kemasan ({selectedFormula.nettoGram}g)</span>
-                <p className="font-mono text-lg font-bold text-indigo-900">
-                  Rp {selectedFormula.hppPerPcs.toLocaleString()} / Pcs
-                </p>
-                <p className="text-[11px] text-indigo-800">HPP bulk per kemasan (belum termasuk kemasan & overhead)</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </DnaModal>
-
-      {/* 6. Modal Buat Formulasi Baru */}
-      <DnaModal
-        isOpen={isBuilderModalOpen}
-        onClose={() => setIsBuilderModalOpen(false)}
-        title="Buat Formulasi Baru (SCR-137)"
-        description="Inisialisasi lembar formulasi produk baru dan penentuan target spesifikasi lab."
-        size="md"
-        footer={
-          <div className="flex items-center justify-end gap-2 w-full">
-            <DnaButton variant="secondary" onClick={() => setIsBuilderModalOpen(false)}>
-              Batal
-            </DnaButton>
-            <DnaButton
-              variant="primary"
-              onClick={() => {
-                toast.success("Draft Formulasi Dibuat", "Lembar formulasi baru berhasil disimpan. Silakan masukkan komposisi bahan per fase.");
-                setIsBuilderModalOpen(false);
-              }}
-            >
-              Simpan & Buka Builder
-            </DnaButton>
-          </div>
-        }
-      >
-        <div className="space-y-4 text-xs">
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700 uppercase">Nama Produk Formulasi *</label>
-            <input
-              type="text"
-              placeholder="Contoh: Hydrating Essence Toner Centella 150ml"
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Kategori Produk *</label>
-              <select className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800">
-                <option value="SKINCARE">Skincare (Face)</option>
-                <option value="BODYCARE">Bodycare & Body Wash</option>
-                <option value="HAIRCARE">Haircare & Shampoo</option>
-                <option value="DECORATIVE">Decorative & Lip Cream</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Netto per Unit (Gram/ml) *</label>
-              <input
-                type="number"
-                defaultValue={30}
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Nama Klien / Perusahaan</label>
-              <input
-                type="text"
-                placeholder="PT Cantika Nusantara"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Nama Brand / Merk</label>
-              <input
-                type="text"
-                placeholder="GlowAura"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-              />
+            <div className="flex justify-end pt-2">
+              <DnaButton variant="outline" onClick={() => setSelectedFormula(null)}>
+                Tutup
+              </DnaButton>
             </div>
           </div>
         </div>
-      </DnaModal>
+      )}
+
+      {/* 5. Modal Penyesuaian Formulasi (SCR-137) */}
+      {isAdjustModalOpen && selectedFormula && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-bold text-slate-800 text-base">Sesuaikan Formulasi (SCR-137)</h3>
+                <p className="text-xs text-slate-500">{selectedFormula.formulaCode} • {selectedFormula.productName}</p>
+              </div>
+              <button onClick={() => setIsAdjustModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAdjustment} className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold text-slate-600 block mb-1">Versi Revisi Baru</label>
+                <Input defaultValue={`Rev ${parseFloat(selectedFormula.revisionVersion.replace('Rev ', '')) + 0.1}`} className="h-8 text-xs font-mono font-bold" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">Target pH</label>
+                  <Input defaultValue={selectedFormula.targetPh} className="h-8 text-xs font-mono" />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">Target Viskositas</label>
+                  <Input defaultValue={selectedFormula.targetViscosity} className="h-8 text-xs font-mono" />
+                </div>
+              </div>
+              <div>
+                <label className="font-bold text-slate-600 block mb-1">Catatan Penyesuaian Formulator</label>
+                <Input placeholder="Alasan penyesuaian (misal peningkatan stabilitas viskositas)..." className="h-8 text-xs" />
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <DnaButton type="button" variant="outline" onClick={() => setIsAdjustModalOpen(false)}>
+                  Batal
+                </DnaButton>
+                <DnaButton type="submit" variant="primary">
+                  Simpan Revisi Formula
+                </DnaButton>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </DnaPageContainer>
+  );
+}
+
+export default function FormulaPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-slate-400">Memuat Formulasi...</div>}>
+      <FormulaContent />
+    </Suspense>
   );
 }

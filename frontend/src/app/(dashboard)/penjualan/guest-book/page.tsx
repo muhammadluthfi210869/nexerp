@@ -1,25 +1,20 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { unwrapResponse } from "@/lib/unwrap-response";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Users,
   Building2,
   Calendar,
-  FileSpreadsheet,
-  Printer,
-  Search,
-  Filter,
   Clock,
+  Printer,
   Plus,
-  Phone,
-  Mail,
+  Search,
   Sparkles,
   Eye,
-  CheckCircle2,
-  MapPin
+  EyeOff,
+  Phone,
+  Tag,
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -30,81 +25,177 @@ import {
   DnaButton,
   DnaBadge,
   DnaModal,
-  formatRupiah,
-  useDnaToast
+  DnaInput,
+  useDnaToast,
 } from "@/components/dna";
+import { DnaTable } from "@/components/dna";
 
 interface GuestBookEntry {
   id: string;
   no: number;
-  date: string;
-  time: string;
-  name: string;
-  phone: string;
-  email: string;
-  address: string;
-  company: string;
-  purpose: string;
-  meetingWith: string;
-  busDev: string;
+  dateTime: string;
+  clientName: string;
+  meetingPic: string;
+  contact: string;
+  city: string;
+  productInterest: string;
+  moq: number;
+  targetMarket: string;
+  category: "BRANDED" | "PEMULA" | "KLINIK" | "DISTRIBUTOR";
 }
 
-const FALLBACK_GUESTS: GuestBookEntry[] = [
-  { id: "1", no: 1, date: "2026-09-09", time: "10:00", name: "Ibu Amanda Putri", phone: "0812-9988-7711", email: "amanda@glowshine.co.id", address: "Jakarta Selatan", company: "Glow & Shine Co", purpose: "Konsultasi Maklon Serum Retinol", meetingWith: "Rina BusDev", busDev: "Rina BusDev" },
-  { id: "2", no: 2, date: "2026-09-08", time: "13:30", name: "dr. Hendra Pratama", phone: "0811-2233-4455", email: "dr.hendra@dermalife.com", address: "Surabaya", company: "Dermalife Aesthetic Clinic", purpose: "Review Sample Batch 2 Sunscreen", meetingWith: "Doni Senior BusDev", busDev: "Doni Senior BusDev" },
-  { id: "3", no: 3, date: "2026-09-07", time: "15:00", name: "Bapak Surya Wijaya", phone: "0813-5566-7788", email: "surya@kharismaherbal.co.id", address: "Bandung", company: "Kharisma Herbal Nusantara", purpose: "Audit Fasilitas Pabrik CPKB", meetingWith: "Rina BusDev", busDev: "Rina BusDev" },
+const SAMPLE_GUESTS: GuestBookEntry[] = [
+  {
+    id: "gb-1",
+    no: 1,
+    dateTime: "2026-09-02 10:15",
+    clientName: "Ibu Amanda Putri (Glow & Shine)",
+    meetingPic: "Apt. Rina Lestari / Irma Safarina",
+    contact: "0812-9988-7711",
+    city: "Jakarta Selatan",
+    productInterest: "Serum Retinol 30ml Encapsulated",
+    moq: 1000,
+    targetMarket: "Wanita 25-45 Karir",
+    category: "BRANDED",
+  },
+  {
+    id: "gb-2",
+    no: 2,
+    dateTime: "2026-09-03 13:30",
+    clientName: "dr. Hendra Pratama (Dermalife)",
+    meetingPic: "dr. Siska Amelia / Fadilah Syahab",
+    contact: "0811-2233-4455",
+    city: "Surabaya",
+    productInterest: "Hybrid Sunscreen SPF 50 Gel 50ml",
+    moq: 2500,
+    targetMarket: "Pasien Klinik Kecantikan",
+    category: "KLINIK",
+  },
+  {
+    id: "gb-3",
+    no: 3,
+    dateTime: "2026-09-04 11:00",
+    clientName: "Bapak Surya Wijaya (Kharisma Herbal)",
+    meetingPic: "Budi Santoso / Keviana",
+    contact: "0813-5566-7788",
+    city: "Bandung",
+    productInterest: "Hair Growth Oil Kemiri 100ml",
+    moq: 5000,
+    targetMarket: "Mass Market E-Commerce",
+    category: "BRANDED",
+  },
+  {
+    id: "gb-4",
+    no: 4,
+    dateTime: "2026-09-05 14:45",
+    clientName: "Ibu Cindy Claudia (Beauty Glow ID)",
+    meetingPic: "Apt. Rina Lestari / Vira",
+    contact: "0817-8899-0011",
+    city: "Semarang",
+    productInterest: "Moisturizer Gel Ceramide 30g",
+    moq: 1000,
+    targetMarket: "Remaja & Dewasa Muda",
+    category: "PEMULA",
+  },
+  {
+    id: "gb-5",
+    no: 5,
+    dateTime: "2026-09-06 09:30",
+    clientName: "dr. Melissa Anggraini (Aura Derma)",
+    meetingPic: "Fadilah Syahab / Desy",
+    contact: "0812-3344-5566",
+    city: "Malang",
+    productInterest: "Facial Wash Tea Tree Acne 100ml",
+    moq: 3000,
+    targetMarket: "Kulit Berjerawat",
+    category: "KLINIK",
+  },
 ];
 
-export default function BussDevGuestBookReportPage() {
+function GuestBookContent() {
   const toast = useDnaToast();
-  const [busDevFilter, setBusDevFilter] = useState("ALL");
+  const searchParams = useSearchParams();
+
+  const [guests, setGuests] = useState<GuestBookEntry[]>(SAMPLE_GUESTS);
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedGuest, setSelectedGuest] = useState<GuestBookEntry | null>(null);
 
   // Form input
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
-    email: "",
-    address: "",
+    city: "Jakarta Selatan",
     company: "",
-    purpose: "Konsultasi Maklon OEM/ODM Kosmetik",
-    meetingWith: "Rina BusDev",
-    busDev: "Rina BusDev"
+    productInterest: "Serum Retinol 30ml",
+    moq: "1000",
+    targetMarket: "Wanita Dewasa",
+    category: "BRANDED" as GuestBookEntry["category"],
+    meetingWith: "Apt. Rina Lestari",
+    busDev: "Irma Safarina",
   });
 
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsModalOpen(true);
+    }
+  }, [searchParams]);
+
   const filteredGuests = useMemo(() => {
-    return FALLBACK_GUESTS.filter((g) => {
+    return guests.filter((g) => {
       const matchSearch =
-        g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        g.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        g.phone.includes(searchQuery);
-      const matchBusDev = busDevFilter === "ALL" || g.busDev === busDevFilter;
-      return matchSearch && matchBusDev;
+        g.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        g.productInterest.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        g.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        g.contact.includes(searchQuery);
+      const matchCategory = categoryFilter === "ALL" || g.category === categoryFilter;
+      return matchSearch && matchCategory;
     });
-  }, [searchQuery, busDevFilter]);
+  }, [guests, searchQuery, categoryFilter]);
 
   const handleSave = () => {
     if (!formData.name || !formData.phone || !formData.company) {
-      toast.error("Mohon lengkapi nama tamu, nomor telepon, dan nama perusahaan/brand!");
+      toast.error("Mohon lengkapi nama klien, kontak WhatsApp, dan nama perusahaan/brand!");
       return;
     }
-    toast.success("Catatan kunjungan tamu baru berhasil disimpan ke Buku Tamu!");
+    const newEntry: GuestBookEntry = {
+      id: `gb-${Date.now()}`,
+      no: guests.length + 1,
+      dateTime: new Date().toISOString().slice(0, 16).replace("T", " "),
+      clientName: `${formData.name} (${formData.company})`,
+      meetingPic: `${formData.meetingWith} / ${formData.busDev}`,
+      contact: formData.phone,
+      city: formData.city,
+      productInterest: formData.productInterest,
+      moq: parseInt(formData.moq) || 1000,
+      targetMarket: formData.targetMarket,
+      category: formData.category,
+    };
+    setGuests([newEntry, ...guests]);
+    toast.success("Catatan kunjungan tamu berhasil disimpan!");
     setIsModalOpen(false);
+    setFormData({
+      name: "",
+      phone: "",
+      city: "Jakarta",
+      company: "",
+      productInterest: "",
+      moq: "1000",
+      targetMarket: "",
+      category: "BRANDED",
+      meetingWith: "Apt. Rina Lestari",
+      busDev: "Irma Safarina",
+    });
   };
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
-        title="Laporan Buku Tamu & BusDev (Guest Book Report)"
-        description="Rekapitulasi kunjungan calon klien maklon, konsultasi formulasi R&D kosmetik, kontak PIC, dan BusDev penanggung jawab."
-        badge={
-          <div className="flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200 font-semibold">
-            <Users className="w-3.5 h-3.5" />
-            <span>Spesifikasi SCR-001 & SCR-175: Guest Interaction Log</span>
-          </div>
-        }
+        title="Buku Tamu Kunjungan Klien (Guest Book)"
+        subtitle="Pencatatan dan monitoring kehadiran calon klien maklon, PIC pendamping, estimasi MOQ, dan kategori prospek"
+        breadcrumbs={[{ label: "Operasional", href: "/sales" }, { label: "Buku Tamu" }]}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
@@ -113,61 +204,60 @@ export default function BussDevGuestBookReportPage() {
             </DnaButton>
             <DnaButton variant="primary" size="md" onClick={() => setIsModalOpen(true)}>
               <Plus className="w-4 h-4 mr-1.5" />
-              + Catat Tamu Baru
+              + Buat Buku Tamu
             </DnaButton>
           </div>
         }
       />
 
-      {/* 4 KPI CARDS PERSIS SCR-175 */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
           label="Total Tamu Terdaftar"
-          value="18 Tamu"
+          value={`${guests.length} Tamu`}
           icon={<Users className="w-5 h-5 text-blue-600" />}
           delta={{ value: "+28% vs bln lalu", isPositive: true }}
-          subtext="Prospect Klien Baru Periode Ini"
+          subtext="Prospect Klien Periode Ini"
           variant="info"
         />
         <DnaStatCard
-          label="Rata-rata / Hari"
-          value="3.4 Tamu / Hari"
-          icon={<Clock className="w-5 h-5 text-purple-600" />}
-          subtext="Aktivitas Konsultasi Maklon Harian"
+          label="Klien Brand Established"
+          value={`${guests.filter((g) => g.category === "BRANDED").length} Klien`}
+          icon={<Building2 className="w-5 h-5 text-purple-600" />}
+          subtext="Segmen Brand Berkembang"
           variant="purple"
         />
         <DnaStatCard
-          label="Perusahaan / Brand Unik"
-          value="14 Perusahaan"
-          icon={<Building2 className="w-5 h-5 text-emerald-600" />}
-          delta={{ value: "Brand Kosmetik Aktif", isPositive: true }}
-          subtext="Diversifikasi Portofolio Klien"
+          label="Klinik Kecantikan"
+          value={`${guests.filter((g) => g.category === "KLINIK").length} Klinik`}
+          icon={<Sparkles className="w-5 h-5 text-emerald-600" />}
+          delta={{ value: "Dokter & Aesthetic Clinic", isPositive: true }}
           variant="success"
         />
         <DnaStatCard
-          label="BusDev Teraktif"
-          value="Rina BusDev"
-          icon={<Sparkles className="w-5 h-5 text-amber-600" />}
-          delta={{ value: "11 Pertemuan", isPositive: true }}
-          subtext="Tamu Terbanyak Ditangani"
+          label="Klien Pemula (Start-up)"
+          value={`${guests.filter((g) => g.category === "PEMULA").length} Mitra`}
+          icon={<Clock className="w-5 h-5 text-amber-600" />}
+          delta={{ value: "Edukasi Formula & MOQ", isPositive: true }}
           variant="warning"
         />
       </DnaKpiGrid>
 
-      {/* TABLE LIST FORMAT PERSIS SCR-175 (No, Tanggal, Waktu, Nama, Telepon, Email, Alamat, Perusahaan, Tujuan, Bertemu, BusDev) */}
       <DnaDataTableCard
-        title="Daftar Buku Tamu Kunjungan Klien (SCR-175)"
-        badge={<DnaBadge variant="default">{filteredGuests.length} Tamu</DnaBadge>}
-        customToolbar={
-          <div className="flex flex-wrap items-center gap-2.5">
+        title="Daftar Buku Tamu Kunjungan Klien"
+        count={filteredGuests.length}
+        totalItems={guests.length}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
             <select
-              value={busDevFilter}
-              onChange={(e) => setBusDevFilter(e.target.value)}
-              className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-medium"
             >
-              <option value="ALL">BusDev: Semua BusDev</option>
-              <option value="Rina BusDev">Rina BusDev</option>
-              <option value="Doni Senior BusDev">Doni Senior BusDev</option>
+              <option value="ALL">Semua Kategori</option>
+              <option value="BRANDED">BRANDED</option>
+              <option value="KLINIK">KLINIK</option>
+              <option value="PEMULA">PEMULA</option>
+              <option value="DISTRIBUTOR">DISTRIBUTOR</option>
             </select>
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
               <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
@@ -189,54 +279,143 @@ export default function BussDevGuestBookReportPage() {
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Cari nama / perusahaan / kontak..."
+                placeholder="Cari nama, kontak, kota..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-52 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
           </div>
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">No</th>
-                <th className="px-3.5 py-3">Tanggal</th>
-                <th className="px-3.5 py-3">Waktu</th>
-                <th className="px-3.5 py-3">Nama Tamu</th>
-                <th className="px-3.5 py-3">Telepon</th>
-                <th className="px-3.5 py-3">Email</th>
-                <th className="px-3.5 py-3">Alamat / Kota</th>
-                <th className="px-3.5 py-3">Perusahaan / Brand</th>
-                <th className="px-3.5 py-3">Tujuan Kunjungan</th>
-                <th className="px-3.5 py-3">Bertemu</th>
-                <th className="px-3.5 py-3">BusDev</th>
+          <DnaTable className="w-full text-left text-[12px]">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
+              <tr>
+                <th className="px-3 py-3 w-10 text-center">#</th>
+                <th className="px-3 py-3">Tanggal & Waktu</th>
+                <th className="px-3 py-3">Nama Klien</th>
+                <th className="px-3 py-3">Meeting & PIC</th>
+                <th className="px-3 py-3">Kontak</th>
+                <th className="px-3 py-3">Kota</th>
+                <th className="px-3 py-3">Produk Diminati</th>
+                <th className="px-3 py-3 text-right">MOQ</th>
+                <th className="px-3 py-3">Target Market</th>
+                <th className="px-3 py-3 text-center">Kategori</th>
+                <th className="px-3 py-3 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredGuests.map((g) => (
-                <tr key={g.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 text-slate-400 font-mono">{g.no}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{g.date}</td>
-                  <td className="px-3.5 py-2.5 font-mono text-slate-600">{g.time}</td>
-                  <td className="px-3.5 py-2.5 font-bold text-slate-900">{g.name}</td>
-                  <td className="px-3.5 py-2.5 font-mono text-slate-600 text-[11px]">{g.phone}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 text-[11px]">{g.email}</td>
-                  <td className="px-3.5 py-2.5 text-slate-700">{g.address}</td>
-                  <td className="px-3.5 py-2.5 font-semibold text-purple-700">{g.company}</td>
-                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">{g.purpose}</td>
-                  <td className="px-3.5 py-2.5 text-slate-700">{g.meetingWith}</td>
-                  <td className="px-3.5 py-2.5 font-semibold text-slate-900">{g.busDev}</td>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {filteredGuests.map((g, idx) => (
+                <tr key={g.id} className="hover:bg-slate-50/60 transition-colors">
+                  <td className="px-3 py-3 text-center text-slate-400 font-mono text-xs">{idx + 1}</td>
+                  <td className="px-3 py-3 text-slate-600 whitespace-nowrap text-xs">{g.dateTime}</td>
+                  <td className="px-3 py-3 font-semibold text-slate-900 whitespace-nowrap text-xs">{g.clientName}</td>
+                  <td className="px-3 py-3 text-slate-700 whitespace-nowrap text-xs">{g.meetingPic}</td>
+                  <td className="px-3 py-3 font-mono text-slate-600 whitespace-nowrap text-xs">{g.contact}</td>
+                  <td className="px-3 py-3 text-slate-700 whitespace-nowrap text-xs">{g.city}</td>
+                  <td className="px-3 py-3 text-slate-800 max-w-xs truncate text-xs font-medium">{g.productInterest}</td>
+                  <td className="px-3 py-3 text-right font-mono font-bold text-blue-600 whitespace-nowrap text-xs">
+                    {g.moq.toLocaleString("id-ID")} pcs
+                  </td>
+                  <td className="px-3 py-3 text-slate-600 whitespace-nowrap text-xs">{g.targetMarket}</td>
+                  <td className="px-3 py-3 text-center whitespace-nowrap text-xs">
+                    <DnaBadge
+                      variant={
+                        g.category === "BRANDED"
+                          ? "purple"
+                          : g.category === "KLINIK"
+                          ? "emerald"
+                          : g.category === "PEMULA"
+                          ? "amber"
+                          : "blue"
+                      }
+                    >
+                      {g.category}
+                    </DnaBadge>
+                  </td>
+                  <td className="px-3 py-3 text-right whitespace-nowrap">
+                    <DnaButton
+                      variant="ghost"
+                      size="sm"
+                      icon={<Eye className="w-3.5 h-3.5" />}
+                      onClick={() => setSelectedGuest(g)}
+                    >
+                      Detail
+                    </DnaButton>
+                  </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
-      {/* MODAL CATAT TAMU BARU */}
+      {/* Modal Detail Kunjungan */}
+      <DnaModal
+        isOpen={!!selectedGuest}
+        onClose={() => setSelectedGuest(null)}
+        title={`Detail Tamu: ${selectedGuest?.clientName || ""}`}
+        size="md"
+      >
+        {selectedGuest && (
+          <div className="space-y-4 text-sm">
+            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <div>
+                <span className="text-xs text-slate-400 block font-medium">Tanggal & Waktu</span>
+                <span className="font-semibold text-slate-800">{selectedGuest.dateTime}</span>
+              </div>
+              <div>
+                <span className="text-xs text-slate-400 block font-medium">Asal Kota</span>
+                <span className="font-semibold text-slate-800">{selectedGuest.city}</span>
+              </div>
+              <div>
+                <span className="text-xs text-slate-400 block font-medium">Meeting Bersama PIC</span>
+                <span className="font-medium text-slate-800">{selectedGuest.meetingPic}</span>
+              </div>
+              <div>
+                <span className="text-xs text-slate-400 block font-medium">Nomor WhatsApp</span>
+                <span className="font-mono font-bold text-blue-600">{selectedGuest.contact}</span>
+              </div>
+              <div>
+                <span className="text-xs text-slate-400 block font-medium">Estimasi Rencana MOQ</span>
+                <span className="font-mono font-bold text-slate-900">{selectedGuest.moq.toLocaleString("id-ID")} pcs</span>
+              </div>
+              <div>
+                <span className="text-xs text-slate-400 block font-medium">Kategori Klien</span>
+                <DnaBadge
+                  variant={
+                    selectedGuest.category === "BRANDED"
+                      ? "purple"
+                      : selectedGuest.category === "KLINIK"
+                      ? "emerald"
+                      : selectedGuest.category === "PEMULA"
+                      ? "amber"
+                      : "blue"
+                  }
+                >
+                  {selectedGuest.category}
+                </DnaBadge>
+              </div>
+            </div>
+            <div>
+              <span className="text-xs text-slate-400 block font-medium">Produk Diminati</span>
+              <p className="text-slate-800 font-medium mt-1">{selectedGuest.productInterest}</p>
+            </div>
+            <div>
+              <span className="text-xs text-slate-400 block font-medium">Target Pasar Konsumen</span>
+              <p className="text-slate-700 mt-1">{selectedGuest.targetMarket}</p>
+            </div>
+            <div className="flex justify-end pt-3 border-t border-slate-100">
+              <DnaButton variant="secondary" onClick={() => setSelectedGuest(null)}>
+                Tutup
+              </DnaButton>
+            </div>
+          </div>
+        )}
+      </DnaModal>
+
+      {/* Modal Buat Tamu Baru */}
       <DnaModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -267,12 +446,12 @@ export default function BussDevGuestBookReportPage() {
               />
             </div>
             <div>
-              <label className="block text-slate-700 font-semibold mb-1">Email Klien</label>
+              <label className="block text-slate-700 font-semibold mb-1">Asal Kota *</label>
               <input
-                type="email"
-                placeholder="amanda@brand.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                type="text"
+                placeholder="Jakarta Selatan"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
               />
             </div>
@@ -283,19 +462,44 @@ export default function BussDevGuestBookReportPage() {
               <label className="block text-slate-700 font-semibold mb-1">Nama Perusahaan / Brand *</label>
               <input
                 type="text"
-                placeholder="e.g. Glow & Shine Skincare"
+                placeholder="Glow & Shine Skincare"
                 value={formData.company}
                 onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
               />
             </div>
             <div>
-              <label className="block text-slate-700 font-semibold mb-1">Alamat / Asal Kota</label>
+              <label className="block text-slate-700 font-semibold mb-1">Kategori Klien</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-medium"
+              >
+                <option value="BRANDED">BRANDED</option>
+                <option value="KLINIK">KLINIK</option>
+                <option value="PEMULA">PEMULA</option>
+                <option value="DISTRIBUTOR">DISTRIBUTOR</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-700 font-semibold mb-1">Produk Diminati</label>
               <input
                 type="text"
-                placeholder="e.g. Jakarta Selatan"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder="Serum Retinol 30ml"
+                value={formData.productInterest}
+                onChange={(e) => setFormData({ ...formData, productInterest: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
+              />
+            </div>
+            <div>
+              <label className="block text-slate-700 font-semibold mb-1">Target MOQ (Pcs)</label>
+              <input
+                type="number"
+                value={formData.moq}
+                onChange={(e) => setFormData({ ...formData, moq: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
               />
             </div>
@@ -303,11 +507,12 @@ export default function BussDevGuestBookReportPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-700 font-semibold mb-1">Tujuan Kunjungan</label>
+              <label className="block text-slate-700 font-semibold mb-1">Target Market</label>
               <input
                 type="text"
-                value={formData.purpose}
-                onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
+                placeholder="Wanita Dewasa Karir"
+                value={formData.targetMarket}
+                onChange={(e) => setFormData({ ...formData, targetMarket: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
               />
             </div>
@@ -315,11 +520,14 @@ export default function BussDevGuestBookReportPage() {
               <label className="block text-slate-700 font-semibold mb-1">BusDev Pendamping</label>
               <select
                 value={formData.busDev}
-                onChange={(e) => setFormData({ ...formData, busDev: e.target.value, meetingWith: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, busDev: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-medium"
               >
-                <option value="Rina BusDev">Rina BusDev</option>
-                <option value="Doni Senior BusDev">Doni Senior BusDev</option>
+                <option value="Irma Safarina">Irma Safarina</option>
+                <option value="Fadilah Syahab">Fadilah Syahab</option>
+                <option value="Keviana">Keviana</option>
+                <option value="Vira">Vira</option>
+                <option value="Desy">Desy</option>
               </select>
             </div>
           </div>
@@ -335,5 +543,13 @@ export default function BussDevGuestBookReportPage() {
         </div>
       </DnaModal>
     </DnaPageContainer>
+  );
+}
+
+export default function BussDevGuestBookReportPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Memuat Buku Tamu...</div>}>
+      <GuestBookContent />
+    </Suspense>
   );
 }

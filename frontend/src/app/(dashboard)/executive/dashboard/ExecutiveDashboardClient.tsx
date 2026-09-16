@@ -14,6 +14,8 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Card, StatCard, TableWrapper, DnaBadge } from "@/components/dna";
 
+import { useAuth } from "@/hooks/useAuth";
+
 function formatRupiah(value: number): string {
   if (!value) return "—";
   if (value >= 1_000_000_000) return `Rp ${(value / 1_000_000_000).toFixed(2)} M`;
@@ -23,19 +25,51 @@ function formatRupiah(value: number): string {
 }
 
 export default function ExecutiveDashboardClient() {
+  const { user, hasRole, loading: authLoading } = useAuth();
+  const isExecutive = hasRole("SUPER_ADMIN", "HEAD_OPS", "FINANCE", "DIRECTOR");
+
   const { data: metrics } = useQuery({
     queryKey: ["executive-metrics"],
     queryFn: async () => (await api.get("/executive/metrics")).data,
-    refetchInterval: 30000,
+    enabled: isExecutive,
+    retry: false,
+    refetchInterval: isExecutive ? 30000 : false,
   });
 
   const { data: alerts } = useQuery({
     queryKey: ["executive-alerts"],
     queryFn: async () => (await api.get("/executive/alerts")).data,
-    refetchInterval: 30000,
+    enabled: isExecutive,
+    retry: false,
+    refetchInterval: isExecutive ? 30000 : false,
   });
 
-  const isLoading = !metrics || !alerts;
+  if (!authLoading && !isExecutive) {
+    return (
+      <div className="p-8 max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300">
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-amber-900 space-y-3 shadow-xs">
+          <div className="flex items-center gap-2 font-bold text-lg">
+            <AlertTriangle className="w-5 h-5 text-amber-600" />
+            <span>Akses Terbatas: Dashboard Executive</span>
+          </div>
+          <p className="text-sm text-amber-800">
+            Halaman ini khusus untuk jajaran eksekutif (Super Admin, Head of Ops, Finance, Director).
+            Peran aktif Anda saat ini adalah: <strong>{user?.roles?.join(", ") || "Staff"}</strong>.
+          </p>
+          <div className="pt-2">
+            <a
+              href="/marketing/management-task/overview"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-xs transition"
+            >
+              Buka Digital Marketing Workspace
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isLoading = authLoading || !metrics || !alerts;
 
   const mtd = metrics?.revenue?.mtd ?? 0;
   const target = metrics?.revenue?.target ?? 0;

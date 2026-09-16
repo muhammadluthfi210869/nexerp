@@ -304,23 +304,24 @@ export default function BayarPenjualanPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-4">INVOICE & TGL BAYAR</th>
-                <th className="py-3 px-4">KLIEN & BRAND</th>
-                <th className="py-3 px-4">REKENING BANK</th>
-                <th className="py-3 px-4 text-right">TOTAL TAGIHAN</th>
-                <th className="py-3 px-4 text-right">POTONGAN PPH (21/23)</th>
-                <th className="py-3 px-4 text-right">KAS NETT MASUK</th>
-                <th className="py-3 px-4 text-center">STATUS</th>
-                <th className="py-3 px-4 text-right">AKSI</th>
+                <th className="py-3 px-3">Receipt No</th>
+                <th className="py-3 px-3">Customer</th>
+                <th className="py-3 px-3">Date</th>
+                <th className="py-3 px-3 text-right">Total Amount</th>
+                <th className="py-3 px-3">Allocated Invoices</th>
+                <th className="py-3 px-3 text-right">PPh 21 & 23 Terhitung</th>
+                <th className="py-3 px-3 text-right">Unallocated Balance</th>
+                <th className="py-3 px-3 text-center">Status</th>
+                <th className="py-3 px-3 text-right">#</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
+            <tbody className="divide-y divide-slate-100">
               {filteredPayments.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-slate-400">
+                  <td colSpan={9} className="text-center py-12 text-slate-400">
                     <Receipt className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
                     <p className="font-semibold text-slate-600">Tidak ada data pembayaran</p>
                     <p className="text-xs text-slate-400">Coba sesuaikan kata kunci pencarian atau filter status.</p>
@@ -329,52 +330,35 @@ export default function BayarPenjualanPage() {
               ) : (
                 filteredPayments.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-4">
-                      <DnaCell.Text primary={p.invoiceNumber} secondary={`Tgl: ${p.paymentDate}`} />
+                    <td className="py-3 px-3 font-mono font-semibold text-blue-600 whitespace-nowrap">
+                      {`REC-${p.invoiceNumber.replace("INV-", "")}`}
                     </td>
-                    <td className="py-3.5 px-4">
-                      <DnaCell.Avatar name={p.customerName} subtext={p.brandName || "Maklon"} />
+                    <td className="py-3 px-3 font-semibold text-slate-900 whitespace-nowrap">
+                      {p.customerName}
                     </td>
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-700">
-                        <Landmark className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{p.bankAccount}</span>
-                      </div>
+                    <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
+                      {p.paymentDate}
                     </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <p className="font-bold text-slate-900">
-                        Rp {p.totalAmount.toLocaleString("id-ID")}
-                      </p>
-                      {p.remainingAmount > 0 && (
-                        <p className="text-[11px] text-rose-600 font-semibold">
-                          Sisa: Rp {p.remainingAmount.toLocaleString("id-ID")}
-                        </p>
-                      )}
+                    <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                      Rp {p.totalAmount.toLocaleString("id-ID")}
                     </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <p className="text-xs font-semibold text-purple-700">
-                        PPh 23: Rp {p.pph23Deduction.toLocaleString("id-ID")}
-                      </p>
-                      {p.pph21Deduction > 0 && (
-                        <p className="text-[10px] text-slate-500">
-                          PPh 21: Rp {p.pph21Deduction.toLocaleString("id-ID")}
-                        </p>
-                      )}
+                    <td className="py-3 px-3 font-mono text-xs text-slate-700 whitespace-nowrap">
+                      {p.invoiceNumber}
                     </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <p className="font-bold text-emerald-600">
-                        Rp {p.netCashReceived.toLocaleString("id-ID")}
-                      </p>
-                      <p className="text-[10px] text-slate-400">Terpotong Pajak</p>
+                    <td className="py-3 px-3 text-right font-mono text-purple-700 whitespace-nowrap">
+                      Rp {(p.pph23Deduction + p.pph21Deduction).toLocaleString("id-ID")}
                     </td>
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3 px-3 text-right font-mono font-bold text-rose-600 whitespace-nowrap">
+                      Rp {p.remainingAmount.toLocaleString("id-ID")}
+                    </td>
+                    <td className="py-3 px-3 text-center whitespace-nowrap">
                       <DnaCell.Badge
                         status={statusBadgeConfig[p.status]?.status || "default"}
                         label={statusBadgeConfig[p.status]?.label || p.status}
                       />
                     </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex justify-end gap-1.5">
+                    <td className="py-3 px-3 text-right whitespace-nowrap">
+                      <div className="flex justify-end gap-1">
                         {p.remainingAmount > 0 ? (
                           <DnaButton
                             variant="primary"
@@ -382,7 +366,7 @@ export default function BayarPenjualanPage() {
                             icon={<CircleDollarSign className="w-3.5 h-3.5" />}
                             onClick={() => openPaymentDialog(p)}
                           >
-                            Terima Bayar
+                            Bayar
                           </DnaButton>
                         ) : (
                           <DnaButton
@@ -393,7 +377,7 @@ export default function BayarPenjualanPage() {
                               toast.info("Bukti Pembayaran", `Faktur ${p.invoiceNumber} telah lunas.`);
                             }}
                           >
-                            Lunas
+                            Bukti
                           </DnaButton>
                         )}
                       </div>

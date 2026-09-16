@@ -98,6 +98,7 @@ interface BrandReportingViewProps {
   onOpenDailyStoryModal?: (brandName: string, monthYear: string, story?: DailyStoryRecap | null) => void;
   onUpdatePostMedia?: (postId: string, imageUrl: string) => void;
   onSaveReportMetrics?: (updatedReport: BrandReport) => void;
+  onUpdateWeeklyReports?: (updatedWeeklyList: WeeklyReportData[]) => void;
   onNavigateToPlanner?: (targetChannel?: string) => void;
 }
 
@@ -116,6 +117,7 @@ export const BrandReportingView: React.FC<BrandReportingViewProps> = ({
   onOpenDailyStoryModal,
   onUpdatePostMedia,
   onSaveReportMetrics,
+  onUpdateWeeklyReports,
   onNavigateToPlanner
 }) => {
   const [internalPeriod, setInternalPeriod] = useState('September 2026');
@@ -218,7 +220,11 @@ export const BrandReportingView: React.FC<BrandReportingViewProps> = ({
       ...activeReport,
       weeklyReports: updatedWeeklyList
     };
-    onSaveReportMetrics?.(updated);
+    if (onUpdateWeeklyReports) {
+      onUpdateWeeklyReports(updatedWeeklyList);
+    } else {
+      onSaveReportMetrics?.(updated);
+    }
   };
 
   // Calculate live aggregates from actual posts if available

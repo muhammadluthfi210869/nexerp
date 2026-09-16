@@ -1,9 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { unwrapResponse } from "@/lib/unwrap-response";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   DollarSign,
   Plus,
@@ -13,19 +11,13 @@ import {
   Eye,
   Calendar,
   User,
-  Building2,
   Clock,
   CheckCircle2,
   AlertTriangle,
   Calculator,
-  Layers,
+  X,
   Package,
-  Boxes,
-  Briefcase,
-  Check,
-  XCircle,
-  FileText,
-  Printer
+  Layers
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -35,364 +27,308 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
-  DnaModal,
-  DnaTabNav,
   useDnaToast
 } from "@/components/dna";
+import { Input } from "@/components/ui/input";
 
-interface CogsRequestItem {
+interface CogsRequest {
   id: string;
   requestCode: string;
   requestDate: string;
-  clientName: string;
-  brandName: string;
+  customerName: string;
   productName: string;
   formulaCode: string;
-  revisionVersion: string;
-  nettoGram: number;
-  moqTargetPcs: number; // e.g. 5.000 pcs
-  formulaCostPerPcs: number; // Biaya Bulk / Bahan Baku
-  primaryPackCostPerPcs: number; // Botol / Tube / Pot
-  secondaryPackCostPerPcs: number; // Box Hologram / Leaflet / Seal
-  directLaborCostPerPcs: number; // Upah Filling & Packing
-  factoryOverheadCostPerPcs: number; // Listrik, Mesin, QC
-  wasteMarginPercent: number; // e.g. 3%
-  totalHppPerPcs: number;
-  recommendedSellingPrice: number;
+  moqQty: number;
   status: "PENDING" | "APPROVED" | "REJECTED";
   statusLabel: string;
-  busdevPic: string;
-  approvedBy?: string;
+  // Detail Costing
+  formulaCost: number;
+  primaryPackCost: number;
+  secondaryPackCost: number;
+  laborCost: number;
+  overheadCost: number;
+  totalHppPerPcs: number;
+  recommendedPrice: number;
   notes?: string;
 }
 
-const MOCK_COGS_REQUESTS: CogsRequestItem[] = [
+const INITIAL_COGS: CogsRequest[] = [
   {
     id: "cogs-01",
-    requestCode: "HPP-202603-0001",
+    requestCode: "HPP-2026-0001",
     requestDate: "2026-03-08",
-    clientName: "PT Cantika Glow Nusantara",
-    brandName: "GlowAura Skin",
+    customerName: "PT Cantika Glow Nusantara",
     productName: "Brightening Glow Serum 10% Niacinamide 30ml",
-    formulaCode: "FORM-202603-001",
-    revisionVersion: "Rev 2.0",
-    nettoGram: 30,
-    moqTargetPcs: 5000,
-    formulaCostPerPcs: 4350,
-    primaryPackCostPerPcs: 4200, // Botol dropper kaca frosted 30ml
-    secondaryPackCostPerPcs: 1650, // Inner box printing foil emas
-    directLaborCostPerPcs: 850,
-    factoryOverheadCostPerPcs: 650,
-    wasteMarginPercent: 3.0,
-    totalHppPerPcs: 12050,
-    recommendedSellingPrice: 24500,
+    formulaCode: "FORM-2026-0001 (Rev 2.0)",
+    moqQty: 5000,
     status: "APPROVED",
     statusLabel: "Disetujui Management",
-    busdevPic: "Sari Dewi",
-    approvedBy: "Dewi Lestari (Finance Director)",
-    notes: "MOQ 5.000 pcs disetujui untuk penawaran kontrak maklon."
+    formulaCost: 4350,
+    primaryPackCost: 4200,
+    secondaryPackCost: 1650,
+    laborCost: 850,
+    overheadCost: 650,
+    totalHppPerPcs: 12050,
+    recommendedPrice: 24500,
+    notes: "MOQ 5.000 pcs disetujui untuk kontrak maklon kosmetik."
   },
   {
     id: "cogs-02",
-    requestCode: "HPP-202603-0002",
+    requestCode: "HPP-2026-0002",
     requestDate: "2026-03-07",
-    clientName: "PT Miracle Beauty Lab",
-    brandName: "MiracleSkin",
+    customerName: "PT Miracle Beauty Lab",
     productName: "Ceramide 5X Barrier Repair Moisturizer 50g",
-    formulaCode: "FORM-202603-002",
-    revisionVersion: "Rev 1.1",
-    nettoGram: 50,
-    moqTargetPcs: 3000,
-    formulaCostPerPcs: 10500,
-    primaryPackCostPerPcs: 5800, // Pot cream double wall acrylic
-    secondaryPackCostPerPcs: 1900, // Box premium emboss
-    directLaborCostPerPcs: 950,
-    factoryOverheadCostPerPcs: 750,
-    wasteMarginPercent: 3.5,
-    totalHppPerPcs: 20590,
-    recommendedSellingPrice: 38000,
-    status: "PENDING",
-    statusLabel: "Menunggu Review Finance",
-    busdevPic: "Rian Hendra",
-    notes: "Simulasi tiering: MOQ 3.000 pcs (Rp 20.590) vs MOQ 5.000 pcs (Rp 18.900)."
+    formulaCode: "FORM-2026-0002 (Rev 1.1)",
+    moqQty: 3000,
+    status: "APPROVED",
+    statusLabel: "Disetujui Management",
+    formulaCost: 9250,
+    primaryPackCost: 6500,
+    secondaryPackCost: 2100,
+    laborCost: 950,
+    overheadCost: 850,
+    totalHppPerPcs: 20300,
+    recommendedPrice: 38000,
+    notes: "Biaya kemasan jar akrilik impor disesuaikan kurs USD 16.200."
   },
   {
     id: "cogs-03",
-    requestCode: "HPP-202603-0003",
+    requestCode: "HPP-2026-0003",
     requestDate: "2026-03-05",
-    clientName: "CV Derma Estetika Mandiri",
-    brandName: "DermaPure",
-    productName: "AHA BHA PHA Exfoliating Toner 100ml",
-    formulaCode: "FORM-202603-003",
-    revisionVersion: "Rev 1.0",
-    nettoGram: 100,
-    moqTargetPcs: 2000,
-    formulaCostPerPcs: 6500,
-    primaryPackCostPerPcs: 3800, // Botol PET transparan + plug
-    secondaryPackCostPerPcs: 1400, // Inner box ivory 300gsm
-    directLaborCostPerPcs: 800,
-    factoryOverheadCostPerPcs: 600,
-    wasteMarginPercent: 3.0,
-    totalHppPerPcs: 13490,
-    recommendedSellingPrice: 26000,
+    customerName: "PT Cantika Herbal Nusantara",
+    productName: "Soothing Acne Gel Cica + Tea Tree 30gr",
+    formulaCode: "FORM-2026-0003 (Rev 1.0)",
+    moqQty: 5000,
+    status: "PENDING",
+    statusLabel: "Menunggu Approval",
+    formulaCost: 2850,
+    primaryPackCost: 3200,
+    secondaryPackCost: 1400,
+    laborCost: 750,
+    overheadCost: 550,
+    totalHppPerPcs: 9000,
+    recommendedPrice: 18500,
+    notes: "Perhitungan HPP awal menunggu rilis harga final kemasan tube lokal."
+  },
+  {
+    id: "cogs-04",
+    requestCode: "HPP-2026-0004",
+    requestDate: "2026-03-01",
+    customerName: "CV Royal Beauty Luxe",
+    productName: "Hydrating Lip Oil Peptide Tint 5ml",
+    formulaCode: "FORM-2026-0004 (Rev 1.0)",
+    moqQty: 10000,
     status: "APPROVED",
     statusLabel: "Disetujui Management",
-    busdevPic: "Sari Dewi",
-    approvedBy: "Hendro Wibowo",
-    notes: "Sudah diterbitkan Surat Penawaran Harga (SPH)."
+    formulaCost: 1200,
+    primaryPackCost: 5500,
+    secondaryPackCost: 1800,
+    laborCost: 650,
+    overheadCost: 450,
+    totalHppPerPcs: 9950,
+    recommendedPrice: 22000,
+    notes: "MOQ 10.000 pcs disetujui untuk peluncuran seasonal Q3."
   }
 ];
 
-export default function RequestCogsPage() {
-  const toast = useDnaToast();
-  const queryClient = useQueryClient();
-
-  const [activeTab, setActiveTab] = useState("all");
+function CogsRequestContent() {
+  const searchParams = useSearchParams();
+  const [cogsList, setCogsList] = useState<CogsRequest[]>(INITIAL_COGS);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRequest, setSelectedRequest] = useState<CogsRequestItem | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedCogs, setSelectedCogs] = useState<CogsRequest | null>(null);
+  const toast = useDnaToast();
 
-  // Form State (SCR-139)
-  const [createForm, setCreateForm] = useState({
-    clientName: "",
-    brandName: "",
-    productName: "",
-    formulaCode: "FORM-202603-001",
-    moqTargetPcs: 5000,
-    nettoGram: 30,
-    primaryPackCost: 4200,
-    secondaryPackCost: 1650,
-    notes: ""
+  // Create Form State (1:1 G-SERP Row 140)
+  const [formData, setFormData] = useState({
+    pelanggan: "PT Sinar Indah Kosmetika",
+    salesSample: "SMP-2026-0015",
+    formula: "FORM-2026-0005",
+    tanggal: new Date().toISOString().slice(0, 10),
+    kemasanPrimer: "Botol Dropper 30ml Frosted",
+    kemasanPrimer2: "-",
+    kemasanSekunder: "Inner Box Printing Foil Emas",
+    netto: "30 ml",
+    jumlahMoq: 5000
   });
 
-  // Queries
-  const { data: rawRequests, isLoading } = useQuery({
-    queryKey: ["rnd-cogs-requests"],
-    queryFn: async () => {
-      try {
-        const res = await api.get("/rnd/cogs-requests");
-        return unwrapResponse(res.data) as CogsRequestItem[];
-      } catch (e) {
-        return null;
-      }
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateModalOpen(true);
     }
-  });
+  }, [searchParams]);
 
-  const requests: CogsRequestItem[] = useMemo(() => {
-    if (rawRequests && Array.isArray(rawRequests) && rawRequests.length > 0) {
-      return rawRequests;
-    }
-    return MOCK_COGS_REQUESTS;
-  }, [rawRequests]);
+  const filteredCogs = useMemo(() => {
+    return cogsList.filter((c) => {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        !searchQuery ||
+        c.requestCode.toLowerCase().includes(q) ||
+        c.customerName.toLowerCase().includes(q) ||
+        c.productName.toLowerCase().includes(q) ||
+        c.formulaCode.toLowerCase().includes(q);
 
-  // Filtering
-  const filteredRequests = useMemo(() => {
-    return requests.filter((r) => {
-      if (activeTab === "pending" && r.status !== "PENDING") return false;
-      if (activeTab === "approved" && r.status !== "APPROVED") return false;
-
-      if (searchQuery.trim() !== "") {
-        const q = searchQuery.toLowerCase();
-        return (
-          r.requestCode.toLowerCase().includes(q) ||
-          r.clientName.toLowerCase().includes(q) ||
-          r.brandName.toLowerCase().includes(q) ||
-          r.productName.toLowerCase().includes(q) ||
-          r.formulaCode.toLowerCase().includes(q) ||
-          r.busdevPic.toLowerCase().includes(q)
-        );
-      }
-      return true;
+      const matchesStatus = statusFilter === "ALL" || c.status === statusFilter;
+      return matchesSearch && matchesStatus;
     });
-  }, [requests, activeTab, searchQuery]);
+  }, [cogsList, searchQuery, statusFilter]);
 
-  // KPIs
-  const totalRequests = requests.length;
-  const pendingRequests = requests.filter(r => r.status === "PENDING").length;
-  const approvedRequests = requests.filter(r => r.status === "APPROVED").length;
+  const totalRequests = cogsList.length;
+  const approvedCount = cogsList.filter((c) => c.status === "APPROVED").length;
+  const pendingCount = cogsList.filter((c) => c.status === "PENDING").length;
 
-  const handleCreateRequest = () => {
-    if (!createForm.clientName || !createForm.productName) {
-      toast.warning("Form Belum Lengkap", "Nama Klien dan Nama Produk wajib diisi.");
-      return;
-    }
-    toast.success("Permintaan HPP Disimpan", "Kalkulasi HPP roll-up berhasil dibuat dan diteruskan ke Finance/Management untuk approval.");
+  const handleSaveCogs = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newCogs: CogsRequest = {
+      id: `cogs-${Date.now()}`,
+      requestCode: `HPP-2026-${String(cogsList.length + 1).padStart(4, "0")}`,
+      requestDate: formData.tanggal,
+      customerName: formData.pelanggan,
+      productName: "Sunscreen Glow Gel Hybrid SPF 50 30ml",
+      formulaCode: formData.formula,
+      moqQty: Number(formData.jumlahMoq) || 5000,
+      status: "PENDING",
+      statusLabel: "Menunggu Approval",
+      formulaCost: 5250,
+      primaryPackCost: 3800,
+      secondaryPackCost: 1500,
+      laborCost: 850,
+      overheadCost: 650,
+      totalHppPerPcs: 12450,
+      recommendedPrice: 25000,
+      notes: "Kalkulasi HPP awal berdasarkan simulasi kemasan primer & sekunder."
+    };
+
+    setCogsList([newCogs, ...cogsList]);
     setIsCreateModalOpen(false);
-  };
-
-  const handleApprove = (id: string, isApproved: boolean) => {
-    toast.success(
-      isApproved ? "HPP Disetujui" : "HPP Ditolak",
-      `Permintaan HPP ${id} telah ${isApproved ? "disetujui untuk rilis penawaran kontrak klien" : "ditolak untuk kalkulasi ulang"}.`
-    );
-    setIsDetailModalOpen(false);
-  };
-
-  const getStatusBadge = (status: CogsRequestItem["status"]) => {
-    switch (status) {
-      case "APPROVED":
-        return <DnaBadge variant="success">APPROVED</DnaBadge>;
-      case "PENDING":
-        return <DnaBadge variant="warning">MENUNGGU REVIEW</DnaBadge>;
-      case "REJECTED":
-        return <DnaBadge variant="danger">DITOLAK</DnaBadge>;
-      default:
-        return <DnaBadge variant="neutral">{status}</DnaBadge>;
-    }
+    toast.success("Permintaan HPP Dibuat", "Dokumen pengajuan HPP berhasil diteruskan ke Finance & Management.");
   };
 
   return (
     <DnaPageContainer>
       {/* 1. Header Page */}
       <DnaPageHeader
-        title="Permintaan HPP & Costing Pra-Produksi"
-        description="Perhitungan Harga Pokok Penjualan (HPP) roll-up menyeluruh (Bahan Baku + Kemasan Primer & Sekunder + Tenaga Kerja + Overhead Pabrik) dan simulasi tiering MOQ."
-        badge={<DnaBadge variant="neutral">SCR-138 & SCR-139</DnaBadge>}
+        title="Permintaan HPP (Cost of Goods Sold)"
+        description="Pengajuan perhitungan HPP maklon berbasis formula lab, spesifikasi kemasan primer/sekunder, dan MOQ (1:1 G-SERP Parity)."
         breadcrumbs={[
-          { label: "R&D & Pra-Produksi", href: "/rnd/dashboard" },
-          { label: "Permintaan HPP", href: "/rnd/cogs-request" }
+          { label: "Operasional", href: "/dashboard-rnd" },
+          { label: "Pra Produksi", href: "/request-cogs" },
+          { label: "Permintaan HPP", href: "/request-cogs" }
         ]}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton
               variant="secondary"
-              onClick={() => toast.success("Export Berhasil", "Rekapitulasi HPP berhasil diunduh ke format Excel.")}
+              onClick={() => toast.success("Export Excel", "Data rekapitulasi HPP berhasil diekspor.")}
             >
-              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
               Export Excel
             </DnaButton>
             <DnaButton variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Buat Permintaan HPP (SCR-139)
+              <Plus className="w-4 h-4 mr-1.5" />
+              + Buat Permintaan HPP
             </DnaButton>
           </div>
         }
       />
 
       {/* 2. KPI Cards */}
-      <DnaKpiGrid cols={4}>
+      <DnaKpiGrid cols={3}>
         <DnaStatCard
-          label="TOTAL PERMINTAAN HPP"
-          value={`${totalRequests} Request`}
-          subValue="Dokumen Costing Terdaftar"
-          icon={<DollarSign className="w-5 h-5 text-blue-600" />}
+          label="TOTAL PENGAJUAN HPP"
+          value={`${totalRequests} Pengajuan`}
+          subValue="Simulasi Biaya Maklon"
+          icon={<Calculator className="w-5 h-5 text-blue-600" />}
         />
         <DnaStatCard
-          label="MENUNGGU REVIEW FINANCE"
-          value={`${pendingRequests} Dokumen`}
-          subValue="Persetujuan Direksi & Finance"
-          icon={<Clock className="w-5 h-5 text-amber-600" />}
-        />
-        <DnaStatCard
-          label="DISETUJUI (APPROVED)"
-          value={`${approvedRequests} Selesai`}
-          subValue="Siap Diterbitkan SPH Klien"
+          label="HPP DISETUJUI (APPROVED)"
+          value={`${approvedCount} Disetujui`}
+          subValue="Siap Rilis Penawaran (Quotation)"
           icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
         />
         <DnaStatCard
-          label="ESTIMASI GROSS MARGIN"
-          value="48.2%"
-          subValue="Rata-Rata Margin Kontrak Maklon"
-          icon={<Calculator className="w-5 h-5 text-indigo-600" />}
+          label="MENUNGGU APPROVAL MANAGEMENT"
+          value={`${pendingCount} Pending`}
+          subValue="Review Margin & Biaya Kemasan"
+          icon={<Clock className="w-5 h-5 text-amber-600" />}
         />
       </DnaKpiGrid>
 
-      {/* 3. Tabs */}
-      <DnaTabNav
-        tabs={[
-          { id: "all", label: `Semua Request (${totalRequests})` },
-          { id: "pending", label: `Menunggu Review (${pendingRequests})` },
-          { id: "approved", label: `Disetujui (${approvedRequests})` }
-        ]}
-        activeTab={activeTab}
-        onChange={setActiveTab}
-      />
-
-      {/* 4. DataTable Card (SCR-138) */}
+      {/* 3. DataTable (1:1 G-SERP Row 139 — EXACT 9 COLUMNS) */}
       <DnaDataTableCard
-        title="Daftar Permintaan & Kalkulasi HPP Pra-Produksi"
-        description="Detail biaya per komponen untuk penetapan harga penawaran maklon dan konfirmasi pesanan (Sales Order)."
+        title="Daftar Permintaan HPP Produk"
+        description="Pelacakan estimasi biaya pokok produksi berdasarkan formula, jumlah MOQ, dan persetujuan komersial."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari Kode HPP, Klien, Brand, Formula, BusDev..."
+        searchPlaceholder="Cari kode HPP, pelanggan, produk, formula..."
+        actions={
+          <div className="flex items-center gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 font-bold text-slate-700 focus:outline-none"
+            >
+              <option value="ALL">Semua Status</option>
+              <option value="APPROVED">Disetujui Management</option>
+              <option value="PENDING">Menunggu Approval</option>
+            </select>
+          </div>
+        }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-slate-50 border-b border-slate-200 font-bold text-slate-600 uppercase tracking-wider text-[10.5px]">
               <tr>
-                <th className="py-3 px-4">Kode & Tanggal</th>
-                <th className="py-3 px-4">Pelanggan & Brand</th>
-                <th className="py-3 px-4">Produk & Formula</th>
-                <th className="py-3 px-4 text-right">Target MOQ</th>
-                <th className="py-3 px-4 text-right">Biaya Formula</th>
-                <th className="py-3 px-4 text-right">Biaya Kemasan</th>
-                <th className="py-3 px-4 text-right">Total HPP / Pcs</th>
-                <th className="py-3 px-4 text-right">Harga Jual Rekomendasi</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
+                <th className="py-3 px-3 text-center w-10">#</th>
+                <th className="py-3 px-3 w-28">Kode</th>
+                <th className="py-3 px-3 w-24">Tanggal</th>
+                <th className="py-3 px-3">Pelanggan</th>
+                <th className="py-3 px-3">Produk</th>
+                <th className="py-3 px-3 w-40">Formula</th>
+                <th className="py-3 px-3 text-right w-28">Jumlah MOQ</th>
+                <th className="py-3 px-3 text-center w-36">Status</th>
+                <th className="py-3 px-3 text-center w-16">#</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredRequests.length === 0 ? (
+              {filteredCogs.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-400">
-                    <DollarSign className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                    Tidak ada permintaan HPP yang sesuai filter pencarian.
+                  <td colSpan={9} className="py-8 text-center text-slate-400">
+                    Tidak ada data permintaan HPP ditemukan.
                   </td>
                 </tr>
               ) : (
-                filteredRequests.map((row) => (
+                filteredCogs.map((row, idx) => (
                   <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4">
-                      <p className="font-mono text-xs font-bold text-slate-900">{row.requestCode}</p>
-                      <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
-                        <Calendar className="w-3 h-3" />
-                        <span>{row.requestDate}</span>
-                      </div>
+                    <td className="py-3 px-3 text-center text-slate-400 font-bold">{idx + 1}</td>
+                    <td className="py-3 px-3 font-mono font-bold text-blue-600">{row.requestCode}</td>
+                    <td className="py-3 px-3 text-slate-600 font-mono">{row.requestDate}</td>
+                    <td className="py-3 px-3 font-semibold text-slate-900">{row.customerName}</td>
+                    <td className="py-3 px-3 text-slate-800">{row.productName}</td>
+                    <td className="py-3 px-3 font-mono text-indigo-600 font-bold">{row.formulaCode}</td>
+                    <td className="py-3 px-3 text-right font-mono font-bold text-slate-900">
+                      {row.moqQty.toLocaleString("id-ID")} pcs
                     </td>
-                    <td className="py-3 px-4 text-xs">
-                      <p className="font-semibold text-slate-800">{row.clientName}</p>
-                      <span className="font-mono text-[10px] text-indigo-600 font-bold">{row.brandName}</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <p className="font-semibold text-slate-900 text-xs">{row.productName}</p>
-                      <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono mt-0.5">
-                        <span>{row.formulaCode} ({row.revisionVersion})</span>
-                        <span>•</span>
-                        <span>{row.nettoGram}g</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-slate-900">
-                      {row.moqTargetPcs.toLocaleString()} Pcs
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono text-slate-700">
-                      Rp {row.formulaCostPerPcs.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono text-slate-700">
-                      Rp {(row.primaryPackCostPerPcs + row.secondaryPackCostPerPcs).toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-indigo-700">
-                      Rp {row.totalHppPerPcs.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-emerald-700">
-                      Rp {row.recommendedSellingPrice.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4">
-                      {getStatusBadge(row.status)}
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <DnaButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedRequest(row);
-                          setIsDetailModalOpen(true);
-                        }}
-                        title="Lihat Detail Roll-Up Biaya"
+                    <td className="py-3 px-3 text-center">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          row.status === "APPROVED"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-amber-100 text-amber-800"
+                        }`}
                       >
-                        <Eye className="w-4 h-4 text-slate-600" />
-                      </DnaButton>
+                        {row.statusLabel}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <button
+                        onClick={() => setSelectedCogs(row)}
+                        className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                        title="Lihat Rincian HPP per Unit"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -402,268 +338,193 @@ export default function RequestCogsPage() {
         </div>
       </DnaDataTableCard>
 
-      {/* 5. Modal Buat Permintaan HPP (SCR-139) */}
-      <DnaModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        title="Buat Permintaan HPP Baru (SCR-139)"
-        description="Formulir permohonan kalkulasi HPP dan simulasi costing pra-produksi."
-        size="lg"
-        footer={
-          <div className="flex items-center justify-end gap-2 w-full">
-            <DnaButton variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
-              Batal
-            </DnaButton>
-            <DnaButton variant="primary" onClick={handleCreateRequest}>
-              Hitung & Ajukan HPP
-            </DnaButton>
-          </div>
-        }
-      >
-        <div className="space-y-4 text-xs">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Nama Pelanggan / Klien *</label>
-              <input
-                type="text"
-                placeholder="PT Cantika Glow Nusantara"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-                value={createForm.clientName}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, clientName: e.target.value }))}
-              />
+      {/* 4. Modal Buat Permintaan HPP (1:1 G-SERP Row 140 / ?action=create) */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-bold text-slate-800 text-base">Buat Permintaan HPP Baru</h3>
+                <p className="text-xs text-slate-500">Kalkulasi biaya pokok penjualan maklon (G-SERP Row 140)</p>
+              </div>
+              <button onClick={() => setIsCreateModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Brand / Merk *</label>
-              <input
-                type="text"
-                placeholder="GlowAura"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-                value={createForm.brandName}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, brandName: e.target.value }))}
-              />
-            </div>
-          </div>
 
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700 uppercase">Nama Produk *</label>
-            <input
-              type="text"
-              placeholder="Serum Niacinamide 10% 30ml"
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-              value={createForm.productName}
-              onChange={(e) => setCreateForm(prev => ({ ...prev, productName: e.target.value }))}
-            />
-          </div>
+            <form onSubmit={handleSaveCogs} className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">
+                    Pelanggan <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    required
+                    value={formData.pelanggan}
+                    onChange={(e) => setFormData({ ...formData, pelanggan: e.target.value })}
+                    className="h-8 text-xs font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">
+                    Tanggal Request <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="date"
+                    required
+                    value={formData.tanggal}
+                    onChange={(e) => setFormData({ ...formData, tanggal: e.target.value })}
+                    className="h-8 text-xs font-mono"
+                  />
+                </div>
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Formula Acuan *</label>
-              <select
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800"
-                value={createForm.formulaCode}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, formulaCode: e.target.value }))}
-              >
-                <option value="FORM-202603-001">FORM-001 - Brightening Glow Serum</option>
-                <option value="FORM-202603-002">FORM-002 - Ceramide 5X Barrier Cream</option>
-                <option value="FORM-202603-003">FORM-003 - AHA BHA PHA Toner</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Target MOQ (Pcs) *</label>
-              <input
-                type="number"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-                value={createForm.moqTargetPcs}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, moqTargetPcs: Number(e.target.value) }))}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Netto (Gram) *</label>
-              <input
-                type="number"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-                value={createForm.nettoGram}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, nettoGram: Number(e.target.value) }))}
-              />
-            </div>
-          </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">Sales Sample Ref</label>
+                  <Input
+                    value={formData.salesSample}
+                    onChange={(e) => setFormData({ ...formData, salesSample: e.target.value })}
+                    className="h-8 text-xs font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">Formula Code</label>
+                  <Input
+                    value={formData.formula}
+                    onChange={(e) => setFormData({ ...formData, formula: e.target.value })}
+                    className="h-8 text-xs font-mono font-bold"
+                  />
+                </div>
+              </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Estimasi Kemasan Primer (Rp/Pcs)</label>
-              <input
-                type="number"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-                value={createForm.primaryPackCost}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, primaryPackCost: Number(e.target.value) }))}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Estimasi Kemasan Sekunder/Box (Rp/Pcs)</label>
-              <input
-                type="number"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-                value={createForm.secondaryPackCost}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, secondaryPackCost: Number(e.target.value) }))}
-              />
-            </div>
-          </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">Kemasan Primer</label>
+                  <Input
+                    value={formData.kemasanPrimer}
+                    onChange={(e) => setFormData({ ...formData, kemasanPrimer: e.target.value })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">Kemasan Primer 2</label>
+                  <Input
+                    value={formData.kemasanPrimer2}
+                    onChange={(e) => setFormData({ ...formData, kemasanPrimer2: e.target.value })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">Kemasan Sekunder</label>
+                  <Input
+                    value={formData.kemasanSekunder}
+                    onChange={(e) => setFormData({ ...formData, kemasanSekunder: e.target.value })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
 
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700 uppercase">Catatan Tambahan</label>
-            <textarea
-              rows={2}
-              placeholder="Kebutuhan khusus stiker segel, shrink wrap, atau sertifikat halal..."
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-              value={createForm.notes}
-              onChange={(e) => setCreateForm(prev => ({ ...prev, notes: e.target.value }))}
-            />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">
+                    Netto Produk <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    required
+                    value={formData.netto}
+                    onChange={(e) => setFormData({ ...formData, netto: e.target.value })}
+                    className="h-8 text-xs font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">
+                    Jumlah Target MOQ (Pcs) <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="number"
+                    required
+                    value={formData.jumlahMoq}
+                    onChange={(e) => setFormData({ ...formData, jumlahMoq: parseInt(e.target.value) || 0 })}
+                    className="h-8 text-xs font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <DnaButton type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+                  Kembali
+                </DnaButton>
+                <DnaButton type="submit" variant="primary">
+                  Simpan Permintaan HPP
+                </DnaButton>
+              </div>
+            </form>
           </div>
         </div>
-      </DnaModal>
+      )}
 
-      {/* 6. Modal Detail & Cost Roll-Up (SCR-146) */}
-      <DnaModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        title={selectedRequest ? `Rincian Roll-Up HPP: ${selectedRequest.requestCode}` : "Detail HPP"}
-        description="Breakdown struktur biaya bahan baku, kemasan, direct labor, overhead pabrik, dan margin."
-        size="lg"
-        footer={
-          <div className="flex items-center justify-between w-full">
-            <div className="text-xs">
-              {selectedRequest?.status === "PENDING" ? (
-                <span className="text-amber-600 font-bold flex items-center gap-1">
-                  <Clock className="w-4 h-4" /> Menunggu Persetujuan Direksi
-                </span>
-              ) : (
-                <span className="text-slate-500 font-medium">Status: {selectedRequest?.status}</span>
-              )}
+      {/* 5. Modal Detail HPP Roll-up */}
+      {selectedCogs && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-bold text-slate-800 text-base">Rincian Komposisi HPP per Unit</h3>
+                <p className="text-xs font-mono text-blue-600">{selectedCogs.requestCode} • {selectedCogs.productName}</p>
+              </div>
+              <button onClick={() => setSelectedCogs(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <DnaButton variant="secondary" onClick={() => setIsDetailModalOpen(false)}>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-slate-500 font-medium">1. Formula Bulk / Netto:</span>
+                <span className="font-mono font-bold text-slate-800">Rp {selectedCogs.formulaCost.toLocaleString("id-ID")}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-slate-500 font-medium">2. Kemasan Primer (Botol/Jar/Tube):</span>
+                <span className="font-mono font-bold text-slate-800">Rp {selectedCogs.primaryPackCost.toLocaleString("id-ID")}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-slate-500 font-medium">3. Kemasan Sekunder (Box Printing/Seal):</span>
+                <span className="font-mono font-bold text-slate-800">Rp {selectedCogs.secondaryPackCost.toLocaleString("id-ID")}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-slate-500 font-medium">4. Upah Tenaga Kerja Langsung:</span>
+                <span className="font-mono font-bold text-slate-800">Rp {selectedCogs.laborCost.toLocaleString("id-ID")}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-slate-500 font-medium">5. Alokasi Overhead Pabrik (Listrik & QC):</span>
+                <span className="font-mono font-bold text-slate-800">Rp {selectedCogs.overheadCost.toLocaleString("id-ID")}</span>
+              </div>
+              <div className="flex justify-between py-2 bg-slate-50 px-3 rounded-lg border border-slate-200">
+                <span className="font-bold text-slate-900">Total HPP per Pcs (BOM):</span>
+                <span className="font-mono font-bold text-rose-600 text-sm">Rp {selectedCogs.totalHppPerPcs.toLocaleString("id-ID")}</span>
+              </div>
+              <div className="flex justify-between py-2 bg-emerald-50 px-3 rounded-lg border border-emerald-200">
+                <span className="font-bold text-emerald-900">Rekomendasi Harga Jual (Quotation):</span>
+                <span className="font-mono font-bold text-emerald-700 text-sm">Rp {selectedCogs.recommendedPrice.toLocaleString("id-ID")}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <DnaButton variant="outline" onClick={() => setSelectedCogs(null)}>
                 Tutup
               </DnaButton>
-
-              {selectedRequest?.status === "PENDING" && (
-                <>
-                  <DnaButton variant="danger" onClick={() => handleApprove(selectedRequest.id, false)}>
-                    <XCircle className="w-4 h-4 mr-1" /> Tolak
-                  </DnaButton>
-                  <DnaButton variant="primary" onClick={() => handleApprove(selectedRequest.id, true)}>
-                    <Check className="w-4 h-4 mr-1" /> Setujui HPP
-                  </DnaButton>
-                </>
-              )}
             </div>
           </div>
-        }
-      >
-        {selectedRequest && (
-          <div className="space-y-6">
-            {/* Header info */}
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-slate-500">Nama Produk & Brand</span>
-                  <p className="text-sm font-bold text-slate-900">{selectedRequest.productName}</p>
-                </div>
-                <div>{getStatusBadge(selectedRequest.status)}</div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t border-slate-200 text-xs">
-                <div>
-                  <span className="text-slate-500">Klien / Brand:</span>
-                  <p className="font-semibold text-slate-800">{selectedRequest.clientName} ({selectedRequest.brandName})</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">Formula Acuan:</span>
-                  <p className="font-mono font-bold text-slate-800">{selectedRequest.formulaCode} ({selectedRequest.revisionVersion})</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">Target MOQ:</span>
-                  <p className="font-mono font-bold text-slate-800">{selectedRequest.moqTargetPcs.toLocaleString()} Pcs (@{selectedRequest.nettoGram}g)</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">BusDev PIC:</span>
-                  <p className="font-semibold text-slate-800">{selectedRequest.busdevPic}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Cost Breakdown Grid */}
-            <div className="border border-slate-200 rounded-xl overflow-hidden text-xs">
-              <table className="w-full text-left">
-                <thead className="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
-                  <tr>
-                    <th className="p-3">Komponen Biaya</th>
-                    <th className="p-3">Deskripsi Komponen</th>
-                    <th className="p-3 text-right">Biaya per Pcs</th>
-                    <th className="p-3 text-right">Total Batch ({selectedRequest.moqTargetPcs.toLocaleString()} Pcs)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 font-mono">
-                  <tr className="hover:bg-slate-50">
-                    <td className="p-3 font-bold text-slate-900 font-sans">1. Biaya Formula Bulk</td>
-                    <td className="p-3 text-slate-600 font-sans">Bahan aktif, pelarut, pengental, pengawet ({selectedRequest.nettoGram}g)</td>
-                    <td className="p-3 text-right font-bold text-slate-900">Rp {selectedRequest.formulaCostPerPcs.toLocaleString()}</td>
-                    <td className="p-3 text-right text-slate-700">Rp {(selectedRequest.formulaCostPerPcs * selectedRequest.moqTargetPcs).toLocaleString()}</td>
-                  </tr>
-                  <tr className="hover:bg-slate-50">
-                    <td className="p-3 font-bold text-slate-900 font-sans">2. Kemasan Primer</td>
-                    <td className="p-3 text-slate-600 font-sans">Wadah utama (Botol / Tube / Pot)</td>
-                    <td className="p-3 text-right font-bold text-slate-900">Rp {selectedRequest.primaryPackCostPerPcs.toLocaleString()}</td>
-                    <td className="p-3 text-right text-slate-700">Rp {(selectedRequest.primaryPackCostPerPcs * selectedRequest.moqTargetPcs).toLocaleString()}</td>
-                  </tr>
-                  <tr className="hover:bg-slate-50">
-                    <td className="p-3 font-bold text-slate-900 font-sans">3. Kemasan Sekunder</td>
-                    <td className="p-3 text-slate-600 font-sans">Inner box, label foil, leaflet & shrink</td>
-                    <td className="p-3 text-right font-bold text-slate-900">Rp {selectedRequest.secondaryPackCostPerPcs.toLocaleString()}</td>
-                    <td className="p-3 text-right text-slate-700">Rp {(selectedRequest.secondaryPackCostPerPcs * selectedRequest.moqTargetPcs).toLocaleString()}</td>
-                  </tr>
-                  <tr className="hover:bg-slate-50">
-                    <td className="p-3 font-bold text-slate-900 font-sans">4. Direct Labor (Upah)</td>
-                    <td className="p-3 text-slate-600 font-sans">Tenaga kerja mixing, filling & packing line</td>
-                    <td className="p-3 text-right font-bold text-slate-900">Rp {selectedRequest.directLaborCostPerPcs.toLocaleString()}</td>
-                    <td className="p-3 text-right text-slate-700">Rp {(selectedRequest.directLaborCostPerPcs * selectedRequest.moqTargetPcs).toLocaleString()}</td>
-                  </tr>
-                  <tr className="hover:bg-slate-50">
-                    <td className="p-3 font-bold text-slate-900 font-sans">5. Factory Overhead</td>
-                    <td className="p-3 text-slate-600 font-sans">Utilitas listrik, depresiasi mesin, testing lab QC</td>
-                    <td className="p-3 text-right font-bold text-slate-900">Rp {selectedRequest.factoryOverheadCostPerPcs.toLocaleString()}</td>
-                    <td className="p-3 text-right text-slate-700">Rp {(selectedRequest.factoryOverheadCostPerPcs * selectedRequest.moqTargetPcs).toLocaleString()}</td>
-                  </tr>
-                  <tr className="bg-indigo-50/70 font-bold">
-                    <td colSpan={2} className="p-3 font-sans text-indigo-950 uppercase">Total HPP per Kemasan (Termasuk Scrap Buffer {selectedRequest.wasteMarginPercent}%):</td>
-                    <td className="p-3 text-right text-indigo-700 text-sm">Rp {selectedRequest.totalHppPerPcs.toLocaleString()}</td>
-                    <td className="p-3 text-right text-indigo-900 text-sm">Rp {(selectedRequest.totalHppPerPcs * selectedRequest.moqTargetPcs).toLocaleString()}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pricing Summary */}
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1">
-                <span className="text-[10px] font-bold uppercase text-emerald-800">Rekomendasi Harga Jual Maklon</span>
-                <p className="font-mono text-xl font-bold text-emerald-700">
-                  Rp {selectedRequest.recommendedSellingPrice.toLocaleString()} / Pcs
-                </p>
-                <p className="text-[11px] text-emerald-800">Estimasi Gross Margin: Rp {(selectedRequest.recommendedSellingPrice - selectedRequest.totalHppPerPcs).toLocaleString()} (50.8%)</p>
-              </div>
-
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="text-[10px] font-bold uppercase text-slate-600">Total Nilai Kontrak PO (Est)</span>
-                <p className="font-mono text-xl font-bold text-slate-900">
-                  Rp {(selectedRequest.recommendedSellingPrice * selectedRequest.moqTargetPcs).toLocaleString()}
-                </p>
-                <p className="text-[11px] text-slate-500">Nilai sebelum PPN 11%</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </DnaModal>
+        </div>
+      )}
     </DnaPageContainer>
+  );
+}
+
+export default function CogsRequestPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-slate-400">Memuat Permintaan HPP...</div>}>
+      <CogsRequestContent />
+    </Suspense>
   );
 }

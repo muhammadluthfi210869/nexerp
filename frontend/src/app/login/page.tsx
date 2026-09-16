@@ -75,8 +75,12 @@ export default function LoginPage() {
         window.location.href = "/executive/dashboard";
       }
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || "Login failed. Check your credentials.");
+      const err = error as { response?: { data?: { message?: string; detail?: string } } };
+      const errorMessage =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        "Login failed. Check your credentials.";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

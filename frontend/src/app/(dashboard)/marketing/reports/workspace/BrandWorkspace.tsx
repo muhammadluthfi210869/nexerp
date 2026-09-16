@@ -654,20 +654,48 @@ export default function BrandWorkspace({
           ? currentChannelConfig.plannerChannel
           : 'Instagram';
 
+      const followersEnd = Math.max(0, Math.round(Number(updatedReport.totalFollowers) || 0));
+      const gained = Math.max(0, Math.round(Number(updatedReport.followersGained) || 0));
+      const lost = Math.max(0, Math.round(Number(updatedReport.followersUnfollowed) || 0));
+      const followersStart = Math.max(0, followersEnd - (gained - lost));
+
       await api.post('/marketing/social/reports/channel-metrics', {
         brandId: activeBrandName,
         periodStart,
         periodEnd,
         channel: targetChannel,
-        reach: updatedReport.totalReach || 0,
-        views: updatedReport.totalViews || 0,
-        impressions: updatedReport.totalImpressions || 0,
-        likes: updatedReport.totalLikes || 0,
-        comments: updatedReport.totalComments || 0,
-        shares: updatedReport.totalShares || 0,
-        saves: updatedReport.totalSaves || 0,
-        followersEnd: updatedReport.totalFollowers || 0,
+        reach: Math.max(0, Math.round(Number(updatedReport.totalReach) || 0)),
+        views: Math.max(0, Math.round(Number(updatedReport.totalViews) || 0)),
+        impressions: Math.max(0, Math.round(Number(updatedReport.totalImpressions) || 0)),
+        likes: Math.max(0, Math.round(Number(updatedReport.totalLikes) || 0)),
+        comments: Math.max(0, Math.round(Number(updatedReport.totalComments) || 0)),
+        shares: Math.max(0, Math.round(Number(updatedReport.totalShares) || 0)),
+        saves: Math.max(0, Math.round(Number(updatedReport.totalSaves) || 0)),
+        followersStart,
+        followersEnd,
       });
+
+      // Sync monthly story metrics if entered
+      if (updatedReport.storiesRecap?.totalStoriesCreated !== undefined && updatedReport.storiesRecap.totalStoriesCreated > 0) {
+        try {
+          await api.post('/marketing/social/reports/stories', {
+            brandId: activeBrandName,
+            periodStart,
+            periodEnd,
+            date: periodStart,
+            storiesCount: Math.max(0, Math.round(Number(updatedReport.storiesRecap.totalStoriesCreated) || 0)),
+            views: Math.max(0, Math.round(Number(updatedReport.storiesRecap.totalStoryViews) || 0)),
+            replies: 0,
+            linkClicks: 0,
+            shares: 0,
+            completionPct: Math.max(0, Math.min(100, Math.round(Number(updatedReport.storiesRecap.completionRate) || 80))),
+            notes: `Rekap Bulanan Stories: ${updatedReport.storiesRecap.totalStoriesCreated} dibuat`,
+          });
+        } catch (storyErr) {
+          console.warn('Could not sync monthly stories recap:', storyErr);
+        }
+      }
+
       toast.success('Metrik channel berhasil disimpan.');
     } catch (e: any) {
       console.warn('Failed to persist channel metric to backend:', e);
@@ -708,12 +736,12 @@ export default function BrandWorkspace({
         periodStart,
         periodEnd,
         date: periodStart,
-        storiesCount: totalStoriesCreated,
-        views: totalStoryViews,
+        storiesCount: Math.max(0, Math.round(Number(totalStoriesCreated) || 0)),
+        views: Math.max(0, Math.round(Number(totalStoryViews) || 0)),
         replies: 0,
         linkClicks: 0,
         shares: 0,
-        completionPct: updated.storiesRecap?.completionRate ?? 80,
+        completionPct: Math.max(0, Math.min(100, Math.round(Number(updated.storiesRecap?.completionRate) || 80))),
         notes: `Monthly Stories Recap: ${totalStoriesCreated} stories, ${totalStoryViews} views`,
       });
       toast.success('Data story bulanan berhasil disimpan.');
@@ -747,33 +775,59 @@ export default function BrandWorkspace({
     try {
       const { periodStart, periodEnd } = parsePeriodDates(monthYear || selectedPeriod);
       const { weekStart, weekEnd } = getWeekDates(monthYear || selectedPeriod, updatedWeek.weekNumber);
-      const starting = updatedWeek.startingFollowers ?? 
-        Math.max(0, updatedWeek.endingFollowers - (updatedWeek.followersGained - updatedWeek.followersUnfollowed));
+      const endingFollowers = Math.max(0, Math.round(Number(updatedWeek.endingFollowers) || 0));
+      const gained = Math.max(0, Math.round(Number(updatedWeek.followersGained) || 0));
+      const lost = Math.max(0, Math.round(Number(updatedWeek.followersUnfollowed) || 0));
+      const starting = updatedWeek.startingFollowers !== undefined
+        ? Math.max(0, Math.round(Number(updatedWeek.startingFollowers) || 0))
+        : Math.max(0, endingFollowers - (gained - lost));
 
       await api.post('/marketing/social/reports/weekly', {
         brandId: brandName,
         periodStart,
         periodEnd,
-        weekNumber: updatedWeek.weekNumber,
+        weekNumber: Math.max(1, Math.round(Number(updatedWeek.weekNumber) || 1)),
         weekStart,
         weekEnd,
         followersStart: starting,
-        followersEnd: updatedWeek.endingFollowers,
-        followersGained: updatedWeek.followersGained,
-        followersLost: updatedWeek.followersUnfollowed,
-        reach: updatedWeek.reach,
-        views: updatedWeek.views,
-        impressions: updatedWeek.impressions ?? 0,
-        totalEngagement: updatedWeek.totalEngagement,
-        storiesCount: updatedWeek.storiesCount,
-        storyViews: updatedWeek.totalStoryViews,
-        highlights: updatedWeek.highlights,
-        notes: updatedWeek.notes,
+        followersEnd: endingFollowers,
+        followersGained: gained,
+        followersLost: lost,
+        reach: Math.max(0, Math.round(Number(updatedWeek.reach) || 0)),
+        views: Math.max(0, Math.round(Number(updatedWeek.views) || 0)),
+        impressions: Math.max(0, Math.round(Number(updatedWeek.impressions) || 0)),
+        totalEngagement: Math.max(0, Math.round(Number(updatedWeek.totalEngagement) || 0)),
+        storiesCount: Math.max(0, Math.round(Number(updatedWeek.storiesCount) || 0)),
+        storyViews: Math.max(0, Math.round(Number(updatedWeek.totalStoryViews) || 0)),
+        highlights: updatedWeek.highlights?.trim() || undefined,
+        notes: updatedWeek.notes?.trim() || undefined,
       });
       toast.success(`Laporan Minggu ${updatedWeek.weekNumber} berhasil disimpan.`);
     } catch (e: any) {
       console.warn('Failed to persist weekly report to backend:', e);
       toast.error('Gagal menyimpan laporan mingguan: ' + (e.response?.data?.message || e.message || 'Terjadi kesalahan'));
+    }
+  };
+
+  const handleSaveWeeklyReportsList = async (updatedWeeklyList: WeeklyReportData[]) => {
+    const reportKey = `${activeBrandName}__${selectedPeriod}`;
+    const base = getReportForBrandAndPeriod(activeBrandName, selectedPeriod);
+    const updated: BrandReport = {
+      ...base,
+      weeklyReports: updatedWeeklyList,
+    };
+    setReports(prev => ({
+      ...prev,
+      [reportKey]: updated,
+      [activeBrandName]: updated,
+    }));
+
+    try {
+      await Promise.all(
+        updatedWeeklyList.map(w => handleSaveWeeklyData(activeBrandName, selectedPeriod, w))
+      );
+    } catch (e) {
+      console.warn('Failed to persist batch weekly reports to backend:', e);
     }
   };
 
@@ -962,6 +1016,7 @@ export default function BrandWorkspace({
               onOpenStoriesModal={(b, m) => setEditingMonthlyStories({ brandName: b, monthYear: m })}
               onOpenDailyStoryModal={(b, m, s) => setEditingMonthlyStories({ brandName: b, monthYear: m })}
               onSaveReportMetrics={handleSaveReportMetrics}
+              onUpdateWeeklyReports={handleSaveWeeklyReportsList}
               onUpdatePostMedia={handleUpdatePostMedia}
               onNavigateToPlanner={(channel) => {
                 if (channel) {

@@ -17,6 +17,12 @@ import { validationExceptionFactory } from './common/validation/validation-error
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Enable 'trust proxy' so req.ip and Throttler read the real client IP from X-Forwarded-For behind Nginx
+  const expressApp = app.getHttpAdapter().getInstance();
+  if (typeof expressApp?.set === 'function') {
+    expressApp.set('trust proxy', 1);
+  }
+
   // Public reverse proxy maps /api/* to /v1/*; keep this contract stable for
   // every browser bundle and existing integration.
   app.setGlobalPrefix('v1');

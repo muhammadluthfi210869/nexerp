@@ -92,7 +92,7 @@ export class SocialPlannerController {
    * DELETE /v1/marketing/social/posts/:id
    */
   @Delete('posts/:id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.MARKETING)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.MARKETING, UserRole.DIGIMAR)
   deletePost(@Req() req: any, @Param('id') id: string) {
     return this.service.deletePost(req.user, id);
   }

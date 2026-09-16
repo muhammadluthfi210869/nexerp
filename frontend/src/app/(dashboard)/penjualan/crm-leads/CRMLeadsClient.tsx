@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -28,15 +29,14 @@ import {
   PhoneCall,
   UserCheck,
   Percent,
+  Eye,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { DnaInput } from "@/components/dna/DnaInput";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DnaBadge } from "@/components/dna/DnaBadge";
 import { DnaButton } from "@/components/dna/DnaButton";
-import { StatCard } from "@/components/dna/StatCard";
 import { TableWrapper } from "@/components/dna/TableWrapper";
 import { SectionLabel } from "@/components/dna/SectionLabel";
 import { toast } from "sonner";
@@ -67,11 +67,101 @@ interface LeadConversion {
   timestamp: string;
 }
 
+interface OperationalLeadItem {
+  penerima: string;
+  qty: number;
+}
+
+interface OperationalLeadBatch {
+  id: string;
+  tanggalLeads: string;
+  catatan: string;
+  totalQtyLeads: number;
+  items: OperationalLeadItem[];
+}
+
+const INITIAL_BATCHES: OperationalLeadBatch[] = [
+  {
+    id: "LEAD-2026-001",
+    tanggalLeads: "2026-09-15",
+    catatan: "Distribusi Leads Kampanye TikTok Skincare Glow",
+    totalQtyLeads: 45,
+    items: [
+      { penerima: "Edi (BusDev)", qty: 15 },
+      { penerima: "Rendi (BusDev)", qty: 15 },
+      { penerima: "Rina (BusDev)", qty: 15 },
+    ],
+  },
+  {
+    id: "LEAD-2026-002",
+    tanggalLeads: "2026-09-12",
+    catatan: "Inbound Leads Expo Kosmetik Jakarta 2026",
+    totalQtyLeads: 30,
+    items: [
+      { penerima: "Siti (BusDev)", qty: 10 },
+      { penerima: "Budi (BusDev)", qty: 10 },
+      { penerima: "Maya (BusDev)", qty: 10 },
+    ],
+  },
+  {
+    id: "LEAD-2026-003",
+    tanggalLeads: "2026-09-08",
+    catatan: "Batch Leads Digital Ads Serum Retinol Anti Aging",
+    totalQtyLeads: 60,
+    items: [
+      { penerima: "Edi (BusDev)", qty: 20 },
+      { penerima: "Rina (BusDev)", qty: 20 },
+      { penerima: "Maya (BusDev)", qty: 20 },
+    ],
+  },
+  {
+    id: "LEAD-2026-004",
+    tanggalLeads: "2026-09-01",
+    catatan: "Batch Leads Brand Body Lotion Tone Up",
+    totalQtyLeads: 25,
+    items: [
+      { penerima: "Rendi (BusDev)", qty: 12 },
+      { penerima: "Siti (BusDev)", qty: 13 },
+    ],
+  },
+];
+
+const AVAILABLE_RECEIVERS = [
+  "Edi (BusDev)",
+  "Rendi (BusDev)",
+  "Rina (BusDev)",
+  "Siti (BusDev)",
+  "Budi (BusDev)",
+  "Maya (BusDev)",
+];
+
 export default function CRMLeadsClient() {
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"leads" | "sales" | "stats">("leads");
-  
-  // Search & Filter state
+  const [activeTab, setActiveTab] = useState<"operational" | "leads" | "sales" | "stats">("operational");
+
+  // Operational Leads Batch State (G-SERP row 103 & 104)
+  const [batches, setBatches] = useState<OperationalLeadBatch[]>(INITIAL_BATCHES);
+  const [batchSearch, setBatchSearch] = useState("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedBatchDetail, setSelectedBatchDetail] = useState<OperationalLeadBatch | null>(null);
+
+  // Form State for Buat Leads
+  const [formTanggal, setFormTanggal] = useState(new Date().toISOString().slice(0, 10));
+  const [formCatatan, setFormCatatan] = useState("");
+  const [formItems, setFormItems] = useState<OperationalLeadItem[]>([
+    { penerima: AVAILABLE_RECEIVERS[0], qty: 10 },
+    { penerima: AVAILABLE_RECEIVERS[1], qty: 10 },
+  ]);
+
+  // Handle URL action=create
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateModalOpen(true);
+    }
+  }, [searchParams]);
+
+  // Inbound CRM Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
@@ -80,17 +170,17 @@ export default function CRMLeadsClient() {
   // Queries
   const { data: salesData, isLoading: salesLoading } = useQuery<SalesMember[]>({
     queryKey: ["crm-sales"],
-    queryFn: () => api.get("/marketing/landing-tracker/sales").then(r => r.data),
+    queryFn: () => api.get("/marketing/landing-tracker/sales").then((r) => r.data),
   });
 
   const { data: leadsData, isLoading: leadsLoading } = useQuery<{ data: LeadConversion[] }>({
     queryKey: ["crm-leads"],
-    queryFn: () => api.get("/marketing/landing-tracker/conversions?limit=500").then(r => r.data),
+    queryFn: () => api.get("/marketing/landing-tracker/conversions?limit=500").then((r) => r.data),
   });
 
   const { data: statsData, isLoading: statsLoading } = useQuery<any>({
     queryKey: ["crm-stats"],
-    queryFn: () => api.get("/marketing/landing-tracker/stats").then(r => r.data),
+    queryFn: () => api.get("/marketing/landing-tracker/stats").then((r) => r.data),
   });
 
   // Mutations
@@ -104,7 +194,7 @@ export default function CRMLeadsClient() {
     },
     onError: () => {
       toast.error("Gagal memperbarui status lead.");
-    }
+    },
   });
 
   const saveSalesMutation = useMutation({
@@ -116,7 +206,7 @@ export default function CRMLeadsClient() {
     },
     onError: () => {
       toast.error("Gagal menyimpan konfigurasi sales.");
-    }
+    },
   });
 
   const resetRotationMutation = useMutation({
@@ -126,7 +216,7 @@ export default function CRMLeadsClient() {
     },
     onError: () => {
       toast.error("Gagal mereset counter rotasi.");
-    }
+    },
   });
 
   const deleteLeadMutation = useMutation({
@@ -138,7 +228,7 @@ export default function CRMLeadsClient() {
     },
     onError: () => {
       toast.error("Gagal menghapus lead.");
-    }
+    },
   });
 
   const clearAllLeadsMutation = useMutation({
@@ -150,20 +240,18 @@ export default function CRMLeadsClient() {
     },
     onError: () => {
       toast.error("Gagal membersihkan data lead.");
-    }
+    },
   });
 
   // Local sales edits before save
   const [editedSales, setEditedSales] = useState<SalesMember[]>([]);
 
-  // Initialize edited sales when data is loaded
-  React.useEffect(() => {
+  useEffect(() => {
     if (salesData) {
       setEditedSales(salesData);
     }
   }, [salesData]);
 
-  // Handle Sales Change Helper
   const handleSalesFieldChange = (index: number, field: keyof SalesMember, value: any) => {
     const updated = [...editedSales];
     updated[index] = { ...updated[index], [field]: value };
@@ -177,8 +265,7 @@ export default function CRMLeadsClient() {
   };
 
   const handleSaveSalesConfig = () => {
-    // Basic phone validation
-    const invalid = editedSales.some(s => s.phone.replace(/\D/g, "").length < 9);
+    const invalid = editedSales.some((s) => s.phone.replace(/\D/g, "").length < 9);
     if (invalid) {
       toast.error("Nomor WhatsApp minimal 9 digit!");
       return;
@@ -186,82 +273,132 @@ export default function CRMLeadsClient() {
     saveSalesMutation.mutate(editedSales);
   };
 
-  // KPI Calculations (Real-time from Leads)
+  // Operational Leads Handlers
+  const handleAddFormItem = () => {
+    setFormItems([...formItems, { penerima: AVAILABLE_RECEIVERS[0], qty: 1 }]);
+  };
+
+  const handleRemoveFormItem = (index: number) => {
+    if (formItems.length <= 1) {
+      toast.warning("Minimal harus ada 1 penerima leads!");
+      return;
+    }
+    setFormItems(formItems.filter((_, idx) => idx !== index));
+  };
+
+  const handleItemChange = (index: number, field: keyof OperationalLeadItem, val: any) => {
+    const updated = [...formItems];
+    updated[index] = { ...updated[index], [field]: val };
+    setFormItems(updated);
+  };
+
+  const handleSaveBatch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formTanggal) {
+      toast.error("Tanggal Leads wajib diisi!");
+      return;
+    }
+    const totalQty = formItems.reduce((acc, curr) => acc + (Number(curr.qty) || 0), 0);
+    if (totalQty <= 0) {
+      toast.error("Total Qty Leads harus lebih besar dari 0!");
+      return;
+    }
+
+    const newBatch: OperationalLeadBatch = {
+      id: `LEAD-${new Date().getFullYear()}-${String(batches.length + 1).padStart(3, "0")}`,
+      tanggalLeads: formTanggal,
+      catatan: formCatatan || "Distribusi Leads Batch",
+      totalQtyLeads: totalQty,
+      items: [...formItems],
+    };
+
+    setBatches([newBatch, ...batches]);
+    setIsCreateModalOpen(false);
+    setFormCatatan("");
+    setFormItems([
+      { penerima: AVAILABLE_RECEIVERS[0], qty: 10 },
+      { penerima: AVAILABLE_RECEIVERS[1], qty: 10 },
+    ]);
+    toast.success("Batch Leads berhasil disimpan!");
+  };
+
+  const handleDeleteBatch = (id: string) => {
+    if (confirm("Hapus baris distribusi leads ini?")) {
+      setBatches(batches.filter((b) => b.id !== id));
+      toast.success("Data distribusi leads berhasil dihapus!");
+    }
+  };
+
+  // Filtered Operational Batches
+  const filteredBatches = useMemo(() => {
+    return batches.filter((b) => {
+      const q = batchSearch.toLowerCase();
+      return (
+        !q ||
+        b.tanggalLeads.toLowerCase().includes(q) ||
+        b.catatan.toLowerCase().includes(q) ||
+        b.items.some((item) => item.penerima.toLowerCase().includes(q))
+      );
+    });
+  }, [batches, batchSearch]);
+
+  // Inbound Leads
   const leads = useMemo(() => leadsData?.data ?? [], [leadsData]);
-  
-  const kpis = useMemo(() => {
-    const total = leads.length;
-    const now = new Date();
-    const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const week0 = today0 - 6 * 86400000;
 
-    const todayLeads = leads.filter(l => new Date(l.timestamp).getTime() >= today0).length;
-    const weeklyLeads = leads.filter(l => new Date(l.timestamp).getTime() >= week0).length;
-    const qualifiedLeads = leads.filter(l => l.status === "Qualified" || l.status === "WON" || l.status === "WON_DEAL").length;
-    const convRate = total > 0 ? Math.round((qualifiedLeads / total) * 100) : 0;
-
-    return { total, todayLeads, weeklyLeads, convRate };
-  }, [leads]);
-
-  // Filtered Leads
   const filteredLeads = useMemo(() => {
-    return leads
-      .filter((l) => {
-        const query = searchQuery.toLowerCase();
-        const matchesSearch =
-          !searchQuery ||
-          (l.nama || "").toLowerCase().includes(query) ||
-          (l.perusahaan || "").toLowerCase().includes(query) ||
-          (l.hp || "").includes(searchQuery);
+    return leads.filter((l) => {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch =
+        !searchQuery ||
+        (l.nama || "").toLowerCase().includes(query) ||
+        (l.perusahaan || "").toLowerCase().includes(query) ||
+        (l.hp || "").includes(searchQuery);
 
-        const matchesStatus =
-          !statusFilter ||
-          (statusFilter === "New" && l.status === "New") ||
-          (statusFilter === "Contacted" && l.status === "Contacted") ||
-          (statusFilter === "Qualified" && (l.status === "Qualified" || l.status === "WON")) ||
-          (statusFilter === "Lost" && l.status === "Lost");
+      const matchesStatus =
+        !statusFilter ||
+        (statusFilter === "New" && l.status === "New") ||
+        (statusFilter === "Contacted" && l.status === "Contacted") ||
+        (statusFilter === "Qualified" && (l.status === "Qualified" || l.status === "WON")) ||
+        (statusFilter === "Lost" && l.status === "Lost");
 
-        const matchesSource =
-          !sourceFilter ||
-          (l.source || "Dreamlab").includes(sourceFilter);
+      const matchesSource = !sourceFilter || (l.source || "Dreamlab").includes(sourceFilter);
+      const matchesTraffic = !trafficFilter || (l.trafficSource || "Direct") === trafficFilter;
 
-        const matchesTraffic =
-          !trafficFilter ||
-          (l.trafficSource || "Direct") === trafficFilter;
-
-        return matchesSearch && matchesStatus && matchesSource && matchesTraffic;
-      });
+      return matchesSearch && matchesStatus && matchesSource && matchesTraffic;
+    });
   }, [leads, searchQuery, statusFilter, sourceFilter, trafficFilter]);
 
-  // Unique list of sources & traffics for filter dropdowns
   const filterOptions = useMemo(() => {
     const sources = new Set<string>();
     const traffics = new Set<string>();
-    
-    leads.forEach(l => {
+    leads.forEach((l) => {
       if (l.source) sources.add(l.source);
       if (l.trafficSource) traffics.add(l.trafficSource);
     });
-
     return {
       sources: Array.from(sources),
-      traffics: Array.from(traffics)
+      traffics: Array.from(traffics),
     };
   }, [leads]);
 
-  // Excel CSV Export local assembly
   const handleExportCSV = () => {
     if (!filteredLeads.length) {
       toast.warning("Tidak ada data lead untuk diekspor!");
       return;
     }
     const headers = [
-      "Tanggal", "Nama", "Brand / Perusahaan", "No. HP",
-      "Halaman Sumber", "URL Asal", "Produk Peminatan",
-      "Kanal Traffic", "UTM Source", "UTM Medium", "UTM Campaign",
-      "Sales Penerima", "Status"
+      "Tanggal",
+      "Nama",
+      "Brand / Perusahaan",
+      "No. HP",
+      "Halaman Sumber",
+      "URL Asal",
+      "Produk Peminatan",
+      "Kanal Traffic",
+      "Sales Penerima",
+      "Status",
     ];
-    const rows = filteredLeads.map(l => [
+    const rows = filteredLeads.map((l) => [
       new Date(l.timestamp).toLocaleString("id-ID"),
       l.nama || "",
       l.perusahaan || "",
@@ -270,16 +407,15 @@ export default function CRMLeadsClient() {
       l.pageUrl || "",
       l.produk || "",
       l.trafficSource || "Direct",
-      l.utmSource || "",
-      l.utmMedium || "",
-      l.utmCampaign || "",
       l.assignedTo || "",
-      l.status
+      l.status,
     ]);
-    const csvContent = "\uFEFF" + [
-      headers.join(","),
-      ...rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-    ].join("\n");
+    const csvContent =
+      "\uFEFF" +
+      [
+        headers.join(","),
+        ...rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+      ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -294,18 +430,17 @@ export default function CRMLeadsClient() {
   };
 
   const handleClearAllLeads = () => {
-    if (confirm("Apakah Anda yakin ingin menghapus SEMUA lead secara permanen? Aksi ini tidak dapat dibatalkan!")) {
+    if (confirm("Apakah Anda yakin ingin membersihkan semua data lead?")) {
       clearAllLeadsMutation.mutate();
     }
   };
 
   const handleDeleteLead = (id: string) => {
-    if (confirm("Hapus lead ini secara permanen?")) {
+    if (confirm("Hapus data lead ini?")) {
       deleteLeadMutation.mutate(id);
     }
   };
 
-  // Status Styling helpers
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
       case "New":
@@ -323,14 +458,14 @@ export default function CRMLeadsClient() {
     }
   };
 
-  // Local Distribution metrics for Tab 3 (Statistik Rotasi)
+  // Local Distribution metrics for Tab 4 (Statistik Rotasi)
   const distributions = useMemo(() => {
     const salesCounts: Record<string, number> = {};
     const pageCounts: Record<string, number> = {};
     const trafficCounts: Record<string, number> = {};
     const productCounts: Record<string, number> = {};
 
-    leads.forEach(l => {
+    leads.forEach((l) => {
       const s = l.assignedTo || "Unassigned";
       const src = l.source || "Dreamlab";
       const t = l.trafficSource || "Direct";
@@ -346,528 +481,637 @@ export default function CRMLeadsClient() {
       sales: Object.entries(salesCounts).sort((a, b) => b[1] - a[1]),
       pages: Object.entries(pageCounts).sort((a, b) => b[1] - a[1]),
       traffics: Object.entries(trafficCounts).sort((a, b) => b[1] - a[1]),
-      products: Object.entries(productCounts).sort((a, b) => b[1] - a[1])
+      products: Object.entries(productCounts).sort((a, b) => b[1] - a[1]),
     };
   }, [leads]);
 
   return (
-    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "leads" | "sales" | "stats")} className="space-y-6">
-      <TabsList className="bg-slate-100 p-1 rounded-xl border border-slate-200">
-        <TabsTrigger value="leads" className="rounded-lg px-8 py-2.5 font-bold text-[11px] uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">
-          📋 Lead Masuk
-        </TabsTrigger>
-        <TabsTrigger value="sales" className="rounded-lg px-8 py-2.5 font-bold text-[11px] uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">
-          👥 Konfigurasi Sales
-        </TabsTrigger>
-        <TabsTrigger value="stats" className="rounded-lg px-8 py-2.5 font-bold text-[11px] uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">
-          📊 Statistik Rotasi
-        </TabsTrigger>
-      </TabsList>
+    <div className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as "operational" | "leads" | "sales" | "stats")}
+        className="space-y-6"
+      >
+        <TabsList className="bg-slate-100 p-1 rounded-xl border border-slate-200">
+          <TabsTrigger
+            value="operational"
+            className="rounded-lg px-6 py-2.5 font-bold text-[11px] uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all"
+          >
+            📑 Distribusi Leads
+          </TabsTrigger>
+          <TabsTrigger
+            value="leads"
+            className="rounded-lg px-6 py-2.5 font-bold text-[11px] uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all"
+          >
+            📋 Inbound Leads & WA
+          </TabsTrigger>
+          <TabsTrigger
+            value="sales"
+            className="rounded-lg px-6 py-2.5 font-bold text-[11px] uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all"
+          >
+            👥 Konfigurasi Sales
+          </TabsTrigger>
+          <TabsTrigger
+            value="stats"
+            className="rounded-lg px-6 py-2.5 font-bold text-[11px] uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all"
+          >
+            📊 Statistik Rotasi
+          </TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="leads" className="space-y-6">
-            <div className="space-y-6">
-              {/* KPIs Row */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <StatCard label="Total Lead" value={leadsLoading ? "..." : kpis.total} subValue="Sepanjang waktu" icon={<Users />} />
-                <StatCard label="Lead Hari Ini" value={leadsLoading ? "..." : kpis.todayLeads} subValue="Sejak 00:00 hari ini" icon={<Activity />} />
-                <StatCard label="Minggu Ini" value={leadsLoading ? "..." : kpis.weeklyLeads} subValue="7 hari terakhir" icon={<Globe />} />
-                <StatCard label="Conversion Rate" value={leadsLoading ? "..." : `${kpis.convRate}%`} subValue="Lead → Qualified" icon={<Percent />} />
-              </div>
-
-              <TableWrapper
-                filters={
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">
-                      Daftar Lead Masuk
-                    </h3>
-                    
-                    {/* Filters Grid */}
-                    <div className="flex flex-wrap items-center gap-3">
-                      <DnaInput
-                        placeholder="Cari nama/brand..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-9 font-bold w-52"
-                        icon={<Search className="w-3.5 h-3.5 text-slate-300" />}
-                      />
-
-                      <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="h-9 px-3 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl cursor-pointer focus:outline-none"
-                      >
-                        <option value="">Semua Status</option>
-                        <option value="New">🔵 New</option>
-                        <option value="Contacted">🟠 Contacted</option>
-                        <option value="Qualified">🟢 Qualified</option>
-                        <option value="Lost">⚫ Lost</option>
-                      </select>
-
-                      <select
-                        value={sourceFilter}
-                        onChange={(e) => setSourceFilter(e.target.value)}
-                        className="h-9 px-3 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl cursor-pointer focus:outline-none max-w-[180px]"
-                      >
-                        <option value="">Semua Sumber</option>
-                        {filterOptions.sources.map(s => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-
-                      <select
-                        value={trafficFilter}
-                        onChange={(e) => setTrafficFilter(e.target.value)}
-                        className="h-9 px-3 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl cursor-pointer focus:outline-none"
-                      >
-                        <option value="">Semua Traffic</option>
-                        {filterOptions.traffics.map(t => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
-
-                      <DnaButton
-                        variant="outline"
-                        onClick={handleExportCSV}
-                        icon={<Download />}
-                      >
-                        Export CSV
-                      </DnaButton>
-
-                      <DnaButton
-                        variant="danger"
-                        onClick={handleClearAllLeads}
-                        icon={<Trash2 />}
-                      >
-                        Hapus Semua
-                      </DnaButton>
-                    </div>
-                  </div>
-                }
-              >
-                <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50/50 border-b border-slate-200">
-                        <th className="p-4 text-left w-28">
-                          <span className="text-table-header text-slate-400">Tanggal</span>
-                        </th>
-                        <th className="p-4 text-left">
-                          <span className="text-table-header text-slate-400">Nama</span>
-                        </th>
-                        <th className="p-4 text-left">
-                          <span className="text-table-header text-slate-400">Brand</span>
-                        </th>
-                        <th className="p-4 text-left w-36">
-                          <span className="text-table-header text-slate-400">No. HP</span>
-                        </th>
-                        <th className="p-4 text-left">
-                          <span className="text-table-header text-slate-400">Sumber</span>
-                        </th>
-                        <th className="p-4 text-left">
-                          <span className="text-table-header text-slate-400">Traffic</span>
-                        </th>
-                        <th className="p-4 text-left">
-                          <span className="text-table-header text-slate-400">Sales</span>
-                        </th>
-                        <th className="p-4 text-left w-36">
-                          <span className="text-table-header text-slate-400">Status</span>
-                        </th>
-                        <th className="p-4 text-center w-20">
-                          <span className="text-table-header text-slate-400">Aksi</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredLeads.map((lead) => {
-                        const date = new Date(lead.timestamp);
-                        const dateStr = date.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
-                        const timeStr = date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-
-                        return (
-                          <tr key={lead.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors group">
-                            <td className="p-4 align-middle">
-                              <div className="flex flex-col">
-                                <span className="text-[11.5px] font-black text-slate-700 tabular-nums">{dateStr}</span>
-                                <span className="text-[9.5px] font-bold text-slate-400 tabular-nums">{timeStr}</span>
-                              </div>
-                            </td>
-                            <td className="p-4 align-middle">
-                              <span className="text-[12px] font-black text-slate-900">{lead.nama || "-"}</span>
-                            </td>
-                            <td className="p-4 align-middle">
-                              <span className="text-[12px] font-bold text-slate-600">{lead.perusahaan || "-"}</span>
-                            </td>
-                            <td className="p-4 align-middle">
-                              {lead.hp ? (
-                                <a
-                                  href={`https://wa.me/${lead.hp.replace(/\D/g, "")}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[11.5px] font-bold text-emerald-600 hover:underline inline-flex items-center gap-1 tabular-nums"
-                                >
-                                  <PhoneCall className="w-3 h-3" /> {lead.hp}
-                                </a>
-                              ) : (
-                                <span className="text-[11.5px] text-slate-400">-</span>
-                              )}
-                            </td>
-                            <td className="p-4 align-middle">
-                              <DnaBadge status="default">
-                                {lead.source || "Dreamlab"}
-                              </DnaBadge>
-                            </td>
-                            <td className="p-4 align-middle">
-                              <DnaBadge status="info">
-                                {lead.trafficSource || "Direct"}
-                              </DnaBadge>
-                            </td>
-                            <td className="p-4 align-middle">
-                              <div className="flex items-center gap-1.5">
-                                <UserCheck className="w-3.5 h-3.5 text-slate-400" />
-                                <span className="text-[12px] font-black text-slate-800">{lead.assignedTo || "-"}</span>
-                              </div>
-                            </td>
-                            <td className="p-4 align-middle">
-                              <select
-                                value={lead.status}
-                                onChange={(e) => updateStatusMutation.mutate({ id: lead.id, status: e.target.value })}
-                                className={`text-[11.5px] font-black uppercase py-1 px-2 border rounded-xl cursor-pointer ${getStatusBadgeStyle(lead.status)} focus:outline-none`}
-                              >
-                                <option value="New">🔵 New</option>
-                                <option value="Contacted">🟠 Contacted</option>
-                                <option value="Qualified">🟢 Qualified</option>
-                                <option value="Lost">⚫ Lost</option>
-                              </select>
-                            </td>
-                            <td className="p-4 align-middle text-center">
-                              <button
-                                onClick={() => handleDeleteLead(lead.id)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
-                                title="Hapus Lead"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-
-                      {filteredLeads.length === 0 && (
-                        <tr>
-                          <td colSpan={9} className="p-12 text-center">
-                            {leadsLoading ? (
-                              <div className="flex flex-col items-center justify-center gap-2">
-                                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                                <p className="text-xs font-black uppercase text-slate-400 tracking-wider">Memuat data lead...</p>
-                              </div>
-                            ) : (
-                              <div className="flex flex-col items-center justify-center gap-2">
-                                <AlertCircle className="w-8 h-8 text-slate-300" />
-                                <p className="text-sm font-black uppercase text-slate-400 tracking-wider">Belum ada lead masuk</p>
-                                <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-                                  Lead baru akan muncul di sini secara otomatis dari widget landing page.
-                                </p>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </TableWrapper>
+        {/* ========================================================================= */}
+        {/* TAB 1: OPERATIONAL LEADS (1:1 G-SERP ROW 103 & 104 - EXACT 5 COLUMNS) */}
+        {/* ========================================================================= */}
+        <TabsContent value="operational" className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Input
+                placeholder="Cari tanggal, catatan, penerima..."
+                value={batchSearch}
+                onChange={(e) => setBatchSearch(e.target.value)}
+                className="pl-9 h-9 text-xs"
+              />
             </div>
-          </TabsContent>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <DnaButton
+                variant="primary"
+                onClick={() => setIsCreateModalOpen(true)}
+                icon={<Plus className="w-4 h-4" />}
+              >
+                Buat Leads
+              </DnaButton>
+            </div>
+          </div>
 
-          <TabsContent value="sales" className="space-y-6 max-w-4xl">
-              {/* Information Banner */}
-              <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-2xl flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-blue-800">
-                    Cara Kerja Rotasi Server-Side Round-Robin:
-                  </h4>
-                  <p className="text-[11.5px] font-bold text-blue-600 mt-1 leading-relaxed">
-                    Setiap lead baru yang masuk dari formulir konsultasi pelanggan akan dialokasikan secara bergiliran (adil 1-ke-1) ke sales WhatsApp yang berstatus aktif (toggle saklar berwarna hijau). Nonaktifkan sales yang sedang cuti agar tidak menerima alokasi leads.
-                  </p>
-                </div>
-              </div>
-
-              {/* Sales Config Card */}
-              <Card className="border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-sm">
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">
-                      Sales WhatsApp Rotator Settings
-                    </h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                      Kelola nomor telepon WhatsApp dan keaktifan sales
-                    </p>
-                  </div>
-                  <DnaButton
-                    variant="outline"
-                    onClick={() => {
-                      if (confirm("Reset counter rotasi? Lead berikutnya akan masuk ke sales pertama yang aktif.")) {
-                        resetRotationMutation.mutate();
-                      }
-                    }}
-                    icon={<RefreshCw />}
-                  >
-                    Reset Counter
-                  </DnaButton>
-                </div>
-
-                <div className="p-6 space-y-4">
-                  {salesLoading ? (
-                    <div className="p-12 text-center">
-                      <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-2" />
-                      <p className="text-xs font-black uppercase text-slate-400">Loading data sales...</p>
-                    </div>
+          <TableWrapper>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/50 border-b border-slate-200">
+                    <th className="p-4 text-center w-12 text-slate-500 font-bold text-[11px] uppercase tracking-wider">#</th>
+                    <th className="p-4 text-left w-36 text-slate-500 font-bold text-[11px] uppercase tracking-wider">Tanggal Leads</th>
+                    <th className="p-4 text-left text-slate-500 font-bold text-[11px] uppercase tracking-wider">Catatan</th>
+                    <th className="p-4 text-center w-36 text-slate-500 font-bold text-[11px] uppercase tracking-wider">Total Qty Leads</th>
+                    <th className="p-4 text-center w-28 text-slate-500 font-bold text-[11px] uppercase tracking-wider">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredBatches.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center text-slate-400 text-xs">
+                        Tidak ada data distribusi leads ditemukan.
+                      </td>
+                    </tr>
                   ) : (
-                    editedSales.map((member, i) => (
-                      <div key={i} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-slate-50/50 border border-slate-100 p-4 rounded-2xl group hover:border-slate-200 transition-all">
-                        {/* Name Input */}
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Nama Sales</label>
-                          <DnaInput
-                            value={member.name}
-                            onChange={(e) => handleSalesFieldChange(i, "name", e.target.value)}
-                            placeholder="Contoh: Annisa"
-                            className="h-9 font-bold"
-                          />
-                        </div>
-
-                        {/* Phone Input */}
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">WhatsApp (Internasional)</label>
-                          <DnaInput
-                            type="tel"
-                            value={member.phone}
-                            onChange={(e) => handleSalesFieldChange(i, "phone", e.target.value.replace(/\D/g, ""))}
-                            placeholder="62812..."
-                            className="h-9 font-bold tabular-nums"
-                          />
-                        </div>
-
-                        {/* Active Toggle */}
-                        <div className="flex flex-col items-center md:items-start justify-center pt-2 md:pt-0">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">Status Dinas</span>
-                          <div className="flex items-center gap-2">
-                            {/* Toggle switch custom */}
+                    filteredBatches.map((batch, index) => (
+                      <tr key={batch.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-4 text-center text-xs font-bold text-slate-500">{index + 1}</td>
+                        <td className="p-4 text-xs font-bold text-slate-800">{batch.tanggalLeads}</td>
+                        <td className="p-4 text-xs text-slate-700">{batch.catatan}</td>
+                        <td className="p-4 text-center text-xs font-bold text-blue-600">
+                          <span className="bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full">
+                            {batch.totalQtyLeads} Leads
+                          </span>
+                        </td>
+                        <td className="p-4 text-center">
+                          <div className="flex items-center justify-center gap-1">
                             <button
-                              onClick={() => handleToggleSales(i)}
-                              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                member.active ? "bg-emerald-500" : "bg-slate-200"
-                              }`}
+                              onClick={() => setSelectedBatchDetail(batch)}
+                              className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                              title="Lihat Alokasi"
                             >
-                              <span
-                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                  member.active ? "translate-x-5" : "translate-x-0"
-                                }`}
-                              />
+                              <Eye className="w-4 h-4" />
                             </button>
-                            <DnaBadge status={member.active ? "success" : "default"}>
-                              {member.active ? "Aktif" : "Off"}
-                            </DnaBadge>
+                            <button
+                              onClick={() => handleDeleteBatch(batch.id)}
+                              className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                              title="Hapus"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
-                        </div>
-
-                        {/* Tips indicator */}
-                        <div className="text-[10px] text-slate-400 font-medium md:pt-4 text-center md:text-right">
-                          {member.phone.startsWith("62") ? (
-                            <span className="text-emerald-500 font-bold">✓ Format nomor valid</span>
-                          ) : member.phone ? (
-                            <span className="text-rose-500 font-bold">⚠️ Harus diawali 62</span>
-                          ) : (
-                            <span>Belum diisi</span>
-                          )}
-                        </div>
-                      </div>
+                        </td>
+                      </tr>
                     ))
                   )}
+                </tbody>
+              </table>
+            </div>
+          </TableWrapper>
+        </TabsContent>
 
-                  {/* Actions buttons */}
-                  {!salesLoading && (
-                    <div className="pt-4 flex justify-end">
-                      <DnaButton
-                        variant="primary"
-                        onClick={handleSaveSalesConfig}
-                        disabled={saveSalesMutation.isPending}
-                      >
-                        {saveSalesMutation.isPending ? "Menyimpan..." : "Simpan Konfigurasi"}
-                      </DnaButton>
-                    </div>
+        {/* ========================================================================= */}
+        {/* TAB 2: INBOUND LEADS & WHATSAPP ROTATION                                  */}
+        {/* ========================================================================= */}
+        <TabsContent value="leads" className="space-y-6">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+              <div className="relative w-full md:w-64">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Input
+                  placeholder="Cari lead, nama, brand, no hp..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 text-xs"
+                />
+              </div>
+
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg text-slate-600 font-bold focus:outline-none"
+              >
+                <option value="">Semua Status</option>
+                <option value="New">New</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Qualified">Qualified</option>
+                <option value="Lost">Lost</option>
+              </select>
+
+              <select
+                value={trafficFilter}
+                onChange={(e) => setTrafficFilter(e.target.value)}
+                className="h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg text-slate-600 font-bold focus:outline-none"
+              >
+                <option value="">Semua Kanal Traffic</option>
+                {filterOptions.traffics.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 self-end md:self-auto">
+              <DnaButton
+                variant="outline"
+                onClick={handleExportCSV}
+                icon={<Download className="w-4 h-4" />}
+              >
+                Ekspor CSV
+              </DnaButton>
+              <DnaButton
+                variant="outline"
+                onClick={handleClearAllLeads}
+                icon={<Trash2 className="w-4 h-4 text-rose-500" />}
+                className="hover:border-rose-200 hover:bg-rose-50"
+              >
+                Bersihkan Data
+              </DnaButton>
+            </div>
+          </div>
+
+          <TableWrapper>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/50 border-b border-slate-200">
+                    <th className="p-4 text-left w-36 text-slate-500 font-bold text-[11px] uppercase tracking-wider">Tanggal</th>
+                    <th className="p-4 text-left text-slate-500 font-bold text-[11px] uppercase tracking-wider">Nama</th>
+                    <th className="p-4 text-left text-slate-500 font-bold text-[11px] uppercase tracking-wider">Brand</th>
+                    <th className="p-4 text-left w-36 text-slate-500 font-bold text-[11px] uppercase tracking-wider">No. HP</th>
+                    <th className="p-4 text-left text-slate-500 font-bold text-[11px] uppercase tracking-wider">Sumber</th>
+                    <th className="p-4 text-left text-slate-500 font-bold text-[11px] uppercase tracking-wider">Traffic</th>
+                    <th className="p-4 text-left text-slate-500 font-bold text-[11px] uppercase tracking-wider">Sales</th>
+                    <th className="p-4 text-left w-36 text-slate-500 font-bold text-[11px] uppercase tracking-wider">Status</th>
+                    <th className="p-4 text-center w-20 text-slate-500 font-bold text-[11px] uppercase tracking-wider">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredLeads.map((lead) => {
+                    const date = new Date(lead.timestamp);
+                    const formattedDate = date.toLocaleDateString("id-ID", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    });
+
+                    return (
+                      <tr key={lead.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-4 text-xs font-bold text-slate-700">{formattedDate}</td>
+                        <td className="p-4 text-xs font-bold text-slate-900">{lead.nama || "-"}</td>
+                        <td className="p-4 text-xs text-slate-600">{lead.perusahaan || "-"}</td>
+                        <td className="p-4 text-xs">
+                          {lead.hp ? (
+                            <a
+                              href={`https://wa.me/${lead.hp.replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-emerald-600 hover:underline inline-flex items-center gap-1 font-bold"
+                            >
+                              <PhoneCall className="w-3 h-3" /> {lead.hp}
+                            </a>
+                          ) : (
+                            <span className="text-slate-400">-</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-xs">
+                          <DnaBadge status="default">{lead.source || "Dreamlab"}</DnaBadge>
+                        </td>
+                        <td className="p-4 text-xs">
+                          <DnaBadge status="info">{lead.trafficSource || "Direct"}</DnaBadge>
+                        </td>
+                        <td className="p-4 text-xs font-bold text-slate-800">{lead.assignedTo || "-"}</td>
+                        <td className="p-4 text-xs">
+                          <select
+                            value={lead.status}
+                            onChange={(e) =>
+                              updateStatusMutation.mutate({ id: lead.id, status: e.target.value })
+                            }
+                            className={`text-[11px] font-bold py-1 px-2 border rounded-lg cursor-pointer ${getStatusBadgeStyle(
+                              lead.status
+                            )} focus:outline-none`}
+                          >
+                            <option value="New">New</option>
+                            <option value="Contacted">Contacted</option>
+                            <option value="Qualified">Qualified</option>
+                            <option value="Lost">Lost</option>
+                          </select>
+                        </td>
+                        <td className="p-4 text-center">
+                          <button
+                            onClick={() => handleDeleteLead(lead.id)}
+                            className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                            title="Hapus Lead"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+
+                  {filteredLeads.length === 0 && (
+                    <tr>
+                      <td colSpan={9} className="p-8 text-center text-slate-400 text-xs">
+                        {leadsLoading ? "Memuat data lead..." : "Belum ada lead masuk"}
+                      </td>
+                    </tr>
                   )}
-                </div>
-              </Card>
+                </tbody>
+              </table>
+            </div>
+          </TableWrapper>
+        </TabsContent>
 
-              {/* Format Guide */}
-              <Card className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 mb-2">Panduan Format Nomor Telepon</h3>
-                <p className="text-[11.5px] font-bold text-slate-500 leading-relaxed">
-                  Semua nomor telepon WhatsApp wajib didaftarkan menggunakan format kode negara internasional tanpa tanda "+" atau "0" di depan:
-                </p>
-                <ul className="list-disc list-inside text-[11px] font-bold text-slate-400 mt-2 space-y-1.5 ml-2">
-                  <li>Contoh: <code className="bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded-lg border border-rose-100">08123456789</code> ditulis sebagai <strong className="text-slate-700">628123456789</strong></li>
-                  <li>Awalan kode negara Indonesia selalu <strong className="text-slate-700">62</strong></li>
-                </ul>
-              </Card>
-          </TabsContent>
+        {/* ========================================================================= */}
+        {/* TAB 3: SALES CONFIGURATION                                                */}
+        {/* ========================================================================= */}
+        <TabsContent value="sales" className="space-y-6 max-w-4xl">
+          <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-blue-800">
+                Cara Kerja Rotasi Server-Side Round-Robin:
+              </h4>
+              <p className="text-xs text-blue-600 mt-1 leading-relaxed">
+                Setiap lead baru yang masuk dari formulir landing page akan dialokasikan secara bergilir ke sales WhatsApp yang berstatus aktif.
+              </p>
+            </div>
+          </div>
 
-          <TabsContent value="stats" className="space-y-6">
-              {statsLoading ? (
-                <div className="p-20 text-center bg-white border border-slate-200 rounded-2xl">
-                  <Loader2 className="w-10 h-10 text-blue-600 animate-spin mx-auto mb-2" />
-                  <p className="text-xs font-black uppercase text-slate-400 tracking-widest">Menghitung statistik rotasi lead...</p>
-                </div>
-              ) : leads.length === 0 ? (
-                <Card className="p-12 text-center bg-white border border-slate-200 rounded-2xl flex flex-col items-center justify-center gap-2">
-                  <AlertCircle className="w-10 h-10 text-slate-300" />
-                  <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">Belum Ada Data Statistik</h3>
-                  <p className="text-[10.5px] text-slate-300 font-bold uppercase tracking-widest">
-                    Statistik visual akan otomatis muncul setelah lead masuk pertama kali tercatat.
-                  </p>
-                </Card>
+          <Card className="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Pengaturan WhatsApp Sales</h3>
+                <p className="text-xs text-slate-500">Kelola nomor telepon WhatsApp dan keaktifan sales</p>
+              </div>
+              <DnaButton
+                variant="outline"
+                onClick={() => {
+                  if (confirm("Reset counter rotasi?")) {
+                    resetRotationMutation.mutate();
+                  }
+                }}
+                icon={<RefreshCw className="w-4 h-4" />}
+              >
+                Reset Counter
+              </DnaButton>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {salesLoading ? (
+                <div className="p-8 text-center text-xs text-slate-400">Loading data sales...</div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Distribution per Sales */}
-                  <Card className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
-                    <div className="mb-6">
-                      <SectionLabel>Lead Allocations</SectionLabel>
-                      <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mt-1">
-                        Distribusi Giliran per Sales
-                      </h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                        Menjamin pembagian lead merata secara round-robin
-                      </p>
+                editedSales.map((member, i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-slate-50/50 border border-slate-100 p-4 rounded-xl"
+                  >
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">Nama Sales</label>
+                      <DnaInput
+                        value={member.name}
+                        onChange={(e) => handleSalesFieldChange(i, "name", e.target.value)}
+                        placeholder="Nama"
+                        className="h-9 text-xs"
+                      />
                     </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">WhatsApp (62...)</label>
+                      <DnaInput
+                        type="tel"
+                        value={member.phone}
+                        onChange={(e) => handleSalesFieldChange(i, "phone", e.target.value.replace(/\D/g, ""))}
+                        placeholder="62812..."
+                        className="h-9 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Status</label>
+                      <button
+                        onClick={() => handleToggleSales(i)}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold transition-colors ${
+                          member.active
+                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                            : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+                        }`}
+                      >
+                        {member.active ? "● Aktif Bertugas" : "○ Cuti / Off"}
+                      </button>
+                    </div>
+                    <div className="text-right text-[11px] text-slate-400">
+                      {member.phone.startsWith("62") ? (
+                        <span className="text-emerald-600 font-bold">✓ Valid (62)</span>
+                      ) : (
+                        <span className="text-rose-500 font-bold">⚠️ Gunakan 62</span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
 
-                    <div className="space-y-4">
-                      {distributions.sales.map(([name, count]) => {
-                        const total = leads.length;
-                        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                        return (
-                          <div key={name} className="space-y-2">
-                            <div className="flex items-center justify-between text-xs font-bold">
-                              <span className="text-slate-800">{name}</span>
-                              <span className="text-blue-600 font-black tabular-nums">{count} lead ({pct}%)</span>
-                            </div>
-                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-blue-600 to-blue-500 rounded-full transition-all duration-500"
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </Card>
-
-                  {/* Distribution per Source Page */}
-                  <Card className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
-                    <div className="mb-6">
-                      <SectionLabel>Sources Ranking</SectionLabel>
-                      <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mt-1">
-                        Distribusi Halaman Sumber
-                      </h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                        Landing page dengan performa konversi terbaik
-                      </p>
-                    </div>
-
-                    <div className="space-y-4">
-                      {distributions.pages.map(([page, count]) => {
-                        const total = leads.length;
-                        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                        return (
-                          <div key={page} className="space-y-2">
-                            <div className="flex items-center justify-between text-xs font-bold">
-                              <span className="text-slate-800 truncate max-w-[200px]">{page}</span>
-                              <span className="text-purple-600 font-black tabular-nums">{count} lead ({pct}%)</span>
-                            </div>
-                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-purple-600 to-purple-500 rounded-full transition-all duration-500"
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </Card>
-
-                  {/* Distribution per Traffic Platform */}
-                  <Card className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
-                    <div className="mb-6">
-                      <SectionLabel>Traffic Share</SectionLabel>
-                      <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mt-1">
-                        Kanal Asal Traffic
-                      </h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                        Distribusi lead berdasarkan platform iklan & organic
-                      </p>
-                    </div>
-
-                    <div className="space-y-4">
-                      {distributions.traffics.map(([traffic, count]) => {
-                        const total = leads.length;
-                        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                        return (
-                          <div key={traffic} className="space-y-2">
-                            <div className="flex items-center justify-between text-xs font-bold">
-                              <span className="text-slate-800">{traffic}</span>
-                              <span className="text-amber-600 font-black tabular-nums">{count} lead ({pct}%)</span>
-                            </div>
-                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-500"
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </Card>
-
-                  {/* Distribution per Product Category */}
-                  <Card className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
-                    <div className="mb-6">
-                      <SectionLabel>Product Interests</SectionLabel>
-                      <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mt-1">
-                        Distribusi Minat Produk
-                      </h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                        Produk kosmetik/maklon yang paling diminati visitor
-                      </p>
-                    </div>
-
-                    <div className="space-y-4">
-                      {distributions.products.map(([product, count]) => {
-                        const total = leads.length;
-                        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                        return (
-                          <div key={product} className="space-y-2">
-                            <div className="flex items-center justify-between text-xs font-bold">
-                              <span className="text-slate-800">{product}</span>
-                              <span className="text-rose-600 font-black tabular-nums">{count} lead ({pct}%)</span>
-                            </div>
-                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-rose-600 to-rose-500 rounded-full transition-all duration-500"
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </Card>
+              {!salesLoading && (
+                <div className="pt-2 flex justify-end">
+                  <DnaButton
+                    variant="primary"
+                    onClick={handleSaveSalesConfig}
+                    disabled={saveSalesMutation.isPending}
+                  >
+                    {saveSalesMutation.isPending ? "Menyimpan..." : "Simpan Konfigurasi"}
+                  </DnaButton>
                 </div>
               )}
-          </TabsContent>
-    </Tabs>
+            </div>
+          </Card>
+        </TabsContent>
+
+        {/* ========================================================================= */}
+        {/* TAB 4: ROTATION STATS                                                     */}
+        {/* ========================================================================= */}
+        <TabsContent value="stats" className="space-y-6">
+          {statsLoading ? (
+            <div className="p-12 text-center text-xs text-slate-400">Menghitung statistik rotasi...</div>
+          ) : leads.length === 0 ? (
+            <Card className="p-12 text-center bg-white border border-slate-200 rounded-xl">
+              <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+              <p className="text-xs font-bold text-slate-500">Belum Ada Data Statistik Lead</p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="border border-slate-200 rounded-xl bg-white p-5 shadow-sm">
+                <h3 className="text-sm font-bold text-slate-900 mb-4">Distribusi Lead per Sales</h3>
+                <div className="space-y-3">
+                  {distributions.sales.map(([name, count]) => {
+                    const total = leads.length;
+                    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                    return (
+                      <div key={name} className="space-y-1">
+                        <div className="flex justify-between text-xs font-bold">
+                          <span>{name}</span>
+                          <span className="text-blue-600">{count} lead ({pct}%)</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-600 rounded-full" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+
+              <Card className="border border-slate-200 rounded-xl bg-white p-5 shadow-sm">
+                <h3 className="text-sm font-bold text-slate-900 mb-4">Kanal Asal Traffic</h3>
+                <div className="space-y-3">
+                  {distributions.traffics.map(([traffic, count]) => {
+                    const total = leads.length;
+                    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                    return (
+                      <div key={traffic} className="space-y-1">
+                        <div className="flex justify-between text-xs font-bold">
+                          <span>{traffic}</span>
+                          <span className="text-amber-600">{count} lead ({pct}%)</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-amber-500 rounded-full" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* ========================================================================= */}
+      {/* MODAL: BUAT LEADS (G-SERP ROW 104 FORM WITH DYNAMIC SUB-TABLE BASKET)      */}
+      {/* ========================================================================= */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="font-bold text-slate-800 text-base">Buat Distribusi Leads Baru</h3>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveBatch} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                    Tanggal Leads <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="date"
+                    required
+                    value={formTanggal}
+                    onChange={(e) => setFormTanggal(e.target.value)}
+                    className="text-xs h-9"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">Catatan</label>
+                  <Input
+                    placeholder="Contoh: Leads Iklan TikTok Batch 1"
+                    value={formCatatan}
+                    onChange={(e) => setFormCatatan(e.target.value)}
+                    className="text-xs h-9"
+                  />
+                </div>
+              </div>
+
+              {/* Sub-tabel Keranjang Penerima Leads */}
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <div className="bg-slate-50 px-3 py-2 border-b border-slate-200 flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700">Daftar Alokasi Penerima</span>
+                  <button
+                    type="button"
+                    onClick={handleAddFormItem}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Tambah Penerima
+                  </button>
+                </div>
+
+                <div className="p-3 space-y-2 max-h-60 overflow-y-auto">
+                  <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-slate-400 uppercase px-1">
+                    <span className="col-span-7">Penerima Leads *</span>
+                    <span className="col-span-4">Qty Leads *</span>
+                    <span className="col-span-1 text-center">Aksi</span>
+                  </div>
+
+                  {formItems.map((item, idx) => (
+                    <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                      <div className="col-span-7">
+                        <select
+                          value={item.penerima}
+                          onChange={(e) => handleItemChange(idx, "penerima", e.target.value)}
+                          className="w-full h-8 text-xs bg-white border border-slate-200 rounded-lg px-2 focus:outline-none"
+                        >
+                          {AVAILABLE_RECEIVERS.map((recv) => (
+                            <option key={recv} value={recv}>
+                              {recv}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="col-span-4">
+                        <Input
+                          type="number"
+                          min="1"
+                          required
+                          value={item.qty}
+                          onChange={(e) => handleItemChange(idx, "qty", parseInt(e.target.value) || 0)}
+                          className="h-8 text-xs text-center"
+                        />
+                      </div>
+                      <div className="col-span-1 flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFormItem(idx)}
+                          className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                          title="Hapus baris"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-slate-50 px-3 py-2 border-t border-slate-200 flex justify-between items-center text-xs font-bold">
+                  <span className="text-slate-600">Total Qty Leads Terbagi:</span>
+                  <span className="text-blue-600">
+                    {formItems.reduce((acc, curr) => acc + (Number(curr.qty) || 0), 0)} Leads
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <DnaButton
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsCreateModalOpen(false)}
+                >
+                  Kembali
+                </DnaButton>
+                <DnaButton type="submit" variant="primary">
+                  Simpan Leads
+                </DnaButton>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: DETAIL ALOKASI LEADS                                               */}
+      {/* ========================================================================= */}
+      {selectedBatchDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-bold text-slate-800 text-base">Detail Distribusi Leads</h3>
+                <p className="text-xs text-slate-500 mt-0.5">{selectedBatchDetail.id}</p>
+              </div>
+              <button
+                onClick={() => setSelectedBatchDetail(null)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div>
+                <span className="text-slate-400 block font-medium">Tanggal Leads:</span>
+                <span className="font-bold text-slate-800">{selectedBatchDetail.tanggalLeads}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-medium">Total Qty Leads:</span>
+                <span className="font-bold text-blue-600">{selectedBatchDetail.totalQtyLeads} Leads</span>
+              </div>
+              <div className="col-span-2">
+                <span className="text-slate-400 block font-medium">Catatan:</span>
+                <span className="text-slate-700">{selectedBatchDetail.catatan}</span>
+              </div>
+            </div>
+
+            <div className="border border-slate-200 rounded-xl overflow-hidden mt-4">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+                  <tr>
+                    <th className="p-3">#</th>
+                    <th className="p-3">Penerima Leads</th>
+                    <th className="p-3 text-center">Qty Leads</th>
+                    <th className="p-3 text-center">Alokasi (%)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {selectedBatchDetail.items.map((item, idx) => {
+                    const pct = Math.round((item.qty / selectedBatchDetail.totalQtyLeads) * 100);
+                    return (
+                      <tr key={idx}>
+                        <td className="p-3 text-slate-400">{idx + 1}</td>
+                        <td className="p-3 font-bold text-slate-800">{item.penerima}</td>
+                        <td className="p-3 text-center font-bold text-slate-700">{item.qty}</td>
+                        <td className="p-3 text-center font-bold text-blue-600">{pct}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <DnaButton
+                variant="outline"
+                onClick={() => setSelectedBatchDetail(null)}
+              >
+                Tutup
+              </DnaButton>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

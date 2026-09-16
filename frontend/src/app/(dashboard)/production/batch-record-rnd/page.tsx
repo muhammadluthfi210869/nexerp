@@ -1,9 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { unwrapResponse } from "@/lib/unwrap-response";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   FileText,
   Plus,
@@ -13,18 +11,14 @@ import {
   Eye,
   Calendar,
   User,
-  Building2,
   Clock,
   CheckCircle2,
   AlertTriangle,
   ClipboardCheck,
   ShieldCheck,
   Printer,
-  Scale,
-  FlaskConical,
-  Check,
-  Sparkles,
-  Layers
+  X,
+  Building2
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -34,332 +28,280 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
-  DnaModal,
-  DnaTabNav,
   useDnaToast
 } from "@/components/dna";
+import { Input } from "@/components/ui/input";
 
-interface BatchRecordItem {
+interface BatchRecord {
   id: string;
   batchRecordCode: string;
-  spkCode: string;
-  releaseDate: string;
-  clientName: string;
-  brandName: string;
+  tanggal: string;
+  salesCode: string;
+  tanggalSales: string;
+  customerName: string;
+  category: string;
   productName: string;
-  formulaCode: string;
-  revisionVersion: string;
-  batchSizePcs: number;
-  batchSizeKg: number;
-  cpkbStage: "LINE_CLEARANCE" | "WEIGHING" | "MIXING" | "IN_PROCESS_QC" | "FILLING" | "PACKING" | "RELEASED";
-  cpkbStageLabel: string;
-  qcApprovalStatus: "PENDING_QC" | "QC_PASSED" | "RELEASED";
-  picFormulator: string;
-  picProductionLead: string;
-  createdDate: string;
+  creatorName: string;
+  status: "PENDING" | "PROCESS" | "READY_TO_PRODUCE" | "RELEASED";
+  statusLabel: string;
   notes?: string;
 }
 
-const MOCK_BATCH_RECORDS: BatchRecordItem[] = [
+const INITIAL_BATCH_RECORDS: BatchRecord[] = [
   {
     id: "br-01",
-    batchRecordCode: "BR-202603-0012",
-    spkCode: "SPK-PRD-202603-0041",
-    releaseDate: "2026-03-09",
-    clientName: "PT Cantika Glow Nusantara",
-    brandName: "GlowAura Skin",
+    batchRecordCode: "BR-2026-0012",
+    tanggal: "2026-03-09",
+    salesCode: "SO-2026-0041",
+    tanggalSales: "2026-03-01",
+    customerName: "PT Cantika Glow Nusantara",
+    category: "Skincare",
     productName: "Brightening Glow Serum 10% Niacinamide 30ml",
-    formulaCode: "FORM-202603-001",
-    revisionVersion: "Rev 2.0",
-    batchSizePcs: 5000,
-    batchSizeKg: 165.0,
-    cpkbStage: "WEIGHING",
-    cpkbStageLabel: "Penimbangan Bahan Baku Fase A-E",
-    qcApprovalStatus: "PENDING_QC",
-    picFormulator: "Apt. Dedi Kurniawan, S.Farm",
-    picProductionLead: "Ahmad Maulana",
-    createdDate: "2026-03-08",
-    notes: "Line clearance ruang penimbangan bersih. Timbangan kalibrasi Mettler Toledo valid."
+    creatorName: "Ahmad Maulana",
+    status: "READY_TO_PRODUCE",
+    statusLabel: "Siap Produksi",
+    notes: "Line clearance ruang mixing steril. Timbangan Mettler Toledo terkalibrasi."
   },
   {
     id: "br-02",
-    batchRecordCode: "BR-202603-0015",
-    spkCode: "SPK-PRD-202603-0044",
-    releaseDate: "2026-03-08",
-    clientName: "PT Miracle Beauty Lab",
-    brandName: "MiracleSkin",
+    batchRecordCode: "BR-2026-0015",
+    tanggal: "2026-03-08",
+    salesCode: "SO-2026-0044",
+    tanggalSales: "2026-02-28",
+    customerName: "PT Miracle Beauty Lab",
+    category: "Skincare",
     productName: "Ceramide 5X Barrier Repair Moisturizer 50g",
-    formulaCode: "FORM-202603-002",
-    revisionVersion: "Rev 1.1",
-    batchSizePcs: 3000,
-    batchSizeKg: 162.0,
-    cpkbStage: "LINE_CLEARANCE",
-    cpkbStageLabel: "Line Clearance Bejana Mixing #02",
-    qcApprovalStatus: "PENDING_QC",
-    picFormulator: "Dr. Maya Sp.KK",
-    picProductionLead: "Hendro Wibowo",
-    createdDate: "2026-03-07",
-    notes: "Pembersihan sanitasi bejana dengan Alkohol 70% dan swab test mikrobiologi lolos."
+    creatorName: "Hendro Wibowo",
+    status: "PROCESS",
+    statusLabel: "Dalam Proses",
+    notes: "Penimbangan bahan baku fase aktif Cica dan Ceramide selesai."
   },
   {
     id: "br-03",
-    batchRecordCode: "BR-202603-0018",
-    spkCode: "SPK-PRD-202603-0048",
-    releaseDate: "2026-03-06",
-    clientName: "CV Derma Estetika Mandiri",
-    brandName: "DermaPure",
-    productName: "AHA BHA PHA Exfoliating Toner 100ml",
-    formulaCode: "FORM-202603-003",
-    revisionVersion: "Rev 1.0",
-    batchSizePcs: 2000,
-    batchSizeKg: 210.0,
-    cpkbStage: "RELEASED",
-    cpkbStageLabel: "Bulk & Produk Jadi Lolos QC",
-    qcApprovalStatus: "RELEASED",
-    picFormulator: "Apt. Siska Handayani, M.Farm",
-    picProductionLead: "Ahmad Maulana",
-    createdDate: "2026-03-05",
-    notes: "Certificate of Analysis (CoA) rilis batch No. COA-FG-2026-048 terbit."
+    batchRecordCode: "BR-2026-0018",
+    tanggal: "2026-03-05",
+    salesCode: "SO-2026-0049",
+    tanggalSales: "2026-02-25",
+    customerName: "PT Cantika Herbal Nusantara",
+    category: "Bodycare",
+    productName: "Soothing Acne Gel Cica + Tea Tree 30gr",
+    creatorName: "Ahmad Maulana",
+    status: "PENDING",
+    statusLabel: "Menunggu APJ",
+    notes: "Menunggu rilis sertifikat CoA bahan baku pengawet dari QC Lab."
+  },
+  {
+    id: "br-04",
+    batchRecordCode: "BR-2026-0021",
+    tanggal: "2026-03-01",
+    salesCode: "SO-2026-0052",
+    tanggalSales: "2026-02-20",
+    customerName: "CV Royal Beauty Luxe",
+    category: "Decorative",
+    productName: "Hydrating Lip Oil Peptide Tint 5ml",
+    creatorName: "Hendro Wibowo",
+    status: "RELEASED",
+    statusLabel: "Selesai (Released)",
+    notes: "Pelepasan batch disetujui APJ & QC. Produk siap masuk karantina gudang."
   }
 ];
 
-export default function BatchRecordPage() {
-  const toast = useDnaToast();
-  const queryClient = useQueryClient();
-
-  const [activeTab, setActiveTab] = useState("all");
+function BatchRecordContent() {
+  const searchParams = useSearchParams();
+  const [records, setRecords] = useState<BatchRecord[]>(INITIAL_BATCH_RECORDS);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRecord, setSelectedRecord] = useState<BatchRecordItem | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<BatchRecord | null>(null);
+  const toast = useDnaToast();
 
-  // Form State (SCR-132)
-  const [createForm, setCreateForm] = useState({
-    spkCode: "SPK-PRD-202603-0050",
-    formulaCode: "FORM-202603-001",
-    clientName: "",
-    brandName: "",
-    productName: "",
-    batchSizePcs: 5000,
-    batchSizeKg: 165,
-    picProductionLead: "Ahmad Maulana",
+  // Create Form State
+  const [formData, setFormData] = useState({
+    salesCode: "SO-2026-0055",
+    productName: "Moisturizing Sunscreen Gel 50ml",
+    tanggal: new Date().toISOString().slice(0, 10),
+    customerName: "PT Cantika Glow Nusantara",
+    category: "Skincare",
     notes: ""
   });
 
-  // Queries
-  const { data: rawRecords, isLoading } = useQuery({
-    queryKey: ["rnd-batch-records"],
-    queryFn: async () => {
-      try {
-        const res = await api.get("/rnd/batch-records");
-        return unwrapResponse(res.data) as BatchRecordItem[];
-      } catch (e) {
-        return null;
-      }
+  // Handle URL action=create
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateModalOpen(true);
     }
-  });
+  }, [searchParams]);
 
-  const records: BatchRecordItem[] = useMemo(() => {
-    if (rawRecords && Array.isArray(rawRecords) && rawRecords.length > 0) {
-      return rawRecords;
-    }
-    return MOCK_BATCH_RECORDS;
-  }, [rawRecords]);
-
-  // Filtering
   const filteredRecords = useMemo(() => {
     return records.filter((r) => {
-      if (activeTab === "pre" && r.cpkbStage !== "LINE_CLEARANCE" && r.cpkbStage !== "WEIGHING") return false;
-      if (activeTab === "mixing" && r.cpkbStage !== "MIXING" && r.cpkbStage !== "IN_PROCESS_QC") return false;
-      if (activeTab === "filling" && r.cpkbStage !== "FILLING" && r.cpkbStage !== "PACKING") return false;
-      if (activeTab === "released" && r.cpkbStage !== "RELEASED") return false;
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        !searchQuery ||
+        r.batchRecordCode.toLowerCase().includes(q) ||
+        r.salesCode.toLowerCase().includes(q) ||
+        r.customerName.toLowerCase().includes(q) ||
+        r.productName.toLowerCase().includes(q) ||
+        r.creatorName.toLowerCase().includes(q);
 
-      if (searchQuery.trim() !== "") {
-        const q = searchQuery.toLowerCase();
-        return (
-          r.batchRecordCode.toLowerCase().includes(q) ||
-          r.spkCode.toLowerCase().includes(q) ||
-          r.clientName.toLowerCase().includes(q) ||
-          r.brandName.toLowerCase().includes(q) ||
-          r.productName.toLowerCase().includes(q) ||
-          r.formulaCode.toLowerCase().includes(q)
-        );
-      }
-      return true;
+      const matchesStatus = statusFilter === "ALL" || r.status === statusFilter;
+      return matchesSearch && matchesStatus;
     });
-  }, [records, activeTab, searchQuery]);
+  }, [records, searchQuery, statusFilter]);
 
-  // KPIs
   const totalRecords = records.length;
-  const preProdCount = records.filter(r => r.cpkbStage === "LINE_CLEARANCE" || r.cpkbStage === "WEIGHING").length;
-  const releasedCount = records.filter(r => r.cpkbStage === "RELEASED").length;
+  const readyCount = records.filter((r) => r.status === "READY_TO_PRODUCE").length;
+  const processCount = records.filter((r) => r.status === "PROCESS").length;
 
-  const handleCreateRecord = () => {
-    if (!createForm.clientName || !createForm.productName) {
-      toast.warning("Form Belum Lengkap", "Nama Klien dan Nama Produk wajib diisi.");
-      return;
-    }
-    toast.success("Batch Record Diterbitkan", "Dokumen Electronic Batch Record (EBMR) berhasil dirilis untuk eksekusi pra-produksi.");
+  const handleSaveBatchRecord = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newRecord: BatchRecord = {
+      id: `br-${Date.now()}`,
+      batchRecordCode: `PRD-2026-${String(records.length + 1).padStart(4, "0")}`,
+      tanggal: formData.tanggal,
+      salesCode: formData.salesCode,
+      tanggalSales: formData.tanggal,
+      customerName: formData.customerName,
+      category: formData.category,
+      productName: formData.productName,
+      creatorName: "Operator Produksi",
+      status: "PROCESS",
+      statusLabel: "Dalam Proses",
+      notes: formData.notes
+    };
+
+    setRecords([newRecord, ...records]);
     setIsCreateModalOpen(false);
-  };
-
-  const getStageBadge = (stage: BatchRecordItem["cpkbStage"]) => {
-    switch (stage) {
-      case "RELEASED":
-        return <DnaBadge variant="success">RELEASED (SELESAI)</DnaBadge>;
-      case "WEIGHING":
-        return <DnaBadge variant="blue">PENIMBANGAN BAHAN</DnaBadge>;
-      case "LINE_CLEARANCE":
-        return <DnaBadge variant="purple">LINE CLEARANCE</DnaBadge>;
-      case "MIXING":
-        return <DnaBadge variant="info">MIXING HOMOGENISASI</DnaBadge>;
-      default:
-        return <DnaBadge variant="neutral">{stage}</DnaBadge>;
-    }
+    toast.success("Batch Record Dibuat", "Nomor batch record universal PRD berhasil diterbitkan.");
   };
 
   return (
     <DnaPageContainer>
       {/* 1. Header Page */}
       <DnaPageHeader
-        title="Batch Record Pra-Produksi (EBMR Standar CPKB)"
-        description="Dokumen induk manufaktur kosmetik standar CPKB: Integrasi formula terkunci, verifikasi checklist line clearance, validasi timbang bahan baku per fase, dan parameter proses kritis."
-        badge={<DnaBadge variant="neutral">SCR-131 & SCR-132</DnaBadge>}
+        title="Batch Record Pra-Produksi"
+        description="Dokumentasi penelusuran riwayat penimbangan bahan, spesifikasi CPKB, dan otorisasi produksi (1:1 G-SERP Parity)."
         breadcrumbs={[
-          { label: "R&D & Pra-Produksi", href: "/rnd/dashboard" },
-          { label: "Batch Record", href: "/rnd/batch-record" }
+          { label: "Operasional", href: "/dashboard-rnd" },
+          { label: "Pra Produksi", href: "/batch-record" },
+          { label: "Batch Record", href: "/batch-record" }
         ]}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton
               variant="secondary"
-              onClick={() => toast.success("Export Berhasil", "Batch record berhasil diunduh ke format Excel.")}
+              onClick={() => toast.success("Export Excel", "Data batch record berhasil diunduh.")}
             >
-              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
               Export Excel
             </DnaButton>
             <DnaButton variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Buat Batch Record (SCR-132)
+              <Plus className="w-4 h-4 mr-1.5" />
+              + Buat Batch Record
             </DnaButton>
           </div>
         }
       />
 
       {/* 2. KPI Cards */}
-      <DnaKpiGrid cols={4}>
+      <DnaKpiGrid cols={3}>
         <DnaStatCard
           label="TOTAL BATCH RECORD"
-          value={`${totalRecords} Dokumen`}
-          subValue="Batch Manufaktur Terdaftar"
+          value={`${totalRecords} Batch`}
+          subValue="Terdaftar di Pra-Produksi"
           icon={<FileText className="w-5 h-5 text-blue-600" />}
         />
         <DnaStatCard
-          label="TAHAP PRA-PRODUKSI"
-          value={`${preProdCount} Batch`}
-          subValue="Line Clearance & Timbang Bahan"
-          icon={<Scale className="w-5 h-5 text-indigo-600" />}
-        />
-        <DnaStatCard
-          label="BATCH RELEASED"
-          value={`${releasedCount} Selesai`}
-          subValue="Lolos In-Process & Finished QC"
+          label="SIAP PRODUKSI (RELEASED APJ)"
+          value={`${readyCount} Batch`}
+          subValue="Menunggu Antrian Mixing"
           icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
         />
         <DnaStatCard
-          label="KEPATUHAN CPKB"
-          value="100% Audit Valid"
-          subValue="Integritas Data Penimbangan"
-          icon={<ShieldCheck className="w-5 h-5 text-cyan-600" />}
+          label="DALAM PROSES PENIMBANGAN"
+          value={`${processCount} Batch`}
+          subValue="Line Clearance & Timbang"
+          icon={<Clock className="w-5 h-5 text-amber-600" />}
         />
       </DnaKpiGrid>
 
-      {/* 3. Tabs */}
-      <DnaTabNav
-        tabs={[
-          { id: "all", label: `Semua Batch (${totalRecords})` },
-          { id: "pre", label: `Pra-Produksi & Timbang (${preProdCount})` },
-          { id: "released", label: `Selesai Released (${releasedCount})` }
-        ]}
-        activeTab={activeTab}
-        onChange={setActiveTab}
-      />
-
-      {/* 4. DataTable Card (SCR-131) */}
+      {/* 3. DataTable (1:1 G-SERP Row 132 — EXACT 9 COLUMNS) */}
       <DnaDataTableCard
-        title="Daftar Electronic Batch Manufacturing Records (EBMR)"
-        description="Dokumentasi penelusuran riwayat penimbangan bahan, parameter mixing, dan pelepasan produk jadi."
+        title="Daftar Batch Record Pra-Produksi"
+        description="Pelacakan status batch manufacturing, referensi sales order, pelanggan, dan nama produk maklon."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari No. Batch Record, SPK, Produk, Klien, Formula..."
+        searchPlaceholder="Cari kode batch, sales, pelanggan, produk..."
+        actions={
+          <div className="flex items-center gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 font-bold text-slate-700 focus:outline-none"
+            >
+              <option value="ALL">Semua Status</option>
+              <option value="READY_TO_PRODUCE">Siap Produksi</option>
+              <option value="PROCESS">Dalam Proses</option>
+              <option value="PENDING">Menunggu APJ</option>
+              <option value="RELEASED">Selesai (Released)</option>
+            </select>
+          </div>
+        }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-slate-50 border-b border-slate-200 font-bold text-slate-600 uppercase tracking-wider text-[10.5px]">
               <tr>
-                <th className="py-3 px-4">No. Batch Record & SPK</th>
-                <th className="py-3 px-4">Klien & Brand</th>
-                <th className="py-3 px-4">Nama Produk & Formula</th>
-                <th className="py-3 px-4 text-right">Ukuran Batch</th>
-                <th className="py-3 px-4">Tahap CPKB Aktif</th>
-                <th className="py-3 px-4">PIC Formulator & Produksi</th>
-                <th className="py-3 px-4 text-center">Status QC</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
+                <th className="py-3 px-3 text-center w-10">#</th>
+                <th className="py-3 px-3 w-28">Kode</th>
+                <th className="py-3 px-3 w-24">Tanggal</th>
+                <th className="py-3 px-3 w-28">Sales</th>
+                <th className="py-3 px-3">Pelanggan</th>
+                <th className="py-3 px-3 w-24">Kategori</th>
+                <th className="py-3 px-3">Produk</th>
+                <th className="py-3 px-3 text-center w-28">Status</th>
+                <th className="py-3 px-3 text-center w-20">#</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
-                    <FileText className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                    Tidak ada batch record yang sesuai.
+                  <td colSpan={9} className="py-8 text-center text-slate-400">
+                    Tidak ada data batch record ditemukan.
                   </td>
                 </tr>
               ) : (
-                filteredRecords.map((row) => (
+                filteredRecords.map((row, idx) => (
                   <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4">
-                      <p className="font-mono text-xs font-bold text-slate-900">{row.batchRecordCode}</p>
-                      <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
-                        <span className="font-mono text-indigo-600 font-semibold">{row.spkCode}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-xs">
-                      <p className="font-semibold text-slate-800">{row.clientName}</p>
-                      <span className="font-mono text-[10px] text-indigo-600 font-bold">{row.brandName}</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <p className="font-semibold text-slate-900 text-xs">{row.productName}</p>
-                      <span className="font-mono text-[10px] text-slate-500">{row.formulaCode} ({row.revisionVersion})</span>
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono">
-                      <p className="font-bold text-slate-900">{row.batchSizePcs.toLocaleString()} Pcs</p>
-                      <p className="text-[10px] text-indigo-600 font-bold">{row.batchSizeKg} Kg Bulk</p>
-                    </td>
-                    <td className="py-3 px-4">
-                      {getStageBadge(row.cpkbStage)}
-                    </td>
-                    <td className="py-3 px-4 text-xs">
-                      <p className="font-medium text-slate-800">{row.picProductionLead}</p>
-                      <p className="text-[10px] text-slate-400">R&D: {row.picFormulator.split(",")[0]}</p>
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <DnaBadge variant={row.qcApprovalStatus === "RELEASED" ? "success" : "warning"}>
-                        {row.qcApprovalStatus === "RELEASED" ? "QC RELEASED" : "MENUNGGU QC"}
-                      </DnaBadge>
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <DnaButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedRecord(row);
-                          setIsDetailModalOpen(true);
-                        }}
-                        title="Lihat Lembar EBMR & Checklist"
+                    <td className="py-3 px-3 text-center text-slate-400 font-bold">{idx + 1}</td>
+                    <td className="py-3 px-3 font-mono font-bold text-blue-600">{row.batchRecordCode}</td>
+                    <td className="py-3 px-3 text-slate-600 font-mono">{row.tanggal}</td>
+                    <td className="py-3 px-3 font-mono text-indigo-600 font-bold">{row.salesCode}</td>
+                    <td className="py-3 px-3 font-semibold text-slate-900">{row.customerName}</td>
+                    <td className="py-3 px-3 text-slate-700">{row.category}</td>
+                    <td className="py-3 px-3 font-medium text-slate-800">{row.productName}</td>
+                    <td className="py-3 px-3 text-center">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          row.status === "READY_TO_PRODUCE"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : row.status === "PROCESS"
+                            ? "bg-blue-100 text-blue-800"
+                            : row.status === "RELEASED"
+                            ? "bg-purple-100 text-purple-800"
+                            : "bg-amber-100 text-amber-800"
+                        }`}
                       >
-                        <Eye className="w-4 h-4 text-slate-600" />
-                      </DnaButton>
+                        {row.statusLabel}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <button
+                        onClick={() => setSelectedRecord(row)}
+                        className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                        title="Lihat Detail Batch Record (ajaxDetail)"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -369,194 +311,198 @@ export default function BatchRecordPage() {
         </div>
       </DnaDataTableCard>
 
-      {/* 5. Modal Buat Batch Record Baru (SCR-132) */}
-      <DnaModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        title="Buat Batch Record Baru (SCR-132)"
-        description="Penerbitan dokumen manufaktur resmi berbasis formula terkunci dan SPK."
-        size="lg"
-        footer={
-          <div className="flex items-center justify-end gap-2 w-full">
-            <DnaButton variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
-              Batal
-            </DnaButton>
-            <DnaButton variant="primary" onClick={handleCreateRecord}>
-              Terbitkan Batch Record
-            </DnaButton>
-          </div>
-        }
-      >
-        <div className="space-y-4 text-xs">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Nomor SPK Produksi *</label>
-              <input
-                type="text"
-                placeholder="SPK-PRD-202603-0050"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-                value={createForm.spkCode}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, spkCode: e.target.value }))}
-              />
+      {/* 4. Modal Buat Batch Record (SCR-133 / ?action=create) */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-bold text-slate-800 text-base">Buat Batch Record Pra-Produksi</h3>
+                <p className="text-xs text-slate-500">Penerbitan nomor urut batch manufaktur CPKB (Format Universal Global)</p>
+              </div>
+              <button onClick={() => setIsCreateModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Formula Terkunci (Locked) *</label>
-              <select
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800"
-                value={createForm.formulaCode}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, formulaCode: e.target.value }))}
-              >
-                <option value="FORM-202603-001">FORM-202603-001 - Brightening Glow Serum 10% (Rev 2.0)</option>
-                <option value="FORM-202603-002">FORM-202603-002 - Ceramide 5X Barrier Cream (Rev 1.1)</option>
-              </select>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Nama Klien / Perusahaan *</label>
-              <input
-                type="text"
-                placeholder="PT Cantika Glow Nusantara"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-                value={createForm.clientName}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, clientName: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Brand / Merk *</label>
-              <input
-                type="text"
-                placeholder="GlowAura Skin"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-                value={createForm.brandName}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, brandName: e.target.value }))}
-              />
-            </div>
-          </div>
+            <form onSubmit={handleSaveBatchRecord} className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">
+                    Nomor Sales Order <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    required
+                    value={formData.salesCode}
+                    onChange={(e) => setFormData({ ...formData, salesCode: e.target.value })}
+                    className="h-8 text-xs font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">
+                    Tanggal Batch Record <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="date"
+                    required
+                    value={formData.tanggal}
+                    onChange={(e) => setFormData({ ...formData, tanggal: e.target.value })}
+                    className="h-8 text-xs font-mono"
+                  />
+                </div>
+              </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Ukuran Batch (Pcs) *</label>
-              <input
-                type="number"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-                value={createForm.batchSizePcs}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, batchSizePcs: Number(e.target.value) }))}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Total Bulk Penimbangan (Kg) *</label>
-              <input
-                type="number"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-                value={createForm.batchSizeKg}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, batchSizeKg: Number(e.target.value) }))}
-              />
-            </div>
-          </div>
+              <div>
+                <label className="font-bold text-slate-600 block mb-1">
+                  Pilih Produk dari Detail Sales <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  required
+                  value={formData.productName}
+                  onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
+                  className="h-8 text-xs"
+                />
+              </div>
 
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700 uppercase">Catatan & Parameter Khusus</label>
-            <textarea
-              rows={2}
-              placeholder="Instruksi khusus suhu peleburan atau homogenizer RPM..."
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-              value={createForm.notes}
-              onChange={(e) => setCreateForm(prev => ({ ...prev, notes: e.target.value }))}
-            />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">Pelanggan</label>
+                  <Input
+                    value={formData.customerName}
+                    onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-600 block mb-1">Kategori Produk</label>
+                  <Input
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-600 block mb-1">Upload File Lampiran (Opsional)</label>
+                <Input type="file" className="h-8 text-xs" />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-600 block mb-1">Catatan Tambahan</label>
+                <Input
+                  placeholder="Instruksi khusus atau catatan penimbangan..."
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="h-8 text-xs"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <DnaButton type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+                  Kembali
+                </DnaButton>
+                <DnaButton type="submit" variant="primary">
+                  Simpan Batch Record
+                </DnaButton>
+              </div>
+            </form>
           </div>
         </div>
-      </DnaModal>
+      )}
 
-      {/* 6. Modal Detail EBMR & Checklist CPKB */}
-      <DnaModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        title={selectedRecord ? `Electronic Batch Record: ${selectedRecord.batchRecordCode}` : "Detail EBMR"}
-        description="Checklist verifikasi penimbangan bahan, line clearance, dan parameter in-process."
-        size="lg"
-        footer={
-          <div className="flex items-center justify-between w-full">
-            <DnaButton
-              variant="secondary"
-              onClick={() => toast.success("Cetak Batch Record", "Lembar Batch Record resmi berhasil dicetak.")}
-            >
-              <Printer className="w-4 h-4 mr-1" /> Cetak Lembar EBMR
-            </DnaButton>
-            <DnaButton variant="primary" onClick={() => setIsDetailModalOpen(false)}>
-              Tutup
-            </DnaButton>
-          </div>
-        }
-      >
-        {selectedRecord && (
-          <div className="space-y-6">
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-slate-500">Nama Produk</span>
-                  <p className="text-sm font-bold text-slate-900">{selectedRecord.productName}</p>
-                </div>
-                <div>{getStageBadge(selectedRecord.cpkbStage)}</div>
+      {/* 5. Modal Detail Batch Record (1:1 G-SERP Row 132 ajaxDetail) */}
+      {selectedRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-bold text-slate-800 text-base">Detail Batch Record Pra-Produksi</h3>
+                <p className="text-xs font-mono text-blue-600">{selectedRecord.batchRecordCode}</p>
               </div>
+              <button onClick={() => setSelectedRecord(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t border-slate-200 text-xs">
-                <div>
-                  <span className="text-slate-500">Klien / Brand:</span>
-                  <p className="font-semibold text-slate-800">{selectedRecord.clientName} ({selectedRecord.brandName})</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">Formula Acuan:</span>
-                  <p className="font-mono font-bold text-slate-800">{selectedRecord.formulaCode} ({selectedRecord.revisionVersion})</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">Batch Size:</span>
-                  <p className="font-mono font-bold text-indigo-700">{selectedRecord.batchSizePcs.toLocaleString()} Pcs ({selectedRecord.batchSizeKg} Kg)</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">No. SPK:</span>
-                  <p className="font-mono font-bold text-slate-800">{selectedRecord.spkCode}</p>
-                </div>
+            <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div>
+                <span className="text-slate-400 font-bold block">Status:</span>
+                <span className="font-bold text-slate-800">{selectedRecord.statusLabel}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold block">Tanggal Dibuat:</span>
+                <span className="font-mono text-slate-700">{selectedRecord.tanggal}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold block">Kode Sales:</span>
+                <span className="font-mono font-bold text-indigo-600">{selectedRecord.salesCode}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold block">Tanggal Sales:</span>
+                <span className="font-mono text-slate-700">{selectedRecord.tanggalSales}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold block">Pelanggan:</span>
+                <span className="font-semibold text-slate-900">{selectedRecord.customerName}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold block">Kategori / Produk:</span>
+                <span className="font-medium text-slate-800">{selectedRecord.category} • {selectedRecord.productName}</span>
+              </div>
+              <div className="col-span-2">
+                <span className="text-slate-400 font-bold block">Dibuat Oleh:</span>
+                <span className="text-slate-800 font-medium">{selectedRecord.creatorName}</span>
               </div>
             </div>
 
-            {/* Checklist CPKB Section */}
-            <div className="space-y-3 text-xs">
-              <h4 className="font-bold uppercase tracking-wider text-slate-700 text-[11px] flex items-center gap-1.5">
-                <ClipboardCheck className="w-4 h-4 text-blue-600" />
-                Checklist Verifikasi Pra-Produksi CPKB
-              </h4>
-
-              <div className="space-y-2">
-                <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-emerald-950">1. Line Clearance Ruang Penimbangan & Bejana Mixing</p>
-                    <p className="text-[11px] text-emerald-800">Area bersih, bebas sisa batch sebelumnya, sanitasi alkohol 70% selesai.</p>
-                  </div>
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                </div>
-
-                <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-emerald-950">2. Verifikasi Kalibrasi Timbangan & Label Bahan Baku</p>
-                    <p className="text-[11px] text-emerald-800">Timbangan Mettler Toledo terkalibrasi. Bahan baku berlabel status lolos QC.</p>
-                  </div>
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                </div>
-
-                <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-blue-950">3. Double-Check Penimbangan Bahan Baku (Fase A s/d E)</p>
-                    <p className="text-[11px] text-blue-800">Operator penimbang dan Pengawas QC menandatangani form penimbangan.</p>
-                  </div>
-                  <Clock className="w-5 h-5 text-blue-600 shrink-0" />
-                </div>
+            {/* Tabel Detail Bahan */}
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <div className="bg-slate-50 px-3 py-2 border-b border-slate-200 font-bold text-xs text-slate-700">
+                Rincian Alokasi Bahan Baku:
               </div>
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50/50 border-b border-slate-200 text-slate-500 font-bold">
+                  <tr>
+                    <th className="p-2.5">#</th>
+                    <th className="p-2.5">Kode Barang</th>
+                    <th className="p-2.5">Nama Barang</th>
+                    <th className="p-2.5 text-center">Satuan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  <tr>
+                    <td className="p-2.5 text-slate-400">1</td>
+                    <td className="p-2.5 font-mono font-bold text-blue-600">BBK00001</td>
+                    <td className="p-2.5 font-medium text-slate-800">Hydro Marine Collagen 99%</td>
+                    <td className="p-2.5 text-center font-bold text-slate-700">gr</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 text-slate-400">2</td>
+                    <td className="p-2.5 font-mono font-bold text-blue-600">BBK00002</td>
+                    <td className="p-2.5 font-medium text-slate-800">Aqua Demineralisata (USP Grade)</td>
+                    <td className="p-2.5 text-center font-bold text-slate-700">kg</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <DnaButton variant="outline" onClick={() => setSelectedRecord(null)}>
+                Tutup Modal
+              </DnaButton>
             </div>
           </div>
-        )}
-      </DnaModal>
+        </div>
+      )}
     </DnaPageContainer>
+  );
+}
+
+export default function BatchRecordPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-slate-400">Memuat Batch Record...</div>}>
+      <BatchRecordContent />
+    </Suspense>
   );
 }
