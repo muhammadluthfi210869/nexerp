@@ -9,6 +9,7 @@ import { MemberProfileView } from '../reports/workspace/components/MemberProfile
 import { TaskModal, TaskDetailModal, MemberEditModal } from '../reports/workspace/components/Modals';
 import { api } from '@/lib/api';
 import { useDnaToast } from '@/components/dna/DnaToast';
+import { useMarketingBrands } from '@/hooks/useCanonicalMarketing';
 
 interface ManagementTaskWorkspaceProps {
   initialMemberSlug?: string;
@@ -23,6 +24,9 @@ export default function ManagementTaskWorkspace({ initialMemberSlug }: Managemen
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMemberName, setSelectedMemberName] = useState<string | null>(null);
+
+  // ponytail: brand list is the source of truth for brandId UUIDs.
+  const { data: brands } = useMarketingBrands();
 
   // Modal States
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -146,7 +150,7 @@ export default function ManagementTaskWorkspace({ initialMemberSlug }: Managemen
   // Task Actions directly connected to PostgreSQL API
   const handleSaveTask = async (taskData: Omit<Task, 'id' | 'createdAt'>) => {
     const targetMember =
-      members.find(m => 
+      members.find(m =>
         m.name.toLowerCase() === taskData.assignee.toLowerCase() ||
         taskData.assignee.toLowerCase().includes(m.name.toLowerCase()) ||
         (m.userId && m.userId === taskData.assigneeId)
@@ -154,13 +158,23 @@ export default function ManagementTaskWorkspace({ initialMemberSlug }: Managemen
       currentMember ||
       members[0];
 
+    // ponytail: resolve brandId to UUID via the active brands list — never
+    // send the display name as brandId (MarketingBrand.id is UUID PK).
+    // If the brand can't be resolved, omit the field rather than 400 the call.
+    const brandFromList = brands?.find(
+      (b) => b.name.toLowerCase() === (taskData.brand ?? '').toLowerCase(),
+    ) ?? brands?.find(
+      (b) => (taskData.brand ?? '').toLowerCase().includes(b.name.toLowerCase()),
+    );
+    const brandId: string | undefined = brandFromList?.id;
+
     const payload = {
       type: taskData.type === 'Project' ? 'PROJECT' : 'DAILY',
       title: taskData.name,
       channel: 'General',
       category: taskData.type === 'Project' ? 'project_campaign' : 'general_operations',
       assigneeId: targetMember?.userId || targetMember?.id || taskData.assignee,
-      brandId: taskData.brand && taskData.brand.toLowerCase().includes('toribio') ? 'toribio' : 'dreamlab',
+      ...(brandId ? { brandId } : {}),
       priority: taskData.priority.toUpperCase(),
       startDate: taskData.startDate || new Date().toISOString().split('T')[0],
       dueDate: taskData.dueDate || new Date().toISOString().split('T')[0],
