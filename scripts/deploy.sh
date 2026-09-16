@@ -74,7 +74,7 @@ docker compose -p "$COMPOSE_PROJECT" config --quiet   # validasi compose + env
 # ── 4. Up (tanpa build!) ──
 echo ""
 echo "🏗️  Restart services (image GHCR, tanpa build)..."
-docker compose -p "$COMPOSE_PROJECT" --profile server up -d
+docker compose -p "$COMPOSE_PROJECT" --profile server up -d --force-recreate
 
 # ── 5. Health gate ──
 echo ""
