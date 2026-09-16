@@ -155,6 +155,20 @@ jobs:
             || { echo "❌ Pre-flight: createTask dual-write gagal"; echo "$CREATE_RES"; exit 1; }
           echo "✅ Dual-write createTask terverifikasi"
 
+          echo "=== 3b. BrandId=UUID createTask (regression RC3) ==="
+          BRAND_ID=$(curl -sf -H "Authorization: Bearer $TOKEN" "$BASE/marketing/brands" | jq -r '.[0].id // empty')
+          if [ -z "$BRAND_ID" ] || [ "$BRAND_ID" = "null" ]; then
+            echo "❌ Pre-flight: /marketing/brands returned 0 rows; brand list not seeded"
+            exit 1
+          fi
+          CREATE_BR=$(curl -sf -X POST "$BASE/marketing/tasks" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"title\":\"CI Pre-flight Task (with brand)\",\"assigneeId\":\"$REVITA_ID\",\"brandId\":\"$BRAND_ID\",\"type\":\"DAILY\",\"priority\":\"LOW\",\"channel\":\"web\",\"category\":\"smoke\",\"startDate\":\"2026-09-15\",\"dueDate\":\"2026-09-16\"}" || echo "")
+          echo "$CREATE_BR" | jq -e '.id // .taskCode // .status' >/dev/null \
+            || { echo "❌ Pre-flight: createTask with brandId=UUID gagal"; echo "$CREATE_BR"; exit 1; }
+          echo "✅ createTask with brandId UUID = $BRAND_ID verified"
+
           echo "=== 4. Prototype Route Disabled Check ==="
           PROTO_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "Authorization: Bearer $TOKEN" "$BASE/marketing/prototype/bundle")
