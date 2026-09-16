@@ -69,6 +69,7 @@ import { Instagram, Youtube } from './utils/socialIcons';
 import { getPreviousMonth, parsePeriodDates, getWeekDates } from './utils/helpers';
 import { useDnaToast } from '@/components/dna/DnaToast';
 import { api } from '@/lib/api';
+import { useMarketingBrands } from '@/hooks/useCanonicalMarketing';
 
 export type BrandWorkspaceTab = 
   | 'overview' 
@@ -177,7 +178,7 @@ interface BrandWorkspaceProps {
 }
 
 export default function BrandWorkspace({
-  initialBrandSlug = 'dreamlab',
+  initialBrandSlug,
   initialTab = 'overview',
   initialChannel,
   initialMode
@@ -185,11 +186,29 @@ export default function BrandWorkspace({
   const router = useRouter();
   const toast = useDnaToast();
 
-  // Active brand resolution: "dreamlab" or "toribio"
+  // ponytail: explicit slug required — no silent 'dreamlab' fallback.
+  // Callers must pass initialBrandSlug; if missing, throw so the bug is loud.
+  if (!initialBrandSlug || typeof initialBrandSlug !== 'string') {
+    throw new Error('BrandWorkspace: initialBrandSlug is required');
+  }
+
+  // Active brand resolution: matches marketing_brands.code (lowercase 'toribio'/'dreamlab')
   const isToribio = initialBrandSlug.toLowerCase().includes('toribio');
   const [activeBrandName, setActiveBrandName] = useState<'Dreamlab' | 'Toribio'>(
     isToribio ? 'Toribio' : 'Dreamlab'
   );
+
+  // ponytail: pull real brands for query params. backend MarketingBrand has
+  // `id` (UUID) and `code` (lowercase 'dreamlab'/'toribio') — never send display
+  // name `Dreamlab` to ?brand= or ?brandId=.
+  const { data: apiBrands } = useMarketingBrands();
+  const activeBrandFromApi = apiBrands?.find(
+    (b) => b.code?.toLowerCase() === initialBrandSlug.toLowerCase(),
+  ) ?? apiBrands?.find(
+    (b) => b.name?.toLowerCase() === activeBrandName.toLowerCase(),
+  );
+  const activeBrandCode = activeBrandFromApi?.code ?? initialBrandSlug.toLowerCase();
+  const activeBrandId = activeBrandFromApi?.id;
 
   // Sync activeBrandName if initialBrandSlug changes
   useEffect(() => {
@@ -331,8 +350,10 @@ export default function BrandWorkspace({
         }
 
         const [postsRes, reportsRes] = await Promise.allSettled([
-          api.get(`/marketing/social/posts?brand=${encodeURIComponent(activeBrandName)}&limit=200`),
-          api.get(`/marketing/social/reports?brandId=${encodeURIComponent(activeBrandName)}`),
+          api.get(`/marketing/social/posts?brand=${encodeURIComponent(activeBrandCode)}&limit=200`),
+          activeBrandId
+            ? api.get(`/marketing/social/reports?brandId=${encodeURIComponent(activeBrandId)}`)
+            : Promise.resolve({ data: [] }),
         ]);
 
         if (isMounted && postsRes.status === 'fulfilled') {

@@ -110,13 +110,13 @@ export function useDigimarSocket(month?: string) {
       .then((ioModule: any) => {
         if (!isMounted) return;
         const io = ioModule.io || ioModule.default || ioModule;
-        const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-        socket = isLocal
-          ? io('http://localhost:3002/digimar', { transports: ['websocket', 'polling'] })
-          : io(window.location.origin + '/digimar', {
-              path: '/api/socket.io',
-              transports: ['websocket', 'polling'],
-            });
+        // ponytail: single connection path — same-origin nginx fronts both
+        // /api (REST rewrite) AND /digimar (socket.io). The isLocal branch was
+        // pointing at the wrong port (3002, backend is on 3001).
+        socket = io(window.location.origin + '/digimar', {
+          path: '/api/socket.io',
+          transports: ['websocket', 'polling'],
+        });
 
         socket.on('connect', () => {
           console.log('[DigimarSocket] connected');

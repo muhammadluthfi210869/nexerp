@@ -38,6 +38,41 @@ grep -qE "rewrite \^/api/\(\.\*\) /v1/\\\$1" nginx.conf \
   && ok "nginx rewrite /api/(.*) → /v1/(.*) preserved" \
   || bad "nginx rewrite contract drifted"
 
+# Lock 6: SQL grant script ships in backend image (RC1 — RolesGuard role block fix)
+[ -f backend/scripts/db-grant-digimar-roles.sql ] \
+  && ok "RC1: backend/scripts/db-grant-digimar-roles.sql exists for marketing-role cohort" \
+  || bad "RC1: backend/scripts/db-grant-digimar-roles.sql MISSING — DIGIMAR roster can't access /marketing/*"
+
+# Lock 7: SQL orphan reassignment ships in backend image (RC2 — defaultOwner fallback fix)
+[ -f backend/scripts/db-reassign-orphan-tasks.sql ] \
+  && ok "RC2: backend/scripts/db-reassign-orphan-tasks.sql exists for orphan-owned marketing_tasks" \
+  || bad "RC2: backend/scripts/db-reassign-orphan-tasks.sql MISSING — Super Admin still owns seeded tasks"
+
+# Lock 8: defaultOwner fallback filters by marketing role
+grep -qE "roles:\s*\{\s*hasSome:\s*\['MARKETING'" backend/src/modules/marketing/canonical/canonical-marketing.service.ts \
+  && ok "RC2: defaultOwner fallback in autoSeedMarketingTasks filters by marketing role" \
+  || bad "RC2: defaultOwner fallback still picks any ACTIVE user (will grab Super Admin on prod)"
+
+# Lock 9: no hardcoded brandId literals in frontend
+if grep -rnE "brandId['\"]?\s*[:=]\s*['\"](toribio|dreamlab)['\"]" frontend/src/ 2>/dev/null; then
+  bad "RC3: frontend hardcodes brandId='toribio'/'dreamlab' literal — must use UUID from useMarketingBrands()"
+else
+  ok "RC3: frontend uses no hardcoded brandId literal strings"
+fi
+
+# Lock 10: BrandWorkspace doesn't default slug to 'dreamlab'
+if grep -nE "initialBrandSlug\s*=\s*['\"]dreamlab['\"]" \
+     frontend/src/app/\(dashboard\)/marketing/reports/workspace/BrandWorkspace.tsx 2>/dev/null; then
+  bad "BrandWorkspace default slug is 'dreamlab' — latent regression if caller forgets slug"
+else
+  ok "BrandWorkspace has no 'dreamlab' default slug (callers must pass explicitly)"
+fi
+
+# Lock 11: test-deploy-marketing.sh exists (RC1 — login as DIGIMAR, not admin)
+[ -f scripts/test-deploy-marketing.sh ] \
+  && ok "CI hardening: test-deploy-marketing.sh exists (logins as revita, asserts marketing endpoints)" \
+  || bad "CI hardening: scripts/test-deploy-marketing.sh MISSING — smoke still uses admin@dreamlab.com"
+
 echo ""
 echo "  contracts: $PASS pass / $FAIL fail"
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1
