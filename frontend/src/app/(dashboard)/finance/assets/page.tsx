@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, Suspense, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -102,12 +103,19 @@ const FALLBACK_ASSETS: AssetRegisterItem[] = [
   }
 ];
 
-export default function AssetsPage() {
+function AssetsContent() {
+  const searchParams = useSearchParams();
   const toast = useDnaToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [selectedAsset, setSelectedAsset] = useState<AssetRegisterItem | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateModalOpen(true);
+    }
+  }, [searchParams]);
 
   // Form (SCR-025)
   const [formData, setFormData] = useState({
@@ -441,5 +449,13 @@ export default function AssetsPage() {
         </div>
       </DnaModal>
     </DnaPageContainer>
+  );
+}
+
+export default function AssetsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400 font-mono text-xs">Memuat Asset Register...</div>}>
+      <AssetsContent />
+    </Suspense>
   );
 }

@@ -145,6 +145,12 @@ function ChartOfAccountsContent() {
   const [editingAccount, setEditingAccount] = useState<AccountModel | null>(null);
   const [accountToDelete, setAccountToDelete] = useState<AccountModel | null>(null);
 
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsModalOpen(true);
+    }
+  }, [searchParams]);
+
   // Form State
   const [formCode, setFormCode] = useState("");
   const [formName, setFormName] = useState("");

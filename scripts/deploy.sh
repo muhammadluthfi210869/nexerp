@@ -15,6 +15,14 @@
 set -euo pipefail
 
 DEPLOY_SHA="${1:-latest}"
+# Auto-resolve short git SHA to full 40-char SHA if passed as git commit ref
+if [ "$DEPLOY_SHA" != "latest" ]; then
+  FULL_SHA=$(git rev-parse "$DEPLOY_SHA" 2>/dev/null || echo "")
+  if [ -n "$FULL_SHA" ]; then
+    DEPLOY_SHA="$FULL_SHA"
+  fi
+fi
+
 # Proyek compose LAMA diteruskan supaya volume postgres_data tidak berubah
 # (rename project = volume baru = data hilang). Nama boleh diganti nanti
 # lewat prosedur rebind volume yang terencana.
@@ -86,9 +94,11 @@ else
   exit 1
 fi
 
-# ── 6. Verifikasi domain ──
-if command -v verify-deploy >/dev/null 2>&1 || [ -f scripts/verify-deploy.sh ]; then
-  bash scripts/verify-deploy.sh https://nexerp.id || echo "  ⚠️  verify-deploy ada warning (lihat di atas)"
+# ── 6. Verifikasi domain (smoke test 6/6) ──
+if [ -f scripts/test-deploy.sh ]; then
+  echo ""
+  echo "🔍 Menjalankan smoke test pasca-deploy..."
+  bash scripts/test-deploy.sh https://nexerp.id/api || echo "  ⚠️  test-deploy ada warning (lihat di atas)"
 fi
 
 echo ""

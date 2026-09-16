@@ -409,6 +409,16 @@ function MasterWarehousesContent() {
   const [editingAccess, setEditingAccess] = useState<WarehouseAccessItem | null>(null);
   const [selectedGudangsForUser, setSelectedGudangsForUser] = useState<string[]>([]);
 
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      if (tabParam === "access") {
+        setIsAccessModalOpen(true);
+      } else {
+        setIsWarehouseModalOpen(true);
+      }
+    }
+  }, [searchParams, tabParam]);
+
   // Form Gudang
   const [warehouseForm, setWarehouseForm] = useState({
     kodeGudang: "",

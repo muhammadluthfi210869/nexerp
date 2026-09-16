@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -104,7 +105,8 @@ const INITIAL_TARGETS: SalesTargetItem[] = [
   },
 ];
 
-export default function SalesTargetPage() {
+function SalesTargetContent() {
+  const searchParams = useSearchParams();
   const toast = useDnaToast();
   const [targets, setTargets] = useState<SalesTargetItem[]>(INITIAL_TARGETS);
   const [searchTerm, setSearchTerm] = useState("");
@@ -112,6 +114,12 @@ export default function SalesTargetPage() {
   const [selectedYear, setSelectedYear] = useState(2026);
   const [detailTarget, setDetailTarget] = useState<SalesTargetItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateOpen(true);
+    }
+  }, [searchParams]);
 
   // Form State
   const [formName, setFormName] = useState("");
@@ -526,5 +534,13 @@ export default function SalesTargetPage() {
         </form>
       </DnaModal>
     </div>
+  );
+}
+
+export default function SalesTargetPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400 font-mono text-xs">Memuat Target Penjualan...</div>}>
+      <SalesTargetContent />
+    </Suspense>
   );
 }
