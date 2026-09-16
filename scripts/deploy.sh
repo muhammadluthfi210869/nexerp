@@ -54,8 +54,18 @@ else
   echo "  ⚠️  Tidak ada DB container '${COMPOSE_PROJECT}-db' yang berjalan (fresh deploy?)"
 fi
 
+# ── 2b. Cleanup disk space (hapus image lama & cache agar disk tidak penuh) ──
+echo "🧹 Membersihkan image lama dan build cache..."
+docker image prune -af --filter "until=1h" || true
+docker builder prune -af || true
+echo "  📊 Kapasitas Disk Saat Ini:"
+df -h /
+
 # ── 3. Pull image dari GHCR ──
 echo ""
+echo "🧹 Membersihkan image lama untuk mengamankan ruang disk..."
+docker image prune -af --filter "until=2h" 2>/dev/null || true
+
 echo "📥 Pull image (tag: $DEPLOY_SHA)..."
 echo "   (asumsi: 'docker login ghcr.io' sudah dilakukan SEKALI di VPS — lihat DEPLOY.md)"
 export IMAGE_TAG="$DEPLOY_SHA"

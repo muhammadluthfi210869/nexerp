@@ -14,6 +14,12 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: 🧹 Free Disk Space on VPS
+        run: |
+          docker image prune -af --filter "until=1h" || true
+          docker builder prune -af || true
+          df -h /
+
       - name: 🚀 Run Deployment Script on VPS
         run: |
           set -euo pipefail
