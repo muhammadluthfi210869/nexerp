@@ -305,7 +305,11 @@ export class ProductionService {
           const targetStage =
             Number(quarantineQty) > 0 ? LifecycleStatus.PENDING_QC : nextStage;
           // Validate state transition via canonical service
-          this.stateTransition.validateTransition('LifecycleStatus', wo.stage, targetStage);
+          this.stateTransition.validateTransition(
+            'LifecycleStatus',
+            wo.stage,
+            targetStage,
+          );
           await tx.workOrder.update({
             where: { id: workOrderId },
             data: { stage: targetStage },

@@ -56,7 +56,10 @@ export class SocialPlannerService {
       where.canonicalStatus = normalizeSocialStatus(filter.status);
     if (filter?.pillar && filter.pillar !== 'all') where.pillar = filter.pillar;
     if (filter?.brandId) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(filter.brandId);
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          filter.brandId,
+        );
       where.OR = [
         ...(isUuid ? [{ brandId: filter.brandId }] : []),
         { brand: { name: { equals: filter.brandId, mode: 'insensitive' } } },
@@ -216,7 +219,8 @@ export class SocialPlannerService {
 
     // Unpack nested performance fields into top-level columns + compute engagementRate
     if (data.performance) {
-      const { reach, impressions, likes, comments, shares, saves } = data.performance;
+      const { reach, impressions, likes, comments, shares, saves } =
+        data.performance;
       if (reach !== undefined) updatePayload.reach = reach;
       if (impressions !== undefined) updatePayload.impressions = impressions;
       if (likes !== undefined) updatePayload.likes = likes;
@@ -224,8 +228,11 @@ export class SocialPlannerService {
       if (shares !== undefined) updatePayload.shares = shares;
       if (saves !== undefined) updatePayload.saves = saves;
       if (reach !== undefined && impressions !== undefined && impressions > 0) {
-        const engagements = (likes ?? 0) + (comments ?? 0) + (shares ?? 0) + (saves ?? 0);
-        updatePayload.engagementRate = Number(((engagements / impressions) * 100).toFixed(2));
+        const engagements =
+          (likes ?? 0) + (comments ?? 0) + (shares ?? 0) + (saves ?? 0);
+        updatePayload.engagementRate = Number(
+          ((engagements / impressions) * 100).toFixed(2),
+        );
       }
     }
 
@@ -546,7 +553,10 @@ export class SocialPlannerService {
   ) {
     let resolvedBrandId: string | undefined = undefined;
     if (brandId) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(brandId);
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          brandId,
+        );
       const brand = await (this.prisma as any).marketingBrand.findFirst({
         where: {
           OR: [
@@ -571,7 +581,10 @@ export class SocialPlannerService {
       ['reviewerId', reviewerId],
     ] as const) {
       if (!id) continue;
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          id,
+        );
       let user = await (this.prisma as any).user.findFirst({
         where: {
           OR: [
@@ -585,16 +598,18 @@ export class SocialPlannerService {
         select: { id: true },
       });
       if (!user) {
-        const member = await (this.prisma as any).marketingTeamMember.findFirst({
-          where: {
-            OR: [
-              ...(isUuid ? [{ id }] : []),
-              { name: { equals: id, mode: 'insensitive' } },
-            ],
-            isActive: true,
+        const member = await (this.prisma as any).marketingTeamMember.findFirst(
+          {
+            where: {
+              OR: [
+                ...(isUuid ? [{ id }] : []),
+                { name: { equals: id, mode: 'insensitive' } },
+              ],
+              isActive: true,
+            },
+            select: { userId: true },
           },
-          select: { userId: true },
-        });
+        );
         if (member?.userId) {
           user = await (this.prisma as any).user.findFirst({
             where: { id: member.userId, status: 'ACTIVE', deletedAt: null },

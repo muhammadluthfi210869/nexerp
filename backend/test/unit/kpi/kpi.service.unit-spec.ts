@@ -178,9 +178,7 @@ describe('KpiService', () => {
         { type: LogActivityType.CREATE, _count: { _all: 1 } },
         { type: LogActivityType.STATE_TRANSITION, _count: { _all: 1 } },
       ]);
-      prismaMock.user.findMany.mockResolvedValue([
-        { id: 'u1', fullName: 'A' },
-      ]);
+      prismaMock.user.findMany.mockResolvedValue([{ id: 'u1', fullName: 'A' }]);
       const result = await service.getDashboardMetrics(Division.FINANCE, {});
       expect(result.division).toBe(Division.FINANCE);
       expect(result.metrics.length).toBe(1);

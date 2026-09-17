@@ -70,7 +70,9 @@ describe('AdjustmentJournalsService', () => {
 
     it('throws ResourceNotFoundException when missing', async () => {
       prismaMock.adjustmentJournal.findUnique.mockResolvedValueOnce(null);
-      await expect(service.findOne('missing')).rejects.toThrow(ResourceNotFoundException);
+      await expect(service.findOne('missing')).rejects.toThrow(
+        ResourceNotFoundException,
+      );
     });
   });
 
@@ -134,7 +136,9 @@ describe('AdjustmentJournalsService', () => {
     });
 
     it('throws SoDViolationException when reviewer == preparer', async () => {
-      await expect(service.review('user-prep', 'adj-1')).rejects.toThrow(SoDViolationException);
+      await expect(service.review('user-prep', 'adj-1')).rejects.toThrow(
+        SoDViolationException,
+      );
     });
 
     it('throws StateTransitionInvalidException when already reviewed', async () => {
@@ -142,12 +146,16 @@ describe('AdjustmentJournalsService', () => {
         ...FAKE_JOURNAL,
         reviewedBy: 'user-rev',
       });
-      await expect(service.review('user-other', 'adj-1')).rejects.toThrow(StateTransitionInvalidException);
+      await expect(service.review('user-other', 'adj-1')).rejects.toThrow(
+        StateTransitionInvalidException,
+      );
     });
 
     it('throws ResourceNotFoundException when missing', async () => {
       prismaMock.adjustmentJournal.findUnique.mockResolvedValueOnce(null);
-      await expect(service.review('user-1', 'missing')).rejects.toThrow(ResourceNotFoundException);
+      await expect(service.review('user-1', 'missing')).rejects.toThrow(
+        ResourceNotFoundException,
+      );
     });
   });
 
@@ -169,7 +177,9 @@ describe('AdjustmentJournalsService', () => {
         ...FAKE_JOURNAL,
         reviewedBy: 'user-rev',
       });
-      await expect(service.approve('user-rev', 'adj-1')).rejects.toThrow(SoDViolationException);
+      await expect(service.approve('user-rev', 'adj-1')).rejects.toThrow(
+        SoDViolationException,
+      );
     });
 
     it('throws SoDViolationException when approver is the preparer', async () => {
@@ -177,12 +187,16 @@ describe('AdjustmentJournalsService', () => {
         ...FAKE_JOURNAL,
         reviewedBy: 'user-rev',
       });
-      await expect(service.approve('user-prep', 'adj-1')).rejects.toThrow(SoDViolationException);
+      await expect(service.approve('user-prep', 'adj-1')).rejects.toThrow(
+        SoDViolationException,
+      );
     });
 
     it('throws StateTransitionInvalidException when not yet reviewed', async () => {
       // reviewedBy is null
-      await expect(service.approve('user-app', 'adj-1')).rejects.toThrow(StateTransitionInvalidException);
+      await expect(service.approve('user-app', 'adj-1')).rejects.toThrow(
+        StateTransitionInvalidException,
+      );
     });
   });
 

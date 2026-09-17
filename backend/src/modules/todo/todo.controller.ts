@@ -26,7 +26,7 @@ import { UserRole } from '@prisma/client';
 
 @ApiTags('todo')
 @ApiBearerAuth()
-@Controller('v1/todo')
+@Controller('todo')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}

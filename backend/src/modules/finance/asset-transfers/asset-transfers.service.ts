@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 @Injectable()
@@ -22,7 +26,8 @@ export class AssetTransfersService {
       where: { id },
       include: { asset: true },
     });
-    if (!transfer) throw new NotFoundException(`Asset transfer ${id} not found`);
+    if (!transfer)
+      throw new NotFoundException(`Asset transfer ${id} not found`);
     return transfer;
   }
 
@@ -45,11 +50,17 @@ export class AssetTransfersService {
     const asset = await this.prisma.fixedAsset.findUnique({
       where: { id: dto.assetId },
     });
-    if (!asset) throw new NotFoundException(`Fixed asset ${dto.assetId} not found`);
+    if (!asset)
+      throw new NotFoundException(`Fixed asset ${dto.assetId} not found`);
     if (asset.status !== 'ACTIVE') {
-      throw new BadRequestException(`Cannot transfer asset in status ${asset.status}`);
+      throw new BadRequestException(
+        `Cannot transfer asset in status ${asset.status}`,
+      );
     }
-    if (dto.fromLocation === dto.toLocation && dto.fromPerson === dto.toPerson) {
+    if (
+      dto.fromLocation === dto.toLocation &&
+      dto.fromPerson === dto.toPerson
+    ) {
       throw new BadRequestException('Transfer target must differ from source');
     }
 

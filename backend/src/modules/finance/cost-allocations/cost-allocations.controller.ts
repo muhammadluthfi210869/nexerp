@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Param, Body, Query, Req, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Body,
+  Query,
+  Req,
+  BadRequestException,
+} from '@nestjs/common';
 import { CostAllocationsService } from './cost-allocations.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateCostAllocationDto } from './dto/cost-allocations.dto';
@@ -10,7 +19,9 @@ export class CostAllocationsController {
   constructor(private service: CostAllocationsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List cost allocations (filter by from/to cost center)' })
+  @ApiOperation({
+    summary: 'List cost allocations (filter by from/to cost center)',
+  })
   findAll(
     @Query('fromCostCenter') fromCostCenter?: string,
     @Query('toCostCenter') toCostCenter?: string,
@@ -19,7 +30,9 @@ export class CostAllocationsController {
   }
 
   @Get('summary')
-  @ApiOperation({ summary: 'Per cost-center inflow/outflow summary for a date range' })
+  @ApiOperation({
+    summary: 'Per cost-center inflow/outflow summary for a date range',
+  })
   summary(@Query('from') from: string, @Query('to') to: string) {
     if (!from || !to) throw new BadRequestException('from and to required');
     return this.service.getSummary(new Date(from), new Date(to));

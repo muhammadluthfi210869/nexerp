@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   CheckSquare,
   ListTodo,
@@ -224,6 +225,15 @@ const INITIAL_MANAGE_CHECKLISTS: ManageChecklistItem[] = [
 ];
 
 export default function ChecklistHubPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Modul Checklist...</div>}>
+      <ChecklistHubContent />
+    </Suspense>
+  );
+}
+
+function ChecklistHubContent() {
+  const searchParams = useSearchParams();
   const { showToast } = useDnaToast();
 
   // Active Tab: 'checklist' | 'category' | 'manage'
@@ -233,6 +243,16 @@ export default function ChecklistHubPage() {
   // Tab 1 state
   const [checklists, setChecklists] = useState<ChecklistItem[]>(INITIAL_CHECKLISTS);
   const [isCreateChecklistOpen, setIsCreateChecklistOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateChecklistOpen(true);
+    }
+    const tab = searchParams.get("tab");
+    if (tab === "manage" || tab === "category" || tab === "checklist") {
+      setActiveTab(tab as any);
+    }
+  }, [searchParams]);
   const [newChecklistForm, setNewChecklistForm] = useState({
     soNumber: "SO-2026-0520",
     customer: "PT Mahakarya Kosmetika",

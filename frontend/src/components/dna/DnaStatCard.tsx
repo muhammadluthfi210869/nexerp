@@ -38,6 +38,7 @@ export type DnaStatCardVariant =
   | "critical"     // alias for rose
   | "info"         // alias for sky
   | "purple"       // subtle purple
+  | "indigo"       // subtle indigo
   | "default";     // alias for neutral
 
 export interface DnaStatCardProps {
@@ -134,6 +135,10 @@ const VARIANT_STYLES: Record<string, {
   purple: {
     container: "border-purple-100/80 bg-purple-50/30",
     iconBadge: "bg-purple-100/70 text-purple-700",
+  },
+  indigo: {
+    container: "border-indigo-100/80 bg-indigo-50/30",
+    iconBadge: "bg-indigo-100/70 text-indigo-700",
   },
 };
 

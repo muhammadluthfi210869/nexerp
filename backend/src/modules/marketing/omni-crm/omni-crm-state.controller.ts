@@ -15,7 +15,7 @@ import { UserRole } from '@prisma/client';
 import { OmniCrmStateService } from './omni-crm-state.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller(['v1/marketing/omni-crm', 'marketing/omni-crm'])
+@Controller('marketing/omni-crm')
 export class OmniCrmStateController {
   constructor(private readonly service: OmniCrmStateService) {}
 

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 type DisposalType = 'SALE' | 'WRITE_OFF' | 'SCRAP';
@@ -30,7 +34,8 @@ export class AssetDisposalsService {
       where: { id },
       include: { asset: true },
     });
-    if (!disposal) throw new NotFoundException(`Asset disposal ${id} not found`);
+    if (!disposal)
+      throw new NotFoundException(`Asset disposal ${id} not found`);
     return disposal;
   }
 
@@ -52,7 +57,9 @@ export class AssetDisposalsService {
     },
   ) {
     if (!['SALE', 'WRITE_OFF', 'SCRAP'].includes(dto.disposalType)) {
-      throw new BadRequestException(`Invalid disposalType: ${dto.disposalType}`);
+      throw new BadRequestException(
+        `Invalid disposalType: ${dto.disposalType}`,
+      );
     }
     if (dto.proceeds < 0) {
       throw new BadRequestException('proceeds cannot be negative');
@@ -64,14 +71,14 @@ export class AssetDisposalsService {
         schedules: { orderBy: { period: 'desc' }, take: 1 },
       },
     });
-    if (!asset) throw new NotFoundException(`Fixed asset ${dto.assetId} not found`);
+    if (!asset)
+      throw new NotFoundException(`Fixed asset ${dto.assetId} not found`);
     if (asset.status !== 'ACTIVE') {
       throw new BadRequestException(`Asset already in status ${asset.status}`);
     }
 
-    const accumulated = asset.schedules.length > 0
-      ? Number(asset.schedules[0].accumulated)
-      : 0;
+    const accumulated =
+      asset.schedules.length > 0 ? Number(asset.schedules[0].accumulated) : 0;
     const bookValue = Number(asset.acquisitionCost) - accumulated;
     const gainLoss = dto.proceeds - bookValue;
 
@@ -84,7 +91,9 @@ export class AssetDisposalsService {
           proceeds: dto.proceeds,
           gainLoss,
           buyer: dto.buyer,
-          notes: dto.notes ? `${dto.notes} [disposed by ${userId}]` : `[disposed by ${userId}]`,
+          notes: dto.notes
+            ? `${dto.notes} [disposed by ${userId}]`
+            : `[disposed by ${userId}]`,
         },
       });
 
@@ -106,7 +115,8 @@ export class AssetDisposalsService {
       where: { id },
       include: { asset: true },
     });
-    if (!disposal) throw new NotFoundException(`Asset disposal ${id} not found`);
+    if (!disposal)
+      throw new NotFoundException(`Asset disposal ${id} not found`);
     if (disposal.asset.status !== 'DISPOSED') {
       throw new BadRequestException('Asset not in DISPOSED status');
     }

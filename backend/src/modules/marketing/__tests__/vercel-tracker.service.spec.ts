@@ -66,7 +66,10 @@ describe('VercelTrackerService', () => {
 
   describe('getTrackedUrls', () => {
     it('returns deployUrl + canonical vercel.app URL per project', async () => {
-      await service.connectProject({ projectId: 'a', deployUrl: 'https://a.com' });
+      await service.connectProject({
+        projectId: 'a',
+        deployUrl: 'https://a.com',
+      });
       const urls = await service.getTrackedUrls();
       expect(urls).toContain('https://a.com');
       expect(urls).toContain('https://a.vercel.app');
@@ -85,11 +88,16 @@ describe('VercelTrackerService', () => {
 
   describe('persistence', () => {
     it('persists to disk and loads on next instantiation', async () => {
-      await service.connectProject({ projectId: 'persist-test', projectName: 'P' });
+      await service.connectProject({
+        projectId: 'persist-test',
+        projectName: 'P',
+      });
       // Simulate process restart: re-instantiate
       const service2 = new VercelTrackerService();
       const projects = await service2.getProjects();
-      expect(projects.find((p) => p.projectId === 'persist-test')).toBeDefined();
+      expect(
+        projects.find((p) => p.projectId === 'persist-test'),
+      ).toBeDefined();
     });
   });
 });

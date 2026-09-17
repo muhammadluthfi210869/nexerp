@@ -221,7 +221,8 @@ async function main() {
     busdev: 'COMMERCIAL'
   };
 
-  const defaultPasswordHash = await bcrypt.hash('160487', 10);
+  const seedPassword = process.env.SEED_DEFAULT_PASSWORD || require('crypto').randomBytes(16).toString('hex');
+  const defaultPasswordHash = await bcrypt.hash(seedPassword, 10);
   let userCount = 0;
   for (const r of userRows) {
     if (!r.email || !r.nama) continue;

@@ -13,17 +13,13 @@ import {
   FileText,
   Package,
 } from "lucide-react";
-import {
-  DnaModal,
-  DnaBadge,
-  DnaButton,
-  DnaAuditTimeline,
-  DnaTable,
-  DnaTableHead,
-  DNA_TABLE_CLASSES,
-  DnaTextarea,
-  DnaConfirmDialog,
-} from "@/components/dna";
+import { DnaModal } from "../DnaModal";
+import { DnaBadge } from "../DnaBadge";
+import { DnaButton } from "../DnaButton";
+import { DnaAuditTimeline } from "../DnaAuditTimeline";
+import { DnaTable, DnaTableHead, DNA_TABLE_CLASSES } from "../DnaTable";
+import { DnaTextarea } from "../DnaTextarea";
+import { DnaConfirmDialog } from "../DnaInteractiveElements";
 import { cn, formatRupiah } from "@/lib/utils";
 
 export interface ApprovalLineItem {

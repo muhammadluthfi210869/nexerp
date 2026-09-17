@@ -22,9 +22,21 @@ export class UsersService {
       user = await this.prisma.user.findFirst({
         where: {
           OR: [
-            { email: { equals: `${normalized}@nexerp.id`, mode: 'insensitive' } },
-            { email: { equals: `${normalized}@dreamlab.id`, mode: 'insensitive' } },
-            { email: { equals: `${normalized}@dreamlab.com`, mode: 'insensitive' } },
+            {
+              email: { equals: `${normalized}@nexerp.id`, mode: 'insensitive' },
+            },
+            {
+              email: {
+                equals: `${normalized}@dreamlab.id`,
+                mode: 'insensitive',
+              },
+            },
+            {
+              email: {
+                equals: `${normalized}@dreamlab.com`,
+                mode: 'insensitive',
+              },
+            },
             { email: { startsWith: `${normalized}.`, mode: 'insensitive' } },
             { fullName: { equals: trimmed, mode: 'insensitive' } },
           ],

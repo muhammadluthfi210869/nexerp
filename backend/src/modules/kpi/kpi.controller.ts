@@ -27,7 +27,7 @@ interface AuthedUser {
 
 @ApiTags('kpi')
 @ApiBearerAuth()
-@Controller(['kpi', 'v1/kpi'])
+@Controller('kpi')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class KpiController {
   constructor(private readonly kpi: KpiService) {}
@@ -90,9 +90,7 @@ export class KpiController {
     UserRole.DIRECTOR,
     UserRole.HR,
   )
-  leaderboard(
-    @Query() query: { from?: string; to?: string; limit?: string },
-  ) {
+  leaderboard(@Query() query: { from?: string; to?: string; limit?: string }) {
     const parsed = query.limit !== undefined ? parseInt(query.limit, 10) : 10;
     const safe = Number.isFinite(parsed) ? parsed : 10;
     const limit = Math.min(100, Math.max(1, safe));

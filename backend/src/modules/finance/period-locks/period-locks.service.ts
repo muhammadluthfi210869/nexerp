@@ -75,7 +75,9 @@ export class PeriodLocksService {
         isLocked: true,
         lockedBy: userId,
         lockedAt: new Date(),
-        notes: notes ? `${existing?.notes || ''}\n[re-locked] ${notes}`.trim() : existing?.notes,
+        notes: notes
+          ? `${existing?.notes || ''}\n[re-locked] ${notes}`.trim()
+          : existing?.notes,
       },
     });
   }

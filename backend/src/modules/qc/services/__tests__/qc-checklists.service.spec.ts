@@ -25,7 +25,9 @@ describe('QCChecklistsService', () => {
         findMany: jest.fn().mockResolvedValue([FAKE_CHECKLIST]),
         findUnique: jest.fn().mockResolvedValue(FAKE_CHECKLIST),
         create: jest.fn().mockResolvedValue(FAKE_CHECKLIST),
-        update: jest.fn().mockResolvedValue({ ...FAKE_CHECKLIST, status: 'COMPLETED' }),
+        update: jest
+          .fn()
+          .mockResolvedValue({ ...FAKE_CHECKLIST, status: 'COMPLETED' }),
       },
     };
     service = new QCChecklistsService(prismaMock);
@@ -75,7 +77,9 @@ describe('QCChecklistsService', () => {
 
     it('throws NotFoundException when missing', async () => {
       prismaMock.qCChecklist.findUnique.mockResolvedValueOnce(null);
-      await expect(service.findOne('missing')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('missing')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -120,7 +124,9 @@ describe('QCChecklistsService', () => {
 
     it('throws NotFoundException when missing', async () => {
       prismaMock.qCChecklist.findUnique.mockResolvedValueOnce(null);
-      await expect(service.update('missing', { notes: 'x' })).rejects.toThrow(NotFoundException);
+      await expect(service.update('missing', { notes: 'x' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

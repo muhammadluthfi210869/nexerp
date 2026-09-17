@@ -1,0 +1,96 @@
+{
+  "url": "/goods-manage",
+  "type": "list",
+  "file": "goods_manage.html",
+  "title": "GsERP KIL - Barang",
+  "forms": [
+    {
+      "id": "filterCategoryForm",
+      "action": "https://kil.gserp.id/goods-manage",
+      "method": "get",
+      "fieldCount": 1,
+      "fields": [
+        {
+          "name": "category_id",
+          "type": "select",
+          "id": "category_id",
+          "required": false,
+          "placeholder": "-- Pilih Kategori --",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Kategori Barang:",
+          "options": [
+            {
+              "value": "",
+              "text": "",
+              "selected": false
+            },
+            {
+              "value": "1",
+              "text": "Bahan Baku",
+              "selected": false
+            },
+            {
+              "value": "7",
+              "text": "Barang Jadi",
+              "selected": false
+            },
+            {
+              "value": "4",
+              "text": "Barang Pembantu",
+              "selected": false
+            },
+            {
+              "value": "5",
+              "text": "Kemasan Primer",
+              "selected": false
+            },
+            {
+              "value": "6",
+              "text": "Kemasan Sekunder",
+              "selected": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "index": 1,
+      "headers": [
+        "#",
+        "Kode",
+        "Barang",
+        "Harga Beli",
+        "Kategori",
+        "Sub Kategori",
+        "Satuan",
+        "#"
+      ],
+      "rowCount": 1
+    },
+    {
+      "index": 2,
+      "headers": [
+        "Tanggal",
+        "No. Pembelian",
+        "Supplier",
+        "Qty",
+        "Harga"
+      ],
+      "rowCount": 2
+    }
+  ],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [
+    "https://kil.gserp.id/goods-manage/detail",
+    "https://kil.gserp.id/goods-manage/get-purchase-history",
+    "https://kil.gserp.id/goods-manage/coa"
+  ],
+  "notes": [],
+  "addUrl": "https://kil.gserp.id/goods-manage/create"
+}

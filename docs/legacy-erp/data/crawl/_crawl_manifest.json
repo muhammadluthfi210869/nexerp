@@ -1,0 +1,222 @@
+[
+  {
+    "path": "/customer-manage",
+    "type": "list",
+    "urlPath": "/customer-manage",
+    "name": "customer_manage",
+    "code": "200",
+    "size": 1124112,
+    "finalUrl": "https://kil.gserp.id/customer-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_customer_manage.html"
+  },
+  {
+    "path": "/customer-my-manage",
+    "type": "list",
+    "urlPath": "/customer-my-manage",
+    "name": "customer_my_manage",
+    "code": "200",
+    "size": 157321,
+    "finalUrl": "https://kil.gserp.id/customer-my-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_customer_my_manage.html"
+  },
+  {
+    "path": "/customer-category-manage",
+    "type": "list",
+    "urlPath": "/customer-category-manage",
+    "name": "customer_category_manage",
+    "code": "200",
+    "size": 156431,
+    "finalUrl": "https://kil.gserp.id/customer-category-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_customer_category_manage.html"
+  },
+  {
+    "path": "/supplier-manage",
+    "type": "list",
+    "urlPath": "/supplier-manage",
+    "name": "supplier_manage",
+    "code": "200",
+    "size": 346300,
+    "finalUrl": "https://kil.gserp.id/supplier-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_supplier_manage.html"
+  },
+  {
+    "path": "/supplier-category-manage",
+    "type": "list",
+    "urlPath": "/supplier-category-manage",
+    "name": "supplier_category_manage",
+    "code": "200",
+    "size": 156418,
+    "finalUrl": "https://kil.gserp.id/supplier-category-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_supplier_category_manage.html"
+  },
+  {
+    "path": "/goods-manage",
+    "type": "list",
+    "urlPath": "/goods-manage",
+    "name": "goods_manage",
+    "code": "200",
+    "size": 160975,
+    "finalUrl": "https://kil.gserp.id/goods-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_goods_manage.html"
+  },
+  {
+    "path": "/goods-category-manage",
+    "type": "list",
+    "urlPath": "/goods-category-manage",
+    "name": "goods_category_manage",
+    "code": "200",
+    "size": 161550,
+    "finalUrl": "https://kil.gserp.id/goods-category-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_goods_category_manage.html"
+  },
+  {
+    "path": "/warehouse-manage",
+    "type": "list",
+    "urlPath": "/warehouse-manage",
+    "name": "warehouse_manage",
+    "code": "200",
+    "size": 168674,
+    "finalUrl": "https://kil.gserp.id/warehouse-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_warehouse_manage.html"
+  },
+  {
+    "path": "/warehouse-access-manage",
+    "type": "list",
+    "urlPath": "/warehouse-access-manage",
+    "name": "warehouse_access_manage",
+    "code": "200",
+    "size": 183373,
+    "finalUrl": "https://kil.gserp.id/warehouse-access-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_warehouse_access_manage.html"
+  },
+  {
+    "path": "/user-manage",
+    "type": "list",
+    "urlPath": "/user-manage",
+    "name": "user_manage",
+    "code": "200",
+    "size": 219955,
+    "finalUrl": "https://kil.gserp.id/user-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_user_manage.html"
+  },
+  {
+    "path": "/role-manage",
+    "type": "list",
+    "urlPath": "/role-manage",
+    "name": "role_manage",
+    "code": "200",
+    "size": 170637,
+    "finalUrl": "https://kil.gserp.id/role-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_role_manage.html"
+  },
+  {
+    "path": "/coa-manage",
+    "type": "list",
+    "urlPath": "/coa-manage",
+    "name": "coa_manage",
+    "code": "200",
+    "size": 341544,
+    "finalUrl": "https://kil.gserp.id/coa-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_coa_manage.html"
+  },
+  {
+    "path": "/coa-auto-manage",
+    "type": "list",
+    "urlPath": "/coa-auto-manage",
+    "name": "coa_auto_manage",
+    "code": "200",
+    "size": 299014,
+    "finalUrl": "https://kil.gserp.id/coa-auto-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_coa_auto_manage.html"
+  },
+  {
+    "path": "/formulation-manage",
+    "type": "list",
+    "urlPath": "/formulation-manage",
+    "name": "formulation_manage",
+    "code": "200",
+    "size": 633681,
+    "finalUrl": "https://kil.gserp.id/formulation-manage",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_formulation_manage.html"
+  },
+  {
+    "path": "/customer-manage/create",
+    "type": "create",
+    "urlPath": "/customer-manage/create",
+    "name": "customer_manage_create",
+    "code": "200",
+    "size": 172039,
+    "finalUrl": "https://kil.gserp.id/customer-manage/create",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_customer_manage_create.html"
+  },
+  {
+    "path": "/supplier-manage/create",
+    "type": "create",
+    "urlPath": "/supplier-manage/create",
+    "name": "supplier_manage_create",
+    "code": "200",
+    "size": 166225,
+    "finalUrl": "https://kil.gserp.id/supplier-manage/create",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_supplier_manage_create.html"
+  },
+  {
+    "path": "/goods-manage/create",
+    "type": "create",
+    "urlPath": "/goods-manage/create",
+    "name": "goods_manage_create",
+    "code": "200",
+    "size": 314031,
+    "finalUrl": "https://kil.gserp.id/goods-manage/create",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_goods_manage_create.html"
+  },
+  {
+    "path": "/warehouse-manage/create",
+    "type": "create",
+    "urlPath": "/warehouse-manage/create",
+    "name": "warehouse_manage_create",
+    "code": "200",
+    "size": 160928,
+    "finalUrl": "https://kil.gserp.id/warehouse-manage/create",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_warehouse_manage_create.html"
+  },
+  {
+    "path": "/user-manage/create",
+    "type": "create",
+    "urlPath": "/user-manage/create",
+    "name": "user_manage_create",
+    "code": "200",
+    "size": 164230,
+    "finalUrl": "https://kil.gserp.id/user-manage/create",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_user_manage_create.html"
+  },
+  {
+    "path": "/role-manage/create",
+    "type": "create",
+    "urlPath": "/role-manage/create",
+    "name": "role_manage_create",
+    "code": "200",
+    "size": 156048,
+    "finalUrl": "https://kil.gserp.id/role-manage/create",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_role_manage_create.html"
+  },
+  {
+    "path": "/coa-manage/create",
+    "type": "create",
+    "urlPath": "/coa-manage/create",
+    "name": "coa_manage_create",
+    "code": "200",
+    "size": 175961,
+    "finalUrl": "https://kil.gserp.id/coa-manage/create",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_coa_manage_create.html"
+  },
+  {
+    "path": "/formulation-manage/create",
+    "type": "create",
+    "urlPath": "/formulation-manage/create",
+    "name": "formulation_manage_create",
+    "code": "404",
+    "size": 2,
+    "finalUrl": "https://kil.gserp.id/formulation-manage/create",
+    "rawFile": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl\\_raw_formulation_manage_create.html"
+  }
+]

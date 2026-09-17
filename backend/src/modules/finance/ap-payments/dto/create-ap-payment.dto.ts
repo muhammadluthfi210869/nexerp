@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsNumber, IsOptional, IsString, IsDateString, IsArray, Min } from 'class-validator';
+import {
+  IsUUID,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsArray,
+  Min,
+} from 'class-validator';
 
 export class CreateApPaymentDto {
   @ApiProperty({ example: 'uuid', description: 'Vendor/Supplier ID' })
@@ -16,7 +24,11 @@ export class CreateApPaymentDto {
   @IsDateString()
   paymentDate?: string;
 
-  @ApiProperty({ example: 'uuid', description: 'Source bank account ID', required: false })
+  @ApiProperty({
+    example: 'uuid',
+    description: 'Source bank account ID',
+    required: false,
+  })
   @IsOptional()
   @IsUUID()
   bankAccountId?: string;
@@ -26,18 +38,28 @@ export class CreateApPaymentDto {
   @IsString()
   notes?: string;
 
-  @ApiProperty({ example: ['https://.../invoice.pdf'], required: false, type: [String] })
+  @ApiProperty({
+    example: ['https://.../invoice.pdf'],
+    required: false,
+    type: [String],
+  })
   @IsOptional()
   @IsArray()
   attachmentUrls?: string[];
 }
 
 export class AllocateApPaymentDto {
-  @ApiProperty({ example: 'uuid', description: 'Bill ID to allocate payment to' })
+  @ApiProperty({
+    example: 'uuid',
+    description: 'Bill ID to allocate payment to',
+  })
   @IsUUID()
   billId: string;
 
-  @ApiProperty({ example: 1500000, description: 'Amount to allocate to this bill' })
+  @ApiProperty({
+    example: 1500000,
+    description: 'Amount to allocate to this bill',
+  })
   @IsNumber()
   @Min(1)
   amount: number;

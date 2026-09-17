@@ -28,7 +28,9 @@ export class AssetTransfersController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Record a new asset transfer (updates asset location/person)' })
+  @ApiOperation({
+    summary: 'Record a new asset transfer (updates asset location/person)',
+  })
   create(@Req() req: any, @Body() dto: CreateAssetTransferDto) {
     const userId = req.user?.id;
     return this.service.create(userId, dto);

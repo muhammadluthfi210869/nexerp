@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -71,6 +71,14 @@ function ProgressBar({ value }: { value: number }) {
 }
 
 export default function ChecklistProgressPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Progres Checklist...</div>}>
+      <ChecklistProgressContent />
+    </Suspense>
+  );
+}
+
+function ChecklistProgressContent() {
   const [dateFilter, setDateFilter] = useState<DateFilterValue>({
     preset: "this-month",
     startDate: "2026-09-01",

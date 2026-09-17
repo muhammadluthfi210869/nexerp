@@ -55,7 +55,9 @@ describe('StockLedgerService', () => {
     it('decrements materialItem.stockQty', async () => {
       const tx = {
         inventoryTransaction: {
-          create: jest.fn().mockResolvedValue({ ...FAKE_TX_RESULT, type: 'OUTBOUND' }),
+          create: jest
+            .fn()
+            .mockResolvedValue({ ...FAKE_TX_RESULT, type: 'OUTBOUND' }),
         },
         materialItem: {
           update: jest.fn().mockResolvedValue({ id: 'mat-1', stockQty: 50 }),
@@ -80,7 +82,9 @@ describe('StockLedgerService', () => {
           create: jest.fn().mockResolvedValue(FAKE_TX_RESULT),
         },
         materialInventory: {
-          update: jest.fn().mockResolvedValue({ id: 'inv-1', currentStock: 200 }),
+          update: jest
+            .fn()
+            .mockResolvedValue({ id: 'inv-1', currentStock: 200 }),
         },
         materialItem: {
           update: jest.fn().mockResolvedValue({ id: 'mat-1', stockQty: 200 }),

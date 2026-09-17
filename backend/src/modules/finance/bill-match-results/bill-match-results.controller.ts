@@ -10,13 +10,20 @@ export class BillMatchResultsController {
   constructor(private service: BillMatchResultsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List 4-way matching results (filter by bill, status)' })
-  findAll(@Query('billId') billId?: string, @Query('matchStatus') matchStatus?: string) {
+  @ApiOperation({
+    summary: 'List 4-way matching results (filter by bill, status)',
+  })
+  findAll(
+    @Query('billId') billId?: string,
+    @Query('matchStatus') matchStatus?: string,
+  ) {
     return this.service.findAll({ billId, matchStatus: matchStatus as any });
   }
 
   @Get('summary')
-  @ApiOperation({ summary: 'Get matching summary (count by status + avg variance)' })
+  @ApiOperation({
+    summary: 'Get matching summary (count by status + avg variance)',
+  })
   summary() {
     return this.service.getSummary();
   }
@@ -28,7 +35,9 @@ export class BillMatchResultsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Record a 4-way matching result (PO ↔ GR ↔ QC ↔ Invoice)' })
+  @ApiOperation({
+    summary: 'Record a 4-way matching result (PO ↔ GR ↔ QC ↔ Invoice)',
+  })
   create(@Req() req: any, @Body() dto: CreateBillMatchResultDto) {
     const userId = req.user?.id;
     return this.service.create(userId, dto);

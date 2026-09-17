@@ -50,7 +50,11 @@ export class UpdateBillLineItemDto {
   @Min(0)
   discount?: number;
 
-  @ApiProperty({ example: 0.5, required: false, description: 'Qty rejected by QC' })
+  @ApiProperty({
+    example: 0.5,
+    required: false,
+    description: 'Qty rejected by QC',
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)

@@ -146,6 +146,16 @@ export default function FinanceTaxesPage() {
         }
       />
 
+      <div className="p-4 bg-amber-50/80 border border-amber-300 rounded-xl text-xs text-amber-900 flex items-start gap-3 my-4">
+        <div className="p-1 rounded-md bg-amber-100 text-amber-700 font-bold">INFO</div>
+        <div>
+          <div className="font-bold text-sm">Modul Pajak &amp; e-Faktur Ditangguhkan (Tax Purge Applied)</div>
+          <div className="text-amber-800 mt-0.5">
+            Sesuai arahan Requirement Bagian 12 (&quot;Modul Pajak dan e-Faktur: tidak perlu dikerjakan / di-skip dari scope&quot;), seluruh perhitungan pajak (PPN/PPh) pada faktur penjualan, pembelian, dan pembayaran dinonaktifkan dan ditunda ke fase maintenance/perubahan.
+          </div>
+        </div>
+      </div>
+
       <DnaKpiGrid cols={3}>
         <DnaStatCard
           label="Total Tarif Pajak"

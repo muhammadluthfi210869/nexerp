@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   DnaPageContainer,
   DnaPageHeader,
@@ -14,6 +15,7 @@ import {
   DnaInput,
   DnaCurrencyInput,
   formatRupiah,
+  useDnaToast,
 } from "@/components/dna";
 import { DnaTable } from "@/components/dna";
 import { Plus, PieChart, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
@@ -37,15 +39,45 @@ const SAMPLE_BUDGETS: DepartmentBudget[] = [
   { id: "b-5", department: "HRD & Rekrutmen Pabrik", year: 2026, allocatedBudget: 180000000, actualSpent: 95000000, committedAmount: 15000000, variance: 70000000, utilizationRate: 61.1 },
 ];
 
-export default function BudgetManagementPage() {
+function BudgetManagementContent() {
+  const searchParams = useSearchParams();
+  const toast = useDnaToast();
   const [budgets, setBudgets] = useState<DepartmentBudget[]>(SAMPLE_BUDGETS);
   const [selectedYear, setSelectedYear] = useState(2026);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(searchParams.get("action") === "create");
+
+  // Form State for New Budget Allocation
+  const [formDepartment, setFormDepartment] = useState("");
+  const [formYear, setFormYear] = useState(2026);
+  const [formAllocated, setFormAllocated] = useState(0);
 
   const totalAllocated = budgets.reduce((acc, b) => acc + b.allocatedBudget, 0);
   const totalSpent = budgets.reduce((acc, b) => acc + b.actualSpent, 0);
   const totalVariance = totalAllocated - totalSpent;
   const overallUtil = totalAllocated > 0 ? (totalSpent / totalAllocated) * 100 : 0;
+
+  const handleCreateBudget = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!formDepartment.trim() || formAllocated <= 0) {
+      toast.error("Validasi Gagal", "Departemen dan Pagu Anggaran wajib diisi dengan benar.");
+      return;
+    }
+    const newBudget: DepartmentBudget = {
+      id: `b-${Date.now()}`,
+      department: formDepartment,
+      year: formYear,
+      allocatedBudget: formAllocated,
+      actualSpent: 0,
+      committedAmount: 0,
+      variance: formAllocated,
+      utilizationRate: 0,
+    };
+    setBudgets([newBudget, ...budgets]);
+    toast.success("Anggaran Disimpan", `Pagu anggaran untuk ${newBudget.department} berhasil ditetapkan.`);
+    setIsModalOpen(false);
+    setFormDepartment("");
+    setFormAllocated(0);
+  };
 
   return (
     <DnaPageContainer>
@@ -140,6 +172,54 @@ export default function BudgetManagementPage() {
           </DnaTable>
         </div>
       </DnaDataTableCard>
+
+      {/* Modal Alokasi Anggaran Baru */}
+      <DnaCrudModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Alokasi Pagu Anggaran Baru"
+        subtitle="Tetapkan pagu belanja dan alokasi modal kerja departemen untuk tahun anggaran aktif"
+        onSave={() => handleCreateBudget()}
+        saveText="Simpan Pagu Anggaran"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Departemen / Divisi *</label>
+            <DnaInput
+              placeholder="Contoh: Digital Marketing & Ads Spend"
+              value={formDepartment}
+              onChange={(e) => setFormDepartment(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Tahun Anggaran</label>
+            <DnaInput
+              type="number"
+              value={formYear}
+              onChange={(e) => setFormYear(Number(e.target.value))}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Pagu Anggaran Disetujui (Rp) *</label>
+            <DnaCurrencyInput
+              value={formAllocated}
+              onChange={(val) => setFormAllocated(val || 0)}
+              required
+            />
+          </div>
+        </div>
+      </DnaCrudModal>
     </DnaPageContainer>
+  );
+}
+
+export default function BudgetManagementPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Memuat Anggaran Departemen...</div>}>
+      <BudgetManagementContent />
+    </Suspense>
   );
 }

@@ -1,0 +1,469 @@
+{
+  "url": "/sales-sample/create",
+  "http_status": 200,
+  "title": "GsERP KIL - Buat Sales Sample",
+  "form_fields": [
+    {
+      "name": "csrf_gs",
+      "type": "hidden",
+      "required": false,
+      "id": null,
+      "options": null
+    },
+    {
+      "name": "sales_samples_date",
+      "type": "text",
+      "required": false,
+      "id": "sales_samples_date",
+      "options": null
+    },
+    {
+      "name": "color",
+      "type": "text",
+      "required": false,
+      "id": "color",
+      "options": null
+    },
+    {
+      "name": "flavor",
+      "type": "text",
+      "required": false,
+      "id": "flavor",
+      "options": null
+    },
+    {
+      "name": "netto",
+      "type": "text",
+      "required": false,
+      "id": "netto",
+      "options": null
+    },
+    {
+      "name": "product_name",
+      "type": "text",
+      "required": false,
+      "id": "product_name",
+      "options": null
+    },
+    {
+      "name": "price",
+      "type": "text",
+      "required": false,
+      "id": "price",
+      "options": null
+    },
+    {
+      "name": "discount",
+      "type": "text",
+      "required": false,
+      "id": "discount",
+      "options": null
+    },
+    {
+      "name": "tax_percentage",
+      "type": "text",
+      "required": false,
+      "id": "tax_percentage",
+      "options": null
+    },
+    {
+      "name": "subtotal",
+      "type": "hidden",
+      "required": false,
+      "id": "subtotal",
+      "options": null
+    },
+    {
+      "name": "tax_total",
+      "type": "hidden",
+      "required": false,
+      "id": "tax_total",
+      "options": null
+    },
+    {
+      "name": "grandtotal",
+      "type": "hidden",
+      "required": false,
+      "id": "grandtotal",
+      "options": null
+    },
+    {
+      "name": "attachment",
+      "type": "file",
+      "required": false,
+      "id": "exampleInputFile",
+      "options": null
+    },
+    {
+      "name": "formulator_id",
+      "type": "select",
+      "required": false,
+      "id": "formulator_id",
+      "options": [
+        {
+          "value": "",
+          "text": ""
+        },
+        {
+          "value": "1",
+          "text": "Super Admin"
+        },
+        {
+          "value": "2",
+          "text": "Fadilah Syahab"
+        },
+        {
+          "value": "3",
+          "text": "Achmad Bagir"
+        },
+        {
+          "value": "4",
+          "text": "Zaki"
+        },
+        {
+          "value": "5",
+          "text": "Fatimah Amira"
+        },
+        {
+          "value": "6",
+          "text": "Ribut Supriyono"
+        },
+        {
+          "value": "7",
+          "text": "Riyantita Tunjungsari"
+        },
+        {
+          "value": "8",
+          "text": "Muhammad Ghufron"
+        },
+        {
+          "value": "9",
+          "text": "Akhmad Ratriono Anggoro"
+        },
+        {
+          "value": "10",
+          "text": "Dicky Barkah"
+        },
+        {
+          "value": "11",
+          "text": "Keviana"
+        },
+        {
+          "value": "13",
+          "text": "Irma Safarina"
+        },
+        {
+          "value": "14",
+          "text": "Ekky Ilham"
+        },
+        {
+          "value": "15",
+          "text": "Irma Finance"
+        },
+        {
+          "value": "16",
+          "text": "Vira"
+        },
+        {
+          "value": "17",
+          "text": "Desy"
+        },
+        {
+          "value": "18",
+          "text": "Gabriella Maulidha"
+        },
+        {
+          "value": "19",
+          "text": "Nur Kholilah"
+        },
+        {
+          "value": "20",
+          "text": "Muhammad Ruhullah"
+        },
+        {
+          "value": "21",
+          "text": "salfa delia fernanda"
+        },
+        {
+          "value": "22",
+          "text": "Rudy Affandy"
+        },
+        {
+          "value": "23",
+          "text": "Yulia Esther"
+        },
+        {
+          "value": "24",
+          "text": "Ayu Anindya"
+        },
+        {
+          "value": "25",
+          "text": "Krisna Putra Ramadhani"
+        },
+        {
+          "value": "26",
+          "text": "Ciptaning"
+        },
+        {
+          "value": "27",
+          "text": "Panca"
+        },
+        {
+          "value": "28",
+          "text": "Diaz Muhammad Irsyadi"
+        },
+        {
+          "value": "29",
+          "text": "Edi Design"
+        },
+        {
+          "value": "30",
+          "text": "BRIAN BUDY CAHYONO"
+        },
+        {
+          "value": "31",
+          "text": "Lee Maychael"
+        },
+        {
+          "value": "32",
+          "text": "SHIRLEY IRMA JUNITA"
+        },
+        {
+          "value": "33",
+          "text": "Siti"
+        },
+        {
+          "value": "34",
+          "text": "Estisan Septyana Atwinda"
+        },
+        {
+          "value": "35",
+          "text": "Laksmi Diah Ahmada"
+        },
+        {
+          "value": "36",
+          "text": "Annisa Shalihah"
+        },
+        {
+          "value": "37",
+          "text": "Diva"
+        },
+        {
+          "value": "38",
+          "text": "Latifatus Cahya Ningtyas"
+        },
+        {
+          "value": "39",
+          "text": "Revita Yustianawati"
+        },
+        {
+          "value": "40",
+          "text": "Etika Citra Nuraisah"
+        },
+        {
+          "value": "41",
+          "text": "R.A Ami Wulandari Soedewo"
+        },
+        {
+          "value": "42",
+          "text": "Umar Nurbana"
+        },
+        {
+          "value": "43",
+          "text": "Siti Mutmainah"
+        },
+        {
+          "value": "44",
+          "text": "Jessica Dwipuspita"
+        },
+        {
+          "value": "45",
+          "text": "Eunike Putriningtyas"
+        },
+        {
+          "value": "46",
+          "text": "Edvin Porvianto Sutedjo"
+        }
+      ]
+    },
+    {
+      "name": "customers_id",
+      "type": "select",
+      "required": false,
+      "id": "customers_id",
+      "options": [
+        {
+          "value": "",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "form",
+      "type": "select",
+      "required": false,
+      "id": "form",
+      "options": [
+        {
+          "value": "",
+          "text": ""
+        },
+        {
+          "value": "Krim",
+          "text": "Krim"
+        },
+        {
+          "value": "Cairan",
+          "text": "Cairan Kental"
+        },
+        {
+          "value": "Cair",
+          "text": "Cair"
+        },
+        {
+          "value": "Padat",
+          "text": "Padat"
+        },
+        {
+          "value": "Dekoratif",
+          "text": "Dekoratif"
+        }
+      ]
+    },
+    {
+      "name": "goods_units_id",
+      "type": "select",
+      "required": false,
+      "id": "goods_units_id",
+      "options": [
+        {
+          "value": "",
+          "text": ""
+        },
+        {
+          "value": "1",
+          "text": "pcs"
+        },
+        {
+          "value": "2",
+          "text": "gr"
+        },
+        {
+          "value": "3",
+          "text": "ml"
+        }
+      ]
+    },
+    {
+      "name": "description",
+      "type": "textarea",
+      "required": false,
+      "id": "description",
+      "options": ""
+    },
+    {
+      "name": "reference",
+      "type": "textarea",
+      "required": false,
+      "id": "reference",
+      "options": ""
+    },
+    {
+      "name": "target",
+      "type": "textarea",
+      "required": false,
+      "id": "target",
+      "options": ""
+    },
+    {
+      "name": "material_request",
+      "type": "textarea",
+      "required": false,
+      "id": "material_request",
+      "options": ""
+    },
+    {
+      "name": "claim",
+      "type": "textarea",
+      "required": false,
+      "id": "claim",
+      "options": ""
+    }
+  ],
+  "tables": [
+    {
+      "headers": [
+        "Subtotal:",
+        "Rp 0.00"
+      ],
+      "rows": 3
+    }
+  ],
+  "actions": [
+    {
+      "text": "Kembali",
+      "type": "button"
+    },
+    {
+      "text": "Simpan",
+      "type": "submit"
+    },
+    {
+      "text": "&times;",
+      "type": "button"
+    },
+    {
+      "text": "Tutup",
+      "type": "button"
+    },
+    {
+      "text": "Akun Saya",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account"
+    }
+  ],
+  "ajax_calls": [
+    "https://kil.gserp.id/sales-sample/detail",
+    "https://kil.gserp.id/purchase-approval/badge",
+    "https://kil.gserp.id/purchase-return-approval/badge",
+    "https://kil.gserp.id/sales-sample-approval/badge",
+    "https://kil.gserp.id/sales-approval/badge",
+    "https://kil.gserp.id/sales-return-approval/badge",
+    "https://kil.gserp.id/request-cogs-approval/badge",
+    "https://kil.gserp.id/purchase-request-approval/badge",
+    "https://kil.gserp.id/goods-request-approval/badge",
+    "https://kil.gserp.id/checklist-progress/badge",
+    "https://kil.gserp.id/purchase/badge",
+    "https://kil.gserp.id/purchase-invoice/badge",
+    "https://kil.gserp.id/purchase-return/badge",
+    "https://kil.gserp.id/purchase-down-payment/badge",
+    "https://kil.gserp.id/purchase-payment/badge",
+    "https://kil.gserp.id/need-for-goods/badge",
+    "https://kil.gserp.id/goods-request/badge",
+    "https://kil.gserp.id/purchase-request/badge",
+    "https://kil.gserp.id/purchase-in/badge",
+    "https://kil.gserp.id/sales-return-in/badge",
+    "https://kil.gserp.id/delivery-out/badge",
+    "https://kil.gserp.id/purchase-return-out/badge",
+    "https://kil.gserp.id/sales-sample/badge",
+    "https://kil.gserp.id/sales-sample-payment/badge",
+    "https://kil.gserp.id/sales/badge",
+    "https://kil.gserp.id/sales-return/badge",
+    "https://kil.gserp.id/sales-down-payment/badge",
+    "https://kil.gserp.id/sales-invoice/badge",
+    "https://kil.gserp.id/sales-payment/badge",
+    "https://kil.gserp.id/formulation-manage/badge",
+    "https://kil.gserp.id/formulation/badge",
+    "https://kil.gserp.id/request-cogs/badge",
+    "https://kil.gserp.id/batch-record/badge",
+    "https://kil.gserp.id/schedule-mixing/badge",
+    "https://kil.gserp.id/schedule-filling/badge",
+    "https://kil.gserp.id/schedule-packaging/badge",
+    "https://kil.gserp.id/production-mixing/badge",
+    "https://kil.gserp.id/production-filling/badge",
+    "https://kil.gserp.id/production-packaging/badge",
+    "https://kil.gserp.id/sales-sample/get-customers"
+  ],
+  "modals": [],
+  "print_pattern": null,
+  "notes": "csrf_gs, DataTables, select2, rich-editor, daterangepicker"
+}

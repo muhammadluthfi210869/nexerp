@@ -1,0 +1,362 @@
+{
+  "url": "/sales-sample/create",
+  "http_status": 200,
+  "title": "GsERP KIL - Buat Sales Sample",
+  "form_fields": [
+    {
+      "name": "formulator_id",
+      "type": "select",
+      "required": false,
+      "id": "formulator_id",
+      "options": [
+        {
+          "value": "",
+          "text": ""
+        },
+        {
+          "value": "1",
+          "text": ""
+        },
+        {
+          "value": "2",
+          "text": ""
+        },
+        {
+          "value": "3",
+          "text": ""
+        },
+        {
+          "value": "4",
+          "text": ""
+        },
+        {
+          "value": "5",
+          "text": ""
+        },
+        {
+          "value": "6",
+          "text": ""
+        },
+        {
+          "value": "7",
+          "text": ""
+        },
+        {
+          "value": "8",
+          "text": ""
+        },
+        {
+          "value": "9",
+          "text": ""
+        },
+        {
+          "value": "10",
+          "text": ""
+        },
+        {
+          "value": "11",
+          "text": ""
+        },
+        {
+          "value": "13",
+          "text": ""
+        },
+        {
+          "value": "14",
+          "text": ""
+        },
+        {
+          "value": "15",
+          "text": ""
+        },
+        {
+          "value": "16",
+          "text": ""
+        },
+        {
+          "value": "17",
+          "text": ""
+        },
+        {
+          "value": "18",
+          "text": ""
+        },
+        {
+          "value": "19",
+          "text": ""
+        },
+        {
+          "value": "20",
+          "text": ""
+        },
+        {
+          "value": "21",
+          "text": ""
+        },
+        {
+          "value": "22",
+          "text": ""
+        },
+        {
+          "value": "23",
+          "text": ""
+        },
+        {
+          "value": "24",
+          "text": ""
+        },
+        {
+          "value": "25",
+          "text": ""
+        },
+        {
+          "value": "26",
+          "text": ""
+        },
+        {
+          "value": "27",
+          "text": ""
+        },
+        {
+          "value": "28",
+          "text": ""
+        },
+        {
+          "value": "29",
+          "text": ""
+        },
+        {
+          "value": "30",
+          "text": ""
+        },
+        {
+          "value": "31",
+          "text": ""
+        },
+        {
+          "value": "32",
+          "text": ""
+        },
+        {
+          "value": "33",
+          "text": ""
+        },
+        {
+          "value": "34",
+          "text": ""
+        },
+        {
+          "value": "35",
+          "text": ""
+        },
+        {
+          "value": "36",
+          "text": ""
+        },
+        {
+          "value": "37",
+          "text": ""
+        },
+        {
+          "value": "38",
+          "text": ""
+        },
+        {
+          "value": "39",
+          "text": ""
+        },
+        {
+          "value": "40",
+          "text": ""
+        },
+        {
+          "value": "41",
+          "text": ""
+        },
+        {
+          "value": "42",
+          "text": ""
+        },
+        {
+          "value": "43",
+          "text": ""
+        },
+        {
+          "value": "44",
+          "text": ""
+        },
+        {
+          "value": "45",
+          "text": ""
+        },
+        {
+          "value": "46",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "customers_id",
+      "type": "select",
+      "required": false,
+      "id": "customers_id",
+      "options": [
+        {
+          "value": "",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "description",
+      "type": "textarea",
+      "required": false,
+      "id": "description",
+      "options": null
+    },
+    {
+      "name": "reference",
+      "type": "textarea",
+      "required": false,
+      "id": "reference",
+      "options": null
+    },
+    {
+      "name": "target",
+      "type": "textarea",
+      "required": false,
+      "id": "target",
+      "options": null
+    },
+    {
+      "name": "form",
+      "type": "select",
+      "required": false,
+      "id": "form",
+      "options": [
+        {
+          "value": "",
+          "text": ""
+        },
+        {
+          "value": "Krim",
+          "text": ""
+        },
+        {
+          "value": "Cairan",
+          "text": ""
+        },
+        {
+          "value": "Cair",
+          "text": ""
+        },
+        {
+          "value": "Padat",
+          "text": ""
+        },
+        {
+          "value": "Dekoratif",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "goods_units_id",
+      "type": "select",
+      "required": false,
+      "id": "goods_units_id",
+      "options": [
+        {
+          "value": "",
+          "text": ""
+        },
+        {
+          "value": "1",
+          "text": ""
+        },
+        {
+          "value": "2",
+          "text": ""
+        },
+        {
+          "value": "3",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "material_request",
+      "type": "textarea",
+      "required": false,
+      "id": "material_request",
+      "options": null
+    },
+    {
+      "name": "claim",
+      "type": "textarea",
+      "required": false,
+      "id": "claim",
+      "options": null
+    }
+  ],
+  "tables": [
+    {
+      "headers": [
+        "Subtotal:",
+        "Rp 0.00"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "text": "Akun Saya"
+    },
+    {
+      "text": "Kembali"
+    },
+    {
+      "text": "Simpan"
+    },
+    {
+      "text": "&times;"
+    },
+    {
+      "text": "Tutup"
+    }
+  ],
+  "ajax_calls": [
+    "https://kil.gserp.id/sales-sample/detail",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frequest\\x2Dcogs\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Drequest\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fgoods\\x2Drequest\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fchecklist\\x2Dprogress\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dinvoice\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Ddown\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fneed\\x2Dfor\\x2Dgoods\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fgoods\\x2Drequest\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Drequest\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Din\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Din\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fdelivery\\x2Dout\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Dout\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Ddown\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dinvoice\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fformulation\\x2Dmanage\\x2Fbadge"
+  ],
+  "modals": [],
+  "print_pattern": null,
+  "notes": "csrf_gs present; uses DataTables; uses select2; uses rich editor"
+}

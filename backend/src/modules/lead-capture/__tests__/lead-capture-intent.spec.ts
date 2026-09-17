@@ -12,14 +12,19 @@ describe('LeadCaptureService.classifyIntent', () => {
     // Production uses real MiniMax API; tests must be hermetic.
     globalThis.fetch = (async (_url: any, init?: any) => {
       const body = init?.body ? JSON.parse(init.body) : {};
-      const userText: string = body.messages?.find((m: any) => m.role === 'user')?.content ?? '';
+      const userText: string =
+        body.messages?.find((m: any) => m.role === 'user')?.content ?? '';
       const lower = userText.toLowerCase();
       const isSpam = /pinjam|pinjol|slot|gacor|cair/.test(lower);
       const intent = isSpam ? 'SPAM' : 'PROSPEK';
       return {
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: JSON.stringify({ intent, confidence: 0.9 }) } }],
+          choices: [
+            {
+              message: { content: JSON.stringify({ intent, confidence: 0.9 }) },
+            },
+          ],
         }),
       } as any;
     }) as typeof globalThis.fetch;

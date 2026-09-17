@@ -235,10 +235,45 @@ export class WaWebhookService {
       this.logger.log(`📨 Gateway from ${phone62}: "${text.slice(0, 50)}"`);
 
       // Jembatan tracking code kalau ada, sama seperti jalur Meta
-      const trackingMatch = text.match(/\[Kode:\s*(DL\w+)\]/);
+      const trackingMatch = text.match(/\[Kode:\s*([A-Za-z0-9_-]+)\]/i);
       const trackingCode = trackingMatch ? trackingMatch[1] : null;
 
       if (trackingCode) {
+        // Forward konfirmasi ke dreamlab.id lead monitor
+        const ac = new AbortController();
+        const timer = setTimeout(() => ac.abort(), 5000);
+        fetch('https://dreamlab.id/api/lead-capture/confirm', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-forwarded-from': 'nexerp-gateway',
+          },
+          body: JSON.stringify({
+            trackingCode,
+            phone: phone62,
+            waName: name || 'Unknown',
+            waMessage: text,
+            destinationPhone: null,
+            phoneNumberId: null,
+            wamid: msgId || null,
+          }),
+          signal: ac.signal,
+        })
+          .then(async (res) => {
+            if (!res.ok) {
+              const bodyText = await res.text().catch(() => '');
+              this.logger.warn(
+                `⚠️ dreamlab.id returned ${res.status} ${res.statusText}: ${bodyText.slice(0, 200)}`,
+              );
+            }
+          })
+          .catch((err) => {
+            this.logger.warn(
+              `⚠️ dreamlab.id forward failed: ${err?.message || err}`,
+            );
+          })
+          .finally(() => clearTimeout(timer));
+
         await this.leadCapture.updateFromWhatsApp(trackingCode, {
           phone: phone62,
           waName: name || 'Unknown',

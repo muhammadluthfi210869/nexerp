@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsNumber, IsOptional, IsString, IsDateString, IsIn, Min } from 'class-validator';
+import {
+  IsUUID,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsIn,
+  Min,
+} from 'class-validator';
 
 export class DepositEscrowDto {
   @ApiProperty({ example: 'uuid' })
@@ -26,7 +34,11 @@ export class DepositEscrowDto {
   @IsString()
   notes?: string;
 
-  @ApiProperty({ example: 'uuid', description: 'Destination bank account', required: false })
+  @ApiProperty({
+    example: 'uuid',
+    description: 'Destination bank account',
+    required: false,
+  })
   @IsOptional()
   @IsUUID()
   bankAccountId?: string;
@@ -37,7 +49,10 @@ export class ReleaseEscrowDto {
   @IsIn(['RELEASE', 'RETURN', 'FORFEIT'])
   action: 'RELEASE' | 'RETURN' | 'FORFEIT';
 
-  @ApiProperty({ example: 'Customer completed order, release as final payment', required: false })
+  @ApiProperty({
+    example: 'Customer completed order, release as final payment',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   notes?: string;

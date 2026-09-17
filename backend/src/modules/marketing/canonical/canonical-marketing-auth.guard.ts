@@ -1,10 +1,19 @@
-import { ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class CanonicalMarketingAuthGuard extends AuthGuard('jwt') {
-  override handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
+  override handleRequest(
+    err: any,
+    user: any,
+    info: any,
+    context: ExecutionContext,
+  ) {
     if (user) return user;
     // A development bypass must be deliberately enabled.  Falling back to a
     // super-admin on every invalid/missing token makes cross-account checks

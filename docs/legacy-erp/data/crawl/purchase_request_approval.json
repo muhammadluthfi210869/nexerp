@@ -1,0 +1,644 @@
+{
+  "url": "/purchase-request-approval",
+  "http_status": 200,
+  "title": "GsERP KIL - Permintaan Pembelian ~",
+  "h1": "Permintaan Pembelian ~",
+  "form_fields": [],
+  "tables": [
+    {
+      "index": 0,
+      "columns": [
+        "#",
+        "Kode",
+        "Tanggal",
+        "Pemohon",
+        "Total Item",
+        "Catatan",
+        "Status",
+        "#"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "tag": "a",
+      "text": "00:00:00",
+      "href": "javascript:;",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "English",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;en",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Indonesia",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;id",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Zaki",
+      "href": "#",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Akun Saya",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "GsERP KIL",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Beranda",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Jadwal Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-schedule",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Realisasi Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-realization",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Penjualan Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-sample",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Penjualan Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-product",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Pelanggan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-customer",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sample",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Eksekutif",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-executive",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Notifikasi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-notification",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Digital Marketing",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-digital-marketing",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. BusDev",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-business-development",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. RnD",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-rnd",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Purchasing",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-purchasing",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Legalitas",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-legality",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Gudang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-warehouse",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. HR",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-human-resources",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Keuangan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-finance",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Buku Tamu",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-guest-book",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Client Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-sample",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Client Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-production",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Client RO",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-repeat-order",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "D. Lost",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-lost",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Kelola Pengguna",
+      "href": "javascript&#x3A;&#x3B;",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Hak Akses",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;role-manage",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Pengguna",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;user-manage",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Kelola CoA",
+      "href": "javascript&#x3A;&#x3B;",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "CoA",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-manage",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "CoA Jurnal Otomatis",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-auto-manage",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Kelola Gudang",
+      "href": "javascript&#x3A;&#x3B;",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Gudang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-manage",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Hak Akses Gudang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-access-manage",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Kelola Barang",
+      "href": "javascript&#x3A;&#x3B;",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Kategori Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-category-manage",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-manage",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Kelola Supplier",
+      "href": "javascript&#x3A;&#x3B;",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Kategori Supplier",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-category-manage",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Supplier",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-manage",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Kelola Pelanggan",
+      "href": "javascript&#x3A;&#x3B;",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Kategori Pelanggan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-category-manage",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Pelanggan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-manage",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Pelanggan Saya",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-my-manage",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Kelola Penjualan",
+      "href": "javascript&#x3A;&#x3B;",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Kategori Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-category",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Target Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-target",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Pembelian ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-approval",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Retur Pembelian ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-approval",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Penjualan Sample ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-approval",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Penjualan Produk ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-approval",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Retur Penjualan ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-approval",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Permintaan HPP ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs-approval",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Permintaan Pembelian ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request-approval",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Permintaan Barang ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request-approval",
+      "onclick": null
+    },
+    {
+      "tag": "a",
+      "text": "Checklist Progress",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-progress",
+      "onclick": null
+    }
+  ],
+  "ajax_calls": [
+    {
+      "kind": "$.ajax",
+      "url": "https://kil.gserp.id/purchase-request-approval/detail",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dapproval\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Dapproval\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Dapproval\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dapproval\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Dapproval\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frequest\\x2Dcogs\\x2Dapproval\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Drequest\\x2Dapproval\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fgoods\\x2Drequest\\x2Dapproval\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fchecklist\\x2Dprogress\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dinvoice\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Ddown\\x2Dpayment\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dpayment\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fneed\\x2Dfor\\x2Dgoods\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fgoods\\x2Drequest\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Drequest\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Din\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Din\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fdelivery\\x2Dout\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Dout\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Dpayment\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Ddown\\x2Dpayment\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dinvoice\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dpayment\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fformulation\\x2Dmanage\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fformulation\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frequest\\x2Dcogs\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fbatch\\x2Drecord\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fschedule\\x2Dmixing\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fschedule\\x2Dfilling\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fschedule\\x2Dpackaging\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fproduction\\x2Dmixing\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fproduction\\x2Dfilling\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "$.ajax",
+      "url": "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fproduction\\x2Dpackaging\\x2Fbadge",
+      "type": "GET",
+      "method": null
+    },
+    {
+      "kind": "function_ref",
+      "name": "ajaxDetail"
+    }
+  ],
+  "modals": [
+    {
+      "id": "modal-sm",
+      "trigger_class": "modal"
+    },
+    {
+      "id": "modal-md",
+      "trigger_class": "modal"
+    },
+    {
+      "id": "modal-lg",
+      "trigger_class": "modal"
+    },
+    {
+      "id": "modal-xl",
+      "trigger_class": "modal"
+    }
+  ],
+  "print_pattern": null,
+  "notes": ""
+}

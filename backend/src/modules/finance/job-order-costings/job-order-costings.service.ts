@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 /**
@@ -29,12 +33,15 @@ export class JobOrderCostingsService {
   /**
    * Record HPP for a new job order.
    */
-  async create(_userId: string, dto: {
-    jobOrderNumber: string;
-    description?: string;
-    totalCost: number;
-    totalRevenue?: number;
-  }) {
+  async create(
+    _userId: string,
+    dto: {
+      jobOrderNumber: string;
+      description?: string;
+      totalCost: number;
+      totalRevenue?: number;
+    },
+  ) {
     if (dto.totalCost <= 0) {
       throw new BadRequestException('totalCost must be > 0');
     }
@@ -42,7 +49,9 @@ export class JobOrderCostingsService {
       where: { jobOrderNumber: dto.jobOrderNumber },
     });
     if (existing) {
-      throw new BadRequestException(`Job order ${dto.jobOrderNumber} already exists`);
+      throw new BadRequestException(
+        `Job order ${dto.jobOrderNumber} already exists`,
+      );
     }
 
     return this.prisma.jobOrderCosting.create({
@@ -58,10 +67,14 @@ export class JobOrderCostingsService {
   /**
    * Add revenue to a job order (or correct costs).
    */
-  async updateTotals(_userId: string, id: string, dto: {
-    totalCost?: number;
-    totalRevenue?: number;
-  }) {
+  async updateTotals(
+    _userId: string,
+    id: string,
+    dto: {
+      totalCost?: number;
+      totalRevenue?: number;
+    },
+  ) {
     const job = await this.prisma.jobOrderCosting.findUnique({ where: { id } });
     if (!job) throw new NotFoundException(`Job order costing ${id} not found`);
     if (job.closedAt) {
@@ -110,7 +123,8 @@ export class JobOrderCostingsService {
     const cost = Number(job.totalCost);
     const revenue = Number(job.totalRevenue);
     const profit = revenue - cost;
-    const margin = revenue > 0 ? Math.round((profit / revenue) * 10000) / 100 : 0;
+    const margin =
+      revenue > 0 ? Math.round((profit / revenue) * 10000) / 100 : 0;
     return {
       jobOrderNumber: job.jobOrderNumber,
       description: job.description,

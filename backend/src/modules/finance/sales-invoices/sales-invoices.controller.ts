@@ -2,7 +2,10 @@ import { Controller, Get, Post, Param, Body, Query, Req } from '@nestjs/common';
 import { SalesInvoicesService } from './sales-invoices.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentStatus } from '@prisma/client';
-import { CreateSalesInvoiceDto, CancelSalesInvoiceDto } from './dto/create-sales-invoice.dto';
+import {
+  CreateSalesInvoiceDto,
+  CancelSalesInvoiceDto,
+} from './dto/create-sales-invoice.dto';
 
 @ApiTags('finance/sales-invoices')
 @ApiBearerAuth()
@@ -26,14 +29,18 @@ export class SalesInvoicesController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a new customer sales invoice with line items' })
+  @ApiOperation({
+    summary: 'Create a new customer sales invoice with line items',
+  })
   create(@Req() req: any, @Body() dto: CreateSalesInvoiceDto) {
     const userId = req.user?.id;
     return this.service.create(userId, dto);
   }
 
   @Post(':id/post')
-  @ApiOperation({ summary: 'Post sales invoice — creates AR + Revenue journal' })
+  @ApiOperation({
+    summary: 'Post sales invoice — creates AR + Revenue journal',
+  })
   post(@Req() req: any, @Param('id') id: string) {
     const userId = req.user?.id;
     return this.service.post(userId, id);

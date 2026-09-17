@@ -1,0 +1,101 @@
+{
+  "url": "/sales",
+  "http_status": 200,
+  "title": "GsERP KIL - Penjualan",
+  "form_fields": [],
+  "tables": [
+    {
+      "headers": [
+        "#",
+        "Kode",
+        "Tanggal",
+        "Pelanggan",
+        "Kategori",
+        "Merek",
+        "Total",
+        "Status",
+        "#"
+      ],
+      "rows": 0
+    },
+    {
+      "headers": [
+        "MOQ ' + (k + 1) + '",
+        "Qty: ' + formatNumber(moq.qty, 0) + '",
+        "Rp ' + formatNumber(moq.price, 2) + '"
+      ],
+      "rows": 1
+    }
+  ],
+  "actions": [
+    {
+      "text": "Riwayat",
+      "type": "button"
+    },
+    {
+      "text": "Buat",
+      "type": "button"
+    },
+    {
+      "text": "&times;",
+      "type": "button"
+    },
+    {
+      "text": "Tutup",
+      "type": "button"
+    },
+    {
+      "text": "' + '",
+      "type": "button"
+    },
+    {
+      "text": "Akun Saya",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account"
+    }
+  ],
+  "ajax_calls": [
+    "https://kil.gserp.id/sales/get-sales-samples",
+    "https://kil.gserp.id/sales/upload-image",
+    "https://kil.gserp.id/sales/detail",
+    "https://kil.gserp.id/sales/get-sales-sample-detail",
+    "https://kil.gserp.id/sales/get-price-reference",
+    "https://kil.gserp.id/sales/get-goods-cart",
+    "https://kil.gserp.id/sales/add-goods-cart",
+    "https://kil.gserp.id/sales/delete-goods-cart",
+    "https://kil.gserp.id/sales/get-service-cart",
+    "https://kil.gserp.id/sales/add-service-cart",
+    "https://kil.gserp.id/sales/delete-service-cart",
+    "https://kil.gserp.id/sales/clear-cart",
+    "https://kil.gserp.id/sales/set-session-values",
+    "https://kil.gserp.id/purchase-approval/badge",
+    "https://kil.gserp.id/purchase-return-approval/badge",
+    "https://kil.gserp.id/sales-sample-approval/badge",
+    "https://kil.gserp.id/sales-approval/badge",
+    "https://kil.gserp.id/sales-return-approval/badge",
+    "https://kil.gserp.id/request-cogs-approval/badge",
+    "https://kil.gserp.id/purchase-request-approval/badge",
+    "https://kil.gserp.id/goods-request-approval/badge",
+    "https://kil.gserp.id/checklist-progress/badge",
+    "https://kil.gserp.id/purchase/badge",
+    "https://kil.gserp.id/purchase-invoice/badge",
+    "https://kil.gserp.id/purchase-return/badge",
+    "https://kil.gserp.id/purchase-down-payment/badge",
+    "https://kil.gserp.id/purchase-payment/badge",
+    "https://kil.gserp.id/need-for-goods/badge",
+    "https://kil.gserp.id/goods-request/badge",
+    "https://kil.gserp.id/purchase-request/badge",
+    "https://kil.gserp.id/purchase-in/badge",
+    "https://kil.gserp.id/sales-return-in/badge",
+    "https://kil.gserp.id/delivery-out/badge",
+    "https://kil.gserp.id/purchase-return-out/badge",
+    "https://kil.gserp.id/sales-sample/badge",
+    "https://kil.gserp.id/sales-sample-payment/badge",
+    "https://kil.gserp.id/sales/badge",
+    "https://kil.gserp.id/sales-return/badge",
+    "https://kil.gserp.id/sales-down-payment/badge",
+    "https://kil.gserp.id/sales-invoice/badge"
+  ],
+  "modals": [],
+  "print_pattern": null,
+  "notes": "csrf_gs, DataTables, select2, rich-editor, daterangepicker"
+}

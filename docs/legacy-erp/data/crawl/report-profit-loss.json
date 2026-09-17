@@ -1,0 +1,342 @@
+{
+  "url_path": "report-profit-loss",
+  "title": "GsERP KIL - Laba Rugi",
+  "page_heading": "Laba Rugi",
+  "forms": [],
+  "inputs": [
+    {
+      "name": "periode",
+      "type": "text",
+      "placeholder": "",
+      "id": "periode"
+    }
+  ],
+  "filters": [],
+  "tables": [
+    {
+      "idx": 0,
+      "headers": [
+        "Description",
+        "Balance"
+      ],
+      "sample_rows": [
+        [
+          "Description",
+          "Balance"
+        ],
+        [
+          "OPERATING REVENUE",
+          ""
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PENJUALAN",
+          "147,350,600.00"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Penjualan Kosmetik",
+          "0.00"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Penjualan Sampel",
+          "147,350,600.00"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pendapatan Ongkir",
+          "0.00"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; RETUR DAN POTONGAN PENJUALAN",
+          "-2,550,000.00"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Retur Penjualan",
+          "0.00"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Potongan Penjualan",
+          "-2,550,000.00"
+        ],
+        [
+          "TOTAL OPERATING REVENUE",
+          "144,800,600.00"
+        ],
+        [
+          "COST OF GOODS SOLD",
+          ""
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; HARGA POKOK PENJUALAN",
+          "119,762,666.87"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Harga Pokok Barang Jadi",
+          "0.00"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Harga Pokok Bahan Baku",
+          "0.00"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Harga Pokok Bahan Pembantu",
+          "0.00"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pemakaian Bahan Baku",
+          "0.00"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pemakaian Bahan Pembantu",
+          "0.00"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tenaga Kerja Pabrik",
+          "0.00"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Listrik Pabrik",
+          "0.00"
+        ],
+        [
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Air Pabrik",
+          "0.00"
+        ]
+      ],
+      "total_rows": 122
+    }
+  ],
+  "nav_links": [
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;en",
+      "text": "English"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;id",
+      "text": "Indonesia"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account",
+      "text": "Akun Saya"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;",
+      "text": "GsERP KIL"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;",
+      "text": "Beranda"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-schedule",
+      "text": "D. Jadwal Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-realization",
+      "text": "D. Realisasi Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-sample",
+      "text": "D. Penjualan Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-product",
+      "text": "D. Penjualan Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-customer",
+      "text": "D. Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sample",
+      "text": "D. Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-executive",
+      "text": "D. Eksekutif"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-notification",
+      "text": "D. Notifikasi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-digital-marketing",
+      "text": "D. Digital Marketing"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-business-development",
+      "text": "D. BusDev"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-rnd",
+      "text": "D. RnD"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-purchasing",
+      "text": "D. Purchasing"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-legality",
+      "text": "D. Legalitas"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production",
+      "text": "D. Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-warehouse",
+      "text": "D. Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-human-resources",
+      "text": "D. HR"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-finance",
+      "text": "D. Keuangan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-guest-book",
+      "text": "D. Buku Tamu"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-sample",
+      "text": "D. Client Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-production",
+      "text": "D. Client Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-repeat-order",
+      "text": "D. Client RO"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-lost",
+      "text": "D. Lost"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;role-manage",
+      "text": "Hak Akses"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;user-manage",
+      "text": "Pengguna"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-manage",
+      "text": "CoA"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-auto-manage",
+      "text": "CoA Jurnal Otomatis"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-manage",
+      "text": "Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-access-manage",
+      "text": "Hak Akses Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-category-manage",
+      "text": "Kategori Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-manage",
+      "text": "Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-category-manage",
+      "text": "Kategori Supplier"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-manage",
+      "text": "Supplier"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-category-manage",
+      "text": "Kategori Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-manage",
+      "text": "Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-my-manage",
+      "text": "Pelanggan Saya"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-category",
+      "text": "Kategori Penjualan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-target",
+      "text": "Target Penjualan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-approval",
+      "text": "Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-approval",
+      "text": "Retur Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-approval",
+      "text": "Penjualan Sample ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-approval",
+      "text": "Penjualan Produk ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-approval",
+      "text": "Retur Penjualan ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs-approval",
+      "text": "Permintaan HPP ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request-approval",
+      "text": "Permintaan Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request-approval",
+      "text": "Permintaan Barang ~"
+    }
+  ],
+  "headings": [
+    {
+      "level": 1,
+      "text": "Laba Rugi"
+    },
+    {
+      "level": 3,
+      "text": "Laporan Laba Rugi"
+    },
+    {
+      "level": 4,
+      "text": "Modal"
+    }
+  ],
+  "ajax_endpoints": [],
+  "aggregations": [
+    "transfer",
+    "opname",
+    "valuation",
+    "balance",
+    "total",
+    "stock"
+  ],
+  "summary": {
+    "page_title": "GsERP KIL - Laba Rugi",
+    "heading": "Laba Rugi",
+    "form_count": 0,
+    "filter_count": 0,
+    "table_count": 1,
+    "has_daterange": true,
+    "has_datatable": true,
+    "has_chart": false
+  }
+}

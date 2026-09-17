@@ -15,6 +15,8 @@ export { TabButton, TabButtonGroup } from "./TabButton";
 export { FilterBar } from "./FilterBar";
 export { dnaToast, dnaToastApi, DnaToaster as DnaToastProvider, useDnaToast } from "./DnaToast";
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+export { DnaTooltip } from "./DnaTooltip";
+export type { DnaTooltipProps } from "./DnaTooltip";
 
 // ── NEW MODULAR DNA COMPONENTS ──
 

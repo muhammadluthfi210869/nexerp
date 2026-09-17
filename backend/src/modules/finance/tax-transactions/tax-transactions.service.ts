@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 type TaxStatus = 'ACCRUED' | 'REPORTED' | 'PAID';
@@ -72,9 +76,11 @@ export class TaxTransactionsService {
     const taxRate = await this.prisma.taxRate.findUnique({
       where: { id: dto.taxTypeId },
     });
-    if (!taxRate) throw new NotFoundException(`Tax rate ${dto.taxTypeId} not found`);
+    if (!taxRate)
+      throw new NotFoundException(`Tax rate ${dto.taxTypeId} not found`);
 
-    const taxAmount = dto.taxAmount ?? Math.round((dto.baseAmount * dto.taxRate) / 100);
+    const taxAmount =
+      dto.taxAmount ?? Math.round((dto.baseAmount * dto.taxRate) / 100);
 
     return this.prisma.taxTransaction.create({
       data: {
@@ -93,7 +99,10 @@ export class TaxTransactionsService {
   /**
    * Mark as REPORTED (submitted to tax authority).
    */
-  async markReported(id: string, dto: { reportPeriod: string; notes?: string }) {
+  async markReported(
+    id: string,
+    dto: { reportPeriod: string; notes?: string },
+  ) {
     const tx = await this.prisma.taxTransaction.findUnique({ where: { id } });
     if (!tx) throw new NotFoundException(`Tax transaction ${id} not found`);
     if (tx.status !== 'ACCRUED') {
@@ -104,7 +113,9 @@ export class TaxTransactionsService {
       data: {
         status: 'REPORTED',
         reportedAt: new Date(),
-        notes: dto.notes ? `${tx.notes ?? ''} | report: ${dto.reportPeriod} ${dto.notes}` : tx.notes,
+        notes: dto.notes
+          ? `${tx.notes ?? ''} | report: ${dto.reportPeriod} ${dto.notes}`
+          : tx.notes,
       },
     });
   }
@@ -116,7 +127,9 @@ export class TaxTransactionsService {
     const tx = await this.prisma.taxTransaction.findUnique({ where: { id } });
     if (!tx) throw new NotFoundException(`Tax transaction ${id} not found`);
     if (tx.status !== 'REPORTED') {
-      throw new BadRequestException(`Cannot mark PAID from ${tx.status}. Must be REPORTED first.`);
+      throw new BadRequestException(
+        `Cannot mark PAID from ${tx.status}. Must be REPORTED first.`,
+      );
     }
     return this.prisma.taxTransaction.update({
       where: { id },
@@ -144,7 +157,13 @@ export class TaxTransactionsService {
 
     const byTaxType: Record<
       string,
-      { name: string; accrued: number; reported: number; paid: number; count: number }
+      {
+        name: string;
+        accrued: number;
+        reported: number;
+        paid: number;
+        count: number;
+      }
     > = {};
 
     for (const t of txs) {
@@ -166,7 +185,10 @@ export class TaxTransactionsService {
     return {
       from,
       to,
-      byTaxType: Object.entries(byTaxType).map(([id, s]) => ({ taxTypeId: id, ...s })),
+      byTaxType: Object.entries(byTaxType).map(([id, s]) => ({
+        taxTypeId: id,
+        ...s,
+      })),
     };
   }
 }

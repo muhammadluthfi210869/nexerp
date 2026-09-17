@@ -1,0 +1,536 @@
+{
+  "customer_manage.html": {
+    "file": "customer_manage.html",
+    "title": "GsERP KIL - Pelanggan",
+    "tables": [
+      {
+        "index": 1,
+        "headers": [
+          "#",
+          "Nama",
+          "Telepon",
+          "Kategori",
+          "Kota",
+          "Penginput",
+          "SO Sample",
+          "SO Produk",
+          "Nominal SO Produk",
+          "#"
+        ],
+        "sampleRows": [
+          [
+            "1",
+            "Vivin Anggi Ardita (FYS)",
+            "082132027557",
+            "Pelanggan Sample",
+            "",
+            "Fadilah Syahab",
+            "1",
+            "0",
+            "0.00",
+            ""
+          ],
+          [
+            "2",
+            "Djafar Shodiq (Sigviolet)",
+            "0895389553799",
+            "Pelanggan RO",
+            "Kota Bandung",
+            "Fadilah Syahab",
+            "4",
+            "16",
+            "400,299,500.00",
+            ""
+          ]
+        ]
+      }
+    ],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": "https://kil.gserp.id/customer-manage/create"
+  },
+  "customer_my_manage.html": {
+    "file": "customer_my_manage.html",
+    "title": "GsERP KIL - Pelanggan Saya",
+    "tables": [
+      {
+        "index": 1,
+        "headers": [
+          "#",
+          "Nama",
+          "Telepon",
+          "Kategori",
+          "Kota",
+          "Penginput",
+          "#"
+        ],
+        "sampleRows": []
+      }
+    ],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": "https://kil.gserp.id/customer-my-manage/create"
+  },
+  "customer_category_manage.html": {
+    "file": "customer_category_manage.html",
+    "title": "GsERP KIL - Kategori Pelanggan",
+    "tables": [
+      {
+        "index": 1,
+        "headers": [
+          "#",
+          "Kategori",
+          "Deskripsi",
+          "#"
+        ],
+        "sampleRows": [
+          [
+            "1",
+            "Calon Pelanggan",
+            "",
+            ""
+          ],
+          [
+            "2",
+            "Pelanggan Sample",
+            "",
+            ""
+          ],
+          [
+            "3",
+            "Pelanggan Produk",
+            "",
+            ""
+          ]
+        ]
+      }
+    ],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": "https://kil.gserp.id/customer-category-manage/create"
+  },
+  "supplier_manage.html": {
+    "file": "supplier_manage.html",
+    "title": "GsERP KIL - Supplier",
+    "tables": [
+      {
+        "index": 1,
+        "headers": [
+          "#",
+          "Supplier",
+          "PIC",
+          "Telepon",
+          "Kategori",
+          "Kota",
+          "Pajak (%)",
+          "#"
+        ],
+        "sampleRows": [
+          [
+            "1",
+            "DKSH",
+            "Wenny",
+            "082244023077",
+            "Bahan Baku",
+            "Kab. Kepulauan Aru",
+            "11",
+            ""
+          ],
+          [
+            "2",
+            "Iberchem",
+            "Yonatan",
+            "087851117541",
+            "Bahan Baku",
+            "Kab. Kepulauan Aru",
+            "0",
+            ""
+          ]
+        ]
+      }
+    ],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": "https://kil.gserp.id/supplier-manage/create"
+  },
+  "supplier_category_manage.html": {
+    "file": "supplier_category_manage.html",
+    "title": "GsERP KIL - Kategori Supplier",
+    "tables": [
+      {
+        "index": 1,
+        "headers": [
+          "#",
+          "Kategori",
+          "Deskripsi",
+          "#"
+        ],
+        "sampleRows": [
+          [
+            "1",
+            "Bahan Baku",
+            "",
+            ""
+          ],
+          [
+            "2",
+            "Kemasan Primer",
+            "",
+            ""
+          ],
+          [
+            "3",
+            "Kemasan Sekunder",
+            "",
+            ""
+          ]
+        ]
+      }
+    ],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": "https://kil.gserp.id/supplier-category-manage/create"
+  },
+  "goods_manage.html": {
+    "file": "goods_manage.html",
+    "title": "GsERP KIL - Barang",
+    "tables": [
+      {
+        "index": 1,
+        "headers": [
+          "#",
+          "Kode",
+          "Barang",
+          "Harga Beli",
+          "Kategori",
+          "Sub Kategori",
+          "Satuan",
+          "#"
+        ],
+        "sampleRows": []
+      },
+      {
+        "index": 2,
+        "headers": [
+          "Tanggal",
+          "No. Pembelian",
+          "Supplier",
+          "Qty",
+          "Harga"
+        ],
+        "sampleRows": [
+          [
+            "Memuat data..."
+          ]
+        ]
+      }
+    ],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": "https://kil.gserp.id/goods-manage/create"
+  },
+  "goods_category_manage.html": {
+    "file": "goods_category_manage.html",
+    "title": "GsERP KIL - Kategori Barang",
+    "tables": [
+      {
+        "index": 1,
+        "headers": [
+          "#",
+          "Kode",
+          "Kategori",
+          "Deskripsi",
+          "#"
+        ],
+        "sampleRows": [
+          [
+            "1",
+            "BBK",
+            "Bahan Baku",
+            "-",
+            ""
+          ],
+          [
+            "2",
+            "BRU",
+            "Barang Ruahan",
+            "-",
+            ""
+          ]
+        ]
+      }
+    ],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": "https://kil.gserp.id/goods-category-manage/create"
+  },
+  "warehouse_manage.html": {
+    "file": "warehouse_manage.html",
+    "title": "GsERP KIL - Gudang",
+    "tables": [
+      {
+        "index": 1,
+        "headers": [
+          "#",
+          "Gudang",
+          "Lokasi",
+          "Telepon",
+          "#"
+        ],
+        "sampleRows": [
+          [
+            "1",
+            "Gudang Bahan Baku",
+            "Kab. Pasuruan",
+            "0895341099232 (Ghufron Dreamlab)",
+            ""
+          ],
+          [
+            "2",
+            "Gudang Kemasan",
+            "Kab. Sidoarjo",
+            "(+62) 895-3410-99232 (Ghufron Dreamlab)",
+            ""
+          ]
+        ]
+      }
+    ],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": "https://kil.gserp.id/warehouse-manage/create"
+  },
+  "warehouse_access_manage.html": {
+    "file": "warehouse_access_manage.html",
+    "title": "GsERP KIL - Hak Akses Gudang",
+    "tables": [
+      {
+        "index": 1,
+        "headers": [
+          "#",
+          "Nama",
+          "Email",
+          "Nomor Telepon",
+          "Hak Akses",
+          "Gudang",
+          "#"
+        ],
+        "sampleRows": [
+          [
+            "1",
+            "Super Admin",
+            "goodsyst@gmail.com",
+            "081231418159",
+            "Administrator",
+            "13",
+            "Gudang"
+          ],
+          [
+            "2",
+            "Fadilah Syahab",
+            "fadilah.syahab@dreamlab.id",
+            "087722291012",
+            "Administrator",
+            "9",
+            "Gudang"
+          ]
+        ]
+      }
+    ],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": null
+  },
+  "user_manage.html": {
+    "file": "user_manage.html",
+    "title": "GsERP KIL - Pengguna",
+    "tables": [
+      {
+        "index": 1,
+        "headers": [
+          "#",
+          "Kode/NIP",
+          "Nama",
+          "Email",
+          "Nomor Telepon",
+          "Hak Akses",
+          "#"
+        ],
+        "sampleRows": [
+          [
+            "1",
+            "000",
+            "Super Admin",
+            "goodsyst@gmail.com",
+            "081231418159",
+            "Administrator",
+            ""
+          ],
+          [
+            "2",
+            "001",
+            "Fadilah Syahab",
+            "fadilah.syahab@dreamlab.id",
+            "087722291012",
+            "Administrator",
+            ""
+          ]
+        ]
+      }
+    ],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": null
+  },
+  "role_manage.html": {
+    "file": "role_manage.html",
+    "title": "GsERP KIL - Hak Akses",
+    "tables": [
+      {
+        "index": 1,
+        "headers": [
+          "#",
+          "Hak Akses",
+          "#"
+        ],
+        "sampleRows": [
+          [
+            "1",
+            "Administrator",
+            ""
+          ],
+          [
+            "2",
+            "HRD",
+            ""
+          ]
+        ]
+      }
+    ],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": null
+  },
+  "coa_manage.html": {
+    "file": "coa_manage.html",
+    "title": "GsERP KIL - CoA",
+    "tables": [
+      {
+        "index": 1,
+        "headers": [
+          "#",
+          "Kode",
+          "Nama",
+          "Tipe",
+          "#"
+        ],
+        "sampleRows": [
+          [
+            "1",
+            "11110",
+            "KAS",
+            "Kas/Bank",
+            ""
+          ],
+          [
+            "1",
+            "&nbsp;&nbsp;&nbsp;&nbsp;11111",
+            "&nbsp;&nbsp;&nbsp;&nbsp;Kas Utama",
+            "Kas/Bank",
+            ""
+          ]
+        ]
+      }
+    ],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": "https://kil.gserp.id/coa-manage/create"
+  },
+  "coa_auto_manage.html": {
+    "file": "coa_auto_manage.html",
+    "title": "GsERP KIL - CoA Jurnal Otomatis",
+    "tables": [],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": null
+  },
+  "formulation_manage.html": {
+    "file": "formulation_manage.html",
+    "title": "GsERP KIL - Kelola Formulasi",
+    "tables": [
+      {
+        "index": 1,
+        "headers": [
+          "#",
+          "Kode",
+          "Tanggal",
+          "Nama Produk",
+          "Rev",
+          "Netto",
+          "Pelanggan",
+          "BusDev",
+          "Formulator",
+          "Status",
+          "#"
+        ],
+        "sampleRows": [
+          [
+            "1",
+            "SS-202607-000076",
+            "2026-09-16",
+            "2 in 1 MOIST &amp; SUNSCREEN FOR MEN",
+            "Rev 1",
+            "30.0000 ml",
+            "Ari Nugroho",
+            "Jessica Dwipuspita",
+            "Panca",
+            "Revise",
+            ""
+          ],
+          [
+            "2",
+            "SS-202608-000073",
+            "2026-09-16",
+            "Keep Me Thayyib Velvet Blurring Lip",
+            "Rev 1",
+            "4.0000 ml",
+            "Choulah",
+            "Achmad Bagir",
+            "Latifatus Cahya Ningtyas",
+            "Revise",
+            ""
+          ],
+          [
+            "3",
+            "SS-202512-000020",
+            "2026-09-16",
+            "PRIO EXTRAIT DE PARFUM Extreme Orchid Louis Varel",
+            "Rev 5",
+            "3.0000 ml",
+            "DANIEL CHRISTOFER WIJAYA",
+            "Annisa Shalihah",
+            "Fatimah Amira",
+            "Revise",
+            ""
+          ]
+        ]
+      }
+    ],
+    "filters": [],
+    "actionButtons": [],
+    "sampleRows": [],
+    "addUrl": "https://kil.gserp.id/formulation-manage/2432/create"
+  }
+}

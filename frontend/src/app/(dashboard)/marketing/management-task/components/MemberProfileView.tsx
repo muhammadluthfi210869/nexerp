@@ -67,7 +67,12 @@ interface MemberProfileViewProps {
 export default function MemberProfileView({ member, tasks, viewer, onRefresh }: MemberProfileViewProps) {
   const toast = useDnaToast();
   const canManage = viewer.roles.some((role) => ["SUPER_ADMIN", "HEAD_OPS", "MARKETING"].includes(role));
-  const canCreateForMember = canManage || member.userId === viewer.id;
+  const viewerName = (viewer.name || viewer.email?.split("@")[0] || "").toLowerCase();
+  const memberName = (member.name || "").toLowerCase();
+  const isRevita = viewerName.includes("revita") || canManage;
+  const isRahmat = viewerName.includes("rahmat");
+  const canRahmatAssign = isRahmat && (memberName.includes("zarkasi") || memberName.includes("gusti") || memberName.includes("rahmat"));
+  const canCreateForMember = isRevita || canRahmatAssign || member.userId === viewer.id;
   const [activeTab, setActiveTab] = useState<"overview" | "daily" | "projects">("overview");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);

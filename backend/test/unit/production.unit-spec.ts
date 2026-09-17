@@ -4,6 +4,7 @@ import { LegalityService } from '../../src/modules/legality/legality.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IdGeneratorService } from '../../src/modules/system/id-generator.service';
+import { StateTransitionService } from '../../src/modules/system/state-transition.service';
 import { BadRequestException } from '@nestjs/common';
 import { TestModule } from '../utilities/test-module';
 
@@ -28,6 +29,13 @@ describe('ProductionService — Unit (DI unresolved — $transaction mock)', () 
         {
           provide: IdGeneratorService,
           useValue: { generateId: jest.fn().mockResolvedValue('WO-001') },
+        },
+        {
+          provide: StateTransitionService,
+          useValue: {
+            validateTransition: jest.fn(),
+            executeTransition: jest.fn(),
+          },
         },
       ],
     }).compile();

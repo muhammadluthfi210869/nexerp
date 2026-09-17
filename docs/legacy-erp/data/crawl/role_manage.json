@@ -1,0 +1,22 @@
+{
+  "url": "/role-manage",
+  "type": "list",
+  "file": "role_manage.html",
+  "title": "GsERP KIL - Hak Akses",
+  "forms": [],
+  "tables": [
+    {
+      "index": 1,
+      "headers": [
+        "#",
+        "Hak Akses",
+        "#"
+      ],
+      "rowCount": 17
+    }
+  ],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [],
+  "notes": []
+}

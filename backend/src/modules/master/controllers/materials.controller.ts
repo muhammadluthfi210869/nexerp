@@ -22,7 +22,7 @@ import { CreateMaterialDto, UpdateMaterialDto } from '../dto/material.dto';
 
 @ApiTags('Master Data - Materials / Barang')
 @ApiBearerAuth()
-@Controller(['master/materials', 'v1/master/materials'])
+@Controller('master/materials')
 @UseGuards(JwtAuthGuard)
 export class MaterialsController {
   constructor(private readonly materialsService: MaterialsService) {}

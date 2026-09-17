@@ -60,7 +60,12 @@ function humanizeCode(code: string): string {
  * so frontend can switch on `code` reliably.
  */
 export class BusinessException extends ApiException {
-  constructor(code: string, message: string, status: HttpStatus = HttpStatus.BAD_REQUEST, details?: any) {
+  constructor(
+    code: string,
+    message: string,
+    status: HttpStatus = HttpStatus.BAD_REQUEST,
+    details?: any,
+  ) {
     super(status, code, message, details);
   }
 }
@@ -126,7 +131,9 @@ export class BusinessRuleViolationException extends BusinessException {
  * ValidationError — input validation failed (consolidates ValidationPipe output).
  */
 export class ValidationFailedException extends BusinessException {
-  constructor(fieldErrors: Array<{ field: string; message: string; code?: string }>) {
+  constructor(
+    fieldErrors: Array<{ field: string; message: string; code?: string }>,
+  ) {
     super(
       'VALIDATION_FAILED',
       `Validasi gagal untuk ${fieldErrors.length} field`,

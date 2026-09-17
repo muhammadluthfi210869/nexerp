@@ -1,5 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsNumber, IsOptional, IsString, IsDateString, IsArray, ValidateNested, Min, ArrayMinSize, MinLength } from 'class-validator';
+import {
+  IsUUID,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsArray,
+  ValidateNested,
+  Min,
+  ArrayMinSize,
+  MinLength,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class SalesInvoiceLineItemDto {

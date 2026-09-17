@@ -25,7 +25,9 @@ export class ClientEscrowsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Deposit new customer escrow (advance payment held)' })
+  @ApiOperation({
+    summary: 'Deposit new customer escrow (advance payment held)',
+  })
   deposit(@Req() req: any, @Body() dto: DepositEscrowDto) {
     const userId = req.user?.id;
     return this.service.deposit(userId, dto);

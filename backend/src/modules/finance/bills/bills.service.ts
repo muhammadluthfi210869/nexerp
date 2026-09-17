@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { PaymentStatus } from '@prisma/client';
 import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
@@ -63,7 +67,8 @@ export class BillsService {
     const vendor = await this.prisma.supplier.findUnique({
       where: { id: dto.vendorId },
     });
-    if (!vendor) throw new NotFoundException(`Vendor ${dto.vendorId} not found`);
+    if (!vendor)
+      throw new NotFoundException(`Vendor ${dto.vendorId} not found`);
 
     if (dto.lineItems.length === 0) {
       throw new BadRequestException(`Bill must have at least one line item`);
@@ -142,7 +147,9 @@ export class BillsService {
         where: { code: bill.procurementCategory.match(/\d+/)?.[0] || '5000' },
       });
       if (apAcc && expenseAcc) {
-        const vendor = await tx.supplier.findUnique({ where: { id: bill.vendorId } });
+        const vendor = await tx.supplier.findUnique({
+          where: { id: bill.vendorId },
+        });
         await tx.journalEntry.create({
           data: {
             date: new Date(),
@@ -151,8 +158,16 @@ export class BillsService {
             sourceDocumentType: 'PURCHASE_ORDER' as any,
             lines: {
               create: [
-                { accountId: expenseAcc.id, debit: Number(bill.subtotal), credit: 0 },
-                { accountId: apAcc.id, debit: 0, credit: Number(bill.grandTotal) },
+                {
+                  accountId: expenseAcc.id,
+                  debit: Number(bill.subtotal),
+                  credit: 0,
+                },
+                {
+                  accountId: apAcc.id,
+                  debit: 0,
+                  credit: Number(bill.grandTotal),
+                },
               ],
             },
           },

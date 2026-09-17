@@ -7,6 +7,7 @@ import {
 import {
   assertSocialTransition,
   assertTaskTransition,
+  canAssignMarketingTask,
   ensureMarketingTaskRole,
   ensureSocialWriteRole,
   isMarketingManager,
@@ -167,5 +168,45 @@ describe('canonical marketing domain policy', () => {
   it('normalizes legacy social review status', () => {
     expect(normalizeSocialStatus('review')).toBe('IN_REVIEW');
     expect(normalizeSocialStatus('published')).toBe('PUBLISHED');
+  });
+
+  describe('canAssignMarketingTask delegation matrix', () => {
+    const revita = { id: 'u-revita', email: 'revita@nexerp.id', fullName: 'Revita', roles: ['MARKETING', 'DIGIMAR'] };
+    const rahmat = { id: 'u-rahmat', email: 'rahmat@nexerp.id', fullName: 'Rahmat Hidayat', roles: ['DIGIMAR'] };
+    const gusti = { id: 'u-gusti', email: 'gusti@nexerp.id', fullName: 'Gusti Bagus', roles: ['DIGIMAR'] };
+    const zarkasi = { id: 'u-zarkasi', email: 'zarkasi@nexerp.id', fullName: 'Muhammad Zarkasi', roles: ['DIGIMAR'] };
+    const aurel = { id: 'u-aurel', email: 'aurel@nexerp.id', fullName: 'Aurelia Putri', roles: ['DIGIMAR'] };
+
+    it('Revita as Marketing Manager can assign tasks to ALL staff', () => {
+      expect(canAssignMarketingTask(revita, gusti)).toBe(true);
+      expect(canAssignMarketingTask(revita, zarkasi)).toBe(true);
+      expect(canAssignMarketingTask(revita, rahmat)).toBe(true);
+      expect(canAssignMarketingTask(revita, aurel)).toBe(true);
+      expect(canAssignMarketingTask(revita, revita)).toBe(true);
+    });
+
+    it('Rahmat has delegated access to assign tasks to Zarkasi, Gusti, and himself', () => {
+      expect(canAssignMarketingTask(rahmat, gusti)).toBe(true);
+      expect(canAssignMarketingTask(rahmat, zarkasi)).toBe(true);
+      expect(canAssignMarketingTask(rahmat, rahmat)).toBe(true);
+    });
+
+    it('Rahmat CANNOT assign tasks to Revita or Aurel', () => {
+      expect(canAssignMarketingTask(rahmat, revita)).toBe(false);
+      expect(canAssignMarketingTask(rahmat, aurel)).toBe(false);
+    });
+
+    it('Gusti can only assign to himself, NOT to others', () => {
+      expect(canAssignMarketingTask(gusti, gusti)).toBe(true);
+      expect(canAssignMarketingTask(gusti, zarkasi)).toBe(false);
+      expect(canAssignMarketingTask(gusti, rahmat)).toBe(false);
+      expect(canAssignMarketingTask(gusti, revita)).toBe(false);
+    });
+
+    it('Zarkasi can only assign to himself, NOT to others', () => {
+      expect(canAssignMarketingTask(zarkasi, zarkasi)).toBe(true);
+      expect(canAssignMarketingTask(zarkasi, gusti)).toBe(false);
+      expect(canAssignMarketingTask(zarkasi, rahmat)).toBe(false);
+    });
   });
 });

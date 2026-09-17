@@ -1,0 +1,611 @@
+{
+  "url_path": "report-guest-book",
+  "title": "GsERP KIL - Laporan Buku Tamu",
+  "page_heading": "Laporan Buku Tamu",
+  "forms": [],
+  "inputs": [
+    {
+      "name": "periode",
+      "type": "text",
+      "placeholder": "",
+      "id": "periode"
+    }
+  ],
+  "filters": [
+    {
+      "name": "busdev",
+      "options": [
+        {
+          "value": "",
+          "text": "Semua BusDev"
+        },
+        {
+          "value": "",
+          "text": "Achmad Bagir"
+        },
+        {
+          "value": "",
+          "text": "Akhmad Ratriono Anggoro"
+        },
+        {
+          "value": "",
+          "text": "Annisa Shalihah"
+        },
+        {
+          "value": "",
+          "text": "Ayu Anindya"
+        },
+        {
+          "value": "",
+          "text": "BRIAN BUDY CAHYONO"
+        },
+        {
+          "value": "",
+          "text": "Ciptaning"
+        },
+        {
+          "value": "",
+          "text": "Desy"
+        },
+        {
+          "value": "",
+          "text": "Diaz Muhammad Irsyadi"
+        },
+        {
+          "value": "",
+          "text": "Dicky Barkah"
+        },
+        {
+          "value": "",
+          "text": "Diva"
+        },
+        {
+          "value": "",
+          "text": "Edi Design"
+        },
+        {
+          "value": "",
+          "text": "Edvin Porvianto Sutedjo"
+        },
+        {
+          "value": "",
+          "text": "Ekky Ilham"
+        },
+        {
+          "value": "",
+          "text": "Estisan Septyana Atwinda"
+        },
+        {
+          "value": "",
+          "text": "Etika Citra Nuraisah"
+        },
+        {
+          "value": "",
+          "text": "Eunike Putriningtyas"
+        },
+        {
+          "value": "",
+          "text": "Fadilah Syahab"
+        },
+        {
+          "value": "",
+          "text": "Fatimah Amira"
+        },
+        {
+          "value": "",
+          "text": "Gabriella Maulidha"
+        }
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "idx": 0,
+      "headers": [
+        "No",
+        "Tanggal",
+        "Waktu",
+        "Nama",
+        "Telepon",
+        "Email",
+        "Alamat",
+        "Perusahaan",
+        "Tujuan",
+        "Bertemu",
+        "BusDev"
+      ],
+      "sample_rows": [
+        [
+          "No",
+          "Tanggal",
+          "Waktu",
+          "Nama",
+          "Telepon",
+          "Email",
+          "Alamat",
+          "Perusahaan",
+          "Tujuan",
+          "Bertemu",
+          "BusDev"
+        ],
+        [
+          "1",
+          "16-09-2026",
+          "15:18",
+          "Beauve Skin Official 09092026",
+          "+6287781112022",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "2",
+          "16-09-2026",
+          "15:17",
+          "One Heart",
+          "+6282175652005",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "3",
+          "16-09-2026",
+          "15:17",
+          "ojann",
+          "+6283140454518",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "4",
+          "16-09-2026",
+          "15:16",
+          "09092026",
+          "+6289629979328",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "5",
+          "16-09-2026",
+          "15:16",
+          "elsubagbeauty",
+          "+6285274895755",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "6",
+          "16-09-2026",
+          "15:16",
+          "Meilani",
+          "+6282311962225",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "7",
+          "16-09-2026",
+          "15:16",
+          "Expression Labs",
+          "+6289679311482",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "8",
+          "16-09-2026",
+          "15:14",
+          "Vika",
+          "+6288289135536",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "9",
+          "16-09-2026",
+          "15:14",
+          "Ferdian Lacony",
+          "+6282371845693",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "10",
+          "16-09-2026",
+          "15:14",
+          "WAWAN W",
+          "+6281284898899",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "11",
+          "16-09-2026",
+          "15:13",
+          "- 09092026",
+          "+6281210778348",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "12",
+          "16-09-2026",
+          "15:13",
+          "syauqi",
+          "+6287725006665",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "13",
+          "16-09-2026",
+          "15:13",
+          "Akbar Ghibran 09092026",
+          "+6282229624247",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "14",
+          "16-09-2026",
+          "15:12",
+          "Tychy Snack",
+          "+6285864577255",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "15",
+          "16-09-2026",
+          "15:12",
+          "F 08092026",
+          "+628811091008",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "16",
+          "16-09-2026",
+          "15:11",
+          "Rizka",
+          "+628111341008",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "17",
+          "16-09-2026",
+          "15:11",
+          "Nadya Elvara",
+          "+6285755020289",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "18",
+          "16-09-2026",
+          "15:10",
+          "Anisah Nur Afifah",
+          "+628980532686",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ],
+        [
+          "19",
+          "16-09-2026",
+          "15:10",
+          "Herlina",
+          "+628119001800",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "Irma Safarina"
+        ]
+      ],
+      "total_rows": 385
+    }
+  ],
+  "nav_links": [
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;en",
+      "text": "English"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;id",
+      "text": "Indonesia"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account",
+      "text": "Akun Saya"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;",
+      "text": "GsERP KIL"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;",
+      "text": "Beranda"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-schedule",
+      "text": "D. Jadwal Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-realization",
+      "text": "D. Realisasi Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-sample",
+      "text": "D. Penjualan Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-product",
+      "text": "D. Penjualan Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-customer",
+      "text": "D. Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sample",
+      "text": "D. Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-executive",
+      "text": "D. Eksekutif"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-notification",
+      "text": "D. Notifikasi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-digital-marketing",
+      "text": "D. Digital Marketing"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-business-development",
+      "text": "D. BusDev"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-rnd",
+      "text": "D. RnD"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-purchasing",
+      "text": "D. Purchasing"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-legality",
+      "text": "D. Legalitas"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production",
+      "text": "D. Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-warehouse",
+      "text": "D. Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-human-resources",
+      "text": "D. HR"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-finance",
+      "text": "D. Keuangan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-guest-book",
+      "text": "D. Buku Tamu"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-sample",
+      "text": "D. Client Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-production",
+      "text": "D. Client Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-repeat-order",
+      "text": "D. Client RO"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-lost",
+      "text": "D. Lost"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;role-manage",
+      "text": "Hak Akses"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;user-manage",
+      "text": "Pengguna"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-manage",
+      "text": "CoA"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-auto-manage",
+      "text": "CoA Jurnal Otomatis"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-manage",
+      "text": "Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-access-manage",
+      "text": "Hak Akses Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-category-manage",
+      "text": "Kategori Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-manage",
+      "text": "Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-category-manage",
+      "text": "Kategori Supplier"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-manage",
+      "text": "Supplier"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-category-manage",
+      "text": "Kategori Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-manage",
+      "text": "Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-my-manage",
+      "text": "Pelanggan Saya"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-category",
+      "text": "Kategori Penjualan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-target",
+      "text": "Target Penjualan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-approval",
+      "text": "Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-approval",
+      "text": "Retur Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-approval",
+      "text": "Penjualan Sample ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-approval",
+      "text": "Penjualan Produk ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-approval",
+      "text": "Retur Penjualan ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs-approval",
+      "text": "Permintaan HPP ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request-approval",
+      "text": "Permintaan Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request-approval",
+      "text": "Permintaan Barang ~"
+    }
+  ],
+  "headings": [
+    {
+      "level": 1,
+      "text": "Laporan Buku Tamu"
+    },
+    {
+      "level": 3,
+      "text": "Laporan Buku Tamu"
+    }
+  ],
+  "ajax_endpoints": [],
+  "aggregations": [
+    "transfer",
+    "opname",
+    "valuation",
+    "total"
+  ],
+  "summary": {
+    "page_title": "GsERP KIL - Laporan Buku Tamu",
+    "heading": "Laporan Buku Tamu",
+    "form_count": 0,
+    "filter_count": 1,
+    "table_count": 1,
+    "has_daterange": true,
+    "has_datatable": true,
+    "has_chart": false
+  }
+}

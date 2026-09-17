@@ -1,0 +1,32 @@
+﻿# Supporting decision queue. Not runtime authority.
+# All 4 implementation-changing decisions resolved on 2026-09-17 per stakeholder instruction.
+status: RESOLVED
+decisions: []
+resolved_decisions:
+  - id: OD-SM-01
+    subject: Formulation adjustment effect on parent revision
+    canonical_owner: ../contracts/03_WORKFLOW_STATE_MACHINE.yaml
+    selected_option: Option A — Separate lineage
+    resolution: FormulationAdjustment maintains a separate auditable lineage and does not mutate or increment parent formulation rev_number. Parent formulation revision increments exclusively via formal R&D REVISED workflow (Draft Rev N+1 -> Pending -> Approved -> Locked), preserving historical batch reproducibility.
+    blocking: false
+
+  - id: OD-SM-02
+    subject: Sales Order cancellation after production starts
+    canonical_owner: ../contracts/03_WORKFLOW_STATE_MACHINE.yaml
+    selected_option: Option A — Direct cancellation forbidden after IN_PRODUCTION
+    resolution: Direct cancellation of SalesOrder after IN_PRODUCTION is strictly forbidden. Any work-stop after production begins must proceed through separate operational workflows (production termination, WIP disposition, scrap/material recovery, and financial settlement).
+    blocking: false
+
+  - id: DECISION_REQUIRED-002
+    subject: Inventory valuation and HPP source
+    canonical_owner: ../contracts/04_BUSINESS_RULES.md
+    selected_option: Option A — Moving weighted average via auditable cost ledger
+    resolution: Inventory valuation and HPP use perpetual Moving Weighted Average Cost recorded and audited via cost ledger/snapshot per legal entity and item on each receipt, return, adjustment, and reversal. Physical picking (FIFO/FEFO) operates independently from accounting valuation.
+    blocking: false
+
+  - id: DECISION_REQUIRED-003
+    subject: Sales Order amendment after accepted down payment
+    canonical_owner: ../contracts/04_BUSINESS_RULES.md and ../contracts/03_WORKFLOW_STATE_MACHINE.yaml
+    selected_option: Option B — Governed amendment before IN_PRODUCTION only
+    resolution: Amendments after DP acceptance are permitted only before IN_PRODUCTION. The SO transitions to AMENDMENT_REVIEW, placing production on hold. Total and DP delta are recalculated and dual approval (BusDevManager + FinanceManager) is required. Once in IN_PRODUCTION, commercial fields are strictly immutable.
+    blocking: false

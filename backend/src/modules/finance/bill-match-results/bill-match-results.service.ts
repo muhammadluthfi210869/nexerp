@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 type MatchStatus = 'MATCHED' | 'EXCEPTION' | 'PARTIAL';
@@ -29,7 +33,8 @@ export class BillMatchResultsService {
       where: { id },
       include: { bill: true },
     });
-    if (!result) throw new NotFoundException(`Bill match result ${id} not found`);
+    if (!result)
+      throw new NotFoundException(`Bill match result ${id} not found`);
     return result;
   }
 
@@ -50,13 +55,16 @@ export class BillMatchResultsService {
       notes?: string;
     },
   ) {
-    const bill = await this.prisma.bill.findUnique({ where: { id: dto.billId } });
+    const bill = await this.prisma.bill.findUnique({
+      where: { id: dto.billId },
+    });
     if (!bill) throw new NotFoundException(`Bill ${dto.billId} not found`);
     if (dto.orderedQty <= 0 || dto.poPrice <= 0) {
       throw new BadRequestException('orderedQty and poPrice must be > 0');
     }
 
-    const qtyVariance = ((dto.actualQty - dto.orderedQty) / dto.orderedQty) * 100;
+    const qtyVariance =
+      ((dto.actualQty - dto.orderedQty) / dto.orderedQty) * 100;
     const priceVariance = ((dto.actualPrice - dto.poPrice) / dto.poPrice) * 100;
 
     // Tolerance: ±2% on qty, ±1% on price
@@ -89,8 +97,14 @@ export class BillMatchResultsService {
       acc[r.matchStatus] = (acc[r.matchStatus] || 0) + 1;
       return acc;
     }, {});
-    const totalQtyVariance = results.reduce((s, r) => s + Number(r.qtyVariance), 0);
-    const totalPriceVariance = results.reduce((s, r) => s + Number(r.priceVariance), 0);
+    const totalQtyVariance = results.reduce(
+      (s, r) => s + Number(r.qtyVariance),
+      0,
+    );
+    const totalPriceVariance = results.reduce(
+      (s, r) => s + Number(r.priceVariance),
+      0,
+    );
     return {
       total: results.length,
       byStatus: {
@@ -99,9 +113,13 @@ export class BillMatchResultsService {
         EXCEPTION: byStatus.EXCEPTION ?? 0,
       },
       avgQtyVariance:
-        results.length > 0 ? Math.round((totalQtyVariance / results.length) * 100) / 100 : 0,
+        results.length > 0
+          ? Math.round((totalQtyVariance / results.length) * 100) / 100
+          : 0,
       avgPriceVariance:
-        results.length > 0 ? Math.round((totalPriceVariance / results.length) * 100) / 100 : 0,
+        results.length > 0
+          ? Math.round((totalPriceVariance / results.length) * 100) / 100
+          : 0,
     };
   }
 }

@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
-@Controller(['executive', 'v1/executive'])
+@Controller('executive')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ExecutiveController {
   constructor(private executiveService: ExecutiveService) {}

@@ -1,0 +1,27 @@
+{
+  "url": "/coa-manage",
+  "type": "list",
+  "file": "coa_manage.html",
+  "title": "GsERP KIL - CoA",
+  "forms": [],
+  "tables": [
+    {
+      "index": 1,
+      "headers": [
+        "#",
+        "Kode",
+        "Nama",
+        "Tipe",
+        "#"
+      ],
+      "rowCount": 190
+    }
+  ],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [
+    "https://kil.gserp.id/coa-manage/detail"
+  ],
+  "notes": [],
+  "addUrl": "https://kil.gserp.id/coa-manage/create"
+}

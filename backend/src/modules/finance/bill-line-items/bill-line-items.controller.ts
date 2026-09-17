@@ -1,7 +1,19 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Req,
+} from '@nestjs/common';
 import { BillLineItemsService } from './bill-line-items.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AddBillLineItemDto, UpdateBillLineItemDto } from './dto/bill-line-items.dto';
+import {
+  AddBillLineItemDto,
+  UpdateBillLineItemDto,
+} from './dto/bill-line-items.dto';
 
 @ApiTags('finance/bill-line-items')
 @ApiBearerAuth()
@@ -23,14 +35,22 @@ export class BillLineItemsController {
 
   @Post('by-bill/:billId')
   @ApiOperation({ summary: 'Add line item to bill (recomputes totals)' })
-  addItem(@Req() req: any, @Param('billId') billId: string, @Body() dto: AddBillLineItemDto) {
+  addItem(
+    @Req() req: any,
+    @Param('billId') billId: string,
+    @Body() dto: AddBillLineItemDto,
+  ) {
     const userId = req.user?.id;
     return this.service.addItem(userId, billId, dto);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update bill line item (recomputes totals)' })
-  update(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateBillLineItemDto) {
+  update(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateBillLineItemDto,
+  ) {
     const userId = req.user?.id;
     return this.service.updateItem(userId, id, dto);
   }

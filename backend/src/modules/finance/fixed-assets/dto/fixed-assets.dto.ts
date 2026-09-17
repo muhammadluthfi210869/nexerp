@@ -1,8 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsDateString, IsPositive, Min, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsDateString,
+  IsPositive,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class CreateFixedAssetDto {
-  @ApiProperty({ example: 'FA-2609-0001', required: false, description: 'Auto-generated if omitted' })
+  @ApiProperty({
+    example: 'FA-2609-0001',
+    required: false,
+    description: 'Auto-generated if omitted',
+  })
   @IsOptional()
   @IsString()
   assetNumber?: string;
@@ -12,7 +24,10 @@ export class CreateFixedAssetDto {
   @MinLength(3)
   assetName: string;
 
-  @ApiProperty({ example: 'Kendaraan', description: 'Free-text category (Kendaraan, Peralatan, Bangunan, dll)' })
+  @ApiProperty({
+    example: 'Kendaraan',
+    description: 'Free-text category (Kendaraan, Peralatan, Bangunan, dll)',
+  })
   @IsString()
   assetCategory: string;
 
@@ -25,7 +40,10 @@ export class CreateFixedAssetDto {
   @IsPositive()
   acquisitionCost: number;
 
-  @ApiProperty({ example: 60, description: 'Useful life in months (e.g., 60 = 5 years)' })
+  @ApiProperty({
+    example: 60,
+    description: 'Useful life in months (e.g., 60 = 5 years)',
+  })
   @IsNumber()
   @Min(1)
   usefulLife: number;

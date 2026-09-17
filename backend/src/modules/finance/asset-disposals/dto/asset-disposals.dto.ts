@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsString, IsIn, IsNumber, IsOptional, IsDateString, Min } from 'class-validator';
+import {
+  IsUUID,
+  IsString,
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsDateString,
+  Min,
+} from 'class-validator';
 
 export class CreateAssetDisposalDto {
   @ApiProperty({ example: 'uuid', description: 'Asset to dispose' })
@@ -14,12 +22,19 @@ export class CreateAssetDisposalDto {
   @IsIn(['SALE', 'WRITE_OFF', 'SCRAP'])
   disposalType: 'SALE' | 'WRITE_OFF' | 'SCRAP';
 
-  @ApiProperty({ example: 80000000, description: 'Proceeds from sale (0 for write-off/scrap)' })
+  @ApiProperty({
+    example: 80000000,
+    description: 'Proceeds from sale (0 for write-off/scrap)',
+  })
   @IsNumber()
   @Min(0)
   proceeds: number;
 
-  @ApiProperty({ example: 'PT Xyz', required: false, description: 'Buyer name (for SALE)' })
+  @ApiProperty({
+    example: 'PT Xyz',
+    required: false,
+    description: 'Buyer name (for SALE)',
+  })
   @IsOptional()
   @IsString()
   buyer?: string;

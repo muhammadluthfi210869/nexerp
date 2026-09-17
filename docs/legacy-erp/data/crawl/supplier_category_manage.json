@@ -1,0 +1,24 @@
+{
+  "url": "/supplier-category-manage",
+  "type": "list",
+  "file": "supplier_category_manage.html",
+  "title": "GsERP KIL - Kategori Supplier",
+  "forms": [],
+  "tables": [
+    {
+      "index": 1,
+      "headers": [
+        "#",
+        "Kategori",
+        "Deskripsi",
+        "#"
+      ],
+      "rowCount": 4
+    }
+  ],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [],
+  "notes": [],
+  "addUrl": "https://kil.gserp.id/supplier-category-manage/create"
+}

@@ -1,0 +1,148 @@
+{
+  "generated_at": "2026-09-17T15:06:23.416Z",
+  "gates": {
+    "yaml_parse": {
+      "status": "PASS",
+      "files": 6
+    },
+    "json_parse": {
+      "status": "PASS",
+      "files": 1
+    },
+    "prisma_validate": {
+      "status": "PASS",
+      "message": " | Prisma schema loaded from ..\\tmp\\ssot-prisma7-compat.schema.prisma. |  | Validated through Prisma 7 compatibility projection; canonical schema targets Prisma 5."
+    },
+    "openapi_structure": {
+      "status": "PASS",
+      "duplicate_operation_ids": [],
+      "dangling_schema_refs": []
+    },
+    "rbac_ids_and_inheritance": {
+      "status": "PASS",
+      "duplicate_role_ids": [],
+      "duplicate_role_names": [],
+      "duplicate_permissions": [],
+      "dangling_inheritance": [],
+      "dangling_assignment_roles": [],
+      "dangling_assignment_permissions": []
+    },
+    "screen_ids": {
+      "status": "PASS",
+      "duplicates": []
+    },
+    "screen_api_refs": {
+      "status": "PASS",
+      "checked": 209,
+      "dangling": []
+    },
+    "screen_rbac_refs": {
+      "status": "PASS",
+      "checked": 372,
+      "dangling": []
+    },
+    "business_rule_ids": {
+      "status": "PASS",
+      "duplicates": []
+    },
+    "workflow_ids_entities_actors": {
+      "status": "PASS",
+      "duplicate_entities": [],
+      "dangling_entities": [],
+      "dangling_actors": []
+    },
+    "workflow_event_refs": {
+      "status": "PASS",
+      "checked": 33,
+      "dangling": []
+    },
+    "workflow_rule_refs": {
+      "status": "PASS",
+      "checked": 1769,
+      "dangling": []
+    },
+    "event_ids": {
+      "status": "PASS",
+      "duplicates": []
+    },
+    "data_ownership_coverage": {
+      "status": "PASS",
+      "schema_models_checked": 92,
+      "missing_models": [],
+      "entries_without_writer": []
+    },
+    "traceability_ids": {
+      "status": "PASS",
+      "duplicate_requirements": [],
+      "duplicate_rules": [],
+      "duplicate_workflows": [],
+      "duplicate_entities": [],
+      "duplicate_screens": [],
+      "duplicate_tests": []
+    },
+    "traceability_refs": {
+      "status": "PASS",
+      "checked_requirements": 37,
+      "dangling": []
+    },
+    "business_rule_test_refs": {
+      "status": "PASS",
+      "checked_rules": 106,
+      "rules_without_tests": []
+    },
+    "blocking_decisions_zero": {
+      "status": "PASS",
+      "decisions": []
+    },
+    "locked_status_integrity": {
+      "status": "PASS",
+      "locked_with_open_markers": []
+    }
+  },
+  "counts": {
+    "prisma_models": 92,
+    "api_operations": 377,
+    "roles": 44,
+    "permissions": 144,
+    "screens": 179,
+    "screen_api_refs": 209,
+    "screen_permission_refs": 372,
+    "business_rules": 106,
+    "workflows": 37,
+    "integration_events": 76,
+    "requirements": 37,
+    "trace_tests": 239
+  },
+  "unresolved": {
+    "open_decisions": []
+  },
+  "files": {
+    "02_DATA_OWNERSHIP.yaml": {
+      "parse": "PASS"
+    },
+    "03_WORKFLOW_STATE_MACHINE.yaml": {
+      "parse": "PASS"
+    },
+    "05_API_CONTRACT.yaml": {
+      "parse": "PASS"
+    },
+    "07_RBAC_MATRIX.yaml": {
+      "parse": "PASS"
+    },
+    "08_INTEGRATION_EVENT_CONTRACT.yaml": {
+      "parse": "PASS"
+    },
+    "10_TRACEABILITY_MATRIX.yaml": {
+      "parse": "PASS"
+    },
+    "06_SCREEN_CONTRACT.json": {
+      "parse": "PASS"
+    }
+  },
+  "summary": {
+    "pass": 19,
+    "fail": 0,
+    "certification": "CERTIFIED",
+    "warnings": []
+  }
+}

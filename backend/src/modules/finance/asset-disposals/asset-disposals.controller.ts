@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Param, Body, Query, Req, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Body,
+  Query,
+  Req,
+  BadRequestException,
+} from '@nestjs/common';
 import { AssetDisposalsService } from './asset-disposals.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateAssetDisposalDto } from './dto/asset-disposals.dto';
@@ -32,7 +41,10 @@ export class AssetDisposalsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Dispose an asset (auto-computes gain/loss, flips status to DISPOSED)' })
+  @ApiOperation({
+    summary:
+      'Dispose an asset (auto-computes gain/loss, flips status to DISPOSED)',
+  })
   create(@Req() req: any, @Body() dto: CreateAssetDisposalDto) {
     const userId = req.user?.id;
     return this.service.create(userId, dto);

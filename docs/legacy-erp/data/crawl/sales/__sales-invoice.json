@@ -1,0 +1,76 @@
+{
+  "url": "/sales-invoice",
+  "http_status": 200,
+  "title": "GsERP KIL - Faktur Penjualan",
+  "form_fields": [],
+  "tables": [
+    {
+      "headers": [
+        "#",
+        "Kode DO",
+        "Kode Sales",
+        "Tanggal",
+        "Pelanggan",
+        "Total",
+        "Pembuat",
+        "Status",
+        "#"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "text": "Akun Saya"
+    },
+    {
+      "text": "Riwayat"
+    },
+    {
+      "text": "&times;"
+    },
+    {
+      "text": "Tutup"
+    },
+    {
+      "text": "&times;"
+    },
+    {
+      "text": "Tutup"
+    }
+  ],
+  "ajax_calls": [
+    "https://kil.gserp.id/sales-invoice/detailDO",
+    "https://kil.gserp.id/sales-invoice/detail",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frequest\\x2Dcogs\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Drequest\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fgoods\\x2Drequest\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fchecklist\\x2Dprogress\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dinvoice\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Ddown\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fneed\\x2Dfor\\x2Dgoods\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fgoods\\x2Drequest\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Drequest\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Din\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Din\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fdelivery\\x2Dout\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Dout\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Ddown\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dinvoice\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dpayment\\x2Fbadge"
+  ],
+  "modals": [],
+  "print_pattern": null,
+  "notes": "uses DataTables; uses select2; uses rich editor"
+}

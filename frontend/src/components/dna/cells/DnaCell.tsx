@@ -296,7 +296,7 @@ export function DnaCellActions({
 }
 
 // ── EXPORT AS A NAMESPACED OBJECT ──
-export const DnaCell = {
+export const DnaCell = Object.assign(DnaCellText, {
   Code: DnaCellCode,
   code: DnaCellCode,
   Text: DnaCellText,
@@ -317,4 +317,4 @@ export const DnaCell = {
   date: DnaCellDate,
   Actions: DnaCellActions,
   actions: DnaCellActions,
-};
+});

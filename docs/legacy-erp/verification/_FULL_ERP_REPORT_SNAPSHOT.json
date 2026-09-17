@@ -1,0 +1,99 @@
+{
+  "surface": "report",
+  "title": "NEX ERP needs gated reconciliation before it is ready for UAT",
+  "generatedAt": "2026-09-17T04:08:36.447Z",
+  "status": "reviewed",
+  "buildStatus": "complete",
+  "filters": [],
+  "queries": {
+    "readiness_dimensions": {
+      "rows": [
+        {"dimension":"SSOT certainty","weight":10,"score":94.7,"contribution":9.5},
+        {"dimension":"Contract-to-code alignment","weight":15,"score":10.0,"contribution":1.5},
+        {"dimension":"Build and static quality","weight":10,"score":20.0,"contribution":2.0},
+        {"dimension":"Automated verification","weight":15,"score":0,"contribution":0},
+        {"dimension":"Golden-thread business flows","weight":15,"score":0,"contribution":0},
+        {"dimension":"Security and compliance","weight":10,"score":0,"contribution":0},
+        {"dimension":"Data migration and finance reconciliation","weight":10,"score":0,"contribution":0},
+        {"dimension":"UI UX and accessibility","weight":10,"score":0,"contribution":0},
+        {"dimension":"Operations observability and DR","weight":5,"score":20.0,"contribution":1.0}
+      ],
+      "source": {
+        "label": "Reviewed production-readiness scoring model",
+        "tables": ["docs/legacy-erp/verification/_FULL_ERP_GAP_ASSESSMENT.md"],
+        "filters": ["Assessment date 2026-09-17", "Gate-based scoring; unverified domains receive no release credit"],
+        "metricDefinitions": [
+          {"label":"Verified readiness","definition":"Weighted release-evidence score; not feature implementation percentage.","formula":"SUM(weight × score) / 100","componentIds":["readiness-summary","readiness-table","executive-summary"]}
+        ]
+      }
+    },
+    "exact_alignment": {
+      "rows": [
+        {"layer":"Prisma models","canonical":92,"implementation":194,"exactShared":21,"exactCoverage":0.228},
+        {"layer":"API operations","canonical":377,"implementation":662,"exactShared":13,"exactCoverage":0.034},
+        {"layer":"Screen routes","canonical":179,"implementation":270,"exactShared":7,"exactCoverage":0.039}
+      ],
+      "source": {
+        "label": "Deterministic exact-identity audit",
+        "tables": ["docs/legacy-erp/verification/_IMPLEMENTATION_READINESS_BASELINE.json"],
+        "filters": ["Normalized HTTP base prefixes, parameters, and trailing slashes", "Exact mismatch is a reconciliation queue, not proof of missing functionality"],
+        "metricDefinitions": [
+          {"label":"Exact coverage","definition":"Canonical identities with an exact normalized implementation identity divided by canonical identities.","formula":"exactShared / canonical","componentIds":["alignment-table","executive-summary"]}
+        ]
+      }
+    },
+    "observed_gates": {
+      "rows": [
+        {"gate":"SSOT validator","result":"FAIL","detail":"18 PASS; 1 FAIL; four business decisions open"},
+        {"gate":"Backend production build","result":"PASS","detail":"Nest compiled 478 files"},
+        {"gate":"Frontend production build","result":"FAIL","detail":"Type error in R&D project monitoring"},
+        {"gate":"Backend unit suite","result":"FAIL","detail":"18 suites pass; 5 fail; 198 tests pass; 61 fail; 1 skip"},
+        {"gate":"Frontend unit suite","result":"FAIL","detail":"325 tests pass; 2 fail; 7 skip; 2 worker errors"},
+        {"gate":"Frontend lint","result":"FAIL","detail":"524 errors; 8106 warnings"},
+        {"gate":"Docker Compose precheck","result":"FAIL","detail":"Root .env cannot be parsed"},
+        {"gate":"Backend production dependency audit","result":"FAIL","detail":"27 high vulnerabilities"},
+        {"gate":"Frontend production dependency audit","result":"FAIL","detail":"19 total: 1 critical; 11 high; 4 moderate; 3 low"},
+        {"gate":"Full backend and Playwright E2E","result":"NOT EXECUTED","detail":"Environment gate unavailable"}
+      ],
+      "source": {
+        "label": "Commands executed on the local workspace",
+        "tables": ["backend/package.json", "frontend/package.json", "docker-compose.yml", "docs/legacy-erp/verification/_SSOT_VALIDATION_REPORT.md"],
+        "filters": ["Execution date 2026-09-17", "No failed command is represented as passing"],
+        "metricDefinitions": []
+      }
+    },
+    "phase_plan": {
+      "rows": [
+        {"phase":"P00","group":"Foundation","name":"Stop-the-line containment"},
+        {"phase":"P01","group":"Foundation","name":"Business certainty and SSOT lock"},
+        {"phase":"P02","group":"Foundation","name":"Contract-to-code reconciliation"},
+        {"phase":"P03","group":"Foundation","name":"Reproducible build and CI"},
+        {"phase":"P04","group":"Foundation","name":"Canonical database and migration chain"},
+        {"phase":"P05","group":"Foundation","name":"Cross-cutting platform controls"},
+        {"phase":"P06","group":"Domain","name":"Master data and system configuration"},
+        {"phase":"P07","group":"Domain","name":"CRM marketing guest book and BusDev"},
+        {"phase":"P08","group":"Domain","name":"Sample R&D formulation creative and legality"},
+        {"phase":"P09","group":"Domain","name":"Sales DP delivery AR and returns"},
+        {"phase":"P10","group":"Domain","name":"SCM MRP procurement AP and matching"},
+        {"phase":"P11","group":"Domain","name":"Warehouse and inventory"},
+        {"phase":"P12","group":"Domain","name":"Production planning and dispatch"},
+        {"phase":"P13","group":"Domain","name":"Production execution"},
+        {"phase":"P14","group":"Domain","name":"QC quarantine release and traceability"},
+        {"phase":"P15","group":"Domain","name":"Finance costing accounting and closing"},
+        {"phase":"P16","group":"Domain","name":"HR personnel payroll scope and KPI"},
+        {"phase":"P17","group":"Domain","name":"Documents communication integrations and automation"},
+        {"phase":"P18","group":"Domain","name":"Reporting executive analytics and KPI governance"},
+        {"phase":"P19","group":"Certification","name":"UI UX polish and accessibility"},
+        {"phase":"P20","group":"Certification","name":"System-wide verification and resilience"},
+        {"phase":"P21","group":"Certification","name":"Migration operations cutover and DR rehearsal"},
+        {"phase":"P22","group":"Certification","name":"Independent pre-UAT certification"}
+      ],
+      "source": {
+        "label": "Full ERP gated roadmap",
+        "tables": ["docs/legacy-erp/process/_FULL_ERP_PRODUCTION_READINESS_ROADMAP.md", "docs/legacy-erp/verification/_PRODUCTION_PHASE_GATES.yaml"],
+        "filters": ["Strict sequential certification", "No deadline waiver"],
+        "metricDefinitions": []
+      }
+    }
+  }
+}

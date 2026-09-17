@@ -1,0 +1,1942 @@
+{
+  "ActivityLog": {
+    "model": "ActivityLog",
+    "file": "backend/prisma/schema/activity.prisma",
+    "domain": "activity",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Exact implementation of canonical model ActivityLog.",
+    "reachable": true
+  },
+  "User": {
+    "model": "User",
+    "file": "backend/prisma/schema/auth.prisma",
+    "domain": "auth",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Security Team",
+    "rationale": "Exact implementation of canonical model User.",
+    "reachable": true
+  },
+  "SalesLead": {
+    "model": "SalesLead",
+    "file": "backend/prisma/schema/bussdev.prisma",
+    "domain": "bussdev",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model SalesLead supporting bussdev workflow in bussdev.prisma.",
+    "reachable": true
+  },
+  "LeadActivity": {
+    "model": "LeadActivity",
+    "file": "backend/prisma/schema/bussdev.prisma",
+    "domain": "bussdev",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model LeadActivity supporting bussdev workflow in bussdev.prisma.",
+    "reachable": true
+  },
+  "LostDeal": {
+    "model": "LostDeal",
+    "file": "backend/prisma/schema/bussdev.prisma",
+    "domain": "bussdev",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model LostDeal supporting bussdev workflow in bussdev.prisma.",
+    "reachable": true
+  },
+  "BussdevStaff": {
+    "model": "BussdevStaff",
+    "file": "backend/prisma/schema/bussdev.prisma",
+    "domain": "bussdev",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model BussdevStaff supporting bussdev workflow in bussdev.prisma.",
+    "reachable": true
+  },
+  "GuestLog": {
+    "model": "GuestLog",
+    "file": "backend/prisma/schema/bussdev.prisma",
+    "domain": "bussdev",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model GuestLog supporting bussdev workflow in bussdev.prisma.",
+    "reachable": true
+  },
+  "NewProductForm": {
+    "model": "NewProductForm",
+    "file": "backend/prisma/schema/bussdev.prisma",
+    "domain": "bussdev",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model NewProductForm supporting bussdev workflow in bussdev.prisma.",
+    "reachable": true
+  },
+  "SalesOrder": {
+    "model": "SalesOrder",
+    "file": "backend/prisma/schema/bussdev.prisma",
+    "domain": "bussdev",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Exact implementation of canonical model SalesOrder.",
+    "reachable": true
+  },
+  "SalesOrderItem": {
+    "model": "SalesOrderItem",
+    "file": "backend/prisma/schema/bussdev.prisma",
+    "domain": "bussdev",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model SalesOrderItem supporting bussdev workflow in bussdev.prisma.",
+    "reachable": true
+  },
+  "SalesReturn": {
+    "model": "SalesReturn",
+    "file": "backend/prisma/schema/bussdev.prisma",
+    "domain": "bussdev",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Exact implementation of canonical model SalesReturn.",
+    "reachable": true
+  },
+  "SalesReturnItem": {
+    "model": "SalesReturnItem",
+    "file": "backend/prisma/schema/bussdev.prisma",
+    "domain": "bussdev",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model SalesReturnItem supporting bussdev workflow in bussdev.prisma.",
+    "reachable": true
+  },
+  "RetentionEngine": {
+    "model": "RetentionEngine",
+    "file": "backend/prisma/schema/bussdev.prisma",
+    "domain": "bussdev",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model RetentionEngine supporting bussdev workflow in bussdev.prisma.",
+    "reachable": true
+  },
+  "LeadTimelineLog": {
+    "model": "LeadTimelineLog",
+    "file": "backend/prisma/schema/bussdev.prisma",
+    "domain": "bussdev",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model LeadTimelineLog supporting bussdev workflow in bussdev.prisma.",
+    "reachable": true
+  },
+  "ActivityStream": {
+    "model": "ActivityStream",
+    "file": "backend/prisma/schema/bussdev.prisma",
+    "domain": "bussdev",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model ActivityStream supporting bussdev workflow in bussdev.prisma.",
+    "reachable": true
+  },
+  "CommunicationThread": {
+    "model": "CommunicationThread",
+    "file": "backend/prisma/schema/communication.prisma",
+    "domain": "system",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Domain model CommunicationThread supporting system workflow in communication.prisma.",
+    "reachable": true
+  },
+  "CommunicationThreadReply": {
+    "model": "CommunicationThreadReply",
+    "file": "backend/prisma/schema/communication.prisma",
+    "domain": "system",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Domain model CommunicationThreadReply supporting system workflow in communication.prisma.",
+    "reachable": true
+  },
+  "CommunicationMention": {
+    "model": "CommunicationMention",
+    "file": "backend/prisma/schema/communication.prisma",
+    "domain": "system",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Domain model CommunicationMention supporting system workflow in communication.prisma.",
+    "reachable": true
+  },
+  "CommunicationAttachment": {
+    "model": "CommunicationAttachment",
+    "file": "backend/prisma/schema/communication.prisma",
+    "domain": "system",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Domain model CommunicationAttachment supporting system workflow in communication.prisma.",
+    "reachable": true
+  },
+  "DesignTask": {
+    "model": "DesignTask",
+    "file": "backend/prisma/schema/creative.prisma",
+    "domain": "creative",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Creative Design Team",
+    "rationale": "Domain model DesignTask supporting creative workflow in creative.prisma.",
+    "reachable": true
+  },
+  "DesignVersion": {
+    "model": "DesignVersion",
+    "file": "backend/prisma/schema/creative.prisma",
+    "domain": "creative",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Creative Design Team",
+    "rationale": "Domain model DesignVersion supporting creative workflow in creative.prisma.",
+    "reachable": true
+  },
+  "DesignFeedback": {
+    "model": "DesignFeedback",
+    "file": "backend/prisma/schema/creative.prisma",
+    "domain": "creative",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Creative Design Team",
+    "rationale": "Domain model DesignFeedback supporting creative workflow in creative.prisma.",
+    "reachable": true
+  },
+  "CrmLead": {
+    "model": "CrmLead",
+    "file": "backend/prisma/schema/crm.prisma",
+    "domain": "crm",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model CrmLead supporting crm workflow in crm.prisma.",
+    "reachable": true
+  },
+  "GuestbookEvent": {
+    "model": "GuestbookEvent",
+    "file": "backend/prisma/schema/crm.prisma",
+    "domain": "crm",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model GuestbookEvent supporting crm workflow in crm.prisma.",
+    "reachable": true
+  },
+  "LeadAudit": {
+    "model": "LeadAudit",
+    "file": "backend/prisma/schema/crm.prisma",
+    "domain": "crm",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Commercial Team",
+    "rationale": "Domain model LeadAudit supporting crm workflow in crm.prisma.",
+    "reachable": true
+  },
+  "DocumentDraft": {
+    "model": "DocumentDraft",
+    "file": "backend/prisma/schema/document-automation.prisma",
+    "domain": "document",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Operations Automation Team",
+    "rationale": "Domain model DocumentDraft supporting document workflow in document-automation.prisma.",
+    "reachable": true
+  },
+  "Bill": {
+    "model": "Bill",
+    "file": "backend/prisma/schema/finance-extension.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model Bill supporting finance workflow in finance-extension.prisma.",
+    "reachable": true
+  },
+  "BillLineItem": {
+    "model": "BillLineItem",
+    "file": "backend/prisma/schema/finance-extension.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model BillLineItem supporting finance workflow in finance-extension.prisma.",
+    "reachable": true
+  },
+  "BillMatchResult": {
+    "model": "BillMatchResult",
+    "file": "backend/prisma/schema/finance-extension.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model BillMatchResult supporting finance workflow in finance-extension.prisma.",
+    "reachable": true
+  },
+  "DownPayment": {
+    "model": "DownPayment",
+    "file": "backend/prisma/schema/finance-extension.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model DownPayment supporting finance workflow in finance-extension.prisma.",
+    "reachable": true
+  },
+  "APPayment": {
+    "model": "APPayment",
+    "file": "backend/prisma/schema/finance-extension.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model APPayment supporting finance workflow in finance-extension.prisma.",
+    "reachable": true
+  },
+  "BillAllocation": {
+    "model": "BillAllocation",
+    "file": "backend/prisma/schema/finance-extension.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model BillAllocation supporting finance workflow in finance-extension.prisma.",
+    "reachable": true
+  },
+  "BankAccount": {
+    "model": "BankAccount",
+    "file": "backend/prisma/schema/finance-extension.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model BankAccount supporting finance workflow in finance-extension.prisma.",
+    "reachable": true
+  },
+  "BankTransaction": {
+    "model": "BankTransaction",
+    "file": "backend/prisma/schema/finance-extension.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model BankTransaction supporting finance workflow in finance-extension.prisma.",
+    "reachable": true
+  },
+  "BankReconciliation": {
+    "model": "BankReconciliation",
+    "file": "backend/prisma/schema/finance-extension.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model BankReconciliation supporting finance workflow in finance-extension.prisma.",
+    "reachable": true
+  },
+  "TaxTransaction": {
+    "model": "TaxTransaction",
+    "file": "backend/prisma/schema/finance-extension.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model TaxTransaction supporting finance workflow in finance-extension.prisma.",
+    "reachable": true
+  },
+  "Invoice": {
+    "model": "Invoice",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model Invoice supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "Account": {
+    "model": "Account",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model Account supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "FinancialPeriod": {
+    "model": "FinancialPeriod",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model FinancialPeriod supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "StockAdjustment": {
+    "model": "StockAdjustment",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Exact implementation of canonical model StockAdjustment.",
+    "reachable": true
+  },
+  "StockAdjustmentItem": {
+    "model": "StockAdjustmentItem",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model StockAdjustmentItem supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "JournalEntry": {
+    "model": "JournalEntry",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Exact implementation of canonical model JournalEntry.",
+    "reachable": true
+  },
+  "JournalLine": {
+    "model": "JournalLine",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Exact implementation of canonical model JournalLine.",
+    "reachable": true
+  },
+  "Payment": {
+    "model": "Payment",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model Payment supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "FundRequest": {
+    "model": "FundRequest",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Exact implementation of canonical model FundRequest.",
+    "reachable": true
+  },
+  "TaxRate": {
+    "model": "TaxRate",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model TaxRate supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "Currency": {
+    "model": "Currency",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model Currency supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "AutoJournalConfig": {
+    "model": "AutoJournalConfig",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model AutoJournalConfig supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "Customer": {
+    "model": "Customer",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Exact implementation of canonical model Customer.",
+    "reachable": true
+  },
+  "SalesInvoice": {
+    "model": "SalesInvoice",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Exact implementation of canonical model SalesInvoice.",
+    "reachable": true
+  },
+  "SalesInvoiceLineItem": {
+    "model": "SalesInvoiceLineItem",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model SalesInvoiceLineItem supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "ARReceipt": {
+    "model": "ARReceipt",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model ARReceipt supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "SampleFee": {
+    "model": "SampleFee",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model SampleFee supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "FixedAsset": {
+    "model": "FixedAsset",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Exact implementation of canonical model FixedAsset.",
+    "reachable": true
+  },
+  "DepreciationSchedule": {
+    "model": "DepreciationSchedule",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model DepreciationSchedule supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "AssetTransfer": {
+    "model": "AssetTransfer",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model AssetTransfer supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "AssetDisposal": {
+    "model": "AssetDisposal",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model AssetDisposal supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "IntangibleAsset": {
+    "model": "IntangibleAsset",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model IntangibleAsset supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "PeriodLock": {
+    "model": "PeriodLock",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model PeriodLock supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "ClosingChecklist": {
+    "model": "ClosingChecklist",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model ClosingChecklist supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "AdjustmentJournal": {
+    "model": "AdjustmentJournal",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model AdjustmentJournal supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "JobOrderCosting": {
+    "model": "JobOrderCosting",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model JobOrderCosting supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "CostVariance": {
+    "model": "CostVariance",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model CostVariance supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "ProductProfitability": {
+    "model": "ProductProfitability",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model ProductProfitability supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "CostAllocation": {
+    "model": "CostAllocation",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model CostAllocation supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "ClientEscrow": {
+    "model": "ClientEscrow",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model ClientEscrow supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "InventoryOwnership": {
+    "model": "InventoryOwnership",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model InventoryOwnership supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "FinancialSummaryLedger": {
+    "model": "FinancialSummaryLedger",
+    "file": "backend/prisma/schema/finance.prisma",
+    "domain": "finance",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Finance Team",
+    "rationale": "Domain model FinancialSummaryLedger supporting finance workflow in finance.prisma.",
+    "reachable": true
+  },
+  "Employee": {
+    "model": "Employee",
+    "file": "backend/prisma/schema/hr.prisma",
+    "domain": "hr",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "HR Team",
+    "rationale": "Exact implementation of canonical model Employee.",
+    "reachable": true
+  },
+  "EmployeeRoleMapping": {
+    "model": "EmployeeRoleMapping",
+    "file": "backend/prisma/schema/hr.prisma",
+    "domain": "hr",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "HR Team",
+    "rationale": "Domain model EmployeeRoleMapping supporting hr workflow in hr.prisma.",
+    "reachable": true
+  },
+  "KpiMetricDefinition": {
+    "model": "KpiMetricDefinition",
+    "file": "backend/prisma/schema/hr.prisma",
+    "domain": "hr",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "HR Team",
+    "rationale": "Domain model KpiMetricDefinition supporting hr workflow in hr.prisma.",
+    "reachable": true
+  },
+  "KpiPointLog": {
+    "model": "KpiPointLog",
+    "file": "backend/prisma/schema/hr.prisma",
+    "domain": "hr",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "HR Team",
+    "rationale": "Domain model KpiPointLog supporting hr workflow in hr.prisma.",
+    "reachable": true
+  },
+  "KpiScore": {
+    "model": "KpiScore",
+    "file": "backend/prisma/schema/hr.prisma",
+    "domain": "hr",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "HR Team",
+    "rationale": "Domain model KpiScore supporting hr workflow in hr.prisma.",
+    "reachable": true
+  },
+  "Attendance": {
+    "model": "Attendance",
+    "file": "backend/prisma/schema/hr.prisma",
+    "domain": "hr",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "HR Team",
+    "rationale": "Domain model Attendance supporting hr workflow in hr.prisma.",
+    "reachable": true
+  },
+  "Ticket": {
+    "model": "Ticket",
+    "file": "backend/prisma/schema/hr.prisma",
+    "domain": "hr",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "HR Team",
+    "rationale": "Domain model Ticket supporting hr workflow in hr.prisma.",
+    "reachable": true
+  },
+  "Payroll": {
+    "model": "Payroll",
+    "file": "backend/prisma/schema/hr.prisma",
+    "domain": "hr",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "HR Team",
+    "rationale": "Domain model Payroll supporting hr workflow in hr.prisma.",
+    "reachable": true
+  },
+  "PayrollItem": {
+    "model": "PayrollItem",
+    "file": "backend/prisma/schema/hr.prisma",
+    "domain": "hr",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "HR Team",
+    "rationale": "Domain model PayrollItem supporting hr workflow in hr.prisma.",
+    "reachable": true
+  },
+  "LegalStaff": {
+    "model": "LegalStaff",
+    "file": "backend/prisma/schema/legal.prisma",
+    "domain": "legal",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Legal & Regulatory Team",
+    "rationale": "Domain model LegalStaff supporting legal workflow in legal.prisma.",
+    "reachable": true
+  },
+  "HkiRecord": {
+    "model": "HkiRecord",
+    "file": "backend/prisma/schema/legal.prisma",
+    "domain": "legal",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Legal & Regulatory Team",
+    "rationale": "Domain model HkiRecord supporting legal workflow in legal.prisma.",
+    "reachable": true
+  },
+  "BpomRecord": {
+    "model": "BpomRecord",
+    "file": "backend/prisma/schema/legal.prisma",
+    "domain": "legal",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Legal & Regulatory Team",
+    "rationale": "Domain model BpomRecord supporting legal workflow in legal.prisma.",
+    "reachable": true
+  },
+  "HalalRecord": {
+    "model": "HalalRecord",
+    "file": "backend/prisma/schema/legal.prisma",
+    "domain": "legal",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Legal & Regulatory Team",
+    "rationale": "Domain model HalalRecord supporting legal workflow in legal.prisma.",
+    "reachable": true
+  },
+  "LegalTimelineLog": {
+    "model": "LegalTimelineLog",
+    "file": "backend/prisma/schema/legal.prisma",
+    "domain": "legal",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Legal & Regulatory Team",
+    "rationale": "Domain model LegalTimelineLog supporting legal workflow in legal.prisma.",
+    "reachable": true
+  },
+  "InternalAudit": {
+    "model": "InternalAudit",
+    "file": "backend/prisma/schema/legal.prisma",
+    "domain": "legal",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Legal & Regulatory Team",
+    "rationale": "Domain model InternalAudit supporting legal workflow in legal.prisma.",
+    "reachable": true
+  },
+  "RegulatoryPipeline": {
+    "model": "RegulatoryPipeline",
+    "file": "backend/prisma/schema/legal.prisma",
+    "domain": "legal",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Legal & Regulatory Team",
+    "rationale": "Domain model RegulatoryPipeline supporting legal workflow in legal.prisma.",
+    "reachable": true
+  },
+  "ArtworkReview": {
+    "model": "ArtworkReview",
+    "file": "backend/prisma/schema/legal.prisma",
+    "domain": "legal",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Legal & Regulatory Team",
+    "rationale": "Domain model ArtworkReview supporting legal workflow in legal.prisma.",
+    "reachable": true
+  },
+  "PNBPRequest": {
+    "model": "PNBPRequest",
+    "file": "backend/prisma/schema/legal.prisma",
+    "domain": "legal",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Legal & Regulatory Team",
+    "rationale": "Domain model PNBPRequest supporting legal workflow in legal.prisma.",
+    "reachable": true
+  },
+  "MasterInci": {
+    "model": "MasterInci",
+    "file": "backend/prisma/schema/legal.prisma",
+    "domain": "legal",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Legal & Regulatory Team",
+    "rationale": "Domain model MasterInci supporting legal workflow in legal.prisma.",
+    "reachable": true
+  },
+  "LeadCapture": {
+    "model": "LeadCapture",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model LeadCapture supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "LeadValidationLog": {
+    "model": "LeadValidationLog",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model LeadValidationLog supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "LeadMessage": {
+    "model": "LeadMessage",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model LeadMessage supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "LeadAttribute": {
+    "model": "LeadAttribute",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model LeadAttribute supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "RoundRobinAgent": {
+    "model": "RoundRobinAgent",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model RoundRobinAgent supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "RoundRobinState": {
+    "model": "RoundRobinState",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model RoundRobinState supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "OmniCrmState": {
+    "model": "OmniCrmState",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model OmniCrmState supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingTask": {
+    "model": "MarketingTask",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingTask supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "DailyAdsMetric": {
+    "model": "DailyAdsMetric",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model DailyAdsMetric supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingTarget": {
+    "model": "MarketingTarget",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingTarget supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "ContentAsset": {
+    "model": "ContentAsset",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model ContentAsset supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "SearchVisibilityMetric": {
+    "model": "SearchVisibilityMetric",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model SearchVisibilityMetric supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "AccountHealthLog": {
+    "model": "AccountHealthLog",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model AccountHealthLog supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingTaskHistory": {
+    "model": "MarketingTaskHistory",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingTaskHistory supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingTaskAttachment": {
+    "model": "MarketingTaskAttachment",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingTaskAttachment supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingTaskComment": {
+    "model": "MarketingTaskComment",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingTaskComment supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingProject": {
+    "model": "MarketingProject",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingProject supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingBrand": {
+    "model": "MarketingBrand",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingBrand supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingTaskChecklistItem": {
+    "model": "MarketingTaskChecklistItem",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingTaskChecklistItem supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "SocialPost": {
+    "model": "SocialPost",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model SocialPost supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "SocialChecklistItem": {
+    "model": "SocialChecklistItem",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model SocialChecklistItem supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "SocialPostMedia": {
+    "model": "SocialPostMedia",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model SocialPostMedia supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "SocialPostMetricSnapshot": {
+    "model": "SocialPostMetricSnapshot",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model SocialPostMetricSnapshot supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "CampaignOkr": {
+    "model": "CampaignOkr",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model CampaignOkr supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingReportingPeriod": {
+    "model": "MarketingReportingPeriod",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingReportingPeriod supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "BrandChannelMetric": {
+    "model": "BrandChannelMetric",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model BrandChannelMetric supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "WeeklySocialReport": {
+    "model": "WeeklySocialReport",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model WeeklySocialReport supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "StoryDailyMetric": {
+    "model": "StoryDailyMetric",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model StoryDailyMetric supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingChannelFunnel": {
+    "model": "MarketingChannelFunnel",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingChannelFunnel supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingIntegrationConnection": {
+    "model": "MarketingIntegrationConnection",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingIntegrationConnection supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingIntegrationSyncJob": {
+    "model": "MarketingIntegrationSyncJob",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingIntegrationSyncJob supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingIdempotencyKey": {
+    "model": "MarketingIdempotencyKey",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingIdempotencyKey supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MetaAccountConfig": {
+    "model": "MetaAccountConfig",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MetaAccountConfig supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MarketingTeamMember": {
+    "model": "MarketingTeamMember",
+    "file": "backend/prisma/schema/marketing.prisma",
+    "domain": "marketing",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Marketing & Omni-CRM Team",
+    "rationale": "Domain model MarketingTeamMember supporting marketing workflow in marketing.prisma.",
+    "reachable": true
+  },
+  "MasterUnit": {
+    "model": "MasterUnit",
+    "file": "backend/prisma/schema/master-extension.prisma",
+    "domain": "master",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Master Data Team",
+    "rationale": "Domain model MasterUnit supporting master workflow in master-extension.prisma.",
+    "reachable": true
+  },
+  "WarehouseAccess": {
+    "model": "WarehouseAccess",
+    "file": "backend/prisma/schema/master-extension.prisma",
+    "domain": "master",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Master Data Team",
+    "rationale": "Exact implementation of canonical model WarehouseAccess.",
+    "reachable": true
+  },
+  "MasterKode": {
+    "model": "MasterKode",
+    "file": "backend/prisma/schema/master-extension.prisma",
+    "domain": "master",
+    "lifecycle_classification": "COMPATIBILITY_ADAPTER",
+    "implementation_state": "IMPLEMENTED_ADAPTER",
+    "owner": "Master Data Team",
+    "rationale": "Sequence number compatibility bridge during transition to universal code engine.",
+    "reachable": true
+  },
+  "ProductionPlan": {
+    "model": "ProductionPlan",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model ProductionPlan supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "MaterialRequisition": {
+    "model": "MaterialRequisition",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model MaterialRequisition supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "RequisitionFulfillment": {
+    "model": "RequisitionFulfillment",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model RequisitionFulfillment supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "ProductionStepLog": {
+    "model": "ProductionStepLog",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model ProductionStepLog supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "FinishedGood": {
+    "model": "FinishedGood",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model FinishedGood supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "WorkOrder": {
+    "model": "WorkOrder",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model WorkOrder supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "MaterialReturn": {
+    "model": "MaterialReturn",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model MaterialReturn supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "Machine": {
+    "model": "Machine",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model Machine supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "LaborRate": {
+    "model": "LaborRate",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model LaborRate supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "ProductionSchedule": {
+    "model": "ProductionSchedule",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model ProductionSchedule supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "ProductionStepDetail": {
+    "model": "ProductionStepDetail",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model ProductionStepDetail supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "ProductionLog": {
+    "model": "ProductionLog",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model ProductionLog supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "DeliveryOrder": {
+    "model": "DeliveryOrder",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model DeliveryOrder supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "Shipment": {
+    "model": "Shipment",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model Shipment supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "ShipmentItem": {
+    "model": "ShipmentItem",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model ShipmentItem supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "MaterialRequisitionHeader": {
+    "model": "MaterialRequisitionHeader",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model MaterialRequisitionHeader supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "MaterialRequisitionItem": {
+    "model": "MaterialRequisitionItem",
+    "file": "backend/prisma/schema/production.prisma",
+    "domain": "production",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Production Team",
+    "rationale": "Domain model MaterialRequisitionItem supporting production workflow in production.prisma.",
+    "reachable": true
+  },
+  "QCAudit": {
+    "model": "QCAudit",
+    "file": "backend/prisma/schema/qc.prisma",
+    "domain": "qc",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Quality Control Team",
+    "rationale": "Domain model QCAudit supporting qc workflow in qc.prisma.",
+    "reachable": true
+  },
+  "QCParameter": {
+    "model": "QCParameter",
+    "file": "backend/prisma/schema/qc.prisma",
+    "domain": "qc",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Quality Control Team",
+    "rationale": "Domain model QCParameter supporting qc workflow in qc.prisma.",
+    "reachable": true
+  },
+  "RejectExecution": {
+    "model": "RejectExecution",
+    "file": "backend/prisma/schema/qc.prisma",
+    "domain": "qc",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Quality Control Team",
+    "rationale": "Domain model RejectExecution supporting qc workflow in qc.prisma.",
+    "reachable": true
+  },
+  "QCChecklist": {
+    "model": "QCChecklist",
+    "file": "backend/prisma/schema/qc.prisma",
+    "domain": "qc",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Quality Control Team",
+    "rationale": "Domain model QCChecklist supporting qc workflow in qc.prisma.",
+    "reachable": true
+  },
+  "COPQRecord": {
+    "model": "COPQRecord",
+    "file": "backend/prisma/schema/qc.prisma",
+    "domain": "qc",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Quality Control Team",
+    "rationale": "Domain model COPQRecord supporting qc workflow in qc.prisma.",
+    "reachable": true
+  },
+  "AuditEscalation": {
+    "model": "AuditEscalation",
+    "file": "backend/prisma/schema/qc.prisma",
+    "domain": "qc",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Quality Control Team",
+    "rationale": "Domain model AuditEscalation supporting qc workflow in qc.prisma.",
+    "reachable": true
+  },
+  "RndStaff": {
+    "model": "RndStaff",
+    "file": "backend/prisma/schema/rnd.prisma",
+    "domain": "rnd",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "R&D Team",
+    "rationale": "Domain model RndStaff supporting rnd workflow in rnd.prisma.",
+    "reachable": true
+  },
+  "SampleRequest": {
+    "model": "SampleRequest",
+    "file": "backend/prisma/schema/rnd.prisma",
+    "domain": "rnd",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "R&D Team",
+    "rationale": "Domain model SampleRequest supporting rnd workflow in rnd.prisma.",
+    "reachable": true
+  },
+  "SampleStageLog": {
+    "model": "SampleStageLog",
+    "file": "backend/prisma/schema/rnd.prisma",
+    "domain": "rnd",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "R&D Team",
+    "rationale": "Domain model SampleStageLog supporting rnd workflow in rnd.prisma.",
+    "reachable": true
+  },
+  "Formula": {
+    "model": "Formula",
+    "file": "backend/prisma/schema/rnd.prisma",
+    "domain": "rnd",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "R&D Team",
+    "rationale": "Domain model Formula supporting rnd workflow in rnd.prisma.",
+    "reachable": true
+  },
+  "FormulaPhase": {
+    "model": "FormulaPhase",
+    "file": "backend/prisma/schema/rnd.prisma",
+    "domain": "rnd",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "R&D Team",
+    "rationale": "Domain model FormulaPhase supporting rnd workflow in rnd.prisma.",
+    "reachable": true
+  },
+  "FormulaItem": {
+    "model": "FormulaItem",
+    "file": "backend/prisma/schema/rnd.prisma",
+    "domain": "rnd",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "R&D Team",
+    "rationale": "Domain model FormulaItem supporting rnd workflow in rnd.prisma.",
+    "reachable": true
+  },
+  "SampleFeedback": {
+    "model": "SampleFeedback",
+    "file": "backend/prisma/schema/rnd.prisma",
+    "domain": "rnd",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "R&D Team",
+    "rationale": "Domain model SampleFeedback supporting rnd workflow in rnd.prisma.",
+    "reachable": true
+  },
+  "BillOfMaterial": {
+    "model": "BillOfMaterial",
+    "file": "backend/prisma/schema/rnd.prisma",
+    "domain": "rnd",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "R&D Team",
+    "rationale": "Domain model BillOfMaterial supporting rnd workflow in rnd.prisma.",
+    "reachable": true
+  },
+  "LabTestResult": {
+    "model": "LabTestResult",
+    "file": "backend/prisma/schema/rnd.prisma",
+    "domain": "rnd",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "R&D Team",
+    "rationale": "Domain model LabTestResult supporting rnd workflow in rnd.prisma.",
+    "reachable": true
+  },
+  "GoodsRequirement": {
+    "model": "GoodsRequirement",
+    "file": "backend/prisma/schema/scm.prisma",
+    "domain": "scm",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Procurement & SCM Team",
+    "rationale": "Domain model GoodsRequirement supporting scm workflow in scm.prisma.",
+    "reachable": true
+  },
+  "GoodsRequirementItem": {
+    "model": "GoodsRequirementItem",
+    "file": "backend/prisma/schema/scm.prisma",
+    "domain": "scm",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Procurement & SCM Team",
+    "rationale": "Domain model GoodsRequirementItem supporting scm workflow in scm.prisma.",
+    "reachable": true
+  },
+  "SystemOverrideLog": {
+    "model": "SystemOverrideLog",
+    "file": "backend/prisma/schema/system.prisma",
+    "domain": "system",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Domain model SystemOverrideLog supporting system workflow in system.prisma.",
+    "reachable": true
+  },
+  "SalesTarget": {
+    "model": "SalesTarget",
+    "file": "backend/prisma/schema/system.prisma",
+    "domain": "system",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Exact implementation of canonical model SalesTarget.",
+    "reachable": true
+  },
+  "SystemConfig": {
+    "model": "SystemConfig",
+    "file": "backend/prisma/schema/system.prisma",
+    "domain": "system",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Domain model SystemConfig supporting system workflow in system.prisma.",
+    "reachable": true
+  },
+  "StateTransitionLog": {
+    "model": "StateTransitionLog",
+    "file": "backend/prisma/schema/system.prisma",
+    "domain": "system",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Domain model StateTransitionLog supporting system workflow in system.prisma.",
+    "reachable": true
+  },
+  "Notification": {
+    "model": "Notification",
+    "file": "backend/prisma/schema/system.prisma",
+    "domain": "system",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Exact implementation of canonical model Notification.",
+    "reachable": true
+  },
+  "SystemSequence": {
+    "model": "SystemSequence",
+    "file": "backend/prisma/schema/system.prisma",
+    "domain": "system",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Domain model SystemSequence supporting system workflow in system.prisma.",
+    "reachable": true
+  },
+  "ErrorLog": {
+    "model": "ErrorLog",
+    "file": "backend/prisma/schema/system.prisma",
+    "domain": "system",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Domain model ErrorLog supporting system workflow in system.prisma.",
+    "reachable": true
+  },
+  "TaskBoard": {
+    "model": "TaskBoard",
+    "file": "backend/prisma/schema/system.prisma",
+    "domain": "system",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Domain model TaskBoard supporting system workflow in system.prisma.",
+    "reachable": true
+  },
+  "TaskItem": {
+    "model": "TaskItem",
+    "file": "backend/prisma/schema/system.prisma",
+    "domain": "system",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Domain model TaskItem supporting system workflow in system.prisma.",
+    "reachable": true
+  },
+  "AutoApproveConfig": {
+    "model": "AutoApproveConfig",
+    "file": "backend/prisma/schema/system.prisma",
+    "domain": "system",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Domain model AutoApproveConfig supporting system workflow in system.prisma.",
+    "reachable": true
+  },
+  "Warehouse": {
+    "model": "Warehouse",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Exact implementation of canonical model Warehouse.",
+    "reachable": true
+  },
+  "WarehouseLocation": {
+    "model": "WarehouseLocation",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model WarehouseLocation supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "MaterialItem": {
+    "model": "MaterialItem",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model MaterialItem supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "MaterialValuation": {
+    "model": "MaterialValuation",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model MaterialValuation supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "Supplier": {
+    "model": "Supplier",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Exact implementation of canonical model Supplier.",
+    "reachable": true
+  },
+  "PurchaseRequest": {
+    "model": "PurchaseRequest",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Exact implementation of canonical model PurchaseRequest.",
+    "reachable": true
+  },
+  "PurchaseRequestItem": {
+    "model": "PurchaseRequestItem",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model PurchaseRequestItem supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "PurchaseOrder": {
+    "model": "PurchaseOrder",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Exact implementation of canonical model PurchaseOrder.",
+    "reachable": true
+  },
+  "PurchaseOrderItem": {
+    "model": "PurchaseOrderItem",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model PurchaseOrderItem supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "WarehouseInbound": {
+    "model": "WarehouseInbound",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model WarehouseInbound supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "PurchaseReturn": {
+    "model": "PurchaseReturn",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Exact implementation of canonical model PurchaseReturn.",
+    "reachable": true
+  },
+  "PurchaseReturnItem": {
+    "model": "PurchaseReturnItem",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model PurchaseReturnItem supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "InboundItem": {
+    "model": "InboundItem",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model InboundItem supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "MasterCategory": {
+    "model": "MasterCategory",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model MasterCategory supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "InventoryTransaction": {
+    "model": "InventoryTransaction",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model InventoryTransaction supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "MaterialInventory": {
+    "model": "MaterialInventory",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model MaterialInventory supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "TransferOrder": {
+    "model": "TransferOrder",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model TransferOrder supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "TransferOrderItem": {
+    "model": "TransferOrderItem",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model TransferOrderItem supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "StockOpname": {
+    "model": "StockOpname",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "CANONICAL",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Exact implementation of canonical model StockOpname.",
+    "reachable": true
+  },
+  "StockOpnameItem": {
+    "model": "StockOpnameItem",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model StockOpnameItem supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "EmergencyPurchaseRequest": {
+    "model": "EmergencyPurchaseRequest",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model EmergencyPurchaseRequest supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "ProductSupplierHistory": {
+    "model": "ProductSupplierHistory",
+    "file": "backend/prisma/schema/warehouse.prisma",
+    "domain": "warehouse",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Warehouse Team",
+    "rationale": "Domain model ProductSupplierHistory supporting warehouse workflow in warehouse.prisma.",
+    "reachable": true
+  },
+  "Article": {
+    "model": "Article",
+    "file": "backend/prisma/schema/website.prisma",
+    "domain": "website",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Digital Marketing Team",
+    "rationale": "Domain model Article supporting website workflow in website.prisma.",
+    "reachable": true
+  },
+  "WebsiteProduct": {
+    "model": "WebsiteProduct",
+    "file": "backend/prisma/schema/website.prisma",
+    "domain": "website",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Digital Marketing Team",
+    "rationale": "Domain model WebsiteProduct supporting website workflow in website.prisma.",
+    "reachable": true
+  },
+  "LandingPageVisit": {
+    "model": "LandingPageVisit",
+    "file": "backend/prisma/schema/website.prisma",
+    "domain": "website",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Digital Marketing Team",
+    "rationale": "Domain model LandingPageVisit supporting website workflow in website.prisma.",
+    "reachable": true
+  },
+  "LandingPageConversion": {
+    "model": "LandingPageConversion",
+    "file": "backend/prisma/schema/website.prisma",
+    "domain": "website",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Digital Marketing Team",
+    "rationale": "Domain model LandingPageConversion supporting website workflow in website.prisma.",
+    "reachable": true
+  }
+}

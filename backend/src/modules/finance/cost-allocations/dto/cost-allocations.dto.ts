@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString, IsOptional, IsIn, IsDateString, Min } from 'class-validator';
+import {
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsIn,
+  IsDateString,
+  Min,
+} from 'class-validator';
 
 export class CreateCostAllocationDto {
   @ApiProperty({ example: '2026-09-30' })
@@ -19,7 +26,11 @@ export class CreateCostAllocationDto {
   @IsString()
   toCostCenter: string;
 
-  @ApiProperty({ example: 'DIRECT', enum: ['DIRECT', 'STEP_DOWN', 'RECIPROCAL'], required: false })
+  @ApiProperty({
+    example: 'DIRECT',
+    enum: ['DIRECT', 'STEP_DOWN', 'RECIPROCAL'],
+    required: false,
+  })
   @IsOptional()
   @IsIn(['DIRECT', 'STEP_DOWN', 'RECIPROCAL'])
   allocationMethod?: 'DIRECT' | 'STEP_DOWN' | 'RECIPROCAL';

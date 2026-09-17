@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
 import { SoDViolationException } from '../../../common/exceptions/api-exception';
@@ -22,7 +26,12 @@ export class BankReconciliationsService {
       where,
       include: {
         bankAccount: {
-          select: { id: true, accountCode: true, bankName: true, accountNumber: true },
+          select: {
+            id: true,
+            accountCode: true,
+            bankName: true,
+            accountNumber: true,
+          },
         },
       },
       orderBy: { periodEnd: 'desc' },
@@ -37,7 +46,8 @@ export class BankReconciliationsService {
         reconciler: { select: { id: true, fullName: true, email: true } },
       },
     });
-    if (!recon) throw new NotFoundException(`Bank reconciliation ${id} not found`);
+    if (!recon)
+      throw new NotFoundException(`Bank reconciliation ${id} not found`);
     return recon;
   }
 
@@ -60,7 +70,9 @@ export class BankReconciliationsService {
       where: { id: dto.bankAccountId },
     });
     if (!account) {
-      throw new NotFoundException(`Bank account ${dto.bankAccountId} not found`);
+      throw new NotFoundException(
+        `Bank account ${dto.bankAccountId} not found`,
+      );
     }
 
     const periodStart = new Date(dto.periodStart);
@@ -77,10 +89,17 @@ export class BankReconciliationsService {
       },
     });
     const deposit = txs
-      .filter((t) => t.transactionType === 'DEPOSIT' || t.transactionType === 'ADJUSTMENT')
+      .filter(
+        (t) =>
+          t.transactionType === 'DEPOSIT' || t.transactionType === 'ADJUSTMENT',
+      )
       .reduce((s, t) => s + Number(t.amount), 0);
     const withdrawal = txs
-      .filter((t) => t.transactionType === 'WITHDRAWAL' || t.transactionType === 'TRANSFER')
+      .filter(
+        (t) =>
+          t.transactionType === 'WITHDRAWAL' ||
+          t.transactionType === 'TRANSFER',
+      )
       .reduce((s, t) => s + Number(t.amount), 0);
     const bookBalance = deposit - withdrawal;
     const difference = dto.statementBalance - bookBalance;
@@ -106,7 +125,8 @@ export class BankReconciliationsService {
     const recon = await this.prisma.bankReconciliation.findUnique({
       where: { id },
     });
-    if (!recon) throw new NotFoundException(`Bank reconciliation ${id} not found`);
+    if (!recon)
+      throw new NotFoundException(`Bank reconciliation ${id} not found`);
     if (recon.status === 'RECONCILED') {
       throw new BadRequestException('Already finalized');
     }
@@ -131,7 +151,9 @@ export class BankReconciliationsService {
           status: 'RECONCILED',
           reconciledBy: userId,
           reconciledAt: new Date(),
-          notes: dto.notes ? `${recon.notes ?? ''} | finalize: ${dto.notes}` : recon.notes,
+          notes: dto.notes
+            ? `${recon.notes ?? ''} | finalize: ${dto.notes}`
+            : recon.notes,
         },
       });
 
@@ -160,7 +182,8 @@ export class BankReconciliationsService {
     const recon = await this.prisma.bankReconciliation.findUnique({
       where: { id },
     });
-    if (!recon) throw new NotFoundException(`Bank reconciliation ${id} not found`);
+    if (!recon)
+      throw new NotFoundException(`Bank reconciliation ${id} not found`);
     if (recon.status !== 'RECONCILED') {
       throw new BadRequestException('Not yet finalized');
     }

@@ -154,6 +154,51 @@ describe('CanonicalMarketingService', () => {
     );
   });
 
+  it('scopes Rahmat to Zarkasi, Gusti, and himself', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTask.findMany.mockResolvedValue([task()]);
+    prisma.marketingTask.count.mockResolvedValue(1);
+    const service = new CanonicalMarketingService(prisma);
+    const rahmatViewer = { id: 'u-rahmat', email: 'rahmat@nexerp.id', roles: ['DIGIMAR'] };
+
+    await service.listTasks(rahmatViewer, { page: 1, limit: 50 });
+
+    expect(prisma.marketingTask.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([
+            { ownerId: 'u-rahmat' },
+            { assigneeId: 'u-rahmat' },
+            expect.objectContaining({
+              pic: expect.objectContaining({
+                OR: expect.arrayContaining([
+                  { email: { contains: 'zarkasi', mode: 'insensitive' } },
+                  { fullName: { contains: 'gusti', mode: 'insensitive' } },
+                ]),
+              }),
+            }),
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it('allows Revita as Manager to see all tasks (unscoped where)', async () => {
+    const prisma = prismaMock();
+    prisma.marketingTask.findMany.mockResolvedValue([task()]);
+    prisma.marketingTask.count.mockResolvedValue(1);
+    const service = new CanonicalMarketingService(prisma);
+    const revitaViewer = { id: 'u-revita', email: 'revita@nexerp.id', roles: ['MARKETING', 'DIGIMAR'] };
+
+    await service.listTasks(revitaViewer, { page: 1, limit: 50 });
+
+    expect(prisma.marketingTask.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {},
+      }),
+    );
+  });
+
   it('returns 404 for an object outside member scope', async () => {
     const prisma = prismaMock();
     prisma.marketingTask.findFirst.mockResolvedValue(null);
@@ -212,7 +257,12 @@ describe('CanonicalMarketingService', () => {
   it('requires edit rights before uploading an attachment', async () => {
     const prisma = prismaMock();
     prisma.marketingTask.findFirst.mockResolvedValue(
-      task({ ownerId: 'owner', assigneeId: 'other', picId: 'other', assignedById: 'member' }),
+      task({
+        ownerId: 'owner',
+        assigneeId: 'other',
+        picId: 'other',
+        assignedById: 'member',
+      }),
     );
     const service = new CanonicalMarketingService(prisma);
 
@@ -343,9 +393,9 @@ describe('CanonicalMarketingService', () => {
       createdAt: new Date(),
     });
     const service = new CanonicalMarketingService(prisma);
-    await expect(service.deleteComment(member, 'comment-1')).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(
+      service.deleteComment(member, 'comment-1'),
+    ).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.marketingTaskComment.delete).not.toHaveBeenCalled();
   });
 
@@ -374,9 +424,9 @@ describe('CanonicalMarketingService', () => {
     const prisma = prismaMock();
     prisma.marketingTask.findFirst.mockResolvedValue(null);
     const service = new CanonicalMarketingService(prisma);
-    await expect(service.listAttachments(member, 'hidden')).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(
+      service.listAttachments(member, 'hidden'),
+    ).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.marketingTaskAttachment.findMany).not.toHaveBeenCalled();
   });
 
@@ -445,9 +495,9 @@ describe('CanonicalMarketingService', () => {
       createdAt: new Date(),
     });
     const service = new CanonicalMarketingService(prisma);
-    await expect(service.deleteAttachment(member, 'att-1')).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(
+      service.deleteAttachment(member, 'att-1'),
+    ).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.marketingTaskAttachment.delete).not.toHaveBeenCalled();
   });
 
@@ -651,4 +701,3 @@ describe('CanonicalMarketingService', () => {
     });
   });
 });
-

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import {
   TrendingUp,
   BarChart3,
@@ -57,12 +58,12 @@ export default function ExecutiveDashboardClient() {
             Peran aktif Anda saat ini adalah: <strong>{user?.roles?.join(", ") || "Staff"}</strong>.
           </p>
           <div className="pt-2">
-            <a
+            <Link
               href="/marketing/management-task/overview"
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-xs transition"
             >
               Buka Digital Marketing Workspace
-            </a>
+            </Link>
           </div>
         </div>
       </div>

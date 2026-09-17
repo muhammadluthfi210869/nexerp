@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { CreateUnitDto, UpdateUnitDto } from '../dto/unit.dto';
 
@@ -23,7 +27,8 @@ export class UnitsService {
     const existing = await this.prisma.masterUnit.findUnique({
       where: { code: dto.code },
     });
-    if (existing) throw new ConflictException(`Unit code "${dto.code}" already exists`);
+    if (existing)
+      throw new ConflictException(`Unit code "${dto.code}" already exists`);
     return this.prisma.masterUnit.create({
       data: {
         code: dto.code.toUpperCase(),

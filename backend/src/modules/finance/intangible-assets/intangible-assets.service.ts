@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 /**
@@ -19,7 +23,9 @@ export class IntangibleAssetsService {
   }
 
   async findOne(id: string) {
-    const asset = await this.prisma.intangibleAsset.findUnique({ where: { id } });
+    const asset = await this.prisma.intangibleAsset.findUnique({
+      where: { id },
+    });
     if (!asset) throw new NotFoundException(`Intangible asset ${id} not found`);
     return asset;
   }
@@ -58,7 +64,10 @@ export class IntangibleAssetsService {
       const existing = await this.prisma.intangibleAsset.findUnique({
         where: { assetNumber },
       });
-      if (existing) throw new BadRequestException(`assetNumber ${assetNumber} already exists`);
+      if (existing)
+        throw new BadRequestException(
+          `assetNumber ${assetNumber} already exists`,
+        );
     }
 
     return this.prisma.intangibleAsset.create({
@@ -78,7 +87,9 @@ export class IntangibleAssetsService {
    * Calculate monthly amortization and remaining book value.
    */
   async getAmortizationSchedule(id: string) {
-    const asset = await this.prisma.intangibleAsset.findUnique({ where: { id } });
+    const asset = await this.prisma.intangibleAsset.findUnique({
+      where: { id },
+    });
     if (!asset) throw new NotFoundException(`Intangible asset ${id} not found`);
 
     const monthly = Number(asset.acquisitionCost) / asset.amortizationPeriod;
@@ -96,7 +107,8 @@ export class IntangibleAssetsService {
         period: period.toISOString().slice(0, 7),
         monthlyAmount: Math.round(monthly * 100) / 100,
         accumulated: Math.round(accumulated * 100) / 100,
-        bookValue: Math.round((Number(asset.acquisitionCost) - accumulated) * 100) / 100,
+        bookValue:
+          Math.round((Number(asset.acquisitionCost) - accumulated) * 100) / 100,
       });
     }
 
@@ -115,10 +127,14 @@ export class IntangibleAssetsService {
    * Mark intangible asset as fully amortized / retired.
    */
   async retire(_userId: string, id: string) {
-    const asset = await this.prisma.intangibleAsset.findUnique({ where: { id } });
+    const asset = await this.prisma.intangibleAsset.findUnique({
+      where: { id },
+    });
     if (!asset) throw new NotFoundException(`Intangible asset ${id} not found`);
     if (asset.status !== 'ACTIVE') {
-      throw new BadRequestException(`Cannot retire asset in status ${asset.status}`);
+      throw new BadRequestException(
+        `Cannot retire asset in status ${asset.status}`,
+      );
     }
     return this.prisma.intangibleAsset.update({
       where: { id },

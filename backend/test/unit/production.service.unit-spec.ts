@@ -4,6 +4,7 @@ import { PrismaService } from '../../src/prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IdGeneratorService } from '../../src/modules/system/id-generator.service';
 import { LegalityService } from '../../src/modules/legality/legality.service';
+import { StateTransitionService } from '../../src/modules/system/state-transition.service';
 import { TestModule } from '../utilities/test-module';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 
@@ -37,6 +38,13 @@ describe('ProductionService — Unit', () => {
         { provide: EventEmitter2, useValue: eventEmitter },
         { provide: IdGeneratorService, useValue: idGenerator },
         { provide: LegalityService, useValue: legalityService },
+        {
+          provide: StateTransitionService,
+          useValue: {
+            validateTransition: jest.fn(),
+            executeTransition: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

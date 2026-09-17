@@ -1,0 +1,42 @@
+{
+  "url": "/formulation-manage",
+  "type": "list",
+  "file": "formulation_manage.html",
+  "title": "GsERP KIL - Kelola Formulasi",
+  "forms": [],
+  "tables": [
+    {
+      "index": 1,
+      "headers": [
+        "#",
+        "Kode",
+        "Tanggal",
+        "Nama Produk",
+        "Rev",
+        "Netto",
+        "Pelanggan",
+        "BusDev",
+        "Formulator",
+        "Status",
+        "#"
+      ],
+      "rowCount": 319
+    }
+  ],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [
+    "https://kil.gserp.id/formulation-manage/get-goods",
+    "https://kil.gserp.id/formulation-manage/get-goods-detail",
+    "https://kil.gserp.id/formulation-manage/add-cart",
+    "https://kil.gserp.id/formulation-manage/clear-cart",
+    "https://kil.gserp.id/formulation-manage/delete-cart",
+    "https://kil.gserp.id/formulation-manage/get-cart",
+    "https://kil.gserp.id/formulation-manage/detail-sales-sample",
+    "https://kil.gserp.id/formulation-manage/detail",
+    "https://kil.gserp.id/formulation-manage/detail-sample",
+    "https://kil.gserp.id/formulation-manage/assign-formulator"
+  ],
+  "notes": [],
+  "addUrl": "https://kil.gserp.id/formulation-manage/2432/create"
+}

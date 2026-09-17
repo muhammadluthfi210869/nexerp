@@ -23,7 +23,8 @@ export class BankTransactionsController {
 
   @Get()
   @ApiOperation({
-    summary: 'List bank transactions (filter by account, date range, type, reconciled status)',
+    summary:
+      'List bank transactions (filter by account, date range, type, reconciled status)',
   })
   findAll(
     @Query('bankAccountId') bankAccountId?: string,
@@ -38,12 +39,16 @@ export class BankTransactionsController {
       to: to ? new Date(to) : undefined,
       transactionType: transactionType as any,
       reconciled:
-        reconciled === undefined ? undefined : reconciled === 'true' || reconciled === '1',
+        reconciled === undefined
+          ? undefined
+          : reconciled === 'true' || reconciled === '1',
     });
   }
 
   @Get('running-balance')
-  @ApiOperation({ summary: 'Get running balance for a bank account over a date range' })
+  @ApiOperation({
+    summary: 'Get running balance for a bank account over a date range',
+  })
   runningBalance(
     @Query('bankAccountId') bankAccountId: string,
     @Query('from') from?: string,
@@ -64,14 +69,18 @@ export class BankTransactionsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Record manual bank transaction (fees/interest/adjustment)' })
+  @ApiOperation({
+    summary: 'Record manual bank transaction (fees/interest/adjustment)',
+  })
   create(@Req() req: any, @Body() dto: CreateBankTransactionDto) {
     const userId = req.user?.id;
     return this.service.create(userId, dto);
   }
 
   @Post(':id/reconcile')
-  @ApiOperation({ summary: 'Mark transaction as reconciled against bank statement' })
+  @ApiOperation({
+    summary: 'Mark transaction as reconciled against bank statement',
+  })
   reconcile(
     @Req() req: any,
     @Param('id') id: string,

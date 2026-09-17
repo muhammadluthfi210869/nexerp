@@ -1,7 +1,15 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
-type OwnerType = 'COMPANY' | 'CONSIGNMENT' | 'CUSTOMER_OWNED' | 'SUPPLIER_OWNED';
+type OwnerType =
+  | 'COMPANY'
+  | 'CONSIGNMENT'
+  | 'CUSTOMER_OWNED'
+  | 'SUPPLIER_OWNED';
 
 /**
  * InventoryOwnership = Tracks stock per (material, warehouse, owner).
@@ -28,8 +36,11 @@ export class InventoryOwnershipsService {
   }
 
   async findOne(id: string) {
-    const own = await this.prisma.inventoryOwnership.findUnique({ where: { id } });
-    if (!own) throw new NotFoundException(`Inventory ownership ${id} not found`);
+    const own = await this.prisma.inventoryOwnership.findUnique({
+      where: { id },
+    });
+    if (!own)
+      throw new NotFoundException(`Inventory ownership ${id} not found`);
     return own;
   }
 
@@ -47,7 +58,11 @@ export class InventoryOwnershipsService {
       unitCost?: number;
     },
   ) {
-    if (!['COMPANY', 'CONSIGNMENT', 'CUSTOMER_OWNED', 'SUPPLIER_OWNED'].includes(dto.ownerType)) {
+    if (
+      !['COMPANY', 'CONSIGNMENT', 'CUSTOMER_OWNED', 'SUPPLIER_OWNED'].includes(
+        dto.ownerType,
+      )
+    ) {
       throw new BadRequestException(`Invalid ownerType: ${dto.ownerType}`);
     }
     if (dto.ownerType === 'COMPANY' && dto.ownerId) {
@@ -66,7 +81,7 @@ export class InventoryOwnershipsService {
           materialId: dto.materialId,
           warehouseId: dto.warehouseId,
           ownerType: dto.ownerType,
-          ownerId: dto.ownerId ?? null as any,
+          ownerId: dto.ownerId ?? (null as any),
         },
       },
       create: {
@@ -87,12 +102,19 @@ export class InventoryOwnershipsService {
   /**
    * Adjust quantity (e.g., stock correction, return, write-off).
    */
-  async adjustQuantity(_userId: string, id: string, dto: {
-    delta: number;
-    reason?: string;
-  }) {
-    const own = await this.prisma.inventoryOwnership.findUnique({ where: { id } });
-    if (!own) throw new NotFoundException(`Inventory ownership ${id} not found`);
+  async adjustQuantity(
+    _userId: string,
+    id: string,
+    dto: {
+      delta: number;
+      reason?: string;
+    },
+  ) {
+    const own = await this.prisma.inventoryOwnership.findUnique({
+      where: { id },
+    });
+    if (!own)
+      throw new NotFoundException(`Inventory ownership ${id} not found`);
     const newQty = Number(own.quantity) + dto.delta;
     if (newQty < 0) {
       throw new BadRequestException(
@@ -111,18 +133,26 @@ export class InventoryOwnershipsService {
   /**
    * Transfer ownership to another owner (e.g., customer returns consign stock → COMPANY).
    */
-  async transferOwnership(_userId: string, id: string, dto: {
-    newOwnerType: OwnerType;
-    newOwnerId?: string;
-  }) {
-    const own = await this.prisma.inventoryOwnership.findUnique({ where: { id } });
-    if (!own) throw new NotFoundException(`Inventory ownership ${id} not found`);
+  async transferOwnership(
+    _userId: string,
+    id: string,
+    dto: {
+      newOwnerType: OwnerType;
+      newOwnerId?: string;
+    },
+  ) {
+    const own = await this.prisma.inventoryOwnership.findUnique({
+      where: { id },
+    });
+    if (!own)
+      throw new NotFoundException(`Inventory ownership ${id} not found`);
 
     return this.prisma.inventoryOwnership.update({
       where: { id },
       data: {
         ownerType: dto.newOwnerType,
-        ownerId: dto.newOwnerType === 'COMPANY' ? null : dto.newOwnerId ?? null,
+        ownerId:
+          dto.newOwnerType === 'COMPANY' ? null : (dto.newOwnerId ?? null),
       },
     });
   }

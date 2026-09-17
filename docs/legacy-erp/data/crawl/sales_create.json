@@ -1,0 +1,339 @@
+{
+  "url": "/sales/create",
+  "http_status": 200,
+  "title": "GsERP KIL - Penjualan",
+  "form_fields": [
+    {
+      "name": "csrf_gs",
+      "type": "hidden",
+      "required": false,
+      "id": null,
+      "options": null
+    },
+    {
+      "name": "date",
+      "type": "text",
+      "required": false,
+      "id": "date",
+      "options": null
+    },
+    {
+      "name": "date_due",
+      "type": "text",
+      "required": false,
+      "id": "date_due",
+      "options": null
+    },
+    {
+      "name": "brand",
+      "type": "text",
+      "required": false,
+      "id": "brand",
+      "options": null
+    },
+    {
+      "name": "product_name",
+      "type": "text",
+      "required": false,
+      "id": "product_name",
+      "options": null
+    },
+    {
+      "name": "netto_packaging",
+      "type": "text",
+      "required": false,
+      "id": "netto_packaging",
+      "options": null
+    },
+    {
+      "name": "goods_units_id",
+      "type": "hidden",
+      "required": false,
+      "id": "goods_units_id",
+      "options": null
+    },
+    {
+      "name": "netto_bpom",
+      "type": "text",
+      "required": false,
+      "id": "netto_bpom",
+      "options": null
+    },
+    {
+      "name": "primary_image",
+      "type": "file",
+      "required": false,
+      "id": "primary_image",
+      "options": null
+    },
+    {
+      "name": "secondary_image",
+      "type": "file",
+      "required": false,
+      "id": "secondary_image",
+      "options": null
+    },
+    {
+      "name": "primary_image_data",
+      "type": "hidden",
+      "required": false,
+      "id": "primary_image_data",
+      "options": null
+    },
+    {
+      "name": "primary_image_temp",
+      "type": "hidden",
+      "required": false,
+      "id": "primary_image_temp",
+      "options": null
+    },
+    {
+      "name": "secondary_image_data",
+      "type": "hidden",
+      "required": false,
+      "id": "secondary_image_data",
+      "options": null
+    },
+    {
+      "name": "secondary_image_temp",
+      "type": "hidden",
+      "required": false,
+      "id": "secondary_image_temp",
+      "options": null
+    },
+    {
+      "name": "goods_qty",
+      "type": "text",
+      "required": false,
+      "id": "goods_qty",
+      "options": null
+    },
+    {
+      "name": "goods_price",
+      "type": "text",
+      "required": false,
+      "id": "goods_price",
+      "options": null
+    },
+    {
+      "name": "goods_total",
+      "type": "text",
+      "required": false,
+      "id": "goods_total",
+      "options": null
+    },
+    {
+      "name": "service_name",
+      "type": "text",
+      "required": false,
+      "id": "service_name",
+      "options": null
+    },
+    {
+      "name": "service_price",
+      "type": "text",
+      "required": false,
+      "id": "service_price",
+      "options": null
+    },
+    {
+      "name": "service_qty",
+      "type": "text",
+      "required": false,
+      "id": "service_qty",
+      "options": null
+    },
+    {
+      "name": "service_total",
+      "type": "text",
+      "required": false,
+      "id": "service_total",
+      "options": null
+    },
+    {
+      "name": "discount",
+      "type": "text",
+      "required": false,
+      "id": "discount",
+      "options": null
+    },
+    {
+      "name": "tax_percent",
+      "type": "text",
+      "required": false,
+      "id": "tax_percent",
+      "options": null
+    },
+    {
+      "name": "customer",
+      "type": "select",
+      "required": false,
+      "id": "customer",
+      "options": [
+        {
+          "value": "",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "sales_category",
+      "type": "select",
+      "required": false,
+      "id": "sales_category",
+      "options": [
+        {
+          "value": "",
+          "text": ""
+        },
+        {
+          "value": "1",
+          "text": "Produk Baru"
+        },
+        {
+          "value": "2",
+          "text": "Produk RO"
+        }
+      ]
+    },
+    {
+      "name": "cart_sales_samples",
+      "type": "select",
+      "required": false,
+      "id": "cart_sales_samples",
+      "options": [
+        {
+          "value": "",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "formulations",
+      "type": "select",
+      "required": false,
+      "id": "formulations",
+      "options": [
+        {
+          "value": "",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "price_reference",
+      "type": "select",
+      "required": false,
+      "id": "price_reference",
+      "options": [
+        {
+          "value": "",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "note",
+      "type": "textarea",
+      "required": false,
+      "id": "note",
+      "options": ""
+    }
+  ],
+  "tables": [
+    {
+      "headers": [
+        "Subtotal:",
+        "Rp"
+      ],
+      "rows": 5
+    },
+    {
+      "headers": [
+        "MOQ ' + (k + 1) + '",
+        "Qty: ' + formatNumber(moq.qty, 0) + '",
+        "Rp ' + formatNumber(moq.price, 2) + '"
+      ],
+      "rows": 1
+    }
+  ],
+  "actions": [
+    {
+      "text": "Tambah Barang",
+      "type": "button"
+    },
+    {
+      "text": "Tambah Jasa",
+      "type": "button"
+    },
+    {
+      "text": "Kembali",
+      "type": "button"
+    },
+    {
+      "text": "Simpan",
+      "type": "submit"
+    },
+    {
+      "text": "&times;",
+      "type": "button"
+    },
+    {
+      "text": "Tutup",
+      "type": "button"
+    },
+    {
+      "text": "' + '",
+      "type": "button"
+    },
+    {
+      "text": "Akun Saya",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account"
+    }
+  ],
+  "ajax_calls": [
+    "https://kil.gserp.id/sales/get-sales-samples",
+    "https://kil.gserp.id/sales/upload-image",
+    "https://kil.gserp.id/sales/detail",
+    "https://kil.gserp.id/sales/get-sales-sample-detail",
+    "https://kil.gserp.id/sales/get-price-reference",
+    "https://kil.gserp.id/sales/get-goods-cart",
+    "https://kil.gserp.id/sales/add-goods-cart",
+    "https://kil.gserp.id/sales/delete-goods-cart",
+    "https://kil.gserp.id/sales/get-service-cart",
+    "https://kil.gserp.id/sales/add-service-cart",
+    "https://kil.gserp.id/sales/delete-service-cart",
+    "https://kil.gserp.id/sales/clear-cart",
+    "https://kil.gserp.id/sales/set-session-values",
+    "https://kil.gserp.id/purchase-approval/badge",
+    "https://kil.gserp.id/purchase-return-approval/badge",
+    "https://kil.gserp.id/sales-sample-approval/badge",
+    "https://kil.gserp.id/sales-approval/badge",
+    "https://kil.gserp.id/sales-return-approval/badge",
+    "https://kil.gserp.id/request-cogs-approval/badge",
+    "https://kil.gserp.id/purchase-request-approval/badge",
+    "https://kil.gserp.id/goods-request-approval/badge",
+    "https://kil.gserp.id/checklist-progress/badge",
+    "https://kil.gserp.id/purchase/badge",
+    "https://kil.gserp.id/purchase-invoice/badge",
+    "https://kil.gserp.id/purchase-return/badge",
+    "https://kil.gserp.id/purchase-down-payment/badge",
+    "https://kil.gserp.id/purchase-payment/badge",
+    "https://kil.gserp.id/need-for-goods/badge",
+    "https://kil.gserp.id/goods-request/badge",
+    "https://kil.gserp.id/purchase-request/badge",
+    "https://kil.gserp.id/purchase-in/badge",
+    "https://kil.gserp.id/sales-return-in/badge",
+    "https://kil.gserp.id/delivery-out/badge",
+    "https://kil.gserp.id/purchase-return-out/badge",
+    "https://kil.gserp.id/sales-sample/badge",
+    "https://kil.gserp.id/sales-sample-payment/badge",
+    "https://kil.gserp.id/sales/badge",
+    "https://kil.gserp.id/sales-return/badge",
+    "https://kil.gserp.id/sales-down-payment/badge",
+    "https://kil.gserp.id/sales-invoice/badge"
+  ],
+  "modals": [],
+  "print_pattern": null,
+  "notes": "csrf_gs, DataTables, select2, rich-editor, daterangepicker"
+}

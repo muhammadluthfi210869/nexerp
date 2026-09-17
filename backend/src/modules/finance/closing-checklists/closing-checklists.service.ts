@@ -1,11 +1,19 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 @Injectable()
 export class ClosingChecklistsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(filter?: { period?: string; department?: string; completed?: boolean }) {
+  async findAll(filter?: {
+    period?: string;
+    department?: string;
+    completed?: boolean;
+  }) {
     const where: any = {};
     if (filter?.period) {
       const periodStart = new Date(filter.period);
@@ -23,8 +31,11 @@ export class ClosingChecklistsService {
   }
 
   async findOne(id: string) {
-    const item = await this.prisma.closingChecklist.findUnique({ where: { id } });
-    if (!item) throw new NotFoundException(`Closing checklist item ${id} not found`);
+    const item = await this.prisma.closingChecklist.findUnique({
+      where: { id },
+    });
+    if (!item)
+      throw new NotFoundException(`Closing checklist item ${id} not found`);
     return item;
   }
 
@@ -40,23 +51,79 @@ export class ClosingChecklistsService {
 
     // Standard ERP closing checklist template
     const template = [
-      { department: 'Finance', item: 'Reconcile all bank accounts', category: 'Reconciliation' },
+      {
+        department: 'Finance',
+        item: 'Reconcile all bank accounts',
+        category: 'Reconciliation',
+      },
       { department: 'Finance', item: 'Post all AP payments', category: 'AP' },
       { department: 'Finance', item: 'Post all AR receipts', category: 'AR' },
-      { department: 'Finance', item: 'Record PPN payable / receivable', category: 'Tax' },
-      { department: 'Finance', item: 'Run depreciation schedule', category: 'FixedAssets' },
-      { department: 'Finance', item: 'Post adjusting journals (accruals, deferrals)', category: 'Adjustments' },
-      { department: 'Finance', item: 'Review trial balance', category: 'Review' },
-      { department: 'Finance', item: 'Generate financial statements', category: 'Reporting' },
+      {
+        department: 'Finance',
+        item: 'Record PPN payable / receivable',
+        category: 'Tax',
+      },
+      {
+        department: 'Finance',
+        item: 'Run depreciation schedule',
+        category: 'FixedAssets',
+      },
+      {
+        department: 'Finance',
+        item: 'Post adjusting journals (accruals, deferrals)',
+        category: 'Adjustments',
+      },
+      {
+        department: 'Finance',
+        item: 'Review trial balance',
+        category: 'Review',
+      },
+      {
+        department: 'Finance',
+        item: 'Generate financial statements',
+        category: 'Reporting',
+      },
       { department: 'Finance', item: 'Lock GL period', category: 'Close' },
-      { department: 'Sales', item: 'Confirm all sales invoices posted', category: 'AR' },
-      { department: 'Sales', item: 'Confirm all collections received', category: 'AR' },
-      { department: 'Procurement', item: 'Confirm all purchase bills posted', category: 'AP' },
-      { department: 'Procurement', item: 'Confirm all supplier payments made', category: 'AP' },
-      { department: 'Warehouse', item: 'Stock opname for high-value items', category: 'Inventory' },
-      { department: 'Warehouse', item: 'Reconcile inventory GL vs warehouse', category: 'Inventory' },
-      { department: 'Production', item: 'Close all open production orders', category: 'Production' },
-      { department: 'Production', item: 'Record WIP variance', category: 'Production' },
+      {
+        department: 'Sales',
+        item: 'Confirm all sales invoices posted',
+        category: 'AR',
+      },
+      {
+        department: 'Sales',
+        item: 'Confirm all collections received',
+        category: 'AR',
+      },
+      {
+        department: 'Procurement',
+        item: 'Confirm all purchase bills posted',
+        category: 'AP',
+      },
+      {
+        department: 'Procurement',
+        item: 'Confirm all supplier payments made',
+        category: 'AP',
+      },
+      {
+        department: 'Warehouse',
+        item: 'Stock opname for high-value items',
+        category: 'Inventory',
+      },
+      {
+        department: 'Warehouse',
+        item: 'Reconcile inventory GL vs warehouse',
+        category: 'Inventory',
+      },
+      {
+        department: 'Production',
+        item: 'Close all open production orders',
+        category: 'Production',
+      },
+      {
+        department: 'Production',
+        item: 'Record WIP variance',
+        category: 'Production',
+      },
       { department: 'HR', item: 'Post payroll accrual', category: 'HR' },
     ];
 
@@ -70,7 +137,9 @@ export class ClosingChecklistsService {
       },
     });
     if (existing > 0) {
-      throw new BadRequestException(`Closing checklist for ${dto.period} already generated`);
+      throw new BadRequestException(
+        `Closing checklist for ${dto.period} already generated`,
+      );
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -90,8 +159,11 @@ export class ClosingChecklistsService {
    * Mark a checklist item as completed.
    */
   async completeItem(userId: string, id: string, dto: { notes?: string }) {
-    const item = await this.prisma.closingChecklist.findUnique({ where: { id } });
-    if (!item) throw new NotFoundException(`Closing checklist item ${id} not found`);
+    const item = await this.prisma.closingChecklist.findUnique({
+      where: { id },
+    });
+    if (!item)
+      throw new NotFoundException(`Closing checklist item ${id} not found`);
     if (item.completed) {
       throw new BadRequestException('Already completed');
     }
@@ -111,8 +183,11 @@ export class ClosingChecklistsService {
    * Reopen a completed item (admin correction).
    */
   async reopenItem(_userId: string, id: string) {
-    const item = await this.prisma.closingChecklist.findUnique({ where: { id } });
-    if (!item) throw new NotFoundException(`Closing checklist item ${id} not found`);
+    const item = await this.prisma.closingChecklist.findUnique({
+      where: { id },
+    });
+    if (!item)
+      throw new NotFoundException(`Closing checklist item ${id} not found`);
     if (!item.completed) {
       throw new BadRequestException('Not completed');
     }
@@ -140,7 +215,9 @@ export class ClosingChecklistsService {
       },
     });
 
-    const byDept = items.reduce<Record<string, { total: number; done: number }>>((acc, it) => {
+    const byDept = items.reduce<
+      Record<string, { total: number; done: number }>
+    >((acc, it) => {
       acc[it.department] ??= { total: 0, done: 0 };
       acc[it.department].total++;
       if (it.completed) acc[it.department].done++;
@@ -161,7 +238,8 @@ export class ClosingChecklistsService {
       byDepartment: Object.entries(byDept).map(([dept, stat]) => ({
         department: dept,
         ...stat,
-        percent: stat.total > 0 ? Math.round((stat.done / stat.total) * 100) : 0,
+        percent:
+          stat.total > 0 ? Math.round((stat.done / stat.total) * 100) : 0,
       })),
     };
   }

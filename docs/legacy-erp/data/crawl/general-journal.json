@@ -1,0 +1,506 @@
+{
+  "url_path": "general-journal",
+  "title": "GsERP KIL - Jurnal Umum",
+  "page_heading": "Jurnal Umum",
+  "forms": [],
+  "inputs": [
+    {
+      "name": "periode",
+      "type": "text",
+      "placeholder": "",
+      "id": "periode"
+    }
+  ],
+  "filters": [],
+  "tables": [
+    {
+      "idx": 0,
+      "headers": [
+        "#",
+        "Kode",
+        "Tanggal",
+        "Deksripsi",
+        "Debit",
+        "Kredit",
+        "Tipe",
+        "Referensi",
+        "Status",
+        "#"
+      ],
+      "sample_rows": [
+        [
+          "1",
+          "GL-202609-000130",
+          "2026-09-16",
+          "Invoice Sample - SS-202609-000043",
+          "250,000.00",
+          "250,000.00",
+          "Sales Sample Invoice",
+          "SSI-202609-000040",
+          "Aktif",
+          ""
+        ],
+        [
+          "2",
+          "GL-202609-000131",
+          "2026-09-16",
+          "Invoice Sample - SS-202609-000044",
+          "250,000.00",
+          "250,000.00",
+          "Sales Sample Invoice",
+          "SSI-202609-000041",
+          "Aktif",
+          ""
+        ],
+        [
+          "3",
+          "GL-202609-000132",
+          "2026-09-16",
+          "Produksi filling - PF-202609-000008",
+          "3,581,725.00",
+          "3,581,725.00",
+          "Production Filling",
+          "PF-202609-000008",
+          "Aktif",
+          ""
+        ],
+        [
+          "4",
+          "GL-202609-000133",
+          "2026-09-16",
+          "Produksi filling - PF-202609-000009",
+          "1,183,733.91",
+          "1,183,733.91",
+          "Production Filling",
+          "PF-202609-000009",
+          "Aktif",
+          ""
+        ],
+        [
+          "5",
+          "GL-202609-000134",
+          "2026-09-16",
+          "Produksi filling - PF-202609-000010",
+          "4,252,717.50",
+          "4,252,717.50",
+          "Production Filling",
+          "PF-202609-000010",
+          "Aktif",
+          ""
+        ],
+        [
+          "6",
+          "GL-202609-000135",
+          "2026-09-16",
+          "Produksi mixing - PM-202609-000020",
+          "730,617.94",
+          "730,617.94",
+          "Production Mixing",
+          "PM-202609-000020",
+          "Aktif",
+          ""
+        ],
+        [
+          "7",
+          "GL-202609-000136",
+          "2026-09-16",
+          "Produksi mixing - PM-202609-000021",
+          "363,079.70",
+          "363,079.70",
+          "Production Mixing",
+          "PM-202609-000021",
+          "Aktif",
+          ""
+        ],
+        [
+          "8",
+          "GL-202609-000137",
+          "2026-09-16",
+          "Penerimaan barang - PO-202609-000008",
+          "2,033,150.00",
+          "2,033,150.00",
+          "Good Receipt",
+          "GR-202609-000027",
+          "Aktif",
+          ""
+        ],
+        [
+          "9",
+          "GL-202609-000098",
+          "2026-09-15",
+          "Penerimaan barang - PO-202609-000021",
+          "1,650,000.00",
+          "1,650,000.00",
+          "Good Receipt",
+          "GR-202609-000019",
+          "Aktif",
+          ""
+        ],
+        [
+          "10",
+          "GL-202609-000099",
+          "2026-09-15",
+          "Penerimaan barang - PO-202609-000018",
+          "552,000.00",
+          "552,000.00",
+          "Good Receipt",
+          "GR-202609-000020",
+          "Aktif",
+          ""
+        ],
+        [
+          "11",
+          "GL-202609-000100",
+          "2026-09-15",
+          "Koreksi Stok - GRQ-202609-000018",
+          "33,733.82",
+          "33,733.82",
+          "Stock Opname",
+          "GRQ-202609-000018",
+          "Aktif",
+          ""
+        ],
+        [
+          "12",
+          "GL-202609-000101",
+          "2026-09-15",
+          "Stock Opname - STO-202609-000009",
+          "0.00",
+          "0.00",
+          "Stock Opname",
+          "STO-202609-000009",
+          "Aktif",
+          ""
+        ],
+        [
+          "13",
+          "GL-202609-000102",
+          "2026-09-15",
+          "Invoice Sample - SS-202609-000042",
+          "350,000.00",
+          "350,000.00",
+          "Sales Sample Invoice",
+          "SSI-202609-000039",
+          "Aktif",
+          ""
+        ],
+        [
+          "14",
+          "GL-202609-000103",
+          "2026-09-15",
+          "Produksi mixing - PM-202609-000014",
+          "1,347,128.85",
+          "1,347,128.85",
+          "Production Mixing",
+          "PM-202609-000014",
+          "Aktif",
+          ""
+        ],
+        [
+          "15",
+          "GL-202609-000104",
+          "2026-09-15",
+          "Produksi mixing - PM-202609-000015",
+          "4,100,087.57",
+          "4,100,087.57",
+          "Production Mixing",
+          "PM-202609-000015",
+          "Aktif",
+          ""
+        ],
+        [
+          "16",
+          "GL-202609-000105",
+          "2026-09-15",
+          "Produksi mixing - PM-202609-000016",
+          "752,716.35",
+          "752,716.35",
+          "Production Mixing",
+          "PM-202609-000016",
+          "Aktif",
+          ""
+        ],
+        [
+          "17",
+          "GL-202609-000106",
+          "2026-09-15",
+          "Produksi mixing - PM-202609-000017",
+          "746,952.65",
+          "746,952.65",
+          "Production Mixing",
+          "PM-202609-000017",
+          "Aktif",
+          ""
+        ],
+        [
+          "18",
+          "GL-202609-000107",
+          "2026-09-15",
+          "Produksi mixing - PM-202609-000018",
+          "805,182.60",
+          "805,182.60",
+          "Production Mixing",
+          "PM-202609-000018",
+          "Aktif",
+          ""
+        ],
+        [
+          "19",
+          "GL-202609-000108",
+          "2026-09-15",
+          "Koreksi Stok - GRQ-202609-000019",
+          "31,799.32",
+          "31,799.32",
+          "Stock Opname",
+          "GRQ-202609-000019",
+          "Aktif",
+          ""
+        ],
+        [
+          "20",
+          "GL-202609-000109",
+          "2026-09-15",
+          "Koreksi Stok - GRQ-202609-000020",
+          "31,799.32",
+          "31,799.32",
+          "Stock Opname",
+          "GRQ-202609-000020",
+          "Aktif",
+          ""
+        ]
+      ],
+      "total_rows": 137
+    }
+  ],
+  "nav_links": [
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;en",
+      "text": "English"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;id",
+      "text": "Indonesia"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account",
+      "text": "Akun Saya"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;",
+      "text": "GsERP KIL"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;",
+      "text": "Beranda"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-schedule",
+      "text": "D. Jadwal Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-realization",
+      "text": "D. Realisasi Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-sample",
+      "text": "D. Penjualan Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-product",
+      "text": "D. Penjualan Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-customer",
+      "text": "D. Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sample",
+      "text": "D. Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-executive",
+      "text": "D. Eksekutif"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-notification",
+      "text": "D. Notifikasi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-digital-marketing",
+      "text": "D. Digital Marketing"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-business-development",
+      "text": "D. BusDev"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-rnd",
+      "text": "D. RnD"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-purchasing",
+      "text": "D. Purchasing"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-legality",
+      "text": "D. Legalitas"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production",
+      "text": "D. Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-warehouse",
+      "text": "D. Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-human-resources",
+      "text": "D. HR"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-finance",
+      "text": "D. Keuangan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-guest-book",
+      "text": "D. Buku Tamu"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-sample",
+      "text": "D. Client Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-production",
+      "text": "D. Client Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-repeat-order",
+      "text": "D. Client RO"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-lost",
+      "text": "D. Lost"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;role-manage",
+      "text": "Hak Akses"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;user-manage",
+      "text": "Pengguna"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-manage",
+      "text": "CoA"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-auto-manage",
+      "text": "CoA Jurnal Otomatis"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-manage",
+      "text": "Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-access-manage",
+      "text": "Hak Akses Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-category-manage",
+      "text": "Kategori Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-manage",
+      "text": "Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-category-manage",
+      "text": "Kategori Supplier"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-manage",
+      "text": "Supplier"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-category-manage",
+      "text": "Kategori Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-manage",
+      "text": "Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-my-manage",
+      "text": "Pelanggan Saya"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-category",
+      "text": "Kategori Penjualan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-target",
+      "text": "Target Penjualan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-approval",
+      "text": "Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-approval",
+      "text": "Retur Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-approval",
+      "text": "Penjualan Sample ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-approval",
+      "text": "Penjualan Produk ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-approval",
+      "text": "Retur Penjualan ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs-approval",
+      "text": "Permintaan HPP ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request-approval",
+      "text": "Permintaan Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request-approval",
+      "text": "Permintaan Barang ~"
+    }
+  ],
+  "headings": [
+    {
+      "level": 1,
+      "text": "Jurnal Umum"
+    },
+    {
+      "level": 4,
+      "text": "Modal"
+    }
+  ],
+  "ajax_endpoints": [],
+  "aggregations": [
+    "transfer",
+    "opname",
+    "valuation",
+    "debit",
+    "stock",
+    "credit"
+  ],
+  "summary": {
+    "page_title": "GsERP KIL - Jurnal Umum",
+    "heading": "Jurnal Umum",
+    "form_count": 0,
+    "filter_count": 0,
+    "table_count": 1,
+    "has_daterange": true,
+    "has_datatable": true,
+    "has_chart": false
+  }
+}

@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, Min, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class CreateJobOrderCostingDto {
   @ApiProperty({ example: 'JO-2026-09-0001' })

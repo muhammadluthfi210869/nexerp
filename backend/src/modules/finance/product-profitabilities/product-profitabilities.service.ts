@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 /**
@@ -24,8 +28,11 @@ export class ProductProfitabilitiesService {
   }
 
   async findOne(id: string) {
-    const p = await this.prisma.productProfitability.findUnique({ where: { id } });
-    if (!p) throw new NotFoundException(`Product profitability ${id} not found`);
+    const p = await this.prisma.productProfitability.findUnique({
+      where: { id },
+    });
+    if (!p)
+      throw new NotFoundException(`Product profitability ${id} not found`);
     return p;
   }
 
@@ -33,18 +40,22 @@ export class ProductProfitabilitiesService {
    * Record or update profitability for a product in a period.
    * If revenue + cost provided, computes profit + margin server-side.
    */
-  async upsert(_userId: string, dto: {
-    productId: string;
-    productName: string;
-    period: string;
-    revenue: number;
-    cost: number;
-  }) {
+  async upsert(
+    _userId: string,
+    dto: {
+      productId: string;
+      productName: string;
+      period: string;
+      revenue: number;
+      cost: number;
+    },
+  ) {
     if (dto.revenue < 0 || dto.cost < 0) {
       throw new BadRequestException('Revenue and cost cannot be negative');
     }
     const profit = dto.revenue - dto.cost;
-    const margin = dto.revenue > 0 ? Math.round((profit / dto.revenue) * 10000) / 100 : 0;
+    const margin =
+      dto.revenue > 0 ? Math.round((profit / dto.revenue) * 10000) / 100 : 0;
 
     const periodStart = new Date(dto.period);
     periodStart.setDate(1);

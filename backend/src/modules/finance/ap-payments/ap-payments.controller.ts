@@ -2,7 +2,10 @@ import { Controller, Get, Post, Param, Body, Query, Req } from '@nestjs/common';
 import { APPaymentsService } from './ap-payments.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentStatus } from '@prisma/client';
-import { CreateApPaymentDto, AllocateApPaymentDto } from './dto/create-ap-payment.dto';
+import {
+  CreateApPaymentDto,
+  AllocateApPaymentDto,
+} from './dto/create-ap-payment.dto';
 
 @ApiTags('finance/ap-payments')
 @ApiBearerAuth()
@@ -40,7 +43,9 @@ export class APPaymentsController {
   }
 
   @Post(':id/paid')
-  @ApiOperation({ summary: 'Mark AP payment as PAID (after verify, bank transfer done)' })
+  @ApiOperation({
+    summary: 'Mark AP payment as PAID (after verify, bank transfer done)',
+  })
   markPaid(@Req() req: any, @Param('id') id: string) {
     const userId = req.user?.id;
     return this.service.markPaid(userId, id);

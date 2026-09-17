@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsNumber, IsString, IsOptional, IsIn, Min } from 'class-validator';
+import {
+  IsUUID,
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsIn,
+  Min,
+} from 'class-validator';
 
 export class CreateInventoryOwnershipDto {
   @ApiProperty({ example: 'uuid', description: 'Material ID' })
@@ -17,7 +24,11 @@ export class CreateInventoryOwnershipDto {
   @IsIn(['COMPANY', 'CONSIGNMENT', 'CUSTOMER_OWNED', 'SUPPLIER_OWNED'])
   ownerType: 'COMPANY' | 'CONSIGNMENT' | 'CUSTOMER_OWNED' | 'SUPPLIER_OWNED';
 
-  @ApiProperty({ example: 'uuid', required: false, description: 'Customer/Supplier ID for non-COMPANY owners' })
+  @ApiProperty({
+    example: 'uuid',
+    required: false,
+    description: 'Customer/Supplier ID for non-COMPANY owners',
+  })
   @IsOptional()
   @IsUUID()
   ownerId?: string;
@@ -27,7 +38,11 @@ export class CreateInventoryOwnershipDto {
   @Min(0.01)
   quantity: number;
 
-  @ApiProperty({ example: 25000, required: false, description: 'Unit cost (IDR)' })
+  @ApiProperty({
+    example: 25000,
+    required: false,
+    description: 'Unit cost (IDR)',
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
@@ -35,7 +50,10 @@ export class CreateInventoryOwnershipDto {
 }
 
 export class AdjustInventoryOwnershipDto {
-  @ApiProperty({ example: -5, description: 'Quantity delta (positive = add, negative = remove)' })
+  @ApiProperty({
+    example: -5,
+    description: 'Quantity delta (positive = add, negative = remove)',
+  })
   @IsNumber()
   delta: number;
 
@@ -46,7 +64,10 @@ export class AdjustInventoryOwnershipDto {
 }
 
 export class TransferInventoryOwnershipDto {
-  @ApiProperty({ example: 'COMPANY', enum: ['COMPANY', 'CONSIGNMENT', 'CUSTOMER_OWNED', 'SUPPLIER_OWNED'] })
+  @ApiProperty({
+    example: 'COMPANY',
+    enum: ['COMPANY', 'CONSIGNMENT', 'CUSTOMER_OWNED', 'SUPPLIER_OWNED'],
+  })
   @IsIn(['COMPANY', 'CONSIGNMENT', 'CUSTOMER_OWNED', 'SUPPLIER_OWNED'])
   newOwnerType: 'COMPANY' | 'CONSIGNMENT' | 'CUSTOMER_OWNED' | 'SUPPLIER_OWNED';
 

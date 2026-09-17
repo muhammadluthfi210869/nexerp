@@ -62,7 +62,9 @@ export class ActivityLogService {
       where: {
         userId,
         ...(from || to
-          ? { createdAt: { ...(from && { gte: from }), ...(to && { lte: to }) } }
+          ? {
+              createdAt: { ...(from && { gte: from }), ...(to && { lte: to }) },
+            }
           : {}),
         ...(type && { type }),
         ...(entityType && { entityType }),

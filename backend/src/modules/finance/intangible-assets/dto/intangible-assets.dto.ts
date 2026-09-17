@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsDateString, IsPositive, Min, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsDateString,
+  IsPositive,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class CreateIntangibleAssetDto {
   @ApiProperty({ example: 'IA-2609-0001', required: false })
@@ -21,12 +29,19 @@ export class CreateIntangibleAssetDto {
   @IsPositive()
   acquisitionCost: number;
 
-  @ApiProperty({ example: 36, description: 'Amortization period in months (e.g., 36 = 3 years)' })
+  @ApiProperty({
+    example: 36,
+    description: 'Amortization period in months (e.g., 36 = 3 years)',
+  })
   @IsNumber()
   @Min(1)
   amortizationPeriod: number;
 
-  @ApiProperty({ example: 'STRAIGHT_LINE', required: false, default: 'STRAIGHT_LINE' })
+  @ApiProperty({
+    example: 'STRAIGHT_LINE',
+    required: false,
+    default: 'STRAIGHT_LINE',
+  })
   @IsOptional()
   @IsString()
   amortizationMethod?: string;

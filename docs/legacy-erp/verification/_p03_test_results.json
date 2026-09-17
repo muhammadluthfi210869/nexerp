@@ -1,0 +1,358 @@
+{
+  "phase": "P03",
+  "generated_at": "2026-09-17T22:06:43.730Z",
+  "verdict": "PASS",
+  "passed_tests": 21,
+  "total_tests": 21,
+  "results": {
+    "clean_checkout_build": {
+      "status": "PASS",
+      "details": {
+        "has_backend_main": true,
+        "has_backend_app_module": true,
+        "backend_compiled_js_count": 478,
+        "has_frontend_next": true,
+        "frontend_routes_count": 276
+      },
+      "error": null
+    },
+    "typecheck": {
+      "status": "PASS",
+      "details": {
+        "backend_typecheck": "PASS (exit 0)",
+        "frontend_typecheck": "PASS (exit 0)"
+      },
+      "error": null
+    },
+    "lint": {
+      "status": "PASS",
+      "details": {
+        "backend_errors": 0,
+        "backend_warnings": 0,
+        "frontend_errors": 0,
+        "frontend_warnings": 8218,
+        "frontend_warnings_baseline_max": 8218,
+        "ratchet_complies": true
+      },
+      "error": null
+    },
+    "unit_smoke": {
+      "status": "PASS",
+      "details": {
+        "backend_spec_suites_count": 33,
+        "frontend_spec_suites_count": 55,
+        "deterministic_in_band": true
+      },
+      "error": null
+    },
+    "container_build": {
+      "status": "PASS",
+      "details": {
+        "backend_dockerfile_valid": true,
+        "frontend_dockerfile_valid": true,
+        "docker_compose_valid": true,
+        "compose_config_valid": true
+      },
+      "error": null
+    },
+    "ci_required_check_test": {
+      "status": "PASS",
+      "details": {
+        "has_fast_gate": true,
+        "has_push_images": true,
+        "has_strict_npm_ci": true,
+        "has_typecheck": true,
+        "has_lint": true,
+        "has_unit": true,
+        "has_migration": true,
+        "has_build_verif": true,
+        "has_arch_gate": true,
+        "has_negative_gate": true,
+        "has_postgres_service": true,
+        "has_push_migration": true,
+        "has_backend_start": true,
+        "has_deterministic_memory": true,
+        "missing_checks": []
+      },
+      "error": null
+    },
+    "module_boundary_test": {
+      "status": "PASS",
+      "details": {
+        "scanned_modules": 37,
+        "violations_count": 0,
+        "violations": []
+      },
+      "error": null
+    },
+    "dependency_direction_test": {
+      "status": "PASS",
+      "details": {
+        "scanned_services_count": 118,
+        "scanned_common_files_count": 14,
+        "violations_count": 0,
+        "violations": []
+      },
+      "error": null
+    },
+    "circular_dependency_scan": {
+      "status": "PASS",
+      "details": {
+        "scanned_files_count": 1150,
+        "cycles_count": 0,
+        "cycles": []
+      },
+      "error": null
+    },
+    "unused_export_dependency_scan": {
+      "status": "PASS",
+      "details": {
+        "backend_production_dependencies": 38,
+        "frontend_production_dependencies": 26,
+        "backend_classified_and_reachable": 38,
+        "frontend_classified_and_reachable": 26,
+        "unclassified_or_dead_backend": [],
+        "unclassified_or_dead_frontend": []
+      },
+      "error": null
+    },
+    "orphan_object_scan": {
+      "status": "PASS",
+      "details": {
+        "total_catalogued_objects": 1089,
+        "unexplained_objects": 0
+      },
+      "error": null
+    },
+    "duplicate_code_scan": {
+      "status": "PASS",
+      "details": {
+        "scanned_controllers": 94,
+        "collisions_count": 0,
+        "changed_files_scanned": 180,
+        "total_tokens": 96918,
+        "duplicated_tokens": 18039,
+        "duplication_percent": 18.61,
+        "max_allowed_percent": 28.7,
+        "collisions": []
+      },
+      "error": null
+    },
+    "changed_complexity_check": {
+      "status": "PASS",
+      "details": {
+        "checked_changed_files": 189,
+        "max_allowed_complexity": 10,
+        "absolute_max_exception": 15,
+        "baseline_high_complexity_max": 62,
+        "baseline_medium_complexity_max": 58,
+        "violations_count": 62,
+        "missing_rationale_count": 55,
+        "ratchet_mode": "downward_ratchet_baseline",
+        "violations": [
+          {
+            "file": "backend/src/modules/communication/communication.service.ts",
+            "line": 243,
+            "name": "replyToThread",
+            "complexity": 16
+          },
+          {
+            "file": "backend/src/modules/finance/finance.service.ts",
+            "line": 154,
+            "name": "createJournalEntry",
+            "complexity": 17
+          },
+          {
+            "file": "backend/src/modules/finance/finance.service.ts",
+            "line": 578,
+            "name": "verifyOrderPayment",
+            "complexity": 24
+          },
+          {
+            "file": "backend/src/modules/finance/finance.service.ts",
+            "line": 835,
+            "name": "getAdvancedDashboardStats",
+            "complexity": 34
+          },
+          {
+            "file": "backend/src/modules/finance/finance.service.ts",
+            "line": 1425,
+            "name": "verifyArHubPayment",
+            "complexity": 35
+          },
+          {
+            "file": "backend/src/modules/finance/finance.service.ts",
+            "line": 1436,
+            "name": "anonymous",
+            "complexity": 35
+          },
+          {
+            "file": "backend/src/modules/marketing/canonical/canonical-marketing.service.ts",
+            "line": 82,
+            "name": "listTasks",
+            "complexity": 16
+          },
+          {
+            "file": "backend/src/modules/marketing/canonical/canonical-marketing.service.ts",
+            "line": 159,
+            "name": "getKpi",
+            "complexity": 18
+          },
+          {
+            "file": "backend/src/modules/marketing/canonical/canonical-marketing.service.ts",
+            "line": 232,
+            "name": "createTask",
+            "complexity": 25
+          },
+          {
+            "file": "backend/src/modules/marketing/canonical/canonical-marketing.service.ts",
+            "line": 243,
+            "name": "anonymous",
+            "complexity": 25
+          }
+        ],
+        "missing_rationale": [
+          {
+            "file": "backend/src/modules/activity-log/activity-log.interceptor.ts",
+            "line": 41,
+            "name": "intercept",
+            "complexity": 13
+          },
+          {
+            "file": "backend/src/modules/activity-log/activity-log.service.ts",
+            "line": 27,
+            "name": "log",
+            "complexity": 11
+          },
+          {
+            "file": "backend/src/modules/communication/communication.service.ts",
+            "line": 406,
+            "name": "attachFile",
+            "complexity": 14
+          },
+          {
+            "file": "backend/src/modules/finance/ap-payments/ap-payments.service.ts",
+            "line": 143,
+            "name": "markPaid",
+            "complexity": 12
+          },
+          {
+            "file": "backend/src/modules/finance/ar-receipts/ar-receipts.service.ts",
+            "line": 55,
+            "name": "create",
+            "complexity": 14
+          },
+          {
+            "file": "backend/src/modules/finance/bill-line-items/bill-line-items.service.ts",
+            "line": 83,
+            "name": "updateItem",
+            "complexity": 15
+          },
+          {
+            "file": "backend/src/modules/finance/bill-line-items/bill-line-items.service.ts",
+            "line": 102,
+            "name": "anonymous",
+            "complexity": 13
+          },
+          {
+            "file": "backend/src/modules/finance/finance.service.ts",
+            "line": 2009,
+            "name": "getProfitLoss",
+            "complexity": 14
+          },
+          {
+            "file": "backend/src/modules/finance/finance.service.ts",
+            "line": 2034,
+            "name": "anonymous",
+            "complexity": 14
+          },
+          {
+            "file": "backend/src/modules/kpi/kpi.service.ts",
+            "line": 81,
+            "name": "computePerson",
+            "complexity": 15
+          }
+        ]
+      },
+      "error": null
+    },
+    "dna_import_boundary_ast": {
+      "status": "PASS",
+      "details": {
+        "total_screens_scanned": 270,
+        "unhandled_ui_kit_imports_count": 0,
+        "unhandled_screens": []
+      },
+      "error": null
+    },
+    "dna_native_interactive_scan": {
+      "status": "PASS",
+      "details": {
+        "total_screens_scanned": 270,
+        "unhandled_native_count": 0,
+        "unhandled_screens": []
+      },
+      "error": null
+    },
+    "dna_primitive_duplication_scan": {
+      "status": "PASS",
+      "details": {
+        "duplicate_primitives_count": 0,
+        "violations": []
+      },
+      "error": null
+    },
+    "dna_hardcoded_visual_scan": {
+      "status": "PASS",
+      "details": {
+        "total_screens_scanned": 270,
+        "unhandled_visual_count": 0,
+        "unhandled_screens": []
+      },
+      "error": null
+    },
+    "dna_barrel_integrity": {
+      "status": "PASS",
+      "details": {
+        "barrel_exports_count": 73,
+        "missing_targets": []
+      },
+      "error": null
+    },
+    "dna_reference_route_and_composition": {
+      "status": "PASS",
+      "details": {
+        "canonical_visual_dna_exists": true,
+        "canonical_golden_ref_exists": true,
+        "legacy_visual_dna_redirects": true,
+        "legacy_golden_ref_redirects": true
+      },
+      "error": null
+    },
+    "dna_screen_coverage_manifest": {
+      "status": "PASS",
+      "details": {
+        "screens_in_manifest": 272,
+        "expected_screens": 272,
+        "coverage_percent": 100,
+        "canonical_screens_reconciliation_percent": 100
+      },
+      "error": null
+    },
+    "dna_exception_registry_validation": {
+      "status": "PASS",
+      "details": {
+        "total_exceptions": 205,
+        "baseline_max_allowed": 205,
+        "schema_errors_count": 0,
+        "expired_exceptions_count": 0,
+        "missing_files_count": 0,
+        "ratchet_complies": true,
+        "schema_errors": [],
+        "expired_exceptions": [],
+        "missing_files": []
+      },
+      "error": null
+    }
+  }
+}

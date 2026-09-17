@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
   OnModuleInit,
   ServiceUnavailableException,
@@ -33,8 +34,10 @@ import {
 } from './canonical-marketing.dto';
 import {
   assertTaskTransition,
+  canAssignMarketingTask,
   ensureMarketingTaskRole,
   isMarketingManager,
+  isRahmatViewer,
   MarketingViewer,
   TaskStatus,
 } from './marketing-domain.policy';
@@ -52,6 +55,8 @@ const TASK_INCLUDE: any = {
 
 @Injectable()
 export class CanonicalMarketingService implements OnModuleInit {
+  private readonly logger = new Logger(CanonicalMarketingService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
@@ -237,22 +242,25 @@ export class CanonicalMarketingService implements OnModuleInit {
       dto,
       async (db) => {
         this.assertDateOrder(dto.startDate, dto.dueDate);
-        const assigneeUser = await this.ensureActiveUser(db, dto.assigneeId, 'assigneeId', viewer.id);
-        const isSelf =
-          assigneeUser.id === viewer.id ||
-          (Boolean(assigneeUser.email) &&
-            Boolean(viewer.email) &&
-            assigneeUser.email?.split('@')[0].toLowerCase() ===
-              viewer.email?.split('@')[0].toLowerCase());
-        if (!isMarketingManager(viewer) && !isSelf) {
+        const assigneeUser = await this.ensureActiveUser(
+          db,
+          dto.assigneeId,
+          'assigneeId',
+          viewer.id,
+        );
+        if (!canAssignMarketingTask(viewer, assigneeUser)) {
           throw new ForbiddenException({
             code: 'TASK_ASSIGN_FORBIDDEN',
-            message: 'Member hanya dapat membuat task untuk dirinya sendiri.',
+            message: 'Anda tidak memiliki hak akses untuk menugaskan task ke member ini.',
           });
         }
         let reviewerUser: { id: string } | null = null;
         if (dto.reviewerId)
-          reviewerUser = await this.ensureActiveUser(db, dto.reviewerId, 'reviewerId');
+          reviewerUser = await this.ensureActiveUser(
+            db,
+            dto.reviewerId,
+            'reviewerId',
+          );
         const brand = dto.brandId
           ? await this.ensureActiveBrand(db, dto.brandId)
           : null;
@@ -293,7 +301,8 @@ export class CanonicalMarketingService implements OnModuleInit {
             description: dto.brief?.trim() || null,
             status: 'OPEN',
             canonicalStatus: 'NOT_STARTED',
-            taskType: dto.type.toUpperCase() === 'PROJECT' ? 'PROJECT' : 'DAILY',
+            taskType:
+              dto.type.toUpperCase() === 'PROJECT' ? 'PROJECT' : 'DAILY',
             priority: dto.priority,
             startDate: new Date(dto.startDate),
             dueDate: new Date(dto.dueDate),
@@ -351,12 +360,20 @@ export class CanonicalMarketingService implements OnModuleInit {
     }
     const data: any = { version: { increment: 1 } };
     if (dto.assigneeId) {
-      const user = await this.ensureActiveUser(this.prisma, dto.assigneeId, 'assigneeId');
+      const user = await this.ensureActiveUser(
+        this.prisma,
+        dto.assigneeId,
+        'assigneeId',
+      );
       data.assigneeId = user.id;
       data.picId = user.id;
     }
     if (dto.reviewerId) {
-      const user = await this.ensureActiveUser(this.prisma, dto.reviewerId, 'reviewerId');
+      const user = await this.ensureActiveUser(
+        this.prisma,
+        dto.reviewerId,
+        'reviewerId',
+      );
       data.reviewerId = user.id;
     }
     if (dto.projectId) await this.ensureProject(this.prisma, dto.projectId);
@@ -421,17 +438,23 @@ export class CanonicalMarketingService implements OnModuleInit {
       reason: dto.reason,
     });
     await this.prisma.$transaction(async (db) => {
-      await this.optimisticUpdate(db.marketingTask, id, dto.version ?? current.version, {
-        canonicalStatus: dto.status,
-        status: this.legacyTaskStatus(dto.status),
-        completedAt:
-          dto.status === 'DONE'
-            ? new Date()
-            : dto.status === 'IN_PROGRESS' && current.canonicalStatus === 'DONE'
-              ? null
-              : current.completedAt,
-        version: { increment: 1 },
-      });
+      await this.optimisticUpdate(
+        db.marketingTask,
+        id,
+        dto.version ?? current.version,
+        {
+          canonicalStatus: dto.status,
+          status: this.legacyTaskStatus(dto.status),
+          completedAt:
+            dto.status === 'DONE'
+              ? new Date()
+              : dto.status === 'IN_PROGRESS' &&
+                  current.canonicalStatus === 'DONE'
+                ? null
+                : current.completedAt,
+          version: { increment: 1 },
+        },
+      );
       await db.marketingTaskHistory.create({
         data: {
           taskId: id,
@@ -762,7 +785,15 @@ export class CanonicalMarketingService implements OnModuleInit {
     let members = await this.prisma.marketingTeamMember.findMany({
       where: {
         isActive: true,
-        department: { in: ['Digital Marketing', 'Digital Strategy', 'Social Media', 'Design & Visual', 'Production'] },
+        department: {
+          in: [
+            'Digital Marketing',
+            'Digital Strategy',
+            'Social Media',
+            'Design & Visual',
+            'Production',
+          ],
+        },
         NOT: { role: { contains: 'Admin' } },
       },
       orderBy: { name: 'asc' },
@@ -772,7 +803,15 @@ export class CanonicalMarketingService implements OnModuleInit {
       members = await this.prisma.marketingTeamMember.findMany({
         where: {
           isActive: true,
-          department: { in: ['Digital Marketing', 'Digital Strategy', 'Social Media', 'Design & Visual', 'Production'] },
+          department: {
+            in: [
+              'Digital Marketing',
+              'Digital Strategy',
+              'Social Media',
+              'Design & Visual',
+              'Production',
+            ],
+          },
           NOT: { role: { contains: 'Admin' } },
         },
         orderBy: { name: 'asc' },
@@ -812,7 +851,9 @@ export class CanonicalMarketingService implements OnModuleInit {
         ...(dto.name ? { name: dto.name.trim() } : {}),
         ...(dto.role ? { role: dto.role.trim() } : {}),
         ...(dto.email ? { email: dto.email.trim() } : {}),
-        ...(dto.phone !== undefined ? { phone: dto.phone?.trim() || null } : {}),
+        ...(dto.phone !== undefined
+          ? { phone: dto.phone?.trim() || null }
+          : {}),
         ...(dto.avatarBg ? { avatarBg: dto.avatarBg } : {}),
         ...(dto.initial ? { initial: dto.initial.trim() } : {}),
         ...(dto.department ? { department: dto.department.trim() } : {}),
@@ -865,7 +906,9 @@ export class CanonicalMarketingService implements OnModuleInit {
       await this.autoSeedMarketingBrands(this.prisma);
       brands = await this.prisma.marketingBrand.findMany({
         where:
-          includeInactive && isMarketingManager(viewer) ? {} : { isActive: true },
+          includeInactive && isMarketingManager(viewer)
+            ? {}
+            : { isActive: true },
         select: {
           id: true,
           code: true,
@@ -947,7 +990,10 @@ export class CanonicalMarketingService implements OnModuleInit {
       limit = query.limit ?? 50;
     const where: any = {};
     if (query.brandId) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(query.brandId);
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          query.brandId,
+        );
       const brand = await this.prisma.marketingBrand.findFirst({
         where: {
           OR: [
@@ -958,7 +1004,11 @@ export class CanonicalMarketingService implements OnModuleInit {
         },
         select: { id: true },
       });
-      where.brandId = brand ? brand.id : (isUuid ? query.brandId : '00000000-0000-0000-0000-000000000000');
+      where.brandId = brand
+        ? brand.id
+        : isUuid
+          ? query.brandId
+          : '00000000-0000-0000-0000-000000000000';
     }
     if (query.periodStart || query.periodEnd)
       where.AND = [
@@ -1346,7 +1396,7 @@ export class CanonicalMarketingService implements OnModuleInit {
     viewer: MarketingViewer,
     id: string,
   ) {
-    const scope = this.taskScope(viewer);
+    const scope: any = this.taskScope(viewer);
     const task = await db.marketingTask.findFirst({
       where: { id, ...scope },
       include: TASK_INCLUDE,
@@ -1361,6 +1411,19 @@ export class CanonicalMarketingService implements OnModuleInit {
 
   private ensureCanEditTask(viewer: MarketingViewer, task: any) {
     if (isMarketingManager(viewer)) return;
+
+    if (isRahmatViewer(viewer)) {
+      const taskPicEmail = (task.pic?.email || '').toLowerCase();
+      const taskPicName = (task.pic?.fullName || task.pic?.name || '').toLowerCase();
+      const isTarget =
+        [task.ownerId, task.assigneeId, task.picId].includes(viewer.id) ||
+        taskPicEmail.includes('gusti') ||
+        taskPicName.includes('gusti') ||
+        taskPicEmail.includes('zarkasi') ||
+        taskPicName.includes('zarkasi');
+      if (isTarget) return;
+    }
+
     if (![task.ownerId, task.assigneeId, task.picId].includes(viewer.id))
       throw new NotFoundException({
         code: 'TASK_NOT_FOUND',
@@ -1396,6 +1459,29 @@ export class CanonicalMarketingService implements OnModuleInit {
 
   private taskScope(viewer: MarketingViewer) {
     if (isMarketingManager(viewer)) return {};
+
+    if (isRahmatViewer(viewer)) {
+      return {
+        OR: [
+          { ownerId: viewer.id },
+          { assigneeId: viewer.id },
+          { picId: viewer.id },
+          { assignedById: viewer.id },
+          { reviewerId: viewer.id },
+          {
+            pic: {
+              OR: [
+                { email: { contains: 'zarkasi', mode: 'insensitive' } },
+                { fullName: { contains: 'zarkasi', mode: 'insensitive' } },
+                { email: { contains: 'gusti', mode: 'insensitive' } },
+                { fullName: { contains: 'gusti', mode: 'insensitive' } },
+              ],
+            },
+          },
+        ],
+      };
+    }
+
     return {
       OR: [
         { ownerId: viewer.id },
@@ -1777,7 +1863,14 @@ export class CanonicalMarketingService implements OnModuleInit {
   }
 
   private page<T>(data: T[], page: number, limit: number, total: number) {
-    return { data, items: data, page, limit, total, hasMore: page * limit < total };
+    return {
+      data,
+      items: data,
+      page,
+      limit,
+      total,
+      hasMore: page * limit < total,
+    };
   }
   private code(prefix: string) {
     return `${prefix}-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${randomBytes(3).toString('hex').toUpperCase()}`;
@@ -1915,7 +2008,12 @@ export class CanonicalMarketingService implements OnModuleInit {
           where: {
             OR: [
               { email: { equals: m.email, mode: 'insensitive' } },
-              { email: { equals: `${m.name.toLowerCase()}@nexerp.id`, mode: 'insensitive' } },
+              {
+                email: {
+                  equals: `${m.name.toLowerCase()}@nexerp.id`,
+                  mode: 'insensitive',
+                },
+              },
               { fullName: { equals: m.fullName, mode: 'insensitive' } },
               { fullName: { equals: m.name, mode: 'insensitive' } },
             ],
@@ -1949,13 +2047,20 @@ export class CanonicalMarketingService implements OnModuleInit {
 
         // Find existing marketing team member by userId, email, or name
         const existingByUserId = user?.id
-          ? await db.marketingTeamMember.findFirst({ where: { userId: user.id } })
+          ? await db.marketingTeamMember.findFirst({
+              where: { userId: user.id },
+            })
           : null;
         const existingByEmail = await db.marketingTeamMember.findFirst({
           where: {
             OR: [
               { email: { equals: m.email, mode: 'insensitive' } },
-              { email: { equals: `${m.name.toLowerCase()}@nexerp.id`, mode: 'insensitive' } },
+              {
+                email: {
+                  equals: `${m.name.toLowerCase()}@nexerp.id`,
+                  mode: 'insensitive',
+                },
+              },
             ],
           },
         });
@@ -1968,7 +2073,9 @@ export class CanonicalMarketingService implements OnModuleInit {
         if (target) {
           // If another stale record was using m.email and is not target, clean it up
           if (existingByEmail && existingByEmail.id !== target.id) {
-            await db.marketingTeamMember.delete({ where: { id: existingByEmail.id } }).catch(() => null);
+            await db.marketingTeamMember
+              .delete({ where: { id: existingByEmail.id } })
+              .catch(() => null);
           }
           await db.marketingTeamMember.update({
             where: { id: target.id },
@@ -1986,7 +2093,9 @@ export class CanonicalMarketingService implements OnModuleInit {
         } else {
           // Check if userId is already occupied by any other record before create
           const isUserIdTaken = user?.id
-            ? await db.marketingTeamMember.findFirst({ where: { userId: user.id } })
+            ? await db.marketingTeamMember.findFirst({
+                where: { userId: user.id },
+              })
             : null;
           await db.marketingTeamMember.create({
             data: {
@@ -2081,7 +2190,8 @@ export class CanonicalMarketingService implements OnModuleInit {
         status: 'IN_PROGRESS',
         canonicalStatus: 'IN_PROGRESS',
         taskType: 'DAILY',
-        brief: 'Update Meta Ads spend, CTR, CPL, and Organic Reach in dashboard.',
+        brief:
+          'Update Meta Ads spend, CTR, CPL, and Organic Reach in dashboard.',
         dueDate: new Date('2026-09-09'),
       },
       {
@@ -2093,7 +2203,8 @@ export class CanonicalMarketingService implements OnModuleInit {
         status: 'DONE',
         canonicalStatus: 'DONE',
         taskType: 'DAILY',
-        brief: 'Konten 7 slide anatomi skin barrier & bahan aktif niacinamide 5%.',
+        brief:
+          'Konten 7 slide anatomi skin barrier & bahan aktif niacinamide 5%.',
         dueDate: new Date('2026-09-09'),
       },
       {
@@ -2117,7 +2228,8 @@ export class CanonicalMarketingService implements OnModuleInit {
         status: 'IN_PROGRESS',
         canonicalStatus: 'IN_PROGRESS',
         taskType: 'PROJECT',
-        brief: 'Asset visual untuk landing page dan campaign display Google Ads.',
+        brief:
+          'Asset visual untuk landing page dan campaign display Google Ads.',
         dueDate: new Date('2026-09-15'),
       },
       {
@@ -2141,7 +2253,8 @@ export class CanonicalMarketingService implements OnModuleInit {
         status: 'IN_PROGRESS',
         canonicalStatus: 'IN_PROGRESS',
         taskType: 'DAILY',
-        brief: 'Balas komentar dan DM di Instagram & TikTok @dreamlab.workspace.',
+        brief:
+          'Balas komentar dan DM di Instagram & TikTok @dreamlab.workspace.',
         dueDate: new Date('2026-09-14'),
       },
     ];

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { PaymentStatus } from '@prisma/client';
 import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
@@ -15,7 +19,9 @@ export class DownPaymentsService {
       where: filter,
       include: {
         vendor: { select: { id: true, name: true } },
-        appliedToBill: { select: { id: true, billNumber: true, grandTotal: true } },
+        appliedToBill: {
+          select: { id: true, billNumber: true, grandTotal: true },
+        },
       },
       orderBy: { date: 'desc' },
     });
@@ -67,7 +73,9 @@ export class DownPaymentsService {
         amount: dto.amount,
         remainingAmount: dto.amount,
         status: PaymentStatus.PENDING,
-        notes: dto.notes ? `${dto.notes} [created by ${userId}]` : `[created by ${userId}]`,
+        notes: dto.notes
+          ? `${dto.notes} [created by ${userId}]`
+          : `[created by ${userId}]`,
       },
     });
   }
@@ -76,11 +84,7 @@ export class DownPaymentsService {
    * Post down payment — mark as PAID (bank transfer confirmed).
    * Creates journal entry: Dr. DP (asset) / Cr. Bank.
    */
-  async post(
-    userId: string,
-    id: string,
-    dto: { bankAccountId: string },
-  ) {
+  async post(userId: string, id: string, dto: { bankAccountId: string }) {
     const dp = await this.prisma.downPayment.findUnique({ where: { id } });
     if (!dp) throw new NotFoundException(`Down payment ${id} not found`);
     if (dp.status !== PaymentStatus.PENDING) {
@@ -96,7 +100,9 @@ export class DownPaymentsService {
       where: { id: dto.bankAccountId },
     });
     if (!bankAcc) {
-      throw new NotFoundException(`Bank account ${dto.bankAccountId} not found`);
+      throw new NotFoundException(
+        `Bank account ${dto.bankAccountId} not found`,
+      );
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -104,12 +110,16 @@ export class DownPaymentsService {
         where: { id },
         data: {
           status: PaymentStatus.PAID,
-          notes: dp.notes ? `${dp.notes} [posted by ${userId}]` : `[posted by ${userId}]`,
+          notes: dp.notes
+            ? `${dp.notes} [posted by ${userId}]`
+            : `[posted by ${userId}]`,
         },
       });
 
       // Journal: Dr. DP issued (asset) / Cr. Bank
-      const dpAssetAcc = await tx.account.findFirst({ where: { code: '1301' } });
+      const dpAssetAcc = await tx.account.findFirst({
+        where: { code: '1301' },
+      });
       if (dpAssetAcc) {
         await tx.journalEntry.create({
           data: {
@@ -119,7 +129,11 @@ export class DownPaymentsService {
             sourceDocumentType: 'PAYMENT' as any,
             lines: {
               create: [
-                { accountId: dpAssetAcc.id, debit: Number(dp.amount), credit: 0 },
+                {
+                  accountId: dpAssetAcc.id,
+                  debit: Number(dp.amount),
+                  credit: 0,
+                },
                 { accountId: bankAcc.id, debit: 0, credit: Number(dp.amount) },
               ],
             },
@@ -159,7 +173,9 @@ export class DownPaymentsService {
       );
     }
 
-    const bill = await this.prisma.bill.findUnique({ where: { id: dto.billId } });
+    const bill = await this.prisma.bill.findUnique({
+      where: { id: dto.billId },
+    });
     if (!bill) throw new NotFoundException(`Bill ${dto.billId} not found`);
     if (bill.vendorId !== dp.vendorId) {
       throw new BadRequestException(

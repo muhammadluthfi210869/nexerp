@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { 
   ClipboardList, 
   History, 
@@ -55,7 +56,22 @@ const DEPENDENCY_OPTIONS = [
 ];
 
 export default function ChecklistCategoryPrototype() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Kategori Checklist...</div>}>
+      <ChecklistCategoryContent />
+    </Suspense>
+  );
+}
+
+function ChecklistCategoryContent() {
+  const searchParams = useSearchParams();
   const [view, setView] = useState<"list" | "form">("list");
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setView("form");
+    }
+  }, [searchParams]);
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },

@@ -1,0 +1,24 @@
+{
+  "url": "/customer-category-manage",
+  "type": "list",
+  "file": "customer_category_manage.html",
+  "title": "GsERP KIL - Kategori Pelanggan",
+  "forms": [],
+  "tables": [
+    {
+      "index": 1,
+      "headers": [
+        "#",
+        "Kategori",
+        "Deskripsi",
+        "#"
+      ],
+      "rowCount": 4
+    }
+  ],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [],
+  "notes": [],
+  "addUrl": "https://kil.gserp.id/customer-category-manage/create"
+}

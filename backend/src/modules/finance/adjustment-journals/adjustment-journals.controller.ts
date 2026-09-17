@@ -10,7 +10,9 @@ export class AdjustmentJournalsController {
   constructor(private service: AdjustmentJournalsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List adjustment journals (filter by period, fully approved)' })
+  @ApiOperation({
+    summary: 'List adjustment journals (filter by period, fully approved)',
+  })
   findAll(
     @Query('period') period?: string,
     @Query('approvedBy') approvedBy?: string,
@@ -25,7 +27,9 @@ export class AdjustmentJournalsController {
   }
 
   @Get(':id/progress')
-  @ApiOperation({ summary: 'Get approval progress (prepared/reviewed/approved)' })
+  @ApiOperation({
+    summary: 'Get approval progress (prepared/reviewed/approved)',
+  })
   progress(@Param('id') id: string) {
     return this.service.getProgress(id);
   }
@@ -38,14 +42,18 @@ export class AdjustmentJournalsController {
   }
 
   @Post(':id/review')
-  @ApiOperation({ summary: 'Review the draft (REVIEWED — SoD: different user from preparer)' })
+  @ApiOperation({
+    summary: 'Review the draft (REVIEWED — SoD: different user from preparer)',
+  })
   review(@Req() req: any, @Param('id') id: string) {
     const userId = req.user?.id;
     return this.service.review(userId, id);
   }
 
   @Post(':id/approve')
-  @ApiOperation({ summary: 'Approve the reviewed journal (APPROVED — full SoD chain)' })
+  @ApiOperation({
+    summary: 'Approve the reviewed journal (APPROVED — full SoD chain)',
+  })
   approve(@Req() req: any, @Param('id') id: string) {
     const userId = req.user?.id;
     return this.service.approve(userId, id);

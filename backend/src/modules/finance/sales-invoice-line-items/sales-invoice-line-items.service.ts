@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 @Injectable()
@@ -13,24 +17,32 @@ export class SalesInvoiceLineItemsService {
   }
 
   async findOne(id: string) {
-    const item = await this.prisma.salesInvoiceLineItem.findUnique({ where: { id } });
-    if (!item) throw new NotFoundException(`Sales invoice line item ${id} not found`);
+    const item = await this.prisma.salesInvoiceLineItem.findUnique({
+      where: { id },
+    });
+    if (!item)
+      throw new NotFoundException(`Sales invoice line item ${id} not found`);
     return item;
   }
 
-  async addItem(_userId: string, invoiceId: string, dto: {
-    itemCode: string;
-    itemName: string;
-    qty: number;
-    unit: string;
-    price: number;
-    discount?: number;
-  }) {
+  async addItem(
+    _userId: string,
+    invoiceId: string,
+    dto: {
+      itemCode: string;
+      itemName: string;
+      qty: number;
+      unit: string;
+      price: number;
+      discount?: number;
+    },
+  ) {
     const invoice = await this.prisma.salesInvoice.findUnique({
       where: { id: invoiceId },
       include: { lineItems: true },
     });
-    if (!invoice) throw new NotFoundException(`Sales invoice ${invoiceId} not found`);
+    if (!invoice)
+      throw new NotFoundException(`Sales invoice ${invoiceId} not found`);
     if (invoice.postedAt) {
       throw new BadRequestException('Cannot edit line items on posted invoice');
     }
@@ -54,16 +66,21 @@ export class SalesInvoiceLineItemsService {
     });
   }
 
-  async updateItem(_userId: string, id: string, dto: {
-    qty?: number;
-    price?: number;
-    discount?: number;
-  }) {
+  async updateItem(
+    _userId: string,
+    id: string,
+    dto: {
+      qty?: number;
+      price?: number;
+      discount?: number;
+    },
+  ) {
     const item = await this.prisma.salesInvoiceLineItem.findUnique({
       where: { id },
       include: { invoice: true },
     });
-    if (!item) throw new NotFoundException(`Sales invoice line item ${id} not found`);
+    if (!item)
+      throw new NotFoundException(`Sales invoice line item ${id} not found`);
     if (item.invoice.postedAt) {
       throw new BadRequestException('Cannot edit line items on posted invoice');
     }
@@ -76,7 +93,12 @@ export class SalesInvoiceLineItemsService {
 
       const result = await tx.salesInvoiceLineItem.update({
         where: { id },
-        data: { qty: dto.qty, price: dto.price, discount: dto.discount, total: newTotal },
+        data: {
+          qty: dto.qty,
+          price: dto.price,
+          discount: dto.discount,
+          total: newTotal,
+        },
       });
       await this.recomputeInvoiceTotals(tx, item.invoiceId);
       return result;
@@ -88,7 +110,8 @@ export class SalesInvoiceLineItemsService {
       where: { id },
       include: { invoice: true },
     });
-    if (!item) throw new NotFoundException(`Sales invoice line item ${id} not found`);
+    if (!item)
+      throw new NotFoundException(`Sales invoice line item ${id} not found`);
     if (item.invoice.postedAt) {
       throw new BadRequestException('Cannot edit line items on posted invoice');
     }
@@ -101,8 +124,13 @@ export class SalesInvoiceLineItemsService {
   }
 
   private async recomputeInvoiceTotals(tx: any, invoiceId: string) {
-    const items = await tx.salesInvoiceLineItem.findMany({ where: { invoiceId } });
-    const subtotal = items.reduce((s: number, i: { total: any }) => s + Number(i.total), 0);
+    const items = await tx.salesInvoiceLineItem.findMany({
+      where: { invoiceId },
+    });
+    const subtotal = items.reduce(
+      (s: number, i: { total: any }) => s + Number(i.total),
+      0,
+    );
     const taxAmount = subtotal * 0.11;
     const totalAmount = subtotal + taxAmount;
     await tx.salesInvoice.update({

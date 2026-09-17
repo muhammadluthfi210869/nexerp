@@ -16,10 +16,7 @@ import { DreamlabRrSyncService } from './dreamlab-rr-sync.service';
 import { SendOutboundMessageDto } from './dto/send-outbound-message.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller([
-  'v1/marketing/omni-crm/conversations',
-  'marketing/omni-crm/conversations',
-])
+@Controller('marketing/omni-crm/conversations')
 export class OmniCrmConversationController {
   constructor(
     private readonly service: OmniCrmConversationService,

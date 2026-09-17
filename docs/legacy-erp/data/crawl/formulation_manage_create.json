@@ -1,0 +1,87 @@
+{
+  "url": "/formulation-manage/create",
+  "type": "create",
+  "file": "formulation_manage_create.html",
+  "title": "GsERP KIL - Kelola Formulasi",
+  "forms": [
+    {
+      "id": "GSForm",
+      "action": "https://kil.gserp.id/formulation-manage/1001/create",
+      "method": "post",
+      "fieldCount": 4,
+      "fields": [
+        {
+          "name": "csrf_gs",
+          "type": "hidden",
+          "id": null,
+          "required": false,
+          "placeholder": "",
+          "value": "872117d075614d41d2607b3871bdc7e5",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "",
+          "options": null
+        },
+        {
+          "name": "date",
+          "type": "text",
+          "id": "date",
+          "required": false,
+          "placeholder": "YYYY-MM-DD",
+          "value": "2026-09-16",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Tanggal * Tanggal formulasi",
+          "options": null
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "id": "name",
+          "required": false,
+          "placeholder": "",
+          "value": "Formula&#x20;PARFUME&#x20;EXTRAIT&#x20;DE&#x20;PARFUME&#x20;JD&#x20;MYSTERIOSA&#x20;Rev&#x20;0",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Nama Formula Auto generate",
+          "options": null
+        },
+        {
+          "name": "note",
+          "type": "textarea",
+          "id": "note",
+          "required": false,
+          "placeholder": "Tambahkan catatan atau keterangan...",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Catatan Opsional",
+          "options": null
+        }
+      ]
+    }
+  ],
+  "tables": [],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [
+    "https://kil.gserp.id/formulation-manage/get-goods",
+    "https://kil.gserp.id/formulation-manage/get-goods-detail",
+    "https://kil.gserp.id/formulation-manage/add-cart",
+    "https://kil.gserp.id/formulation-manage/clear-cart",
+    "https://kil.gserp.id/formulation-manage/delete-cart",
+    "https://kil.gserp.id/formulation-manage/get-cart",
+    "https://kil.gserp.id/formulation-manage/detail-sales-sample",
+    "https://kil.gserp.id/formulation-manage/detail",
+    "https://kil.gserp.id/formulation-manage/detail-sample",
+    "https://kil.gserp.id/formulation-manage/assign-formulator"
+  ],
+  "notes": []
+}

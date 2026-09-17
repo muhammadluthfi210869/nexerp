@@ -1,0 +1,2463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GsERP KIL - Akun Saya</title>
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="57x57" href="https://kil.gserp.id/assets/favicon/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="https://kil.gserp.id/assets/favicon/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="https://kil.gserp.id/assets/favicon/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="https://kil.gserp.id/assets/favicon/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="https://kil.gserp.id/assets/favicon/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="https://kil.gserp.id/assets/favicon/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="https://kil.gserp.id/assets/favicon/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://kil.gserp.id/assets/favicon/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://kil.gserp.id/assets/favicon/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="https://kil.gserp.id/assets/favicon/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://kil.gserp.id/assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="https://kil.gserp.id/assets/favicon/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://kil.gserp.id/assets/favicon/favicon-16x16.png">
+    <link rel="manifest" href="https://kil.gserp.id/assets/favicon/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="https://kil.gserp.id/assets/favicon/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/fontawesome-free/css/all.min.css">
+    <!-- flag-icon-css -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/flag-icon-css/css/flag-icon.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+    <!-- Select2 -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/select2/css/select2.min.css">
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+    <!-- Lightbox -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/ekko-lightbox/ekko-lightbox.css">
+    <!-- daterange picker -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/daterangepicker/daterangepicker.css">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+    <!-- summernote -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/summernote/summernote-bs4.css">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- Full Calendar -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/plugins/fullcalendar/main.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="https://kil.gserp.id/assets/css/adminlte.min.css">
+    <!-- User style -->
+    </head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+
+        <!-- Preloader -->
+        <div class="preloader flex-column justify-content-center align-items-center">
+            <img class="animation__shake" src="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;uploads&#x2F;default.png" alt="Logo" height="60" width="60">
+        </div>
+
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a></li>
+            </ul>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item"><a class="nav-link" href="javascript:;"> <i class="fas fa-clock"></i> <span class="digital-clock">00:00:00</span>
+                    </a></li>
+                <!-- Language Dropdown Menu
+                <li class="nav-item dropdown">
+                    <a class="nav-link" data-toggle="dropdown" href="#">
+                        <i class="flag-icon flag-icon-us"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right p-0">
+                        <a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;en" class="dropdown-item active">
+                            <i class="flag-icon flag-icon-us mr-2"></i> English
+                        </a>
+                        <a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;id" class="dropdown-item">
+                            <i class="flag-icon flag-icon-id mr-2"></i> Indonesia
+                        </a>
+                    </div>
+                </li> -->
+                <li class="nav-item dropdown user-menu"><a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown"> <img src="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;uploads&#x2F;default.png" class="user-image img-circle elevation-2" alt="Zaki&#x20;"> <span class="d-none d-md-inline">Zaki </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                        <!-- User image -->
+                        <li class="user-header bg-primary"><img src="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;uploads&#x2F;default.png" class="img-circle elevation-2" alt="Zaki&#x20;">
+
+                            <p>
+                                Zaki                                 <small>Administrator</small>
+                            </p>
+                        </li>
+                        <li class="user-footer">
+                            <a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account" class="btn btn-default btn-flat btn-block"><i class="fas fa-user"></i> Akun Saya</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item"><a class="nav-link" data-widget="fullscreen"
+                        href="#" role="button"> <i class="fas fa-expand-arrows-alt"></i>
+                    </a></li>
+
+                <li class="nav-item"><a class="nav-link" href="javascript:;" role="button" onclick="uriAlert('https\x3A\x2F\x2Fkil.gserp.id\x2Fauth\x2Flogout')"> <i class="fas fa-power-off"></i>
+                    </a></li>
+            </ul>
+        </nav>
+        <!-- /.navbar -->
+
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;" class="brand-link"> <img src="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;uploads&#x2F;default.png" alt="Logo" class="brand-image img-circle elevation-3" style="opacity: .8"> <span class="brand-text font-weight-light">GsERP KIL</span>
+            </a>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- SidebarSearch Form -->
+                <div class="form-inline mt-2">
+                    <div class="input-group" data-widget="sidebar-search">
+                        <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+                        <div class="input-group-append">
+                            <button class="btn btn-sidebar">
+                                <i class="fas fa-search fa-fw"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column nav-child-indent" data-widget="treeview" role="menu" data-accordion="false">
+                        <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;" class="nav-link">
+                                <i class="nav-icon fas fa-home"></i>
+                                <p>Beranda</p>
+                            </a></li>
+                                                        <li class="nav-header">Dasbor</li>
+                                                            <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-schedule" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-calendar"></i>
+                                            <p>
+                                                D. Jadwal Produksi                                                <span id="side_menu_1001" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-realization" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-calendar-check"></i>
+                                            <p>
+                                                D. Realisasi Produksi                                                <span id="side_menu_1002" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-sample" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-chart-line"></i>
+                                            <p>
+                                                D. Penjualan Sample                                                <span id="side_menu_1003" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-product" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-chart-bar"></i>
+                                            <p>
+                                                D. Penjualan Barang                                                <span id="side_menu_1004" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-customer" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-chart-area"></i>
+                                            <p>
+                                                D. Pelanggan                                                <span id="side_menu_1005" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sample" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-chart-pie"></i>
+                                            <p>
+                                                D. Sample                                                <span id="side_menu_1006" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                <li class="nav-header">Dasbor Eksekutif</li>
+                                                            <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-executive" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-user-tie"></i>
+                                            <p>
+                                                D. Eksekutif                                                <span id="side_menu_1101" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-notification" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-bell"></i>
+                                            <p>
+                                                D. Notifikasi                                                <span id="side_menu_1102" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                <li class="nav-header">Dasbor Departemen</li>
+                                                            <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-digital-marketing" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-bullhorn"></i>
+                                            <p>
+                                                D. Digital Marketing                                                <span id="side_menu_1201" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-business-development" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-handshake"></i>
+                                            <p>
+                                                D. BusDev                                                <span id="side_menu_1202" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-rnd" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-flask"></i>
+                                            <p>
+                                                D. RnD                                                <span id="side_menu_1203" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-purchasing" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-shopping-cart"></i>
+                                            <p>
+                                                D. Purchasing                                                <span id="side_menu_1204" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-legality" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-balance-scale"></i>
+                                            <p>
+                                                D. Legalitas                                                <span id="side_menu_1205" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-industry"></i>
+                                            <p>
+                                                D. Produksi                                                <span id="side_menu_1206" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-warehouse" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-warehouse"></i>
+                                            <p>
+                                                D. Gudang                                                <span id="side_menu_1207" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-human-resources" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-users"></i>
+                                            <p>
+                                                D. HR                                                <span id="side_menu_1208" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-finance" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-money-bill-wave"></i>
+                                            <p>
+                                                D. Keuangan                                                <span id="side_menu_1209" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                <li class="nav-header">Dasbor BusDev</li>
+                                                            <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-guest-book" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-address-book"></i>
+                                            <p>
+                                                D. Buku Tamu                                                <span id="side_menu_1301" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-sample" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-vial"></i>
+                                            <p>
+                                                D. Client Sample                                                <span id="side_menu_1302" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-production" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-user-tag"></i>
+                                            <p>
+                                                D. Client Produksi                                                <span id="side_menu_1303" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-repeat-order" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-sync-alt"></i>
+                                            <p>
+                                                D. Client RO                                                <span id="side_menu_1304" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-lost" class="nav-link">
+                                            <i class="nav-icon fas&#x20;fa-user-times"></i>
+                                            <p>
+                                                D. Lost                                                <span id="side_menu_1305" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                <li class="nav-header">Master</li>
+                                                            <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-users-cog"></i>
+                                            <p>
+                                                Kelola Pengguna                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_2001" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;role-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-key nav-icon"></i>
+                                                            <p>
+                                                                Hak Akses                                                                <span id="side_menu_2002" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;user-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-user-secret nav-icon"></i>
+                                                            <p>
+                                                                Pengguna                                                                <span id="side_menu_2003" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-book"></i>
+                                            <p>
+                                                Kelola CoA                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_2111" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-project-diagram nav-icon"></i>
+                                                            <p>
+                                                                CoA                                                                <span id="side_menu_2112" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-auto-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-external-link-alt nav-icon"></i>
+                                                            <p>
+                                                                CoA Jurnal Otomatis                                                                <span id="side_menu_2113" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-warehouse"></i>
+                                            <p>
+                                                Kelola Gudang                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_2121" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-building nav-icon"></i>
+                                                            <p>
+                                                                Gudang                                                                <span id="side_menu_2122" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-access-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-house-user nav-icon"></i>
+                                                            <p>
+                                                                Hak Akses Gudang                                                                <span id="side_menu_2123" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-box"></i>
+                                            <p>
+                                                Kelola Barang                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_2131" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-category-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-box-open nav-icon"></i>
+                                                            <p>
+                                                                Kategori Barang                                                                <span id="side_menu_2132" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-boxes nav-icon"></i>
+                                                            <p>
+                                                                Barang                                                                <span id="side_menu_2133" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-user-friends"></i>
+                                            <p>
+                                                Kelola Supplier                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_2141" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-category-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-user-lock nav-icon"></i>
+                                                            <p>
+                                                                Kategori Supplier                                                                <span id="side_menu_2142" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-users nav-icon"></i>
+                                                            <p>
+                                                                Supplier                                                                <span id="side_menu_2143" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-address-book"></i>
+                                            <p>
+                                                Kelola Pelanggan                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_2151" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-category-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-user-shield nav-icon"></i>
+                                                            <p>
+                                                                Kategori Pelanggan                                                                <span id="side_menu_2152" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-user-tie nav-icon"></i>
+                                                            <p>
+                                                                Pelanggan                                                                <span id="side_menu_2153" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-my-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-users nav-icon"></i>
+                                                            <p>
+                                                                Pelanggan Saya                                                                <span id="side_menu_2154" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-chart-line"></i>
+                                            <p>
+                                                Kelola Penjualan                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_2161" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-category" class="nav-link">
+                                                            <i class="fa&#x20;fa-tags nav-icon"></i>
+                                                            <p>
+                                                                Kategori Penjualan                                                                <span id="side_menu_2162" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-target" class="nav-link">
+                                                            <i class="fa&#x20;fa-bullseye nav-icon"></i>
+                                                            <p>
+                                                                Target Penjualan                                                                <span id="side_menu_2163" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                <li class="nav-header">Persetujuan</li>
+                                                            <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-approval" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-cart-arrow-down"></i>
+                                            <p>
+                                                Pembelian ~                                                <span id="side_menu_3001" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-approval" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-step-backward"></i>
+                                            <p>
+                                                Retur Pembelian ~                                                <span id="side_menu_3002" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-approval" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-shopping-bag"></i>
+                                            <p>
+                                                Penjualan Sample ~                                                <span id="side_menu_3003" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-approval" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-luggage-cart"></i>
+                                            <p>
+                                                Penjualan Produk ~                                                <span id="side_menu_3004" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-approval" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-step-forward"></i>
+                                            <p>
+                                                Retur Penjualan ~                                                <span id="side_menu_3005" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs-approval" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-dollar-sign"></i>
+                                            <p>
+                                                Permintaan HPP ~                                                <span id="side_menu_3006" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request-approval" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-thumbtack"></i>
+                                            <p>
+                                                Permintaan Pembelian ~                                                <span id="side_menu_3007" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request-approval" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-thumbs-up"></i>
+                                            <p>
+                                                Permintaan Barang ~                                                <span id="side_menu_3008" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                <li class="nav-header">Umum</li>
+                                                            <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-progress" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-check-double"></i>
+                                            <p>
+                                                Checklist Progress                                                <span id="side_menu_4001" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-tracking" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-check-circle"></i>
+                                            <p>
+                                                Checklist Tracking                                                <span id="side_menu_4002" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-clipboard-list"></i>
+                                            <p>
+                                                Checklist                                                <span id="side_menu_4003" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-category" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-tags"></i>
+                                            <p>
+                                                Kategori Checklist                                                <span id="side_menu_4004" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-manage" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-check-double"></i>
+                                            <p>
+                                                Kelola Checklist                                                <span id="side_menu_4008" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                <li class="nav-header">Operasional</li>
+                                                            <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-cart-plus"></i>
+                                            <p>
+                                                Pembelian                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_5001" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase" class="nav-link">
+                                                            <i class="fa&#x20;fa-cart-arrow-down nav-icon"></i>
+                                                            <p>
+                                                                Buat Pembelian                                                                <span id="side_menu_5002" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-invoice" class="nav-link">
+                                                            <i class="fa&#x20;fa-file-invoice-dollar nav-icon"></i>
+                                                            <p>
+                                                                Faktur Pembelian                                                                <span id="side_menu_5003" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return" class="nav-link">
+                                                            <i class="fa&#x20;fa-step-backward nav-icon"></i>
+                                                            <p>
+                                                                Retur Pembelian                                                                <span id="side_menu_5004" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-down-payment" class="nav-link">
+                                                            <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                                            <p>
+                                                                DP Pembelian                                                                <span id="side_menu_5005" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-payment" class="nav-link">
+                                                            <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                                            <p>
+                                                                Bayar Pembelian                                                                <span id="side_menu_5006" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;need-for-goods" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-cubes"></i>
+                                            <p>
+                                                Kebutuhan Barang                                                <span id="side_menu_5011" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-clipboard-list"></i>
+                                            <p>
+                                                Permintaan Barang                                                <span id="side_menu_5012" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-thumbtack"></i>
+                                            <p>
+                                                Permintaan Pembelian                                                <span id="side_menu_5013" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-angle-double-right"></i>
+                                            <p>
+                                                Barang Masuk                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_5101" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-in" class="nav-link">
+                                                            <i class="fa&#x20;fa-truck-loading nav-icon"></i>
+                                                            <p>
+                                                                Pembelian Masuk                                                                <span id="side_menu_5102" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-in" class="nav-link">
+                                                            <i class="fa&#x20;fa-undo nav-icon"></i>
+                                                            <p>
+                                                                Retur Penjualan                                                                <span id="side_menu_5103" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-angle-double-left"></i>
+                                            <p>
+                                                Barang Keluar                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_5104" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-transfer" class="nav-link">
+                                                            <i class="fa&#x20;fa-sync nav-icon"></i>
+                                                            <p>
+                                                                Transfer Barang                                                                <span id="side_menu_5105" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;delivery-out" class="nav-link">
+                                                            <i class="fa&#x20;fa-truck-moving nav-icon"></i>
+                                                            <p>
+                                                                Pengiriman Barang                                                                <span id="side_menu_5106" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-out" class="nav-link">
+                                                            <i class="fa&#x20;fa-undo nav-icon"></i>
+                                                            <p>
+                                                                Retur Pembelian                                                                <span id="side_menu_5107" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;stock-opname" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-clipboard-check"></i>
+                                            <p>
+                                                Stok Opname                                                <span id="side_menu_5108" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;leads" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-address-card"></i>
+                                            <p>
+                                                Leads                                                <span id="side_menu_5151" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;guest-book" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-address-book"></i>
+                                            <p>
+                                                Buku Tamu                                                <span id="side_menu_5152" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;client-sample" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-box"></i>
+                                            <p>
+                                                Client Sample                                                <span id="side_menu_5153" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;client-production" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-clipboard-check"></i>
+                                            <p>
+                                                Client Produksi                                                <span id="side_menu_5154" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;client-repeat-order" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-sync"></i>
+                                            <p>
+                                                Client RO                                                <span id="side_menu_5155" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;client-lost" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-users-slash"></i>
+                                            <p>
+                                                Client Lost                                                <span id="side_menu_5156" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-luggage-cart"></i>
+                                            <p>
+                                                Penjualan                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_5201" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample" class="nav-link">
+                                                            <i class="fa&#x20;fa-shopping-bag nav-icon"></i>
+                                                            <p>
+                                                                Penjualan Sample                                                                <span id="side_menu_5202" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-payment" class="nav-link">
+                                                            <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                                            <p>
+                                                                Bayar Sample                                                                <span id="side_menu_5203" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales" class="nav-link">
+                                                            <i class="fa&#x20;fa-luggage-cart nav-icon"></i>
+                                                            <p>
+                                                                Penjualan                                                                <span id="side_menu_5211" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return" class="nav-link">
+                                                            <i class="fa&#x20;fa-step-forward nav-icon"></i>
+                                                            <p>
+                                                                Retur Penjualan                                                                <span id="side_menu_5212" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-down-payment" class="nav-link">
+                                                            <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                                            <p>
+                                                                DP Penjualan                                                                <span id="side_menu_5213" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-invoice" class="nav-link">
+                                                            <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                                            <p>
+                                                                Faktur Penjualan                                                                <span id="side_menu_5214" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-payment" class="nav-link">
+                                                            <i class="fa&#x20;fa-file-invoice nav-icon"></i>
+                                                            <p>
+                                                                Bayar Penjualan                                                                <span id="side_menu_5215" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-calendar"></i>
+                                            <p>
+                                                Pra Produksi                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_5301" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;formulation-adjustment" class="nav-link">
+                                                            <i class="fa&#x20;fa-sliders-h nav-icon"></i>
+                                                            <p>
+                                                                Penyesuaian Formulasi                                                                <span id="side_menu_5300" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;formulation-manage" class="nav-link">
+                                                            <i class="fa&#x20;fa-vials nav-icon"></i>
+                                                            <p>
+                                                                Kelola Formulasi                                                                <span id="side_menu_5302" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;formulation" class="nav-link">
+                                                            <i class="fa&#x20;fa-vial nav-icon"></i>
+                                                            <p>
+                                                                Formulasi                                                                <span id="side_menu_5303" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs" class="nav-link">
+                                                            <i class="fa&#x20;fa-dollar-sign nav-icon"></i>
+                                                            <p>
+                                                                Permintaan HPP                                                                <span id="side_menu_5304" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;batch-record" class="nav-link">
+                                                            <i class="fa&#x20;fa-barcode nav-icon"></i>
+                                                            <p>
+                                                                Batch Record                                                                <span id="side_menu_5305" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;schedule-mixing" class="nav-link">
+                                                            <i class="fa&#x20;fa-vial nav-icon"></i>
+                                                            <p>
+                                                                Jadwal Mixing                                                                <span id="side_menu_5306" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;schedule-filling" class="nav-link">
+                                                            <i class="fa&#x20;fa-wine-bottle nav-icon"></i>
+                                                            <p>
+                                                                Jadwal Filling                                                                <span id="side_menu_5307" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;schedule-packaging" class="nav-link">
+                                                            <i class="fa&#x20;fa-box-tissue nav-icon"></i>
+                                                            <p>
+                                                                Jadwal Packaging                                                                <span id="side_menu_5308" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-industry"></i>
+                                            <p>
+                                                Produksi                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_5401" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;production-mixing" class="nav-link">
+                                                            <i class="fa&#x20;fa-vial nav-icon"></i>
+                                                            <p>
+                                                                Produksi Mixing                                                                <span id="side_menu_5402" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;production-filling" class="nav-link">
+                                                            <i class="fa&#x20;fa-wine-bottle nav-icon"></i>
+                                                            <p>
+                                                                Produksi Filling                                                                <span id="side_menu_5403" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;production-packaging" class="nav-link">
+                                                            <i class="fa&#x20;fa-box-tissue nav-icon"></i>
+                                                            <p>
+                                                                Produksi Packaging                                                                <span id="side_menu_5404" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-calculator"></i>
+                                            <p>
+                                                Akuntansi                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_5701" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;general-journal" class="nav-link">
+                                                            <i class="fa&#x20;fa-file-contract nav-icon"></i>
+                                                            <p>
+                                                                Jurnal Umum                                                                <span id="side_menu_5702" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;other-payment" class="nav-link">
+                                                            <i class="fa&#x20;fa-file-invoice-dollar nav-icon"></i>
+                                                            <p>
+                                                                Kas Bank Keluar                                                                <span id="side_menu_5703" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;other-deposit" class="nav-link">
+                                                            <i class="fa&#x20;fa-hand-holding-usd nav-icon"></i>
+                                                            <p>
+                                                                Kas Bank Masuk                                                                <span id="side_menu_5704" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;stock-adjustment" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-boxes"></i>
+                                            <p>
+                                                Penyesuaian Stok                                                <span id="side_menu_5801" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                <li class="nav-header">Laporan</li>
+                                                            <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-need-for-goods" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-cubes"></i>
+                                            <p>
+                                                Kebutuhan Barang                                                <span id="side_menu_6001" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-boxes"></i>
+                                            <p>
+                                                Laporan Persediaan                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_6101" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-stock" class="nav-link">
+                                                            <i class="fa&#x20;fa-cubes nav-icon"></i>
+                                                            <p>
+                                                                Stok                                                                <span id="side_menu_6102" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-mutation-goods" class="nav-link">
+                                                            <i class="fa&#x20;fa-random nav-icon"></i>
+                                                            <p>
+                                                                Mutasi Barang                                                                <span id="side_menu_6103" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-stock-valuation" class="nav-link">
+                                                            <i class="fa&#x20;fa-cubes nav-icon"></i>
+                                                            <p>
+                                                                Stok Valuation                                                                <span id="side_menu_6104" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-users"></i>
+                                            <p>
+                                                Laporan BusDev                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_6201" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-guest-book" class="nav-link">
+                                                            <i class="fa&#x20;fa-address-book nav-icon"></i>
+                                                            <p>
+                                                                Buku Tamu                                                                <span id="side_menu_6202" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-follow-up-customer" class="nav-link">
+                                                            <i class="fa&#x20;fa-user-check nav-icon"></i>
+                                                            <p>
+                                                                Follow Up Pelanggan                                                                <span id="side_menu_6203" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                    <li class="nav-item has-treeview">
+                                        <a href="javascript&#x3A;&#x3B;" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-file-invoice-dollar"></i>
+                                            <p>
+                                                Laporan Keuangan                                                <i class="right fas fa-angle-left"></i> <span id="side_menu_6801" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a>
+                                        <ul class="nav nav-treeview">
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-general-ledger" class="nav-link">
+                                                            <i class="fa&#x20;fa-file-alt nav-icon"></i>
+                                                            <p>
+                                                                Buku Besar                                                                <span id="side_menu_6802" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-profit-loss" class="nav-link">
+                                                            <i class="fa&#x20;fa-file-invoice-dollar nav-icon"></i>
+                                                            <p>
+                                                                Laba Rugi                                                                <span id="side_menu_6803" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-trial-balance" class="nav-link">
+                                                            <i class="fa&#x20;fa-balance-scale nav-icon"></i>
+                                                            <p>
+                                                                Neraca Saldo                                                                <span id="side_menu_6804" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                                <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-balance-sheet" class="nav-link">
+                                                            <i class="fa&#x20;fa-file-contract nav-icon"></i>
+                                                            <p>
+                                                                Neraca                                                                <span id="side_menu_6805" class="badge badge-danger right"></span>
+                                                            </p>
+                                                        </a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                <li class="nav-header">Pengaturan</li>
+                                                            <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account" class="nav-link active">
+                                            <i class="nav-icon fa&#x20;fa-user"></i>
+                                            <p>
+                                                Akun Saya                                                <span id="side_menu_7001" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;company" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-building"></i>
+                                            <p>
+                                                Perusahaan                                                <span id="side_menu_7002" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;setting" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-cogs"></i>
+                                            <p>
+                                                Pengaturan                                                <span id="side_menu_7003" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                                    <li class="nav-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;activity-log" class="nav-link">
+                                            <i class="nav-icon fa&#x20;fa-history"></i>
+                                            <p>
+                                                Catatan Aktifitas                                                <span id="side_menu_7004" class="badge badge-danger right"></span>
+                                            </p>
+                                        </a></li>
+                                                    </ul>
+                </nav>
+                <!-- /.sidebar-menu -->
+            </div>
+            <!-- /.sidebar -->
+        </aside>
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1 class="m-0 text-dark">Akun Saya</h1>
+                        </div>
+                        <!-- /.col -->
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;">Beranda</a></li>
+                                                                <li class="breadcrumb-item active">Akun Saya</li>
+                            </ol>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                    <!-- /.row -->
+                </div>
+                <!-- /.container-fluid -->
+            </section>
+            <!-- /.content-header -->
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    <form action="https://kil.gserp.id/account" class="form-horizontal" id="GSForm" enctype="multipart/form-data" method="post" accept-charset="utf-8">
+<input type="hidden" name="csrf_gs" value="99a34d6c3604c3d369949f5d9e917cef"><div class="row">
+	<!-- Sidebar Profile Card -->
+	<div class="col-md-5 mb-3">
+		<div class="card card-primary card-outline h-100">
+			<div class="card-body box-profile">
+				<div class="text-center">
+					<a class="example-image-link" href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;uploads&#x2F;default.png" data-toggle="lightbox">
+						<img class="profile-user-img img-fluid img-circle" src="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;uploads&#x2F;default.png" alt="User profile picture" id="blah">
+					</a>
+				</div>
+
+				<h3 class="profile-username text-center">Zaki </h3>
+
+				<p class="text-muted text-center">Administrator</p>
+
+				<ul class="list-group list-group-unbordered mb-3">
+					<li class="list-group-item">
+						<b>Email</b> <a class="float-right">zaki@dreamlab.id</a>
+					</li>
+					<li class="list-group-item">
+						<b>Nomor Telepon</b>
+						<a class="float-right">085659360766</a>
+					</li>
+					<li class="list-group-item">
+						<b>Tanggal Bergabung</b>
+						<a class="float-right">Sun, 12 Mar 2023</a>
+					</li>
+					<li class="list-group-item">
+						<b><i class="fas fa-shield-alt"></i> Autentikasi 2FA</b>
+						<span class="float-right">
+															<span class="badge badge-warning">
+									<i class="fas fa-exclamation-triangle"></i> Tidak Aktif
+								</span>
+													</span>
+					</li>
+				</ul>
+
+				
+									<div class="alert alert-warning">
+						<h6>
+							<i class="icon fas fa-exclamation-triangle"></i> <b>Tingkatkan Keamanan Akun</b>
+						</h6>
+						Akun Anda belum dilindungi dengan Autentikasi Dua Faktor (2FA).
+						<a href="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account&#x2F;security" class="alert-link">
+							<b>Aktifkan sekarang</b>
+						</a> untuk keamanan ekstra.
+					</div>
+							</div>
+		</div>
+	</div>
+
+	<!-- Main Form Card -->
+	<div class="col-md-7 mb-3">
+		<div class="card h-100">
+			<div class="overlay" id="cardLoading">
+				<span class="spinner-grow"></span>
+			</div>
+			<div class="card-header py-2">
+				<h3 class="card-title text-sm">Perbarui Data Akun</h3>
+			</div>
+			<div class="card-body">
+				
+				<!-- Informasi Pribadi -->
+				<div class="card card-info card-outline mb-3">
+					<div class="card-header py-2">
+						<h5 class="card-title text-sm mb-0">
+							<i class="fas fa-user mr-1"></i>Informasi Pribadi
+							<small class="text-muted ml-2">Data diri</small>
+						</h5>
+					</div>
+					<div class="card-body">
+						<div class="form-group row mb-2">
+							<label for="inputName" class="col-sm-3 col-form-label font-weight-normal">
+								<i class="fas fa-user mr-1 text-info"></i>
+								Nama
+								<span class="text-danger">*</span>
+								<small class="text-muted d-block">Nama lengkap</small>
+							</label>
+							<div class="gs-field col-sm-9">
+								<input type="text" class="form-control" name="name" id="inputName"
+									placeholder="Nama Lengkap" value="Zaki&#x20;" required>
+								<small class="form-text text-muted">Nama lengkap Anda</small>
+							</div>
+						</div>
+
+						<div class="form-group row mb-2">
+							<label for="inputEmail" class="col-sm-3 col-form-label font-weight-normal">
+								<i class="fas fa-envelope mr-1 text-info"></i>
+								Email
+								<span class="text-danger">*</span>
+								<small class="text-muted d-block">Email address</small>
+							</label>
+							<div class="gs-field col-sm-9">
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<span class="input-group-text"><i class="fas fa-envelope"></i></span>
+									</div>
+									<input type="email" class="form-control" name="email" id="inputEmail"
+										placeholder="email@example.com" value="zaki&#x40;dreamlab.id" required>
+								</div>
+								<small class="form-text text-muted">Email yang digunakan untuk login</small>
+							</div>
+						</div>
+
+						<div class="form-group row mb-2">
+							<label for="inputPhone" class="col-sm-3 col-form-label font-weight-normal">
+								<i class="fas fa-phone mr-1 text-info"></i>
+								Nomor Telepon
+								<small class="text-muted d-block">Kontak</small>
+							</label>
+							<div class="gs-field col-sm-9">
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<span class="input-group-text"><i class="fas fa-phone"></i></span>
+									</div>
+									<input type="text" class="form-control" name="phone" id="inputPhone"
+										placeholder="081234567890" value="085659360766">
+								</div>
+								<small class="form-text text-muted">Nomor telepon yang dapat dihubungi</small>
+							</div>
+						</div>
+
+						<div class="form-group row mb-0">
+							<label class="col-sm-3 col-form-label font-weight-normal">
+								<i class="fas fa-signature mr-1 text-info"></i>
+								Tanda Tangan
+								<small class="text-muted d-block">Digital signature</small>
+							</label>
+							<div class="col-sm-12 text-center">
+								<textarea id="mySignature" name="signature" style="display: none;"></textarea>
+								<canvas id="myCanvas" class="myCanvas" width="200" height="100" style="border: 1px solid #ced4da; cursor: crosshair;"></canvas>
+								<br>
+								<button type="button" class="btn btn-danger btn-sm" data-action="clear">
+									<i class="fas fa-eraser mr-1"></i> Bersihkan
+								</button>
+								<small class="form-text text-muted">Buat tanda tangan digital menggunakan mouse/touchpad</small>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Foto Profil -->
+				<div class="card card-success card-outline mb-3">
+					<div class="card-header py-2">
+						<h5 class="card-title text-sm mb-0">
+							<i class="fas fa-image mr-1"></i>Foto Profil
+							<small class="text-muted d-block">Upload foto</small>
+						</h5>
+					</div>
+					<div class="card-body">
+						<div class="form-group row mb-0">
+							<label class="col-sm-3 col-form-label font-weight-normal">
+								<i class="fas fa-camera mr-1 text-success"></i>
+								Upload Foto
+								<small class="text-muted d-block">Profile picture</small>
+							</label>
+							<div class="col-sm-9">
+								<div class="custom-file">
+									<input type="file" accept="image/jpg,image/jpeg,image/gif,image/png,image/webp"
+										class="custom-file-input" id="exampleInputFile" name="photo"
+										onchange="document.getElementById('blah').src = window.URL.createObjectURL(this.files[0])">
+									<label class="custom-file-label" for="exampleInputFile">Pilih file foto</label>
+								</div>
+								<small class="form-text text-muted">Format: JPG, PNG, GIF, WEBP (Max 1MB)</small>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Keamanan - Password -->
+				<div class="card card-warning card-outline mb-3">
+					<div class="card-header py-2">
+						<h5 class="card-title text-sm mb-0">
+							<i class="fas fa-lock mr-1"></i>Ubah Kata Sandi
+							<small class="text-muted ml-2">Keamanan</small>
+						</h5>
+					</div>
+					<div class="card-body">
+						<div class="alert alert-info alert-sm mb-3">
+							<i class="fas fa-info-circle mr-1"></i>
+							<strong>Kriteria Kata Sandi Kuat:</strong> 8-20 karakter, minimal 1 huruf besar, 1 huruf kecil, 1 angka, dan 1 karakter khusus (@#$%&).
+						</div>
+
+						<div class="form-group row mb-2">
+							<label for="password" class="col-sm-3 col-form-label font-weight-normal">
+								<i class="fas fa-key mr-1 text-warning"></i>
+								Kata Sandi Baru
+								<small class="text-muted d-block">New password</small>
+							</label>
+							<div class="gs-field col-sm-9">
+								<div class="input-group">
+									<input type="password" class="form-control" name="password" id="password"
+										placeholder="Kosongkan jika tidak ingin mengubah">
+									<div class="input-group-append">
+										<a href="javascript:;" class="btn btn-default" id="toogle_password">
+											<i class="fas fa-eye-slash"></i>
+										</a>
+									</div>
+								</div>
+								<small class="form-text text-muted">Biarkan kosong jika tidak ingin mengubah password</small>
+							</div>
+						</div>
+
+						<div class="form-group row mb-0">
+							<label for="password_confirm" class="col-sm-3 col-form-label font-weight-normal">
+								<i class="fas fa-check-circle mr-1 text-warning"></i>
+								Konfirmasi Kata Sandi
+								<small class="text-muted d-block">Confirm password</small>
+							</label>
+							<div class="gs-field col-sm-9">
+								<input type="password" class="form-control" name="password_confirm" id="password_confirm"
+									placeholder="Ulangi kata sandi baru">
+								<small class="form-text text-muted">Ketik ulang kata sandi baru untuk konfirmasi</small>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="card-footer text-right">
+				<button type="button" class="btn btn-default" onclick="location.href='https\x3A\x2F\x2Fkil.gserp.id\x2Faccount';">
+					<i class="fas fa-times-circle mr-1"></i> Batal
+				</button>
+				<button type="submit" class="btn btn-primary">
+					<i class="fas fa-save mr-1"></i> Simpan Perubahan
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+</form>                    <!-- /.row -->
+                </div>
+                <!-- /.container-fluid -->
+
+                <div class="modal fade" id="modal-sm">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div id="modal-sm-content">
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <!-- /.modal -->
+
+                <div class="modal fade" id="modal-md">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div id="modal-md-content">
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <!-- /.modal -->
+
+                <div class="modal fade" id="modal-lg">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div id="modal-lg-content">
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <!-- /.modal -->
+
+                <div class="modal fade" id="modal-xl">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div id="modal-xl-content">
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <!-- /.modal -->
+
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+
+        <!-- Main Footer -->
+        <footer class="main-footer">
+            <!-- To the right -->
+            <div class="float-right d-none d-sm-inline">
+                Goodsyst Enterprise Resource Planning Karya Impian Laboratoris. 2.0.0            </div>
+            <!-- Default to the left -->
+            <strong>Copyright &copy; 2026 <a href="https&#x3A;&#x2F;&#x2F;dreamlab.id">PT. Karya Impian Laboratoris</a>.
+            </strong> All rights reserved.
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+
+    <!-- REQUIRED SCRIPTS -->
+
+    <!-- jQuery -->
+    <script src="https://kil.gserp.id/assets/plugins/jquery/jquery.min.js"></script>
+    <!-- jQuery UI 1.11.4 -->
+    <script src="https://kil.gserp.id/assets/plugins/jquery-ui/jquery-ui.min.js"></script>
+    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+    <script>
+        $.widget.bridge('uibutton', $.ui.button)
+    </script>
+    <!-- Bootstrap 4 -->
+    <script src="https://kil.gserp.id/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://kil.gserp.id/assets/plugins/sweetalert2/sweetalert2.min.js"></script>
+    <!-- jquery-validation -->
+    <script src="https://kil.gserp.id/assets/plugins/jquery-validation/jquery.validate.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/jquery-validation/additional-methods.min.js"></script>
+    <!-- DataTables -->
+    <script src="https://kil.gserp.id/assets/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+    <!-- jszip -->
+    <script src="https://kil.gserp.id/assets/plugins/jszip/jszip.min.js"></script>
+    <!-- Select2 -->
+    <script src="https://kil.gserp.id/assets/plugins/select2/js/select2.full.min.js"></script>
+    <!-- Lightbox2 -->
+    <script src="https://kil.gserp.id/assets/plugins/ekko-lightbox/ekko-lightbox.min.js"></script>
+    <!-- date-range-picker -->
+    <script src="https://kil.gserp.id/assets/plugins/moment/moment.min.js"></script>
+    <script src="https://kil.gserp.id/assets/plugins/daterangepicker/daterangepicker.js"></script>
+    <!-- Tempusdominus Bootstrap 4 -->
+    <script src="https://kil.gserp.id/assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js">
+    </script>
+    <!-- Summernote -->
+    <script src="https://kil.gserp.id/assets/plugins/summernote/summernote-bs4.min.js"></script>
+    <!-- Jquery Number -->
+    <script src="https://kil.gserp.id/assets/tools/jquery.number.js"></script>
+    <!-- overlayScrollbars -->
+    <script src="https://kil.gserp.id/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+    <!-- Full Calendar -->
+    <script src="https://kil.gserp.id/assets/plugins/fullcalendar/main.js"></script>
+    <!-- AdminLTE App -->
+    <script src="https://kil.gserp.id/assets/js/adminlte.min.js"></script>
+    <script>
+        function uriAlert(uri, message, loading = false) {
+            var text = '';
+            if (message) {
+                text = message;
+            }
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Anda akan melakukan aksi ini! " + text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: '&nbsp;&nbsp;&nbsp;Iya&nbsp;&nbsp;&nbsp;',
+                cancelButtonText: '&nbsp;&nbsp;&nbsp;Tidak&nbsp;&nbsp;&nbsp;',
+                reverseButtons: true,
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                },
+            }).then((result) => {
+                if (result.value) {
+                    // Only show full-screen loading if explicitly requested
+                    if (loading === true) {
+                        showFullScreenLoading();
+                    }
+
+                    // Show card loading juga untuk backward compatibility
+                    $('#cardLoading').show();
+
+                    location.href = uri;
+                }
+            });
+        }
+
+        function showFullScreenLoading() {
+            // Create full-screen loading overlay if not exists
+            if ($('#fullScreenLoading').length === 0) {
+                var loadingHtml = '<div id="fullScreenLoading" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 9999; display: flex; justify-content: center; align-items: center;">' +
+                    '<div style="text-align: center;">' +
+                    '<div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;"></div>' +
+                    '<div class="text-light mt-3" style="font-size: 1.2rem;">Memproses...</div>' +
+                    '</div>' +
+                    '</div>';
+                $('body').append(loadingHtml);
+            } else {
+                $('#fullScreenLoading').show();
+            }
+        }
+
+        function hideFullScreenLoading() {
+            $('#fullScreenLoading').hide();
+        }
+    </script>
+    <!-- User JS -->
+    <!-- bs-custom-file-input -->
+<script src="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;assets&#x2F;plugins&#x2F;bs-custom-file-input&#x2F;bs-custom-file-input.min.js"></script>
+<script src="https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;assets&#x2F;tools&#x2F;signature_pad.umd.js"></script>
+<script>
+	$(function() {
+		bsCustomFileInput.init();
+		$("#toogle_password").on('click', function(event) {
+			event.preventDefault();
+			if ($('#show_hide_password input').attr("type") == "text") {
+				$('#show_hide_password input').attr('type', 'password');
+				$('#show_hide_password i').addClass("fa-eye-slash");
+				$('#show_hide_password i').removeClass("fa-eye");
+			} else if ($('#show_hide_password input').attr("type") == "password") {
+				$('#show_hide_password input').attr('type', 'text');
+				$('#show_hide_password i').removeClass("fa-eye-slash");
+				$('#show_hide_password i').addClass("fa-eye");
+			}
+		});
+		$.validator.addMethod("strong_password", function(value, element) {
+			let password = value;
+			if (!(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@#$%&])(.{8,20}$)/.test(password))) {
+				return false;
+			}
+			return true;
+		}, function(value, element) {
+			let password = $(element).val();
+			if (!(/^(.{8,20}$)/.test(password))) {
+				return 'Kata sandi harus antara 8 hingga 20 karakter.';
+			} else if (!(/^(?=.*[A-Z])/.test(password))) {
+				return 'Kata sandi harus mengandung setidaknya satu huruf besar.';
+			} else if (!(/^(?=.*[a-z])/.test(password))) {
+				return 'Kata sandi harus mengandung setidaknya satu huruf kecil.';
+			} else if (!(/^(?=.*[0-9])/.test(password))) {
+				return 'Kata sandi harus mengandung setidaknya satu angka.';
+			} else if (!(/^(?=.*[@#$%&])/.test(password))) {
+				return "Kata sandi harus berisi karakter khusus dari @#$%&.";
+			}
+			return false;
+		});
+		$.validator.setDefaults({
+			submitHandler: function(form) {
+				const data = signaturePad.toDataURL();
+				$('#mySignature').val(data);
+				Swal.fire({
+					title: 'Apakah Anda yakin?',
+					text: "Anda akan melakukan aksi ini!",
+					icon: 'warning',
+					showCancelButton: true,
+					confirmButtonColor: '#3085d6',
+					cancelButtonColor: '#d33',
+					confirmButtonText: '&nbsp;&nbsp;&nbsp;Iya&nbsp;&nbsp;&nbsp;',
+					cancelButtonText: '&nbsp;&nbsp;&nbsp;Tidak&nbsp;&nbsp;&nbsp;',
+					reverseButtons: true,
+					showClass: {
+						popup: 'animate__animated animate__fadeInDown'
+					},
+					hideClass: {
+						popup: 'animate__animated animate__fadeOutUp'
+					},
+				}).then((result) => {
+					if (result.value) {
+						$('#cardLoading').show();
+						form.submit();
+					}
+				});
+			}
+		});
+		$('#GSForm').validate({
+			rules: {
+				name: {
+					required: true,
+				},
+				email: {
+					required: true,
+					email: true,
+				},
+				phone: {
+					required: true,
+				},
+				password: {
+					strong_password: false
+				},
+				password_confirm: {
+					equalTo: "#password"
+				},
+			},
+			errorElement: 'span',
+			errorPlacement: function(error, element) {
+				error.addClass('invalid-feedback');
+				element.closest('.gs-field').append(error);
+			},
+			highlight: function(element, errorClass, validClass) {
+				$(element).addClass('is-invalid');
+			},
+			unhighlight: function(element, errorClass, validClass) {
+				$(element).removeClass('is-invalid');
+			}
+		});
+
+		const canvas = document.querySelector("canvas");
+		const signaturePad = new SignaturePad(canvas);
+		var clearButton = document.querySelector("[data-action=clear]");
+		var saveButton = document.querySelector("[data-action=simpan]");
+		clearButton.addEventListener("click", function(event) {
+			signaturePad.clear();
+		});
+
+		signaturePad.fromDataURL("data\x3Aimage\x2Fpng\x3Bbase64,iVBORw0KGgoAAAANSUhEUgAAAMgAAABkCAYAAADDhn8LAAAQAElEQVR4AeydB7A0RRHHz5xzzoo5J8qcxYxZFMVUCCVmEUUQcwBLsMSsKAqUoiCYEDOoYAIjBlAxYEAUE2ZUgv\x2FffW\x2FeN9fXszt7b3dv725eTb\x2BZ6elJvdMTesKdd1T\x2BCgcKB\x2BDAefTvyoIDBHsJxqYIyJgN5d8KcwDBOEn1P0dwmuBJgt0E5wp2LAIiLhSzshw4v2qOYNxItmf2KwLisaXgVoEDF1Ql\x2FyeoNEVAKtlTApeYA\x2F\x2FJqVuHApKTfaEpHJgLB1hfeBnfQEjWJMCxco\x2BKgMCFAoUDo9GWYsLJgmDuhqMICFwosEoc2N\x2Bp7KOE\x2B5bAmi2LgFiWFP\x2Byc2B7p4KHOzhQJxQBgQ0FVoUDrC1sXW9qEZH\x2FrMUUkKgGxVk40IADd3FoT3Rw66giIOusKI4V4MAxpo7snBvUpLcIyCQ\x2Fim\x2B1OHBEXXWLgNRxqIQvMwdeVVe5RRKQa6gyVxBcaA3OJ7uYwoFcDmzhEP7GwU2ghi4gb1Fp2fUEfiX36YIz1\x2BAs2eCB78v9TAGbO56mQkF5plAtLQdoH40rNyQBuZpK\x2FyDBnQQ0euAZcueYm4nozYIvCTidSVw2fi4sfzGFA3Dg8vxrCkMQEBozwHD3CVXgK4I2zG2UyL8FpH2k7GJWmwPHm\x2BozOzGoae\x2B8BIRz\x2BL9TcWi8sjo3D1QO5HUv2cWsJgeONtX\x2BrvG73nkIyC1UEs7hX0l2E\x2FN5Ee8s\x2BLJgVnOUIs40F1W8YhabAxczxWc9a1DT3nkIyAnTxUhiXqYQFt3AfeTeV3BXAf4AaLW2Fe5UQY5hrbJ7DmHLNCW5\x2BXJgF5P9N43f9fYtIAe7pdiM\x2FIGcXJy\x2FhGwE4JWy68x\x2FRXCI4OoC4gAszj8of8rsqYAykogJK2QeY\x2Bpau4su\x2BvP1KSCXUoaPFaQMZbm5An8v\x2BIegzlxWBDsIPP02t8XIC2ERiWsYSW7shhRk4cAmDvQqIGdsynPiP1omGjHAInoisMbzboW\x2FS\x2FBFAYt\x2BWa4h7W3ckNGo8qBaIk5Brw4Hzk\x2Bv3Ud1UyPCRfvIXHkcJthb4JnresiCKxwQB87bh4DQe1sNgvIe0bNjzwpMr3ZU5HsI2FWXVWl2TYRa\x2FXiCbMjoUrauONC1gDBCHOoUfqPCQZJ\x2F1j\x2BmWT\x2BXnWu8qRhrmdz4hW61OHBO1wLyT4efbQiHk2wW6uwE1UUS\x2BBw0U7TjRMgaKgDrrT2Eu6qgmOFxgHVrTqnO7VJAnuuUYJ7CEYrDocfgDva\x2FgsOxEYADhWcqJ2vKfFWY2wlig8bu1UKwN5P7MUReTE8ceGtuPl0KyBtMIYYgHBTptvxrAGxsPlH0XxCwvyJrwnA4cgJhPHeXn5FFVjED4UD2tLwrAXm7YcT1jH\x2Be3j82zDxWMDzVics95w8L\x2FxlBlflDVeBgw5azYLl3iTrbB9nJ8PVnxr\x2BoXo66hLKzuEeTxujwSCHvL2CU9KZwChpx3LqrDon0C6Q5wHeJQ60\x2FDovdneyDsDiNM7lA7BmI\x2B6dOOTwNF2QcS8G2gAbN26i8lghTR2pS\x2B0GKUkyHHLAdU862AMXpREBYnJI48DX9yy2MSHszL3dysoIdSOy9ZU4ih7CUvV0iYCPaskSSBZ3BAQ60xmRVSpmYrhMBief494tzG5D7A05ZPKGBjCu\x2B2AEYaeiRmF5VbVRePEQo9tw5wE8dxIX4W\x2BypcHeyD3IHZXiQ4J6CvwuGaOo0T3Vl\x2FrgI6jYqvT0gRSsmcKBH2645cr\x2FN2fSEbZeTBTk\x2FY7Wo\x2Bn8ucm0tpnA8mkcgOGEs74Th7vwEongGzQFOd8cFtP44LHZ3IiBxBovmRiPFVWAeFOM\x2BCY9AfC9Ria0S\x2BIIeHge4MzRLqTqZYs1SkEWM87maQnMbsoakBPfEAasoyp05raSA8LwQI0XX3ya16O8635J\x2BPQdyNwo7PYtVX8x\x2BKWAKgsHzQm3ljEbLS4trwx7eu\x2F3o0RXcxjhQF5u2UEdD\x2BAVyhxqIFxWuqIIjGHaYFTppfqSQvQSx8fY\x2F\x2BGWimCa4WcfYoyUvVuAvBMXMnwNWq5Uq0WWXWUCeplojGNxxlzPLwDiAu\x2BovUgzcAawuXcGjqr0OtF\x2BsQ3imCPdriFBgEBzIHUG2WDYBQUWLUABv6\x2BBTPM6k\x2BX7jj70IJq\x2By8EwRr7XEYcU9Xw6kpsa2VFdZFgFh\x2BoJQMLWxlfT8s65D2IFnyvYIJcopXx6dkLOYBeNAroB0ctSkT15xYBDBsOelUmXgpC3DKz\x2BlkKKpw7O2\x2BIiIcs\x2FziLSYgXEgd2A4c5pwYDVJFIc3rRCMpyTCLZpH4lhLcNJ2o8dMbNqen\x2FUKD9ktKn\x2B9Oi0TjraTU58LLdoHpGIADb6ugrwUj1AA2Vcs6xJNhDPdolwBOMrwa9FyBz7gsp66VJxlMqnryil8X3Xnu\x2BTkdbdFEBAaOI8g0NByKsVdeOI8uIY498BaTTIjzmXl3PPgqi914I3hujTbDL90m4k1TIt7N951ZX7wyMM3TH5mcr5DTuSthiwgqEipCFMiHkGoq9B1RIBgvFF2jqHXz6GrormjAhmpZGWbz4qSRb6sTg3TPH5E6C\x2FKBT4G2FL\x2BeZv4XkzqMYwuywgvctK\x2FxlAEhI95fZWYq7oUHsg9qoHwIBinKH6fhjUGL5rMkufhivQKQZfmWUqcHxGSNWG\x2BIR\x2FXhWV1avgucQb2Xk0I\x2B1Rw9Gh7m75u9r0KiCkBjRpBAJiz\x2F0Th9rEHoZLmRgohjdzLLyJv1bDGSCXIAw4PTQWu4V8qm7rb225Ct2L2qUjlTwprYwRVMkkzpB8rop3EBc1Wz89DQMiThsHUKS50rpvXGqnwj3Mj9Ej3JuVF2XjAgUtVuIGqdUeqZ1VSnRous6Hy7iqTd3SV8Azp2n0POuSsZGisWYQtEXEBKVeDEGfJm1SUlcaWLf1xAi27EXAvyed4SOH4dayqvZdUeoramYGX9u2yNjNjQzU3vVvlEs5IZx8Oye6caXQz5tk4GnsWXEBqEpGfa\x2BNDMlzPoxE1Keuta4jZvY8XpzXknQTbH65kndJJRg0T\x2FU5D\x2BqbkM09j\x2BxIQFovseldVjCH\x2FziKgESEUAOpAoRbC5PwoJNMp6uVVKFf75sW1OE9YOTTpCQSHOm38ZfdnTy37EhDUjSmmv0QBNJpLykYrRCOSs5FZNOIbOgV\x2BtoObFcVekI37MItY83dxqPMKa2kPxbLTetaxWWXrQ0C892wpHHe\x2BEYz4HS3wiwD2Xkfd9VtbJzR2FtemH77a9MLarcnawKaR639dLmFPdPYuUI4Aj9ctfQjIaxNM4DcEE0GDRx9gSlilpTKk6973rbs2O7yGvTk038WDfZY67H10rd4lX16FwR4K2BEkp5Ng43nUh4A8weESv2LroBcGxQ76RgvLs0I2DauOtOG5\x2FmMcQt4rA21H9NNBtgy8Q9xykq0mlzOCjDu9PgQk9FxxDXPOLsX0Q3Ozz7GRMqHWHA\x2FhJpHsHV4Tz3o5A2VxvFUGLn75En9ObwrdEAEecsaNUxis61Lt2S7KL5NRmcdDk0qQsAJjDrT6jxECdbWn1mzzRIC3EXantZq0mc9ako0tNlQbR4oisKcEH3nvilPSrOl4R4CpFPibRbQ4rYDk7IOMR9wiILBvM1hGbg6ZdPExJjG\x2BjyeG0Mrx0YCqEcKeXfJTnB0bRnLKMXsq7cTM\x2FgEbJ7t7C8fFN1lJw\x2FZAXE\x2FuAcXEXIeO\x2FUl31wLSdfrJis0YkCsg9n4JP6BDlqiqeZeYjwOwOZizSdXnbxkOYf1nGyy8ywHee\x2BZUQg4tNLyfjP1A\x2FkVwcuSudHbdgHOGssoC9hxY1cPHRbEfmOPrCMRfReQpJYROGjRXpyVD2w8YwprjmjNUi\x2Bnp0Q3jhbXGDUw8fhbPoKa84\x2FtCXQvIVK4DR9DIU0WkIdP4mTI9P0XUAI8akTQbRGmF1E7lvt5KqpOJ2Dsylq\x2FjxjcZpdZX13mlRhauTdhT4u\x2BtzW00uqVoDioCIi4kDNMtejo\x2BLsBoyPQpZ8qUSHIdzW82njJa9\x2FbqsBemxovRlktgn0OyAnFCw\x2Fzgvxflh0LSyQCoZeGrUBOGi3feSY66tj\x2F\x2BlYI6oomclshj9wJC1fgQAdh9\x2FWUIaNlGDUs\x2BbQhbKBoCTePnQYuqqYg9sBjit2nbfRD7wB4NO86v6hDrp2PCyM2VaqutolFHJJVOWwaXeJUEhAbEMEzDDMcuXKb0iGS6Ru\x2FXJEs0Y\x2FyyFepN6hIAgea2IA9asJjNTZMrwLm0uXSpt4lDfNS0wY2d2rhDY2V\x2Fpew4ReAdAPZA7it3rtLhcqKNDRfu6Exi3JR7mQWEhscBvbgBwfApJswZwdStrgg8vBDqgWZsP0Vgg0xWtknlQyNLjahe4mjqPHyMQ\x2FBjv3VzfSHGXTv2RG46tMg7dt5e\x2F48UoDnk5ib7OoE32wifMmi07KhBZ0JcjkMhcMSl3WDToe6ybALCczJchaXSNAgeeKOybcCjlQjMA\x2BScMBzlB2\x2BB3o3F3gsnqKc9aMGmsZsw3KPh4YVNvrz\x2FaNO40htTgwubhTEeNxoi7Crg3QBGKdJhHwElQ4qejbtUGHju\x2BWAHSJ2upVEHmhz70ARRmPLZKVkg5\x2Fuw6RjaDTZ13WfZBIQpBo8phIpvxGZoj\x2B\x2BmfChKzM51WSBGwetOjtTwC1WcbkV4Ug2BRxzWI0UOjk8gfBEq6aT3JA\x2Fg0qKyZ6xQeVptjsjGhh3osaPiH7vz9KqQoCqmXrg9sA9oHGaIbLgJXvfeTq6DBRs1vIYZvlFqOufmMS8BCYx2C7UBJL1AXfRvJwjoRWlcAZibp6YK9iRu7kYfax87F04UZ4Rw5uzYM22kzLYRXsVJ2PbcgaROk\x2BXVj4V36mQwo3dIGzv04LiBT\x2FIvA\x2BiI7IPhGdFcEr4nU0nOol3JpXCQ8xKQ\x2FZ2ytIHiRiINhSd1\x2BIA0HAu8tu7lldOLhnj2tfYmakumDUeFhCKbtUDkHVW9\x2FcsUBwGgbimNVd2\x2BQZxXKo1Ac2pwGJsR0qDGXrvXcpcxdvM\x2Fbjdu9o1GqQceWGvEdLGb32\x2FZVgj2pPaUzUv6XDrDL2\x2BlYXSFd2gRK6fhfQhIPDUJpQ4nS4O\x2FLZseh6kGm0NW9x7ySOFDeI59oiFCvWpQlV56fUuwW4SgDpF3wsmHRUtU95J97jQmJM40MLitzav2FlflD\x2Be\x2BAg2jc3BjMz1jcY0b2JV\x2FBqinPSICCQ9jEMbvtxwixOsFewjY70Ardazc1iAEaPbsjIAZB\x2Bs\x2F0nOhDwHx7j1QAbQQ2H0BH43Fl5df0\x2FvgJzmJwGAHPYVKNcS40\x2FAWm1yjzc2DTOklsVNgO64XiJCFuKwpw7RkCikEG6myZjKMMmzsMd3mPQKbSGoEneUkMEIw08\x2BS9yEgqUb5cHHkyYIuDA3pJkqY919pbJSBx9KEcg2Nzw1IIEnPBjHv9haALMyZgz9dEYhHQ5RzyqB9Awk9toWmQlzXkNDK2TzsVeIQTg8c3LEdyhzjcFutGxoh8BYY8eGbxeNn5NRqZgAABbxJREFUvYAdA1Oi2O\x2B5jxcyHp12ln9m04eAULhUPpyJSfWoxMsBhAGV48dETAMEYDo67wOFq5quKHjExht2G0CvTf4xMKVDi2JPAMf5xUIRuwMNU4HgzrXZCEvRpha\x2BLMYpu43nXeG1NLHfClpb7w7k8oF9I6ZUfNt944I1dacabtN06uhhekpTQo9KOL8LWJcO4ZzMhD4AwsD9gocQ2BB2EP1vBbOY1HSkaVrwBe1WiOdNZ9rKizxQKIQ1hW3IhAOBt4zwuOPyEQ5U3clgZEBrBB2NeqOdIOk0AcrMlCr\x2BtnSkqLqbpNPLnfRQII4IpPT90LDwpWIAu6UIAi8xovEBF6CtJ0e5prkRbRpaInvsnXo0ATRt8CUnTpOPW7XLznXfkF\x2Fd\x2B8GM8IHW2ttZhPGzj0RPzrTIEzBDPuVlRjCFnBFB50tHigaRRX12Mn2NIKFAqZ9NDuHB5gg2gsAhNnssIdDMavN7hvQmHBicNY0Qj16UoxdsogVcjs1oRxmYfnn0sUYrhPNxw3GIgPNsOhLOaXlh5BnjuXnHCB7jct1WVevFY9fdw\x2BfgOEaSQ1dHQ53pfAPd8\x2BRgj0lWvelbQCgRBcbuA7iXwBqEEYnGRd5t\x2FxwzGhgWlGjJWIPYeiHgfBBUneQPHGGJjD\x2FVyzFdQQBYNG\x2BhOOz7MH0BF0Bo16RefuQVeEZpN1IC2VG7mciN9eMEQh4eBJeVbXjRk5HDRsge0fqoqC0cfhoJ0wvcbQDDOQtMGiJpB\x2BBINBuHaDZSmpQ28icNNDfs0Ia8g83D2\x2Bjfm2xEUtaqRTaHMJnn04vnjgApdTtl30r\x2FOPMlq9ZQL4SxlnCDBJ6al\x2B9JJ5HTbimjdw\x2Bk0ciUk9EG65mMzvQCZqMHZ8MnSWgCmBcTh7gBWBBybZWGaMgH5WUU21sl4uOlIJwlY4rZVLWrpKcMwoSaue4A4XsUM\x2FCTzov1FUdTcAc8tsjmauAhnQ38Q1MZjs6jyOAaAHggVchGTzbNU0BCBRgCOTIA85mGsPjjWX4eVUbDYz\x2FQ9opIHFkLY6gbH43er\x2B4oBHsL0ALshqeOedRVnqMX5Mtit2oPyEuHzov1FWsU3B5NHzjaQ1U\x2B7HVRTnjFOpBrAFX0rBerwqfChiAgcaHoGTi9yUKK8zloeOb5geKyzeJGE8fHm1Wg6SjQ5TfJmzsUCAZHL5rEGyIt7YErAxstG9MqeMJ6sVFaQxOQRoUfMDH3UhAMpkldFZOX\x2F\x2Bhh\x2BfAxhGPdXeXbd7ociKR\x2B3OXA3TR\x2FTjfcf9Q01hp9EZA1RrRscRiv5SSnkuPIPYv5\x2BAzXFNESIVhvMJpwhotRsqpqHC9Cs4hgeRuvVXEnwoqATLCjNY\x2FX052h1NFo7S4b1W\x2F4gHxED9DK5ezV8NI8oxWaPCW99IZzVoySgWfwaWvVmsV6wKGxY00i9MZMEZCN8S8Vm6ut9PAcyAwfjZ1wBIP7zwhK3QdEK8duf4iPTj\x2BVH3he\x2F0BQECp6WXCrAPCJeyPc1W\x2B9vkVAWmfpOEH2KHhk7qNjXzv\x2FePA6CAtrD36AyEuZ9Q\x2BjFcKSovHiFZzDgSIgDlMWAIV2hx8gQmDYUU\x2Ft\x2FzDVQFAA7kQsQNWGVcQcARlWiUtpLAc4kcsJAjZPUZHb8ODnoCiCwrkk1j8BX\x2BwKDhQBqWDOggWx18ImK6MKKtFU8TnZylkkBOvWKaKC38SBIiCb\x2BLBs\x2F1GJIigAJw\x2B8\x2BvFYGy\x2B8MKrwygjrGo9upXFFQJb\x2F83N2DUHhW7Mz79X4AUJyvwVh4aQxtEIVUxixOm2Axs8RHoSF4ysptSh7CigBoOcMF7SrwyVT0zkLiClN8fbFAa6iho21d1Zkyh0XBAlh4TzTTqJlfcPJWTmX3xQBWf5vXFdDGj2jCg\x2FRVdHysB1Pl3LCl01OhCYAL6SQRlX8hQwrArKQn62TQvMQHY0c4M4Fr1PmZsR9HrRoQWCwuVacG3\x2BwdP8HAAD\x2F\x2F6yIdCkAAAAGSURBVAMAcVkwuWt3hHMAAAAASUVORK5CYII\x3D", {
+			ratio: 1,
+			width: 200,
+			height: 100
+		});
+	});
+</script>    <script>
+        $(function() {
+
+            $(document).on('select2:open', () => {
+                document.querySelector('.select2-container--open .select2-search__field').focus();
+            });
+            $('.gs-tooltip').tooltip();
+            $(document).on('click', '[data-toggle="lightbox"]', function(event) {
+                event.preventDefault();
+                $(this).ekkoLightbox();
+            });
+            $('.number').number(true, 0);
+            $(".number").keyup(function() {
+                if ($(this).val() == '') {
+                    $(this).val(0);
+                }
+            });
+            $('.number2').number(true, 2);
+            $('.number4').number(true, 4);
+
+            $('.datepicker').datetimepicker({
+                format: 'YYYY-MM-DD',
+            });
+            $('.yearpicker').datetimepicker({
+                format: "YYYY",
+                viewMode: "years",
+                minViewMode: 1,
+                autoclose: true,
+            });
+            $('.monthpicker').datetimepicker({
+                format: "YYYY-MM",
+                viewMode: "months",
+                minViewMode: 1,
+                autoclose: true,
+            });
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.datepicker, .input-group').length) {
+                    $('.datepicker').datetimepicker('hide');
+                }
+                if (!$(e.target).closest('.yearpicker, .input-group').length) {
+                    $('.yearpicker').datetimepicker('hide');
+                }
+                if (!$(e.target).closest('.monthpicker, .input-group').length) {
+                    $('.monthpicker').datetimepicker('hide');
+                }
+            });
+
+            $('.timepicker').datetimepicker({
+                format: 'HH:mm'
+            });
+            $('.mydaterangepicker').daterangepicker({
+                locale: {
+                    separator: '/',
+                    format: 'YYYY-MM-DD'
+                }
+            });
+            $('.summernote').summernote({
+                toolbar: [
+                    ['font', ['bold', 'italic', 'underline', 'clear']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                ]
+            });
+            clockUpdate();
+            setInterval(clockUpdate, 1000);
+
+            $('#cardLoading').hide();
+        });
+
+        function clockUpdate() {
+            var date = new Date();
+
+            function addZero(x) {
+                if (x < 10) {
+                    return x = '0' + x;
+                } else {
+                    return x;
+                }
+            }
+
+            function twelveHour(x) {
+                if (x > 12) {
+                    return x = x - 12;
+                } else if (x == 0) {
+                    return x = 12;
+                } else {
+                    return x;
+                }
+            }
+            var h = addZero(date.getHours());
+            var m = addZero(date.getMinutes());
+            var s = addZero(date.getSeconds());
+
+            $('.digital-clock').text(h + ':' + m + ':' + s)
+        }
+
+        $(document).ready(function() {
+            // Load badges after DOM is ready
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dapproval\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_3001').html(result);
+                                $('#main_menu_3001').html(result);
+                                if (0 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_0').html() != '') {
+                                        var temp = parseFloat($('#side_menu_0').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_0').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dreturn\x2Dapproval\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_3002').html(result);
+                                $('#main_menu_3002').html(result);
+                                if (0 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_0').html() != '') {
+                                        var temp = parseFloat($('#side_menu_0').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_0').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dsample\x2Dapproval\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_3003').html(result);
+                                $('#main_menu_3003').html(result);
+                                if (0 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_0').html() != '') {
+                                        var temp = parseFloat($('#side_menu_0').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_0').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dapproval\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_3004').html(result);
+                                $('#main_menu_3004').html(result);
+                                if (0 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_0').html() != '') {
+                                        var temp = parseFloat($('#side_menu_0').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_0').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dreturn\x2Dapproval\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_3005').html(result);
+                                $('#main_menu_3005').html(result);
+                                if (0 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_0').html() != '') {
+                                        var temp = parseFloat($('#side_menu_0').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_0').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Frequest\x2Dcogs\x2Dapproval\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_3006').html(result);
+                                $('#main_menu_3006').html(result);
+                                if (0 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_0').html() != '') {
+                                        var temp = parseFloat($('#side_menu_0').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_0').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Drequest\x2Dapproval\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_3007').html(result);
+                                $('#main_menu_3007').html(result);
+                                if (0 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_0').html() != '') {
+                                        var temp = parseFloat($('#side_menu_0').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_0').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fgoods\x2Drequest\x2Dapproval\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_3008').html(result);
+                                $('#main_menu_3008').html(result);
+                                if (0 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_0').html() != '') {
+                                        var temp = parseFloat($('#side_menu_0').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_0').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fchecklist\x2Dprogress\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_4001').html(result);
+                                $('#main_menu_4001').html(result);
+                                if (0 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_0').html() != '') {
+                                        var temp = parseFloat($('#side_menu_0').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_0').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5002').html(result);
+                                $('#main_menu_5002').html(result);
+                                if (5001 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5001').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5001').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5001').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dinvoice\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5003').html(result);
+                                $('#main_menu_5003').html(result);
+                                if (5001 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5001').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5001').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5001').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dreturn\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5004').html(result);
+                                $('#main_menu_5004').html(result);
+                                if (5001 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5001').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5001').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5001').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Ddown\x2Dpayment\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5005').html(result);
+                                $('#main_menu_5005').html(result);
+                                if (5001 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5001').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5001').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5001').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dpayment\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5006').html(result);
+                                $('#main_menu_5006').html(result);
+                                if (5001 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5001').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5001').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5001').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fneed\x2Dfor\x2Dgoods\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5011').html(result);
+                                $('#main_menu_5011').html(result);
+                                if (0 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_0').html() != '') {
+                                        var temp = parseFloat($('#side_menu_0').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_0').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fgoods\x2Drequest\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5012').html(result);
+                                $('#main_menu_5012').html(result);
+                                if (0 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_0').html() != '') {
+                                        var temp = parseFloat($('#side_menu_0').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_0').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Drequest\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5013').html(result);
+                                $('#main_menu_5013').html(result);
+                                if (0 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_0').html() != '') {
+                                        var temp = parseFloat($('#side_menu_0').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_0').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Din\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5102').html(result);
+                                $('#main_menu_5102').html(result);
+                                if (5101 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5101').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5101').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5101').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dreturn\x2Din\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5103').html(result);
+                                $('#main_menu_5103').html(result);
+                                if (5101 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5101').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5101').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5101').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fdelivery\x2Dout\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5106').html(result);
+                                $('#main_menu_5106').html(result);
+                                if (5104 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5104').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5104').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5104').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fpurchase\x2Dreturn\x2Dout\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5107').html(result);
+                                $('#main_menu_5107').html(result);
+                                if (5104 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5104').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5104').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5104').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dsample\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5202').html(result);
+                                $('#main_menu_5202').html(result);
+                                if (5201 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5201').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5201').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5201').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dsample\x2Dpayment\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5203').html(result);
+                                $('#main_menu_5203').html(result);
+                                if (5201 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5201').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5201').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5201').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5211').html(result);
+                                $('#main_menu_5211').html(result);
+                                if (5201 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5201').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5201').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5201').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dreturn\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5212').html(result);
+                                $('#main_menu_5212').html(result);
+                                if (5201 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5201').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5201').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5201').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Ddown\x2Dpayment\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5213').html(result);
+                                $('#main_menu_5213').html(result);
+                                if (5201 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5201').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5201').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5201').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dinvoice\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5214').html(result);
+                                $('#main_menu_5214').html(result);
+                                if (5201 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5201').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5201').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5201').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fsales\x2Dpayment\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5215').html(result);
+                                $('#main_menu_5215').html(result);
+                                if (5201 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5201').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5201').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5201').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fformulation\x2Dmanage\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5302').html(result);
+                                $('#main_menu_5302').html(result);
+                                if (5301 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5301').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5301').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5301').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fformulation\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5303').html(result);
+                                $('#main_menu_5303').html(result);
+                                if (5301 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5301').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5301').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5301').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Frequest\x2Dcogs\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5304').html(result);
+                                $('#main_menu_5304').html(result);
+                                if (5301 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5301').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5301').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5301').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fbatch\x2Drecord\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5305').html(result);
+                                $('#main_menu_5305').html(result);
+                                if (5301 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5301').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5301').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5301').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fschedule\x2Dmixing\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5306').html(result);
+                                $('#main_menu_5306').html(result);
+                                if (5301 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5301').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5301').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5301').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fschedule\x2Dfilling\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5307').html(result);
+                                $('#main_menu_5307').html(result);
+                                if (5301 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5301').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5301').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5301').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fschedule\x2Dpackaging\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5308').html(result);
+                                $('#main_menu_5308').html(result);
+                                if (5301 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5301').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5301').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5301').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fproduction\x2Dmixing\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5402').html(result);
+                                $('#main_menu_5402').html(result);
+                                if (5401 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5401').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5401').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5401').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fproduction\x2Dfilling\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5403').html(result);
+                                $('#main_menu_5403').html(result);
+                                if (5401 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5401').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5401').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5401').html(badge);
+                                }
+                            }
+                        }
+                    });
+                                $.ajax({
+                        type: "GET",
+                        url: "https\x3A\x2F\x2Fkil.gserp.id\x2Fproduction\x2Dpackaging\x2Fbadge",
+                        cache: false,
+                        success: function(result) {
+                            if (result != 0) {
+                                $('#side_menu_5404').html(result);
+                                $('#main_menu_5404').html(result);
+                                if (5401 != 0) {
+                                    var temp = 0;
+                                    if ($('#side_menu_5401').html() != '') {
+                                        var temp = parseFloat($('#side_menu_5401').html());
+                                    }
+                                    var badge = temp + parseFloat(result);
+                                    if (badge == 0) {
+                                        badge = '';
+                                    }
+                                    $('#side_menu_5401').html(badge);
+                                }
+                            }
+                        }
+                    });
+            
+            // Scroll to active menu item
+            setTimeout(function() {
+                var activeLink = $('.nav-link.active');
+                var scrollViewport = $('.os-viewport');
+
+                if (activeLink.length > 0 && scrollViewport.length > 0) {
+                    var offsetTop = activeLink.offset().top - scrollViewport.offset().top;
+
+                    scrollViewport.animate({
+                        scrollTop: scrollViewport.scrollTop() + offsetTop - 50
+                    }, 150);
+                }
+            }, 150);
+        });
+    </script>
+</body>
+
+</html>

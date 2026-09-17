@@ -1,0 +1,30 @@
+{
+  "url": "/customer-my-manage",
+  "type": "list",
+  "file": "customer_my_manage.html",
+  "title": "GsERP KIL - Pelanggan Saya",
+  "forms": [],
+  "tables": [
+    {
+      "index": 1,
+      "headers": [
+        "#",
+        "Nama",
+        "Telepon",
+        "Kategori",
+        "Kota",
+        "Penginput",
+        "#"
+      ],
+      "rowCount": 1
+    }
+  ],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [
+    "https://kil.gserp.id/customer-my-manage/detail",
+    "https://kil.gserp.id/customer-my-manage/cities"
+  ],
+  "notes": [],
+  "addUrl": "https://kil.gserp.id/customer-my-manage/create"
+}

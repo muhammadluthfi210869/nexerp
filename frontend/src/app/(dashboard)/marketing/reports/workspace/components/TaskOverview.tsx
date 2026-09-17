@@ -62,6 +62,12 @@ export const TaskOverview: React.FC<TaskOverviewProps> = ({
     });
   }, [tasks, typeFilter, statusFilter, assigneeFilter, searchTerm]);
 
+  const availableAssignees = useMemo(() => {
+    const taskAssignees = new Set(tasks.map(t => (t.assignee || '').toLowerCase()));
+    const filtered = members.filter(m => taskAssignees.has((m.name || '').toLowerCase()));
+    return filtered.length > 0 ? filtered : members;
+  }, [members, tasks]);
+
   // Member stats calculations
   const memberStats = useMemo(() => {
     return members.map(m => {
@@ -195,10 +201,17 @@ export const TaskOverview: React.FC<TaskOverviewProps> = ({
                       {member.initial}
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition flex items-center gap-1">
-                        {member.name}
-                        <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition text-blue-600" />
-                      </h3>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h3 className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition flex items-center gap-1">
+                          {member.name}
+                          <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition text-blue-600" />
+                        </h3>
+                        {(member.name.toLowerCase().includes('revita') || member.role.toLowerCase().includes('manager')) && (
+                          <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
+                            Manager
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[11px] text-slate-400 font-medium">
                         {total} tasks · <span className={late > 0 ? 'text-rose-600 font-semibold' : ''}>{late} late</span>
                       </p>
@@ -216,7 +229,7 @@ export const TaskOverview: React.FC<TaskOverviewProps> = ({
               <div className="grid grid-cols-3 gap-2 border-t border-slate-100 mt-4 pt-3 text-center">
                 <div className="text-left">
                   <div className="text-[9px] font-extrabold text-slate-400 tracking-wider uppercase">Daily Task</div>
-                  <div className="text-xs font-bold text-slate-800 mt-0.5">{dailyDone} / {dailyTotal || 5}</div>
+                  <div className="text-xs font-bold text-slate-800 mt-0.5">{dailyDone} / {dailyTotal}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-[9px] font-extrabold text-slate-400 tracking-wider uppercase">Project</div>
@@ -298,7 +311,7 @@ export const TaskOverview: React.FC<TaskOverviewProps> = ({
               className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none"
             >
               <option value="All">Semua Member</option>
-              {members.map(m => (
+              {availableAssignees.map(m => (
                 <option key={m.id} value={m.name}>{m.name}</option>
               ))}
             </select>

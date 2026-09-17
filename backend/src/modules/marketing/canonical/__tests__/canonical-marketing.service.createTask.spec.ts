@@ -15,11 +15,19 @@ function prismaMock() {
     user: {
       findFirst: jest.fn(),
     },
-    marketingTeamMember: { findMany: jest.fn(), findUnique: jest.fn(), findFirst: jest.fn() },
+    marketingTeamMember: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+    },
     marketingProject: { findFirst: jest.fn(), create: jest.fn() },
     marketingTaskHistory: { create: jest.fn() },
     marketingTaskChecklistItem: { count: jest.fn() },
-    marketingIdempotencyKey: { findUnique: jest.fn(), create: jest.fn(), delete: jest.fn() },
+    marketingIdempotencyKey: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      delete: jest.fn(),
+    },
   };
   prisma.$transaction = jest.fn(async (value: any) =>
     typeof value === 'function' ? value(prisma) : Promise.all(value),
@@ -111,7 +119,10 @@ describe('CanonicalMarketingService.createTask', () => {
 
   it('member trying to create task for someone else → 403 TASK_ASSIGN_FORBIDDEN', async () => {
     const prisma = prismaMock();
-    prisma.user.findFirst.mockResolvedValue({ id: 'someone-else', status: 'ACTIVE' });
+    prisma.user.findFirst.mockResolvedValue({
+      id: 'someone-else',
+      status: 'ACTIVE',
+    });
     const service = new CanonicalMarketingService(prisma);
     const dto: any = {
       title: 'For someone else',
@@ -123,7 +134,9 @@ describe('CanonicalMarketingService.createTask', () => {
       startDate: '2026-09-15',
       dueDate: '2026-09-22',
     };
-    await expect(service.createTask(member, dto)).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(service.createTask(member, dto)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
     expect(prisma.marketingTask.create).not.toHaveBeenCalled();
   });
 
@@ -193,7 +206,10 @@ describe('CanonicalMarketingService.createTask', () => {
     const prisma = prismaMock();
     prisma.user.findFirst.mockResolvedValue({ id: 'mem', status: 'ACTIVE' });
     prisma.marketingProject.findFirst.mockResolvedValue(null);
-    prisma.marketingProject.create.mockResolvedValue({ id: 'auto-prj-id', projectCode: 'PRJ-MKT-GENERAL' });
+    prisma.marketingProject.create.mockResolvedValue({
+      id: 'auto-prj-id',
+      projectCode: 'PRJ-MKT-GENERAL',
+    });
     prisma.marketingTask.create.mockResolvedValue({
       id: 'task-prj-1',
       taskCode: 'MKT-003',
@@ -252,5 +268,125 @@ describe('CanonicalMarketingService.createTask', () => {
         }),
       }),
     );
+  });
+
+  describe('delegation matrix in service.createTask', () => {
+    const revitaUser = { id: 'u-revita', email: 'revita@nexerp.id', fullName: 'Revita', roles: ['MARKETING', 'DIGIMAR'] };
+    const rahmatUser = { id: 'u-rahmat', email: 'rahmat@nexerp.id', fullName: 'Rahmat Hidayat', roles: ['DIGIMAR'] };
+    const gustiUser = { id: 'u-gusti', email: 'gusti@nexerp.id', fullName: 'Gusti Bagus', status: 'ACTIVE' };
+    const zarkasiUser = { id: 'u-zarkasi', email: 'zarkasi@nexerp.id', fullName: 'Muhammad Zarkasi', status: 'ACTIVE' };
+    const aurelUser = { id: 'u-aurel', email: 'aurel@nexerp.id', fullName: 'Aurelia', status: 'ACTIVE' };
+
+    it('allows Rahmat to assign to Gusti and Zarkasi', async () => {
+      const prisma = prismaMock();
+      prisma.user.findFirst.mockResolvedValue(gustiUser);
+      prisma.marketingTask.create.mockResolvedValue({
+        id: 'task-gusti',
+        taskCode: 'MKT-GUSTI',
+        title: 'Task for Gusti',
+        taskType: 'DAILY',
+        ownerId: 'u-rahmat',
+        assigneeId: 'u-gusti',
+        picId: 'u-gusti',
+        reviewerId: null,
+        assignedById: 'u-rahmat',
+        status: 'OPEN',
+        canonicalStatus: 'NOT_STARTED',
+        priority: 'MEDIUM',
+        channel: 'Instagram',
+        category: 'content',
+        startDate: new Date(),
+        dueDate: new Date(),
+        completedAt: null,
+        brief: null,
+        outputUrl: null,
+        referenceUrl: null,
+        estimatedMinutes: 0,
+        actualMinutes: 0,
+        version: 1,
+        checklist: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      const service = new CanonicalMarketingService(prisma);
+      const dto: any = {
+        title: 'Task for Gusti',
+        type: 'DAILY',
+        priority: 'MEDIUM',
+        channel: 'Instagram',
+        category: 'content',
+        assigneeId: 'u-gusti',
+        startDate: '2026-09-15',
+        dueDate: '2026-09-22',
+      };
+      const result = await service.createTask(rahmatUser, dto);
+      expect(result.id).toBe('task-gusti');
+      expect(prisma.marketingTask.create).toHaveBeenCalled();
+    });
+
+    it('rejects Rahmat assigning to Aurel with 403 TASK_ASSIGN_FORBIDDEN', async () => {
+      const prisma = prismaMock();
+      prisma.user.findFirst.mockResolvedValue(aurelUser);
+      const service = new CanonicalMarketingService(prisma);
+      const dto: any = {
+        title: 'Task for Aurel',
+        type: 'DAILY',
+        priority: 'MEDIUM',
+        channel: 'Instagram',
+        category: 'content',
+        assigneeId: 'u-aurel',
+        startDate: '2026-09-15',
+        dueDate: '2026-09-22',
+      };
+      await expect(service.createTask(rahmatUser, dto)).rejects.toThrow(ForbiddenException);
+      expect(prisma.marketingTask.create).not.toHaveBeenCalled();
+    });
+
+    it('allows Revita as manager to assign to Aurel', async () => {
+      const prisma = prismaMock();
+      prisma.user.findFirst.mockResolvedValue(aurelUser);
+      prisma.marketingTask.create.mockResolvedValue({
+        id: 'task-aurel',
+        taskCode: 'MKT-AUREL',
+        title: 'Task for Aurel',
+        taskType: 'DAILY',
+        ownerId: 'u-revita',
+        assigneeId: 'u-aurel',
+        picId: 'u-aurel',
+        reviewerId: null,
+        assignedById: 'u-revita',
+        status: 'OPEN',
+        canonicalStatus: 'NOT_STARTED',
+        priority: 'MEDIUM',
+        channel: 'Instagram',
+        category: 'content',
+        startDate: new Date(),
+        dueDate: new Date(),
+        completedAt: null,
+        brief: null,
+        outputUrl: null,
+        referenceUrl: null,
+        estimatedMinutes: 0,
+        actualMinutes: 0,
+        version: 1,
+        checklist: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      const service = new CanonicalMarketingService(prisma);
+      const dto: any = {
+        title: 'Task for Aurel',
+        type: 'DAILY',
+        priority: 'MEDIUM',
+        channel: 'Instagram',
+        category: 'content',
+        assigneeId: 'u-aurel',
+        startDate: '2026-09-15',
+        dueDate: '2026-09-22',
+      };
+      const result = await service.createTask(revitaUser, dto);
+      expect(result.id).toBe('task-aurel');
+      expect(prisma.marketingTask.create).toHaveBeenCalled();
+    });
   });
 });

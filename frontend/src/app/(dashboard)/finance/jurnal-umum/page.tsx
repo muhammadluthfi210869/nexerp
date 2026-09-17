@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -113,12 +114,31 @@ const FALLBACK_JOURNALS: JournalHeader[] = [
 ];
 
 export default function JurnalUmumPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Jurnal Umum...</div>}>
+      <JurnalUmumContent />
+    </Suspense>
+  );
+}
+
+function JurnalUmumContent() {
+  const searchParams = useSearchParams();
   const toast = useDnaToast();
   const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedJournal, setSelectedJournal] = useState<JournalHeader | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateModalOpen(true);
+    }
+    const type = searchParams.get("type");
+    if (type === "adjustment") {
+      setTypeFilter("ADJUSTMENT");
+    }
+  }, [searchParams]);
 
   // Form states (SCR-080)
   const [headerForm, setHeaderForm] = useState({

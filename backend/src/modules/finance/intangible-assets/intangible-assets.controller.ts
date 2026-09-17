@@ -22,20 +22,26 @@ export class IntangibleAssetsController {
   }
 
   @Get(':id/amortization')
-  @ApiOperation({ summary: 'Calculate full amortization schedule for an intangible asset' })
+  @ApiOperation({
+    summary: 'Calculate full amortization schedule for an intangible asset',
+  })
   amortization(@Param('id') id: string) {
     return this.service.getAmortizationSchedule(id);
   }
 
   @Post()
-  @ApiOperation({ summary: 'Register a new intangible asset (software/license/patent)' })
+  @ApiOperation({
+    summary: 'Register a new intangible asset (software/license/patent)',
+  })
   create(@Req() req: any, @Body() dto: CreateIntangibleAssetDto) {
     const userId = req.user?.id;
     return this.service.create(userId, dto);
   }
 
   @Post(':id/retire')
-  @ApiOperation({ summary: 'Retire an intangible asset (mark fully amortized)' })
+  @ApiOperation({
+    summary: 'Retire an intangible asset (mark fully amortized)',
+  })
   retire(@Req() req: any, @Param('id') id: string) {
     const userId = req.user?.id;
     return this.service.retire(userId, id);

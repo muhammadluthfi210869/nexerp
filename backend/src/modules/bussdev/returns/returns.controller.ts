@@ -18,7 +18,7 @@ import { Roles } from '../../auth/roles.decorator';
 
 @ApiTags('bussdev/returns')
 @ApiBearerAuth()
-@Controller(['bussdev/returns', 'v1/bussdev/returns'])
+@Controller('bussdev/returns')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ReturnsController {
   constructor(private readonly service: ReturnsService) {}

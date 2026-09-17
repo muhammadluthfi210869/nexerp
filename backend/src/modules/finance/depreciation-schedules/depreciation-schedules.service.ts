@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 /**
@@ -31,7 +35,8 @@ export class DepreciationSchedulesService {
       where: { id },
       include: { asset: true },
     });
-    if (!entry) throw new NotFoundException(`Depreciation entry ${id} not found`);
+    if (!entry)
+      throw new NotFoundException(`Depreciation entry ${id} not found`);
     return entry;
   }
 
@@ -45,7 +50,8 @@ export class DepreciationSchedulesService {
     });
     if (!asset) throw new NotFoundException(`Asset ${assetId} not found`);
 
-    const depreciable = Number(asset.acquisitionCost) - Number(asset.salvageValue);
+    const depreciable =
+      Number(asset.acquisitionCost) - Number(asset.salvageValue);
     const monthly = depreciable / asset.usefulLife;
     return {
       assetId,
@@ -61,10 +67,14 @@ export class DepreciationSchedulesService {
    * Idempotent per (assetId, period).
    */
   async generate(assetId: string) {
-    const asset = await this.prisma.fixedAsset.findUnique({ where: { id: assetId } });
+    const asset = await this.prisma.fixedAsset.findUnique({
+      where: { id: assetId },
+    });
     if (!asset) throw new NotFoundException(`Asset ${assetId} not found`);
     if (asset.status !== 'ACTIVE') {
-      throw new BadRequestException(`Cannot generate for asset in status ${asset.status}`);
+      throw new BadRequestException(
+        `Cannot generate for asset in status ${asset.status}`,
+      );
     }
 
     const startDate = new Date(asset.acquisitionDate);
@@ -110,12 +120,19 @@ export class DepreciationSchedulesService {
       where: { id },
       include: { asset: true },
     });
-    if (!entry) throw new NotFoundException(`Depreciation entry ${id} not found`);
+    if (!entry)
+      throw new NotFoundException(`Depreciation entry ${id} not found`);
 
-    const depExp = await this.prisma.account.findFirst({ where: { code: '5210' } });
-    const accDep = await this.prisma.account.findFirst({ where: { code: '1310' } });
+    const depExp = await this.prisma.account.findFirst({
+      where: { code: '5210' },
+    });
+    const accDep = await this.prisma.account.findFirst({
+      where: { code: '1310' },
+    });
     if (!depExp || !accDep) {
-      throw new BadRequestException('COA accounts 5210 (Depreciation Expense) or 1310 (Accumulated Depreciation) missing');
+      throw new BadRequestException(
+        'COA accounts 5210 (Depreciation Expense) or 1310 (Accumulated Depreciation) missing',
+      );
     }
 
     return this.prisma.journalEntry.create({

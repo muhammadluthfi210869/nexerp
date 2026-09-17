@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsNumber, IsString, IsOptional, IsIn, MinLength } from 'class-validator';
+import {
+  IsUUID,
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsIn,
+  MinLength,
+} from 'class-validator';
 
 export class CreateBankAccountDto {
   @ApiProperty({ example: 'BCA-001' })
@@ -24,7 +31,11 @@ export class CreateBankAccountDto {
   @IsString()
   currencyCode?: string;
 
-  @ApiProperty({ example: 'uuid', description: 'Linked GL account', required: false })
+  @ApiProperty({
+    example: 'uuid',
+    description: 'Linked GL account',
+    required: false,
+  })
   @IsOptional()
   @IsUUID()
   glAccountId?: string;
@@ -67,7 +78,10 @@ export class UpdateBankAccountDto {
 }
 
 export class ReconcileBankAccountDto {
-  @ApiProperty({ example: 15000000, description: 'Actual balance from bank statement' })
+  @ApiProperty({
+    example: 15000000,
+    description: 'Actual balance from bank statement',
+  })
   @IsNumber()
   actualBalance: number;
 

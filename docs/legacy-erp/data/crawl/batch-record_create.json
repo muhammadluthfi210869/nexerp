@@ -1,0 +1,161 @@
+{
+  "module": "Production",
+  "path": "/batch-record/create",
+  "size_bytes": 167010,
+  "title": "GsERP KIL - Buat Batch Record",
+  "h_titles": [
+    "Buat Batch Record"
+  ],
+  "breadcrumbs": [
+    "Beranda",
+    "Pra Produksi",
+    "Buat Batch Record"
+  ],
+  "forms": [
+    {
+      "action": "https://kil.gserp.id/batch-record/create",
+      "method": "POST",
+      "id": "GSForm",
+      "fields_count": 7,
+      "fields": [
+        {
+          "tag": "input",
+          "name": "csrf_gs",
+          "type": "hidden",
+          "id": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "name": "sales_id",
+          "type": "",
+          "id": "sales_id",
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "name": "date",
+          "type": "text",
+          "id": "date",
+          "placeholder": "Tanggal"
+        },
+        {
+          "tag": "input",
+          "name": "attachment",
+          "type": "file",
+          "id": "attachmentFile",
+          "placeholder": ""
+        },
+        {
+          "tag": "textarea",
+          "name": "note",
+          "type": "",
+          "id": "",
+          "placeholder": "Catatan tambahan..."
+        },
+        {
+          "tag": "button",
+          "name": "",
+          "type": "button",
+          "id": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "button",
+          "name": "",
+          "type": "submit",
+          "id": "",
+          "placeholder": ""
+        }
+      ]
+    }
+  ],
+  "tables": [],
+  "buttons": [
+    "Kembali",
+    "Simpan",
+    "&times;",
+    "Tutup"
+  ],
+  "ajax_endpoints": [
+    "https://kil.gserp.id/batch-record/detail",
+    "https://kil.gserp.id/batch-record/get-sales",
+    "https://kil.gserp.id/batch-record/get-sales-details/",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fbatch\\x2Drecord\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fchecklist\\x2Dprogress\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fdelivery\\x2Dout\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fformulation\\x2Dmanage\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fformulation\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fgoods\\x2Drequest\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fgoods\\x2Drequest\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fneed\\x2Dfor\\x2Dgoods\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fproduction\\x2Dfilling\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fproduction\\x2Dmixing\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fproduction\\x2Dpackaging\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Ddown\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Din\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dinvoice\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Drequest\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Drequest\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Dout\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frequest\\x2Dcogs\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frequest\\x2Dcogs\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Ddown\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dinvoice\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Din\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fschedule\\x2Dfilling\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fschedule\\x2Dmixing\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fschedule\\x2Dpackaging\\x2Fbadge"
+  ],
+  "modals": [
+    "modal-sm",
+    "modal-sm-content",
+    "modal-md",
+    "modal-md-content",
+    "modal-lg",
+    "modal-lg-content",
+    "modal-xl",
+    "modal-xl-content"
+  ],
+  "links": [],
+  "print_patterns": [],
+  "status_badges": [],
+  "status_keywords": [
+    "mixing",
+    "filling",
+    "packaging",
+    "sample",
+    "production",
+    "ready",
+    "open"
+  ],
+  "machine_equipment": [],
+  "input_names": [
+    "csrf_gs",
+    "date",
+    "attachment",
+    "sales_details_id",
+    "sales_id"
+  ],
+  "select_names": [],
+  "datatables_init": [
+    {
+      "selector": "GSTable1",
+      "config_snippet": "{\n\t\t\t\"responsive\": false,\n\t\t\t\"autoWidth\": false,\n\t\t\t\"columnDefs\": [{\n\t\t\t\t\"targets\": 'no-sort',\n\t\t\t\t\"orderable\": false,\n\t\t\t\t\"responsivePriority\": 1\n\t\t\t}],\n\t\t}"
+    }
+  ],
+  "column_defs": []
+}

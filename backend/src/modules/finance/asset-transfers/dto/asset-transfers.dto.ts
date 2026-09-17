@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsString, IsOptional, IsDateString, MinLength } from 'class-validator';
+import {
+  IsUUID,
+  IsString,
+  IsOptional,
+  IsDateString,
+  MinLength,
+} from 'class-validator';
 
 export class CreateAssetTransferDto {
   @ApiProperty({ example: 'uuid', description: 'Asset being transferred' })

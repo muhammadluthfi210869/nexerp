@@ -7,7 +7,8 @@ describe('CanonicalMarketingAuthGuard', () => {
 
   afterEach(() => {
     process.env.NODE_ENV = originalNodeEnv;
-    if (originalBypass === undefined) delete process.env.MARKETING_DEV_AUTH_BYPASS;
+    if (originalBypass === undefined)
+      delete process.env.MARKETING_DEV_AUTH_BYPASS;
     else process.env.MARKETING_DEV_AUTH_BYPASS = originalBypass;
   });
 
@@ -27,7 +28,10 @@ describe('CanonicalMarketingAuthGuard', () => {
     const guard = new CanonicalMarketingAuthGuard();
 
     expect(guard.handleRequest(null, null, null, {} as any)).toEqual(
-      expect.objectContaining({ id: expect.any(String), roles: expect.any(Array) }),
+      expect.objectContaining({
+        id: expect.any(String),
+        roles: expect.any(Array),
+      }),
     );
   });
 });

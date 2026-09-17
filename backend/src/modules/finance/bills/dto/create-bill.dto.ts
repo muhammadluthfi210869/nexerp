@@ -1,5 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsNumber, IsOptional, IsString, IsDateString, IsArray, ValidateNested, Min, ArrayMinSize, MinLength } from 'class-validator';
+import {
+  IsUUID,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsArray,
+  ValidateNested,
+  Min,
+  ArrayMinSize,
+  MinLength,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class BillLineItemDto {
@@ -42,7 +53,10 @@ export class CreateBillDto {
   @IsUUID()
   vendorId: string;
 
-  @ApiProperty({ example: 'Bahan Baku (11510)', description: 'COA category code' })
+  @ApiProperty({
+    example: 'Bahan Baku (11510)',
+    description: 'COA category code',
+  })
   @IsString()
   procurementCategory: string;
 

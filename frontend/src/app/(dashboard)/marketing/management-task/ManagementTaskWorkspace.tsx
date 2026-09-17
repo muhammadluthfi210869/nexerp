@@ -10,6 +10,7 @@ import { TaskModal, TaskDetailModal, MemberEditModal } from '../reports/workspac
 import { api } from '@/lib/api';
 import { useDnaToast } from '@/components/dna/DnaToast';
 import { useMarketingBrands } from '@/hooks/useCanonicalMarketing';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ManagementTaskWorkspaceProps {
   initialMemberSlug?: string;
@@ -18,6 +19,7 @@ interface ManagementTaskWorkspaceProps {
 export default function ManagementTaskWorkspace({ initialMemberSlug }: ManagementTaskWorkspaceProps) {
   const router = useRouter();
   const toast = useDnaToast();
+  const { user } = useAuth();
 
   // Pure database states (no mock fallbacks)
   const [members, setMembers] = useState<Member[]>([]);
@@ -146,6 +148,74 @@ export default function ManagementTaskWorkspace({ initialMemberSlug }: Managemen
     if (!selectedMemberName) return null;
     return members.find(m => m.name.toLowerCase() === selectedMemberName.toLowerCase()) || members[0] || null;
   }, [members, selectedMemberName]);
+
+  // Allowed assignees based on delegation permissions
+  const allowedMembers = useMemo(() => {
+    if (!user) return members;
+    const emailName = (user.email?.split('@')[0] || '').toLowerCase();
+    const fullName = (user.fullName || '').toLowerCase();
+    const isSuperAdminOrHead = user.roles?.some((r: string) => ['SUPER_ADMIN', 'HEAD_OPS'].includes(r));
+    const isRevita = emailName.includes('revita') || fullName.includes('revita') || user.roles?.includes('MARKETING');
+    const isRahmat = emailName.includes('rahmat') || fullName.includes('rahmat');
+
+    if (isSuperAdminOrHead || isRevita) {
+      // Revita / Manager can assign to ALL members
+      return members;
+    }
+
+    if (isRahmat) {
+      // Rahmat has delegated authority for Zarkasi, Gusti, and himself
+      return members.filter((m) => {
+        const name = m.name.toLowerCase();
+        return name.includes('rahmat') || name.includes('zarkasi') || name.includes('gusti');
+      });
+    }
+
+    // Other staff can only assign to themselves
+    return members.filter((m) => {
+      const name = m.name.toLowerCase();
+      return name === emailName || m.userId === user.id || fullName.includes(name);
+    });
+  }, [members, user]);
+
+  // Visible tasks based on user role and delegation matrix
+  const visibleTasks = useMemo(() => {
+    if (!user) return tasks;
+    const emailName = (user.email?.split('@')[0] || '').toLowerCase();
+    const fullName = (user.fullName || '').toLowerCase();
+    const isSuperAdminOrHead = user.roles?.some((r: string) => ['SUPER_ADMIN', 'HEAD_OPS'].includes(r));
+    const isRevita = emailName.includes('revita') || fullName.includes('revita') || user.roles?.includes('MARKETING');
+    const isRahmat = emailName.includes('rahmat') || fullName.includes('rahmat');
+
+    // 1. Revita / Manager: ALL tasks are visible
+    if (isSuperAdminOrHead || isRevita) {
+      return tasks;
+    }
+
+    // 2. Rahmat: Only Zarkasi, Gusti, and Rahmat tasks (3 members)
+    if (isRahmat) {
+      return tasks.filter((t) => {
+        const assName = (t.assignee || '').toLowerCase();
+        return (
+          t.assigneeId === user.id ||
+          assName.includes('rahmat') ||
+          assName.includes('zarkasi') ||
+          assName.includes('gusti')
+        );
+      });
+    }
+
+    // 3. Other staff: ONLY their own tasks
+    return tasks.filter((t) => {
+      const assName = (t.assignee || '').toLowerCase();
+      return (
+        t.assigneeId === user.id ||
+        assName === emailName ||
+        fullName.includes(assName) ||
+        assName.includes(emailName)
+      );
+    });
+  }, [tasks, user]);
 
   // Task Actions directly connected to PostgreSQL API
   const handleSaveTask = async (taskData: Omit<Task, 'id' | 'createdAt'>) => {
@@ -336,7 +406,7 @@ export default function ManagementTaskWorkspace({ initialMemberSlug }: Managemen
         {selectedMemberName === null || !currentMember ? (
           /* VIEW 1: OVERVIEW */
           <TaskOverview
-            tasks={tasks}
+            tasks={visibleTasks}
             members={members}
             onSelectMember={(name) => {
               setSelectedMemberName(name);
@@ -351,7 +421,7 @@ export default function ManagementTaskWorkspace({ initialMemberSlug }: Managemen
           /* VIEW 2: MEMBER PROFILE */
           <MemberProfileView
             member={currentMember}
-            tasks={tasks}
+            tasks={visibleTasks}
             onBack={() => {
               setSelectedMemberName(null);
               router.push('/marketing/management-task/overview');
@@ -370,8 +440,12 @@ export default function ManagementTaskWorkspace({ initialMemberSlug }: Managemen
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
         onSave={handleSaveTask}
-        members={members}
-        defaultAssignee={currentMember?.name || members[0]?.name}
+        members={allowedMembers}
+        defaultAssignee={
+          allowedMembers.find(m => m.name.toLowerCase() === currentMember?.name?.toLowerCase())?.name ||
+          allowedMembers[0]?.name ||
+          'Gusti'
+        }
       />
 
       <TaskDetailModal

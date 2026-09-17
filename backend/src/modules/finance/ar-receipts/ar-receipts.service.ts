@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { PaymentStatus } from '@prisma/client';
 import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
@@ -15,8 +19,17 @@ export class ARReceiptsService {
       where: filter,
       include: {
         customer: { select: { id: true, name: true } },
-        invoice: { select: { id: true, invoiceNumber: true, totalAmount: true, paidAmount: true } },
-        bankAccount: { select: { id: true, bankName: true, accountNumber: true } },
+        invoice: {
+          select: {
+            id: true,
+            invoiceNumber: true,
+            totalAmount: true,
+            paidAmount: true,
+          },
+        },
+        bankAccount: {
+          select: { id: true, bankName: true, accountNumber: true },
+        },
       },
       orderBy: { receiptDate: 'desc' },
     });
@@ -94,7 +107,9 @@ export class ARReceiptsService {
           amount: dto.amount,
           pph23Amount: dto.pph23Amount,
           bankAccountId: dto.bankAccountId,
-          notes: dto.notes ? `${dto.notes} [created by ${userId}]` : `[created by ${userId}]`,
+          notes: dto.notes
+            ? `${dto.notes} [created by ${userId}]`
+            : `[created by ${userId}]`,
           attachmentUrls: dto.attachmentUrls || [],
         },
       });
@@ -163,12 +178,14 @@ export class ARReceiptsService {
     const receipt = await this.prisma.aRReceipt.findUnique({
       where: { id: receiptId },
     });
-    if (!receipt) throw new NotFoundException(`AR receipt ${receiptId} not found`);
+    if (!receipt)
+      throw new NotFoundException(`AR receipt ${receiptId} not found`);
 
     const invoice = await this.prisma.salesInvoice.findUnique({
       where: { id: dto.invoiceId },
     });
-    if (!invoice) throw new NotFoundException(`Sales invoice ${dto.invoiceId} not found`);
+    if (!invoice)
+      throw new NotFoundException(`Sales invoice ${dto.invoiceId} not found`);
 
     if (invoice.customerId !== receipt.customerId) {
       throw new BadRequestException(

@@ -10,7 +10,10 @@ export class UpsertProductProfitabilityDto {
   @IsString()
   productName: string;
 
-  @ApiProperty({ example: '2026-09-01', description: 'Period start (YYYY-MM-DD)' })
+  @ApiProperty({
+    example: '2026-09-01',
+    description: 'Period start (YYYY-MM-DD)',
+  })
   @IsDateString()
   period: string;
 

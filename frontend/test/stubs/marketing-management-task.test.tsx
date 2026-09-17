@@ -28,10 +28,10 @@ describe('Stub: marketing/management-task/page.tsx (client redirect)', () => {
     expect(screen.getByText(/Redirecting/i)).toBeTruthy();
   });
 
-  it('falls back to aurel workspace when no user is stored', async () => {
+  it('falls back to default workspace when no user is stored', async () => {
     render(<Page />);
     await waitFor(() => expect(replaceMock).toHaveBeenCalled());
-    expect(replaceMock.mock.calls[0][0]).toMatch(/\/marketing\/management-task\/(aurel|revi)/);
+    expect(replaceMock.mock.calls[0][0]).toMatch(/\/marketing\/management-task\/(overview|aurel|revi)/);
   });
 
   it('routes manager emails to revi workspace', async () => {

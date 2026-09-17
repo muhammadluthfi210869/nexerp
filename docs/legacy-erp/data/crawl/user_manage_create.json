@@ -1,0 +1,225 @@
+{
+  "url": "/user-manage/create",
+  "type": "create",
+  "file": "user_manage_create.html",
+  "title": "GsERP KIL - Buat Pengguna",
+  "forms": [
+    {
+      "id": "GSForm",
+      "action": "https://kil.gserp.id/user-manage/create",
+      "method": "post",
+      "fieldCount": 9,
+      "fields": [
+        {
+          "name": "csrf_gs",
+          "type": "hidden",
+          "id": null,
+          "required": false,
+          "placeholder": "",
+          "value": "872117d075614d41d2607b3871bdc7e5",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "",
+          "options": null
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "id": "inputCode",
+          "required": false,
+          "placeholder": "Contoh: USR-001",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Kode/NIP Kode unik (opsional)",
+          "options": null
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "id": "inputName",
+          "required": true,
+          "placeholder": "Contoh: John Doe",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Nama * Nama lengkap",
+          "options": null
+        },
+        {
+          "name": "photo",
+          "type": "file",
+          "id": "exampleInputFile",
+          "required": false,
+          "placeholder": "",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Pilih file",
+          "options": null
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "id": "inputEmail",
+          "required": false,
+          "placeholder": "Contoh: email@domain.com",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Email Email (opsional)",
+          "options": null
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "id": "inputPhone",
+          "required": false,
+          "placeholder": "Contoh: 0812-3456-7890",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Nomor Telepon Telepon (opsional)",
+          "options": null
+        },
+        {
+          "name": "password",
+          "type": "password",
+          "id": "password",
+          "required": true,
+          "placeholder": "Kata Sandi",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Kata Sandi * Password",
+          "options": null
+        },
+        {
+          "name": "password_confirm",
+          "type": "password",
+          "id": "password_confirm",
+          "required": true,
+          "placeholder": "Konfirmasi Kata Sandi",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Konfirmasi Kata Sandi * Ulangi password",
+          "options": null
+        },
+        {
+          "name": "role",
+          "type": "select",
+          "id": "inputRole",
+          "required": true,
+          "placeholder": "Pilih Hak Akses",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Hak Akses * Role pengguna",
+          "options": [
+            {
+              "value": "",
+              "text": "",
+              "selected": false
+            },
+            {
+              "value": "1",
+              "text": "Administrator",
+              "selected": false
+            },
+            {
+              "value": "2",
+              "text": "HRD",
+              "selected": false
+            },
+            {
+              "value": "3",
+              "text": "Staff Back Office",
+              "selected": false
+            },
+            {
+              "value": "4",
+              "text": "Purchasing",
+              "selected": false
+            },
+            {
+              "value": "5",
+              "text": "Warehouse",
+              "selected": false
+            },
+            {
+              "value": "6",
+              "text": "Head Business Development",
+              "selected": false
+            },
+            {
+              "value": "7",
+              "text": "Business Development",
+              "selected": false
+            },
+            {
+              "value": "8",
+              "text": "Head Research and Development",
+              "selected": false
+            },
+            {
+              "value": "9",
+              "text": "Research and Development",
+              "selected": false
+            },
+            {
+              "value": "10",
+              "text": "Production Mixing &amp; Filling",
+              "selected": false
+            },
+            {
+              "value": "11",
+              "text": "Production Packaging",
+              "selected": false
+            },
+            {
+              "value": "12",
+              "text": "Apoteker Penanggung Jawab",
+              "selected": false
+            },
+            {
+              "value": "13",
+              "text": "Finance",
+              "selected": false
+            },
+            {
+              "value": "14",
+              "text": "Digital Marketing",
+              "selected": false
+            },
+            {
+              "value": "15",
+              "text": "BusDev + HRD",
+              "selected": false
+            },
+            {
+              "value": "16",
+              "text": "BusDev + Purchasing",
+              "selected": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tables": [],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [],
+  "notes": []
+}

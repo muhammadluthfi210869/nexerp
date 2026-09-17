@@ -21,7 +21,7 @@ import { Roles } from '../../auth/roles.decorator';
 
 @ApiTags('legality/audits')
 @ApiBearerAuth()
-@Controller(['legality/audits', 'v1/legality/audits'])
+@Controller('legality/audits')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AuditsController {
   constructor(private readonly service: AuditsService) {}

@@ -1,0 +1,12 @@
+{
+  "url": "/sales-invoice/create",
+  "http_status": 404,
+  "title": null,
+  "form_fields": [],
+  "tables": [],
+  "actions": [],
+  "ajax_calls": [],
+  "modals": [],
+  "print_pattern": null,
+  "notes": "404"
+}

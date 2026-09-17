@@ -1,0 +1,40 @@
+{
+  "phase": "P03",
+  "baseline_commit": "7a449e0af719c86ec0f57e362ed75d39b0af7ff0",
+  "created_at": "2026-09-17T22:00:00.000Z",
+  "ratchet_direction": "strictly_downward_or_equal",
+  "dna_exceptions": {
+    "total_max_allowed": 205,
+    "current_count": 205,
+    "breakdown": {
+      "DNA_NATIVE_INTERACTIVE": 109,
+      "DNA_HARDCODED_VISUAL": 59,
+      "DNA_IMPORT_BOUNDARY": 37
+    }
+  },
+  "lint_warning_thresholds": {
+    "frontend_max_warnings_baseline": 8218,
+    "frontend_errors_max": 0,
+    "backend_max_warnings": 0,
+    "backend_errors_max": 0,
+    "changed_files_max_warnings": 0
+  },
+  "complexity_thresholds": {
+    "standard_function_max": 10,
+    "absolute_exception_max": 15,
+    "rationale_required_for_range": [
+      11,
+      15
+    ],
+    "baseline_high_complexity_max": 62,
+    "baseline_medium_complexity_max": 58
+  },
+  "duplication_thresholds": {
+    "changed_code_duplication_percent_max": 1,
+    "codebase_baseline_percent": 28.7
+  },
+  "coverage_manifest": {
+    "expected_screens_count": 272,
+    "coverage_percent_min": 100
+  }
+}

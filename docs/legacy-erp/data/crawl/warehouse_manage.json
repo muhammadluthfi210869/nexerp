@@ -1,0 +1,27 @@
+{
+  "url": "/warehouse-manage",
+  "type": "list",
+  "file": "warehouse_manage.html",
+  "title": "GsERP KIL - Gudang",
+  "forms": [],
+  "tables": [
+    {
+      "index": 1,
+      "headers": [
+        "#",
+        "Gudang",
+        "Lokasi",
+        "Telepon",
+        "#"
+      ],
+      "rowCount": 17
+    }
+  ],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [
+    "https://kil.gserp.id/warehouse-manage/cities"
+  ],
+  "notes": [],
+  "addUrl": "https://kil.gserp.id/warehouse-manage/create"
+}

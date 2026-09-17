@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 @Injectable()
@@ -62,7 +66,9 @@ export class SampleFeesService {
     const fee = await this.prisma.sampleFee.findUnique({ where: { id } });
     if (!fee) throw new NotFoundException(`Sample fee ${id} not found`);
     if (fee.offsetToDPId) {
-      throw new BadRequestException(`Fee already linked to DP ${fee.offsetToDPId}`);
+      throw new BadRequestException(
+        `Fee already linked to DP ${fee.offsetToDPId}`,
+      );
     }
     return this.prisma.sampleFee.update({
       where: { id },

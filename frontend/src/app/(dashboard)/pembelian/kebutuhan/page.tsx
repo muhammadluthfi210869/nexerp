@@ -11,8 +11,8 @@
  * - Aksi instan penerbitan Draft PO / PR untuk item dengan status defisit
  */
 
-import React, { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Layers,
   Search,
@@ -153,13 +153,50 @@ const INITIAL_MRP_DATA: MrpItemRecord[] = [
   },
 ];
 
-export default function KebutuhanBarangMRPPage() {
+function KebutuhanBarangMRPContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const toast = useDnaToast();
   const [mrpList, setMrpList] = useState<MrpItemRecord[]>(INITIAL_MRP_DATA);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<MrpItemRecord | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(searchParams.get("action") === "create");
+
+  // Form State for Manual Need Entry
+  const [formData, setFormData] = useState({
+    materialCode: "",
+    materialName: "",
+    category: "Bahan Baku" as "Bahan Baku" | "Kemas Primer" | "Kemas Sekunder",
+    salesOrderRef: "",
+    clientName: "",
+    brandProduct: "",
+    grossRequirement: 0,
+    realStockQty: 0,
+    onOrderQty: 0,
+    unit: "kg",
+    primarySupplier: "",
+    estimatedUnitPrice: 0,
+  });
+
+  const handleCreateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.materialCode || !formData.materialName) {
+      toast.error("Validasi Gagal", "Kode material dan nama material wajib diisi.");
+      return;
+    }
+    const netNeed = Math.max(0, formData.grossRequirement - formData.realStockQty - formData.onOrderQty);
+    const newItem: MrpItemRecord = {
+      id: `mrp-${Date.now()}`,
+      ...formData,
+      netNeedQty: netNeed,
+      estimatedTotalCost: netNeed * formData.estimatedUnitPrice,
+      status: netNeed > 0 ? "DEFICIT" : "SAFE_STOCK",
+    };
+    setMrpList([newItem, ...mrpList]);
+    toast.success("Kebutuhan Dicatat", `Kebutuhan ${newItem.materialName} berhasil ditambahkan ke rencana MRP.`);
+    setIsCreateOpen(false);
+  };
 
   // Filters
   const filteredList = useMemo(() => {
@@ -204,16 +241,25 @@ export default function KebutuhanBarangMRPPage() {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           actions={
-            <DnaButton
-              variant="primary"
-              icon={<ShoppingCart className="w-4 h-4" />}
-              onClick={() => {
-                toast.success("Batch PO Ready", "Semua item defisit siap diterbitkan PO massal.");
-                router.push("/scm/pembelian/create");
-              }}
-            >
-              + Terbitkan PO dari Defisit MRP
-            </DnaButton>
+            <div className="flex items-center gap-2">
+              <DnaButton
+                variant="secondary"
+                icon={<Plus className="w-4 h-4" />}
+                onClick={() => setIsCreateOpen(true)}
+              >
+                + Input Kebutuhan Barang
+              </DnaButton>
+              <DnaButton
+                variant="primary"
+                icon={<ShoppingCart className="w-4 h-4" />}
+                onClick={() => {
+                  toast.success("Batch PO Ready", "Semua item defisit siap diterbitkan PO massal.");
+                  router.push("/scm/pembelian/create");
+                }}
+              >
+                + Terbitkan PO dari Defisit MRP
+              </DnaButton>
+            </div>
           }
         />
 
@@ -476,6 +522,153 @@ export default function KebutuhanBarangMRPPage() {
           </div>
         )}
       </DnaModal>
+
+      {/* Modal Input Kebutuhan Barang Baru */}
+      <DnaModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title="Input Kebutuhan Barang Baru (Manual Entry MRP)"
+        size="lg"
+      >
+        <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Kode Material / Bahan *</label>
+              <DnaInput
+                placeholder="Contoh: RAW-ACT-005"
+                value={formData.materialCode}
+                onChange={(e) => setFormData({ ...formData, materialCode: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Nama Material / Bahan *</label>
+              <DnaInput
+                placeholder="Contoh: Hyaluronic Acid 2%"
+                value={formData.materialName}
+                onChange={(e) => setFormData({ ...formData, materialName: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Kategori Material</label>
+              <DnaSelect
+                value={formData.category}
+                onChange={(val) => setFormData({ ...formData, category: val as any })}
+                options={[
+                  { value: "Bahan Baku", label: "Bahan Baku (Formula)" },
+                  { value: "Kemas Primer", label: "Kemas Primer (Botol/Pot)" },
+                  { value: "Kemas Sekunder", label: "Kemas Sekunder (Box/Label)" },
+                ]}
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Referensi Sales Order</label>
+              <DnaInput
+                placeholder="SO-2026-005"
+                value={formData.salesOrderRef}
+                onChange={(e) => setFormData({ ...formData, salesOrderRef: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Nama Klien Maklon</label>
+              <DnaInput
+                placeholder="PT Cantika Jelita"
+                value={formData.clientName}
+                onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Kebutuhan Gross (SO)</label>
+              <DnaInput
+                type="number"
+                min="0"
+                value={formData.grossRequirement}
+                onChange={(e) => setFormData({ ...formData, grossRequirement: Number(e.target.value) })}
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Real Stok Gudang</label>
+              <DnaInput
+                type="number"
+                min="0"
+                value={formData.realStockQty}
+                onChange={(e) => setFormData({ ...formData, realStockQty: Number(e.target.value) })}
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">PO Berjalan (On-Order)</label>
+              <DnaInput
+                type="number"
+                min="0"
+                value={formData.onOrderQty}
+                onChange={(e) => setFormData({ ...formData, onOrderQty: Number(e.target.value) })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Satuan (Unit)</label>
+              <DnaInput
+                placeholder="kg / pcs / roll"
+                value={formData.unit}
+                onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Supplier Rekomendasi</label>
+              <DnaInput
+                placeholder="PT Chemindo Natural"
+                value={formData.primarySupplier}
+                onChange={(e) => setFormData({ ...formData, primarySupplier: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Estimasi Harga Satuan (Rp)</label>
+              <DnaInput
+                type="number"
+                min="0"
+                value={formData.estimatedUnitPrice}
+                onChange={(e) => setFormData({ ...formData, estimatedUnitPrice: Number(e.target.value) })}
+              />
+            </div>
+          </div>
+
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs">
+            <div>
+              <span className="font-semibold text-blue-900 block">Kalkulasi Otomatis Defisit (Net Need):</span>
+              <span className="text-blue-700">Gross - Real Stok - PO On-Order</span>
+            </div>
+            <div className="text-right font-mono font-bold text-base text-blue-800">
+              {Math.max(0, formData.grossRequirement - formData.realStockQty - formData.onOrderQty)} {formData.unit}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+            <DnaButton variant="secondary" type="button" onClick={() => setIsCreateOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" type="submit">
+              Simpan Kebutuhan MRP
+            </DnaButton>
+          </div>
+        </form>
+      </DnaModal>
     </div>
+  );
+}
+
+export default function KebutuhanBarangMRPPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Memuat Kebutuhan Barang (MRP)...</div>}>
+      <KebutuhanBarangMRPContent />
+    </Suspense>
   );
 }

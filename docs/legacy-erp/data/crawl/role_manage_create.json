@@ -1,0 +1,48 @@
+{
+  "url": "/role-manage/create",
+  "type": "create",
+  "file": "role_manage_create.html",
+  "title": "GsERP KIL - Buat Hak Akses",
+  "forms": [
+    {
+      "id": "GSForm",
+      "action": "https://kil.gserp.id/role-manage/create",
+      "method": "post",
+      "fieldCount": 2,
+      "fields": [
+        {
+          "name": "csrf_gs",
+          "type": "hidden",
+          "id": null,
+          "required": false,
+          "placeholder": "",
+          "value": "872117d075614d41d2607b3871bdc7e5",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "",
+          "options": null
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "id": "inputName",
+          "required": true,
+          "placeholder": "Contoh: Administrator",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Nama * Nama role",
+          "options": null
+        }
+      ]
+    }
+  ],
+  "tables": [],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [],
+  "notes": []
+}

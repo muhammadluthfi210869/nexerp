@@ -78,10 +78,17 @@ export default function MemberCardsGrid({ members, tasks }: MemberCardsGridProps
                       {member.initial}
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition flex items-center gap-1">
-                        {member.name}
-                        <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition text-blue-600" />
-                      </h3>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h3 className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition flex items-center gap-1">
+                          {member.name}
+                          <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition text-blue-600" />
+                        </h3>
+                        {(member.name.toLowerCase().includes("revita") || member.role.toLowerCase().includes("manager")) && (
+                          <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
+                            Manager
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[11px] text-slate-500 font-medium">
                         {total} tasks ·{" "}
                         <span className={late > 0 ? "text-rose-600 font-bold" : "text-slate-500"}>

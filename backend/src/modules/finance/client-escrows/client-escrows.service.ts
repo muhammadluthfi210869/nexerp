@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 export const ESCROW_STATUS = {
@@ -49,7 +53,8 @@ export class ClientEscrowsService {
     const customer = await this.prisma.customer.findUnique({
       where: { id: dto.customerId },
     });
-    if (!customer) throw new NotFoundException(`Customer ${dto.customerId} not found`);
+    if (!customer)
+      throw new NotFoundException(`Customer ${dto.customerId} not found`);
 
     return this.prisma.$transaction(async (tx) => {
       const escrow = await tx.clientEscrow.create({
@@ -65,7 +70,9 @@ export class ClientEscrowsService {
 
       // Journal: Dr Bank / Cr Escrow Liability
       if (dto.bankAccountId) {
-        const escrowLiabAcc = await tx.account.findFirst({ where: { code: '2301' } });
+        const escrowLiabAcc = await tx.account.findFirst({
+          where: { code: '2301' },
+        });
         if (escrowLiabAcc) {
           await tx.journalEntry.create({
             data: {
@@ -75,7 +82,11 @@ export class ClientEscrowsService {
               sourceDocumentType: 'PAYMENT' as any,
               lines: {
                 create: [
-                  { accountId: dto.bankAccountId, debit: dto.amount, credit: 0 },
+                  {
+                    accountId: dto.bankAccountId,
+                    debit: dto.amount,
+                    credit: 0,
+                  },
                   { accountId: escrowLiabAcc.id, debit: 0, credit: dto.amount },
                 ],
               },
@@ -123,7 +134,8 @@ export class ClientEscrowsService {
       data: {
         status: newStatus,
         releaseDate: new Date(),
-        notes: `${escrow.notes || ''}\n[${dto.action}D by ${userId}] ${dto.notes || ''}`.trim(),
+        notes:
+          `${escrow.notes || ''}\n[${dto.action}D by ${userId}] ${dto.notes || ''}`.trim(),
       },
     });
   }

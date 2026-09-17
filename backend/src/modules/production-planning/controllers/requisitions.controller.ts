@@ -18,7 +18,7 @@ import {
 } from '../dto/requisition.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller(['material-requisitions', 'v1/material-requisitions'])
+@Controller('material-requisitions')
 export class RequisitionsController {
   constructor(private readonly requisitionsService: RequisitionsService) {}
 

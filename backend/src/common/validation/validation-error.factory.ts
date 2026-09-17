@@ -1,7 +1,11 @@
 import { BadRequestException } from '@nestjs/common';
 import { ValidationError } from 'class-validator';
 
-function collect(errors: ValidationError[], prefix = '', output: Record<string, string[]> = {}) {
+function collect(
+  errors: ValidationError[],
+  prefix = '',
+  output: Record<string, string[]> = {},
+) {
   for (const error of errors) {
     const field = prefix ? `${prefix}.${error.property}` : error.property;
     if (error.constraints) output[field] = Object.values(error.constraints);

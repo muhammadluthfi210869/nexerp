@@ -1,0 +1,191 @@
+{
+  "scope": "Reports + Operational + Finance (21 URLs)",
+  "auth": {
+    "method": "ci_session cookie + csrf_cookie_gs",
+    "user": "zaki@dreamlab.id",
+    "login_url": "https://kil.gserp.id/auth/login",
+    "redirect_after_login": "https://kil.gserp.id/"
+  },
+  "totals": {
+    "pages_requested": 21,
+    "pages_fetched_ok": 21,
+    "http_errors": []
+  },
+  "categories": {
+    "reports": [
+      "report-profit-loss",
+      "report-balance-sheet",
+      "report-trial-balance",
+      "report-general-ledger",
+      "report-stock",
+      "report-stock-valuation",
+      "report-mutation-goods",
+      "report-follow-up-customer",
+      "report-guest-book"
+    ],
+    "finance_operational": [
+      "general-journal",
+      "other-deposit",
+      "other-payment",
+      "request-cogs",
+      "request-cogs-approval"
+    ],
+    "inventory_operational": [
+      "goods-request",
+      "goods-request-approval",
+      "goods-transfer",
+      "need-for-goods",
+      "stock-opname",
+      "stock-adjustment"
+    ],
+    "misc": [
+      "guest-book"
+    ]
+  },
+  "common_patterns": {
+    "filter_mechanism": "All report/listing pages use `periode` input (month picker) + DataTable server-side; some add `warehouse`, `showAll`, `busdev`, or `goods` selects",
+    "auth_method": "ci_session cookie + csrf_cookie_gs (CodeIgniter 3 style)",
+    "ui_framework": "Bootstrap-based + DataTables.js + DateRangePicker + Chart.js (varies per page)",
+    "date_filter": "Single `periode` field on all reports (period, not date range). No start_date/end_date inputs visible — they are server-side defaults",
+    "table_format": "DataTables AJAX endpoint (server-side pagination/search). Most tables show 0 rows on initial render (empty state)",
+    "no_forms_on_listing": "0 forms on all 21 listing pages — they are read-only views. Only `guest-book` has 1 form (filter form)"
+  },
+  "reports_detail": {
+    "report-profit-loss": {
+      "columns": ["Description", "Balance"],
+      "row_count": 122,
+      "filter": "periode (month)",
+      "logic": "Two-column description/balance structure typical of P&L: revenue lines, COGS, expenses grouped by account category; final balance = net profit/loss"
+    },
+    "report-balance-sheet": {
+      "columns": ["Description", "Balance"],
+      "row_count": 97,
+      "filter": "periode (month)",
+      "logic": "Standard balance sheet: Assets (current + fixed), Liabilities, Equity. Closing balance by account"
+    },
+    "report-trial-balance": {
+      "columns": ["Kode", "Nama Akun", "Saldo Awal", "Perubahan", "Saldo Akhir", "Debit", "Kredit", "Debit", "Kredit", "Debit", "Kredit", "TOTAL"],
+      "row_count": 16,
+      "filter": "periode + showAll checkbox",
+      "logic": "Three-period pair (likely opening/movement/closing) with debit/credit each side; aggregates to TOTAL row. Bottom shows 3,483,845,258.46 == 3,483,845,258.46 (debits = credits enforced)"
+    },
+    "report-general-ledger": {
+      "columns": ["Kode CoA", "Nama CoA", "Opening", "Debet", "Kredit", "Perubahan", "Saldo"],
+      "row_count": 190,
+      "filter": "periode (month)",
+      "logic": "One row per GL account; computes movement (Debet - Kredit), running Saldo. Source of truth that feeds Balance Sheet & P&L"
+    },
+    "report-stock": {
+      "columns": "(DataTable - server-rendered, no static headers visible)",
+      "filter": "periode + warehouse + showAll",
+      "logic": "Stock listing by warehouse with qty/valuation per item"
+    },
+    "report-stock-valuation": {
+      "columns": "(DataTable - server-rendered)",
+      "filter": "periode + warehouse + showAll",
+      "logic": "Valuation of stock using costing method (likely FIFO/Average based on ERP config)"
+    },
+    "report-mutation-goods": {
+      "columns": "(DataTable - server-rendered)",
+      "filter": "periode + warehouse + goods (item)",
+      "logic": "Stock mutation: beginning balance + purchases/transfers/sales - ending balance per SKU per warehouse"
+    },
+    "report-follow-up-customer": {
+      "columns": "(DataTable - server-rendered)",
+      "filter": "periode + busdev",
+      "logic": "Sales pipeline tracking by BusDev rep"
+    },
+    "report-guest-book": {
+      "columns": ["No", "Tanggal", "Waktu", "Nama", "Telepon", "Email", "Alamat", "Perusahaan", "Tujuan", "Bertemu", "BusDev"],
+      "row_count": 385,
+      "filter": "periode + busdev",
+      "logic": "Visitor log linked to BusDev; date+time split"
+    }
+  },
+  "finance_operational_detail": {
+    "general-journal": {
+      "columns": ["#", "Kode", "Tanggal", "Deksripsi", "Debit", "Kredit", "Tipe", "Referensi", "Status", "#"],
+      "row_count": 137,
+      "filter": "periode (month)",
+      "logic": "GL journal entries. Tipe column = source doc type (Penjualan, Pembelian, Kas Masuk, etc). Referensi = source doc number. Double-entry: Debit/Kredit columns. Status = approval/void state. This is the CHRONOLOGICAL ledger backing the General Ledger report"
+    },
+    "other-deposit": {
+      "columns": ["#", "Kode", "Tanggal", "Deskripsi", "Dari", "Kas/Bank", "Jumlah", "Status", "#"],
+      "filter": "periode",
+      "logic": "Kas Bank Masuk = cash/bank deposits (non-AR). Dari = payer, Kas/Bank = GL account credited, Jumlah = amount, Status = approval"
+    },
+    "other-payment": {
+      "columns": ["#", "Kode", "Tanggal", "Deskripsi", "Kepada", "No. Tagihan", "Kas/Bank", "Jumlah", "Status", "#"],
+      "filter": "periode",
+      "logic": "Kas Bank Keluar = cash/bank payments (non-AP). Kepada = payee, No. Tagihan = bill/invoice ref, Kas/Bank = GL account debited"
+    },
+    "request-cogs": {
+      "columns": ["#", "Kode", "Tanggal", "Pelanggan", "Produk", "Formula", "Jumlah MOQ", "Status", "#"],
+      "logic": "HPP request = cost-of-goods-sales request tied to sales sample. Pelanggan = customer, Produk = item, Formula = production formula, Jumlah MOQ = minimum order qty. Approval workflow before sales sample production"
+    },
+    "request-cogs-approval": {
+      "columns": ["#", "Kode", "Tanggal", "Pelanggan", "Sales Sample", "Produk", "Pembuat", "Catatan", "Status", "#"],
+      "row_count": 2,
+      "logic": "Approval queue for HPP requests. Status drives next step (sample production -> quotation)"
+    }
+  },
+  "inventory_operational_detail": {
+    "goods-request": {
+      "columns": ["#", "Kode", "Tanggal", "Peminta", "Penyedia", "Pembuat", "Catatan", "Status", "#"],
+      "row_count": 8,
+      "logic": "Internal goods request (Peminta = requester dept, Penyedia = supplying warehouse). Two-step: goods-request -> goods-request-approval"
+    },
+    "goods-request-approval": {
+      "columns": ["#", "Kode", "Tanggal", "Peminta", "Penyedia", "Pembuat", "Catatan", "Status", "#"],
+      "row_count": 8,
+      "logic": "Approval queue mirroring goods-request"
+    },
+    "goods-transfer": {
+      "columns": ["#", "Kode", "Tanggal", "Gudang Asal", "Gudang Tujuan", "Pembuat", "Status", "#"],
+      "row_count": 16,
+      "logic": "Inter-warehouse transfer. Gudang Asal -> Gudang Tujuan = source and destination warehouse. Affects two stock records simultaneously"
+    },
+    "need-for-goods": {
+      "columns": ["#", "Kode", "Tanggal", "Sales / Customer / Produk / Brand", "Pembuat", "Status", "#"],
+      "row_count": 63,
+      "logic": "Material Requirements Planning (MRP) view: aggregates sales orders -> calculates Kebutuhan Qty (required qty) -> Stok (on-hand) -> Selisih (shortfall) -> Qty Order (PO suggestion). Cross-references purchase history with Tanggal/No. Pembelian/Supplier/Qty/Harga"
+    },
+    "stock-opname": {
+      "columns": ["#", "Kode", "Tanggal", "Gudang", "Pembuat", "Catatan", "#"],
+      "row_count": 8,
+      "logic": "Physical stock count session per warehouse. Generates variance -> feeds stock-adjustment"
+    },
+    "stock-adjustment": {
+      "columns": ["#", "Kode", "Tanggal", "Gudang", "Pembuat", "Catatan", "#"],
+      "logic": "Stock adjustment posting — usually produced from stock-opname variance. Updates book balance to physical count"
+    }
+  },
+  "misc_detail": {
+    "guest-book": {
+      "columns": ["#", "Tanggal & Waktu", "Nama Klien", "Meeting & PIC", "Kontak", "Kota", "Produk Diminati", "MOQ", "Target Market", "Kategori", "Aksi"],
+      "row_count": 1,
+      "filter_form": "filter_type + month",
+      "logic": "OPERATIONAL entry form for visitors (the report counterpart is report-guest-book). Captures lead details, MOQ, target market, kategori"
+    }
+  },
+  "cross_references": {
+    "balance_sheet_feeds_from": ["report-general-ledger"],
+    "profit_loss_feeds_from": ["report-general-ledger"],
+    "trial_balance_feeds_from": ["report-general-ledger"],
+    "general_journal_feeds_into": ["report-general-ledger", "report-trial-balance", "report-balance-sheet", "report-profit-loss"],
+    "report_mutation_goods_cross_check_with": ["report-stock", "report-stock-valuation"],
+    "stock_opname_generates": ["stock-adjustment"],
+    "goods_request_chains_to": ["goods-request-approval"],
+    "need_for_goods_pulls_from": ["goods-request", "purchase", "purchase-in", "report-stock"],
+    "request_cogs_chains_to": ["request-cogs-approval", "general-journal (HPP posting)"],
+    "other_deposit_other_payment_post_to": ["general-journal"]
+  },
+  "key_findings": {
+    "single_period_filter": "Every report/listing uses ONE `periode` field (a month), not a date range. This is the dominant filter across the ERP",
+    "no_static_tables": "Most reports return DataTable JSON server-side; raw HTML shows empty tables — column structure was inferred from header cells in the DataTable thead",
+    "double_entry_gl": "General Journal + General Ledger + Trial Balance + Balance Sheet + P&L form the standard accounting chain (Debit/Kredit enforced; trial balance shows 3.48B = 3.48B)",
+    "stock_flow": "Purchase-in -> stock (increase) -> goods-transfer (inter-warehouse) -> goods-request -> sale -> stock-out. Stock-opname creates variance -> stock-adjustment reconciles",
+    "cogs_flow": "Request COGS (sales sample) -> approval -> production -> General Journal posts HPP when sample is converted to actual sale",
+    "guest_book_pair": "guest-book (entry form, 1 row) and report-guest-book (visitor report, 385 rows) are operational + reporting pair for sales pipeline entry"
+  }
+}

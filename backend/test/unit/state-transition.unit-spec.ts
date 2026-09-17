@@ -4,6 +4,7 @@ import {
   EntityType,
 } from '../../src/modules/system/state-transition.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 
 describe('StateTransitionService — Unit', () => {
@@ -35,6 +36,10 @@ describe('StateTransitionService — Unit', () => {
       providers: [
         StateTransitionService,
         { provide: PrismaService, useValue: prisma },
+        {
+          provide: EventEmitter2,
+          useValue: { emit: jest.fn(), on: jest.fn() },
+        },
       ],
     }).compile();
     service = module.get<StateTransitionService>(StateTransitionService);

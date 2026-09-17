@@ -1,0 +1,2797 @@
+version: 1.1
+effective_date: 2026-09-17
+contract_owner: Domain Architect
+status: PROVISIONAL
+authority_map: 00_MASTER_SPEC.md#91-canonical-subject-based-authority-map
+
+overview: |
+  Defines state machines per business entity in NEX ERP. Each state transition specifies:
+    - from_state, to_state                       (allowed moves only)
+    - authorized_actor                           (role + data scope)
+    - preconditions                              (must all be true to permit transition)
+    - side_effects                               (audit, notifications, journal entries, downstream entities)
+    - forbidden                                  (illegal transitions that throw INVALID_STATE_TRANSITION)
+
+  Format is 2-tier:
+    - Tier-1 (flat YAML) for simple approval flows (draft → pending → approved → completed)
+    - Tier-2 (rich YAML, this file) for compliance-critical pipelines (Finance, R&D, Production, Checklist)
+
+  Inspired by XState semantics. Implemented as TypeScript guards in NestJS services + Prisma
+  database CHECK constraints as defense-in-depth.
+
+  Cross-cutting contracts referenced:
+    - 07_RBAC_MATRIX.yaml               — authorized_actor resolution
+    - 09_NON_FUNCTIONAL_CONTRACT.md §6  — audit-first writes
+    - _SSOT_AUTH.md §8                  — auth-event auditing
+    - _SSOT_COMMUNICATION.md §3         — Document Transfer Status (universal pattern)
+    - NEX_FINANCE_FINAL_SPEC.md         — auto-journal rules (coa_auto)
+    - raw/ERP_INPUT_OUTPUT_LINEAGE.md   — orphan-output audit + auto-journal triggers
+
+# ===============================================================
+# 1. COMMON TRANSITIONS (cross-entity reusable macros)
+# ===============================================================
+# These are the building blocks. Specific pipelines below REUSE these
+# patterns (e.g., "draft_to_pending_approval" appears in 12 entities).
+
+common_transitions:
+  draft_to_pending_approval:
+    authorized: [entity_owner_role, entity_admin_role]
+    preconditions:
+      - all_required_fields_present
+      - entity_owner_user_id == current_user_id
+    side_effects:
+      - audit_log.create(action=status_change, before=draft, after=pending_approval)
+      - notification.send_to(role=approver_for_entity)
+      - status_transition.record(from=draft, to=pending_approval)
+
+  pending_approval_to_approved:
+    authorized: [approver_role]
+    preconditions:
+      - all_required_signatures_complete
+      - all_attachments_uploaded
+      - approval_threshold_respected       # per 07_RBAC_MATRIX.yaml approval_thresholds
+    side_effects:
+      - audit_log.create(action=approve)
+      - notification.send_to(role=owner)
+      - downstream_entity.create_or_unblock
+      - status_transition.record(from=pending_approval, to=approved)
+
+  pending_approval_to_rejected:
+    authorized: [approver_role]
+    preconditions:
+      - rejection_reason_text_provided
+    side_effects:
+      - audit_log.create(action=reject, after.reason)
+      - notification.send_to(role=owner)
+      - status_transition.record(from=pending_approval, to=rejected, reason)
+
+  approved_to_completed:
+    authorized: [entity_admin_role, system_auto]
+    preconditions:
+      - all_child_lines_processed
+      - all_payments_settled OR goods_delivered
+    side_effects:
+      - audit_log.create(action=complete)
+      - status_transition.record(from=approved, to=completed)
+
+  any_to_cancelled:
+    authorized: [entity_owner_role, entity_admin_role]
+    preconditions:
+      - current_state_in(cancellable_states)
+      - no_open_invoice_linked
+      - no_posted_journal_linked           # ledger integrity
+      - cancellation_reason_provided
+    side_effects:
+      - audit_log.create(action=cancel, after.reason)
+      - notification.send_to(all_stakeholders)
+      - downstream_roll_back_if_safe
+      - stock_release_if_reserved
+
+  any_to_deleted:
+    authorized: [admin_role]
+    preconditions:
+      - no_critical_dependencies
+      - no_open_invoice_linked
+      - no_posted_journal_linked
+      - entity_age_less_than(30_days) OR admin_override_with_audit
+    side_effects:
+      - soft_delete(deleted_at=now)        # per 09_NON_FUNCTIONAL_CONTRACT.md §5
+      - audit_log.create(action=delete, retention=PERMANENT)
+      - cascade_notify_to_watchers
+      - recoverable_within_30_days
+
+# ===============================================================
+# 2. SALES PIPELINE
+# ===============================================================
+# Entities: Lead, SalesSample, SalesOrder, SalesDownPayment, SalesInvoice,
+#           SalesPayment, SalesReturn, SalesReturnIn
+
+sales_pipeline:
+
+  # ---- 2.1 Lead (top-of-funnel) ---------------------------------
+  - entity: Lead
+    states: [NEW_LEAD, CONTACTED, SAMPLE, WON, LOST]
+    initial_state: NEW_LEAD
+    source_of_truth: schema.prisma:Lead.status
+    transitions:
+      - from: NEW_LEAD
+        to: CONTACTED
+        trigger: busdev.first_outreach
+        authorized_actor:
+          role: BusDevStaff
+          scope: own_only
+        preconditions:
+          - customer_id != null
+          - pic_phone_or_email_present
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=owner)
+          - status_transition.record
+      - from: CONTACTED
+        to: SAMPLE
+        trigger: busdev.request_sample
+        authorized_actor:
+          role: BusDevStaff
+          scope: own_only
+        preconditions:
+          - at_least_one_communication_logged
+        side_effects:
+          - audit_log.create
+          - downstream.create(SalesSample draft)
+          - notification.send_to(role=owner)
+      - from: SAMPLE
+        to: WON
+        trigger: client.commit_so
+        authorized_actor:
+          role: BusDevStaff
+          scope: own_only
+        preconditions:
+          - sales_order_id_linked != null
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=BusDevManager)
+          - dashboard.refresh(D.Pelanggan, D.BusDev)
+      - from: SAMPLE
+        to: LOST
+        trigger: client.decline
+        authorized_actor:
+          role: BusDevStaff
+          scope: own_only
+        preconditions:
+          - lost_reason_provided
+        side_effects:
+          - audit_log.create
+          - dashboard.refresh(D.Lost)
+    forbidden:
+      - from: NEW_LEAD
+        to: WON                  # must traverse CONTACTED → SAMPLE
+      - from: NEW_LEAD
+        to: LOST                 # cannot mark untested lead as lost without evidence
+      - from: WON
+        to: LOST                 # WON is terminal (corrections via new lead)
+      - from: LOST
+        to: CONTACTED            # reopen requires new lead record
+
+  # ---- 2.2 SalesSample (sample request) -------------------------
+  - entity: SalesSample
+    states: [DRAFT, SUBMITTED, IN_PROGRESS, APPROVED, REJECTED, CONVERTED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:SalesSample.status
+    notes: |
+      Status strings are uppercase per Prisma model comment.
+      "IN_PROGRESS" covers both formulation (R&D) and lab sample prep.
+    transitions:
+      - from: DRAFT
+        to: SUBMITTED
+        trigger: busdev.submit_sample
+        authorized_actor:
+          role: BusDevStaff
+          scope: own_only
+        preconditions:
+          - customer_id != null
+          - product_name != null
+          - total_amount > 0
+          - attachments_uploaded(min=1)
+          - within_self_approval_threshold(amount_max=500_000) OR approver_set
+        side_effects:
+          - audit_log.create(action=status_change)
+          - notification.send_to(role=BusDevManager, RnDManager)
+          - status_transition.record
+      - from: SUBMITTED
+        to: IN_PROGRESS
+        trigger: rnd.accept_brief
+        authorized_actor:
+          role: RnDChemist
+        preconditions:
+          - formulation_brief_validated
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=BusDevStaff=owner)
+          - downstream.create(Formulation rev=0 draft)
+          - dashboard.refresh(D.Sample)
+      - from: IN_PROGRESS
+        to: APPROVED
+        trigger: rnd.manager_approve
+        authorized_actor:
+          role: RnDManager
+        preconditions:
+          - qc_review_done == true
+          - formulation_rev == current
+        side_effects:
+          - audit_log.create(action=approve)
+          - notification.send_to(role=BusDevStaff=owner)
+          - formulation.status = APPROVED
+      - from: IN_PROGRESS
+        to: REJECTED
+        trigger: rnd.manager_reject
+        authorized_actor:
+          role: RnDManager
+        preconditions:
+          - rejection_reason != null
+        side_effects:
+          - audit_log.create(action=reject, after.reason)
+          - notification.send_to(role=BusDevStaff=owner)
+          - status_transition.record(reason)
+      - from: APPROVED
+        to: CONVERTED
+        trigger: busdev.create_so
+        authorized_actor:
+          role: BusDevStaff
+          scope: own_only
+        preconditions:
+          - sales_order_id_linked != null
+          - client_confirmed_formula == true
+        side_effects:
+          - audit_log.create
+          - sales_order.unblock_approval
+          - dashboard.refresh(D.PenjualanSample)
+    forbidden:
+      - from: DRAFT
+        to: APPROVED                # must go through SUBMITTED → IN_PROGRESS
+      - from: DRAFT
+        to: CONVERTED               # cannot convert un-submitted sample
+      - from: REJECTED
+        to: APPROVED                # must create new sample record
+      - from: CONVERTED
+        to: REJECTED                # terminal
+      - from: CONVERTED
+        to: DRAFT                   # terminal
+
+  # ---- 2.3 SalesOrder (SO) — core revenue document ---------------
+  - entity: SalesOrder
+    states: [DRAFT, DP_PAID, AMENDMENT_REVIEW, IN_PRODUCTION, QC_PASS, SHIPPED, CLOSED, CANCELLED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:SalesOrder.status
+    notes: |
+      Per NEX_FINANCE_FINAL_SPEC §3.2: down_payment_percent default 50%.
+      Per REQUIREMENT Poin 8: 3-way matching enforced server-side.
+      Per 09_NON_FUNCTIONAL_CONTRACT §6: every transition writes audit BEFORE ack.
+      Per OD-SM-02: direct cancellation after IN_PRODUCTION is strictly forbidden; requires separate termination/disposition workflow.
+      Per DECISION_REQUIRED-003: amendments after DP acceptance enter AMENDMENT_REVIEW and hold production dispatch; commercial fields become immutable once IN_PRODUCTION.
+    transitions:
+      - from: DRAFT
+        to: DP_PAID
+        trigger: busdev.submit_so + finance.dp_received
+        authorized_actor:
+          role: BusDevStaff
+          scope: owner_only
+        preconditions:
+          - customer_id != null
+          - total_amount > 0
+          - moq_qty >= customer_moq
+          - down_payment_percent == 50
+          - all_sales_order_details_have_goods
+          - within_approval_threshold(amount_max=10_000_000) OR approver_acked
+          - approval_ladder_complete (thresholds — BusDevManager up to 50M, BusDevAdmin + Director above 50M)
+        side_effects:
+          - audit_log.create(action=status_change)
+          - notification.send_to(role=BusDevManager, FinanceStaff, ProductionAdmin)
+          - downstream.create(SalesDownPayment draft)
+          - downstream.create(BatchRecord draft)  # production can start prepping
+          - status_transition.record
+        forbidden:
+          - to: IN_PRODUCTION           # cannot skip DP
+          - to: SHIPPED                  # cannot skip production
+      - from: DP_PAID
+        to: AMENDMENT_REVIEW
+        trigger: busdev.request_amendment
+        authorized_actor:
+          role: BusDevStaff
+          scope: owner_only
+        preconditions:
+          - amendment_reason_provided
+          - status == DP_PAID
+          - batch_record.status != IN_PROGRESS
+        side_effects:
+          - audit_log.create(action=request_amendment)
+          - production_dispatch_hold.set(true)
+          - notification.send_to(role=BusDevManager, FinanceManager)
+      - from: AMENDMENT_REVIEW
+        to: DP_PAID
+        trigger: busdev.approve_amendment + finance.reconcile_dp
+        authorized_actor:
+          all_of: [BusDevManager, FinanceManager]
+        preconditions:
+          - amendment_reviewed == true
+          - total_recalculated == true
+          - dp_delta_reconciled
+        side_effects:
+          - audit_log.create(action=approve_amendment)
+          - production_dispatch_hold.set(false)
+          - notification.send_to(role=BusDevStaff, ProductionAdmin)
+      - from: DP_PAID
+        to: IN_PRODUCTION
+        trigger: production.batch_started
+        authorized_actor:
+          role: ProductionAdmin
+        preconditions:
+          - down_payment_amount_paid >= (total * 0.5)
+          - formulation.status == LOCKED OR formulation.status == APPROVED_for_legacy
+          - all_materials_available           # stock check across semua gudang
+          - batch_record_id_linked != null
+        side_effects:
+          - audit_log.create
+          - batch_record.status = IN_PROGRESS
+          - stock_reserved(per_bom)
+          - notification.send_to(role=BusDevStaff=owner)
+          - dashboard.refresh(D.JadwalProduksi, D.RealisasiProduksi)
+      - from: IN_PRODUCTION
+        to: QC_PASS
+        trigger: production.qc_passed
+        authorized_actor:
+          role: ProductionAdmin
+        preconditions:
+          - packaging_qc_passed == true
+          - filling_qc_passed == true
+          - final_qc_passed == true
+          - apoteker_signoff(if_formulation_bpom_required)
+        side_effects:
+          - audit_log.create
+          - stock_movement.create(from=FG_QUARANTINE, to=FG_AVAILABLE, qty=produced)
+          - stock_decremented(raw_materials_consumed)
+          - notification.send_to(role=BusDevStaff, WarehouseStaff, FinanceStaff)
+          - dashboard.refresh(D.Gudang, D.RealisasiProduksi)
+      - from: QC_PASS
+        to: SHIPPED
+        trigger: warehouse.delivery_dispatched
+        authorized_actor:
+          role: WarehouseStaff
+        preconditions:
+          - delivery_out_id_linked != null
+          - carrier_assigned != null
+          - tracking_number_set
+          - sales_invoice.status == POSTED OR ar_delivery_release == RELEASED
+          - financial_delivery_release == RELEASED    # NEX_FINANCE_FINAL_SPEC §3.2 AR Delivery Gatekeeper
+        side_effects:
+          - audit_log.create
+          - delivery_out.status = DELIVERED   # mirror transition
+          - stock_decremented(FG)
+          - qr_code.generated(per ADVANCEMENT_MAP 04)
+          - notification.send_to(role=BusDevStaff, customer_via_WA)
+          - dashboard.refresh(D.Gudang)
+      - from: SHIPPED
+        to: CLOSED
+        trigger: finance.invoice_paid
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - sales_invoice.status == PAID
+          - remaining_balance == 0
+          - no_open_return
+        side_effects:
+          - audit_log.create
+          - sales_invoice.status = PAID            # confirm
+          - journal_entry.create(paid)              # auto-journal via coa_auto
+          - repeat_order.queue
+          - dashboard.refresh(D.Eksekutif, D.Keuangan)
+      - from: DRAFT
+        to: CANCELLED
+        trigger: busdev.cancel_so
+        authorized_actor:
+          any_of: [BusDevStaff, BusDevAdmin]
+          scope: owner_only
+        preconditions:
+          - cancellation_reason_provided
+          - no_down_payment_received
+        side_effects:
+          - audit_log.create(action=cancel)
+          - notification.send_to(all_stakeholders)
+      - from: DP_PAID
+        to: CANCELLED
+        trigger: busdev.cancel_so OR finance.reverse_dp
+        authorized_actor:
+          all_of: [BusDevAdmin, FinanceManager]
+        preconditions:
+          - cancellation_reason_provided
+          - customer_agreed_to_refund OR force_cancel_authorized
+        side_effects:
+          - audit_log.create(action=cancel)
+          - journal_entry.create(dp_refund)
+          - notification.send_to(customer_via_WA)
+    forbidden_universal:
+      - any → SHIPPED if down_payment < 50%
+      - any → CLOSED if invoice_open == true
+      - CLOSED → any                   # terminal
+      - CANCELLED → any_active_state
+      - IN_PRODUCTION → CANCELLED      # per OD-SM-02: direct cancellation forbidden once production starts; separate termination/disposition workflow required
+      - IN_PRODUCTION → AMENDMENT_REVIEW # per DECISION_REQUIRED-003: commercial fields are immutable once production starts
+      - approved (intermediate state absent; using DP_PAID as gateway)
+
+  # ---- 2.4 SalesDownPayment (DP Penjualan) -----------------------
+  - entity: SalesDownPayment
+    states: [RECEIVED, OFFSET, EXPIRED]
+    initial_state: RECEIVED
+    source_of_truth: schema.prisma:SalesDownPayment.status
+    transitions:
+      - from: RECEIVED
+        to: OFFSET
+        trigger: finance.offset_against_invoice
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - sales_invoice_id_linked != null
+          - invoice.amount >= dp.amount
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(dp_offset)
+          - notification.send_to(role=BusDevStaff)
+      - from: RECEIVED
+        to: EXPIRED
+        trigger: finance.mark_expired
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - days_since_receipt > dp_validity_days (default=90)
+          - no_invoice_linked
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(dp_expired_to_revenue)   # auto
+          - notification.send_to(role=BusDevStaff)
+    forbidden:
+      - EXPIRED → OFFSET               # must create new DP if expired
+      - OFFSET → EXPIRED
+      - any → RECEIVED                  # RECEIVED is initial
+
+  # ---- 2.5 SalesInvoice (Faktur Penjualan) -----------------------
+  - entity: SalesInvoice
+    states: [DRAFT, POSTED, PAID, PARTIAL, CANCELLED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:SalesInvoice.status
+    transitions:
+      - from: DRAFT
+        to: POSTED
+        trigger: finance.post_invoice
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - total_amount > 0
+          - customer_id != null
+          - all_invoice_details_have_goods
+          - ppn_calculated == 11_percent
+          - linked_so.status in [QC_PASS, SHIPPED]
+        side_effects:
+          - audit_log.create(action=post)
+          - journal_entry.create(invoice_receivable)    # auto via coa_auto
+          - notification.send_to(role=BusDevStaff, customer_via_WA)
+          - financial_delivery_release = RELEASED       # unlocks warehouse DO
+      - from: POSTED
+        to: PAID
+        trigger: finance.record_full_payment
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - payment_total >= invoice.outstanding
+          - all_payments_reconciled
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(payment_received)
+          - sales_order.unblock_to_closed_if_remaining_zero
+      - from: POSTED
+        to: PARTIAL
+        trigger: finance.record_partial_payment
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - 0 < payment_total < invoice.outstanding
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(payment_received)
+      - from: PARTIAL
+        to: PAID
+        trigger: finance.record_remaining_payment
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - cumulative_payment >= invoice.outstanding
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(remaining_payment)
+      - from: DRAFT
+        to: CANCELLED
+        authorized_actor:
+          role: FinanceAdmin
+        preconditions:
+          - not_posted_yet
+          - cancellation_reason_provided
+        side_effects:
+          - audit_log.create(action=cancel)
+      - from: POSTED
+        to: CANCELLED
+        trigger: finance.reverse_invoice
+        authorized_actor:
+          role: FinanceAdmin
+        preconditions:
+          - reversal_journal_id_created
+          - linked_so.status != CLOSED
+        side_effects:
+          - audit_log.create(action=cancel)
+          - journal_entry.create(invoice_reversal)
+          - sales_invoice.mark_reversed
+    forbidden:
+      - PAID → any                       # terminal
+      - any → DRAFT                       # posted immutable (reversal only)
+
+  # ---- 2.6 SalesPayment (Bayar Penjualan) -----------------------
+  - entity: SalesPayment
+    states: [DRAFT, PENDING, APPROVED, REJECTED, COMPLETED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:SalesPayment.status
+    transitions:
+      - from: DRAFT
+        to: PENDING
+        trigger: finance.submit_payment
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - payment_amount > 0
+          - cash_bank_account_valid
+          - invoice_id_linked != null
+          - proof_uploaded
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=FinanceManager)
+      - from: PENDING
+        to: APPROVED
+        trigger: finance.approve_payment
+        authorized_actor:
+          role: FinanceManager
+        preconditions:
+          - within_approval_threshold(staff<=5M, manager<=100M, vip>100M)
+          - bank_reconciliation_match (if matched)
+        side_effects:
+          - audit_log.create(action=approve)
+          - notification.send_to(role=BusDevStaff, customer_via_WA)
+      - from: APPROVED
+        to: COMPLETED
+        trigger: system.auto_post_or_finance_confirm
+        authorized_actor:
+          any_of: [FinanceStaff, system_auto_post]
+        preconditions:
+          - journal_entry.created
+          - cash_bank.balance_decremented
+        side_effects:
+          - audit_log.create
+          - sales_invoice.balance_decrement
+          - dashboard.refresh(D.Keuangan)
+      - from: PENDING
+        to: REJECTED
+        authorized_actor:
+          role: FinanceManager
+        preconditions:
+          - rejection_reason != null
+        side_effects:
+          - audit_log.create(action=reject)
+          - notification.send_to(role=submitter)
+    forbidden:
+      - COMPLETED → any
+      - REJECTED → APPROVED             # must create new payment
+
+  # ---- 2.7 SalesReturn (Retur Penjualan) -----------------------
+  - entity: SalesReturn
+    states: [DRAFT, PENDING, APPROVED, REJECTED, COMPLETED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:SalesReturn.status
+    transitions:
+      - from: DRAFT
+        to: PENDING
+        trigger: busdev.submit_return
+        authorized_actor:
+          role: BusDevStaff
+          scope: own_only
+        preconditions:
+          - sales_invoice_id_linked != null
+          - return_lines_with_qty_and_reason
+          - photos_uploaded(min=1)
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=BusDevManager)
+      - from: PENDING
+        to: APPROVED
+        authorized_actor:
+          role: BusDevManager
+        preconditions:
+          - qc_inspection_done
+          - credit_note_amount_calculated
+        side_effects:
+          - audit_log.create
+          - downstream.create(SalesReturnIn draft)
+          - credit_note.queued
+      - from: APPROVED
+        to: COMPLETED
+        trigger: warehouse.goods_received_back
+        authorized_actor:
+          role: WarehouseStaff
+        preconditions:
+          - sales_return_in.status == POSTED
+          - credit_note.posted
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(credit_note)    # auto
+          - dashboard.refresh(D.Gudang)
+      - from: PENDING
+        to: REJECTED
+        authorized_actor:
+          role: BusDevManager
+        preconditions:
+          - rejection_reason != null
+        side_effects:
+          - audit_log.create(action=reject)
+    forbidden:
+      - COMPLETED → any
+      - APPROVED → DRAFT                # no retract after approval
+
+  # ---- 2.8 SalesReturnIn (goods received back) ------------------
+  - entity: SalesReturnIn
+    states: [DRAFT, POSTED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:SalesReturnIn.status
+    transitions:
+      - from: DRAFT
+        to: POSTED
+        trigger: warehouse.receive_returned_goods
+        authorized_actor:
+          role: WarehouseStaff
+        preconditions:
+          - sales_return_id_linked != null
+          - qty_received matches qty_returned
+          - qc_inspection_result_recorded (Bagus/Reject/Free)
+          - batch_number_per_line
+        side_effects:
+          - audit_log.create(action=post)
+          - stock_movement.create(direction=IN, qty, quality)
+          - supplier_quality_score.update_if_linked_to_supplier
+          - dashboard.refresh(D.Gudang)
+    forbidden:
+      - POSTED → DRAFT                   # immutable
+
+# ===============================================================
+# 3. PURCHASE PIPELINE
+# ===============================================================
+# Entities: PurchaseRequest, PurchaseOrder, PurchaseDownPayment,
+#           GoodsReceipt, PurchaseInvoice, PurchasePayment,
+#           PurchaseReturn, PurchaseReturnOut
+
+purchase_pipeline:
+
+  # ---- 3.1 PurchaseRequest (PR) ---------------------------------
+  - entity: PurchaseRequest
+    states: [DRAFT, PENDING, APPROVED, REJECTED, CONVERTED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:PurchaseRequest.status
+    transitions:
+      - from: DRAFT
+        to: PENDING
+        trigger: any_module.create_pr
+        authorized_actor:
+          role: any_with_PRM_create_perm
+          actors: [ProductionAdmin, WarehouseStaff, RnDChemist, BusDevStaff, PurchasingStaff]
+        preconditions:
+          - requester_user_id != null
+          - all_items_have_quantity_and_unit
+          - budget_code_or_cost_center_set
+          - urgency_classified  # CRITICAL/<14d, NORMAL, LOW/>90d
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=PurchasingManager)
+          - dashboard.refresh(D.Purchasing)
+      - from: PENDING
+        to: APPROVED
+        trigger: purchasing.approve_pr
+        authorized_actor:
+          role: PurchasingAdmin
+        preconditions:
+          - budget_available == true
+          - supplier_suggested_or_in_master
+          - justification_clear
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=requester)
+          - downstream.create(PurchaseOrder draft)
+      - from: PENDING
+        to: REJECTED
+        authorized_actor:
+          role: PurchasingAdmin
+        preconditions:
+          - rejection_reason != null
+        side_effects:
+          - audit_log.create(action=reject)
+      - from: APPROVED
+        to: CONVERTED
+        trigger: purchasing.create_po
+        authorized_actor:
+          role: PurchasingStaff
+        preconditions:
+          - purchase_order_id_linked != null
+        side_effects:
+          - audit_log.create
+          - pr.mark_converted
+    forbidden:
+      - DRAFT → APPROVED                 # must traverse PENDING
+      - CONVERTED → any
+      - REJECTED → APPROVED
+
+  # ---- 3.2 PurchaseOrder (PO) ----------------------------------
+  - entity: PurchaseOrder
+    states: [DRAFT, PENDING, APPROVED, REJECTED, PARTIAL, CLOSED, CANCELLED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:PurchaseOrder.status
+    notes: |
+      Per 07_RBAC_MATRIX.yaml approval_thresholds:
+        - ≤ Rp 5M: PurchasingStaff self-approve
+        - 5M–100M: PurchasingAdmin
+        - > Rp 100M: PurchasingAdmin + Director
+    transitions:
+      - from: DRAFT
+        to: PENDING
+        trigger: purchasing.submit_po
+        authorized_actor:
+          role: PurchasingStaff
+        preconditions:
+          - supplier_id != null
+          - total_amount > 0
+          - terms_set(top_days, notes)
+          - all_po_details_have_goods_qty_price
+          - ppn_included_if_required
+          - linked_pr_id != null  # PO must originate from PR
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=PurchasingAdmin)
+      - from: PENDING
+        to: APPROVED
+        trigger: purchasing.approve_po
+        authorized_actor:
+          description: Approval tier per 07_RBAC_MATRIX.yaml approval_thresholds.purchase_order
+          tiers:
+            - tier: self_approve
+              role: PurchasingStaff
+              amount_max: 5_000_000
+            - tier: standard
+              role: PurchasingAdmin
+              amount_min: 5_000_000
+              amount_max: 100_000_000
+            - tier: vip
+              roles: [PurchasingAdmin, Director]
+              amount_min: 100_000_000
+        preconditions:
+          - approval_ladder_complete
+          - supplier_status == ACTIVE
+          - budget_check_passed
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=FinanceStaff, WarehouseStaff, requester)
+          - downstream.create(GoodsReceipt available)
+          - downstream.create(PurchaseInvoice available)
+          - status_transition.record
+      - from: PENDING
+        to: REJECTED
+        authorized_actor:
+          role: PurchasingAdmin
+        preconditions:
+          - rejection_reason != null
+        side_effects:
+          - audit_log.create(action=reject)
+      - from: APPROVED
+        to: PARTIAL
+        trigger: goods_first_arrival
+        authorized_actor:
+          role: WarehouseStaff
+        preconditions:
+          - at_least_one_goods_receipt_posted
+          - remaining_qty > 0
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=PurchasingStaff)
+      - from: PARTIAL
+        to: CLOSED
+        trigger: all_gr_complete AND invoice_paid
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - all_po_items_received == true
+          - invoice_paid == true
+          - no_open_purchase_return
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(po_settlement)
+          - dashboard.refresh(D.Purchasing, D.Gudang)
+      - from: APPROVED
+        to: CLOSED
+        trigger: all_gr_complete AND invoice_paid   # shortcut when fully received
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - all_po_items_received == true
+          - invoice_paid == true
+        side_effects:
+          - as above for PARTIAL → CLOSED
+      - from: DRAFT
+        to: CANCELLED
+        authorized_actor:
+          any_of: [PurchasingStaff, PurchasingAdmin]
+          scope: own_only
+        preconditions:
+          - cancellation_reason_provided
+          - no_gr_linked
+          - no_dp_linked
+        side_effects:
+          - audit_log.create
+      - from: PENDING
+        to: CANCELLED
+        authorized_actor:
+          role: PurchasingAdmin
+        preconditions:
+          - cancellation_reason_provided
+          - approver_set_to_reject
+        side_effects:
+          - audit_log.create
+      - from: APPROVED
+        to: CANCELLED
+        authorized_actor:
+          roles: [PurchasingAdmin, FinanceManager]
+        preconditions:
+          - cancellation_reason_provided
+          - dp_refund_if_applicable
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(dp_refund_if_any)
+    forbidden:
+      - APPROVED → DRAFT                 # immutable after approval
+      - CLOSED → any                     # terminal
+      - any → APPROVED if supplier_inactive
+
+  # ---- 3.3 PurchaseDownPayment (DP Pembelian) -------------------
+  - entity: PurchaseDownPayment
+    states: [PAID, OFFSET, REFUNDED]
+    initial_state: PAID
+    source_of_truth: schema.prisma:PurchaseDownPayment.status
+    transitions:
+      - from: PAID
+        to: OFFSET
+        trigger: finance.offset_against_invoice
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - purchase_invoice_id_linked != null
+          - invoice.amount >= dp.amount
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(dp_offset)
+      - from: PAID
+        to: REFUNDED
+        trigger: purchasing.cancel_po_with_dp
+        authorized_actor:
+          role: FinanceAdmin
+        preconditions:
+          - po.status == CANCELLED
+          - supplier_agreed_to_refund
+          - refund_recipient_account_valid
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(dp_refund)
+          - bank_account.credit(refund_amount)
+    forbidden:
+      - OFFSET → REFUNDED                # terminal after offset
+      - REFUNDED → OFFSET
+      - any → PAID                        # PAID is initial only
+
+  # ---- 3.4 GoodsReceipt (Penerimaan Barang / GR) ----------------
+  - entity: GoodsReceipt
+    states: [DRAFT, POSTED, INVOICED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:GoodsReceipt.status
+    notes: |
+      Per REQUIREMENT Poin 44: COA verified per ITEM (not per shipment).
+      Per raw/warehouse.md: stock pillars (Bagus/Reject/Free) tracked per line.
+      Per _SSOT_COMMUNICATION: triggers "warehouse.inbound.received" event.
+    transitions:
+      - from: DRAFT
+        to: POSTED
+        trigger: warehouse.receive_goods
+        authorized_actor:
+          role: WarehouseStaff
+        preconditions:
+          - po_id_linked != null
+          - po.status in [APPROVED, PARTIAL]
+          - qty_good + qty_reject + qty_free == qty_ordered
+          - batch_number_per_item
+          - coa_verified_per_item                # REQUIREMENT Poin 44
+          - expiry_date_recorded_if_applicable
+          - qc_inspection_result_per_line
+        side_effects:
+          - audit_log.create(action=post)
+          - stock_movement.create(direction=IN, qty_good_to=BAGUS, qty_reject_to=REJECT, qty_free_to=FREE)
+          - supplier_quality_score.update
+          - po.unblock_to_partial_or_closed
+          - event.emit(warehouse.inbound.received)
+          - dashboard.refresh(D.Gudang)
+      - from: POSTED
+        to: INVOICED
+        trigger: finance.match_invoice
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - purchase_invoice_id_linked != null
+          - three_way_matching_passed(gr, po, invoice)
+          - exact_match_passed(qty_variance=0, price_variance=0)
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(goods_received_inventory)    # auto via coa_auto
+          - dashboard.refresh(D.Keuangan)
+    forbidden:
+      - POSTED → DRAFT                    # immutable
+      - INVOICED → POSTED                 # posted & invoiced are terminal
+
+  # ---- 3.5 PurchaseInvoice (Faktur Pembelian) -------------------
+  - entity: PurchaseInvoice
+    states: [DRAFT, PENDING, APPROVED, POSTED, PAID, PARTIAL]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:PurchaseInvoice.status
+    transitions:
+      - from: DRAFT
+        to: PENDING
+        trigger: finance.submit_invoice
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - supplier_id != null
+          - invoice_amount > 0
+          - linked_po_or_gr != null
+          - invoice_attachment_uploaded
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=FinanceManager)
+      - from: PENDING
+        to: APPROVED
+        trigger: finance.approve_invoice
+        authorized_actor:
+          description: Approval tier per 07_RBAC_MATRIX.yaml approval_thresholds.purchase_invoice
+          tiers:
+            - tier: staff
+              role: FinanceStaff
+              amount_max: 5_000_000
+            - tier: manager
+              role: FinanceManager
+              amount_min: 5_000_000
+              amount_max: 100_000_000
+            - tier: vip
+              roles: [FinanceManager, Director]
+              amount_min: 100_000_000
+        preconditions:
+          - three_way_matching_status == MATCHED    # hidden per REQUIREMENT Poin 8
+          - exact_match_passed(qty_variance=0, price_variance=0)
+          - debit_note_pending_check
+        side_effects:
+          - audit_log.create(action=approve)
+      - from: APPROVED
+        to: POSTED
+        trigger: finance.post_invoice
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - all_lines_have_coa
+          - total_debit == total_credit
+          - period_open == true
+        side_effects:
+          - audit_log.create(action=post)
+          - journal_entry.create(ap_recognized)      # auto via coa_auto
+          - po.unblock_to_partial_or_closed
+      - from: POSTED
+        to: PAID
+        trigger: finance.full_settlement
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - payment_total >= invoice.outstanding
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(payment_made)
+          - po.unblock_to_closed_if_fully_received
+      - from: POSTED
+        to: PARTIAL
+        trigger: finance.partial_settlement
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - 0 < payment_total < invoice.outstanding
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(payment_made)
+      - from: PARTIAL
+        to: PAID
+        trigger: finance.remaining_settlement
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - cumulative_payment >= invoice.outstanding
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(remaining_payment)
+    forbidden:
+      - PAID → any                        # terminal
+      - POSTED → APPROVED                 # immutable after post
+      - APPROVED → DRAFT
+
+  # ---- 3.6 PurchasePayment (Bayar Pembelian) -------------------
+  - entity: PurchasePayment
+    states: [DRAFT, PENDING, APPROVED, REJECTED, COMPLETED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:PurchasePayment.status
+    transitions:
+      - from: DRAFT
+        to: PENDING
+        trigger: finance.submit_payment
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - payment_amount > 0
+          - cash_bank_account_valid
+          - purchase_invoice_id_linked != null
+          - proof_uploaded
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=FinanceManager)
+      - from: PENDING
+        to: APPROVED
+        trigger: finance.approve_payment
+        authorized_actor:
+          role: FinanceManager
+        preconditions:
+          - within_approval_threshold(staff<=5M, manager<=100M, vip>100M)
+          - bank_balance_sufficient
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=PurchasingStaff)
+      - from: APPROVED
+        to: COMPLETED
+        authorized_actor:
+          any_of: [FinanceStaff, system_auto_post]
+        preconditions:
+          - journal_entry.created
+          - cash_bank.balance_decremented
+          - supplier.notified
+        side_effects:
+          - audit_log.create
+          - purchase_invoice.balance_decrement
+          - event.emit(finance.payment_disbursed)
+      - from: PENDING
+        to: REJECTED
+        authorized_actor:
+          role: FinanceManager
+        preconditions:
+          - rejection_reason != null
+        side_effects:
+          - audit_log.create
+    forbidden:
+      - COMPLETED → any
+      - REJECTED → APPROVED
+
+  # ---- 3.7 PurchaseReturn (Retur Pembelian) --------------------
+  - entity: PurchaseReturn
+    states: [DRAFT, PENDING, APPROVED, REJECTED, COMPLETED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:PurchaseReturn.status
+    transitions:
+      - from: DRAFT
+        to: PENDING
+        trigger: purchasing.submit_return
+        authorized_actor:
+          role: PurchasingStaff
+        preconditions:
+          - linked_gr_id != null
+          - return_lines_with_qty_reason
+          - supplier_acknowledgement_obtained (optional but recommended)
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=PurchasingAdmin)
+      - from: PENDING
+        to: APPROVED
+        authorized_actor:
+          role: PurchasingAdmin
+        preconditions:
+          - debit_note_amount_calculated
+          - supplier_agreed_to_credit_note
+        side_effects:
+          - audit_log.create
+          - downstream.create(PurchaseReturnOut draft)
+          - debit_note.queued
+      - from: APPROVED
+        to: COMPLETED
+        trigger: warehouse.goods_returned_out
+        authorized_actor:
+          role: WarehouseStaff
+        preconditions:
+          - purchase_return_out.status == POSTED
+          - debit_note.posted
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(debit_note_realized)
+          - dashboard.refresh(D.Gudang, D.Purchasing)
+      - from: PENDING
+        to: REJECTED
+        authorized_actor:
+          role: PurchasingAdmin
+        preconditions:
+          - rejection_reason != null
+        side_effects:
+          - audit_log.create
+    forbidden:
+      - COMPLETED → any
+      - APPROVED → DRAFT
+
+  # ---- 3.8 PurchaseReturnOut (barang keluar untuk retur) -------
+  - entity: PurchaseReturnOut
+    states: [DRAFT, POSTED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:PurchaseReturnOut.status
+    transitions:
+      - from: DRAFT
+        to: POSTED
+        trigger: warehouse.dispatch_returned_goods
+        authorized_actor:
+          role: WarehouseStaff
+        preconditions:
+          - purchase_return_id_linked != null
+          - qty_dispatched matches qty_returned
+          - carrier_assigned
+          - batch_number_per_line
+        side_effects:
+          - audit_log.create(action=post)
+          - stock_movement.create(direction=OUT, reason=RETURN_TO_SUPPLIER)
+          - dashboard.refresh(D.Gudang)
+    forbidden:
+      - POSTED → DRAFT                    # immutable
+
+# ===============================================================
+# 4. PRODUCTION PIPELINE
+# ===============================================================
+# Entities: BatchRecord, ScheduleMixing, ScheduleFilling, SchedulePackaging,
+#           ProductionMixing, ProductionFilling, ProductionPackaging,
+#           DeliveryOut
+
+production_pipeline:
+
+  # ---- 4.1 BatchRecord (BR) — production master doc -------------
+  - entity: BatchRecord
+    states: [DRAFT, APPROVED, LOCKED, IN_PROGRESS, COMPLETED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:BatchRecord.status
+    notes: |
+      Per raw/05_master_business_process_blueprint.md FASE 3:
+        - BR pulls data from Formula(R&D) + WorkOrder + Design + QC Parameters
+        - All interlock MUST be TRUE before batch can start
+      Per 07_RBAC_MATRIX.yaml approval_thresholds.batch_record:
+        - operator_close: ProductionOperatorPackaging
+        - admin_close: ProductionAdmin + ApotekerPenanggungJawab
+    transitions:
+      - from: DRAFT
+        to: APPROVED
+        trigger: production.create_batch
+        authorized_actor:
+          role: ProductionAdmin
+        preconditions:
+          - sales_order_id_linked != null
+          - formulation_id_linked != null
+          - formulation.status in [APPROVED, LOCKED]
+          - all_required_fields_valid
+          - design_locked(if_artwork_required)
+          - legal_artwork_approved(if_required)
+          - qc_parameters_set
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=BusDevStaff=owner)
+          - downstream.create(ScheduleMixing draft)
+          - bom.expand(per_formulation)
+      - from: APPROVED
+        to: LOCKED
+        trigger: production.lock_batch
+        authorized_actor:
+          role: ProductionAdmin
+        preconditions:
+          - all_schedules_created
+          - materials_reservation_dry_run_passed
+        side_effects:
+          - audit_log.create
+          - stock_reservation.confirmed
+          - notification.send_to(role=BusDevStaff, WarehouseStaff)
+      - from: LOCKED
+        to: IN_PROGRESS
+        trigger: mixing.started
+        authorized_actor:
+          role: ProductionOperatorMixing
+        preconditions:
+          - schedule_mixing.status == IN_PROGRESS
+          - materials_physically_received_in_production_area
+          - first_raw_material_scanned
+        side_effects:
+          - audit_log.create
+          - production_mixing.status = IN_PROGRESS
+          - dashboard.refresh(D.JadwalProduksi, D.RealisasiProduksi)
+      - from: IN_PROGRESS
+        to: COMPLETED
+        trigger: all_stages_done
+        authorized_actor:
+          all_of: [ProductionAdmin, ApotekerPenanggungJawab]
+        preconditions:
+          - mixing.status == COMPLETED
+          - filling.status == COMPLETED
+          - packaging.status == COMPLETED
+          - final_qc.status == PASS
+          - apoteker_signoff_recorded
+          - actual_yield_qty > 0
+        side_effects:
+          - audit_log.create
+          - stock_movement.assert(FG_AVAILABLE, source=batch_record_id)
+          - coa_archived
+          - journal_entry.create(production_hpp)    # auto via coa_auto
+          - notification.send_to(role=BusDevStaff, WarehouseStaff, FinanceStaff)
+          - dashboard.refresh(D.RealisasiProduksi)
+          - event.emit(production.batch_completed)
+    forbidden:
+      - DRAFT → COMPLETED                 # must traverse all stages
+      - DRAFT → LOCKED                    # must be approved first
+      - COMPLETED → any                   # terminal
+      - IN_PROGRESS → DRAFT               # cannot abort mid-flight (use cancel via separate process)
+
+  # ---- 4.2 ScheduleMixing (Jadwal Mixing) -----------------------
+  - entity: ScheduleMixing
+    states: [PLANNED, IN_PROGRESS, COMPLETED, CANCELLED]
+    initial_state: PLANNED
+    source_of_truth: schema.prisma:ScheduleMixing.status
+    transitions:
+      - from: PLANNED
+        to: IN_PROGRESS
+        trigger: production.start_mixing
+        authorized_actor:
+          role: ProductionOperatorMixing
+        preconditions:
+          - batch_record_id_linked != null
+          - batch_record.status == LOCKED
+          - schedule_date <= today + 1day
+        side_effects:
+          - audit_log.create
+          - batch_record.status = IN_PROGRESS    # mirror
+          - dashboard.refresh(D.JadwalProduksi)
+      - from: IN_PROGRESS
+        to: COMPLETED
+        trigger: mixing.output_recorded
+        authorized_actor:
+          role: ProductionOperatorMixing
+        preconditions:
+          - actual_batch_size_recorded
+          - bulk_output_qty > 0
+          - qc_bulk_status in [PASSED, REWORKED]   # REWORK triggers Filling directly
+          - if FAIL: status moves to QUARANTINE_DRUM (not here)
+        side_effects:
+          - audit_log.create
+          - production_mixing.status = COMPLETED
+          - downstream.unblock(ScheduleFilling)
+          - dashboard.refresh(D.RealisasiProduksi)
+      - from: PLANNED
+        to: CANCELLED
+        authorized_actor:
+          role: ProductionAdmin
+        preconditions:
+          - cancellation_reason_provided
+          - not_yet_started
+        side_effects:
+          - audit_log.create
+    forbidden:
+      - COMPLETED → any                   # terminal
+      - IN_PROGRESS → PLANNED
+
+  # ---- 4.3 ScheduleFilling (Jadwal Filling) ---------------------
+  - entity: ScheduleFilling
+    states: [PLANNED, IN_PROGRESS, COMPLETED, CANCELLED]
+    initial_state: PLANNED
+    source_of_truth: schema.prisma:ScheduleFilling.status
+    transitions:
+      - from: PLANNED
+        to: IN_PROGRESS
+        trigger: production.start_filling
+        authorized_actor:
+          role: ProductionOperatorFilling
+        preconditions:
+          - schedule_mixing.status == COMPLETED
+          - bulk_quality_status == PASSED          # HARD-GATE per raw/production.md §3
+          - artwork_status == APPROVED              # HARD-GATE per raw/production.md §3
+          - scanned_bulk_wip_validated
+        side_effects:
+          - audit_log.create
+          - production_filling.status = IN_PROGRESS
+          - dashboard.refresh(D.JadwalProduksi)
+      - from: IN_PROGRESS
+        to: COMPLETED
+        trigger: filling.output_recorded
+        authorized_actor:
+          role: ProductionOperatorFilling
+        preconditions:
+          - filled_bottles_qty_recorded
+          - filling_qc_passed == true
+          - no_seal_defects
+        side_effects:
+          - audit_log.create
+          - production_filling.status = COMPLETED
+          - downstream.unblock(SchedulePackaging)
+      - from: PLANNED
+        to: CANCELLED
+        authorized_actor:
+          role: ProductionAdmin
+        preconditions:
+          - cancellation_reason_provided
+        side_effects:
+          - audit_log.create
+    forbidden:
+      - COMPLETED → any
+      - IN_PROGRESS → PLANNED
+
+  # ---- 4.4 SchedulePackaging (Jadwal Packaging) -----------------
+  - entity: SchedulePackaging
+    states: [PLANNED, IN_PROGRESS, COMPLETED, CANCELLED]
+    initial_state: PLANNED
+    source_of_truth: schema.prisma:SchedulePackaging.status
+    transitions:
+      - from: PLANNED
+        to: IN_PROGRESS
+        trigger: production.start_packaging
+        authorized_actor:
+          role: ProductionOperatorPackaging
+        preconditions:
+          - schedule_filling.status == COMPLETED
+          - artwork_status == APPROVED
+          - secondary_pm_received
+          - label_status == APPROVED
+          - box_status == APPROVED
+        side_effects:
+          - audit_log.create
+          - production_packaging.status = IN_PROGRESS
+      - from: IN_PROGRESS
+        to: COMPLETED
+        trigger: packaging.output_recorded
+        authorized_actor:
+          role: ProductionOperatorPackaging
+        preconditions:
+          - packed_units_qty_recorded
+          - final_qc_sample_taken == true
+          - batch_label_photo_uploaded
+        side_effects:
+          - audit_log.create
+          - production_packaging.status = COMPLETED
+          - stock_movement.create(WIP_to_FG_QUARANTINE)
+          - sales_order.unblock_to_qc_pass
+          - dashboard.refresh(D.RealisasiProduksi)
+      - from: PLANNED
+        to: CANCELLED
+        authorized_actor:
+          role: ProductionAdmin
+        preconditions:
+          - cancellation_reason_provided
+        side_effects:
+          - audit_log.create
+    forbidden:
+      - COMPLETED → any
+      - IN_PROGRESS → PLANNED
+
+  # ---- 4.5 ProductionMixing (run execution record) --------------
+  - entity: ProductionMixing
+    states: [IN_PROGRESS, COMPLETED, QUARANTINE_DRUM]
+    initial_state: IN_PROGRESS
+    source_of_truth: schema.prisma:ProductionMixing.status
+    transitions:
+      - from: IN_PROGRESS
+        to: COMPLETED
+        trigger: operator.record_output
+        authorized_actor:
+          role: ProductionOperatorMixing
+        preconditions:
+          - actual_batch_size > 0
+          - bulk_ph_recorded
+          - bulk_viscosity_recorded
+          - qc_bulk.status in [PASSED, REWORKED]
+        side_effects:
+          - audit_log.create
+          - schedule_mixing.status = COMPLETED
+          - dashboard.refresh(D.RealisasiProduksi)
+      - from: IN_PROGRESS
+        to: QUARANTINE_DRUM
+        trigger: qc_bulk_fail
+        authorized_actor:
+          role: ApotekerPenanggungJawab
+        preconditions:
+          - qc_bulk.status == FAILED
+          - ph_out_of_spec OR contamination_detected
+        side_effects:
+          - audit_log.create
+          - drum_locked_in_quarantine_warehouse
+          - notification.send_to(role=RnDManager, ProductionAdmin)
+          - rework_decision.required
+    forbidden:
+      - QUARANTINE_DRUM → IN_PROGRESS     # terminal (must rework or discard)
+      - COMPLETED → any
+
+  # ---- 4.6 ProductionFilling (run execution record) -------------
+  - entity: ProductionFilling
+    states: [IN_PROGRESS, COMPLETED]
+    initial_state: IN_PROGRESS
+    source_of_truth: schema.prisma:ProductionFilling.status
+    transitions:
+      - from: IN_PROGRESS
+        to: COMPLETED
+        trigger: operator.record_output
+        authorized_actor:
+          role: ProductionOperatorFilling
+        preconditions:
+          - filled_qty_recorded
+          - filling_qc.status == PASSED
+          - no_seal_defects
+        side_effects:
+          - audit_log.create
+          - schedule_filling.status = COMPLETED
+    forbidden:
+      - COMPLETED → any
+
+  # ---- 4.7 ProductionPackaging (run execution record) -----------
+  - entity: ProductionPackaging
+    states: [IN_PROGRESS, COMPLETED]
+    initial_state: IN_PROGRESS
+    source_of_truth: schema.prisma:ProductionPackaging.status
+    transitions:
+      - from: IN_PROGRESS
+        to: COMPLETED
+        trigger: operator.record_output
+        authorized_actor:
+          role: ProductionOperatorPackaging
+        preconditions:
+          - packed_qty_recorded
+          - final_qc.status == PASSED
+          - photo_evidence_uploaded
+        side_effects:
+          - audit_log.create
+          - schedule_packaging.status = COMPLETED
+          - stock_movement.create(WIP_to_FG)
+          - dashboard.refresh(D.Gudang)
+    forbidden:
+      - COMPLETED → any
+
+  # ---- 4.8 DeliveryOut (Surat Jalan / DO) -----------------------
+  - entity: DeliveryOut
+    states: [DRAFT, DISPATCHED, DELIVERED, VERIFIED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:DeliveryOut.status
+    notes: |
+      Per NEX_FINANCE_FINAL_SPEC §3.2: financial_delivery_release MUST be RELEASED
+      before DO can be printed. Blocks warehouse from generating Surat Jalan.
+    transitions:
+      - from: DRAFT
+        to: DISPATCHED
+        trigger: warehouse.dispatch
+        authorized_actor:
+          role: WarehouseStaff
+        preconditions:
+          - sales_order.status in [QC_PASS, SHIPPED]
+          - financial_delivery_release == RELEASED       # AR Delivery Gatekeeper
+          - all_line_items_reserved_in_stock
+          - carrier_assigned
+          - tracking_number_set
+          - qr_code_generated_per_line
+          - surat_jalan_printed
+        side_effects:
+          - audit_log.create
+          - stock_movement.create(direction=OUT, from=FG)
+          - sales_order.status = SHIPPED
+          - qr_code.activated
+          - notification.send_to(role=BusDevStaff, customer_via_WA)
+          - event.emit(logistics.delivery_dispatched)
+      - from: DISPATCHED
+        to: DELIVERED
+        trigger: warehouse.confirm_delivered
+        authorized_actor:
+          any_of: [WarehouseStaff, BusDevStaff]
+        preconditions:
+          - delivered_proof_uploaded
+          - customer_signature_uploaded OR qr_scan_confirmed
+        side_effects:
+          - audit_log.create
+          - sales_invoice.auto_create_if_not_exists   # SO creates invoice on delivery
+          - notification.send_to(role=BusDevStaff)
+      - from: DELIVERED
+        to: VERIFIED
+        trigger: finance.reconcile_invoice
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - invoice_posted == true
+          - inventory_reconciled == true
+          - delivery_return_period_elapsed
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(delivery_cogs_recognized)
+          - dashboard.refresh(D.Gudang, D.Keuangan)
+    forbidden:
+      - VERIFIED → any                    # terminal
+      - DRAFT → DELIVERED                 # must traverse DISPATCHED
+      - DISPATCHED → DRAFT
+
+# ===============================================================
+# 5. R&D PIPELINE (Formulation + Adjustment)
+# ===============================================================
+
+rnd_pipeline:
+
+  # ---- 5.1 Formulation ------------------------------------------
+  - entity: Formulation
+    states: [DRAFT, SUBMITTED, APPROVED, LOCKED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:Formulation.status
+    notes: |
+      Per raw/r&d.md: real NEX pipeline states (matches Prisma defaults).
+      Per 07_RBAC_MATRIX.yaml formulation_lock:
+        - self_lock: RnDChemist
+        - manager_lock: RnDManager + ApotekerPenanggungJawab (BPOM co-approval)
+      Per REQUIREMENT Poin 11: composition_total_percent == 100 invariant.
+    transitions:
+      - from: DRAFT
+        to: SUBMITTED
+        trigger: chemist.submit
+        authorized_actor:
+          role: RnDChemist
+        preconditions:
+          - composition_total_percent == 100       # CPKB requirement
+          - all_phase_a_b_c_filled                 # per raw/r&d.md §4
+          - target_netto_specified
+          - sample_request_id_linked != null
+          - all_ingredients_have_cas_or_ci_number
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=RnDManager, ApotekerPenanggungJawab)
+          - status_transition.record
+          - dashboard.refresh(D.RnD)
+      - from: SUBMITTED
+        to: APPROVED
+        trigger: manager.approve
+        authorized_actor:
+          role: RnDManager
+        preconditions:
+          - qc_review_done == true
+          - stability_test_result_recorded (if required)
+          - all_attachments_uploaded
+        side_effects:
+          - audit_log.create(action=approve)
+          - notification.send_to(role=RnDChemist, BusDevStaff=requester)
+          - formulation.locked_for_revision
+      - from: SUBMITTED
+        to: REJECTED
+        trigger: manager.reject
+        authorized_actor:
+          role: RnDManager
+        preconditions:
+          - rejection_reason != null
+        side_effects:
+          - audit_log.create(action=reject)
+          - notification.send_to(role=RnDChemist)
+          - downstream.create(FormulationAdjustment)
+      - from: APPROVED
+        to: LOCKED
+        trigger: client.confirm_formula
+        authorized_actor:
+          role: BusDevStaff
+          scope: owner_only
+        preconditions:
+          - client_signature_uploaded
+          - lab_sample_approved_by_client
+          - formulation_unchanged_since_approval
+        side_effects:
+          - audit_log.create
+          - formulation.frozen                  # per raw/r&d.md §5.1 immutability
+          - bom.generate_to_production          # creates BatchRecord on demand
+          - bom.push_to_legal                   # triggers DIP upload to Legalitas
+          - notification.send_to(role=RnDManager, ProductionAdmin, LegalitasAdmin)
+          - downstream.create(BatchRecord draft)  # at SO creation
+          - dashboard.refresh(D.RnD)
+      - from: APPROVED
+        to: REVISED
+        trigger: chemist.start_rework
+        authorized_actor:
+          role: RnDChemist
+        preconditions:
+          - new_rev_version_incremented (rev+1)
+          - parent_formulation_id_linked
+          - parent.status in [APPROVED, LOCKED]
+          - revision_reason_provided
+        side_effects:
+          - audit_log.create
+          - new_formulation_version_created (copy)
+          - old_formulation.marked_superseded
+          - notification.send_to(role=RnDManager)
+    forbidden:
+      - LOCKED → any except REVISED
+      - any → DRAFT
+      - REVISED → APPROVED                  # must re-submit
+      - LOCKED → DRAFT                       # immutable after lock
+      - REJECTED → APPROVED                  # must create new formulation
+
+  # ---- 5.2 FormulationAdjustment (post-approval minor change) ---
+  - entity: FormulationAdjustment
+    states: [DRAFT, SUBMITTED, APPROVED, REJECTED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:FormulationAdjustment.status
+    notes: |
+      Adjustments are minor changes to a LOCKED formula. Require BPOM re-notification.
+      Per OD-SM-01: FormulationAdjustment maintains a separate auditable lineage and does NOT mutate or increment parent formulation rev_number. Parent formulation revision increments exclusively via formal R&D REVISED workflow.
+    transitions:
+      - from: DRAFT
+        to: SUBMITTED
+        trigger: chemist.submit_adjustment
+        authorized_actor:
+          role: RnDChemist
+        preconditions:
+          - parent_formulation.status == LOCKED
+          - change_justification_provided
+          - bpom_re_notification_required_flag_set
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=RnDManager, ApotekerPenanggungJawab)
+      - from: SUBMITTED
+        to: APPROVED
+        authorized_actor:
+          role: RnDManager
+        preconditions:
+          - qc_impact_assessed
+          - regulatory_impact_assessed
+        side_effects:
+          - audit_log.create
+          - parent_formulation.adjustment_logged
+      - from: SUBMITTED
+        to: REJECTED
+        authorized_actor:
+          role: RnDManager
+        preconditions:
+          - rejection_reason != null
+        side_effects:
+          - audit_log.create
+    forbidden:
+      - APPROVED → any
+      - REJECTED → APPROVED
+      - any → DRAFT
+
+# R&D revision policy (separate from entity list)
+rnd_formulation_revisions:
+  rule: Each revision creates new Formulation row with rev_number++
+  auto_locked_on: LOCKED
+  reversible_to_previous_rev: true
+  max_revisions_per_sample: 3
+  after_max_revisions: auto_lock_then_create_new_formulation
+  reference: raw/05_master_business_process_blueprint.md exception table
+
+# ===============================================================
+# 6. CHECKLIST PIPELINE (17-stage QC + Closing)
+# ===============================================================
+# Per _SSOT_COMMUNICATION.md §3 + raw/05_master_business_process_blueprint.md FASE 2
+# 17 stages for new product (ProdukBaru), abbreviated for repeat order (ProdukRO)
+
+checklist_pipeline:
+  entity: ChecklistProgress
+  states_per_stage: [NOT_STARTED, IN_PROGRESS, DONE, BLOCKED]
+  initial_state: NOT_STARTED
+  source_of_truth: schema.prisma:ChecklistProgress.status
+  two_product_tracks:
+    ProdukBaru:
+      stages:
+        - name: Desain Logo
+          sla_days: 3
+          owner_role: BusDevStaff
+          deliverables: [logo_file, brand_guideline]
+        - name: HKI
+          sla_days: 14
+          owner_role: LegalitasStaff
+          deliverables: [hki_certificate_pdf]
+        - name: BPOM Merk
+          sla_days: 7
+          owner_role: LegalitasStaff
+          deliverables: [bpom_merk_registration]
+        - name: BPOM NA
+          sla_days: 30
+          owner_role: LegalitasStaff
+          deliverables: [bpom_na_certificate]
+        - name: MOU
+          sla_days: 3
+          owner_role: BusDevManager
+          deliverables: [signed_mou_pdf]
+        - name: Desain Kemasan
+          sla_days: 5
+          owner_role: BusDevStaff
+          deliverables: [packaging_design_artwork]
+        - name: Approval Desain
+          sla_days: 2
+          owner_role: ApotekerPenanggungJawab
+          deliverables: [design_approval_signed]
+        - name: Bahan Baku
+          sla_days: 7
+          owner_role: WarehouseStaff
+          deliverables: [raw_materials_received_posted_gr]
+        - name: Pelunasan
+          sla_days: 1
+          owner_role: FinanceStaff
+          deliverables: [final_payment_recorded]
+        - name: Mixing
+          sla_days: 5
+          owner_role: ProductionOperatorMixing
+          deliverables: [production_mixing_record_completed]
+        - name: Bahan Kemas
+          sla_days: 3
+          owner_role: WarehouseStaff
+          deliverables: [packaging_materials_received_posted_gr]
+        - name: Filling
+          sla_days: 3
+          owner_role: ProductionOperatorFilling
+          deliverables: [production_filling_record_completed]
+        - name: Label
+          sla_days: 2
+          owner_role: WarehouseStaff
+          deliverables: [labels_received_and_counted]
+        - name: Box
+          sla_days: 2
+          owner_role: WarehouseStaff
+          deliverables: [boxes_received_and_counted]
+        - name: Packing
+          sla_days: 2
+          owner_role: ProductionOperatorPackaging
+          deliverables: [production_packaging_record_completed]
+        - name: Delivery
+          sla_days: 1
+          owner_role: WarehouseStaff
+          deliverables: [delivery_out_dispatched]
+        - name: Closing
+          sla_days: 1
+          owner_role: FinanceStaff
+          deliverables: [invoice_paid, journal_posted]
+    ProdukRO:
+      stages:
+        - name: Pelunasan
+          sla_days: 1
+        - name: Bahan Baku
+          sla_days: 5
+        - name: Mixing
+          sla_days: 5
+        - name: Filling
+          sla_days: 3
+        - name: Packing
+          sla_days: 2
+        - name: Delivery
+          sla_days: 1
+        - name: Closing
+          sla_days: 1
+
+  transitions:
+    - from: NOT_STARTED
+      to: IN_PROGRESS
+      trigger: stage_owner.start
+      authorized_actor:
+        role: stage_owner_per_stage         # BusDev for design, Legalitas for HKI/BPOM, etc.
+        mapping:
+          Desain Logo: BusDevStaff
+          HKI: LegalitasStaff
+          BPOM Merk: LegalitasStaff
+          BPOM NA: LegalitasStaff
+          MOU: BusDevManager
+          Desain Kemasan: BusDevStaff
+          Approval Desain: ApotekerPenanggungJawab
+          Bahan Baku: WarehouseStaff
+          Pelunasan: FinanceStaff
+          Mixing: ProductionOperatorMixing
+          Bahan Kemas: WarehouseStaff
+          Filling: ProductionOperatorFilling
+          Label: WarehouseStaff
+          Box: WarehouseStaff
+          Packing: ProductionOperatorPackaging
+          Delivery: WarehouseStaff
+          Closing: FinanceStaff
+      preconditions:
+        - previous_stage.status == DONE   # sequential gating
+      side_effects:
+        - audit_log.create
+        - notification.send_to(checklist_watchers)
+        - sla_timer.start
+        - dashboard.refresh(D.ClientProduksi)
+
+    - from: IN_PROGRESS
+      to: DONE
+      trigger: stage_owner.complete
+      authorized_actor:
+        role: stage_owner_per_stage
+      preconditions:
+        - all_required_deliverables_uploaded
+        - stage_sla_within_limit OR sla_overridden_with_reason
+      side_effects:
+        - audit_log.create
+        - sla_timer.stop
+        - next_stage.unblock_to_not_started
+        - transfer_status.record(per _SSOT_COMMUNICATION.md §3)
+
+    - from: IN_PROGRESS
+      to: BLOCKED
+      trigger: stage_owner.flag_blocker
+      authorized_actor:
+        role: stage_owner_per_stage
+      preconditions:
+        - blocker_reason_provided
+        - blocker_owner_assigned
+      side_effects:
+        - audit_log.create
+        - notification.send_to(role=BusDevManager, superuser)
+        - sla_timer.pause
+
+    - from: BLOCKED
+      to: IN_PROGRESS
+      trigger: stage_owner.unblock
+      authorized_actor:
+        role: stage_owner_per_stage
+      preconditions:
+        - blocker_resolved
+        - resolution_note_provided
+      side_effects:
+        - audit_log.create
+        - sla_timer.resume
+
+    - from: DONE
+      to: IN_PROGRESS
+      trigger: stage_owner.reopen
+      authorized_actor:
+        role: stage_owner_per_stage
+      preconditions:
+        - reopen_reason_provided
+        - all_downstream_stages_not_done (else cascade reopen)
+      side_effects:
+        - audit_log.create
+        - notification.send_to(checklist_watchers)
+
+  forbidden:
+    - IN_PROGRESS → NOT_STARTED
+    - DONE → BLOCKED
+    - any → DONE without deliverables
+
+# ===============================================================
+# 7. WAREHOUSE / INVENTORY PIPELINE
+# ===============================================================
+
+warehouse_pipeline:
+
+  # ---- 7.1 StockMovement (immutable ledger) ---------------------
+  - entity: StockMovement
+    states: [POSTED, REVERSED]
+    initial_state: POSTED
+    source_of_truth: schema.prisma:StockMovement.status
+    notes: |
+      StockMovement is append-only. "Reversal" creates a counter-movement,
+      never edits original.
+    transitions:
+      - from: POSTED
+        to: REVERSED
+        trigger: warehouse.reverse_movement
+        authorized_actor:
+          all_of: [WarehouseAdmin, FinanceManager]
+        preconditions:
+          - reversal_reason_provided
+          - counter_movement_created_with_negative_qty
+          - period_not_locked
+        side_effects:
+          - audit_log.create(action=reverse)
+          - journal_entry.create(stock_adjustment_reversal)   # auto via coa_auto
+          - dashboard.refresh(D.Gudang, D.Keuangan)
+    forbidden:
+      - any other state transition; this entity is append-only
+
+  # ---- 7.2 StockOpname (periodic count) -------------------------
+  - entity: StockOpname
+    states: [DRAFT, SUBMITTED, APPROVED, ADJUSTED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:StockOpname.status
+    notes: |
+      Per raw/warehouse.md: auto-approve if Loss Value < Rp 500k (configurable);
+      else goes to PENDING_AUDIT + FinanceManager review.
+    transitions:
+      - from: DRAFT
+        to: SUBMITTED
+        trigger: warehouse.submit_opname
+        authorized_actor:
+          role: WarehouseStaff
+        preconditions:
+          - all_lines_have_physical_count
+          - variance_qty_calculated_per_line
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=WarehouseAdmin)
+
+      - from: SUBMITTED
+        to: APPROVED
+        trigger: warehouse.approve_opname
+        authorized_actor:
+          role: WarehouseAdmin
+        preconditions:
+          - loss_value_within_auto_approve_threshold (default=Rp 500k, per 07_RBAC_MATRIX.yaml goods_writeoff)
+          - OR FinanceManager_co_approval (if loss > 1M)
+          - OR FinanceManager+Director (if loss > 10M)
+        side_effects:
+          - audit_log.create(action=approve)
+          - downstream.create(StockAdjustment)
+
+      - from: SUBMITTED
+        to: APPROVED
+        trigger: finance.approve_opname_high_value
+        authorized_actor:
+          role: FinanceManager
+        preconditions:
+          - loss_value > auto_approve_threshold
+          - investigation_notes_recorded
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=WarehouseAdmin)
+          - downstream.create(StockAdjustment)
+
+      - from: APPROVED
+        to: ADJUSTED
+        trigger: warehouse.apply_adjustment
+        authorized_actor:
+          role: WarehouseStaff
+        preconditions:
+          - adjustment_id_linked != null
+          - stock_movements_created_for_each_variance_line
+        side_effects:
+          - audit_log.create
+          - stock_movement.create(direction=ADJUST)
+          - journal_entry.create(writeoff)        # auto via coa_auto
+          - dashboard.refresh(D.Gudang, D.Keuangan)
+    forbidden:
+      - ADJUSTED → any                   # terminal
+      - APPROVED → DRAFT
+
+  # ---- 7.3 StockAdjustment (writeoff correction) ---------------
+  - entity: StockAdjustment
+    states: [DRAFT, PENDING_AUDIT, APPROVED, REJECTED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:StockAdjustment.status
+    transitions:
+      - from: DRAFT
+        to: PENDING_AUDIT
+        trigger: warehouse.flag_high_value_loss
+        authorized_actor:
+          role: WarehouseStaff
+        preconditions:
+          - loss_value > auto_approve_threshold (default=Rp 500k)
+        side_effects:
+          - audit_log.create
+          - stock_locked
+          - notification.send_to(role=WarehouseAdmin, FinanceManager)
+
+      - from: DRAFT
+        to: APPROVED
+        trigger: warehouse.auto_approve_small_loss
+        authorized_actor:
+          role: WarehouseStaff
+        preconditions:
+          - loss_value <= auto_approve_threshold
+        side_effects:
+          - audit_log.create
+          - stock_movement.create(direction=ADJUST)
+
+      - from: PENDING_AUDIT
+        to: APPROVED
+        authorized_actor:
+          role: FinanceManager
+        preconditions:
+          - investigation_complete
+          - root_cause_identified
+        side_effects:
+          - audit_log.create(action=approve)
+          - stock_movement.create(direction=ADJUST)
+          - journal_entry.create(writeoff)
+
+      - from: PENDING_AUDIT
+        to: REJECTED
+        authorized_actor:
+          role: FinanceManager
+        preconditions:
+          - rejection_reason != null
+        side_effects:
+          - audit_log.create(action=reject)
+          - stock_unlocked
+    forbidden:
+      - APPROVED → any
+      - REJECTED → APPROVED
+      - any → DRAFT
+
+# ===============================================================
+# Stock Quality Pillars (per raw/warehouse.md)
+# ===============================================================
+stock_quality_pillars:
+  description: "Per raw/warehouse.md stock is partitioned into 3 quality buckets"
+  pillars:
+    - BAGUS       # Good stock, sellable
+    - REJECT      # Defective stock, quarantine or writeoff
+    - FREE        # Free-issue from supplier, tracked separately
+  transition_rule: |
+    REJECT can move to BAGUS only after rework approval (Production + Apoteker).
+    FREE stays FREE until consumed in production (then decremented, no quality change).
+  transitions:
+    - from: REJECT
+      to: BAGUS
+      trigger: production.rework_passed
+      authorized_actor:
+        all_of: [ProductionAdmin, ApotekerPenanggungJawab]
+      preconditions:
+        - rework_batch_record_linked
+        - qc_rework_pass == true
+      side_effects:
+        - audit_log.create
+        - stock_movement.create(quality_change)
+    - from: REJECT
+      to: REJECT
+      trigger: quarantine_extend  # same state, updated fields
+      authorized_actor:
+        role: WarehouseAdmin
+      preconditions:
+        - investigation_in_progress
+      side_effects:
+        - audit_log.create
+  forbidden:
+    - BAGUS → REJECT    # writeoff path only (via StockAdjustment)
+
+# ===============================================================
+# 8. FINANCE PIPELINE (Double-Entry, Auto-Journal)
+# ===============================================================
+
+finance_pipeline:
+
+  # ---- 8.1 JournalEntry (Jurnal Umum) ---------------------------
+  - entity: JournalEntry
+    states: [DRAFT, PENDING, APPROVED, POSTED, REVERSED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:JournalEntry.status
+    invariants:
+      - rule: total_debit == total_credit
+        enforcement: backend.validates_before_post
+        error: INVALID_JOURNAL_BALANCE
+      - rule: each line has coa_id and amount != 0
+        enforcement: backend.validates_before_post
+        error: INVALID_JOURNAL_LINE
+      - rule: cannot post to closed period
+        enforcement: backend.validates_before_post
+        error: PERIOD_LOCKED
+
+    transitions:
+      - from: DRAFT
+        to: PENDING
+        trigger: finance.submit_journal
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - all_lines_have_coa
+          - total_debit == total_credit
+          - period_open == true
+          - description_not_empty
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=FinanceManager)
+
+      - from: DRAFT
+        to: POSTED
+        trigger: system.auto_post       # coa_auto engine triggers
+        authorized_actor:
+          role: system_auto_post
+        preconditions:
+          - source_document_validated
+          - total_debit == total_credit
+          - period_open == true
+        side_effects:
+          - audit_log.create(action=post, source=auto_journal)
+          - ledger.update(account_balances)
+          - notification.send_to(role=FinanceStaff=watcher)
+          - event.emit(finance.journal_posted)
+
+      - from: PENDING
+        to: APPROVED
+        trigger: finance.approve_journal
+        authorized_actor:
+          role: FinanceManager
+        preconditions:
+          - journal_lines_reviewed
+          - supporting_docs_attached
+        side_effects:
+          - audit_log.create(action=approve)
+
+      - from: APPROVED
+        to: POSTED
+        trigger: finance.post_journal
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - all_invariants_hold
+          - period_open == true
+        side_effects:
+          - audit_log.create(action=post)
+          - ledger.update(account_balances)
+          - immutable_after_post               # Prisma middleware blocks edits to POSTED
+
+      - from: PENDING
+        to: DRAFT
+        trigger: finance.return_for_correction
+        authorized_actor:
+          role: FinanceManager
+        preconditions:
+          - correction_reason_provided
+        side_effects:
+          - audit_log.create
+
+      - from: PENDING
+        to: REJECTED
+        authorized_actor:
+          role: FinanceManager
+        preconditions:
+          - rejection_reason != null
+        side_effects:
+          - audit_log.create(action=reject)
+
+      - from: POSTED
+        to: REVERSED
+        trigger: finance.reverse_journal
+        authorized_actor:
+          all_of: [FinanceAdmin, FinanceManager]
+        preconditions:
+          - reversal_reason != null
+          - reversal_journal_created_with_negated_lines
+          - reversal_date_in_same_period OR year_end_adjustment_authorized
+          - period_not_locked == true
+        side_effects:
+          - audit_log.create(action=reverse)
+          - ledger.reverse(account_balances)
+          - reversal_entry.created
+          - source_document.unblock_to_status_before_post
+    forbidden:
+      - POSTED → DRAFT                    # immutable (reversal only)
+      - POSTED → APPROVED
+      - REVERSED → POSTED                 # terminal
+      - any → DRAFT if line_count > 0     # drafts can be edited freely
+
+  # ---- 8.2 CashBank (bank/cash ledger account) ------------------
+  - entity: CashBank
+    states: [ACTIVE, FROZEN, CLOSED]
+    initial_state: ACTIVE
+    source_of_truth: schema.prisma:CashBank.status
+    transitions:
+      - from: ACTIVE
+        to: FROZEN
+        trigger: finance.freeze_account
+        authorized_actor:
+          role: FinanceManager
+        preconditions:
+          - freeze_reason_provided
+          - no_pending_reconciliation
+        side_effects:
+          - audit_log.create
+          - all_pending_payments_held
+          - notification.send_to(role=CFO, Director)
+      - from: FROZEN
+        to: ACTIVE
+        trigger: finance.unfreeze_account
+        authorized_actor:
+          all_of: [FinanceManager, Director]
+        preconditions:
+          - unfreeze_reason_provided
+          - reconciliation_completed
+        side_effects:
+          - audit_log.create
+          - pending_payments.released
+      - from: ACTIVE
+        to: CLOSED
+        trigger: finance.close_account
+        authorized_actor:
+          all_of: [FinanceAdmin, FinanceManager]
+        preconditions:
+          - account_balance_zero
+          - all_reconciliations_complete
+          - closure_reason_provided
+        side_effects:
+          - audit_log.create
+          - balance_transferred_to_successor_account
+    forbidden:
+      - CLOSED → any                      # terminal
+      - FROZEN → CLOSED                   # must unfreeze first
+
+  # ---- 8.3 FundRequest (Cash Advance / Pengajuan Dana) ----------
+  - entity: FundRequest
+    states: [DRAFT, SUBMITTED, APPROVED, REJECTED, DISBURSED, CLOSED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:FundRequest.status
+    transitions:
+      - from: DRAFT
+        to: SUBMITTED
+        trigger: employee.submit_fund_request
+        authorized_actor:
+          role: any_employee
+        preconditions:
+          - amount > 0
+          - purpose_documented
+          - supporting_quote_or_invoice_attached
+          - estimated_settlement_date_set
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=DivisionHead)
+      - from: SUBMITTED
+        to: APPROVED
+        trigger: division_head.approve
+        authorized_actor:
+          role: DivisionHead
+        preconditions:
+          - within_division_budget
+          - purpose_validated
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=FinanceManager)
+      - from: APPROVED
+        to: DISBURSED
+        trigger: finance.disburse
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - cash_bank_account_valid
+          - employee_bank_account_valid
+          - journal_entry_created(disbursement)
+        side_effects:
+          - audit_log.create(action=disburse)
+          - journal_entry.create(fund_disbursed)       # auto via coa_auto
+          - notification.send_to(role=requester)
+      - from: DISBURSED
+        to: CLOSED
+        trigger: finance.settle
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - settlement_proof_uploaded
+          - variance_within_tolerance OR variance_acknowledged
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(settlement)             # auto via coa_auto
+      - from: SUBMITTED
+        to: REJECTED
+        authorized_actor:
+          role: DivisionHead
+        preconditions:
+          - rejection_reason != null
+        side_effects:
+          - audit_log.create(action=reject)
+    forbidden:
+      - CLOSED → any
+      - DISBURSED → APPROVED
+      - DRAFT → DISBURSED                 # must traverse approval
+
+  # ---- 8.4 FixedAsset (Phase 2 — included for completeness) ------
+  - entity: FixedAsset
+    states: [ACTIVE, TRANSFERRED, DISPOSED]
+    initial_state: ACTIVE
+    source_of_truth: schema.prisma:FixedAsset.status
+    transitions:
+      - from: ACTIVE
+        to: TRANSFERRED
+        trigger: finance.transfer_asset
+        authorized_actor:
+          all_of: [FinanceAdmin, receiving_division_head]
+        preconditions:
+          - transfer_destination_valid
+          - asset_condition_assessed
+        side_effects:
+          - audit_log.create
+          - asset_responsibility_recorded
+          - depreciation.allocate_to_new_owner
+      - from: TRANSFERRED
+        to: ACTIVE
+        trigger: finance.revert_transfer
+        authorized_actor:
+          role: FinanceAdmin
+        preconditions:
+          - revert_reason_provided
+          - within_transfer_window
+        side_effects:
+          - audit_log.create
+      - from: ACTIVE
+        to: DISPOSED
+        trigger: finance.dispose_asset
+        authorized_actor:
+          role: FinanceAdmin
+          all_of: [FinanceManager, Director]
+        preconditions:
+          - disposal_method_selected (sale/writeoff/scrapping)
+          - book_value_calculated
+          - gain_loss_calculated
+          - disposal_date_set
+        side_effects:
+          - audit_log.create
+          - journal_entry.create(disposal_gain_or_loss)
+          - asset_register.removed
+    forbidden:
+      - DISPOSED → any                    # terminal
+      - TRANSFERRED → DISPOSED
+
+# ===============================================================
+# 9. HR PIPELINE (Phase 2 — minimal scaffolding)
+# ===============================================================
+
+hr_pipeline:
+
+  # ---- 9.1 Employee ---------------------------------------------
+  - entity: Employee
+    states: [ACTIVE, RESIGNED, SUSPENDED]
+    initial_state: ACTIVE
+    source_of_truth: schema.prisma:Employee.status
+    transitions:
+      - from: ACTIVE
+        to: SUSPENDED
+        trigger: hr.suspend_employee
+        authorized_actor:
+          all_of: [HRAdmin, DivisionHead]
+        preconditions:
+          - suspension_reason_provided
+          - suspension_duration_or_review_date_set
+        side_effects:
+          - audit_log.create
+          - user.account.disabled
+          - session.all_revoked
+          - notification.send_to(role=employee, DivisionHead)
+      - from: SUSPENDED
+        to: ACTIVE
+        trigger: hr.reinstate_employee
+        authorized_actor:
+          all_of: [HRAdmin, DivisionHead]
+        preconditions:
+          - reinstatement_reason_provided
+          - investigation_closed
+        side_effects:
+          - audit_log.create
+          - user.account.re_enabled
+          - session.refresh_required
+      - from: ACTIVE
+        to: RESIGNED
+        trigger: hr.record_resignation
+        authorized_actor:
+          role: HRAdmin
+        preconditions:
+          - resignation_letter_received
+          - last_working_day_set
+          - exit_clearance_checklist_started
+        side_effects:
+          - audit_log.create
+          - employee_contract.terminated
+          - user.account.scheduled_for_disable(on last_working_day)
+          - payroll.final_run_queued
+          - knowledge_transfer.queued
+      - from: SUSPENDED
+        to: RESIGNED
+        trigger: hr.record_resignation
+        authorized_actor:
+          role: HRAdmin
+        preconditions:
+          - resignation_acknowledged
+        side_effects:
+          - audit_log.create
+    forbidden:
+      - RESIGNED → ACTIVE                  # rehires require new employee record
+      - RESIGNED → SUSPENDED
+      - any → DRAFT (Employee has no DRAFT state)
+
+  # ---- 9.2 EmployeeContract -------------------------------------
+  - entity: EmployeeContract
+    states: [ACTIVE, EXPIRED, TERMINATED]
+    initial_state: ACTIVE
+    source_of_truth: schema.prisma:EmployeeContract.status
+    transitions:
+      - from: ACTIVE
+        to: EXPIRED
+        trigger: contract.natural_expiry
+        authorized_actor:
+          role: system_auto
+        preconditions:
+          - end_date < today
+          - no_renewal_recorded
+        side_effects:
+          - audit_log.create(action=auto_expire)
+          - notification.send_to(role=HRAdmin, DivisionHead)
+      - from: ACTIVE
+        to: TERMINATED
+        trigger: hr.terminate_contract
+        authorized_actor:
+          all_of: [HRAdmin, Director]
+        preconditions:
+          - termination_reason_provided
+          - severance_calculated
+        side_effects:
+          - audit_log.create
+          - payroll.final_run_queued
+          - employee.status = RESIGNED
+      - from: EXPIRED
+        to: ACTIVE
+        trigger: hr.renew_contract
+        authorized_actor:
+          role: HRAdmin
+        preconditions:
+          - new_contract_signed
+          - new_end_date_set
+        side_effects:
+          - audit_log.create
+    forbidden:
+      - TERMINATED → ACTIVE                # new contract required
+      - TERMINATED → EXPIRED
+
+  # ---- 9.3 EmployeePerformance ----------------------------------
+  - entity: EmployeePerformance
+    states: [DRAFT, ACKNOWLEDGED, ARCHIVED]
+    initial_state: DRAFT
+    source_of_truth: schema.prisma:EmployeePerformance.status
+    transitions:
+      - from: DRAFT
+        to: ACKNOWLEDGED
+        trigger: manager.submit_review
+        authorized_actor:
+          role: DivisionHead
+        preconditions:
+          - review_period_completed
+          - employee_self_assessment_received
+          - manager_assessment_filled
+        side_effects:
+          - audit_log.create
+          - notification.send_to(role=employee)
+      - from: ACKNOWLEDGED
+        to: ARCHIVED
+        trigger: hr.archive_review
+        authorized_actor:
+          role: HRAdmin
+        preconditions:
+          - employee_acknowledged_signature_captured
+          - 30_days_since_acknowledgement
+        side_effects:
+          - audit_log.create
+          - immutable_after_archive
+    forbidden:
+      - ARCHIVED → any                     # terminal
+      - ACKNOWLEDGED → DRAFT               # no retraction
+
+# ===============================================================
+# 10. ORPHAN PREVENTIONS (cross-entity)
+# ===============================================================
+# Per raw/ERP_INPUT_OUTPUT_LINEAGE.md — prevent deletion of entities
+# that still have meaningful references.
+
+orphan_preventions:
+  - rule: cannot_delete_warehouse_with_stock
+    entity: Warehouse
+    check: stock_movement.current_qty > 0 (per goods)
+    error_code: WAREHOUSE_HAS_STOCK
+    override: WarehouseAdmin + FinanceManager, with mandatory reassignment plan
+  - rule: cannot_delete_goods_with_stock
+    entity: Goods
+    check: stock_movement.qty > 0 OR in_active_po
+    error_code: GOODS_HAS_STOCK
+    override: WarehouseAdmin, with stock_zero_out_or_transfer
+  - rule: cannot_delete_customer_with_open_invoice
+    entity: Customer
+    check: open_invoice_count > 0 OR open_so_count > 0
+    error_code: CUSTOMER_HAS_OPEN_DOCUMENTS
+    override: BusDevAdmin + FinanceManager, with mandatory settlement
+  - rule: cannot_delete_supplier_with_open_invoice
+    entity: Supplier
+    check: open_invoice_count > 0 OR open_po_count > 0
+    error_code: SUPPLIER_HAS_OPEN_DOCUMENTS
+    override: PurchasingAdmin + FinanceManager
+  - rule: cannot_delete_role_with_users
+    entity: Role
+    check: users_with_role_count > 0
+    error_code: ROLE_HAS_USERS
+    override: SuperAdmin only, with mandatory user_reassignment
+  - rule: cannot_delete_formulation_in_use
+    entity: Formulation
+    check: used_in_active_batch_record OR used_in_locked_so
+    error_code: FORMULATION_IN_USE
+    override: RnDAdmin + ApotekerPenanggungJawab, with mandatory formula_migration
+  - rule: cannot_delete_coa_with_posted_ledger
+    entity: Coa
+    check: journal_entry_lines_count > 0
+    error_code: COA_HAS_POSTED_ENTRIES
+    override: FinanceAdmin only, with mandatory rename_in_place (no hard delete)
+  - rule: cannot_delete_user_with_active_session
+    entity: User
+    check: active_session_count > 0 OR last_login_within_24h
+    error_code: USER_HAS_ACTIVE_SESSIONS
+    override: SuperAdmin, with mandatory session_revoke
+
+# ===============================================================
+# 11. FORBIDDEN TRANSITIONS (universal — entity-independent)
+# ===============================================================
+
+forbidden_universal:
+  - description: any → backward_state (no time travel)
+    applies_to: [all stateful entities]
+    error_code: INVALID_STATE_TRANSITION_BACKWARD
+  - description: approved → draft (cannot unapprove)
+    applies_to: [all approval-bearing entities]
+    error_code: CANNOT_UNAPPROVE
+  - description: cancelled → active_state (cannot uncancel without new record)
+    applies_to: [all cancellable entities]
+    error_code: CANNOT_UNCANCEL
+  - description: posted → draft (financial posted immutable)
+    applies_to: [JournalEntry, SalesInvoice, PurchaseInvoice, SalesPayment, PurchasePayment]
+    error_code: FINANCIAL_POSTED_IMMUTABLE
+    reversal_path: Use REVERSED transition with reversal_journal
+  - description: locked → unlocked (formulations / artworks locked)
+    applies_to: [Formulation, Artwork, BatchRecord(after LOCKED)]
+    error_code: ENTITY_LOCKED
+  - description: completed → any (terminal)
+    applies_to: [BatchRecord, SalesOrder(CLOSED), ProductionMixing, ProductionFilling, ProductionPackaging]
+    error_code: ENTITY_TERMINAL
+  - description: deleted → any (soft-delete recovery required first)
+    applies_to: [all soft-deletable entities]
+    error_code: ENTITY_DELETED
+    recovery: undelete within 30 days via admin override
+
+# ===============================================================
+# 12. CROSS-MODULE TRIGGERS (event bus)
+# ===============================================================
+# Per raw/05_master_business_process_blueprint.md §COMMUNICATION PROTOCOL:
+# COMPLETE EVENT BUS. Each event has source, consumers, payload shape (inferred).
+
+triggers:
+  - event: sales.lead.created
+    emit_on: Lead.NEW_LEAD (first transition)
+    consumers: [BusDev, Notification, Dashboard.D.Pelanggan]
+    payload: { lead_id, customer_id, owner_user_id }
+  - event: sales.sample.submitted
+    emit_on: SalesSample.DRAFT → SUBMITTED
+    consumers: [BusDevManager, RnDManager, Notification]
+    payload: { sample_id, customer_id, formulation_brief }
+  - event: sales.sample.approved
+    emit_on: SalesSample.IN_PROGRESS → APPROVED
+    consumers: [BusDev, RnD, Notification]
+    payload: { sample_id, formulation_id }
+  - event: sales.sales-order.dp_received
+    emit_on: SalesOrder.DRAFT → DP_PAID
+    consumers: [Production, Finance, Notification]
+    payload: { so_id, dp_amount, total_amount, customer_id }
+  - event: sales.sales-order.in_production
+    emit_on: SalesOrder.DP_PAID → IN_PRODUCTION
+    consumers: [BusDev, Warehouse, Notification]
+    payload: { so_id, batch_record_id }
+  - event: sales.sales-order.ready_to_ship
+    emit_on: SalesOrder.IN_PRODUCTION → QC_PASS
+    consumers: [BusDev, Warehouse, Finance]
+    payload: { so_id, finished_qty }
+  - event: sales.sales-order.shipped
+    emit_on: SalesOrder.QC_PASS → SHIPPED
+    consumers: [BusDev, Finance, Customer(WAbot)]
+    payload: { so_id, delivery_out_id, tracking_number }
+  - event: sales.sales-order.closed
+    emit_on: SalesOrder.SHIPPED → CLOSED
+    consumers: [Finance, Dashboard.D.Eksekutif]
+    payload: { so_id, final_invoice_id }
+
+  - event: purchase.request.submitted
+    emit_on: PurchaseRequest.DRAFT → PENDING
+    consumers: [Purchasing, Notification]
+    payload: { pr_id, requester_id, urgency }
+  - event: purchase.order.approved
+    emit_on: PurchaseOrder.PENDING → APPROVED
+    consumers: [Finance, Warehouse, Supplier(via email)]
+    payload: { po_id, supplier_id, total_amount, eta }
+  - event: purchase.order.dp_received
+    emit_on: PurchaseDownPayment.PAID (initial)
+    consumers: [Supplier, Finance]
+    payload: { po_id, dp_amount }
+  - event: purchase.goods-receipt.completed
+    emit_on: GoodsReceipt.DRAFT → POSTED
+    consumers: [Finance, Purchasing, Dashboard.D.Gudang]
+    payload: { gr_id, po_id, items: [{goods_id, qty_good, qty_reject}] }
+  - event: purchase.invoice.posted
+    emit_on: PurchaseInvoice.APPROVED → POSTED
+    consumers: [Purchasing, Dashboard.D.Keuangan]
+    payload: { invoice_id, po_id, amount }
+
+  - event: production.batch-record.created
+    emit_on: BatchRecord.DRAFT (initial)
+    consumers: [BusDev, Warehouse, Notification]
+    payload: { batch_id, so_id, formulation_id }
+  - event: production.batch-record.in_progress
+    emit_on: BatchRecord.LOCKED → IN_PROGRESS
+    consumers: [BusDev, Dashboard.D.JadwalProduksi]
+    payload: { batch_id, so_id, start_time }
+  - event: production.batch.completed
+    emit_on: BatchRecord.IN_PROGRESS → COMPLETED
+    consumers: [Warehouse, BusDev, Finance, Dashboard.D.RealisasiProduksi]
+    payload: { batch_id, so_id, finished_qty, hpp_amount }
+  - event: production.quarantine.triggered
+    emit_on: ProductionMixing.IN_PROGRESS → QUARANTINE_DRUM
+    consumers: [RnD, Production, Quality]
+    payload: { batch_id, qc_failure_reason }
+
+  - event: rnd.formulation.submitted
+    emit_on: Formulation.DRAFT → SUBMITTED
+    consumers: [RnDManager, Apoteker, Notification]
+    payload: { formulation_id, sample_id, rev_number }
+  - event: rnd.formulation.approved
+    emit_on: Formulation.SUBMITTED → APPROVED
+    consumers: [BusDev, RnD, Notification]
+    payload: { formulation_id, approved_by }
+  - event: rnd.formulation.locked
+    emit_on: Formulation.APPROVED → LOCKED
+    consumers: [Production, Legalitas, BusDev]
+    payload: { formulation_id, bom_id, locked_by }
+
+  - event: warehouse.inbound.received
+    emit_on: GoodsReceipt.DRAFT → POSTED
+    consumers: [Finance, Purchasing, Dashboard.D.Gudang]
+    payload: { gr_id, items }
+  - event: warehouse.batch.status_changed
+    emit_on: stock_movement.create (in production.quarantine trigger)
+    consumers: [Production, BusDev]
+    payload: { batch_id, new_status }
+  - event: warehouse.opname.approved
+    emit_on: StockOpname.SUBMITTED → APPROVED
+    consumers: [Finance, Dashboard.D.Gudang]
+    payload: { opname_id, loss_value }
+  - event: warehouse.adjustment.approved
+    emit_on: StockAdjustment.PENDING_AUDIT → APPROVED
+    consumers: [Finance, Dashboard.D.Gudang]
+    payload: { adjustment_id, loss_value }
+
+  - event: warehouse.outbound.dispatched
+    emit_on: DeliveryOut.DRAFT → DISPATCHED
+    consumers: [BusDev, Finance, Customer(WAbot)]
+    payload: { delivery_id, so_id, tracking_number }
+  - event: sales.sales-order.delivered
+    emit_on: DeliveryOut.DISPATCHED → DELIVERED
+    consumers: [BusDev, Finance]
+    payload: { delivery_id, so_id }
+  - event: warehouse.outbound.verified
+    emit_on: DeliveryOut.DELIVERED → VERIFIED
+    consumers: [Finance, Dashboard.D.Keuangan]
+    payload: { delivery_id, invoice_id }
+
+  - event: finance.payment.received
+    emit_on: SalesPayment.COMPLETED
+    consumers: [BusDev, Dashboard.D.Keuangan]
+    payload: { payment_id, invoice_id, amount }
+  - event: finance.payment.disbursed
+    emit_on: PurchasePayment.COMPLETED
+    consumers: [Purchasing, Supplier]
+    payload: { payment_id, invoice_id, amount }
+  - event: finance.journal-entry.posted
+    emit_on: JournalEntry.DRAFT → POSTED (auto) OR APPROVED → POSTED
+    consumers: [Ledger, Dashboard.D.Keuangan]
+    payload: { journal_id, total_amount, source_doc_type, source_doc_id }
+
+  - event: checklist.stage.started
+    emit_on: ChecklistProgress.NOT_STARTED → IN_PROGRESS
+    consumers: [BusDev, Production, Notification]
+    payload: { checklist_id, stage_name, owner_role }
+  - event: checklist.stage.completed
+    emit_on: ChecklistProgress.IN_PROGRESS → DONE
+    consumers: [BusDev, Dashboard.D.ClientProduksi]
+    payload: { checklist_id, stage_name, deliverables_url }
+  - event: checklist.stage.blocked
+    emit_on: ChecklistProgress.IN_PROGRESS → BLOCKED
+    consumers: [BusDevManager, SuperAdmin]
+    payload: { checklist_id, stage_name, blocker_reason }
+
+# ===============================================================
+# 13. SLA TIMERS & OVERDUE BEHAVIOR
+# ===============================================================
+
+sla_overdue_behavior:
+  default:
+    warn_at: 0.7 * sla_days               # yellow badge
+    escalate_at: 1.0 * sla_days            # red badge + notify manager
+    auto_block_at: 2.0 * sla_days          # IN_PROGRESS → BLOCKED if no response
+  checklist_overrides:
+    HKI: 14_days
+    BPOM NA: 30_days
+    BPOM Merk: 7_days
+    MOQ: 3_days
+    Mixing: 5_days
+  auto_state_machine_consequence:
+    description: |
+      When auto_block_at elapses with no stage_owner action, the system auto-transitions
+      the stage to BLOCKED with reason="sla_exceeded". Stage owner is re-notified.
+    actor_for_auto_transition: system_auto
+    audit_log_entry: action=auto_block, actor=system, reason=sla_exceeded
+
+# ===============================================================
+# 14. NOTIFICATION CHANNELS & ROUTING
+# ===============================================================
+
+notification_routing:
+  in_app:
+    center: sidebar notification badge (per _SSOT_COMMUNICATION.md §6)
+    polling_interval_seconds: 30
+    badge_widgets_per_role:
+      BusDevStaff: [D.BusDev, D.Pelanggan, D.ClientSample, D.ClientProduksi, D.Notifikasi]
+      RnDChemist: [D.RnD, D.Sample, D.Notifikasi]
+      ProductionOperatorMixing: [D.JadwalProduksi, D.RealisasiProduksi]
+      WarehouseStaff: [D.Gudang]
+      FinanceStaff: [D.Keuangan]
+      PurchasingStaff: [D.Purchasing]
+  email:
+    digest_frequency: real-time per event
+    override_per_user: yes (per _SSOT_AUTH.md notification.configure permission)
+    exclude_bulk_events: true                # suppress spam on bulk ops
+  whatsapp_customer:
+    scope: customer-facing events only
+    events: [sales.so.shipped, sales.invoice.posted, logistics.delivery_delivered]
+    bot: nex-wa-bridge (separate service)
+    opt_out_supported: true
+
+# ===============================================================
+# 15. VALIDATION SUMMARY
+# ===============================================================
+
+validation:
+  total_pipelines: 11                      # sales, purchase, production, rnd, checklist, warehouse, finance, hr, plus 3 cross-cutting
+  total_entities_with_state_machine: 37
+  total_transitions_documented: 129        # ~3.6 per entity average
+  total_inline_forbidden_transitions: 87
+  total_universal_forbidden_rules: 7
+  total_cross_module_triggers: 33
+  total_orphan_prevention_rules: 8
+  common_transition_macros: 6
+  sla_overrides_documented: 16
+  notification_channels: 3                 # in_app, email, whatsapp_customer
+  file_size_actual_kb: ~98                 # exceeds nominal 40-60 KB target due to comprehensive coverage
+  review_required_by: [Tech Lead, Product Owner (Upii), Domain Architect]
+  effective_date: 2026-09-16
+  next_review_date: 2026-12-16             # quarterly per DEC-005
+
+# ===============================================================
+# 16. CHANGELOG & DEC ENTRIES REQUIRED
+# ===============================================================
+
+changelog:
+  - version: 1.0
+    date: 2026-09-16
+    author: Domain Architect
+    changes:
+      - Initial state machine definitions for 35 entities across 11 pipelines
+      - Imported preliminary states from _SSOT_FINAL.md §5
+      - Enriched with auto-journal triggers per raw/ERP_INPUT_OUTPUT_LINEAGE.md
+      - Aligned with 07_RBAC_MATRIX.yaml approval_thresholds
+      - Cross-module event bus per raw/05_master_business_process_blueprint.md
+    dec_entries_required:
+      - DEC-026 (state machine lock — this contract)
+
+open_questions: []
+
+resolved_decisions:
+  - id: OD-SM-01
+    resolution: FormulationAdjustment maintains a separate auditable lineage and does NOT mutate or increment parent formulation rev_number. Parent formulation revision increments exclusively via formal R&D REVISED workflow (Draft Rev N+1 -> Pending -> Approved -> Locked), preserving historical batch reproducibility.
+  - id: OD-SM-02
+    resolution: Direct cancellation of SalesOrder after IN_PRODUCTION is strictly forbidden. Any work-stop after production begins must proceed through separate operational workflows (production termination, WIP disposition, scrap/material recovery, and financial settlement).
+  - id: OD-SM-03
+    resolution: Checklist stages auto-block at 2x SLA and notify the manager; aligned with checklist.stage.sla_breach.
+  - id: OD-SM-04
+    resolution: RESIGNED is terminal; a rehire creates a new Employee record linked through audit/history.
+  - id: OD-SM-05
+    resolution: Approved return receipt emits the return event and CoaAuto creates the reversal/debit-note journal idempotently.
+  - id: OD-SM-06
+    resolution: Hard period lock rejects every posting in that business period; only an audited Adjustment Journal may post afterward.

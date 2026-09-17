@@ -1,7 +1,10 @@
 import { Controller, Get, Post, Param, Body, Query, Req } from '@nestjs/common';
 import { SampleFeesService } from './sample-fees.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { CreateSampleFeeDto, LinkSampleFeeToDpDto } from './dto/sample-fees.dto';
+import {
+  CreateSampleFeeDto,
+  LinkSampleFeeToDpDto,
+} from './dto/sample-fees.dto';
 
 @ApiTags('finance/sample-fees')
 @ApiBearerAuth()
@@ -30,7 +33,11 @@ export class SampleFeesController {
 
   @Post(':id/link-dp')
   @ApiOperation({ summary: 'Link this sample fee to a Down Payment (offset)' })
-  linkDp(@Req() req: any, @Param('id') id: string, @Body() dto: LinkSampleFeeToDpDto) {
+  linkDp(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: LinkSampleFeeToDpDto,
+  ) {
     const userId = req.user?.id;
     return this.service.linkToDownPayment(userId, id, dto.dpId);
   }

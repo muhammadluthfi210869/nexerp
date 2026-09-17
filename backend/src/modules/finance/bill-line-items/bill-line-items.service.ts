@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 /**
@@ -26,21 +30,27 @@ export class BillLineItemsService {
    * Add a new line item to an existing bill (DRAFT only).
    * Auto-recomputes bill subtotal + grand total + tax.
    */
-  async addItem(_userId: string, billId: string, dto: {
-    itemCode: string;
-    itemName: string;
-    qty: number;
-    unit: string;
-    price: number;
-    discount?: number;
-  }) {
+  async addItem(
+    _userId: string,
+    billId: string,
+    dto: {
+      itemCode: string;
+      itemName: string;
+      qty: number;
+      unit: string;
+      price: number;
+      discount?: number;
+    },
+  ) {
     const bill = await this.prisma.bill.findUnique({
       where: { id: billId },
       include: { items: true },
     });
     if (!bill) throw new NotFoundException(`Bill ${billId} not found`);
     if (bill.postedAt) {
-      throw new BadRequestException(`Cannot edit items on posted bill. Reverse bill first.`);
+      throw new BadRequestException(
+        `Cannot edit items on posted bill. Reverse bill first.`,
+      );
     }
 
     const lineTotal = dto.qty * dto.price - (dto.discount || 0);
@@ -70,12 +80,16 @@ export class BillLineItemsService {
    * Update a line item (qty, price, discount, rejectQty).
    * Recomputes line total and bill totals.
    */
-  async updateItem(_userId: string, id: string, dto: {
-    qty?: number;
-    price?: number;
-    discount?: number;
-    rejectQty?: number;
-  }) {
+  async updateItem(
+    _userId: string,
+    id: string,
+    dto: {
+      qty?: number;
+      price?: number;
+      discount?: number;
+      rejectQty?: number;
+    },
+  ) {
     const item = await this.prisma.billLineItem.findUnique({
       where: { id },
       include: { bill: true },
@@ -86,15 +100,19 @@ export class BillLineItemsService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      const updated = dto.qty !== undefined || dto.price !== undefined || dto.discount !== undefined
-        ? {
-            ...item,
-            qty: dto.qty ?? Number(item.qty),
-            price: dto.price ?? Number(item.price),
-            discount: dto.discount ?? Number(item.discount),
-          }
-        : item;
-      const newTotal = Number(updated.qty) * Number(updated.price) - Number(updated.discount);
+      const updated =
+        dto.qty !== undefined ||
+        dto.price !== undefined ||
+        dto.discount !== undefined
+          ? {
+              ...item,
+              qty: dto.qty ?? Number(item.qty),
+              price: dto.price ?? Number(item.price),
+              discount: dto.discount ?? Number(item.discount),
+            }
+          : item;
+      const newTotal =
+        Number(updated.qty) * Number(updated.price) - Number(updated.discount);
 
       const result = await tx.billLineItem.update({
         where: { id },
@@ -103,13 +121,20 @@ export class BillLineItemsService {
           price: dto.price,
           discount: dto.discount,
           rejectQty: dto.rejectQty,
-          total: dto.qty !== undefined || dto.price !== undefined || dto.discount !== undefined
-            ? newTotal
-            : undefined,
+          total:
+            dto.qty !== undefined ||
+            dto.price !== undefined ||
+            dto.discount !== undefined
+              ? newTotal
+              : undefined,
         },
       });
 
-      if (dto.qty !== undefined || dto.price !== undefined || dto.discount !== undefined) {
+      if (
+        dto.qty !== undefined ||
+        dto.price !== undefined ||
+        dto.discount !== undefined
+      ) {
         await this.recomputeBillTotals(tx, item.billId);
       }
 
@@ -139,8 +164,14 @@ export class BillLineItemsService {
 
   private async recomputeBillTotals(tx: any, billId: string) {
     const items = await tx.billLineItem.findMany({ where: { billId } });
-    const subtotal = items.reduce((s: number, i: { total: any }) => s + Number(i.total), 0);
-    const totalDiscount = items.reduce((s: number, i: { discount: any }) => s + Number(i.discount), 0);
+    const subtotal = items.reduce(
+      (s: number, i: { total: any }) => s + Number(i.total),
+      0,
+    );
+    const totalDiscount = items.reduce(
+      (s: number, i: { discount: any }) => s + Number(i.discount),
+      0,
+    );
     const taxAmount = subtotal * 0.11;
     const grandTotal = subtotal + taxAmount;
     await tx.bill.update({

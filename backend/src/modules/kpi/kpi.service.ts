@@ -6,11 +6,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
-import {
-  Division,
-  LogActivityType,
-  Prisma,
-} from '@prisma/client';
+import { Division, LogActivityType, Prisma } from '@prisma/client';
 
 export interface Period {
   from?: Date;
@@ -82,10 +78,7 @@ export class KpiService {
   }
 
   // computePerson — count ActivityLog rows per LogActivityType for one user.
-  async computePerson(
-    userId: string,
-    period: Period = {},
-  ): Promise<PersonKpi> {
+  async computePerson(userId: string, period: Period = {}): Promise<PersonKpi> {
     const where: Prisma.ActivityLogWhereInput = {
       userId,
       ...(period.from || period.to
@@ -314,25 +307,26 @@ export class KpiService {
     );
 
     const userIds = scores.map((s) => s.userId);
-    const users = userIds.length === 0
-      ? []
-      : await this.prisma.user.findMany({
-          where: { id: { in: userIds } },
-          select: { id: true, fullName: true },
-        });
+    const users =
+      userIds.length === 0
+        ? []
+        : await this.prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, fullName: true },
+          });
     const userMap = new Map(users.map((u) => [u.id, u.fullName]));
     for (const s of scores) {
       s.fullName = userMap.get(s.userId) ?? null;
     }
 
-    return scores
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
+    return scores.sort((a, b) => b.score - a.score).slice(0, limit);
   }
 
   // Convenience: pull current user from JWT, used by controller.
   async computeSelf(period: Period = {}): Promise<PersonKpi> {
     // Self is resolved by controller via req.user.sub; this is a placeholder.
-    throw new Error('computeSelf requires userId — use computePerson(req.user.sub)');
+    throw new Error(
+      'computeSelf requires userId — use computePerson(req.user.sub)',
+    );
   }
 }

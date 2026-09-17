@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 type VarianceType = 'MATERIAL' | 'LABOR' | 'OVERHEAD';
@@ -22,7 +26,9 @@ export class CostVariancesService {
   }
 
   async findOne(id: string) {
-    const variance = await this.prisma.costVariance.findUnique({ where: { id } });
+    const variance = await this.prisma.costVariance.findUnique({
+      where: { id },
+    });
     if (!variance) throw new NotFoundException(`Cost variance ${id} not found`);
     return variance;
   }
@@ -32,15 +38,20 @@ export class CostVariancesService {
    * If actualCost is provided, variance = actualCost - standardCost.
    * Positive = unfavorable (over budget), negative = favorable.
    */
-  async create(_userId: string, dto: {
-    jobOrderId: string;
-    varianceType: VarianceType;
-    standardCost: number;
-    actualCost: number;
-    notes?: string;
-  }) {
+  async create(
+    _userId: string,
+    dto: {
+      jobOrderId: string;
+      varianceType: VarianceType;
+      standardCost: number;
+      actualCost: number;
+      notes?: string;
+    },
+  ) {
     if (!['MATERIAL', 'LABOR', 'OVERHEAD'].includes(dto.varianceType)) {
-      throw new BadRequestException(`Invalid varianceType: ${dto.varianceType}`);
+      throw new BadRequestException(
+        `Invalid varianceType: ${dto.varianceType}`,
+      );
     }
     if (dto.standardCost < 0 || dto.actualCost < 0) {
       throw new BadRequestException('Costs cannot be negative');
@@ -67,7 +78,10 @@ export class CostVariancesService {
       where: { jobOrderId },
     });
 
-    const byType: Record<string, { total: number; favorable: number; unfavorable: number }> = {};
+    const byType: Record<
+      string,
+      { total: number; favorable: number; unfavorable: number }
+    > = {};
     for (const v of variances) {
       byType[v.varianceType] ??= { total: 0, favorable: 0, unfavorable: 0 };
       byType[v.varianceType].total += Number(v.variance);

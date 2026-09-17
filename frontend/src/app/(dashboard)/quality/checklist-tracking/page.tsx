@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -52,6 +52,14 @@ function TimelineDot({ status }: { status: string }) {
 }
 
 export default function ChecklistTrackingPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Tracking Checklist...</div>}>
+      <ChecklistTrackingContent />
+    </Suspense>
+  );
+}
+
+function ChecklistTrackingContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFrom, setDateFrom] = useState(
     new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0]

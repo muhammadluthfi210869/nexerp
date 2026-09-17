@@ -22,11 +22,15 @@ describe('RequisitionService', () => {
         findMany: jest.fn().mockResolvedValue([FAKE_REQ]),
         findUnique: jest.fn().mockResolvedValue(FAKE_REQ),
         create: jest.fn().mockResolvedValue(FAKE_REQ),
-        update: jest.fn().mockResolvedValue({ ...FAKE_REQ, status: 'APPROVED' }),
+        update: jest
+          .fn()
+          .mockResolvedValue({ ...FAKE_REQ, status: 'APPROVED' }),
       },
       $transaction: jest.fn(),
     };
-    idGeneratorMock = { generateId: jest.fn().mockResolvedValue('REQ-2609-001') };
+    idGeneratorMock = {
+      generateId: jest.fn().mockResolvedValue('REQ-2609-001'),
+    };
     service = new RequisitionService(prismaMock, idGeneratorMock);
   });
 
@@ -66,14 +70,20 @@ describe('RequisitionService', () => {
     });
 
     it('throws NotFoundException when missing', async () => {
-      prismaMock.materialRequisitionHeader.findUnique.mockResolvedValueOnce(null);
-      await expect(service.findOne('missing')).rejects.toThrow(NotFoundException);
+      prismaMock.materialRequisitionHeader.findUnique.mockResolvedValueOnce(
+        null,
+      );
+      await expect(service.findOne('missing')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('updateStatus', () => {
     it('transitions PENDING -> APPROVED', async () => {
-      const result = await service.updateStatus('req-1', { status: 'APPROVED' });
+      const result = await service.updateStatus('req-1', {
+        status: 'APPROVED',
+      });
       expect((result as any).status).toBe('APPROVED');
     });
 
@@ -86,7 +96,9 @@ describe('RequisitionService', () => {
         ...FAKE_REQ,
         status: 'FULFILLED',
       });
-      const result = await service.updateStatus('req-1', { status: 'FULFILLED' });
+      const result = await service.updateStatus('req-1', {
+        status: 'FULFILLED',
+      });
       expect((result as any).status).toBe('FULFILLED');
     });
 
@@ -95,12 +107,18 @@ describe('RequisitionService', () => {
         ...FAKE_REQ,
         status: 'FULFILLED',
       });
-      await expect(service.updateStatus('req-1', { status: 'PENDING' })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.updateStatus('req-1', { status: 'PENDING' }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('throws NotFoundException when missing', async () => {
-      prismaMock.materialRequisitionHeader.findUnique.mockResolvedValueOnce(null);
-      await expect(service.updateStatus('missing', { status: 'APPROVED' })).rejects.toThrow(NotFoundException);
+      prismaMock.materialRequisitionHeader.findUnique.mockResolvedValueOnce(
+        null,
+      );
+      await expect(
+        service.updateStatus('missing', { status: 'APPROVED' }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

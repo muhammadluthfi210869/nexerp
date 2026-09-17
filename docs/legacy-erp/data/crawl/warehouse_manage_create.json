@@ -1,0 +1,284 @@
+{
+  "url": "/warehouse-manage/create",
+  "type": "create",
+  "file": "warehouse_manage_create.html",
+  "title": "GsERP KIL - Buat Gudang",
+  "forms": [
+    {
+      "id": "GSForm",
+      "action": "https://kil.gserp.id/warehouse-manage/create",
+      "method": "post",
+      "fieldCount": 6,
+      "fields": [
+        {
+          "name": "csrf_gs",
+          "type": "hidden",
+          "id": null,
+          "required": false,
+          "placeholder": "",
+          "value": "872117d075614d41d2607b3871bdc7e5",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "",
+          "options": null
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "id": "inputName",
+          "required": true,
+          "placeholder": "Contoh: Gudang Utama",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Nama * Nama gudang",
+          "options": null
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "id": "phone",
+          "required": false,
+          "placeholder": "Contoh: 021-12345678",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Telepon Nomor telepon (opsional)",
+          "options": null
+        },
+        {
+          "name": "province",
+          "type": "select",
+          "id": "province",
+          "required": true,
+          "placeholder": "",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Provinsi * Pilih provinsi",
+          "options": [
+            {
+              "value": "",
+              "text": "",
+              "selected": false
+            },
+            {
+              "value": "1",
+              "text": "Aceh",
+              "selected": false
+            },
+            {
+              "value": "2",
+              "text": "Sumatera Utara",
+              "selected": false
+            },
+            {
+              "value": "3",
+              "text": "Sumatera Barat",
+              "selected": false
+            },
+            {
+              "value": "4",
+              "text": "Riau",
+              "selected": false
+            },
+            {
+              "value": "5",
+              "text": "Jambi",
+              "selected": false
+            },
+            {
+              "value": "6",
+              "text": "Sumatera Selatan",
+              "selected": false
+            },
+            {
+              "value": "7",
+              "text": "Bengkulu",
+              "selected": false
+            },
+            {
+              "value": "8",
+              "text": "Lampung",
+              "selected": false
+            },
+            {
+              "value": "9",
+              "text": "Kepulauan Bangka Belitung",
+              "selected": false
+            },
+            {
+              "value": "10",
+              "text": "Kepulauan Riau",
+              "selected": false
+            },
+            {
+              "value": "11",
+              "text": "DKI Jakarta",
+              "selected": false
+            },
+            {
+              "value": "12",
+              "text": "Jawa Barat",
+              "selected": false
+            },
+            {
+              "value": "13",
+              "text": "Jawa Tengah",
+              "selected": false
+            },
+            {
+              "value": "14",
+              "text": "DI Yogyakarta",
+              "selected": false
+            },
+            {
+              "value": "15",
+              "text": "Jawa Timur",
+              "selected": false
+            },
+            {
+              "value": "16",
+              "text": "Banten",
+              "selected": false
+            },
+            {
+              "value": "17",
+              "text": "Bali",
+              "selected": false
+            },
+            {
+              "value": "18",
+              "text": "Nusa Tenggara Barat",
+              "selected": false
+            },
+            {
+              "value": "19",
+              "text": "Nusa Tenggara Timur",
+              "selected": false
+            },
+            {
+              "value": "20",
+              "text": "Kalimantan Barat",
+              "selected": false
+            },
+            {
+              "value": "21",
+              "text": "Kalimantan Tengah",
+              "selected": false
+            },
+            {
+              "value": "22",
+              "text": "Kalimantan Selatan",
+              "selected": false
+            },
+            {
+              "value": "23",
+              "text": "Kalimantan Timur",
+              "selected": false
+            },
+            {
+              "value": "24",
+              "text": "Kalimantan Utara",
+              "selected": false
+            },
+            {
+              "value": "25",
+              "text": "Sulawesi Utara",
+              "selected": false
+            },
+            {
+              "value": "26",
+              "text": "Sulawesi Tengah",
+              "selected": false
+            },
+            {
+              "value": "27",
+              "text": "Sulawesi Selatan",
+              "selected": false
+            },
+            {
+              "value": "28",
+              "text": "Sulawesi Tenggara",
+              "selected": false
+            },
+            {
+              "value": "29",
+              "text": "Gorontalo",
+              "selected": false
+            },
+            {
+              "value": "30",
+              "text": "Sulawesi Barat",
+              "selected": false
+            },
+            {
+              "value": "31",
+              "text": "Maluku",
+              "selected": false
+            },
+            {
+              "value": "32",
+              "text": "Maluku Utara",
+              "selected": false
+            },
+            {
+              "value": "33",
+              "text": "Papua",
+              "selected": false
+            },
+            {
+              "value": "34",
+              "text": "Papua Barat",
+              "selected": false
+            }
+          ]
+        },
+        {
+          "name": "city",
+          "type": "select",
+          "id": "city",
+          "required": true,
+          "placeholder": "",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Kota * Pilih provinsi terlebih dahulu",
+          "options": [
+            {
+              "value": "",
+              "text": "Pilih provinsi terlebih dahulu",
+              "selected": false
+            }
+          ]
+        },
+        {
+          "name": "address",
+          "type": "textarea",
+          "id": "address",
+          "required": true,
+          "placeholder": "Alamat lengkap gudang",
+          "pattern": null,
+          "maxlength": null,
+          "multiple": false,
+          "checked": false,
+          "label": "Alamat * Alamat lengkap gudang",
+          "options": null
+        }
+      ]
+    }
+  ],
+  "tables": [],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [
+    "https://kil.gserp.id/warehouse-manage/cities"
+  ],
+  "notes": []
+}

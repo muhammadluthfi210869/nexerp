@@ -113,7 +113,10 @@ export class NotificationGateway
 
     if (!token) {
       this.logger.warn(`WS ${client.id} rejected: missing token`);
-      client.emit('error', { code: 'UNAUTHENTICATED', message: 'JWT token required' });
+      client.emit('error', {
+        code: 'UNAUTHENTICATED',
+        message: 'JWT token required',
+      });
       client.disconnect(true);
       return;
     }
@@ -159,7 +162,9 @@ export class NotificationGateway
     this.logger.log(`WS ${client.id} connected user=${userId}`);
 
     // Replay ring buffer if client sent lastEventId on handshake.
-    const lastEventId = client.handshake.auth?.lastEventId as string | undefined;
+    const lastEventId = client.handshake.auth?.lastEventId as
+      | string
+      | undefined;
     const ring = this.ringByUser.get(userId) ?? [];
     if (lastEventId && ring.length) {
       const idx = ring.findIndex((e) => e.id === lastEventId);

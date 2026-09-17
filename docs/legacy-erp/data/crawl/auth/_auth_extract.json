@@ -1,0 +1,1263 @@
+{
+  "source": "https://kil.gserp.id",
+  "crawl_date": "2026-09-16",
+  "users": [
+    {
+      "id": 1,
+      "name": "Super Admin",
+      "code": "000",
+      "email": "goodsyst@gmail.com",
+      "phone": "081231418159",
+      "role_name": "Administrator",
+      "status": "Aktif",
+      "tgl_bergabung": "06-01-2026",
+      "photo_url": "https://kil.gserp.id/uploads/common/202606/1782428936_2d32532e28825209553a.jpeg",
+      "last_login": null
+    },
+    {
+      "id": 2,
+      "name": "Fadilah Syahab",
+      "code": "001",
+      "email": "fadilah.syahab@dreamlab.id",
+      "phone": "087722291012",
+      "role_name": "Administrator",
+      "status": "Aktif",
+      "tgl_bergabung": "12-03-2023",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 3,
+      "name": "Achmad Bagir",
+      "code": "002",
+      "email": "achmad.bagir@dreamlab.id",
+      "phone": "081999122990",
+      "role_name": "Administrator",
+      "status": "Aktif",
+      "tgl_bergabung": "12-03-2023",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 4,
+      "name": "Zaki",
+      "code": "003",
+      "email": "zaki@dreamlab.id",
+      "phone": "085659360766",
+      "role_name": "Administrator",
+      "status": "Aktif",
+      "tgl_bergabung": "12-03-2023",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 5,
+      "name": "Fatimah Amira",
+      "code": "004",
+      "email": "fatimah.amira@dreamlab.id",
+      "phone": "085174191902",
+      "role_name": "Head Research and Development",
+      "status": "Aktif",
+      "tgl_bergabung": "12-03-2023",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 6,
+      "name": "Ribut Supriyono",
+      "code": "005",
+      "email": "ribut.supriyono@dreamlab.id",
+      "phone": "085604348983",
+      "role_name": "Research and Development",
+      "status": "Aktif",
+      "tgl_bergabung": "12-03-2023",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 7,
+      "name": "Riyantita Tunjungsari",
+      "code": "006",
+      "email": "riyantita.tunjungsari@dreamlab.id",
+      "phone": "081356351997",
+      "role_name": "Production Mixing &amp; Filling",
+      "status": "Aktif",
+      "tgl_bergabung": "12-03-2023",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 8,
+      "name": "Muhammad Ghufron",
+      "code": "007",
+      "email": "muhammad.ghufron@dreamlab.id",
+      "phone": "0895341099232",
+      "role_name": "Warehouse",
+      "status": "Aktif",
+      "tgl_bergabung": "13-04-2023",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 9,
+      "name": "Akhmad Ratriono Anggoro",
+      "code": "008",
+      "email": "akhmad.ratriono@dreamlab.id",
+      "phone": "081213971639",
+      "role_name": "Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "15-08-2023",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 10,
+      "name": "Dicky Barkah",
+      "code": "009",
+      "email": "dicky.barkah@dreamlab.id",
+      "phone": "628979152855",
+      "role_name": "Production Packaging",
+      "status": "Aktif",
+      "tgl_bergabung": "09-01-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 11,
+      "name": "Keviana",
+      "code": "010",
+      "email": "keviana@dreamlab.id",
+      "phone": "62895375470001",
+      "role_name": "Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "09-01-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 13,
+      "name": "Irma Safarina",
+      "code": "012",
+      "email": "irma.safarina@dreamlab.id",
+      "phone": "083820898788",
+      "role_name": "BusDev + Purchasing",
+      "status": "Aktif",
+      "tgl_bergabung": "24-01-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 14,
+      "name": "Ekky Ilham",
+      "code": "013",
+      "email": "ekky.ilham@dreamlab.id",
+      "phone": "081214727282",
+      "role_name": "Finance",
+      "status": "Aktif",
+      "tgl_bergabung": "29-01-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 15,
+      "name": "Irma Finance",
+      "code": "014",
+      "email": "irma.finance@dreamlab.id",
+      "phone": "088229186548",
+      "role_name": "Finance",
+      "status": "Aktif",
+      "tgl_bergabung": "02-02-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 16,
+      "name": "Vira",
+      "code": "015",
+      "email": "vira@dreamlab.id",
+      "phone": "088235482487",
+      "role_name": "Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "09-03-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 17,
+      "name": "Desy",
+      "code": "016",
+      "email": "desy@dreamlab.id",
+      "phone": "085604015560",
+      "role_name": "Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "21-03-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 18,
+      "name": "Gabriella Maulidha",
+      "code": "017",
+      "email": "gabriella.maulidha@dreamlab.id",
+      "phone": "087899752715",
+      "role_name": "Research and Development",
+      "status": "Aktif",
+      "tgl_bergabung": "06-05-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 19,
+      "name": "Nur Kholilah",
+      "code": "018",
+      "email": "nur.kholilah@dreamlab.id",
+      "phone": "085851237453",
+      "role_name": "Production Mixing &amp; Filling",
+      "status": "Aktif",
+      "tgl_bergabung": "05-09-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 20,
+      "name": "Muhammad Ruhullah",
+      "code": "019",
+      "email": "muhammad.ruhullah@dreamlab.id",
+      "phone": "089524640010",
+      "role_name": "Production Mixing &amp; Filling",
+      "status": "Aktif",
+      "tgl_bergabung": "04-11-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 21,
+      "name": "salfa delia fernanda",
+      "code": "020",
+      "email": "salfa.delia@dreamlab.id",
+      "phone": "08819405360",
+      "role_name": "Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "12-11-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 22,
+      "name": "Rudy Affandy",
+      "code": "021",
+      "email": "rudy.affandy@dreamlab.id",
+      "phone": "081358590645",
+      "role_name": "Production Packaging",
+      "status": "Aktif",
+      "tgl_bergabung": "13-11-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 23,
+      "name": "Yulia Esther",
+      "code": "022",
+      "email": "yulia.esther@dreamlab.id",
+      "phone": "082337458118",
+      "role_name": "HRD",
+      "status": "Aktif",
+      "tgl_bergabung": "13-11-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 24,
+      "name": "Ayu Anindya",
+      "code": "023",
+      "email": "ayu.anindya@dreamlab.id",
+      "phone": "085731558835",
+      "role_name": "Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "21-12-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 25,
+      "name": "Krisna Putra Ramadhani",
+      "code": "024",
+      "email": "krisna.putra@dreamlab.id",
+      "phone": "082230206692",
+      "role_name": "Warehouse",
+      "status": "Aktif",
+      "tgl_bergabung": "21-12-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 26,
+      "name": "Ciptaning",
+      "code": "025",
+      "email": "ciptaning@dreamlab.id",
+      "phone": "081334163882",
+      "role_name": "Apoteker Penanggung Jawab",
+      "status": "Aktif",
+      "tgl_bergabung": "21-12-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 27,
+      "name": "Panca",
+      "code": "026",
+      "email": "panca@dreamlab.id",
+      "phone": "081231944581",
+      "role_name": "Research and Development",
+      "status": "Aktif",
+      "tgl_bergabung": "21-12-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 28,
+      "name": "Diaz Muhammad Irsyadi",
+      "code": "027",
+      "email": "diaz.muhammad@dreamlab.id",
+      "phone": "082266781965",
+      "role_name": "BusDev + HRD",
+      "status": "Aktif",
+      "tgl_bergabung": "23-12-2024",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 29,
+      "name": "Edi Design",
+      "code": "028",
+      "email": "edi.design@dreamlab.id",
+      "phone": "6287820625288",
+      "role_name": "Staff Back Office",
+      "status": "Aktif",
+      "tgl_bergabung": "08-01-2025",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 30,
+      "name": "BRIAN BUDY CAHYONO",
+      "code": "029",
+      "email": "brian.budy@dreamlab.id",
+      "phone": "083831038899",
+      "role_name": "Research and Development",
+      "status": "Aktif",
+      "tgl_bergabung": "10-01-2025",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 31,
+      "name": "Lee Maychael",
+      "code": "030",
+      "email": "lee.maychael@dreamlab.id",
+      "phone": "08112287773",
+      "role_name": "Research and Development",
+      "status": "Aktif",
+      "tgl_bergabung": "03-02-2025",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 32,
+      "name": "SHIRLEY IRMA JUNITA",
+      "code": "031",
+      "email": "shirley.irma@dreamlab.id",
+      "phone": "082260099901",
+      "role_name": "Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "04-06-2025",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 33,
+      "name": "Siti",
+      "code": "032",
+      "email": "siti@dreamlab.id",
+      "phone": "0895359873700",
+      "role_name": "Finance",
+      "status": "Aktif",
+      "tgl_bergabung": "04-09-2025",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 34,
+      "name": "Estisan Septyana Atwinda",
+      "code": "033",
+      "email": "estisan.septyanaatwinda@dreamlab.id",
+      "phone": "0817403344",
+      "role_name": "Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "19-09-2025",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 35,
+      "name": "Laksmi Diah Ahmada",
+      "code": "034",
+      "email": "laksmi.diah@dreamlab.id",
+      "phone": "0817740233",
+      "role_name": "Head Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "19-09-2025",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 36,
+      "name": "Annisa Shalihah",
+      "code": "035",
+      "email": "annisa.shalihah@dreamlab.id",
+      "phone": "081952417051",
+      "role_name": "Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "08-10-2025",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 37,
+      "name": "Diva",
+      "code": "036",
+      "email": "diva@dreamlab.id",
+      "phone": "087712232389",
+      "role_name": "Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "08-10-2025",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 38,
+      "name": "Latifatus Cahya Ningtyas",
+      "code": "037",
+      "email": "latifatus.cahya@dreamlab.id",
+      "phone": "08123456789",
+      "role_name": "Research and Development",
+      "status": "Aktif",
+      "tgl_bergabung": "14-01-2026",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 39,
+      "name": "Revita Yustianawati",
+      "code": "038",
+      "email": "revita.yustianawati@dreamlab.id",
+      "phone": "085816961799",
+      "role_name": "Digital Marketing",
+      "status": "Aktif",
+      "tgl_bergabung": "04-02-2026",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 40,
+      "name": "Etika Citra Nuraisah",
+      "code": "039",
+      "email": "etika.citra.nuraisah@dreamlab.id",
+      "phone": "082229212228‬",
+      "role_name": "Finance",
+      "status": "Aktif",
+      "tgl_bergabung": "06-02-2026",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 41,
+      "name": "R.A Ami Wulandari Soedewo",
+      "code": "040",
+      "email": "ami@dreamlab.id",
+      "phone": "087776550657",
+      "role_name": "Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "04-05-2026",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 42,
+      "name": "Umar Nurbana",
+      "code": "041",
+      "email": "umar.nurbana@dreamlab.id",
+      "phone": "0895630271008",
+      "role_name": "Warehouse",
+      "status": "Aktif",
+      "tgl_bergabung": "06-05-2026",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 43,
+      "name": "Siti Mutmainah",
+      "code": "042",
+      "email": "siti.mutmainah@dreamlab.id",
+      "phone": "087712232381",
+      "role_name": "Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "11-05-2026",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 44,
+      "name": "Jessica Dwipuspita",
+      "code": "01072606",
+      "email": "jessica@dreamlab.id",
+      "phone": "081231418157",
+      "role_name": "Business Development",
+      "status": "Aktif",
+      "tgl_bergabung": "02-07-2026",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 45,
+      "name": "Eunike Putriningtyas",
+      "code": "043",
+      "email": "eunike@dreamlab.id",
+      "phone": "085231660403",
+      "role_name": "Purchasing",
+      "status": "Aktif",
+      "tgl_bergabung": "12-08-2026",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    },
+    {
+      "id": 46,
+      "name": "Edvin Porvianto Sutedjo",
+      "code": "05092602",
+      "email": "edvin@dreamlab.id",
+      "phone": "081212315021",
+      "role_name": "Finance",
+      "status": "Aktif",
+      "tgl_bergabung": "01-09-2026",
+      "photo_url": "https://kil.gserp.id/uploads/default.png",
+      "last_login": null
+    }
+  ],
+  "users_count": 45,
+  "roles": [
+    {
+      "id": 1,
+      "name": "Administrator",
+      "module_count_displayed": 123,
+      "users_count": 4,
+      "dashboard_modules_count": 22,
+      "sub_modules_count": 55,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi",
+          "Penjualan Sample",
+          "Penjualan Barang",
+          "Pelanggan",
+          "Sample",
+          "Eksekutif",
+          "Notifikasi",
+          "Digital Marketing",
+          "BusDev",
+          "RnD",
+          "Purchasing",
+          "Legalitas",
+          "Produksi",
+          "Gudang",
+          "HR",
+          "Keuangan",
+          "Buku Tamu",
+          "Client Sample",
+          "Client Produksi",
+          "Client RO",
+          "Lost"
+        ],
+        "sub_modules": [
+          "role-manage",
+          "user-manage",
+          "coa-manage",
+          "coa-auto-manage",
+          "warehouse-manage",
+          "warehouse-access-manage",
+          "goods-category-manage",
+          "goods-manage",
+          "supplier-category-manage",
+          "supplier-manage",
+          "customer-category-manage",
+          "customer-manage",
+          "customer-my-manage",
+          "sales-category",
+          "sales-target",
+          "purchase",
+          "purchase-invoice",
+          "purchase-return",
+          "purchase-down-payment",
+          "purchase-payment",
+          "purchase-in",
+          "sales-return-in",
+          "goods-transfer",
+          "delivery-out",
+          "purchase-return-out",
+          "sales-sample",
+          "sales-sample-payment",
+          "sales",
+          "sales-return",
+          "sales-down-payment",
+          "sales-invoice",
+          "sales-payment",
+          "formulation-adjustment",
+          "formulation-manage",
+          "formulation",
+          "request-cogs",
+          "batch-record",
+          "schedule-mixing",
+          "schedule-filling",
+          "schedule-packaging",
+          "production-mixing",
+          "production-filling",
+          "production-packaging",
+          "general-journal",
+          "other-payment",
+          "other-deposit",
+          "report-stock",
+          "report-mutation-goods",
+          "report-stock-valuation",
+          "report-guest-book",
+          "report-follow-up-customer",
+          "report-general-ledger",
+          "report-profit-loss",
+          "report-trial-balance",
+          "report-balance-sheet"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "HRD",
+      "module_count_displayed": 8,
+      "users_count": 1,
+      "dashboard_modules_count": 2,
+      "sub_modules_count": 1,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi"
+        ],
+        "sub_modules": [
+          "user-manage"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "name": "Staff Back Office",
+      "module_count_displayed": 5,
+      "users_count": 1,
+      "dashboard_modules_count": 2,
+      "sub_modules_count": 0,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi"
+        ],
+        "sub_modules": []
+      }
+    },
+    {
+      "id": 4,
+      "name": "Purchasing",
+      "module_count_displayed": 18,
+      "users_count": 1,
+      "dashboard_modules_count": 2,
+      "sub_modules_count": 7,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi"
+        ],
+        "sub_modules": [
+          "goods-manage",
+          "supplier-category-manage",
+          "supplier-manage",
+          "purchase",
+          "purchase-return",
+          "report-stock",
+          "report-mutation-goods"
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "name": "Warehouse",
+      "module_count_displayed": 18,
+      "users_count": 3,
+      "dashboard_modules_count": 2,
+      "sub_modules_count": 7,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi"
+        ],
+        "sub_modules": [
+          "purchase-in",
+          "sales-return-in",
+          "goods-transfer",
+          "delivery-out",
+          "purchase-return-out",
+          "report-stock",
+          "report-mutation-goods"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "name": "Head Business Development",
+      "module_count_displayed": 20,
+      "users_count": 1,
+      "dashboard_modules_count": 2,
+      "sub_modules_count": 6,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi"
+        ],
+        "sub_modules": [
+          "customer-manage",
+          "customer-my-manage",
+          "sales-sample",
+          "sales",
+          "sales-return",
+          "request-cogs"
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "name": "Business Development",
+      "module_count_displayed": 25,
+      "users_count": 13,
+      "dashboard_modules_count": 8,
+      "sub_modules_count": 5,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi",
+          "BusDev",
+          "Buku Tamu",
+          "Client Sample",
+          "Client Produksi",
+          "Client RO",
+          "Lost"
+        ],
+        "sub_modules": [
+          "customer-my-manage",
+          "sales-sample",
+          "sales",
+          "sales-return",
+          "request-cogs"
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "name": "Head Research and Development",
+      "module_count_displayed": 15,
+      "users_count": 1,
+      "dashboard_modules_count": 3,
+      "sub_modules_count": 5,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi",
+          "Sample"
+        ],
+        "sub_modules": [
+          "formulation-adjustment",
+          "formulation-manage",
+          "formulation",
+          "report-stock",
+          "report-mutation-goods"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "name": "Research and Development",
+      "module_count_displayed": 11,
+      "users_count": 6,
+      "dashboard_modules_count": 2,
+      "sub_modules_count": 3,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi"
+        ],
+        "sub_modules": [
+          "formulation",
+          "report-stock",
+          "report-mutation-goods"
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "name": "Production Mixing & Filling",
+      "module_count_displayed": 17,
+      "users_count": 0,
+      "dashboard_modules_count": 2,
+      "sub_modules_count": 7,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi"
+        ],
+        "sub_modules": [
+          "batch-record",
+          "schedule-mixing",
+          "schedule-filling",
+          "production-mixing",
+          "production-filling",
+          "report-stock",
+          "report-mutation-goods"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "name": "Production Packaging",
+      "module_count_displayed": 15,
+      "users_count": 2,
+      "dashboard_modules_count": 2,
+      "sub_modules_count": 5,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi"
+        ],
+        "sub_modules": [
+          "delivery-out",
+          "schedule-packaging",
+          "production-packaging",
+          "report-stock",
+          "report-mutation-goods"
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "name": "Apoteker Penanggung Jawab",
+      "module_count_displayed": 8,
+      "users_count": 1,
+      "dashboard_modules_count": 2,
+      "sub_modules_count": 2,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi"
+        ],
+        "sub_modules": [
+          "report-stock",
+          "report-mutation-goods"
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "name": "Finance",
+      "module_count_displayed": 30,
+      "users_count": 5,
+      "dashboard_modules_count": 2,
+      "sub_modules_count": 18,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi"
+        ],
+        "sub_modules": [
+          "coa-manage",
+          "coa-auto-manage",
+          "purchase-invoice",
+          "purchase-down-payment",
+          "purchase-payment",
+          "sales-sample-payment",
+          "sales-down-payment",
+          "sales-invoice",
+          "sales-payment",
+          "general-journal",
+          "other-payment",
+          "other-deposit",
+          "report-stock",
+          "report-mutation-goods",
+          "report-general-ledger",
+          "report-profit-loss",
+          "report-trial-balance",
+          "report-balance-sheet"
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "name": "Digital Marketing",
+      "module_count_displayed": 8,
+      "users_count": 1,
+      "dashboard_modules_count": 1,
+      "sub_modules_count": 2,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Buku Tamu"
+        ],
+        "sub_modules": [
+          "report-guest-book",
+          "report-follow-up-customer"
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "name": "BusDev + HRD",
+      "module_count_displayed": 20,
+      "users_count": 1,
+      "dashboard_modules_count": 2,
+      "sub_modules_count": 5,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi"
+        ],
+        "sub_modules": [
+          "customer-my-manage",
+          "sales-sample",
+          "sales",
+          "sales-return",
+          "request-cogs"
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "name": "BusDev + Purchasing",
+      "module_count_displayed": 32,
+      "users_count": 1,
+      "dashboard_modules_count": 2,
+      "sub_modules_count": 12,
+      "status": "Aktif",
+      "module_tree_shape": {
+        "dashboard_modules": [
+          "Jadwal Produksi",
+          "Realisasi Produksi"
+        ],
+        "sub_modules": [
+          "goods-manage",
+          "supplier-category-manage",
+          "supplier-manage",
+          "customer-my-manage",
+          "purchase",
+          "purchase-return",
+          "sales-sample",
+          "sales",
+          "sales-return",
+          "request-cogs",
+          "report-stock",
+          "report-mutation-goods"
+        ]
+      }
+    }
+  ],
+  "roles_count": 16,
+  "permissions_sample": {
+    "1": {
+      "dashboard:Jadwal Produksi": true,
+      "dashboard:Realisasi Produksi": true,
+      "dashboard:Penjualan Sample": true,
+      "dashboard:Penjualan Barang": true,
+      "dashboard:Pelanggan": true,
+      "dashboard:Sample": true,
+      "dashboard:Eksekutif": true,
+      "dashboard:Notifikasi": true,
+      "dashboard:Digital Marketing": true,
+      "dashboard:BusDev": true,
+      "dashboard:RnD": true,
+      "dashboard:Purchasing": true,
+      "dashboard:Legalitas": true,
+      "dashboard:Produksi": true,
+      "dashboard:Gudang": true,
+      "dashboard:HR": true,
+      "dashboard:Keuangan": true,
+      "dashboard:Buku Tamu": true,
+      "dashboard:Client Sample": true,
+      "dashboard:Client Produksi": true,
+      "dashboard:Client RO": true,
+      "dashboard:Lost": true,
+      "sub:role-manage": true,
+      "sub:user-manage": true,
+      "sub:coa-manage": true,
+      "sub:coa-auto-manage": true,
+      "sub:warehouse-manage": true,
+      "sub:warehouse-access-manage": true,
+      "sub:goods-category-manage": true,
+      "sub:goods-manage": true,
+      "sub:supplier-category-manage": true,
+      "sub:supplier-manage": true,
+      "sub:customer-category-manage": true,
+      "sub:customer-manage": true,
+      "sub:customer-my-manage": true,
+      "sub:sales-category": true,
+      "sub:sales-target": true,
+      "sub:purchase": true,
+      "sub:purchase-invoice": true,
+      "sub:purchase-return": true,
+      "sub:purchase-down-payment": true,
+      "sub:purchase-payment": true,
+      "sub:purchase-in": true,
+      "sub:sales-return-in": true,
+      "sub:goods-transfer": true,
+      "sub:delivery-out": true,
+      "sub:purchase-return-out": true,
+      "sub:sales-sample": true,
+      "sub:sales-sample-payment": true,
+      "sub:sales": true,
+      "sub:sales-return": true,
+      "sub:sales-down-payment": true,
+      "sub:sales-invoice": true,
+      "sub:sales-payment": true,
+      "sub:formulation-adjustment": true,
+      "sub:formulation-manage": true,
+      "sub:formulation": true,
+      "sub:request-cogs": true,
+      "sub:batch-record": true,
+      "sub:schedule-mixing": true,
+      "sub:schedule-filling": true,
+      "sub:schedule-packaging": true,
+      "sub:production-mixing": true,
+      "sub:production-filling": true,
+      "sub:production-packaging": true,
+      "sub:general-journal": true,
+      "sub:other-payment": true,
+      "sub:other-deposit": true,
+      "sub:report-stock": true,
+      "sub:report-mutation-goods": true,
+      "sub:report-stock-valuation": true,
+      "sub:report-guest-book": true,
+      "sub:report-follow-up-customer": true,
+      "sub:report-general-ledger": true,
+      "sub:report-profit-loss": true,
+      "sub:report-trial-balance": true,
+      "sub:report-balance-sheet": true
+    },
+    "3": {
+      "dashboard:Jadwal Produksi": true,
+      "dashboard:Realisasi Produksi": true
+    },
+    "7": {
+      "dashboard:Jadwal Produksi": true,
+      "dashboard:Realisasi Produksi": true,
+      "dashboard:BusDev": true,
+      "dashboard:Buku Tamu": true,
+      "dashboard:Client Sample": true,
+      "dashboard:Client Produksi": true,
+      "dashboard:Client RO": true,
+      "dashboard:Lost": true,
+      "sub:customer-my-manage": true,
+      "sub:sales-sample": true,
+      "sub:sales": true,
+      "sub:sales-return": true,
+      "sub:request-cogs": true
+    },
+    "13": {
+      "dashboard:Jadwal Produksi": true,
+      "dashboard:Realisasi Produksi": true,
+      "sub:coa-manage": true,
+      "sub:coa-auto-manage": true,
+      "sub:purchase-invoice": true,
+      "sub:purchase-down-payment": true,
+      "sub:purchase-payment": true,
+      "sub:sales-sample-payment": true,
+      "sub:sales-down-payment": true,
+      "sub:sales-invoice": true,
+      "sub:sales-payment": true,
+      "sub:general-journal": true,
+      "sub:other-payment": true,
+      "sub:other-deposit": true,
+      "sub:report-stock": true,
+      "sub:report-mutation-goods": true,
+      "sub:report-general-ledger": true,
+      "sub:report-profit-loss": true,
+      "sub:report-trial-balance": true,
+      "sub:report-balance-sheet": true
+    }
+  },
+  "all_unique_sub_modules": [
+    "batch-record",
+    "coa-auto-manage",
+    "coa-manage",
+    "customer-category-manage",
+    "customer-manage",
+    "customer-my-manage",
+    "delivery-out",
+    "formulation",
+    "formulation-adjustment",
+    "formulation-manage",
+    "general-journal",
+    "goods-category-manage",
+    "goods-manage",
+    "goods-transfer",
+    "other-deposit",
+    "other-payment",
+    "production-filling",
+    "production-mixing",
+    "production-packaging",
+    "purchase",
+    "purchase-down-payment",
+    "purchase-in",
+    "purchase-invoice",
+    "purchase-payment",
+    "purchase-return",
+    "purchase-return-out",
+    "report-balance-sheet",
+    "report-follow-up-customer",
+    "report-general-ledger",
+    "report-guest-book",
+    "report-mutation-goods",
+    "report-profit-loss",
+    "report-stock",
+    "report-stock-valuation",
+    "report-trial-balance",
+    "request-cogs",
+    "role-manage",
+    "sales",
+    "sales-category",
+    "sales-down-payment",
+    "sales-invoice",
+    "sales-payment",
+    "sales-return",
+    "sales-return-in",
+    "sales-sample",
+    "sales-sample-payment",
+    "sales-target",
+    "schedule-filling",
+    "schedule-mixing",
+    "schedule-packaging",
+    "supplier-category-manage",
+    "supplier-manage",
+    "user-manage",
+    "warehouse-access-manage",
+    "warehouse-manage"
+  ],
+  "all_unique_dashboard_modules": [
+    "Buku Tamu",
+    "BusDev",
+    "Client Produksi",
+    "Client RO",
+    "Client Sample",
+    "Digital Marketing",
+    "Eksekutif",
+    "Gudang",
+    "HR",
+    "Jadwal Produksi",
+    "Keuangan",
+    "Legalitas",
+    "Lost",
+    "Notifikasi",
+    "Pelanggan",
+    "Penjualan Barang",
+    "Penjualan Sample",
+    "Produksi",
+    "Purchasing",
+    "Realisasi Produksi",
+    "RnD",
+    "Sample"
+  ],
+  "password_hashing_evidence": {
+    "scheme": "unknown_from_dom (DB not exposed)",
+    "candidate_algorithms": [
+      "bcrypt ($2y$ prefix) — common in CodeIgniter with password_hash() default",
+      "MD5 (legacy CI has md5 helper)",
+      "SHA1"
+    ],
+    "evidence": [
+      "CodeIgniter 3.x framework (ci_session cookie, csrf_gs field convention)",
+      "No client-side hashing JS observed in login.html (password sent plaintext over HTTPS)",
+      "Strong password client-side validator (regex /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@#$%&])(.{8,20}$)/) — UI-only",
+      "Settings page exposes app name, version=2.0.0, recaptcha keys, copyright, copyrightUrl only — no password policy / session timeout in admin settings"
+    ]
+  },
+  "password_policy_evidence": {
+    "min_length": 8,
+    "max_length": 20,
+    "requires": {
+      "uppercase": true,
+      "lowercase": true,
+      "digit": true,
+      "special_chars_allowed": "@#$%&"
+    },
+    "evidence": "JS validator strong_password method on user-manage/create page and account page"
+  },
+  "session_config": {
+    "cookie_name_session": "ci_session",
+    "cookie_name_csrf": "csrf_cookie_gs",
+    "csrf_form_field": "csrf_gs",
+    "remember_me_checkbox": "remember=1",
+    "recaptcha_v2": "grecaptcha (site key from setting page)",
+    "recaptcha_site_key": "6LdkxfMpAAAAADsmqCk-NXoVFymJ9RN5VesPdWvt",
+    "recaptcha_secret_key": "6LdkxfMpAAAAADd_a5ui_1kipwo6T3DSGEAiCu3G",
+    "framework": "CodeIgniter 3.x (ci_session cookie, csrf_gs field, csrf_cookie_gs cookie — matches CI3 CSRF regeneration pattern)",
+    "login_post_redirect": "303 to / (dashboard)",
+    "session_cookie_httponly": true,
+    "session_cookie_secure_flag": false,
+    "cookie_expiry_hints": "ci_session expiry ~10 hours (Unix 1789566589 = 2026-09-17 04:43 UTC; logged in at ~18:43 local)",
+    "password_reset_link_visible": "/auth/forgot (accessible only when logged out; redirects to / when authenticated)"
+  },
+  "audit_log_columns": [
+    "timestamp",
+    "user_name",
+    "user_email",
+    "module",
+    "action",
+    "description",
+    "ip_address"
+  ],
+  "audit_log_modules": [
+    "User",
+    "Role",
+    "Account",
+    "Setting",
+    "Auth",
+    "Formulation",
+    "Coa",
+    "Warehouse",
+    "Goods",
+    "Purchase",
+    "Supplier",
+    "Customer",
+    "Checklist",
+    "Sales",
+    "Leads"
+  ],
+  "audit_log_actions": [
+    "View",
+    "Create",
+    "Update"
+  ],
+  "audit_log_retention_hints": "Activity log page rendered 4,989 rows in single HTML load — no date filter in URL; long retention (legacy ERP convention: never purge)",
+  "audit_log_visible_rows": 4989
+}

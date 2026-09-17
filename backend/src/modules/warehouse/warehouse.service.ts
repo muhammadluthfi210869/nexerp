@@ -1432,12 +1432,18 @@ export class WarehouseService {
       }
 
       // Sum qtyBagus / qtyReject from inbound items per material for PO update
-      const qtyByMaterial = new Map<string, { bagus: number; reject: number }>();
+      const qtyByMaterial = new Map<
+        string,
+        { bagus: number; reject: number }
+      >();
       for (const item of inbound.items) {
         const isReject = item.qcStatus === 'REJECT';
         const good = isReject ? 0 : Number(item.qtyActual);
         const reject = isReject ? Number(item.qtyActual) : 0;
-        const cur = qtyByMaterial.get(item.materialId) ?? { bagus: 0, reject: 0 };
+        const cur = qtyByMaterial.get(item.materialId) ?? {
+          bagus: 0,
+          reject: 0,
+        };
         qtyByMaterial.set(item.materialId, {
           bagus: cur.bagus + good,
           reject: cur.reject + reject,

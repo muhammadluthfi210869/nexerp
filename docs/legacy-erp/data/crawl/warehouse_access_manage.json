@@ -1,0 +1,28 @@
+{
+  "url": "/warehouse-access-manage",
+  "type": "list",
+  "file": "warehouse_access_manage.html",
+  "title": "GsERP KIL - Hak Akses Gudang",
+  "forms": [],
+  "tables": [
+    {
+      "index": 1,
+      "headers": [
+        "#",
+        "Nama",
+        "Email",
+        "Nomor Telepon",
+        "Hak Akses",
+        "Gudang",
+        "#"
+      ],
+      "rowCount": 46
+    }
+  ],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [
+    "https://kil.gserp.id/warehouse-access-manage/detail"
+  ],
+  "notes": []
+}

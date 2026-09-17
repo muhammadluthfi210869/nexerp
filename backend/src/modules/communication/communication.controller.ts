@@ -106,7 +106,11 @@ export class CommunicationController {
     @Param('id') replyId: string,
     @Body() dto: AddMentionDto,
   ) {
-    return this.service.addMention(replyId, dto.mentionedUserId, req.user.userId);
+    return this.service.addMention(
+      replyId,
+      dto.mentionedUserId,
+      req.user.userId,
+    );
   }
 
   // ---- ATTACHMENTS ----
@@ -123,7 +127,8 @@ export class CommunicationController {
     @Param('id') threadId: string,
     @UploadedFile() file: Express.Multer.File | undefined,
   ) {
-    if (!file) throw new BadRequestException('File wajib diupload (field: file)');
+    if (!file)
+      throw new BadRequestException('File wajib diupload (field: file)');
     return this.service.attachFile({
       threadId,
       uploadedById: req.user.userId,
@@ -147,7 +152,8 @@ export class CommunicationController {
     @Param('id') replyId: string,
     @UploadedFile() file: Express.Multer.File | undefined,
   ) {
-    if (!file) throw new BadRequestException('File wajib diupload (field: file)');
+    if (!file)
+      throw new BadRequestException('File wajib diupload (field: file)');
     return this.service.attachFile({
       replyId,
       uploadedById: req.user.userId,

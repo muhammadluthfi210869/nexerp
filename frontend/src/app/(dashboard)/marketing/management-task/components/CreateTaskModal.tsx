@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Plus, Check, Link2, Sparkles } from "lucide-react";
 import { DnaModal, DnaButton } from "@/components/dna";
 import { DnaDaysLeftChip } from "@/components/dna/DnaExtras";
@@ -29,9 +29,27 @@ export default function CreateTaskModal({
 }: CreateTaskModalProps) {
   const toast = useDnaToast();
   const canManage = viewer.roles.some((role) => ["SUPER_ADMIN", "HEAD_OPS", "MARKETING"].includes(role));
+  const viewerName = (viewer.name || viewer.email?.split('@')[0] || '').toLowerCase();
+  const isRevita = viewerName.includes('revita') || canManage;
+  const isRahmat = viewerName.includes('rahmat');
+
   const [brands, setBrands] = useState<MarketingBrand[]>([]);
   const [projects, setProjects] = useState<MarketingProject[]>([]);
   const [members, setMembers] = useState<MarketingTeamMember[]>([]);
+
+  const selectableMembers: MarketingTeamMember[] = useMemo(() => {
+    if (isRevita) {
+      return members.filter((m) => m.userId);
+    }
+    if (isRahmat) {
+      return members.filter((m) => {
+        const n = m.name.toLowerCase();
+        return (n.includes('rahmat') || n.includes('zarkasi') || n.includes('gusti')) && Boolean(m.userId);
+      });
+    }
+    const filtered = members.filter((m) => m.userId === viewer.id || m.name.toLowerCase() === viewerName);
+    return filtered.length > 0 ? filtered : [{ id: viewer.id, userId: viewer.id, name: viewer.name ?? "Saya", role: "Digital Marketing" }];
+  }, [members, isRevita, isRahmat, viewer.id, viewerName]);
   const [submitting, setSubmitting] = useState(false);
   const [referenceDataError, setReferenceDataError] = useState<string | null>(null);
 
@@ -63,7 +81,14 @@ export default function CreateTaskModal({
         setMembers(loadedMembers);
         if (loadedBrands.length > 0 && !brandId && !initialTask) setBrandId(loadedBrands[0].id);
         if (loadedProjects.items.length > 0 && !projectId && !initialTask) setProjectId(loadedProjects.items[0].id);
-        if (!initialTask && (!defaultAssigneeId || !canManage)) setAssigneeId(viewer.id);
+        if (!initialTask) {
+          if (defaultAssigneeId) {
+            const isAllowed = isRevita || canManage || (isRahmat ? loadedMembers.some(m => (m.userId === defaultAssigneeId || m.id === defaultAssigneeId) && (m.name.toLowerCase().includes('gusti') || m.name.toLowerCase().includes('zarkasi') || m.name.toLowerCase().includes('rahmat'))) : defaultAssigneeId === viewer.id);
+            setAssigneeId(isAllowed ? defaultAssigneeId : viewer.id);
+          } else {
+            setAssigneeId(viewer.id);
+          }
+        }
       }).catch((error) => {
         setReferenceDataError(error instanceof Error ? error.message : "Data referensi tidak dapat dimuat.");
       });
@@ -249,8 +274,8 @@ export default function CreateTaskModal({
               onChange={(e) => setAssigneeId(e.target.value)}
               className="w-full h-10 px-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none text-xs font-semibold text-slate-800"
             >
-              {(canManage ? members.filter((m) => m.userId) : [{ id: viewer.id, userId: viewer.id, name: viewer.name ?? "Saya", role: "Digital Marketing" }]).map((m) => (
-                <option key={m.id} value={m.userId!}>
+              {selectableMembers.map((m) => (
+                <option key={m.id} value={m.userId || m.id}>
                   {m.name} — {m.role}
                 </option>
               ))}

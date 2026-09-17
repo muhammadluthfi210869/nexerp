@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 @Injectable()
@@ -76,7 +80,10 @@ export class FixedAssetsService {
       const existing = await this.prisma.fixedAsset.findUnique({
         where: { assetNumber },
       });
-      if (existing) throw new BadRequestException(`assetNumber ${assetNumber} already exists`);
+      if (existing)
+        throw new BadRequestException(
+          `assetNumber ${assetNumber} already exists`,
+        );
     }
 
     return this.prisma.fixedAsset.create({
@@ -112,7 +119,9 @@ export class FixedAssetsService {
     const asset = await this.prisma.fixedAsset.findUnique({ where: { id } });
     if (!asset) throw new NotFoundException(`Fixed asset ${id} not found`);
     if (asset.status !== 'ACTIVE') {
-      throw new BadRequestException(`Cannot update asset in status ${asset.status}`);
+      throw new BadRequestException(
+        `Cannot update asset in status ${asset.status}`,
+      );
     }
     return this.prisma.fixedAsset.update({ where: { id }, data: dto });
   }
@@ -129,9 +138,8 @@ export class FixedAssetsService {
     });
     if (!asset) throw new NotFoundException(`Fixed asset ${id} not found`);
 
-    const accumulated = asset.schedules.length > 0
-      ? Number(asset.schedules[0].accumulated)
-      : 0;
+    const accumulated =
+      asset.schedules.length > 0 ? Number(asset.schedules[0].accumulated) : 0;
     const bookValue = Number(asset.acquisitionCost) - accumulated;
 
     return {

@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsDateString, Min, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsDateString,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class CreateAdjustmentJournalDto {
   @ApiProperty({ example: '2026-09-01', description: 'Period (YYYY-MM-DD)' })
@@ -16,7 +23,10 @@ export class CreateAdjustmentJournalDto {
   @Min(1)
   totalAmount: number;
 
-  @ApiProperty({ example: ['https://storage/utility-bill.pdf'], required: false })
+  @ApiProperty({
+    example: ['https://storage/utility-bill.pdf'],
+    required: false,
+  })
   @IsOptional()
   @IsString({ each: true })
   attachmentUrls?: string[];

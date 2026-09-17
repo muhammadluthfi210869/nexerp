@@ -100,14 +100,16 @@ describe('FinanceService — Unit', () => {
 
   describe('verifyOrderPayment', () => {
     it('rejects an already verified sales order', async () => {
-      prisma.salesOrder.findUnique = jest.fn().mockResolvedValue({
+      const mockSo = {
         id: soId,
         status: 'LOCKED_ACTIVE',
         leadId: 'LEAD-1',
         totalAmount: 1000000,
         orderNumber: 'SO-001',
         lead: { id: 'LEAD-1' },
-      });
+      };
+      prisma.salesOrder.findUnique = jest.fn().mockResolvedValue(mockSo);
+      prisma.salesOrder.findFirst = jest.fn().mockResolvedValue(mockSo);
 
       await expect(
         service.verifyOrderPayment({

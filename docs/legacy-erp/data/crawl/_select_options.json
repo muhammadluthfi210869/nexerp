@@ -1,0 +1,6629 @@
+{
+  "customer_manage_create.html": {
+    "category": {
+      "name": "category",
+      "id": "category",
+      "options": [
+        {
+          "value": "1",
+          "text": "Calon Pelanggan"
+        },
+        {
+          "value": "2",
+          "text": "Pelanggan Sample"
+        },
+        {
+          "value": "3",
+          "text": "Pelanggan Produk"
+        },
+        {
+          "value": "4",
+          "text": "Pelanggan RO"
+        }
+      ]
+    },
+    "user": {
+      "name": "user",
+      "id": "user",
+      "options": [
+        {
+          "value": "1",
+          "text": "Super Admin"
+        },
+        {
+          "value": "2",
+          "text": "Fadilah Syahab"
+        },
+        {
+          "value": "3",
+          "text": "Achmad Bagir"
+        },
+        {
+          "value": "4",
+          "text": "Zaki"
+        },
+        {
+          "value": "5",
+          "text": "Fatimah Amira"
+        },
+        {
+          "value": "6",
+          "text": "Ribut Supriyono"
+        },
+        {
+          "value": "7",
+          "text": "Riyantita Tunjungsari"
+        },
+        {
+          "value": "8",
+          "text": "Muhammad Ghufron"
+        },
+        {
+          "value": "9",
+          "text": "Akhmad Ratriono Anggoro"
+        },
+        {
+          "value": "10",
+          "text": "Dicky Barkah"
+        },
+        {
+          "value": "11",
+          "text": "Keviana"
+        },
+        {
+          "value": "13",
+          "text": "Irma Safarina"
+        },
+        {
+          "value": "14",
+          "text": "Ekky Ilham"
+        },
+        {
+          "value": "15",
+          "text": "Irma Finance"
+        },
+        {
+          "value": "16",
+          "text": "Vira"
+        },
+        {
+          "value": "17",
+          "text": "Desy"
+        },
+        {
+          "value": "18",
+          "text": "Gabriella Maulidha"
+        },
+        {
+          "value": "19",
+          "text": "Nur Kholilah"
+        },
+        {
+          "value": "20",
+          "text": "Muhammad Ruhullah"
+        },
+        {
+          "value": "21",
+          "text": "salfa delia fernanda"
+        },
+        {
+          "value": "22",
+          "text": "Rudy Affandy"
+        },
+        {
+          "value": "23",
+          "text": "Yulia Esther"
+        },
+        {
+          "value": "24",
+          "text": "Ayu Anindya"
+        },
+        {
+          "value": "25",
+          "text": "Krisna Putra Ramadhani"
+        },
+        {
+          "value": "26",
+          "text": "Ciptaning"
+        },
+        {
+          "value": "27",
+          "text": "Panca"
+        },
+        {
+          "value": "28",
+          "text": "Diaz Muhammad Irsyadi"
+        },
+        {
+          "value": "29",
+          "text": "Edi Design"
+        },
+        {
+          "value": "30",
+          "text": "BRIAN BUDY CAHYONO"
+        },
+        {
+          "value": "31",
+          "text": "Lee Maychael"
+        },
+        {
+          "value": "32",
+          "text": "SHIRLEY IRMA JUNITA"
+        },
+        {
+          "value": "33",
+          "text": "Siti"
+        },
+        {
+          "value": "34",
+          "text": "Estisan Septyana Atwinda"
+        },
+        {
+          "value": "35",
+          "text": "Laksmi Diah Ahmada"
+        },
+        {
+          "value": "36",
+          "text": "Annisa Shalihah"
+        },
+        {
+          "value": "37",
+          "text": "Diva"
+        },
+        {
+          "value": "38",
+          "text": "Latifatus Cahya Ningtyas"
+        },
+        {
+          "value": "39",
+          "text": "Revita Yustianawati"
+        },
+        {
+          "value": "40",
+          "text": "Etika Citra Nuraisah"
+        },
+        {
+          "value": "41",
+          "text": "R.A Ami Wulandari Soedewo"
+        },
+        {
+          "value": "42",
+          "text": "Umar Nurbana"
+        },
+        {
+          "value": "43",
+          "text": "Siti Mutmainah"
+        },
+        {
+          "value": "44",
+          "text": "Jessica Dwipuspita"
+        },
+        {
+          "value": "45",
+          "text": "Eunike Putriningtyas"
+        },
+        {
+          "value": "46",
+          "text": "Edvin Porvianto Sutedjo"
+        }
+      ]
+    },
+    "province": {
+      "name": "province",
+      "id": "province",
+      "options": [
+        {
+          "value": "1",
+          "text": "Aceh"
+        },
+        {
+          "value": "2",
+          "text": "Sumatera Utara"
+        },
+        {
+          "value": "3",
+          "text": "Sumatera Barat"
+        },
+        {
+          "value": "4",
+          "text": "Riau"
+        },
+        {
+          "value": "5",
+          "text": "Jambi"
+        },
+        {
+          "value": "6",
+          "text": "Sumatera Selatan"
+        },
+        {
+          "value": "7",
+          "text": "Bengkulu"
+        },
+        {
+          "value": "8",
+          "text": "Lampung"
+        },
+        {
+          "value": "9",
+          "text": "Kepulauan Bangka Belitung"
+        },
+        {
+          "value": "10",
+          "text": "Kepulauan Riau"
+        },
+        {
+          "value": "11",
+          "text": "DKI Jakarta"
+        },
+        {
+          "value": "12",
+          "text": "Jawa Barat"
+        },
+        {
+          "value": "13",
+          "text": "Jawa Tengah"
+        },
+        {
+          "value": "14",
+          "text": "DI Yogyakarta"
+        },
+        {
+          "value": "15",
+          "text": "Jawa Timur"
+        },
+        {
+          "value": "16",
+          "text": "Banten"
+        },
+        {
+          "value": "17",
+          "text": "Bali"
+        },
+        {
+          "value": "18",
+          "text": "Nusa Tenggara Barat"
+        },
+        {
+          "value": "19",
+          "text": "Nusa Tenggara Timur"
+        },
+        {
+          "value": "20",
+          "text": "Kalimantan Barat"
+        },
+        {
+          "value": "21",
+          "text": "Kalimantan Tengah"
+        },
+        {
+          "value": "22",
+          "text": "Kalimantan Selatan"
+        },
+        {
+          "value": "23",
+          "text": "Kalimantan Timur"
+        },
+        {
+          "value": "24",
+          "text": "Kalimantan Utara"
+        },
+        {
+          "value": "25",
+          "text": "Sulawesi Utara"
+        },
+        {
+          "value": "26",
+          "text": "Sulawesi Tengah"
+        },
+        {
+          "value": "27",
+          "text": "Sulawesi Selatan"
+        },
+        {
+          "value": "28",
+          "text": "Sulawesi Tenggara"
+        },
+        {
+          "value": "29",
+          "text": "Gorontalo"
+        },
+        {
+          "value": "30",
+          "text": "Sulawesi Barat"
+        },
+        {
+          "value": "31",
+          "text": "Maluku"
+        },
+        {
+          "value": "32",
+          "text": "Maluku Utara"
+        },
+        {
+          "value": "33",
+          "text": "Papua"
+        },
+        {
+          "value": "34",
+          "text": "Papua Barat"
+        }
+      ]
+    },
+    "city": {
+      "name": "city",
+      "id": "city",
+      "options": [
+        {
+          "value": "",
+          "text": "Pilih provinsi terlebih dahulu"
+        }
+      ]
+    }
+  },
+  "supplier_manage_create.html": {
+    "category": {
+      "name": "category",
+      "id": "category",
+      "options": [
+        {
+          "value": "1",
+          "text": "Bahan Baku"
+        },
+        {
+          "value": "2",
+          "text": "Kemasan Primer"
+        },
+        {
+          "value": "3",
+          "text": "Kemasan Sekunder"
+        },
+        {
+          "value": "4",
+          "text": "Bahan Pembantu"
+        }
+      ]
+    },
+    "province": {
+      "name": "province",
+      "id": "province",
+      "options": [
+        {
+          "value": "1",
+          "text": "Aceh"
+        },
+        {
+          "value": "2",
+          "text": "Sumatera Utara"
+        },
+        {
+          "value": "3",
+          "text": "Sumatera Barat"
+        },
+        {
+          "value": "4",
+          "text": "Riau"
+        },
+        {
+          "value": "5",
+          "text": "Jambi"
+        },
+        {
+          "value": "6",
+          "text": "Sumatera Selatan"
+        },
+        {
+          "value": "7",
+          "text": "Bengkulu"
+        },
+        {
+          "value": "8",
+          "text": "Lampung"
+        },
+        {
+          "value": "9",
+          "text": "Kepulauan Bangka Belitung"
+        },
+        {
+          "value": "10",
+          "text": "Kepulauan Riau"
+        },
+        {
+          "value": "11",
+          "text": "DKI Jakarta"
+        },
+        {
+          "value": "12",
+          "text": "Jawa Barat"
+        },
+        {
+          "value": "13",
+          "text": "Jawa Tengah"
+        },
+        {
+          "value": "14",
+          "text": "DI Yogyakarta"
+        },
+        {
+          "value": "15",
+          "text": "Jawa Timur"
+        },
+        {
+          "value": "16",
+          "text": "Banten"
+        },
+        {
+          "value": "17",
+          "text": "Bali"
+        },
+        {
+          "value": "18",
+          "text": "Nusa Tenggara Barat"
+        },
+        {
+          "value": "19",
+          "text": "Nusa Tenggara Timur"
+        },
+        {
+          "value": "20",
+          "text": "Kalimantan Barat"
+        },
+        {
+          "value": "21",
+          "text": "Kalimantan Tengah"
+        },
+        {
+          "value": "22",
+          "text": "Kalimantan Selatan"
+        },
+        {
+          "value": "23",
+          "text": "Kalimantan Timur"
+        },
+        {
+          "value": "24",
+          "text": "Kalimantan Utara"
+        },
+        {
+          "value": "25",
+          "text": "Sulawesi Utara"
+        },
+        {
+          "value": "26",
+          "text": "Sulawesi Tengah"
+        },
+        {
+          "value": "27",
+          "text": "Sulawesi Selatan"
+        },
+        {
+          "value": "28",
+          "text": "Sulawesi Tenggara"
+        },
+        {
+          "value": "29",
+          "text": "Gorontalo"
+        },
+        {
+          "value": "30",
+          "text": "Sulawesi Barat"
+        },
+        {
+          "value": "31",
+          "text": "Maluku"
+        },
+        {
+          "value": "32",
+          "text": "Maluku Utara"
+        },
+        {
+          "value": "33",
+          "text": "Papua"
+        },
+        {
+          "value": "34",
+          "text": "Papua Barat"
+        }
+      ]
+    },
+    "city": {
+      "name": "city",
+      "id": "city",
+      "options": [
+        {
+          "value": "",
+          "text": "Pilih provinsi terlebih dahulu"
+        }
+      ]
+    }
+  },
+  "goods_manage_create.html": {
+    "category": {
+      "name": "category",
+      "id": "category",
+      "options": [
+        {
+          "value": "1",
+          "text": "Bahan Baku"
+        },
+        {
+          "value": "2",
+          "text": "Barang Ruahan"
+        },
+        {
+          "value": "3",
+          "text": "Barang Setengah Jadi"
+        },
+        {
+          "value": "4",
+          "text": "Barang Pembantu"
+        },
+        {
+          "value": "5",
+          "text": "Kemasan Primer"
+        },
+        {
+          "value": "6",
+          "text": "Kemasan Sekunder"
+        },
+        {
+          "value": "7",
+          "text": "Barang Jadi"
+        }
+      ]
+    },
+    "sub_category": {
+      "name": "sub_category",
+      "id": "sub_category",
+      "options": []
+    },
+    "unit": {
+      "name": "unit",
+      "id": "unit",
+      "options": [
+        {
+          "value": "1",
+          "text": "pcs"
+        },
+        {
+          "value": "2",
+          "text": "gr"
+        },
+        {
+          "value": "3",
+          "text": "ml"
+        }
+      ]
+    },
+    "coa_1": {
+      "name": "coa_1",
+      "id": "coa_1",
+      "options": [
+        {
+          "value": "2",
+          "text": "11111 - Kas Utama"
+        },
+        {
+          "value": "3",
+          "text": "11112 - Kas Kecil"
+        },
+        {
+          "value": "5",
+          "text": "11201 - Investasi"
+        },
+        {
+          "value": "7",
+          "text": "11212 - BCA (2640351589)"
+        },
+        {
+          "value": "9",
+          "text": "11221 - Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "10",
+          "text": "11311 - Ayat Silang"
+        },
+        {
+          "value": "12",
+          "text": "11411 - Piutang Dagang"
+        },
+        {
+          "value": "13",
+          "text": "11412 - Uang Muka pembelian"
+        },
+        {
+          "value": "15",
+          "text": "11511 - Piutang Karyawan"
+        },
+        {
+          "value": "16",
+          "text": "11517 - Piutang Pihak Ketiga-Lainnya"
+        },
+        {
+          "value": "18",
+          "text": "11611 - Persediaan Bahan Baku"
+        },
+        {
+          "value": "19",
+          "text": "11612 - Persediaan Bahan Pembantu"
+        },
+        {
+          "value": "20",
+          "text": "11615 - Persediaan Setengah Jadi"
+        },
+        {
+          "value": "21",
+          "text": "11616 - Persediaan Barang Jadi"
+        },
+        {
+          "value": "22",
+          "text": "11617 - Persediaan Barang Lain"
+        },
+        {
+          "value": "23",
+          "text": "11618 - Persediaan Dalam Perjalanan"
+        },
+        {
+          "value": "25",
+          "text": "11711 - Uang Muka PPh 22"
+        },
+        {
+          "value": "26",
+          "text": "11712 - Uang Muka PPh 23"
+        },
+        {
+          "value": "27",
+          "text": "11713 - Uang Muka PPh 25"
+        },
+        {
+          "value": "28",
+          "text": "11714 - Piutang PPh 28"
+        },
+        {
+          "value": "29",
+          "text": "11715 - PPN Masukan"
+        },
+        {
+          "value": "31",
+          "text": "11811 - Uang Muka Pembelian Aktiva"
+        },
+        {
+          "value": "32",
+          "text": "11812 - Uang Muka Pembelian Lain"
+        },
+        {
+          "value": "34",
+          "text": "11911 - Iklan Dibayar Dimuka"
+        },
+        {
+          "value": "35",
+          "text": "11912 - Asuransi Dibayar Dimuka"
+        },
+        {
+          "value": "36",
+          "text": "11913 - Sewa Dibayar Dimuka"
+        },
+        {
+          "value": "38",
+          "text": "12111 - Tanah"
+        },
+        {
+          "value": "39",
+          "text": "12112 - Bangunan Kantor"
+        },
+        {
+          "value": "40",
+          "text": "12113 - Bangunan Pabrik"
+        },
+        {
+          "value": "41",
+          "text": "12114 - Inventaris Kantor"
+        },
+        {
+          "value": "42",
+          "text": "12115 - Inventaris Pabrik"
+        },
+        {
+          "value": "43",
+          "text": "12116 - Kendaraan"
+        },
+        {
+          "value": "44",
+          "text": "12117 - Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "46",
+          "text": "12211 - Akum Peny Bangunan Kantor"
+        },
+        {
+          "value": "47",
+          "text": "12212 - Akum Peny Bangunan Pabrik"
+        },
+        {
+          "value": "48",
+          "text": "12213 - Akum Peny Inventaris Kantor"
+        },
+        {
+          "value": "49",
+          "text": "12214 - Akum Peny Inventaris Pabrik"
+        },
+        {
+          "value": "50",
+          "text": "12215 - Akum Peny Kendaraan"
+        },
+        {
+          "value": "51",
+          "text": "12216 - Akum Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "53",
+          "text": "21111 - Hutang Dagang"
+        },
+        {
+          "value": "54",
+          "text": "21113 - Uang Muka Penjualan"
+        },
+        {
+          "value": "56",
+          "text": "21211 - Uang Muka Ongkir"
+        },
+        {
+          "value": "58",
+          "text": "21311 - Hutang PPh 21"
+        },
+        {
+          "value": "59",
+          "text": "21312 - Hutang PPh 22"
+        },
+        {
+          "value": "60",
+          "text": "21313 - Hutang PPh 23"
+        },
+        {
+          "value": "61",
+          "text": "21314 - Hutang PPh 25"
+        },
+        {
+          "value": "62",
+          "text": "21315 - Hutang PPh 4 (2)"
+        },
+        {
+          "value": "63",
+          "text": "21316 - Hutang PPh 29"
+        },
+        {
+          "value": "64",
+          "text": "21317 - PPN Keluaran"
+        },
+        {
+          "value": "65",
+          "text": "21318 - PPN Keluaran Yang Diperhitungkan"
+        },
+        {
+          "value": "67",
+          "text": "21411 - Biaya YMHD Gaji"
+        },
+        {
+          "value": "68",
+          "text": "21412 - Biaya YMHD Telp, Listrik, Air dan Internet"
+        },
+        {
+          "value": "69",
+          "text": "21413 - Biaya YMHD Lain"
+        },
+        {
+          "value": "71",
+          "text": "21511 - Hutang Pemegang Saham"
+        },
+        {
+          "value": "72",
+          "text": "21512 - Hutang Pihak Ketiga"
+        },
+        {
+          "value": "73",
+          "text": "21513 - Hutang Lain"
+        },
+        {
+          "value": "74",
+          "text": "21514 - Hutang Dagang Yang Belum Difakturkan"
+        },
+        {
+          "value": "75",
+          "text": "21515 - Hutang Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "77",
+          "text": "31111 - Modal Saham"
+        },
+        {
+          "value": "79",
+          "text": "31211 - Opening Balance Equity"
+        },
+        {
+          "value": "80",
+          "text": "31212 - Laba Ditahan"
+        },
+        {
+          "value": "81",
+          "text": "31213 - Deviden"
+        },
+        {
+          "value": "83",
+          "text": "41111 - Penjualan Kosmetik"
+        },
+        {
+          "value": "84",
+          "text": "41113 - Penjualan Sampel"
+        },
+        {
+          "value": "85",
+          "text": "41114 - Pendapatan Ongkir"
+        },
+        {
+          "value": "87",
+          "text": "41211 - Retur Penjualan"
+        },
+        {
+          "value": "88",
+          "text": "41212 - Potongan Penjualan"
+        },
+        {
+          "value": "90",
+          "text": "51111 - Harga Pokok Barang Jadi"
+        },
+        {
+          "value": "91",
+          "text": "51112 - Harga Pokok Bahan Baku"
+        },
+        {
+          "value": "92",
+          "text": "51113 - Harga Pokok Bahan Pembantu"
+        },
+        {
+          "value": "93",
+          "text": "51114 - Pemakaian Bahan Baku"
+        },
+        {
+          "value": "94",
+          "text": "51115 - Pemakaian Bahan Pembantu"
+        },
+        {
+          "value": "95",
+          "text": "51116 - Tenaga Kerja Pabrik"
+        },
+        {
+          "value": "96",
+          "text": "51117 - Listrik Pabrik"
+        },
+        {
+          "value": "97",
+          "text": "51118 - Air Pabrik"
+        },
+        {
+          "value": "98",
+          "text": "51119 - Beban Peny Bangunan Pabrik"
+        },
+        {
+          "value": "99",
+          "text": "51120 - Beban Peny Inventaris Pabrik"
+        },
+        {
+          "value": "100",
+          "text": "51121 - Beban Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "101",
+          "text": "51122 - Overhead Pabrik Lain"
+        },
+        {
+          "value": "102",
+          "text": "51123 - Variance"
+        },
+        {
+          "value": "103",
+          "text": "51124 - Koreksi Stock"
+        },
+        {
+          "value": "104",
+          "text": "51125 - Beban Laboratorium"
+        },
+        {
+          "value": "105",
+          "text": "51126 - Koreksi Stock Retur Rusak"
+        },
+        {
+          "value": "107",
+          "text": "71111 - Pendapatan Jasa Giro"
+        },
+        {
+          "value": "108",
+          "text": "71112 - Penjualan Aktiva"
+        },
+        {
+          "value": "109",
+          "text": "71113 - Pendapatan Lain-Lain"
+        },
+        {
+          "value": "111",
+          "text": "61111 - Beban Komisi"
+        },
+        {
+          "value": "112",
+          "text": "61115 - Beban Pendaftaran BPOM"
+        },
+        {
+          "value": "113",
+          "text": "61116 - Beban Pendaftaran Merk"
+        },
+        {
+          "value": "114",
+          "text": "61117 - Beban Digital Marketing"
+        },
+        {
+          "value": "115",
+          "text": "61118 - Beban Iklan Promosi Penjualan"
+        },
+        {
+          "value": "116",
+          "text": "61119 - Beban Angkut"
+        },
+        {
+          "value": "117",
+          "text": "61120 - Beban Pameran"
+        },
+        {
+          "value": "118",
+          "text": "61121 - Beban Penelitian &amp; Pengembangan"
+        },
+        {
+          "value": "119",
+          "text": "61122 - Beban Pendaftaran HSA"
+        },
+        {
+          "value": "120",
+          "text": "61123 - Beban Pembuatan Video"
+        },
+        {
+          "value": "121",
+          "text": "61124 - Beban Bensin &amp; Solar Gudang"
+        },
+        {
+          "value": "122",
+          "text": "61125 - Beban Perjalanan Dinas Luar Kota"
+        },
+        {
+          "value": "123",
+          "text": "61126 - Beban Perjalanan Dinas Luar Pulau"
+        },
+        {
+          "value": "124",
+          "text": "61127 - Beban Penghapusan Piutang"
+        },
+        {
+          "value": "126",
+          "text": "62111 - Beban Gaji"
+        },
+        {
+          "value": "127",
+          "text": "62112 - Beban Lembur"
+        },
+        {
+          "value": "128",
+          "text": "62113 - Beban Insentif Karyawan"
+        },
+        {
+          "value": "129",
+          "text": "62114 - Beban Bonus &amp; Gratifikasi"
+        },
+        {
+          "value": "130",
+          "text": "62115 - Beban THR"
+        },
+        {
+          "value": "131",
+          "text": "62116 - Beban Jamsostek /Astek"
+        },
+        {
+          "value": "132",
+          "text": "62117 - Beban Honorarium"
+        },
+        {
+          "value": "133",
+          "text": "62118 - Beban Tunjangan Makan"
+        },
+        {
+          "value": "134",
+          "text": "62119 - Beban Tunjangan Pengobatan"
+        },
+        {
+          "value": "135",
+          "text": "62120 - Beban Tunjangan Transportasi"
+        },
+        {
+          "value": "136",
+          "text": "62121 - Beban Tunjangan Perumahan"
+        },
+        {
+          "value": "137",
+          "text": "62122 - Beban Kenikmatan Lainnya"
+        },
+        {
+          "value": "138",
+          "text": "62123 - Beban Honor Manajemen"
+        },
+        {
+          "value": "139",
+          "text": "62124 - Beban Honor Tenaga Ahli Lainnya"
+        },
+        {
+          "value": "140",
+          "text": "62125 - Beban Pos dan Materai"
+        },
+        {
+          "value": "141",
+          "text": "62126 - Beban Perijinan"
+        },
+        {
+          "value": "142",
+          "text": "62127 - Beban Retribusi"
+        },
+        {
+          "value": "143",
+          "text": "62128 - Beban Jamuan Entertaint"
+        },
+        {
+          "value": "144",
+          "text": "62129 - Beban Sumbangan"
+        },
+        {
+          "value": "145",
+          "text": "62130 - Beban Listrik"
+        },
+        {
+          "value": "146",
+          "text": "62131 - Beban Air"
+        },
+        {
+          "value": "147",
+          "text": "62132 - Beban Gas Negara/LPG"
+        },
+        {
+          "value": "148",
+          "text": "62133 - Beban Telp, Fax dan Internet"
+        },
+        {
+          "value": "149",
+          "text": "62134 - Beban Bensin &amp; Solar"
+        },
+        {
+          "value": "150",
+          "text": "62135 - Beban Pengiriman Surat &amp; Paket"
+        },
+        {
+          "value": "151",
+          "text": "62136 - Beban Stationery"
+        },
+        {
+          "value": "152",
+          "text": "62137 - Beban Pendidikan dan Seminar"
+        },
+        {
+          "value": "153",
+          "text": "62138 - Beban Rapat"
+        },
+        {
+          "value": "154",
+          "text": "62139 - Beban Asuransi"
+        },
+        {
+          "value": "155",
+          "text": "62140 - Beban Admin Bank"
+        },
+        {
+          "value": "156",
+          "text": "62141 - Beban Provisi"
+        },
+        {
+          "value": "157",
+          "text": "62142 - Beban Sewa Kendaraan"
+        },
+        {
+          "value": "158",
+          "text": "62143 - Beban Amortisasi Sewa"
+        },
+        {
+          "value": "159",
+          "text": "62144 - Beban Pajak"
+        },
+        {
+          "value": "160",
+          "text": "62145 - Beban Gedung"
+        },
+        {
+          "value": "161",
+          "text": "62146 - Beban Kendaraan"
+        },
+        {
+          "value": "162",
+          "text": "62147 - Beban Spare Part (Non PPh 23)"
+        },
+        {
+          "value": "163",
+          "text": "62148 - Beban Peny Bangunan Kantor"
+        },
+        {
+          "value": "164",
+          "text": "62149 - Beban Peny Inventaris Kantor"
+        },
+        {
+          "value": "165",
+          "text": "62150 - Beban Penyusutan Kendaraan"
+        },
+        {
+          "value": "166",
+          "text": "62151 - Beban PBB"
+        },
+        {
+          "value": "167",
+          "text": "62152 - Beban Perbaikan Inventaris"
+        },
+        {
+          "value": "168",
+          "text": "62153 - Beban Pajak B3"
+        },
+        {
+          "value": "169",
+          "text": "62154 - Beban Sewa"
+        },
+        {
+          "value": "170",
+          "text": "62155 - Beban PPh 21"
+        },
+        {
+          "value": "171",
+          "text": "62156 - Beban Direksi"
+        },
+        {
+          "value": "172",
+          "text": "62157 - Beban Tenaga Kerja Outsoursing"
+        },
+        {
+          "value": "173",
+          "text": "62158 - Beban Pinjam Pakai"
+        },
+        {
+          "value": "175",
+          "text": "72111 - Kurang lebih Bayar"
+        },
+        {
+          "value": "176",
+          "text": "72112 - Pajak Jasa Giro"
+        },
+        {
+          "value": "177",
+          "text": "72113 - Beban Bunga Bank"
+        },
+        {
+          "value": "178",
+          "text": "72114 - Beban Bunga Pihak Ketiga"
+        },
+        {
+          "value": "179",
+          "text": "72115 - Beban Selisih Kurs"
+        },
+        {
+          "value": "180",
+          "text": "72116 - Beban Lainnya"
+        },
+        {
+          "value": "181",
+          "text": "72117 - Beban Selisih Tagihan"
+        },
+        {
+          "value": "182",
+          "text": "72118 - Beban Supplies"
+        },
+        {
+          "value": "184",
+          "text": "81111 - Beban Pajak Penghasilan"
+        },
+        {
+          "value": "185",
+          "text": "51128 - Harga Pokok Sample Kosmetik"
+        },
+        {
+          "value": "186",
+          "text": "51127 - Beban Import"
+        },
+        {
+          "value": "187",
+          "text": "61114 - Beban Proofing Packing"
+        },
+        {
+          "value": "188",
+          "text": "71114 - Potongan Pembayaran"
+        },
+        {
+          "value": "189",
+          "text": "21516 - Hutang Sewa"
+        }
+      ]
+    },
+    "coa_2": {
+      "name": "coa_2",
+      "id": "coa_2",
+      "options": [
+        {
+          "value": "2",
+          "text": "11111 - Kas Utama"
+        },
+        {
+          "value": "3",
+          "text": "11112 - Kas Kecil"
+        },
+        {
+          "value": "5",
+          "text": "11201 - Investasi"
+        },
+        {
+          "value": "7",
+          "text": "11212 - BCA (2640351589)"
+        },
+        {
+          "value": "9",
+          "text": "11221 - Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "10",
+          "text": "11311 - Ayat Silang"
+        },
+        {
+          "value": "12",
+          "text": "11411 - Piutang Dagang"
+        },
+        {
+          "value": "13",
+          "text": "11412 - Uang Muka pembelian"
+        },
+        {
+          "value": "15",
+          "text": "11511 - Piutang Karyawan"
+        },
+        {
+          "value": "16",
+          "text": "11517 - Piutang Pihak Ketiga-Lainnya"
+        },
+        {
+          "value": "18",
+          "text": "11611 - Persediaan Bahan Baku"
+        },
+        {
+          "value": "19",
+          "text": "11612 - Persediaan Bahan Pembantu"
+        },
+        {
+          "value": "20",
+          "text": "11615 - Persediaan Setengah Jadi"
+        },
+        {
+          "value": "21",
+          "text": "11616 - Persediaan Barang Jadi"
+        },
+        {
+          "value": "22",
+          "text": "11617 - Persediaan Barang Lain"
+        },
+        {
+          "value": "23",
+          "text": "11618 - Persediaan Dalam Perjalanan"
+        },
+        {
+          "value": "25",
+          "text": "11711 - Uang Muka PPh 22"
+        },
+        {
+          "value": "26",
+          "text": "11712 - Uang Muka PPh 23"
+        },
+        {
+          "value": "27",
+          "text": "11713 - Uang Muka PPh 25"
+        },
+        {
+          "value": "28",
+          "text": "11714 - Piutang PPh 28"
+        },
+        {
+          "value": "29",
+          "text": "11715 - PPN Masukan"
+        },
+        {
+          "value": "31",
+          "text": "11811 - Uang Muka Pembelian Aktiva"
+        },
+        {
+          "value": "32",
+          "text": "11812 - Uang Muka Pembelian Lain"
+        },
+        {
+          "value": "34",
+          "text": "11911 - Iklan Dibayar Dimuka"
+        },
+        {
+          "value": "35",
+          "text": "11912 - Asuransi Dibayar Dimuka"
+        },
+        {
+          "value": "36",
+          "text": "11913 - Sewa Dibayar Dimuka"
+        },
+        {
+          "value": "38",
+          "text": "12111 - Tanah"
+        },
+        {
+          "value": "39",
+          "text": "12112 - Bangunan Kantor"
+        },
+        {
+          "value": "40",
+          "text": "12113 - Bangunan Pabrik"
+        },
+        {
+          "value": "41",
+          "text": "12114 - Inventaris Kantor"
+        },
+        {
+          "value": "42",
+          "text": "12115 - Inventaris Pabrik"
+        },
+        {
+          "value": "43",
+          "text": "12116 - Kendaraan"
+        },
+        {
+          "value": "44",
+          "text": "12117 - Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "46",
+          "text": "12211 - Akum Peny Bangunan Kantor"
+        },
+        {
+          "value": "47",
+          "text": "12212 - Akum Peny Bangunan Pabrik"
+        },
+        {
+          "value": "48",
+          "text": "12213 - Akum Peny Inventaris Kantor"
+        },
+        {
+          "value": "49",
+          "text": "12214 - Akum Peny Inventaris Pabrik"
+        },
+        {
+          "value": "50",
+          "text": "12215 - Akum Peny Kendaraan"
+        },
+        {
+          "value": "51",
+          "text": "12216 - Akum Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "53",
+          "text": "21111 - Hutang Dagang"
+        },
+        {
+          "value": "54",
+          "text": "21113 - Uang Muka Penjualan"
+        },
+        {
+          "value": "56",
+          "text": "21211 - Uang Muka Ongkir"
+        },
+        {
+          "value": "58",
+          "text": "21311 - Hutang PPh 21"
+        },
+        {
+          "value": "59",
+          "text": "21312 - Hutang PPh 22"
+        },
+        {
+          "value": "60",
+          "text": "21313 - Hutang PPh 23"
+        },
+        {
+          "value": "61",
+          "text": "21314 - Hutang PPh 25"
+        },
+        {
+          "value": "62",
+          "text": "21315 - Hutang PPh 4 (2)"
+        },
+        {
+          "value": "63",
+          "text": "21316 - Hutang PPh 29"
+        },
+        {
+          "value": "64",
+          "text": "21317 - PPN Keluaran"
+        },
+        {
+          "value": "65",
+          "text": "21318 - PPN Keluaran Yang Diperhitungkan"
+        },
+        {
+          "value": "67",
+          "text": "21411 - Biaya YMHD Gaji"
+        },
+        {
+          "value": "68",
+          "text": "21412 - Biaya YMHD Telp, Listrik, Air dan Internet"
+        },
+        {
+          "value": "69",
+          "text": "21413 - Biaya YMHD Lain"
+        },
+        {
+          "value": "71",
+          "text": "21511 - Hutang Pemegang Saham"
+        },
+        {
+          "value": "72",
+          "text": "21512 - Hutang Pihak Ketiga"
+        },
+        {
+          "value": "73",
+          "text": "21513 - Hutang Lain"
+        },
+        {
+          "value": "74",
+          "text": "21514 - Hutang Dagang Yang Belum Difakturkan"
+        },
+        {
+          "value": "75",
+          "text": "21515 - Hutang Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "77",
+          "text": "31111 - Modal Saham"
+        },
+        {
+          "value": "79",
+          "text": "31211 - Opening Balance Equity"
+        },
+        {
+          "value": "80",
+          "text": "31212 - Laba Ditahan"
+        },
+        {
+          "value": "81",
+          "text": "31213 - Deviden"
+        },
+        {
+          "value": "83",
+          "text": "41111 - Penjualan Kosmetik"
+        },
+        {
+          "value": "84",
+          "text": "41113 - Penjualan Sampel"
+        },
+        {
+          "value": "85",
+          "text": "41114 - Pendapatan Ongkir"
+        },
+        {
+          "value": "87",
+          "text": "41211 - Retur Penjualan"
+        },
+        {
+          "value": "88",
+          "text": "41212 - Potongan Penjualan"
+        },
+        {
+          "value": "90",
+          "text": "51111 - Harga Pokok Barang Jadi"
+        },
+        {
+          "value": "91",
+          "text": "51112 - Harga Pokok Bahan Baku"
+        },
+        {
+          "value": "92",
+          "text": "51113 - Harga Pokok Bahan Pembantu"
+        },
+        {
+          "value": "93",
+          "text": "51114 - Pemakaian Bahan Baku"
+        },
+        {
+          "value": "94",
+          "text": "51115 - Pemakaian Bahan Pembantu"
+        },
+        {
+          "value": "95",
+          "text": "51116 - Tenaga Kerja Pabrik"
+        },
+        {
+          "value": "96",
+          "text": "51117 - Listrik Pabrik"
+        },
+        {
+          "value": "97",
+          "text": "51118 - Air Pabrik"
+        },
+        {
+          "value": "98",
+          "text": "51119 - Beban Peny Bangunan Pabrik"
+        },
+        {
+          "value": "99",
+          "text": "51120 - Beban Peny Inventaris Pabrik"
+        },
+        {
+          "value": "100",
+          "text": "51121 - Beban Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "101",
+          "text": "51122 - Overhead Pabrik Lain"
+        },
+        {
+          "value": "102",
+          "text": "51123 - Variance"
+        },
+        {
+          "value": "103",
+          "text": "51124 - Koreksi Stock"
+        },
+        {
+          "value": "104",
+          "text": "51125 - Beban Laboratorium"
+        },
+        {
+          "value": "105",
+          "text": "51126 - Koreksi Stock Retur Rusak"
+        },
+        {
+          "value": "107",
+          "text": "71111 - Pendapatan Jasa Giro"
+        },
+        {
+          "value": "108",
+          "text": "71112 - Penjualan Aktiva"
+        },
+        {
+          "value": "109",
+          "text": "71113 - Pendapatan Lain-Lain"
+        },
+        {
+          "value": "111",
+          "text": "61111 - Beban Komisi"
+        },
+        {
+          "value": "112",
+          "text": "61115 - Beban Pendaftaran BPOM"
+        },
+        {
+          "value": "113",
+          "text": "61116 - Beban Pendaftaran Merk"
+        },
+        {
+          "value": "114",
+          "text": "61117 - Beban Digital Marketing"
+        },
+        {
+          "value": "115",
+          "text": "61118 - Beban Iklan Promosi Penjualan"
+        },
+        {
+          "value": "116",
+          "text": "61119 - Beban Angkut"
+        },
+        {
+          "value": "117",
+          "text": "61120 - Beban Pameran"
+        },
+        {
+          "value": "118",
+          "text": "61121 - Beban Penelitian &amp; Pengembangan"
+        },
+        {
+          "value": "119",
+          "text": "61122 - Beban Pendaftaran HSA"
+        },
+        {
+          "value": "120",
+          "text": "61123 - Beban Pembuatan Video"
+        },
+        {
+          "value": "121",
+          "text": "61124 - Beban Bensin &amp; Solar Gudang"
+        },
+        {
+          "value": "122",
+          "text": "61125 - Beban Perjalanan Dinas Luar Kota"
+        },
+        {
+          "value": "123",
+          "text": "61126 - Beban Perjalanan Dinas Luar Pulau"
+        },
+        {
+          "value": "124",
+          "text": "61127 - Beban Penghapusan Piutang"
+        },
+        {
+          "value": "126",
+          "text": "62111 - Beban Gaji"
+        },
+        {
+          "value": "127",
+          "text": "62112 - Beban Lembur"
+        },
+        {
+          "value": "128",
+          "text": "62113 - Beban Insentif Karyawan"
+        },
+        {
+          "value": "129",
+          "text": "62114 - Beban Bonus &amp; Gratifikasi"
+        },
+        {
+          "value": "130",
+          "text": "62115 - Beban THR"
+        },
+        {
+          "value": "131",
+          "text": "62116 - Beban Jamsostek /Astek"
+        },
+        {
+          "value": "132",
+          "text": "62117 - Beban Honorarium"
+        },
+        {
+          "value": "133",
+          "text": "62118 - Beban Tunjangan Makan"
+        },
+        {
+          "value": "134",
+          "text": "62119 - Beban Tunjangan Pengobatan"
+        },
+        {
+          "value": "135",
+          "text": "62120 - Beban Tunjangan Transportasi"
+        },
+        {
+          "value": "136",
+          "text": "62121 - Beban Tunjangan Perumahan"
+        },
+        {
+          "value": "137",
+          "text": "62122 - Beban Kenikmatan Lainnya"
+        },
+        {
+          "value": "138",
+          "text": "62123 - Beban Honor Manajemen"
+        },
+        {
+          "value": "139",
+          "text": "62124 - Beban Honor Tenaga Ahli Lainnya"
+        },
+        {
+          "value": "140",
+          "text": "62125 - Beban Pos dan Materai"
+        },
+        {
+          "value": "141",
+          "text": "62126 - Beban Perijinan"
+        },
+        {
+          "value": "142",
+          "text": "62127 - Beban Retribusi"
+        },
+        {
+          "value": "143",
+          "text": "62128 - Beban Jamuan Entertaint"
+        },
+        {
+          "value": "144",
+          "text": "62129 - Beban Sumbangan"
+        },
+        {
+          "value": "145",
+          "text": "62130 - Beban Listrik"
+        },
+        {
+          "value": "146",
+          "text": "62131 - Beban Air"
+        },
+        {
+          "value": "147",
+          "text": "62132 - Beban Gas Negara/LPG"
+        },
+        {
+          "value": "148",
+          "text": "62133 - Beban Telp, Fax dan Internet"
+        },
+        {
+          "value": "149",
+          "text": "62134 - Beban Bensin &amp; Solar"
+        },
+        {
+          "value": "150",
+          "text": "62135 - Beban Pengiriman Surat &amp; Paket"
+        },
+        {
+          "value": "151",
+          "text": "62136 - Beban Stationery"
+        },
+        {
+          "value": "152",
+          "text": "62137 - Beban Pendidikan dan Seminar"
+        },
+        {
+          "value": "153",
+          "text": "62138 - Beban Rapat"
+        },
+        {
+          "value": "154",
+          "text": "62139 - Beban Asuransi"
+        },
+        {
+          "value": "155",
+          "text": "62140 - Beban Admin Bank"
+        },
+        {
+          "value": "156",
+          "text": "62141 - Beban Provisi"
+        },
+        {
+          "value": "157",
+          "text": "62142 - Beban Sewa Kendaraan"
+        },
+        {
+          "value": "158",
+          "text": "62143 - Beban Amortisasi Sewa"
+        },
+        {
+          "value": "159",
+          "text": "62144 - Beban Pajak"
+        },
+        {
+          "value": "160",
+          "text": "62145 - Beban Gedung"
+        },
+        {
+          "value": "161",
+          "text": "62146 - Beban Kendaraan"
+        },
+        {
+          "value": "162",
+          "text": "62147 - Beban Spare Part (Non PPh 23)"
+        },
+        {
+          "value": "163",
+          "text": "62148 - Beban Peny Bangunan Kantor"
+        },
+        {
+          "value": "164",
+          "text": "62149 - Beban Peny Inventaris Kantor"
+        },
+        {
+          "value": "165",
+          "text": "62150 - Beban Penyusutan Kendaraan"
+        },
+        {
+          "value": "166",
+          "text": "62151 - Beban PBB"
+        },
+        {
+          "value": "167",
+          "text": "62152 - Beban Perbaikan Inventaris"
+        },
+        {
+          "value": "168",
+          "text": "62153 - Beban Pajak B3"
+        },
+        {
+          "value": "169",
+          "text": "62154 - Beban Sewa"
+        },
+        {
+          "value": "170",
+          "text": "62155 - Beban PPh 21"
+        },
+        {
+          "value": "171",
+          "text": "62156 - Beban Direksi"
+        },
+        {
+          "value": "172",
+          "text": "62157 - Beban Tenaga Kerja Outsoursing"
+        },
+        {
+          "value": "173",
+          "text": "62158 - Beban Pinjam Pakai"
+        },
+        {
+          "value": "175",
+          "text": "72111 - Kurang lebih Bayar"
+        },
+        {
+          "value": "176",
+          "text": "72112 - Pajak Jasa Giro"
+        },
+        {
+          "value": "177",
+          "text": "72113 - Beban Bunga Bank"
+        },
+        {
+          "value": "178",
+          "text": "72114 - Beban Bunga Pihak Ketiga"
+        },
+        {
+          "value": "179",
+          "text": "72115 - Beban Selisih Kurs"
+        },
+        {
+          "value": "180",
+          "text": "72116 - Beban Lainnya"
+        },
+        {
+          "value": "181",
+          "text": "72117 - Beban Selisih Tagihan"
+        },
+        {
+          "value": "182",
+          "text": "72118 - Beban Supplies"
+        },
+        {
+          "value": "184",
+          "text": "81111 - Beban Pajak Penghasilan"
+        },
+        {
+          "value": "185",
+          "text": "51128 - Harga Pokok Sample Kosmetik"
+        },
+        {
+          "value": "186",
+          "text": "51127 - Beban Import"
+        },
+        {
+          "value": "187",
+          "text": "61114 - Beban Proofing Packing"
+        },
+        {
+          "value": "188",
+          "text": "71114 - Potongan Pembayaran"
+        },
+        {
+          "value": "189",
+          "text": "21516 - Hutang Sewa"
+        }
+      ]
+    },
+    "coa_3": {
+      "name": "coa_3",
+      "id": "coa_3",
+      "options": [
+        {
+          "value": "2",
+          "text": "11111 - Kas Utama"
+        },
+        {
+          "value": "3",
+          "text": "11112 - Kas Kecil"
+        },
+        {
+          "value": "5",
+          "text": "11201 - Investasi"
+        },
+        {
+          "value": "7",
+          "text": "11212 - BCA (2640351589)"
+        },
+        {
+          "value": "9",
+          "text": "11221 - Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "10",
+          "text": "11311 - Ayat Silang"
+        },
+        {
+          "value": "12",
+          "text": "11411 - Piutang Dagang"
+        },
+        {
+          "value": "13",
+          "text": "11412 - Uang Muka pembelian"
+        },
+        {
+          "value": "15",
+          "text": "11511 - Piutang Karyawan"
+        },
+        {
+          "value": "16",
+          "text": "11517 - Piutang Pihak Ketiga-Lainnya"
+        },
+        {
+          "value": "18",
+          "text": "11611 - Persediaan Bahan Baku"
+        },
+        {
+          "value": "19",
+          "text": "11612 - Persediaan Bahan Pembantu"
+        },
+        {
+          "value": "20",
+          "text": "11615 - Persediaan Setengah Jadi"
+        },
+        {
+          "value": "21",
+          "text": "11616 - Persediaan Barang Jadi"
+        },
+        {
+          "value": "22",
+          "text": "11617 - Persediaan Barang Lain"
+        },
+        {
+          "value": "23",
+          "text": "11618 - Persediaan Dalam Perjalanan"
+        },
+        {
+          "value": "25",
+          "text": "11711 - Uang Muka PPh 22"
+        },
+        {
+          "value": "26",
+          "text": "11712 - Uang Muka PPh 23"
+        },
+        {
+          "value": "27",
+          "text": "11713 - Uang Muka PPh 25"
+        },
+        {
+          "value": "28",
+          "text": "11714 - Piutang PPh 28"
+        },
+        {
+          "value": "29",
+          "text": "11715 - PPN Masukan"
+        },
+        {
+          "value": "31",
+          "text": "11811 - Uang Muka Pembelian Aktiva"
+        },
+        {
+          "value": "32",
+          "text": "11812 - Uang Muka Pembelian Lain"
+        },
+        {
+          "value": "34",
+          "text": "11911 - Iklan Dibayar Dimuka"
+        },
+        {
+          "value": "35",
+          "text": "11912 - Asuransi Dibayar Dimuka"
+        },
+        {
+          "value": "36",
+          "text": "11913 - Sewa Dibayar Dimuka"
+        },
+        {
+          "value": "38",
+          "text": "12111 - Tanah"
+        },
+        {
+          "value": "39",
+          "text": "12112 - Bangunan Kantor"
+        },
+        {
+          "value": "40",
+          "text": "12113 - Bangunan Pabrik"
+        },
+        {
+          "value": "41",
+          "text": "12114 - Inventaris Kantor"
+        },
+        {
+          "value": "42",
+          "text": "12115 - Inventaris Pabrik"
+        },
+        {
+          "value": "43",
+          "text": "12116 - Kendaraan"
+        },
+        {
+          "value": "44",
+          "text": "12117 - Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "46",
+          "text": "12211 - Akum Peny Bangunan Kantor"
+        },
+        {
+          "value": "47",
+          "text": "12212 - Akum Peny Bangunan Pabrik"
+        },
+        {
+          "value": "48",
+          "text": "12213 - Akum Peny Inventaris Kantor"
+        },
+        {
+          "value": "49",
+          "text": "12214 - Akum Peny Inventaris Pabrik"
+        },
+        {
+          "value": "50",
+          "text": "12215 - Akum Peny Kendaraan"
+        },
+        {
+          "value": "51",
+          "text": "12216 - Akum Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "53",
+          "text": "21111 - Hutang Dagang"
+        },
+        {
+          "value": "54",
+          "text": "21113 - Uang Muka Penjualan"
+        },
+        {
+          "value": "56",
+          "text": "21211 - Uang Muka Ongkir"
+        },
+        {
+          "value": "58",
+          "text": "21311 - Hutang PPh 21"
+        },
+        {
+          "value": "59",
+          "text": "21312 - Hutang PPh 22"
+        },
+        {
+          "value": "60",
+          "text": "21313 - Hutang PPh 23"
+        },
+        {
+          "value": "61",
+          "text": "21314 - Hutang PPh 25"
+        },
+        {
+          "value": "62",
+          "text": "21315 - Hutang PPh 4 (2)"
+        },
+        {
+          "value": "63",
+          "text": "21316 - Hutang PPh 29"
+        },
+        {
+          "value": "64",
+          "text": "21317 - PPN Keluaran"
+        },
+        {
+          "value": "65",
+          "text": "21318 - PPN Keluaran Yang Diperhitungkan"
+        },
+        {
+          "value": "67",
+          "text": "21411 - Biaya YMHD Gaji"
+        },
+        {
+          "value": "68",
+          "text": "21412 - Biaya YMHD Telp, Listrik, Air dan Internet"
+        },
+        {
+          "value": "69",
+          "text": "21413 - Biaya YMHD Lain"
+        },
+        {
+          "value": "71",
+          "text": "21511 - Hutang Pemegang Saham"
+        },
+        {
+          "value": "72",
+          "text": "21512 - Hutang Pihak Ketiga"
+        },
+        {
+          "value": "73",
+          "text": "21513 - Hutang Lain"
+        },
+        {
+          "value": "74",
+          "text": "21514 - Hutang Dagang Yang Belum Difakturkan"
+        },
+        {
+          "value": "75",
+          "text": "21515 - Hutang Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "77",
+          "text": "31111 - Modal Saham"
+        },
+        {
+          "value": "79",
+          "text": "31211 - Opening Balance Equity"
+        },
+        {
+          "value": "80",
+          "text": "31212 - Laba Ditahan"
+        },
+        {
+          "value": "81",
+          "text": "31213 - Deviden"
+        },
+        {
+          "value": "83",
+          "text": "41111 - Penjualan Kosmetik"
+        },
+        {
+          "value": "84",
+          "text": "41113 - Penjualan Sampel"
+        },
+        {
+          "value": "85",
+          "text": "41114 - Pendapatan Ongkir"
+        },
+        {
+          "value": "87",
+          "text": "41211 - Retur Penjualan"
+        },
+        {
+          "value": "88",
+          "text": "41212 - Potongan Penjualan"
+        },
+        {
+          "value": "90",
+          "text": "51111 - Harga Pokok Barang Jadi"
+        },
+        {
+          "value": "91",
+          "text": "51112 - Harga Pokok Bahan Baku"
+        },
+        {
+          "value": "92",
+          "text": "51113 - Harga Pokok Bahan Pembantu"
+        },
+        {
+          "value": "93",
+          "text": "51114 - Pemakaian Bahan Baku"
+        },
+        {
+          "value": "94",
+          "text": "51115 - Pemakaian Bahan Pembantu"
+        },
+        {
+          "value": "95",
+          "text": "51116 - Tenaga Kerja Pabrik"
+        },
+        {
+          "value": "96",
+          "text": "51117 - Listrik Pabrik"
+        },
+        {
+          "value": "97",
+          "text": "51118 - Air Pabrik"
+        },
+        {
+          "value": "98",
+          "text": "51119 - Beban Peny Bangunan Pabrik"
+        },
+        {
+          "value": "99",
+          "text": "51120 - Beban Peny Inventaris Pabrik"
+        },
+        {
+          "value": "100",
+          "text": "51121 - Beban Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "101",
+          "text": "51122 - Overhead Pabrik Lain"
+        },
+        {
+          "value": "102",
+          "text": "51123 - Variance"
+        },
+        {
+          "value": "103",
+          "text": "51124 - Koreksi Stock"
+        },
+        {
+          "value": "104",
+          "text": "51125 - Beban Laboratorium"
+        },
+        {
+          "value": "105",
+          "text": "51126 - Koreksi Stock Retur Rusak"
+        },
+        {
+          "value": "107",
+          "text": "71111 - Pendapatan Jasa Giro"
+        },
+        {
+          "value": "108",
+          "text": "71112 - Penjualan Aktiva"
+        },
+        {
+          "value": "109",
+          "text": "71113 - Pendapatan Lain-Lain"
+        },
+        {
+          "value": "111",
+          "text": "61111 - Beban Komisi"
+        },
+        {
+          "value": "112",
+          "text": "61115 - Beban Pendaftaran BPOM"
+        },
+        {
+          "value": "113",
+          "text": "61116 - Beban Pendaftaran Merk"
+        },
+        {
+          "value": "114",
+          "text": "61117 - Beban Digital Marketing"
+        },
+        {
+          "value": "115",
+          "text": "61118 - Beban Iklan Promosi Penjualan"
+        },
+        {
+          "value": "116",
+          "text": "61119 - Beban Angkut"
+        },
+        {
+          "value": "117",
+          "text": "61120 - Beban Pameran"
+        },
+        {
+          "value": "118",
+          "text": "61121 - Beban Penelitian &amp; Pengembangan"
+        },
+        {
+          "value": "119",
+          "text": "61122 - Beban Pendaftaran HSA"
+        },
+        {
+          "value": "120",
+          "text": "61123 - Beban Pembuatan Video"
+        },
+        {
+          "value": "121",
+          "text": "61124 - Beban Bensin &amp; Solar Gudang"
+        },
+        {
+          "value": "122",
+          "text": "61125 - Beban Perjalanan Dinas Luar Kota"
+        },
+        {
+          "value": "123",
+          "text": "61126 - Beban Perjalanan Dinas Luar Pulau"
+        },
+        {
+          "value": "124",
+          "text": "61127 - Beban Penghapusan Piutang"
+        },
+        {
+          "value": "126",
+          "text": "62111 - Beban Gaji"
+        },
+        {
+          "value": "127",
+          "text": "62112 - Beban Lembur"
+        },
+        {
+          "value": "128",
+          "text": "62113 - Beban Insentif Karyawan"
+        },
+        {
+          "value": "129",
+          "text": "62114 - Beban Bonus &amp; Gratifikasi"
+        },
+        {
+          "value": "130",
+          "text": "62115 - Beban THR"
+        },
+        {
+          "value": "131",
+          "text": "62116 - Beban Jamsostek /Astek"
+        },
+        {
+          "value": "132",
+          "text": "62117 - Beban Honorarium"
+        },
+        {
+          "value": "133",
+          "text": "62118 - Beban Tunjangan Makan"
+        },
+        {
+          "value": "134",
+          "text": "62119 - Beban Tunjangan Pengobatan"
+        },
+        {
+          "value": "135",
+          "text": "62120 - Beban Tunjangan Transportasi"
+        },
+        {
+          "value": "136",
+          "text": "62121 - Beban Tunjangan Perumahan"
+        },
+        {
+          "value": "137",
+          "text": "62122 - Beban Kenikmatan Lainnya"
+        },
+        {
+          "value": "138",
+          "text": "62123 - Beban Honor Manajemen"
+        },
+        {
+          "value": "139",
+          "text": "62124 - Beban Honor Tenaga Ahli Lainnya"
+        },
+        {
+          "value": "140",
+          "text": "62125 - Beban Pos dan Materai"
+        },
+        {
+          "value": "141",
+          "text": "62126 - Beban Perijinan"
+        },
+        {
+          "value": "142",
+          "text": "62127 - Beban Retribusi"
+        },
+        {
+          "value": "143",
+          "text": "62128 - Beban Jamuan Entertaint"
+        },
+        {
+          "value": "144",
+          "text": "62129 - Beban Sumbangan"
+        },
+        {
+          "value": "145",
+          "text": "62130 - Beban Listrik"
+        },
+        {
+          "value": "146",
+          "text": "62131 - Beban Air"
+        },
+        {
+          "value": "147",
+          "text": "62132 - Beban Gas Negara/LPG"
+        },
+        {
+          "value": "148",
+          "text": "62133 - Beban Telp, Fax dan Internet"
+        },
+        {
+          "value": "149",
+          "text": "62134 - Beban Bensin &amp; Solar"
+        },
+        {
+          "value": "150",
+          "text": "62135 - Beban Pengiriman Surat &amp; Paket"
+        },
+        {
+          "value": "151",
+          "text": "62136 - Beban Stationery"
+        },
+        {
+          "value": "152",
+          "text": "62137 - Beban Pendidikan dan Seminar"
+        },
+        {
+          "value": "153",
+          "text": "62138 - Beban Rapat"
+        },
+        {
+          "value": "154",
+          "text": "62139 - Beban Asuransi"
+        },
+        {
+          "value": "155",
+          "text": "62140 - Beban Admin Bank"
+        },
+        {
+          "value": "156",
+          "text": "62141 - Beban Provisi"
+        },
+        {
+          "value": "157",
+          "text": "62142 - Beban Sewa Kendaraan"
+        },
+        {
+          "value": "158",
+          "text": "62143 - Beban Amortisasi Sewa"
+        },
+        {
+          "value": "159",
+          "text": "62144 - Beban Pajak"
+        },
+        {
+          "value": "160",
+          "text": "62145 - Beban Gedung"
+        },
+        {
+          "value": "161",
+          "text": "62146 - Beban Kendaraan"
+        },
+        {
+          "value": "162",
+          "text": "62147 - Beban Spare Part (Non PPh 23)"
+        },
+        {
+          "value": "163",
+          "text": "62148 - Beban Peny Bangunan Kantor"
+        },
+        {
+          "value": "164",
+          "text": "62149 - Beban Peny Inventaris Kantor"
+        },
+        {
+          "value": "165",
+          "text": "62150 - Beban Penyusutan Kendaraan"
+        },
+        {
+          "value": "166",
+          "text": "62151 - Beban PBB"
+        },
+        {
+          "value": "167",
+          "text": "62152 - Beban Perbaikan Inventaris"
+        },
+        {
+          "value": "168",
+          "text": "62153 - Beban Pajak B3"
+        },
+        {
+          "value": "169",
+          "text": "62154 - Beban Sewa"
+        },
+        {
+          "value": "170",
+          "text": "62155 - Beban PPh 21"
+        },
+        {
+          "value": "171",
+          "text": "62156 - Beban Direksi"
+        },
+        {
+          "value": "172",
+          "text": "62157 - Beban Tenaga Kerja Outsoursing"
+        },
+        {
+          "value": "173",
+          "text": "62158 - Beban Pinjam Pakai"
+        },
+        {
+          "value": "175",
+          "text": "72111 - Kurang lebih Bayar"
+        },
+        {
+          "value": "176",
+          "text": "72112 - Pajak Jasa Giro"
+        },
+        {
+          "value": "177",
+          "text": "72113 - Beban Bunga Bank"
+        },
+        {
+          "value": "178",
+          "text": "72114 - Beban Bunga Pihak Ketiga"
+        },
+        {
+          "value": "179",
+          "text": "72115 - Beban Selisih Kurs"
+        },
+        {
+          "value": "180",
+          "text": "72116 - Beban Lainnya"
+        },
+        {
+          "value": "181",
+          "text": "72117 - Beban Selisih Tagihan"
+        },
+        {
+          "value": "182",
+          "text": "72118 - Beban Supplies"
+        },
+        {
+          "value": "184",
+          "text": "81111 - Beban Pajak Penghasilan"
+        },
+        {
+          "value": "185",
+          "text": "51128 - Harga Pokok Sample Kosmetik"
+        },
+        {
+          "value": "186",
+          "text": "51127 - Beban Import"
+        },
+        {
+          "value": "187",
+          "text": "61114 - Beban Proofing Packing"
+        },
+        {
+          "value": "188",
+          "text": "71114 - Potongan Pembayaran"
+        },
+        {
+          "value": "189",
+          "text": "21516 - Hutang Sewa"
+        }
+      ]
+    },
+    "coa_4": {
+      "name": "coa_4",
+      "id": "coa_4",
+      "options": [
+        {
+          "value": "2",
+          "text": "11111 - Kas Utama"
+        },
+        {
+          "value": "3",
+          "text": "11112 - Kas Kecil"
+        },
+        {
+          "value": "5",
+          "text": "11201 - Investasi"
+        },
+        {
+          "value": "7",
+          "text": "11212 - BCA (2640351589)"
+        },
+        {
+          "value": "9",
+          "text": "11221 - Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "10",
+          "text": "11311 - Ayat Silang"
+        },
+        {
+          "value": "12",
+          "text": "11411 - Piutang Dagang"
+        },
+        {
+          "value": "13",
+          "text": "11412 - Uang Muka pembelian"
+        },
+        {
+          "value": "15",
+          "text": "11511 - Piutang Karyawan"
+        },
+        {
+          "value": "16",
+          "text": "11517 - Piutang Pihak Ketiga-Lainnya"
+        },
+        {
+          "value": "18",
+          "text": "11611 - Persediaan Bahan Baku"
+        },
+        {
+          "value": "19",
+          "text": "11612 - Persediaan Bahan Pembantu"
+        },
+        {
+          "value": "20",
+          "text": "11615 - Persediaan Setengah Jadi"
+        },
+        {
+          "value": "21",
+          "text": "11616 - Persediaan Barang Jadi"
+        },
+        {
+          "value": "22",
+          "text": "11617 - Persediaan Barang Lain"
+        },
+        {
+          "value": "23",
+          "text": "11618 - Persediaan Dalam Perjalanan"
+        },
+        {
+          "value": "25",
+          "text": "11711 - Uang Muka PPh 22"
+        },
+        {
+          "value": "26",
+          "text": "11712 - Uang Muka PPh 23"
+        },
+        {
+          "value": "27",
+          "text": "11713 - Uang Muka PPh 25"
+        },
+        {
+          "value": "28",
+          "text": "11714 - Piutang PPh 28"
+        },
+        {
+          "value": "29",
+          "text": "11715 - PPN Masukan"
+        },
+        {
+          "value": "31",
+          "text": "11811 - Uang Muka Pembelian Aktiva"
+        },
+        {
+          "value": "32",
+          "text": "11812 - Uang Muka Pembelian Lain"
+        },
+        {
+          "value": "34",
+          "text": "11911 - Iklan Dibayar Dimuka"
+        },
+        {
+          "value": "35",
+          "text": "11912 - Asuransi Dibayar Dimuka"
+        },
+        {
+          "value": "36",
+          "text": "11913 - Sewa Dibayar Dimuka"
+        },
+        {
+          "value": "38",
+          "text": "12111 - Tanah"
+        },
+        {
+          "value": "39",
+          "text": "12112 - Bangunan Kantor"
+        },
+        {
+          "value": "40",
+          "text": "12113 - Bangunan Pabrik"
+        },
+        {
+          "value": "41",
+          "text": "12114 - Inventaris Kantor"
+        },
+        {
+          "value": "42",
+          "text": "12115 - Inventaris Pabrik"
+        },
+        {
+          "value": "43",
+          "text": "12116 - Kendaraan"
+        },
+        {
+          "value": "44",
+          "text": "12117 - Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "46",
+          "text": "12211 - Akum Peny Bangunan Kantor"
+        },
+        {
+          "value": "47",
+          "text": "12212 - Akum Peny Bangunan Pabrik"
+        },
+        {
+          "value": "48",
+          "text": "12213 - Akum Peny Inventaris Kantor"
+        },
+        {
+          "value": "49",
+          "text": "12214 - Akum Peny Inventaris Pabrik"
+        },
+        {
+          "value": "50",
+          "text": "12215 - Akum Peny Kendaraan"
+        },
+        {
+          "value": "51",
+          "text": "12216 - Akum Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "53",
+          "text": "21111 - Hutang Dagang"
+        },
+        {
+          "value": "54",
+          "text": "21113 - Uang Muka Penjualan"
+        },
+        {
+          "value": "56",
+          "text": "21211 - Uang Muka Ongkir"
+        },
+        {
+          "value": "58",
+          "text": "21311 - Hutang PPh 21"
+        },
+        {
+          "value": "59",
+          "text": "21312 - Hutang PPh 22"
+        },
+        {
+          "value": "60",
+          "text": "21313 - Hutang PPh 23"
+        },
+        {
+          "value": "61",
+          "text": "21314 - Hutang PPh 25"
+        },
+        {
+          "value": "62",
+          "text": "21315 - Hutang PPh 4 (2)"
+        },
+        {
+          "value": "63",
+          "text": "21316 - Hutang PPh 29"
+        },
+        {
+          "value": "64",
+          "text": "21317 - PPN Keluaran"
+        },
+        {
+          "value": "65",
+          "text": "21318 - PPN Keluaran Yang Diperhitungkan"
+        },
+        {
+          "value": "67",
+          "text": "21411 - Biaya YMHD Gaji"
+        },
+        {
+          "value": "68",
+          "text": "21412 - Biaya YMHD Telp, Listrik, Air dan Internet"
+        },
+        {
+          "value": "69",
+          "text": "21413 - Biaya YMHD Lain"
+        },
+        {
+          "value": "71",
+          "text": "21511 - Hutang Pemegang Saham"
+        },
+        {
+          "value": "72",
+          "text": "21512 - Hutang Pihak Ketiga"
+        },
+        {
+          "value": "73",
+          "text": "21513 - Hutang Lain"
+        },
+        {
+          "value": "74",
+          "text": "21514 - Hutang Dagang Yang Belum Difakturkan"
+        },
+        {
+          "value": "75",
+          "text": "21515 - Hutang Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "77",
+          "text": "31111 - Modal Saham"
+        },
+        {
+          "value": "79",
+          "text": "31211 - Opening Balance Equity"
+        },
+        {
+          "value": "80",
+          "text": "31212 - Laba Ditahan"
+        },
+        {
+          "value": "81",
+          "text": "31213 - Deviden"
+        },
+        {
+          "value": "83",
+          "text": "41111 - Penjualan Kosmetik"
+        },
+        {
+          "value": "84",
+          "text": "41113 - Penjualan Sampel"
+        },
+        {
+          "value": "85",
+          "text": "41114 - Pendapatan Ongkir"
+        },
+        {
+          "value": "87",
+          "text": "41211 - Retur Penjualan"
+        },
+        {
+          "value": "88",
+          "text": "41212 - Potongan Penjualan"
+        },
+        {
+          "value": "90",
+          "text": "51111 - Harga Pokok Barang Jadi"
+        },
+        {
+          "value": "91",
+          "text": "51112 - Harga Pokok Bahan Baku"
+        },
+        {
+          "value": "92",
+          "text": "51113 - Harga Pokok Bahan Pembantu"
+        },
+        {
+          "value": "93",
+          "text": "51114 - Pemakaian Bahan Baku"
+        },
+        {
+          "value": "94",
+          "text": "51115 - Pemakaian Bahan Pembantu"
+        },
+        {
+          "value": "95",
+          "text": "51116 - Tenaga Kerja Pabrik"
+        },
+        {
+          "value": "96",
+          "text": "51117 - Listrik Pabrik"
+        },
+        {
+          "value": "97",
+          "text": "51118 - Air Pabrik"
+        },
+        {
+          "value": "98",
+          "text": "51119 - Beban Peny Bangunan Pabrik"
+        },
+        {
+          "value": "99",
+          "text": "51120 - Beban Peny Inventaris Pabrik"
+        },
+        {
+          "value": "100",
+          "text": "51121 - Beban Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "101",
+          "text": "51122 - Overhead Pabrik Lain"
+        },
+        {
+          "value": "102",
+          "text": "51123 - Variance"
+        },
+        {
+          "value": "103",
+          "text": "51124 - Koreksi Stock"
+        },
+        {
+          "value": "104",
+          "text": "51125 - Beban Laboratorium"
+        },
+        {
+          "value": "105",
+          "text": "51126 - Koreksi Stock Retur Rusak"
+        },
+        {
+          "value": "107",
+          "text": "71111 - Pendapatan Jasa Giro"
+        },
+        {
+          "value": "108",
+          "text": "71112 - Penjualan Aktiva"
+        },
+        {
+          "value": "109",
+          "text": "71113 - Pendapatan Lain-Lain"
+        },
+        {
+          "value": "111",
+          "text": "61111 - Beban Komisi"
+        },
+        {
+          "value": "112",
+          "text": "61115 - Beban Pendaftaran BPOM"
+        },
+        {
+          "value": "113",
+          "text": "61116 - Beban Pendaftaran Merk"
+        },
+        {
+          "value": "114",
+          "text": "61117 - Beban Digital Marketing"
+        },
+        {
+          "value": "115",
+          "text": "61118 - Beban Iklan Promosi Penjualan"
+        },
+        {
+          "value": "116",
+          "text": "61119 - Beban Angkut"
+        },
+        {
+          "value": "117",
+          "text": "61120 - Beban Pameran"
+        },
+        {
+          "value": "118",
+          "text": "61121 - Beban Penelitian &amp; Pengembangan"
+        },
+        {
+          "value": "119",
+          "text": "61122 - Beban Pendaftaran HSA"
+        },
+        {
+          "value": "120",
+          "text": "61123 - Beban Pembuatan Video"
+        },
+        {
+          "value": "121",
+          "text": "61124 - Beban Bensin &amp; Solar Gudang"
+        },
+        {
+          "value": "122",
+          "text": "61125 - Beban Perjalanan Dinas Luar Kota"
+        },
+        {
+          "value": "123",
+          "text": "61126 - Beban Perjalanan Dinas Luar Pulau"
+        },
+        {
+          "value": "124",
+          "text": "61127 - Beban Penghapusan Piutang"
+        },
+        {
+          "value": "126",
+          "text": "62111 - Beban Gaji"
+        },
+        {
+          "value": "127",
+          "text": "62112 - Beban Lembur"
+        },
+        {
+          "value": "128",
+          "text": "62113 - Beban Insentif Karyawan"
+        },
+        {
+          "value": "129",
+          "text": "62114 - Beban Bonus &amp; Gratifikasi"
+        },
+        {
+          "value": "130",
+          "text": "62115 - Beban THR"
+        },
+        {
+          "value": "131",
+          "text": "62116 - Beban Jamsostek /Astek"
+        },
+        {
+          "value": "132",
+          "text": "62117 - Beban Honorarium"
+        },
+        {
+          "value": "133",
+          "text": "62118 - Beban Tunjangan Makan"
+        },
+        {
+          "value": "134",
+          "text": "62119 - Beban Tunjangan Pengobatan"
+        },
+        {
+          "value": "135",
+          "text": "62120 - Beban Tunjangan Transportasi"
+        },
+        {
+          "value": "136",
+          "text": "62121 - Beban Tunjangan Perumahan"
+        },
+        {
+          "value": "137",
+          "text": "62122 - Beban Kenikmatan Lainnya"
+        },
+        {
+          "value": "138",
+          "text": "62123 - Beban Honor Manajemen"
+        },
+        {
+          "value": "139",
+          "text": "62124 - Beban Honor Tenaga Ahli Lainnya"
+        },
+        {
+          "value": "140",
+          "text": "62125 - Beban Pos dan Materai"
+        },
+        {
+          "value": "141",
+          "text": "62126 - Beban Perijinan"
+        },
+        {
+          "value": "142",
+          "text": "62127 - Beban Retribusi"
+        },
+        {
+          "value": "143",
+          "text": "62128 - Beban Jamuan Entertaint"
+        },
+        {
+          "value": "144",
+          "text": "62129 - Beban Sumbangan"
+        },
+        {
+          "value": "145",
+          "text": "62130 - Beban Listrik"
+        },
+        {
+          "value": "146",
+          "text": "62131 - Beban Air"
+        },
+        {
+          "value": "147",
+          "text": "62132 - Beban Gas Negara/LPG"
+        },
+        {
+          "value": "148",
+          "text": "62133 - Beban Telp, Fax dan Internet"
+        },
+        {
+          "value": "149",
+          "text": "62134 - Beban Bensin &amp; Solar"
+        },
+        {
+          "value": "150",
+          "text": "62135 - Beban Pengiriman Surat &amp; Paket"
+        },
+        {
+          "value": "151",
+          "text": "62136 - Beban Stationery"
+        },
+        {
+          "value": "152",
+          "text": "62137 - Beban Pendidikan dan Seminar"
+        },
+        {
+          "value": "153",
+          "text": "62138 - Beban Rapat"
+        },
+        {
+          "value": "154",
+          "text": "62139 - Beban Asuransi"
+        },
+        {
+          "value": "155",
+          "text": "62140 - Beban Admin Bank"
+        },
+        {
+          "value": "156",
+          "text": "62141 - Beban Provisi"
+        },
+        {
+          "value": "157",
+          "text": "62142 - Beban Sewa Kendaraan"
+        },
+        {
+          "value": "158",
+          "text": "62143 - Beban Amortisasi Sewa"
+        },
+        {
+          "value": "159",
+          "text": "62144 - Beban Pajak"
+        },
+        {
+          "value": "160",
+          "text": "62145 - Beban Gedung"
+        },
+        {
+          "value": "161",
+          "text": "62146 - Beban Kendaraan"
+        },
+        {
+          "value": "162",
+          "text": "62147 - Beban Spare Part (Non PPh 23)"
+        },
+        {
+          "value": "163",
+          "text": "62148 - Beban Peny Bangunan Kantor"
+        },
+        {
+          "value": "164",
+          "text": "62149 - Beban Peny Inventaris Kantor"
+        },
+        {
+          "value": "165",
+          "text": "62150 - Beban Penyusutan Kendaraan"
+        },
+        {
+          "value": "166",
+          "text": "62151 - Beban PBB"
+        },
+        {
+          "value": "167",
+          "text": "62152 - Beban Perbaikan Inventaris"
+        },
+        {
+          "value": "168",
+          "text": "62153 - Beban Pajak B3"
+        },
+        {
+          "value": "169",
+          "text": "62154 - Beban Sewa"
+        },
+        {
+          "value": "170",
+          "text": "62155 - Beban PPh 21"
+        },
+        {
+          "value": "171",
+          "text": "62156 - Beban Direksi"
+        },
+        {
+          "value": "172",
+          "text": "62157 - Beban Tenaga Kerja Outsoursing"
+        },
+        {
+          "value": "173",
+          "text": "62158 - Beban Pinjam Pakai"
+        },
+        {
+          "value": "175",
+          "text": "72111 - Kurang lebih Bayar"
+        },
+        {
+          "value": "176",
+          "text": "72112 - Pajak Jasa Giro"
+        },
+        {
+          "value": "177",
+          "text": "72113 - Beban Bunga Bank"
+        },
+        {
+          "value": "178",
+          "text": "72114 - Beban Bunga Pihak Ketiga"
+        },
+        {
+          "value": "179",
+          "text": "72115 - Beban Selisih Kurs"
+        },
+        {
+          "value": "180",
+          "text": "72116 - Beban Lainnya"
+        },
+        {
+          "value": "181",
+          "text": "72117 - Beban Selisih Tagihan"
+        },
+        {
+          "value": "182",
+          "text": "72118 - Beban Supplies"
+        },
+        {
+          "value": "184",
+          "text": "81111 - Beban Pajak Penghasilan"
+        },
+        {
+          "value": "185",
+          "text": "51128 - Harga Pokok Sample Kosmetik"
+        },
+        {
+          "value": "186",
+          "text": "51127 - Beban Import"
+        },
+        {
+          "value": "187",
+          "text": "61114 - Beban Proofing Packing"
+        },
+        {
+          "value": "188",
+          "text": "71114 - Potongan Pembayaran"
+        },
+        {
+          "value": "189",
+          "text": "21516 - Hutang Sewa"
+        }
+      ]
+    },
+    "coa_5": {
+      "name": "coa_5",
+      "id": "coa_5",
+      "options": [
+        {
+          "value": "2",
+          "text": "11111 - Kas Utama"
+        },
+        {
+          "value": "3",
+          "text": "11112 - Kas Kecil"
+        },
+        {
+          "value": "5",
+          "text": "11201 - Investasi"
+        },
+        {
+          "value": "7",
+          "text": "11212 - BCA (2640351589)"
+        },
+        {
+          "value": "9",
+          "text": "11221 - Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "10",
+          "text": "11311 - Ayat Silang"
+        },
+        {
+          "value": "12",
+          "text": "11411 - Piutang Dagang"
+        },
+        {
+          "value": "13",
+          "text": "11412 - Uang Muka pembelian"
+        },
+        {
+          "value": "15",
+          "text": "11511 - Piutang Karyawan"
+        },
+        {
+          "value": "16",
+          "text": "11517 - Piutang Pihak Ketiga-Lainnya"
+        },
+        {
+          "value": "18",
+          "text": "11611 - Persediaan Bahan Baku"
+        },
+        {
+          "value": "19",
+          "text": "11612 - Persediaan Bahan Pembantu"
+        },
+        {
+          "value": "20",
+          "text": "11615 - Persediaan Setengah Jadi"
+        },
+        {
+          "value": "21",
+          "text": "11616 - Persediaan Barang Jadi"
+        },
+        {
+          "value": "22",
+          "text": "11617 - Persediaan Barang Lain"
+        },
+        {
+          "value": "23",
+          "text": "11618 - Persediaan Dalam Perjalanan"
+        },
+        {
+          "value": "25",
+          "text": "11711 - Uang Muka PPh 22"
+        },
+        {
+          "value": "26",
+          "text": "11712 - Uang Muka PPh 23"
+        },
+        {
+          "value": "27",
+          "text": "11713 - Uang Muka PPh 25"
+        },
+        {
+          "value": "28",
+          "text": "11714 - Piutang PPh 28"
+        },
+        {
+          "value": "29",
+          "text": "11715 - PPN Masukan"
+        },
+        {
+          "value": "31",
+          "text": "11811 - Uang Muka Pembelian Aktiva"
+        },
+        {
+          "value": "32",
+          "text": "11812 - Uang Muka Pembelian Lain"
+        },
+        {
+          "value": "34",
+          "text": "11911 - Iklan Dibayar Dimuka"
+        },
+        {
+          "value": "35",
+          "text": "11912 - Asuransi Dibayar Dimuka"
+        },
+        {
+          "value": "36",
+          "text": "11913 - Sewa Dibayar Dimuka"
+        },
+        {
+          "value": "38",
+          "text": "12111 - Tanah"
+        },
+        {
+          "value": "39",
+          "text": "12112 - Bangunan Kantor"
+        },
+        {
+          "value": "40",
+          "text": "12113 - Bangunan Pabrik"
+        },
+        {
+          "value": "41",
+          "text": "12114 - Inventaris Kantor"
+        },
+        {
+          "value": "42",
+          "text": "12115 - Inventaris Pabrik"
+        },
+        {
+          "value": "43",
+          "text": "12116 - Kendaraan"
+        },
+        {
+          "value": "44",
+          "text": "12117 - Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "46",
+          "text": "12211 - Akum Peny Bangunan Kantor"
+        },
+        {
+          "value": "47",
+          "text": "12212 - Akum Peny Bangunan Pabrik"
+        },
+        {
+          "value": "48",
+          "text": "12213 - Akum Peny Inventaris Kantor"
+        },
+        {
+          "value": "49",
+          "text": "12214 - Akum Peny Inventaris Pabrik"
+        },
+        {
+          "value": "50",
+          "text": "12215 - Akum Peny Kendaraan"
+        },
+        {
+          "value": "51",
+          "text": "12216 - Akum Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "53",
+          "text": "21111 - Hutang Dagang"
+        },
+        {
+          "value": "54",
+          "text": "21113 - Uang Muka Penjualan"
+        },
+        {
+          "value": "56",
+          "text": "21211 - Uang Muka Ongkir"
+        },
+        {
+          "value": "58",
+          "text": "21311 - Hutang PPh 21"
+        },
+        {
+          "value": "59",
+          "text": "21312 - Hutang PPh 22"
+        },
+        {
+          "value": "60",
+          "text": "21313 - Hutang PPh 23"
+        },
+        {
+          "value": "61",
+          "text": "21314 - Hutang PPh 25"
+        },
+        {
+          "value": "62",
+          "text": "21315 - Hutang PPh 4 (2)"
+        },
+        {
+          "value": "63",
+          "text": "21316 - Hutang PPh 29"
+        },
+        {
+          "value": "64",
+          "text": "21317 - PPN Keluaran"
+        },
+        {
+          "value": "65",
+          "text": "21318 - PPN Keluaran Yang Diperhitungkan"
+        },
+        {
+          "value": "67",
+          "text": "21411 - Biaya YMHD Gaji"
+        },
+        {
+          "value": "68",
+          "text": "21412 - Biaya YMHD Telp, Listrik, Air dan Internet"
+        },
+        {
+          "value": "69",
+          "text": "21413 - Biaya YMHD Lain"
+        },
+        {
+          "value": "71",
+          "text": "21511 - Hutang Pemegang Saham"
+        },
+        {
+          "value": "72",
+          "text": "21512 - Hutang Pihak Ketiga"
+        },
+        {
+          "value": "73",
+          "text": "21513 - Hutang Lain"
+        },
+        {
+          "value": "74",
+          "text": "21514 - Hutang Dagang Yang Belum Difakturkan"
+        },
+        {
+          "value": "75",
+          "text": "21515 - Hutang Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "77",
+          "text": "31111 - Modal Saham"
+        },
+        {
+          "value": "79",
+          "text": "31211 - Opening Balance Equity"
+        },
+        {
+          "value": "80",
+          "text": "31212 - Laba Ditahan"
+        },
+        {
+          "value": "81",
+          "text": "31213 - Deviden"
+        },
+        {
+          "value": "83",
+          "text": "41111 - Penjualan Kosmetik"
+        },
+        {
+          "value": "84",
+          "text": "41113 - Penjualan Sampel"
+        },
+        {
+          "value": "85",
+          "text": "41114 - Pendapatan Ongkir"
+        },
+        {
+          "value": "87",
+          "text": "41211 - Retur Penjualan"
+        },
+        {
+          "value": "88",
+          "text": "41212 - Potongan Penjualan"
+        },
+        {
+          "value": "90",
+          "text": "51111 - Harga Pokok Barang Jadi"
+        },
+        {
+          "value": "91",
+          "text": "51112 - Harga Pokok Bahan Baku"
+        },
+        {
+          "value": "92",
+          "text": "51113 - Harga Pokok Bahan Pembantu"
+        },
+        {
+          "value": "93",
+          "text": "51114 - Pemakaian Bahan Baku"
+        },
+        {
+          "value": "94",
+          "text": "51115 - Pemakaian Bahan Pembantu"
+        },
+        {
+          "value": "95",
+          "text": "51116 - Tenaga Kerja Pabrik"
+        },
+        {
+          "value": "96",
+          "text": "51117 - Listrik Pabrik"
+        },
+        {
+          "value": "97",
+          "text": "51118 - Air Pabrik"
+        },
+        {
+          "value": "98",
+          "text": "51119 - Beban Peny Bangunan Pabrik"
+        },
+        {
+          "value": "99",
+          "text": "51120 - Beban Peny Inventaris Pabrik"
+        },
+        {
+          "value": "100",
+          "text": "51121 - Beban Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "101",
+          "text": "51122 - Overhead Pabrik Lain"
+        },
+        {
+          "value": "102",
+          "text": "51123 - Variance"
+        },
+        {
+          "value": "103",
+          "text": "51124 - Koreksi Stock"
+        },
+        {
+          "value": "104",
+          "text": "51125 - Beban Laboratorium"
+        },
+        {
+          "value": "105",
+          "text": "51126 - Koreksi Stock Retur Rusak"
+        },
+        {
+          "value": "107",
+          "text": "71111 - Pendapatan Jasa Giro"
+        },
+        {
+          "value": "108",
+          "text": "71112 - Penjualan Aktiva"
+        },
+        {
+          "value": "109",
+          "text": "71113 - Pendapatan Lain-Lain"
+        },
+        {
+          "value": "111",
+          "text": "61111 - Beban Komisi"
+        },
+        {
+          "value": "112",
+          "text": "61115 - Beban Pendaftaran BPOM"
+        },
+        {
+          "value": "113",
+          "text": "61116 - Beban Pendaftaran Merk"
+        },
+        {
+          "value": "114",
+          "text": "61117 - Beban Digital Marketing"
+        },
+        {
+          "value": "115",
+          "text": "61118 - Beban Iklan Promosi Penjualan"
+        },
+        {
+          "value": "116",
+          "text": "61119 - Beban Angkut"
+        },
+        {
+          "value": "117",
+          "text": "61120 - Beban Pameran"
+        },
+        {
+          "value": "118",
+          "text": "61121 - Beban Penelitian &amp; Pengembangan"
+        },
+        {
+          "value": "119",
+          "text": "61122 - Beban Pendaftaran HSA"
+        },
+        {
+          "value": "120",
+          "text": "61123 - Beban Pembuatan Video"
+        },
+        {
+          "value": "121",
+          "text": "61124 - Beban Bensin &amp; Solar Gudang"
+        },
+        {
+          "value": "122",
+          "text": "61125 - Beban Perjalanan Dinas Luar Kota"
+        },
+        {
+          "value": "123",
+          "text": "61126 - Beban Perjalanan Dinas Luar Pulau"
+        },
+        {
+          "value": "124",
+          "text": "61127 - Beban Penghapusan Piutang"
+        },
+        {
+          "value": "126",
+          "text": "62111 - Beban Gaji"
+        },
+        {
+          "value": "127",
+          "text": "62112 - Beban Lembur"
+        },
+        {
+          "value": "128",
+          "text": "62113 - Beban Insentif Karyawan"
+        },
+        {
+          "value": "129",
+          "text": "62114 - Beban Bonus &amp; Gratifikasi"
+        },
+        {
+          "value": "130",
+          "text": "62115 - Beban THR"
+        },
+        {
+          "value": "131",
+          "text": "62116 - Beban Jamsostek /Astek"
+        },
+        {
+          "value": "132",
+          "text": "62117 - Beban Honorarium"
+        },
+        {
+          "value": "133",
+          "text": "62118 - Beban Tunjangan Makan"
+        },
+        {
+          "value": "134",
+          "text": "62119 - Beban Tunjangan Pengobatan"
+        },
+        {
+          "value": "135",
+          "text": "62120 - Beban Tunjangan Transportasi"
+        },
+        {
+          "value": "136",
+          "text": "62121 - Beban Tunjangan Perumahan"
+        },
+        {
+          "value": "137",
+          "text": "62122 - Beban Kenikmatan Lainnya"
+        },
+        {
+          "value": "138",
+          "text": "62123 - Beban Honor Manajemen"
+        },
+        {
+          "value": "139",
+          "text": "62124 - Beban Honor Tenaga Ahli Lainnya"
+        },
+        {
+          "value": "140",
+          "text": "62125 - Beban Pos dan Materai"
+        },
+        {
+          "value": "141",
+          "text": "62126 - Beban Perijinan"
+        },
+        {
+          "value": "142",
+          "text": "62127 - Beban Retribusi"
+        },
+        {
+          "value": "143",
+          "text": "62128 - Beban Jamuan Entertaint"
+        },
+        {
+          "value": "144",
+          "text": "62129 - Beban Sumbangan"
+        },
+        {
+          "value": "145",
+          "text": "62130 - Beban Listrik"
+        },
+        {
+          "value": "146",
+          "text": "62131 - Beban Air"
+        },
+        {
+          "value": "147",
+          "text": "62132 - Beban Gas Negara/LPG"
+        },
+        {
+          "value": "148",
+          "text": "62133 - Beban Telp, Fax dan Internet"
+        },
+        {
+          "value": "149",
+          "text": "62134 - Beban Bensin &amp; Solar"
+        },
+        {
+          "value": "150",
+          "text": "62135 - Beban Pengiriman Surat &amp; Paket"
+        },
+        {
+          "value": "151",
+          "text": "62136 - Beban Stationery"
+        },
+        {
+          "value": "152",
+          "text": "62137 - Beban Pendidikan dan Seminar"
+        },
+        {
+          "value": "153",
+          "text": "62138 - Beban Rapat"
+        },
+        {
+          "value": "154",
+          "text": "62139 - Beban Asuransi"
+        },
+        {
+          "value": "155",
+          "text": "62140 - Beban Admin Bank"
+        },
+        {
+          "value": "156",
+          "text": "62141 - Beban Provisi"
+        },
+        {
+          "value": "157",
+          "text": "62142 - Beban Sewa Kendaraan"
+        },
+        {
+          "value": "158",
+          "text": "62143 - Beban Amortisasi Sewa"
+        },
+        {
+          "value": "159",
+          "text": "62144 - Beban Pajak"
+        },
+        {
+          "value": "160",
+          "text": "62145 - Beban Gedung"
+        },
+        {
+          "value": "161",
+          "text": "62146 - Beban Kendaraan"
+        },
+        {
+          "value": "162",
+          "text": "62147 - Beban Spare Part (Non PPh 23)"
+        },
+        {
+          "value": "163",
+          "text": "62148 - Beban Peny Bangunan Kantor"
+        },
+        {
+          "value": "164",
+          "text": "62149 - Beban Peny Inventaris Kantor"
+        },
+        {
+          "value": "165",
+          "text": "62150 - Beban Penyusutan Kendaraan"
+        },
+        {
+          "value": "166",
+          "text": "62151 - Beban PBB"
+        },
+        {
+          "value": "167",
+          "text": "62152 - Beban Perbaikan Inventaris"
+        },
+        {
+          "value": "168",
+          "text": "62153 - Beban Pajak B3"
+        },
+        {
+          "value": "169",
+          "text": "62154 - Beban Sewa"
+        },
+        {
+          "value": "170",
+          "text": "62155 - Beban PPh 21"
+        },
+        {
+          "value": "171",
+          "text": "62156 - Beban Direksi"
+        },
+        {
+          "value": "172",
+          "text": "62157 - Beban Tenaga Kerja Outsoursing"
+        },
+        {
+          "value": "173",
+          "text": "62158 - Beban Pinjam Pakai"
+        },
+        {
+          "value": "175",
+          "text": "72111 - Kurang lebih Bayar"
+        },
+        {
+          "value": "176",
+          "text": "72112 - Pajak Jasa Giro"
+        },
+        {
+          "value": "177",
+          "text": "72113 - Beban Bunga Bank"
+        },
+        {
+          "value": "178",
+          "text": "72114 - Beban Bunga Pihak Ketiga"
+        },
+        {
+          "value": "179",
+          "text": "72115 - Beban Selisih Kurs"
+        },
+        {
+          "value": "180",
+          "text": "72116 - Beban Lainnya"
+        },
+        {
+          "value": "181",
+          "text": "72117 - Beban Selisih Tagihan"
+        },
+        {
+          "value": "182",
+          "text": "72118 - Beban Supplies"
+        },
+        {
+          "value": "184",
+          "text": "81111 - Beban Pajak Penghasilan"
+        },
+        {
+          "value": "185",
+          "text": "51128 - Harga Pokok Sample Kosmetik"
+        },
+        {
+          "value": "186",
+          "text": "51127 - Beban Import"
+        },
+        {
+          "value": "187",
+          "text": "61114 - Beban Proofing Packing"
+        },
+        {
+          "value": "188",
+          "text": "71114 - Potongan Pembayaran"
+        },
+        {
+          "value": "189",
+          "text": "21516 - Hutang Sewa"
+        }
+      ]
+    },
+    "coa_6": {
+      "name": "coa_6",
+      "id": "coa_6",
+      "options": [
+        {
+          "value": "2",
+          "text": "11111 - Kas Utama"
+        },
+        {
+          "value": "3",
+          "text": "11112 - Kas Kecil"
+        },
+        {
+          "value": "5",
+          "text": "11201 - Investasi"
+        },
+        {
+          "value": "7",
+          "text": "11212 - BCA (2640351589)"
+        },
+        {
+          "value": "9",
+          "text": "11221 - Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "10",
+          "text": "11311 - Ayat Silang"
+        },
+        {
+          "value": "12",
+          "text": "11411 - Piutang Dagang"
+        },
+        {
+          "value": "13",
+          "text": "11412 - Uang Muka pembelian"
+        },
+        {
+          "value": "15",
+          "text": "11511 - Piutang Karyawan"
+        },
+        {
+          "value": "16",
+          "text": "11517 - Piutang Pihak Ketiga-Lainnya"
+        },
+        {
+          "value": "18",
+          "text": "11611 - Persediaan Bahan Baku"
+        },
+        {
+          "value": "19",
+          "text": "11612 - Persediaan Bahan Pembantu"
+        },
+        {
+          "value": "20",
+          "text": "11615 - Persediaan Setengah Jadi"
+        },
+        {
+          "value": "21",
+          "text": "11616 - Persediaan Barang Jadi"
+        },
+        {
+          "value": "22",
+          "text": "11617 - Persediaan Barang Lain"
+        },
+        {
+          "value": "23",
+          "text": "11618 - Persediaan Dalam Perjalanan"
+        },
+        {
+          "value": "25",
+          "text": "11711 - Uang Muka PPh 22"
+        },
+        {
+          "value": "26",
+          "text": "11712 - Uang Muka PPh 23"
+        },
+        {
+          "value": "27",
+          "text": "11713 - Uang Muka PPh 25"
+        },
+        {
+          "value": "28",
+          "text": "11714 - Piutang PPh 28"
+        },
+        {
+          "value": "29",
+          "text": "11715 - PPN Masukan"
+        },
+        {
+          "value": "31",
+          "text": "11811 - Uang Muka Pembelian Aktiva"
+        },
+        {
+          "value": "32",
+          "text": "11812 - Uang Muka Pembelian Lain"
+        },
+        {
+          "value": "34",
+          "text": "11911 - Iklan Dibayar Dimuka"
+        },
+        {
+          "value": "35",
+          "text": "11912 - Asuransi Dibayar Dimuka"
+        },
+        {
+          "value": "36",
+          "text": "11913 - Sewa Dibayar Dimuka"
+        },
+        {
+          "value": "38",
+          "text": "12111 - Tanah"
+        },
+        {
+          "value": "39",
+          "text": "12112 - Bangunan Kantor"
+        },
+        {
+          "value": "40",
+          "text": "12113 - Bangunan Pabrik"
+        },
+        {
+          "value": "41",
+          "text": "12114 - Inventaris Kantor"
+        },
+        {
+          "value": "42",
+          "text": "12115 - Inventaris Pabrik"
+        },
+        {
+          "value": "43",
+          "text": "12116 - Kendaraan"
+        },
+        {
+          "value": "44",
+          "text": "12117 - Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "46",
+          "text": "12211 - Akum Peny Bangunan Kantor"
+        },
+        {
+          "value": "47",
+          "text": "12212 - Akum Peny Bangunan Pabrik"
+        },
+        {
+          "value": "48",
+          "text": "12213 - Akum Peny Inventaris Kantor"
+        },
+        {
+          "value": "49",
+          "text": "12214 - Akum Peny Inventaris Pabrik"
+        },
+        {
+          "value": "50",
+          "text": "12215 - Akum Peny Kendaraan"
+        },
+        {
+          "value": "51",
+          "text": "12216 - Akum Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "53",
+          "text": "21111 - Hutang Dagang"
+        },
+        {
+          "value": "54",
+          "text": "21113 - Uang Muka Penjualan"
+        },
+        {
+          "value": "56",
+          "text": "21211 - Uang Muka Ongkir"
+        },
+        {
+          "value": "58",
+          "text": "21311 - Hutang PPh 21"
+        },
+        {
+          "value": "59",
+          "text": "21312 - Hutang PPh 22"
+        },
+        {
+          "value": "60",
+          "text": "21313 - Hutang PPh 23"
+        },
+        {
+          "value": "61",
+          "text": "21314 - Hutang PPh 25"
+        },
+        {
+          "value": "62",
+          "text": "21315 - Hutang PPh 4 (2)"
+        },
+        {
+          "value": "63",
+          "text": "21316 - Hutang PPh 29"
+        },
+        {
+          "value": "64",
+          "text": "21317 - PPN Keluaran"
+        },
+        {
+          "value": "65",
+          "text": "21318 - PPN Keluaran Yang Diperhitungkan"
+        },
+        {
+          "value": "67",
+          "text": "21411 - Biaya YMHD Gaji"
+        },
+        {
+          "value": "68",
+          "text": "21412 - Biaya YMHD Telp, Listrik, Air dan Internet"
+        },
+        {
+          "value": "69",
+          "text": "21413 - Biaya YMHD Lain"
+        },
+        {
+          "value": "71",
+          "text": "21511 - Hutang Pemegang Saham"
+        },
+        {
+          "value": "72",
+          "text": "21512 - Hutang Pihak Ketiga"
+        },
+        {
+          "value": "73",
+          "text": "21513 - Hutang Lain"
+        },
+        {
+          "value": "74",
+          "text": "21514 - Hutang Dagang Yang Belum Difakturkan"
+        },
+        {
+          "value": "75",
+          "text": "21515 - Hutang Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "77",
+          "text": "31111 - Modal Saham"
+        },
+        {
+          "value": "79",
+          "text": "31211 - Opening Balance Equity"
+        },
+        {
+          "value": "80",
+          "text": "31212 - Laba Ditahan"
+        },
+        {
+          "value": "81",
+          "text": "31213 - Deviden"
+        },
+        {
+          "value": "83",
+          "text": "41111 - Penjualan Kosmetik"
+        },
+        {
+          "value": "84",
+          "text": "41113 - Penjualan Sampel"
+        },
+        {
+          "value": "85",
+          "text": "41114 - Pendapatan Ongkir"
+        },
+        {
+          "value": "87",
+          "text": "41211 - Retur Penjualan"
+        },
+        {
+          "value": "88",
+          "text": "41212 - Potongan Penjualan"
+        },
+        {
+          "value": "90",
+          "text": "51111 - Harga Pokok Barang Jadi"
+        },
+        {
+          "value": "91",
+          "text": "51112 - Harga Pokok Bahan Baku"
+        },
+        {
+          "value": "92",
+          "text": "51113 - Harga Pokok Bahan Pembantu"
+        },
+        {
+          "value": "93",
+          "text": "51114 - Pemakaian Bahan Baku"
+        },
+        {
+          "value": "94",
+          "text": "51115 - Pemakaian Bahan Pembantu"
+        },
+        {
+          "value": "95",
+          "text": "51116 - Tenaga Kerja Pabrik"
+        },
+        {
+          "value": "96",
+          "text": "51117 - Listrik Pabrik"
+        },
+        {
+          "value": "97",
+          "text": "51118 - Air Pabrik"
+        },
+        {
+          "value": "98",
+          "text": "51119 - Beban Peny Bangunan Pabrik"
+        },
+        {
+          "value": "99",
+          "text": "51120 - Beban Peny Inventaris Pabrik"
+        },
+        {
+          "value": "100",
+          "text": "51121 - Beban Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "101",
+          "text": "51122 - Overhead Pabrik Lain"
+        },
+        {
+          "value": "102",
+          "text": "51123 - Variance"
+        },
+        {
+          "value": "103",
+          "text": "51124 - Koreksi Stock"
+        },
+        {
+          "value": "104",
+          "text": "51125 - Beban Laboratorium"
+        },
+        {
+          "value": "105",
+          "text": "51126 - Koreksi Stock Retur Rusak"
+        },
+        {
+          "value": "107",
+          "text": "71111 - Pendapatan Jasa Giro"
+        },
+        {
+          "value": "108",
+          "text": "71112 - Penjualan Aktiva"
+        },
+        {
+          "value": "109",
+          "text": "71113 - Pendapatan Lain-Lain"
+        },
+        {
+          "value": "111",
+          "text": "61111 - Beban Komisi"
+        },
+        {
+          "value": "112",
+          "text": "61115 - Beban Pendaftaran BPOM"
+        },
+        {
+          "value": "113",
+          "text": "61116 - Beban Pendaftaran Merk"
+        },
+        {
+          "value": "114",
+          "text": "61117 - Beban Digital Marketing"
+        },
+        {
+          "value": "115",
+          "text": "61118 - Beban Iklan Promosi Penjualan"
+        },
+        {
+          "value": "116",
+          "text": "61119 - Beban Angkut"
+        },
+        {
+          "value": "117",
+          "text": "61120 - Beban Pameran"
+        },
+        {
+          "value": "118",
+          "text": "61121 - Beban Penelitian &amp; Pengembangan"
+        },
+        {
+          "value": "119",
+          "text": "61122 - Beban Pendaftaran HSA"
+        },
+        {
+          "value": "120",
+          "text": "61123 - Beban Pembuatan Video"
+        },
+        {
+          "value": "121",
+          "text": "61124 - Beban Bensin &amp; Solar Gudang"
+        },
+        {
+          "value": "122",
+          "text": "61125 - Beban Perjalanan Dinas Luar Kota"
+        },
+        {
+          "value": "123",
+          "text": "61126 - Beban Perjalanan Dinas Luar Pulau"
+        },
+        {
+          "value": "124",
+          "text": "61127 - Beban Penghapusan Piutang"
+        },
+        {
+          "value": "126",
+          "text": "62111 - Beban Gaji"
+        },
+        {
+          "value": "127",
+          "text": "62112 - Beban Lembur"
+        },
+        {
+          "value": "128",
+          "text": "62113 - Beban Insentif Karyawan"
+        },
+        {
+          "value": "129",
+          "text": "62114 - Beban Bonus &amp; Gratifikasi"
+        },
+        {
+          "value": "130",
+          "text": "62115 - Beban THR"
+        },
+        {
+          "value": "131",
+          "text": "62116 - Beban Jamsostek /Astek"
+        },
+        {
+          "value": "132",
+          "text": "62117 - Beban Honorarium"
+        },
+        {
+          "value": "133",
+          "text": "62118 - Beban Tunjangan Makan"
+        },
+        {
+          "value": "134",
+          "text": "62119 - Beban Tunjangan Pengobatan"
+        },
+        {
+          "value": "135",
+          "text": "62120 - Beban Tunjangan Transportasi"
+        },
+        {
+          "value": "136",
+          "text": "62121 - Beban Tunjangan Perumahan"
+        },
+        {
+          "value": "137",
+          "text": "62122 - Beban Kenikmatan Lainnya"
+        },
+        {
+          "value": "138",
+          "text": "62123 - Beban Honor Manajemen"
+        },
+        {
+          "value": "139",
+          "text": "62124 - Beban Honor Tenaga Ahli Lainnya"
+        },
+        {
+          "value": "140",
+          "text": "62125 - Beban Pos dan Materai"
+        },
+        {
+          "value": "141",
+          "text": "62126 - Beban Perijinan"
+        },
+        {
+          "value": "142",
+          "text": "62127 - Beban Retribusi"
+        },
+        {
+          "value": "143",
+          "text": "62128 - Beban Jamuan Entertaint"
+        },
+        {
+          "value": "144",
+          "text": "62129 - Beban Sumbangan"
+        },
+        {
+          "value": "145",
+          "text": "62130 - Beban Listrik"
+        },
+        {
+          "value": "146",
+          "text": "62131 - Beban Air"
+        },
+        {
+          "value": "147",
+          "text": "62132 - Beban Gas Negara/LPG"
+        },
+        {
+          "value": "148",
+          "text": "62133 - Beban Telp, Fax dan Internet"
+        },
+        {
+          "value": "149",
+          "text": "62134 - Beban Bensin &amp; Solar"
+        },
+        {
+          "value": "150",
+          "text": "62135 - Beban Pengiriman Surat &amp; Paket"
+        },
+        {
+          "value": "151",
+          "text": "62136 - Beban Stationery"
+        },
+        {
+          "value": "152",
+          "text": "62137 - Beban Pendidikan dan Seminar"
+        },
+        {
+          "value": "153",
+          "text": "62138 - Beban Rapat"
+        },
+        {
+          "value": "154",
+          "text": "62139 - Beban Asuransi"
+        },
+        {
+          "value": "155",
+          "text": "62140 - Beban Admin Bank"
+        },
+        {
+          "value": "156",
+          "text": "62141 - Beban Provisi"
+        },
+        {
+          "value": "157",
+          "text": "62142 - Beban Sewa Kendaraan"
+        },
+        {
+          "value": "158",
+          "text": "62143 - Beban Amortisasi Sewa"
+        },
+        {
+          "value": "159",
+          "text": "62144 - Beban Pajak"
+        },
+        {
+          "value": "160",
+          "text": "62145 - Beban Gedung"
+        },
+        {
+          "value": "161",
+          "text": "62146 - Beban Kendaraan"
+        },
+        {
+          "value": "162",
+          "text": "62147 - Beban Spare Part (Non PPh 23)"
+        },
+        {
+          "value": "163",
+          "text": "62148 - Beban Peny Bangunan Kantor"
+        },
+        {
+          "value": "164",
+          "text": "62149 - Beban Peny Inventaris Kantor"
+        },
+        {
+          "value": "165",
+          "text": "62150 - Beban Penyusutan Kendaraan"
+        },
+        {
+          "value": "166",
+          "text": "62151 - Beban PBB"
+        },
+        {
+          "value": "167",
+          "text": "62152 - Beban Perbaikan Inventaris"
+        },
+        {
+          "value": "168",
+          "text": "62153 - Beban Pajak B3"
+        },
+        {
+          "value": "169",
+          "text": "62154 - Beban Sewa"
+        },
+        {
+          "value": "170",
+          "text": "62155 - Beban PPh 21"
+        },
+        {
+          "value": "171",
+          "text": "62156 - Beban Direksi"
+        },
+        {
+          "value": "172",
+          "text": "62157 - Beban Tenaga Kerja Outsoursing"
+        },
+        {
+          "value": "173",
+          "text": "62158 - Beban Pinjam Pakai"
+        },
+        {
+          "value": "175",
+          "text": "72111 - Kurang lebih Bayar"
+        },
+        {
+          "value": "176",
+          "text": "72112 - Pajak Jasa Giro"
+        },
+        {
+          "value": "177",
+          "text": "72113 - Beban Bunga Bank"
+        },
+        {
+          "value": "178",
+          "text": "72114 - Beban Bunga Pihak Ketiga"
+        },
+        {
+          "value": "179",
+          "text": "72115 - Beban Selisih Kurs"
+        },
+        {
+          "value": "180",
+          "text": "72116 - Beban Lainnya"
+        },
+        {
+          "value": "181",
+          "text": "72117 - Beban Selisih Tagihan"
+        },
+        {
+          "value": "182",
+          "text": "72118 - Beban Supplies"
+        },
+        {
+          "value": "184",
+          "text": "81111 - Beban Pajak Penghasilan"
+        },
+        {
+          "value": "185",
+          "text": "51128 - Harga Pokok Sample Kosmetik"
+        },
+        {
+          "value": "186",
+          "text": "51127 - Beban Import"
+        },
+        {
+          "value": "187",
+          "text": "61114 - Beban Proofing Packing"
+        },
+        {
+          "value": "188",
+          "text": "71114 - Potongan Pembayaran"
+        },
+        {
+          "value": "189",
+          "text": "21516 - Hutang Sewa"
+        }
+      ]
+    },
+    "coa_7": {
+      "name": "coa_7",
+      "id": "coa_7",
+      "options": [
+        {
+          "value": "2",
+          "text": "11111 - Kas Utama"
+        },
+        {
+          "value": "3",
+          "text": "11112 - Kas Kecil"
+        },
+        {
+          "value": "5",
+          "text": "11201 - Investasi"
+        },
+        {
+          "value": "7",
+          "text": "11212 - BCA (2640351589)"
+        },
+        {
+          "value": "9",
+          "text": "11221 - Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "10",
+          "text": "11311 - Ayat Silang"
+        },
+        {
+          "value": "12",
+          "text": "11411 - Piutang Dagang"
+        },
+        {
+          "value": "13",
+          "text": "11412 - Uang Muka pembelian"
+        },
+        {
+          "value": "15",
+          "text": "11511 - Piutang Karyawan"
+        },
+        {
+          "value": "16",
+          "text": "11517 - Piutang Pihak Ketiga-Lainnya"
+        },
+        {
+          "value": "18",
+          "text": "11611 - Persediaan Bahan Baku"
+        },
+        {
+          "value": "19",
+          "text": "11612 - Persediaan Bahan Pembantu"
+        },
+        {
+          "value": "20",
+          "text": "11615 - Persediaan Setengah Jadi"
+        },
+        {
+          "value": "21",
+          "text": "11616 - Persediaan Barang Jadi"
+        },
+        {
+          "value": "22",
+          "text": "11617 - Persediaan Barang Lain"
+        },
+        {
+          "value": "23",
+          "text": "11618 - Persediaan Dalam Perjalanan"
+        },
+        {
+          "value": "25",
+          "text": "11711 - Uang Muka PPh 22"
+        },
+        {
+          "value": "26",
+          "text": "11712 - Uang Muka PPh 23"
+        },
+        {
+          "value": "27",
+          "text": "11713 - Uang Muka PPh 25"
+        },
+        {
+          "value": "28",
+          "text": "11714 - Piutang PPh 28"
+        },
+        {
+          "value": "29",
+          "text": "11715 - PPN Masukan"
+        },
+        {
+          "value": "31",
+          "text": "11811 - Uang Muka Pembelian Aktiva"
+        },
+        {
+          "value": "32",
+          "text": "11812 - Uang Muka Pembelian Lain"
+        },
+        {
+          "value": "34",
+          "text": "11911 - Iklan Dibayar Dimuka"
+        },
+        {
+          "value": "35",
+          "text": "11912 - Asuransi Dibayar Dimuka"
+        },
+        {
+          "value": "36",
+          "text": "11913 - Sewa Dibayar Dimuka"
+        },
+        {
+          "value": "38",
+          "text": "12111 - Tanah"
+        },
+        {
+          "value": "39",
+          "text": "12112 - Bangunan Kantor"
+        },
+        {
+          "value": "40",
+          "text": "12113 - Bangunan Pabrik"
+        },
+        {
+          "value": "41",
+          "text": "12114 - Inventaris Kantor"
+        },
+        {
+          "value": "42",
+          "text": "12115 - Inventaris Pabrik"
+        },
+        {
+          "value": "43",
+          "text": "12116 - Kendaraan"
+        },
+        {
+          "value": "44",
+          "text": "12117 - Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "46",
+          "text": "12211 - Akum Peny Bangunan Kantor"
+        },
+        {
+          "value": "47",
+          "text": "12212 - Akum Peny Bangunan Pabrik"
+        },
+        {
+          "value": "48",
+          "text": "12213 - Akum Peny Inventaris Kantor"
+        },
+        {
+          "value": "49",
+          "text": "12214 - Akum Peny Inventaris Pabrik"
+        },
+        {
+          "value": "50",
+          "text": "12215 - Akum Peny Kendaraan"
+        },
+        {
+          "value": "51",
+          "text": "12216 - Akum Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "53",
+          "text": "21111 - Hutang Dagang"
+        },
+        {
+          "value": "54",
+          "text": "21113 - Uang Muka Penjualan"
+        },
+        {
+          "value": "56",
+          "text": "21211 - Uang Muka Ongkir"
+        },
+        {
+          "value": "58",
+          "text": "21311 - Hutang PPh 21"
+        },
+        {
+          "value": "59",
+          "text": "21312 - Hutang PPh 22"
+        },
+        {
+          "value": "60",
+          "text": "21313 - Hutang PPh 23"
+        },
+        {
+          "value": "61",
+          "text": "21314 - Hutang PPh 25"
+        },
+        {
+          "value": "62",
+          "text": "21315 - Hutang PPh 4 (2)"
+        },
+        {
+          "value": "63",
+          "text": "21316 - Hutang PPh 29"
+        },
+        {
+          "value": "64",
+          "text": "21317 - PPN Keluaran"
+        },
+        {
+          "value": "65",
+          "text": "21318 - PPN Keluaran Yang Diperhitungkan"
+        },
+        {
+          "value": "67",
+          "text": "21411 - Biaya YMHD Gaji"
+        },
+        {
+          "value": "68",
+          "text": "21412 - Biaya YMHD Telp, Listrik, Air dan Internet"
+        },
+        {
+          "value": "69",
+          "text": "21413 - Biaya YMHD Lain"
+        },
+        {
+          "value": "71",
+          "text": "21511 - Hutang Pemegang Saham"
+        },
+        {
+          "value": "72",
+          "text": "21512 - Hutang Pihak Ketiga"
+        },
+        {
+          "value": "73",
+          "text": "21513 - Hutang Lain"
+        },
+        {
+          "value": "74",
+          "text": "21514 - Hutang Dagang Yang Belum Difakturkan"
+        },
+        {
+          "value": "75",
+          "text": "21515 - Hutang Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "77",
+          "text": "31111 - Modal Saham"
+        },
+        {
+          "value": "79",
+          "text": "31211 - Opening Balance Equity"
+        },
+        {
+          "value": "80",
+          "text": "31212 - Laba Ditahan"
+        },
+        {
+          "value": "81",
+          "text": "31213 - Deviden"
+        },
+        {
+          "value": "83",
+          "text": "41111 - Penjualan Kosmetik"
+        },
+        {
+          "value": "84",
+          "text": "41113 - Penjualan Sampel"
+        },
+        {
+          "value": "85",
+          "text": "41114 - Pendapatan Ongkir"
+        },
+        {
+          "value": "87",
+          "text": "41211 - Retur Penjualan"
+        },
+        {
+          "value": "88",
+          "text": "41212 - Potongan Penjualan"
+        },
+        {
+          "value": "90",
+          "text": "51111 - Harga Pokok Barang Jadi"
+        },
+        {
+          "value": "91",
+          "text": "51112 - Harga Pokok Bahan Baku"
+        },
+        {
+          "value": "92",
+          "text": "51113 - Harga Pokok Bahan Pembantu"
+        },
+        {
+          "value": "93",
+          "text": "51114 - Pemakaian Bahan Baku"
+        },
+        {
+          "value": "94",
+          "text": "51115 - Pemakaian Bahan Pembantu"
+        },
+        {
+          "value": "95",
+          "text": "51116 - Tenaga Kerja Pabrik"
+        },
+        {
+          "value": "96",
+          "text": "51117 - Listrik Pabrik"
+        },
+        {
+          "value": "97",
+          "text": "51118 - Air Pabrik"
+        },
+        {
+          "value": "98",
+          "text": "51119 - Beban Peny Bangunan Pabrik"
+        },
+        {
+          "value": "99",
+          "text": "51120 - Beban Peny Inventaris Pabrik"
+        },
+        {
+          "value": "100",
+          "text": "51121 - Beban Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "101",
+          "text": "51122 - Overhead Pabrik Lain"
+        },
+        {
+          "value": "102",
+          "text": "51123 - Variance"
+        },
+        {
+          "value": "103",
+          "text": "51124 - Koreksi Stock"
+        },
+        {
+          "value": "104",
+          "text": "51125 - Beban Laboratorium"
+        },
+        {
+          "value": "105",
+          "text": "51126 - Koreksi Stock Retur Rusak"
+        },
+        {
+          "value": "107",
+          "text": "71111 - Pendapatan Jasa Giro"
+        },
+        {
+          "value": "108",
+          "text": "71112 - Penjualan Aktiva"
+        },
+        {
+          "value": "109",
+          "text": "71113 - Pendapatan Lain-Lain"
+        },
+        {
+          "value": "111",
+          "text": "61111 - Beban Komisi"
+        },
+        {
+          "value": "112",
+          "text": "61115 - Beban Pendaftaran BPOM"
+        },
+        {
+          "value": "113",
+          "text": "61116 - Beban Pendaftaran Merk"
+        },
+        {
+          "value": "114",
+          "text": "61117 - Beban Digital Marketing"
+        },
+        {
+          "value": "115",
+          "text": "61118 - Beban Iklan Promosi Penjualan"
+        },
+        {
+          "value": "116",
+          "text": "61119 - Beban Angkut"
+        },
+        {
+          "value": "117",
+          "text": "61120 - Beban Pameran"
+        },
+        {
+          "value": "118",
+          "text": "61121 - Beban Penelitian &amp; Pengembangan"
+        },
+        {
+          "value": "119",
+          "text": "61122 - Beban Pendaftaran HSA"
+        },
+        {
+          "value": "120",
+          "text": "61123 - Beban Pembuatan Video"
+        },
+        {
+          "value": "121",
+          "text": "61124 - Beban Bensin &amp; Solar Gudang"
+        },
+        {
+          "value": "122",
+          "text": "61125 - Beban Perjalanan Dinas Luar Kota"
+        },
+        {
+          "value": "123",
+          "text": "61126 - Beban Perjalanan Dinas Luar Pulau"
+        },
+        {
+          "value": "124",
+          "text": "61127 - Beban Penghapusan Piutang"
+        },
+        {
+          "value": "126",
+          "text": "62111 - Beban Gaji"
+        },
+        {
+          "value": "127",
+          "text": "62112 - Beban Lembur"
+        },
+        {
+          "value": "128",
+          "text": "62113 - Beban Insentif Karyawan"
+        },
+        {
+          "value": "129",
+          "text": "62114 - Beban Bonus &amp; Gratifikasi"
+        },
+        {
+          "value": "130",
+          "text": "62115 - Beban THR"
+        },
+        {
+          "value": "131",
+          "text": "62116 - Beban Jamsostek /Astek"
+        },
+        {
+          "value": "132",
+          "text": "62117 - Beban Honorarium"
+        },
+        {
+          "value": "133",
+          "text": "62118 - Beban Tunjangan Makan"
+        },
+        {
+          "value": "134",
+          "text": "62119 - Beban Tunjangan Pengobatan"
+        },
+        {
+          "value": "135",
+          "text": "62120 - Beban Tunjangan Transportasi"
+        },
+        {
+          "value": "136",
+          "text": "62121 - Beban Tunjangan Perumahan"
+        },
+        {
+          "value": "137",
+          "text": "62122 - Beban Kenikmatan Lainnya"
+        },
+        {
+          "value": "138",
+          "text": "62123 - Beban Honor Manajemen"
+        },
+        {
+          "value": "139",
+          "text": "62124 - Beban Honor Tenaga Ahli Lainnya"
+        },
+        {
+          "value": "140",
+          "text": "62125 - Beban Pos dan Materai"
+        },
+        {
+          "value": "141",
+          "text": "62126 - Beban Perijinan"
+        },
+        {
+          "value": "142",
+          "text": "62127 - Beban Retribusi"
+        },
+        {
+          "value": "143",
+          "text": "62128 - Beban Jamuan Entertaint"
+        },
+        {
+          "value": "144",
+          "text": "62129 - Beban Sumbangan"
+        },
+        {
+          "value": "145",
+          "text": "62130 - Beban Listrik"
+        },
+        {
+          "value": "146",
+          "text": "62131 - Beban Air"
+        },
+        {
+          "value": "147",
+          "text": "62132 - Beban Gas Negara/LPG"
+        },
+        {
+          "value": "148",
+          "text": "62133 - Beban Telp, Fax dan Internet"
+        },
+        {
+          "value": "149",
+          "text": "62134 - Beban Bensin &amp; Solar"
+        },
+        {
+          "value": "150",
+          "text": "62135 - Beban Pengiriman Surat &amp; Paket"
+        },
+        {
+          "value": "151",
+          "text": "62136 - Beban Stationery"
+        },
+        {
+          "value": "152",
+          "text": "62137 - Beban Pendidikan dan Seminar"
+        },
+        {
+          "value": "153",
+          "text": "62138 - Beban Rapat"
+        },
+        {
+          "value": "154",
+          "text": "62139 - Beban Asuransi"
+        },
+        {
+          "value": "155",
+          "text": "62140 - Beban Admin Bank"
+        },
+        {
+          "value": "156",
+          "text": "62141 - Beban Provisi"
+        },
+        {
+          "value": "157",
+          "text": "62142 - Beban Sewa Kendaraan"
+        },
+        {
+          "value": "158",
+          "text": "62143 - Beban Amortisasi Sewa"
+        },
+        {
+          "value": "159",
+          "text": "62144 - Beban Pajak"
+        },
+        {
+          "value": "160",
+          "text": "62145 - Beban Gedung"
+        },
+        {
+          "value": "161",
+          "text": "62146 - Beban Kendaraan"
+        },
+        {
+          "value": "162",
+          "text": "62147 - Beban Spare Part (Non PPh 23)"
+        },
+        {
+          "value": "163",
+          "text": "62148 - Beban Peny Bangunan Kantor"
+        },
+        {
+          "value": "164",
+          "text": "62149 - Beban Peny Inventaris Kantor"
+        },
+        {
+          "value": "165",
+          "text": "62150 - Beban Penyusutan Kendaraan"
+        },
+        {
+          "value": "166",
+          "text": "62151 - Beban PBB"
+        },
+        {
+          "value": "167",
+          "text": "62152 - Beban Perbaikan Inventaris"
+        },
+        {
+          "value": "168",
+          "text": "62153 - Beban Pajak B3"
+        },
+        {
+          "value": "169",
+          "text": "62154 - Beban Sewa"
+        },
+        {
+          "value": "170",
+          "text": "62155 - Beban PPh 21"
+        },
+        {
+          "value": "171",
+          "text": "62156 - Beban Direksi"
+        },
+        {
+          "value": "172",
+          "text": "62157 - Beban Tenaga Kerja Outsoursing"
+        },
+        {
+          "value": "173",
+          "text": "62158 - Beban Pinjam Pakai"
+        },
+        {
+          "value": "175",
+          "text": "72111 - Kurang lebih Bayar"
+        },
+        {
+          "value": "176",
+          "text": "72112 - Pajak Jasa Giro"
+        },
+        {
+          "value": "177",
+          "text": "72113 - Beban Bunga Bank"
+        },
+        {
+          "value": "178",
+          "text": "72114 - Beban Bunga Pihak Ketiga"
+        },
+        {
+          "value": "179",
+          "text": "72115 - Beban Selisih Kurs"
+        },
+        {
+          "value": "180",
+          "text": "72116 - Beban Lainnya"
+        },
+        {
+          "value": "181",
+          "text": "72117 - Beban Selisih Tagihan"
+        },
+        {
+          "value": "182",
+          "text": "72118 - Beban Supplies"
+        },
+        {
+          "value": "184",
+          "text": "81111 - Beban Pajak Penghasilan"
+        },
+        {
+          "value": "185",
+          "text": "51128 - Harga Pokok Sample Kosmetik"
+        },
+        {
+          "value": "186",
+          "text": "51127 - Beban Import"
+        },
+        {
+          "value": "187",
+          "text": "61114 - Beban Proofing Packing"
+        },
+        {
+          "value": "188",
+          "text": "71114 - Potongan Pembayaran"
+        },
+        {
+          "value": "189",
+          "text": "21516 - Hutang Sewa"
+        }
+      ]
+    },
+    "coa_8": {
+      "name": "coa_8",
+      "id": "coa_8",
+      "options": [
+        {
+          "value": "2",
+          "text": "11111 - Kas Utama"
+        },
+        {
+          "value": "3",
+          "text": "11112 - Kas Kecil"
+        },
+        {
+          "value": "5",
+          "text": "11201 - Investasi"
+        },
+        {
+          "value": "7",
+          "text": "11212 - BCA (2640351589)"
+        },
+        {
+          "value": "9",
+          "text": "11221 - Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "10",
+          "text": "11311 - Ayat Silang"
+        },
+        {
+          "value": "12",
+          "text": "11411 - Piutang Dagang"
+        },
+        {
+          "value": "13",
+          "text": "11412 - Uang Muka pembelian"
+        },
+        {
+          "value": "15",
+          "text": "11511 - Piutang Karyawan"
+        },
+        {
+          "value": "16",
+          "text": "11517 - Piutang Pihak Ketiga-Lainnya"
+        },
+        {
+          "value": "18",
+          "text": "11611 - Persediaan Bahan Baku"
+        },
+        {
+          "value": "19",
+          "text": "11612 - Persediaan Bahan Pembantu"
+        },
+        {
+          "value": "20",
+          "text": "11615 - Persediaan Setengah Jadi"
+        },
+        {
+          "value": "21",
+          "text": "11616 - Persediaan Barang Jadi"
+        },
+        {
+          "value": "22",
+          "text": "11617 - Persediaan Barang Lain"
+        },
+        {
+          "value": "23",
+          "text": "11618 - Persediaan Dalam Perjalanan"
+        },
+        {
+          "value": "25",
+          "text": "11711 - Uang Muka PPh 22"
+        },
+        {
+          "value": "26",
+          "text": "11712 - Uang Muka PPh 23"
+        },
+        {
+          "value": "27",
+          "text": "11713 - Uang Muka PPh 25"
+        },
+        {
+          "value": "28",
+          "text": "11714 - Piutang PPh 28"
+        },
+        {
+          "value": "29",
+          "text": "11715 - PPN Masukan"
+        },
+        {
+          "value": "31",
+          "text": "11811 - Uang Muka Pembelian Aktiva"
+        },
+        {
+          "value": "32",
+          "text": "11812 - Uang Muka Pembelian Lain"
+        },
+        {
+          "value": "34",
+          "text": "11911 - Iklan Dibayar Dimuka"
+        },
+        {
+          "value": "35",
+          "text": "11912 - Asuransi Dibayar Dimuka"
+        },
+        {
+          "value": "36",
+          "text": "11913 - Sewa Dibayar Dimuka"
+        },
+        {
+          "value": "38",
+          "text": "12111 - Tanah"
+        },
+        {
+          "value": "39",
+          "text": "12112 - Bangunan Kantor"
+        },
+        {
+          "value": "40",
+          "text": "12113 - Bangunan Pabrik"
+        },
+        {
+          "value": "41",
+          "text": "12114 - Inventaris Kantor"
+        },
+        {
+          "value": "42",
+          "text": "12115 - Inventaris Pabrik"
+        },
+        {
+          "value": "43",
+          "text": "12116 - Kendaraan"
+        },
+        {
+          "value": "44",
+          "text": "12117 - Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "46",
+          "text": "12211 - Akum Peny Bangunan Kantor"
+        },
+        {
+          "value": "47",
+          "text": "12212 - Akum Peny Bangunan Pabrik"
+        },
+        {
+          "value": "48",
+          "text": "12213 - Akum Peny Inventaris Kantor"
+        },
+        {
+          "value": "49",
+          "text": "12214 - Akum Peny Inventaris Pabrik"
+        },
+        {
+          "value": "50",
+          "text": "12215 - Akum Peny Kendaraan"
+        },
+        {
+          "value": "51",
+          "text": "12216 - Akum Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "53",
+          "text": "21111 - Hutang Dagang"
+        },
+        {
+          "value": "54",
+          "text": "21113 - Uang Muka Penjualan"
+        },
+        {
+          "value": "56",
+          "text": "21211 - Uang Muka Ongkir"
+        },
+        {
+          "value": "58",
+          "text": "21311 - Hutang PPh 21"
+        },
+        {
+          "value": "59",
+          "text": "21312 - Hutang PPh 22"
+        },
+        {
+          "value": "60",
+          "text": "21313 - Hutang PPh 23"
+        },
+        {
+          "value": "61",
+          "text": "21314 - Hutang PPh 25"
+        },
+        {
+          "value": "62",
+          "text": "21315 - Hutang PPh 4 (2)"
+        },
+        {
+          "value": "63",
+          "text": "21316 - Hutang PPh 29"
+        },
+        {
+          "value": "64",
+          "text": "21317 - PPN Keluaran"
+        },
+        {
+          "value": "65",
+          "text": "21318 - PPN Keluaran Yang Diperhitungkan"
+        },
+        {
+          "value": "67",
+          "text": "21411 - Biaya YMHD Gaji"
+        },
+        {
+          "value": "68",
+          "text": "21412 - Biaya YMHD Telp, Listrik, Air dan Internet"
+        },
+        {
+          "value": "69",
+          "text": "21413 - Biaya YMHD Lain"
+        },
+        {
+          "value": "71",
+          "text": "21511 - Hutang Pemegang Saham"
+        },
+        {
+          "value": "72",
+          "text": "21512 - Hutang Pihak Ketiga"
+        },
+        {
+          "value": "73",
+          "text": "21513 - Hutang Lain"
+        },
+        {
+          "value": "74",
+          "text": "21514 - Hutang Dagang Yang Belum Difakturkan"
+        },
+        {
+          "value": "75",
+          "text": "21515 - Hutang Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "77",
+          "text": "31111 - Modal Saham"
+        },
+        {
+          "value": "79",
+          "text": "31211 - Opening Balance Equity"
+        },
+        {
+          "value": "80",
+          "text": "31212 - Laba Ditahan"
+        },
+        {
+          "value": "81",
+          "text": "31213 - Deviden"
+        },
+        {
+          "value": "83",
+          "text": "41111 - Penjualan Kosmetik"
+        },
+        {
+          "value": "84",
+          "text": "41113 - Penjualan Sampel"
+        },
+        {
+          "value": "85",
+          "text": "41114 - Pendapatan Ongkir"
+        },
+        {
+          "value": "87",
+          "text": "41211 - Retur Penjualan"
+        },
+        {
+          "value": "88",
+          "text": "41212 - Potongan Penjualan"
+        },
+        {
+          "value": "90",
+          "text": "51111 - Harga Pokok Barang Jadi"
+        },
+        {
+          "value": "91",
+          "text": "51112 - Harga Pokok Bahan Baku"
+        },
+        {
+          "value": "92",
+          "text": "51113 - Harga Pokok Bahan Pembantu"
+        },
+        {
+          "value": "93",
+          "text": "51114 - Pemakaian Bahan Baku"
+        },
+        {
+          "value": "94",
+          "text": "51115 - Pemakaian Bahan Pembantu"
+        },
+        {
+          "value": "95",
+          "text": "51116 - Tenaga Kerja Pabrik"
+        },
+        {
+          "value": "96",
+          "text": "51117 - Listrik Pabrik"
+        },
+        {
+          "value": "97",
+          "text": "51118 - Air Pabrik"
+        },
+        {
+          "value": "98",
+          "text": "51119 - Beban Peny Bangunan Pabrik"
+        },
+        {
+          "value": "99",
+          "text": "51120 - Beban Peny Inventaris Pabrik"
+        },
+        {
+          "value": "100",
+          "text": "51121 - Beban Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "101",
+          "text": "51122 - Overhead Pabrik Lain"
+        },
+        {
+          "value": "102",
+          "text": "51123 - Variance"
+        },
+        {
+          "value": "103",
+          "text": "51124 - Koreksi Stock"
+        },
+        {
+          "value": "104",
+          "text": "51125 - Beban Laboratorium"
+        },
+        {
+          "value": "105",
+          "text": "51126 - Koreksi Stock Retur Rusak"
+        },
+        {
+          "value": "107",
+          "text": "71111 - Pendapatan Jasa Giro"
+        },
+        {
+          "value": "108",
+          "text": "71112 - Penjualan Aktiva"
+        },
+        {
+          "value": "109",
+          "text": "71113 - Pendapatan Lain-Lain"
+        },
+        {
+          "value": "111",
+          "text": "61111 - Beban Komisi"
+        },
+        {
+          "value": "112",
+          "text": "61115 - Beban Pendaftaran BPOM"
+        },
+        {
+          "value": "113",
+          "text": "61116 - Beban Pendaftaran Merk"
+        },
+        {
+          "value": "114",
+          "text": "61117 - Beban Digital Marketing"
+        },
+        {
+          "value": "115",
+          "text": "61118 - Beban Iklan Promosi Penjualan"
+        },
+        {
+          "value": "116",
+          "text": "61119 - Beban Angkut"
+        },
+        {
+          "value": "117",
+          "text": "61120 - Beban Pameran"
+        },
+        {
+          "value": "118",
+          "text": "61121 - Beban Penelitian &amp; Pengembangan"
+        },
+        {
+          "value": "119",
+          "text": "61122 - Beban Pendaftaran HSA"
+        },
+        {
+          "value": "120",
+          "text": "61123 - Beban Pembuatan Video"
+        },
+        {
+          "value": "121",
+          "text": "61124 - Beban Bensin &amp; Solar Gudang"
+        },
+        {
+          "value": "122",
+          "text": "61125 - Beban Perjalanan Dinas Luar Kota"
+        },
+        {
+          "value": "123",
+          "text": "61126 - Beban Perjalanan Dinas Luar Pulau"
+        },
+        {
+          "value": "124",
+          "text": "61127 - Beban Penghapusan Piutang"
+        },
+        {
+          "value": "126",
+          "text": "62111 - Beban Gaji"
+        },
+        {
+          "value": "127",
+          "text": "62112 - Beban Lembur"
+        },
+        {
+          "value": "128",
+          "text": "62113 - Beban Insentif Karyawan"
+        },
+        {
+          "value": "129",
+          "text": "62114 - Beban Bonus &amp; Gratifikasi"
+        },
+        {
+          "value": "130",
+          "text": "62115 - Beban THR"
+        },
+        {
+          "value": "131",
+          "text": "62116 - Beban Jamsostek /Astek"
+        },
+        {
+          "value": "132",
+          "text": "62117 - Beban Honorarium"
+        },
+        {
+          "value": "133",
+          "text": "62118 - Beban Tunjangan Makan"
+        },
+        {
+          "value": "134",
+          "text": "62119 - Beban Tunjangan Pengobatan"
+        },
+        {
+          "value": "135",
+          "text": "62120 - Beban Tunjangan Transportasi"
+        },
+        {
+          "value": "136",
+          "text": "62121 - Beban Tunjangan Perumahan"
+        },
+        {
+          "value": "137",
+          "text": "62122 - Beban Kenikmatan Lainnya"
+        },
+        {
+          "value": "138",
+          "text": "62123 - Beban Honor Manajemen"
+        },
+        {
+          "value": "139",
+          "text": "62124 - Beban Honor Tenaga Ahli Lainnya"
+        },
+        {
+          "value": "140",
+          "text": "62125 - Beban Pos dan Materai"
+        },
+        {
+          "value": "141",
+          "text": "62126 - Beban Perijinan"
+        },
+        {
+          "value": "142",
+          "text": "62127 - Beban Retribusi"
+        },
+        {
+          "value": "143",
+          "text": "62128 - Beban Jamuan Entertaint"
+        },
+        {
+          "value": "144",
+          "text": "62129 - Beban Sumbangan"
+        },
+        {
+          "value": "145",
+          "text": "62130 - Beban Listrik"
+        },
+        {
+          "value": "146",
+          "text": "62131 - Beban Air"
+        },
+        {
+          "value": "147",
+          "text": "62132 - Beban Gas Negara/LPG"
+        },
+        {
+          "value": "148",
+          "text": "62133 - Beban Telp, Fax dan Internet"
+        },
+        {
+          "value": "149",
+          "text": "62134 - Beban Bensin &amp; Solar"
+        },
+        {
+          "value": "150",
+          "text": "62135 - Beban Pengiriman Surat &amp; Paket"
+        },
+        {
+          "value": "151",
+          "text": "62136 - Beban Stationery"
+        },
+        {
+          "value": "152",
+          "text": "62137 - Beban Pendidikan dan Seminar"
+        },
+        {
+          "value": "153",
+          "text": "62138 - Beban Rapat"
+        },
+        {
+          "value": "154",
+          "text": "62139 - Beban Asuransi"
+        },
+        {
+          "value": "155",
+          "text": "62140 - Beban Admin Bank"
+        },
+        {
+          "value": "156",
+          "text": "62141 - Beban Provisi"
+        },
+        {
+          "value": "157",
+          "text": "62142 - Beban Sewa Kendaraan"
+        },
+        {
+          "value": "158",
+          "text": "62143 - Beban Amortisasi Sewa"
+        },
+        {
+          "value": "159",
+          "text": "62144 - Beban Pajak"
+        },
+        {
+          "value": "160",
+          "text": "62145 - Beban Gedung"
+        },
+        {
+          "value": "161",
+          "text": "62146 - Beban Kendaraan"
+        },
+        {
+          "value": "162",
+          "text": "62147 - Beban Spare Part (Non PPh 23)"
+        },
+        {
+          "value": "163",
+          "text": "62148 - Beban Peny Bangunan Kantor"
+        },
+        {
+          "value": "164",
+          "text": "62149 - Beban Peny Inventaris Kantor"
+        },
+        {
+          "value": "165",
+          "text": "62150 - Beban Penyusutan Kendaraan"
+        },
+        {
+          "value": "166",
+          "text": "62151 - Beban PBB"
+        },
+        {
+          "value": "167",
+          "text": "62152 - Beban Perbaikan Inventaris"
+        },
+        {
+          "value": "168",
+          "text": "62153 - Beban Pajak B3"
+        },
+        {
+          "value": "169",
+          "text": "62154 - Beban Sewa"
+        },
+        {
+          "value": "170",
+          "text": "62155 - Beban PPh 21"
+        },
+        {
+          "value": "171",
+          "text": "62156 - Beban Direksi"
+        },
+        {
+          "value": "172",
+          "text": "62157 - Beban Tenaga Kerja Outsoursing"
+        },
+        {
+          "value": "173",
+          "text": "62158 - Beban Pinjam Pakai"
+        },
+        {
+          "value": "175",
+          "text": "72111 - Kurang lebih Bayar"
+        },
+        {
+          "value": "176",
+          "text": "72112 - Pajak Jasa Giro"
+        },
+        {
+          "value": "177",
+          "text": "72113 - Beban Bunga Bank"
+        },
+        {
+          "value": "178",
+          "text": "72114 - Beban Bunga Pihak Ketiga"
+        },
+        {
+          "value": "179",
+          "text": "72115 - Beban Selisih Kurs"
+        },
+        {
+          "value": "180",
+          "text": "72116 - Beban Lainnya"
+        },
+        {
+          "value": "181",
+          "text": "72117 - Beban Selisih Tagihan"
+        },
+        {
+          "value": "182",
+          "text": "72118 - Beban Supplies"
+        },
+        {
+          "value": "184",
+          "text": "81111 - Beban Pajak Penghasilan"
+        },
+        {
+          "value": "185",
+          "text": "51128 - Harga Pokok Sample Kosmetik"
+        },
+        {
+          "value": "186",
+          "text": "51127 - Beban Import"
+        },
+        {
+          "value": "187",
+          "text": "61114 - Beban Proofing Packing"
+        },
+        {
+          "value": "188",
+          "text": "71114 - Potongan Pembayaran"
+        },
+        {
+          "value": "189",
+          "text": "21516 - Hutang Sewa"
+        }
+      ]
+    }
+  },
+  "coa_manage_create.html": {
+    "type": {
+      "name": "type",
+      "id": "type",
+      "options": [
+        {
+          "value": "1",
+          "text": "Kas/Bank"
+        },
+        {
+          "value": "2",
+          "text": "Piutang Dagang"
+        },
+        {
+          "value": "3",
+          "text": "Persediaan"
+        },
+        {
+          "value": "4",
+          "text": "Aktiva Lancar Lainnya"
+        },
+        {
+          "value": "5",
+          "text": "Akun Hutang"
+        },
+        {
+          "value": "6",
+          "text": "Aktiva Tetap"
+        },
+        {
+          "value": "7",
+          "text": "Akumulasi Penyusutan"
+        },
+        {
+          "value": "8",
+          "text": "Aset Lainnya"
+        },
+        {
+          "value": "9",
+          "text": "Hutang Lancar Lainnya"
+        },
+        {
+          "value": "10",
+          "text": "Ekuitas"
+        },
+        {
+          "value": "11",
+          "text": "Pendapatan"
+        },
+        {
+          "value": "12",
+          "text": "Harga Pokok Penjualan"
+        },
+        {
+          "value": "13",
+          "text": "Beban"
+        },
+        {
+          "value": "14",
+          "text": "Pendapatan Lain-lain"
+        },
+        {
+          "value": "15",
+          "text": "Beban Lain-lain"
+        }
+      ]
+    },
+    "parent": {
+      "name": "parent",
+      "id": "parent",
+      "options": [
+        {
+          "value": "",
+          "text": "Tidak Ada"
+        },
+        {
+          "value": "2",
+          "text": "11111 - Kas Utama"
+        },
+        {
+          "value": "3",
+          "text": "11112 - Kas Kecil"
+        },
+        {
+          "value": "5",
+          "text": "11201 - Investasi"
+        },
+        {
+          "value": "7",
+          "text": "11212 - BCA (2640351589)"
+        },
+        {
+          "value": "9",
+          "text": "11221 - Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "10",
+          "text": "11311 - Ayat Silang"
+        },
+        {
+          "value": "12",
+          "text": "11411 - Piutang Dagang"
+        },
+        {
+          "value": "13",
+          "text": "11412 - Uang Muka pembelian"
+        },
+        {
+          "value": "15",
+          "text": "11511 - Piutang Karyawan"
+        },
+        {
+          "value": "16",
+          "text": "11517 - Piutang Pihak Ketiga-Lainnya"
+        },
+        {
+          "value": "18",
+          "text": "11611 - Persediaan Bahan Baku"
+        },
+        {
+          "value": "19",
+          "text": "11612 - Persediaan Bahan Pembantu"
+        },
+        {
+          "value": "20",
+          "text": "11615 - Persediaan Setengah Jadi"
+        },
+        {
+          "value": "21",
+          "text": "11616 - Persediaan Barang Jadi"
+        },
+        {
+          "value": "22",
+          "text": "11617 - Persediaan Barang Lain"
+        },
+        {
+          "value": "23",
+          "text": "11618 - Persediaan Dalam Perjalanan"
+        },
+        {
+          "value": "25",
+          "text": "11711 - Uang Muka PPh 22"
+        },
+        {
+          "value": "26",
+          "text": "11712 - Uang Muka PPh 23"
+        },
+        {
+          "value": "27",
+          "text": "11713 - Uang Muka PPh 25"
+        },
+        {
+          "value": "28",
+          "text": "11714 - Piutang PPh 28"
+        },
+        {
+          "value": "29",
+          "text": "11715 - PPN Masukan"
+        },
+        {
+          "value": "31",
+          "text": "11811 - Uang Muka Pembelian Aktiva"
+        },
+        {
+          "value": "32",
+          "text": "11812 - Uang Muka Pembelian Lain"
+        },
+        {
+          "value": "34",
+          "text": "11911 - Iklan Dibayar Dimuka"
+        },
+        {
+          "value": "35",
+          "text": "11912 - Asuransi Dibayar Dimuka"
+        },
+        {
+          "value": "36",
+          "text": "11913 - Sewa Dibayar Dimuka"
+        },
+        {
+          "value": "38",
+          "text": "12111 - Tanah"
+        },
+        {
+          "value": "39",
+          "text": "12112 - Bangunan Kantor"
+        },
+        {
+          "value": "40",
+          "text": "12113 - Bangunan Pabrik"
+        },
+        {
+          "value": "41",
+          "text": "12114 - Inventaris Kantor"
+        },
+        {
+          "value": "42",
+          "text": "12115 - Inventaris Pabrik"
+        },
+        {
+          "value": "43",
+          "text": "12116 - Kendaraan"
+        },
+        {
+          "value": "44",
+          "text": "12117 - Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "46",
+          "text": "12211 - Akum Peny Bangunan Kantor"
+        },
+        {
+          "value": "47",
+          "text": "12212 - Akum Peny Bangunan Pabrik"
+        },
+        {
+          "value": "48",
+          "text": "12213 - Akum Peny Inventaris Kantor"
+        },
+        {
+          "value": "49",
+          "text": "12214 - Akum Peny Inventaris Pabrik"
+        },
+        {
+          "value": "50",
+          "text": "12215 - Akum Peny Kendaraan"
+        },
+        {
+          "value": "51",
+          "text": "12216 - Akum Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "53",
+          "text": "21111 - Hutang Dagang"
+        },
+        {
+          "value": "54",
+          "text": "21113 - Uang Muka Penjualan"
+        },
+        {
+          "value": "56",
+          "text": "21211 - Uang Muka Ongkir"
+        },
+        {
+          "value": "58",
+          "text": "21311 - Hutang PPh 21"
+        },
+        {
+          "value": "59",
+          "text": "21312 - Hutang PPh 22"
+        },
+        {
+          "value": "60",
+          "text": "21313 - Hutang PPh 23"
+        },
+        {
+          "value": "61",
+          "text": "21314 - Hutang PPh 25"
+        },
+        {
+          "value": "62",
+          "text": "21315 - Hutang PPh 4 (2)"
+        },
+        {
+          "value": "63",
+          "text": "21316 - Hutang PPh 29"
+        },
+        {
+          "value": "64",
+          "text": "21317 - PPN Keluaran"
+        },
+        {
+          "value": "65",
+          "text": "21318 - PPN Keluaran Yang Diperhitungkan"
+        },
+        {
+          "value": "67",
+          "text": "21411 - Biaya YMHD Gaji"
+        },
+        {
+          "value": "68",
+          "text": "21412 - Biaya YMHD Telp, Listrik, Air dan Internet"
+        },
+        {
+          "value": "69",
+          "text": "21413 - Biaya YMHD Lain"
+        },
+        {
+          "value": "71",
+          "text": "21511 - Hutang Pemegang Saham"
+        },
+        {
+          "value": "72",
+          "text": "21512 - Hutang Pihak Ketiga"
+        },
+        {
+          "value": "73",
+          "text": "21513 - Hutang Lain"
+        },
+        {
+          "value": "74",
+          "text": "21514 - Hutang Dagang Yang Belum Difakturkan"
+        },
+        {
+          "value": "75",
+          "text": "21515 - Hutang Pembelian Aktiva Tetap"
+        },
+        {
+          "value": "77",
+          "text": "31111 - Modal Saham"
+        },
+        {
+          "value": "79",
+          "text": "31211 - Opening Balance Equity"
+        },
+        {
+          "value": "80",
+          "text": "31212 - Laba Ditahan"
+        },
+        {
+          "value": "81",
+          "text": "31213 - Deviden"
+        },
+        {
+          "value": "83",
+          "text": "41111 - Penjualan Kosmetik"
+        },
+        {
+          "value": "84",
+          "text": "41113 - Penjualan Sampel"
+        },
+        {
+          "value": "85",
+          "text": "41114 - Pendapatan Ongkir"
+        },
+        {
+          "value": "87",
+          "text": "41211 - Retur Penjualan"
+        },
+        {
+          "value": "88",
+          "text": "41212 - Potongan Penjualan"
+        },
+        {
+          "value": "90",
+          "text": "51111 - Harga Pokok Barang Jadi"
+        },
+        {
+          "value": "91",
+          "text": "51112 - Harga Pokok Bahan Baku"
+        },
+        {
+          "value": "92",
+          "text": "51113 - Harga Pokok Bahan Pembantu"
+        },
+        {
+          "value": "93",
+          "text": "51114 - Pemakaian Bahan Baku"
+        },
+        {
+          "value": "94",
+          "text": "51115 - Pemakaian Bahan Pembantu"
+        },
+        {
+          "value": "95",
+          "text": "51116 - Tenaga Kerja Pabrik"
+        },
+        {
+          "value": "96",
+          "text": "51117 - Listrik Pabrik"
+        },
+        {
+          "value": "97",
+          "text": "51118 - Air Pabrik"
+        },
+        {
+          "value": "98",
+          "text": "51119 - Beban Peny Bangunan Pabrik"
+        },
+        {
+          "value": "99",
+          "text": "51120 - Beban Peny Inventaris Pabrik"
+        },
+        {
+          "value": "100",
+          "text": "51121 - Beban Peny Mesin dan Peralatan Pabrik"
+        },
+        {
+          "value": "101",
+          "text": "51122 - Overhead Pabrik Lain"
+        },
+        {
+          "value": "102",
+          "text": "51123 - Variance"
+        },
+        {
+          "value": "103",
+          "text": "51124 - Koreksi Stock"
+        },
+        {
+          "value": "104",
+          "text": "51125 - Beban Laboratorium"
+        },
+        {
+          "value": "105",
+          "text": "51126 - Koreksi Stock Retur Rusak"
+        },
+        {
+          "value": "107",
+          "text": "71111 - Pendapatan Jasa Giro"
+        },
+        {
+          "value": "108",
+          "text": "71112 - Penjualan Aktiva"
+        },
+        {
+          "value": "109",
+          "text": "71113 - Pendapatan Lain-Lain"
+        },
+        {
+          "value": "111",
+          "text": "61111 - Beban Komisi"
+        },
+        {
+          "value": "112",
+          "text": "61115 - Beban Pendaftaran BPOM"
+        },
+        {
+          "value": "113",
+          "text": "61116 - Beban Pendaftaran Merk"
+        },
+        {
+          "value": "114",
+          "text": "61117 - Beban Digital Marketing"
+        },
+        {
+          "value": "115",
+          "text": "61118 - Beban Iklan Promosi Penjualan"
+        },
+        {
+          "value": "116",
+          "text": "61119 - Beban Angkut"
+        },
+        {
+          "value": "117",
+          "text": "61120 - Beban Pameran"
+        },
+        {
+          "value": "118",
+          "text": "61121 - Beban Penelitian &amp; Pengembangan"
+        },
+        {
+          "value": "119",
+          "text": "61122 - Beban Pendaftaran HSA"
+        },
+        {
+          "value": "120",
+          "text": "61123 - Beban Pembuatan Video"
+        },
+        {
+          "value": "121",
+          "text": "61124 - Beban Bensin &amp; Solar Gudang"
+        },
+        {
+          "value": "122",
+          "text": "61125 - Beban Perjalanan Dinas Luar Kota"
+        },
+        {
+          "value": "123",
+          "text": "61126 - Beban Perjalanan Dinas Luar Pulau"
+        },
+        {
+          "value": "124",
+          "text": "61127 - Beban Penghapusan Piutang"
+        },
+        {
+          "value": "126",
+          "text": "62111 - Beban Gaji"
+        },
+        {
+          "value": "127",
+          "text": "62112 - Beban Lembur"
+        },
+        {
+          "value": "128",
+          "text": "62113 - Beban Insentif Karyawan"
+        },
+        {
+          "value": "129",
+          "text": "62114 - Beban Bonus &amp; Gratifikasi"
+        },
+        {
+          "value": "130",
+          "text": "62115 - Beban THR"
+        },
+        {
+          "value": "131",
+          "text": "62116 - Beban Jamsostek /Astek"
+        },
+        {
+          "value": "132",
+          "text": "62117 - Beban Honorarium"
+        },
+        {
+          "value": "133",
+          "text": "62118 - Beban Tunjangan Makan"
+        },
+        {
+          "value": "134",
+          "text": "62119 - Beban Tunjangan Pengobatan"
+        },
+        {
+          "value": "135",
+          "text": "62120 - Beban Tunjangan Transportasi"
+        },
+        {
+          "value": "136",
+          "text": "62121 - Beban Tunjangan Perumahan"
+        },
+        {
+          "value": "137",
+          "text": "62122 - Beban Kenikmatan Lainnya"
+        },
+        {
+          "value": "138",
+          "text": "62123 - Beban Honor Manajemen"
+        },
+        {
+          "value": "139",
+          "text": "62124 - Beban Honor Tenaga Ahli Lainnya"
+        },
+        {
+          "value": "140",
+          "text": "62125 - Beban Pos dan Materai"
+        },
+        {
+          "value": "141",
+          "text": "62126 - Beban Perijinan"
+        },
+        {
+          "value": "142",
+          "text": "62127 - Beban Retribusi"
+        },
+        {
+          "value": "143",
+          "text": "62128 - Beban Jamuan Entertaint"
+        },
+        {
+          "value": "144",
+          "text": "62129 - Beban Sumbangan"
+        },
+        {
+          "value": "145",
+          "text": "62130 - Beban Listrik"
+        },
+        {
+          "value": "146",
+          "text": "62131 - Beban Air"
+        },
+        {
+          "value": "147",
+          "text": "62132 - Beban Gas Negara/LPG"
+        },
+        {
+          "value": "148",
+          "text": "62133 - Beban Telp, Fax dan Internet"
+        },
+        {
+          "value": "149",
+          "text": "62134 - Beban Bensin &amp; Solar"
+        },
+        {
+          "value": "150",
+          "text": "62135 - Beban Pengiriman Surat &amp; Paket"
+        },
+        {
+          "value": "151",
+          "text": "62136 - Beban Stationery"
+        },
+        {
+          "value": "152",
+          "text": "62137 - Beban Pendidikan dan Seminar"
+        },
+        {
+          "value": "153",
+          "text": "62138 - Beban Rapat"
+        },
+        {
+          "value": "154",
+          "text": "62139 - Beban Asuransi"
+        },
+        {
+          "value": "155",
+          "text": "62140 - Beban Admin Bank"
+        },
+        {
+          "value": "156",
+          "text": "62141 - Beban Provisi"
+        },
+        {
+          "value": "157",
+          "text": "62142 - Beban Sewa Kendaraan"
+        },
+        {
+          "value": "158",
+          "text": "62143 - Beban Amortisasi Sewa"
+        },
+        {
+          "value": "159",
+          "text": "62144 - Beban Pajak"
+        },
+        {
+          "value": "160",
+          "text": "62145 - Beban Gedung"
+        },
+        {
+          "value": "161",
+          "text": "62146 - Beban Kendaraan"
+        },
+        {
+          "value": "162",
+          "text": "62147 - Beban Spare Part (Non PPh 23)"
+        },
+        {
+          "value": "163",
+          "text": "62148 - Beban Peny Bangunan Kantor"
+        },
+        {
+          "value": "164",
+          "text": "62149 - Beban Peny Inventaris Kantor"
+        },
+        {
+          "value": "165",
+          "text": "62150 - Beban Penyusutan Kendaraan"
+        },
+        {
+          "value": "166",
+          "text": "62151 - Beban PBB"
+        },
+        {
+          "value": "167",
+          "text": "62152 - Beban Perbaikan Inventaris"
+        },
+        {
+          "value": "168",
+          "text": "62153 - Beban Pajak B3"
+        },
+        {
+          "value": "169",
+          "text": "62154 - Beban Sewa"
+        },
+        {
+          "value": "170",
+          "text": "62155 - Beban PPh 21"
+        },
+        {
+          "value": "171",
+          "text": "62156 - Beban Direksi"
+        },
+        {
+          "value": "172",
+          "text": "62157 - Beban Tenaga Kerja Outsoursing"
+        },
+        {
+          "value": "173",
+          "text": "62158 - Beban Pinjam Pakai"
+        },
+        {
+          "value": "175",
+          "text": "72111 - Kurang lebih Bayar"
+        },
+        {
+          "value": "176",
+          "text": "72112 - Pajak Jasa Giro"
+        },
+        {
+          "value": "177",
+          "text": "72113 - Beban Bunga Bank"
+        },
+        {
+          "value": "178",
+          "text": "72114 - Beban Bunga Pihak Ketiga"
+        },
+        {
+          "value": "179",
+          "text": "72115 - Beban Selisih Kurs"
+        },
+        {
+          "value": "180",
+          "text": "72116 - Beban Lainnya"
+        },
+        {
+          "value": "181",
+          "text": "72117 - Beban Selisih Tagihan"
+        },
+        {
+          "value": "182",
+          "text": "72118 - Beban Supplies"
+        },
+        {
+          "value": "184",
+          "text": "81111 - Beban Pajak Penghasilan"
+        },
+        {
+          "value": "185",
+          "text": "51128 - Harga Pokok Sample Kosmetik"
+        },
+        {
+          "value": "186",
+          "text": "51127 - Beban Import"
+        },
+        {
+          "value": "187",
+          "text": "61114 - Beban Proofing Packing"
+        },
+        {
+          "value": "188",
+          "text": "71114 - Potongan Pembayaran"
+        },
+        {
+          "value": "189",
+          "text": "21516 - Hutang Sewa"
+        }
+      ]
+    }
+  },
+  "user_manage_create.html": {
+    "role": {
+      "name": "role",
+      "id": "inputRole",
+      "options": [
+        {
+          "value": "1",
+          "text": "Administrator"
+        },
+        {
+          "value": "2",
+          "text": "HRD"
+        },
+        {
+          "value": "3",
+          "text": "Staff Back Office"
+        },
+        {
+          "value": "4",
+          "text": "Purchasing"
+        },
+        {
+          "value": "5",
+          "text": "Warehouse"
+        },
+        {
+          "value": "6",
+          "text": "Head Business Development"
+        },
+        {
+          "value": "7",
+          "text": "Business Development"
+        },
+        {
+          "value": "8",
+          "text": "Head Research and Development"
+        },
+        {
+          "value": "9",
+          "text": "Research and Development"
+        },
+        {
+          "value": "10",
+          "text": "Production Mixing &amp; Filling"
+        },
+        {
+          "value": "11",
+          "text": "Production Packaging"
+        },
+        {
+          "value": "12",
+          "text": "Apoteker Penanggung Jawab"
+        },
+        {
+          "value": "13",
+          "text": "Finance"
+        },
+        {
+          "value": "14",
+          "text": "Digital Marketing"
+        },
+        {
+          "value": "15",
+          "text": "BusDev + HRD"
+        },
+        {
+          "value": "16",
+          "text": "BusDev + Purchasing"
+        }
+      ]
+    }
+  }
+}

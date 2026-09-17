@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsNumber, IsOptional, IsString, IsDateString, Min } from 'class-validator';
+import {
+  IsUUID,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsDateString,
+  Min,
+} from 'class-validator';
 
 export class CreateDownPaymentDto {
   @ApiProperty({ example: 'uuid', description: 'Vendor/Supplier ID' })
@@ -23,7 +30,10 @@ export class CreateDownPaymentDto {
 }
 
 export class PostDownPaymentDto {
-  @ApiProperty({ example: 'uuid', description: 'Source bank account ID for the payment' })
+  @ApiProperty({
+    example: 'uuid',
+    description: 'Source bank account ID for the payment',
+  })
   @IsUUID()
   bankAccountId: string;
 }
@@ -33,7 +43,10 @@ export class ApplyDownPaymentDto {
   @IsUUID()
   billId: string;
 
-  @ApiProperty({ example: 200000, description: 'Amount to apply (cannot exceed remaining)' })
+  @ApiProperty({
+    example: 200000,
+    description: 'Amount to apply (cannot exceed remaining)',
+  })
   @IsNumber()
   @Min(1)
   applyAmount: number;

@@ -14,7 +14,9 @@ describe('StateTransitionService', () => {
         create: jest.fn().mockResolvedValue({ id: 'log-1' }),
         findMany: jest.fn().mockResolvedValue([]),
       },
-      systemOverrideLog: { create: jest.fn().mockResolvedValue({ id: 'ovr-1' }) },
+      systemOverrideLog: {
+        create: jest.fn().mockResolvedValue({ id: 'ovr-1' }),
+      },
       user: { findMany: jest.fn().mockResolvedValue([]) },
     };
     eventEmitterMock = { emit: jest.fn() };
@@ -23,31 +25,37 @@ describe('StateTransitionService', () => {
 
   describe('validateTransition', () => {
     it('accepts allowed transition NEW_LEAD -> CONTACTED', () => {
-      expect(() => service.validateTransition('SalesLead', 'NEW_LEAD', 'CONTACTED')).not.toThrow();
+      expect(() =>
+        service.validateTransition('SalesLead', 'NEW_LEAD', 'CONTACTED'),
+      ).not.toThrow();
     });
 
     it('rejects unknown entity type', () => {
       expect(() =>
-        service.validateTransition('UnknownEntity' as any, 'NEW_LEAD', 'CONTACTED'),
+        service.validateTransition(
+          'UnknownEntity' as any,
+          'NEW_LEAD',
+          'CONTACTED',
+        ),
       ).toThrow(BadRequestException);
     });
 
     it('rejects unknown fromState', () => {
-      expect(() => service.validateTransition('SalesLead', 'NOT_A_STATE', 'CONTACTED')).toThrow(
-        BadRequestException,
-      );
+      expect(() =>
+        service.validateTransition('SalesLead', 'NOT_A_STATE', 'CONTACTED'),
+      ).toThrow(BadRequestException);
     });
 
     it('rejects disallowed transition NEW_LEAD -> WON_DEAL', () => {
-      expect(() => service.validateTransition('SalesLead', 'NEW_LEAD', 'WON_DEAL')).toThrow(
-        BadRequestException,
-      );
+      expect(() =>
+        service.validateTransition('SalesLead', 'NEW_LEAD', 'WON_DEAL'),
+      ).toThrow(BadRequestException);
     });
 
     it('rejects transitions out of terminal states (LOST has no exits)', () => {
-      expect(() => service.validateTransition('SalesLead', 'LOST', 'CONTACTED')).toThrow(
-        BadRequestException,
-      );
+      expect(() =>
+        service.validateTransition('SalesLead', 'LOST', 'CONTACTED'),
+      ).toThrow(BadRequestException);
     });
   });
 
@@ -58,7 +66,9 @@ describe('StateTransitionService', () => {
     });
 
     it('returns null for non-gate-controlled transition', () => {
-      expect(service.getGateInfo('SalesLead', 'NEW_LEAD', 'CONTACTED')).toBeNull();
+      expect(
+        service.getGateInfo('SalesLead', 'NEW_LEAD', 'CONTACTED'),
+      ).toBeNull();
     });
   });
 
@@ -69,20 +79,30 @@ describe('StateTransitionService', () => {
     });
 
     it('returns [] for unknown entity', () => {
-      expect(service.getAllowedTransitions('UnknownEntity' as any, 'NEW_LEAD')).toEqual([]);
+      expect(
+        service.getAllowedTransitions('UnknownEntity' as any, 'NEW_LEAD'),
+      ).toEqual([]);
     });
 
     it('returns [] for unknown current state', () => {
-      expect(service.getAllowedTransitions('SalesLead', 'NOT_A_STATE')).toEqual([]);
+      expect(service.getAllowedTransitions('SalesLead', 'NOT_A_STATE')).toEqual(
+        [],
+      );
     });
   });
 
   describe('executeTransition (non-gate)', () => {
     it('logs the transition + returns void', async () => {
-      await service.executeTransition('SalesLead', 'lead-1', 'NEW_LEAD', 'CONTACTED', {
-        changedById: 'user-1',
-        reason: 'initial contact',
-      });
+      await service.executeTransition(
+        'SalesLead',
+        'lead-1',
+        'NEW_LEAD',
+        'CONTACTED',
+        {
+          changedById: 'user-1',
+          reason: 'initial contact',
+        },
+      );
       expect(prismaMock.stateTransitionLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -100,9 +120,15 @@ describe('StateTransitionService', () => {
   describe('executeTransition (gate-controlled)', () => {
     it('throws ForbiddenException when overridePin missing', async () => {
       await expect(
-        service.executeTransition('SalesLead', 'lead-1', 'SPK_SIGNED', 'DP_PAID', {
-          changedById: 'user-1',
-        }),
+        service.executeTransition(
+          'SalesLead',
+          'lead-1',
+          'SPK_SIGNED',
+          'DP_PAID',
+          {
+            changedById: 'user-1',
+          },
+        ),
       ).rejects.toThrow(ForbiddenException);
       expect(eventEmitterMock.emit).not.toHaveBeenCalled();
     });
@@ -111,10 +137,16 @@ describe('StateTransitionService', () => {
       prismaMock.user.findMany.mockResolvedValueOnce([
         { id: 'admin-1', managerPin: '123456' },
       ]);
-      await service.executeTransition('SalesLead', 'lead-1', 'SPK_SIGNED', 'DP_PAID', {
-        changedById: 'user-1',
-        overridePin: '123456',
-      });
+      await service.executeTransition(
+        'SalesLead',
+        'lead-1',
+        'SPK_SIGNED',
+        'DP_PAID',
+        {
+          changedById: 'user-1',
+          overridePin: '123456',
+        },
+      );
       expect(prismaMock.systemOverrideLog.create).toHaveBeenCalled();
       expect(eventEmitterMock.emit).toHaveBeenCalledWith(
         'finance.gate2.verified',
@@ -127,9 +159,15 @@ describe('StateTransitionService', () => {
         { id: 'admin-1', managerPin: 'correct-pin' },
       ]);
       await expect(
-        service.executeTransition('SalesLead', 'lead-1', 'SPK_SIGNED', 'DP_PAID', {
-          overridePin: 'wrong-pin',
-        }),
+        service.executeTransition(
+          'SalesLead',
+          'lead-1',
+          'SPK_SIGNED',
+          'DP_PAID',
+          {
+            overridePin: 'wrong-pin',
+          },
+        ),
       ).rejects.toThrow(ForbiddenException);
     });
   });

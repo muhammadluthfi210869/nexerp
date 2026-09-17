@@ -41,7 +41,12 @@ export interface AttachInput {
   threadId?: string;
   replyId?: string;
   uploadedById: string;
-  file: { buffer: Buffer; originalname: string; mimetype: string; size: number };
+  file: {
+    buffer: Buffer;
+    originalname: string;
+    mimetype: string;
+    size: number;
+  };
 }
 
 export interface ListThreadsFilter {
@@ -117,7 +122,8 @@ export class CommunicationService {
       where: { id: threadId },
       select: { id: true, status: true, title: true, createdById: true },
     });
-    if (!existing) throw new ResourceNotFoundException('CommunicationThread', threadId);
+    if (!existing)
+      throw new ResourceNotFoundException('CommunicationThread', threadId);
 
     // State transition only when status changes — title edits don't need
     // state-machine logging. StateMachineService intentionally not wired yet
@@ -169,7 +175,9 @@ export class CommunicationService {
             author: { select: { id: true, fullName: true, email: true } },
             mentions: {
               include: {
-                mentionedUser: { select: { id: true, fullName: true, email: true } },
+                mentionedUser: {
+                  select: { id: true, fullName: true, email: true },
+                },
               },
             },
             attachments: true,
@@ -178,7 +186,8 @@ export class CommunicationService {
         attachments: true,
       },
     });
-    if (!thread) throw new ResourceNotFoundException('CommunicationThread', threadId);
+    if (!thread)
+      throw new ResourceNotFoundException('CommunicationThread', threadId);
     return thread;
   }
 
@@ -194,7 +203,11 @@ export class CommunicationService {
       OR: [
         { createdById: userId },
         { replies: { some: { authorId: userId } } },
-        { replies: { some: { mentions: { some: { mentionedUserId: userId } } } } },
+        {
+          replies: {
+            some: { mentions: { some: { mentionedUserId: userId } } },
+          },
+        },
       ],
     };
 
@@ -210,7 +223,11 @@ export class CommunicationService {
     });
   }
 
-  async listThreadsByContext(contextType: string, contextId: string, status?: ThreadStatus) {
+  async listThreadsByContext(
+    contextType: string,
+    contextId: string,
+    status?: ThreadStatus,
+  ) {
     return this.prisma.communicationThread.findMany({
       where: { contextType, contextId, ...(status && { status }) },
       orderBy: { updatedAt: 'desc' },
@@ -229,7 +246,10 @@ export class CommunicationService {
       select: { id: true, status: true },
     });
     if (!thread) {
-      throw new ResourceNotFoundException('CommunicationThread', input.threadId);
+      throw new ResourceNotFoundException(
+        'CommunicationThread',
+        input.threadId,
+      );
     }
     if (thread.status === ThreadStatus.ARCHIVED) {
       throw new BusinessRuleViolationException(
@@ -264,7 +284,9 @@ export class CommunicationService {
     // Inline mentions (deduped via DB unique constraint).
     const createdMentions = [];
     if (input.mentionIds && input.mentionIds.length) {
-      const dedup = [...new Set(input.mentionIds)].filter((id) => id !== input.authorId);
+      const dedup = [...new Set(input.mentionIds)].filter(
+        (id) => id !== input.authorId,
+      );
       for (const mentionedUserId of dedup) {
         try {
           const mention = await this.prisma.communicationMention.create({
@@ -332,7 +354,8 @@ export class CommunicationService {
       where: { id: replyId },
       select: { id: true, authorId: true, threadId: true },
     });
-    if (!reply) throw new ResourceNotFoundException('CommunicationThreadReply', replyId);
+    if (!reply)
+      throw new ResourceNotFoundException('CommunicationThreadReply', replyId);
     if (mentionedUserId === reply.authorId) {
       throw new BusinessRuleViolationException(
         'SELF_MENTION',
@@ -346,7 +369,10 @@ export class CommunicationService {
         data: { replyId, mentionedUserId },
       });
     } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
         throw new BusinessRuleViolationException(
           'MENTION_EXISTS',
           'User sudah di-mention di reply ini',
@@ -396,14 +422,22 @@ export class CommunicationService {
         where: { id: input.threadId },
         select: { id: true },
       });
-      if (!t) throw new ResourceNotFoundException('CommunicationThread', input.threadId);
+      if (!t)
+        throw new ResourceNotFoundException(
+          'CommunicationThread',
+          input.threadId,
+        );
     }
     if (input.replyId) {
       const r = await this.prisma.communicationThreadReply.findUnique({
         where: { id: input.replyId },
         select: { id: true },
       });
-      if (!r) throw new ResourceNotFoundException('CommunicationThreadReply', input.replyId);
+      if (!r)
+        throw new ResourceNotFoundException(
+          'CommunicationThreadReply',
+          input.replyId,
+        );
     }
 
     const storagePath = await this.fileStorage.saveFile(

@@ -22,7 +22,9 @@ export class BankReconciliationsController {
   constructor(private service: BankReconciliationsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List bank reconciliations (filter by account, status)' })
+  @ApiOperation({
+    summary: 'List bank reconciliations (filter by account, status)',
+  })
   findAll(
     @Query('bankAccountId') bankAccountId?: string,
     @Query('status') status?: string,
@@ -31,7 +33,10 @@ export class BankReconciliationsController {
   }
 
   @Get('summary')
-  @ApiOperation({ summary: 'Get summary: last recon status + unreconciled count for an account' })
+  @ApiOperation({
+    summary:
+      'Get summary: last recon status + unreconciled count for an account',
+  })
   summary(@Query('bankAccountId') bankAccountId: string) {
     if (!bankAccountId) throw new BadRequestException('bankAccountId required');
     return this.service.getSummary(bankAccountId);
@@ -51,7 +56,9 @@ export class BankReconciliationsController {
   }
 
   @Post(':id/finalize')
-  @ApiOperation({ summary: 'Finalize reconciliation — mark all in-period txns as reconciled' })
+  @ApiOperation({
+    summary: 'Finalize reconciliation — mark all in-period txns as reconciled',
+  })
   finalize(
     @Req() req: any,
     @Param('id') id: string,
@@ -62,7 +69,9 @@ export class BankReconciliationsController {
   }
 
   @Post(':id/reopen')
-  @ApiOperation({ summary: 'Re-open a finalized reconciliation (admin correction)' })
+  @ApiOperation({
+    summary: 'Re-open a finalized reconciliation (admin correction)',
+  })
   reopen(@Req() req: any, @Param('id') id: string) {
     const userId = req.user?.id;
     return this.service.reopen(userId, id);

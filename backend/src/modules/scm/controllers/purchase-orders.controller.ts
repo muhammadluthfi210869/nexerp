@@ -24,7 +24,7 @@ import { CreatePurchaseOrderDto } from '../dto/create-po.dto';
 @ApiTags('scm')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller(['scm/purchase-orders', 'v1/scm/purchase-orders'])
+@Controller('scm/purchase-orders')
 export class PurchaseOrdersController {
   constructor(private readonly poService: PurchaseOrdersService) {}
 

@@ -59,7 +59,9 @@ describe('FixedAssetsService', () => {
 
     it('throws NotFoundException when missing', async () => {
       prismaMock.fixedAsset.findUnique.mockResolvedValueOnce(null);
-      await expect(service.findOne('missing')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('missing')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -94,7 +96,9 @@ describe('FixedAssetsService', () => {
       };
       await service.create('user-1', dto);
       expect(prismaMock.fixedAsset.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ assetNumber: 'FA-CUSTOM-1' }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ assetNumber: 'FA-CUSTOM-1' }),
+        }),
       );
     });
 
@@ -150,12 +154,19 @@ describe('FixedAssetsService', () => {
 
     it('throws NotFoundException when missing', async () => {
       prismaMock.fixedAsset.findUnique.mockResolvedValueOnce(null);
-      await expect(service.update('missing', { assetName: 'x' })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.update('missing', { assetName: 'x' }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('throws BadRequestException when status != ACTIVE', async () => {
-      prismaMock.fixedAsset.findUnique.mockResolvedValueOnce({ ...FAKE_ASSET, status: 'DISPOSED' });
-      await expect(service.update('fa-1', { assetName: 'x' })).rejects.toThrow(BadRequestException);
+      prismaMock.fixedAsset.findUnique.mockResolvedValueOnce({
+        ...FAKE_ASSET,
+        status: 'DISPOSED',
+      });
+      await expect(service.update('fa-1', { assetName: 'x' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -182,7 +193,9 @@ describe('FixedAssetsService', () => {
 
     it('throws NotFoundException when asset missing', async () => {
       prismaMock.fixedAsset.findUnique.mockResolvedValueOnce(null);
-      await expect(service.getBookValue('missing')).rejects.toThrow(NotFoundException);
+      await expect(service.getBookValue('missing')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

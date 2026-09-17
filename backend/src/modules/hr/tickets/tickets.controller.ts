@@ -20,7 +20,7 @@ import { Roles } from '../../auth/roles.decorator';
 
 @ApiTags('hr/tickets')
 @ApiBearerAuth()
-@Controller(['hr/tickets', 'v1/hr/tickets'])
+@Controller('hr/tickets')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TicketsController {
   constructor(private readonly service: TicketsService) {}

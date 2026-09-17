@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsNumber, IsString, IsOptional, IsIn, IsDateString, Min } from 'class-validator';
+import {
+  IsUUID,
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsIn,
+  IsDateString,
+  Min,
+} from 'class-validator';
 
 export class CreateBankTransactionDto {
   @ApiProperty({ example: 'uuid', description: 'Bank account ID' })
@@ -18,7 +26,10 @@ export class CreateBankTransactionDto {
   @IsIn(['DEPOSIT', 'WITHDRAWAL', 'TRANSFER', 'ADJUSTMENT'])
   transactionType: 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER' | 'ADJUSTMENT';
 
-  @ApiProperty({ example: 1500000, description: 'Amount in IDR (always positive)' })
+  @ApiProperty({
+    example: 1500000,
+    description: 'Amount in IDR (always positive)',
+  })
   @IsNumber()
   @Min(1)
   amount: number;
@@ -27,19 +38,30 @@ export class CreateBankTransactionDto {
   @IsString()
   description: string;
 
-  @ApiProperty({ example: ['https://storage/receipt.pdf'], required: false, type: [String] })
+  @ApiProperty({
+    example: ['https://storage/receipt.pdf'],
+    required: false,
+    type: [String],
+  })
   @IsOptional()
   @IsString({ each: true })
   attachmentUrls?: string[];
 }
 
 export class ReconcileBankTransactionDto {
-  @ApiProperty({ example: 'uuid', required: false, description: 'Bank reconciliation session ID' })
+  @ApiProperty({
+    example: 'uuid',
+    required: false,
+    description: 'Bank reconciliation session ID',
+  })
   @IsOptional()
   @IsUUID()
   reconciliationId?: string;
 
-  @ApiProperty({ example: 'Matched against Sept statement line 12', required: false })
+  @ApiProperty({
+    example: 'Matched against Sept statement line 12',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   notes?: string;

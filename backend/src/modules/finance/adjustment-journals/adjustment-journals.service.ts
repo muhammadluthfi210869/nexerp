@@ -34,7 +34,9 @@ export class AdjustmentJournalsService {
   }
 
   async findOne(id: string) {
-    const journal = await this.prisma.adjustmentJournal.findUnique({ where: { id } });
+    const journal = await this.prisma.adjustmentJournal.findUnique({
+      where: { id },
+    });
     if (!journal) throw new ResourceNotFoundException('Adjustment journal', id);
     return journal;
   }
@@ -100,7 +102,9 @@ export class AdjustmentJournalsService {
    * Review the draft (different person from preparer — SoD).
    */
   async review(userId: string, id: string) {
-    const journal = await this.prisma.adjustmentJournal.findUnique({ where: { id } });
+    const journal = await this.prisma.adjustmentJournal.findUnique({
+      where: { id },
+    });
     if (!journal) throw new ResourceNotFoundException('Adjustment journal', id);
     if (!journal.preparedBy) {
       throw new StateTransitionInvalidException(
@@ -142,7 +146,9 @@ export class AdjustmentJournalsService {
    * Approve the reviewed journal (3rd person — full SoD chain).
    */
   async approve(userId: string, id: string) {
-    const journal = await this.prisma.adjustmentJournal.findUnique({ where: { id } });
+    const journal = await this.prisma.adjustmentJournal.findUnique({
+      where: { id },
+    });
     if (!journal) throw new ResourceNotFoundException('Adjustment journal', id);
     if (!journal.reviewedBy) {
       throw new StateTransitionInvalidException(
@@ -160,10 +166,7 @@ export class AdjustmentJournalsService {
         'Already approved',
       );
     }
-    if (
-      journal.preparedBy === userId ||
-      journal.reviewedBy === userId
-    ) {
+    if (journal.preparedBy === userId || journal.reviewedBy === userId) {
       throw new SoDViolationException(
         'approver must be different from preparer AND reviewer (full SoD)',
       );
@@ -187,8 +190,9 @@ export class AdjustmentJournalsService {
       prepared: Boolean(journal.preparedBy),
       reviewed: Boolean(journal.reviewedBy),
       approved: Boolean(journal.approvedBy),
-      fullyApproved:
-        Boolean(journal.preparedBy && journal.reviewedBy && journal.approvedBy),
+      fullyApproved: Boolean(
+        journal.preparedBy && journal.reviewedBy && journal.approvedBy,
+      ),
       preparedBy: journal.preparedBy,
       reviewedBy: journal.reviewedBy,
       approvedBy: journal.approvedBy,

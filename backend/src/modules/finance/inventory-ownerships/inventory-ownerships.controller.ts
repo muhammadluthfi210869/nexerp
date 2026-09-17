@@ -14,13 +14,20 @@ export class InventoryOwnershipsController {
   constructor(private service: InventoryOwnershipsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List inventory ownerships (filter by material, warehouse, owner type)' })
+  @ApiOperation({
+    summary:
+      'List inventory ownerships (filter by material, warehouse, owner type)',
+  })
   findAll(
     @Query('materialId') materialId?: string,
     @Query('warehouseId') warehouseId?: string,
     @Query('ownerType') ownerType?: string,
   ) {
-    return this.service.findAll({ materialId, warehouseId, ownerType: ownerType as any });
+    return this.service.findAll({
+      materialId,
+      warehouseId,
+      ownerType: ownerType as any,
+    });
   }
 
   @Get(':id')
@@ -30,7 +37,10 @@ export class InventoryOwnershipsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Register new ownership (idempotent per (material, warehouse, owner))' })
+  @ApiOperation({
+    summary:
+      'Register new ownership (idempotent per (material, warehouse, owner))',
+  })
   create(@Req() req: any, @Body() dto: CreateInventoryOwnershipDto) {
     const userId = req.user?.id;
     return this.service.create(userId, dto);
@@ -38,14 +48,24 @@ export class InventoryOwnershipsController {
 
   @Post(':id/adjust')
   @ApiOperation({ summary: 'Adjust quantity (delta, for corrections/returns)' })
-  adjust(@Req() req: any, @Param('id') id: string, @Body() dto: AdjustInventoryOwnershipDto) {
+  adjust(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: AdjustInventoryOwnershipDto,
+  ) {
     const userId = req.user?.id;
     return this.service.adjustQuantity(userId, id, dto);
   }
 
   @Post(':id/transfer')
-  @ApiOperation({ summary: 'Transfer ownership (e.g., consign → COMPANY after customer buys)' })
-  transfer(@Req() req: any, @Param('id') id: string, @Body() dto: TransferInventoryOwnershipDto) {
+  @ApiOperation({
+    summary: 'Transfer ownership (e.g., consign → COMPANY after customer buys)',
+  })
+  transfer(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: TransferInventoryOwnershipDto,
+  ) {
     const userId = req.user?.id;
     return this.service.transferOwnership(userId, id, dto);
   }

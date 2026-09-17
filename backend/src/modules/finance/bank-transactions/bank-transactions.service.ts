@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 type TxType = 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER' | 'ADJUSTMENT';
@@ -28,7 +32,12 @@ export class BankTransactionsService {
       where,
       include: {
         bankAccount: {
-          select: { id: true, accountCode: true, bankName: true, accountNumber: true },
+          select: {
+            id: true,
+            accountCode: true,
+            bankName: true,
+            accountNumber: true,
+          },
         },
       },
       orderBy: { date: 'desc' },
@@ -65,24 +74,35 @@ export class BankTransactionsService {
     if (dto.amount <= 0) {
       throw new BadRequestException('Amount must be greater than 0');
     }
-    if (!['DEPOSIT', 'WITHDRAWAL', 'TRANSFER', 'ADJUSTMENT'].includes(dto.transactionType)) {
-      throw new BadRequestException(`Invalid transaction type: ${dto.transactionType}`);
+    if (
+      !['DEPOSIT', 'WITHDRAWAL', 'TRANSFER', 'ADJUSTMENT'].includes(
+        dto.transactionType,
+      )
+    ) {
+      throw new BadRequestException(
+        `Invalid transaction type: ${dto.transactionType}`,
+      );
     }
 
     const account = await this.prisma.bankAccount.findUnique({
       where: { id: dto.bankAccountId },
     });
     if (!account) {
-      throw new NotFoundException(`Bank account ${dto.bankAccountId} not found`);
+      throw new NotFoundException(
+        `Bank account ${dto.bankAccountId} not found`,
+      );
     }
     if (!account.glAccountId) {
-      throw new BadRequestException(`Bank account ${account.accountCode} has no GL linkage`);
+      throw new BadRequestException(
+        `Bank account ${account.accountCode} has no GL linkage`,
+      );
     }
 
     const txDate = new Date(dto.date || Date.now());
-    const direction = dto.transactionType === 'DEPOSIT' || dto.transactionType === 'ADJUSTMENT'
-      ? +dto.amount
-      : -dto.amount;
+    const direction =
+      dto.transactionType === 'DEPOSIT' || dto.transactionType === 'ADJUSTMENT'
+        ? +dto.amount
+        : -dto.amount;
 
     return this.prisma.$transaction(async (tx) => {
       const bankTx = await tx.bankTransaction.create({
@@ -119,7 +139,8 @@ export class BankTransactionsService {
     const bankTx = await this.prisma.bankTransaction.findUnique({
       where: { id },
     });
-    if (!bankTx) throw new NotFoundException(`Bank transaction ${id} not found`);
+    if (!bankTx)
+      throw new NotFoundException(`Bank transaction ${id} not found`);
     if (bankTx.reconciled) {
       throw new BadRequestException('Already reconciled');
     }
@@ -144,7 +165,8 @@ export class BankTransactionsService {
     const bankTx = await this.prisma.bankTransaction.findUnique({
       where: { id },
     });
-    if (!bankTx) throw new NotFoundException(`Bank transaction ${id} not found`);
+    if (!bankTx)
+      throw new NotFoundException(`Bank transaction ${id} not found`);
     if (!bankTx.reconciled) {
       throw new BadRequestException('Not reconciled');
     }
@@ -166,14 +188,16 @@ export class BankTransactionsService {
     const account = await this.prisma.bankAccount.findUnique({
       where: { id: bankAccountId },
     });
-    if (!account) throw new NotFoundException(`Bank account ${bankAccountId} not found`);
+    if (!account)
+      throw new NotFoundException(`Bank account ${bankAccountId} not found`);
 
     let running = Number(account.currentBalance);
     const reversed = [...txs].reverse();
     const ledger = reversed.map((t) => {
-      const direction = t.transactionType === 'DEPOSIT' || t.transactionType === 'ADJUSTMENT'
-        ? +Number(t.amount)
-        : -Number(t.amount);
+      const direction =
+        t.transactionType === 'DEPOSIT' || t.transactionType === 'ADJUSTMENT'
+          ? +Number(t.amount)
+          : -Number(t.amount);
       running -= direction;
       return {
         date: t.date,

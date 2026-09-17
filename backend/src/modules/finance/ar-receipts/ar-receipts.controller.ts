@@ -1,7 +1,10 @@
 import { Controller, Get, Post, Param, Body, Query, Req } from '@nestjs/common';
 import { ARReceiptsService } from './ar-receipts.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { CreateArReceiptDto, AllocateArReceiptDto } from './dto/create-ar-receipt.dto';
+import {
+  CreateArReceiptDto,
+  AllocateArReceiptDto,
+} from './dto/create-ar-receipt.dto';
 
 @ApiTags('finance/ar-receipts')
 @ApiBearerAuth()

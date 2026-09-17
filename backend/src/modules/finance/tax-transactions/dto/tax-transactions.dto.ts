@@ -1,8 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsNumber, IsString, IsOptional, IsIn, Min, Max } from 'class-validator';
+import {
+  IsUUID,
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsIn,
+  Min,
+  Max,
+} from 'class-validator';
 
 export class CreateTaxTransactionDto {
-  @ApiProperty({ example: 'uuid', description: 'Tax rate (PPN 11%, PPh 23, etc.)' })
+  @ApiProperty({
+    example: 'uuid',
+    description: 'Tax rate (PPN 11%, PPh 23, etc.)',
+  })
   @IsUUID()
   taxTypeId: string;
 
@@ -45,7 +56,10 @@ export class CreateTaxTransactionDto {
 }
 
 export class ReportTaxDto {
-  @ApiProperty({ example: '2026-09', description: 'Reporting period (e.g., 2026-09)' })
+  @ApiProperty({
+    example: '2026-09',
+    description: 'Reporting period (e.g., 2026-09)',
+  })
   @IsString()
   reportPeriod: string;
 

@@ -14,22 +14,17 @@ import {
   ArrowUpDown,
   Download,
 } from "lucide-react";
-import {
-  DnaPageHeader,
-  DnaStatCard,
-  DnaBadge,
-  DnaButton,
-  DnaDataTableCard,
-  DnaTable,
-  DnaTableHead,
-  DNA_TABLE_CLASSES,
-  DnaCell,
-  DnaPagination,
-  DnaBulkActionBar,
-  DnaConfirmDialog,
-  DnaExportButton,
-  useDnaToast,
-} from "@/components/dna";
+import { DnaPageHeader } from "../layout/DnaPageHeader";
+import { DnaStatCard } from "../DnaStatCard";
+import { DnaBadge } from "../DnaBadge";
+import { DnaButton } from "../DnaButton";
+import { DnaDataTableCard } from "../table/DnaDataTableCard";
+import { DnaTable, DnaTableHead, DNA_TABLE_CLASSES } from "../DnaTable";
+import { DnaCell } from "../cells/DnaCell";
+import { DnaPagination } from "../table/DnaPagination";
+import { DnaBulkActionBar } from "../DnaBulkActionBar";
+import { DnaConfirmDialog, DnaExportButton } from "../DnaInteractiveElements";
+import { useDnaToast } from "../DnaToast";
 import {
   ApprovalDetailModal,
   type ApprovalDetailData,

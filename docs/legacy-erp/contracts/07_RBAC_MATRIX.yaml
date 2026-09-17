@@ -1,0 +1,2466 @@
+# =====================================================
+# 07 — RBAC MATRIX (Role × Module × Action × Data Scope)
+# =====================================================
+# NEX ERP — Authoritative permission configuration
+# Consumed by: NestJS backend guards (mandatory) + Next.js frontend UI hide/show (cosmetic)
+# Migration source: kil.gserp.id legacy crawl 2026-09-16 (45 users × 16 roles × 77 permissions)
+#
+# Authority: access/action semantics are owned here per 00_MASTER_SPEC.md §9.1.
+# Status: PROVISIONAL — certification blockers remain documented in verification reports.
+
+version: 1.0
+effective_date: 2026-09-16
+status: PROVISIONAL
+authority_map: 00_MASTER_SPEC.md#91-canonical-subject-based-authority-map
+migration_source: kil.gserp.id (16 legacy roles, 77 permissions preserved as canonical slugs)
+deprecation_note: |
+  Legacy role IDs 1-16 preserved in Role.legacyId / User.legacyRoleId for traceability (DEC-025).
+  Legacy kebab-case permission slugs preserved verbatim (DEC-024, DEC-026).
+  NEX uses UUID primary keys (DEC-001).
+  Role 10 (Production Mixing & Filling) is ORPHAN with 0 users and is NOT migrated (DEC-023).
+
+actions:
+  - read
+  - create
+  - update
+  - delete
+  - approve
+  - export
+  - import
+
+# =====================================
+# ROLES (generated count; run scripts/ssot/validate_ssot.js)
+# =====================================
+# Format:
+#   id:        stable UUID-equivalent identifier (deterministic per legacyId)
+#   legacy_id: legacy kil.gserp.id role id (null if NEX-only)
+#   name:      human-readable name (used in matrix / UI)
+#   category:  super_admin | admin | division_role | cross_cutting | legacy_combo
+#   division:  which division (hr | scm | warehouse | busdev | rnd | production |
+#              finance | marketing | legalitas | null)
+#   permissions: per-module action list + data scope (granularity)
+
+roles:
+
+  # ---------- SUPER ADMIN (NEX new — root) ----------
+  - id: role-nex-super-admin
+    legacy_id: null
+    name: SuperAdmin
+    description: NEX root — full system access, can manage roles and impersonate
+    is_system: true
+    category: super_admin
+    division: null
+    inherits_from: []
+    permissions:
+      - module: '*'
+        actions: [read, create, update, delete, approve, export, import]
+        data_scope: all
+
+  # ---------- ADMINISTRATOR (legacy id 1, 4 users, 123 module-slots) ----------
+  - id: role-nex-administrator
+    legacy_id: 1
+    name: Administrator
+    description: Operational admin — all permissions except role-management and impersonation
+    is_system: true
+    category: admin
+    division: null
+    inherits_from: []
+    permissions:
+      - module: '*'
+        actions: [read, create, update, delete, approve, export, import]
+        data_scope: all
+
+  # ---------- LEGACY 16 (preserve verbatim as roles) ----------
+  - id: role-nex-hrd
+    legacy_id: 2
+    name: HRD
+    description: Legacy HR admin — HR master + employee + reports
+    is_system: false
+    category: legacy_role
+    division: hr
+    inherits_from: []
+    permissions:
+      - module: user-manage
+        actions: [read, create, update]
+        data_scope: division_only
+      - module: sales-target
+        actions: [read, create, update]
+        data_scope: division_only
+      - module: report-follow-up-customer
+        actions: [read, export]
+        data_scope: all
+      - module: report-guest-book
+        actions: [read, export]
+        data_scope: all
+      - module: D.HR
+        actions: [read]
+        data_scope: division_only
+      - module: D.Pelanggan
+        actions: [read]
+        data_scope: all
+      - module: D.Notifikasi
+        actions: [read]
+        data_scope: own_only
+      - module: D.ClientSample
+        actions: [read]
+        data_scope: own_only
+
+  - id: role-nex-staff-back-office
+    legacy_id: 3
+    name: StaffBackOffice
+    description: Legacy back-office generalist — limited read/entry
+    is_system: false
+    category: legacy_role
+    division: cross_cutting
+    inherits_from: []
+    permissions:
+      - module: customer-my-manage
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: report-guest-book
+        actions: [read]
+        data_scope: all
+      - module: D.Notifikasi
+        actions: [read]
+        data_scope: own_only
+      - module: D.Pelanggan
+        actions: [read]
+        data_scope: all
+      - module: D.ClientSample
+        actions: [read]
+        data_scope: own_only
+
+  - id: role-nex-purchasing-legacy
+    legacy_id: 4
+    name: PurchasingLegacy
+    description: Legacy purchasing user (will migrate into PurchasingAdmin)
+    is_system: false
+    category: legacy_role
+    division: scm
+    inherits_from: []
+    permissions:
+      - module: supplier-category-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: supplier-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase
+        actions: [read, create, update, approve]
+        data_scope: all
+      - module: purchase-invoice
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-return
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-down-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-in
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-return-out
+        actions: [read, create, update]
+        data_scope: all
+      - module: goods-category-manage
+        actions: [read]
+        data_scope: all
+      - module: goods-manage
+        actions: [read]
+        data_scope: all
+      - module: request-cogs
+        actions: [read, create, update]
+        data_scope: all
+      - module: report-stock
+        actions: [read, export]
+        data_scope: all
+      - module: report-mutation-goods
+        actions: [read, export]
+        data_scope: all
+      - module: report-stock-valuation
+        actions: [read, export]
+        data_scope: all
+      - module: D.Purchasing
+        actions: [read]
+        data_scope: all
+      - module: D.Notifikasi
+        actions: [read]
+        data_scope: own_only
+      - module: D.Gudang
+        actions: [read]
+        data_scope: all
+
+  - id: role-nex-warehouse-legacy
+    legacy_id: 5
+    name: WarehouseLegacy
+    description: Legacy warehouse user (will migrate into WarehouseStaff)
+    is_system: false
+    category: legacy_role
+    division: warehouse
+    inherits_from: []
+    permissions:
+      - module: warehouse-manage
+        actions: [read, create, update]
+        data_scope: warehouse_only
+      - module: warehouse-access-manage
+        actions: [read]
+        data_scope: all
+      - module: goods-category-manage
+        actions: [read]
+        data_scope: all
+      - module: goods-manage
+        actions: [read, create, update]
+        data_scope: warehouse_only
+      - module: goods-transfer
+        actions: [read, create, update]
+        data_scope: warehouse_only
+      - module: purchase-in
+        actions: [read, create, update]
+        data_scope: warehouse_only
+      - module: sales-return-in
+        actions: [read, create, update]
+        data_scope: warehouse_only
+      - module: delivery-out
+        actions: [read, create, update]
+        data_scope: warehouse_only
+      - module: report-stock
+        actions: [read, export]
+        data_scope: warehouse_only
+      - module: report-mutation-goods
+        actions: [read, export]
+        data_scope: warehouse_only
+      - module: report-stock-valuation
+        actions: [read, export]
+        data_scope: warehouse_only
+      - module: D.Gudang
+        actions: [read]
+        data_scope: warehouse_only
+      - module: D.Notifikasi
+        actions: [read]
+        data_scope: own_only
+      - module: D.JadwalProduksi
+        actions: [read]
+        data_scope: all
+      - module: D.RealisasiProduksi
+        actions: [read]
+        data_scope: all
+
+  - id: role-nex-head-busdev
+    legacy_id: 6
+    name: HeadBusinessDevelopment
+    description: Legacy BusDev head — full BusDev module access + approval
+    is_system: false
+    category: legacy_role
+    division: busdev
+    inherits_from: []
+    permissions:
+      - module: sales-category
+        actions: [read, create, update, delete]
+        data_scope: all
+      - module: sales-target
+        actions: [read, create, update, approve, delete]
+        data_scope: all
+      - module: customer-category-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: customer-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: customer-my-manage
+        actions: [read, create, update, delete]
+        data_scope: own_only
+      - module: sales-sample
+        actions: [read, create, update, approve]
+        data_scope: all
+      - module: sales-sample-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales
+        actions: [read, create, update, approve]
+        data_scope: all
+      - module: sales-return
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-down-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-invoice
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: delivery-out
+        actions: [read, create, update]
+        data_scope: all
+      - module: report-follow-up-customer
+        actions: [read, export]
+        data_scope: all
+      - module: D.BusDev
+        actions: [read]
+        data_scope: division_only
+      - module: D.Pelanggan
+        actions: [read]
+        data_scope: all
+      - module: D.PenjualanSample
+        actions: [read]
+        data_scope: all
+      - module: D.PenjualanBarang
+        actions: [read]
+        data_scope: all
+      - module: D.ClientSample
+        actions: [read]
+        data_scope: all
+      - module: D.ClientProduksi
+        actions: [read]
+        data_scope: all
+
+  - id: role-nex-business-development
+    legacy_id: 7
+    name: BusinessDevelopment
+    description: Legacy BusDev staff — lead/sample/SO entry (largest role = 13 users)
+    is_system: false
+    category: legacy_role
+    division: busdev
+    inherits_from: []
+    permissions:
+      - module: customer-my-manage
+        actions: [read, create, update, delete]
+        data_scope: own_only
+      - module: sales-sample
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-sample-payment
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-return
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-down-payment
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-invoice
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-payment
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-category
+        actions: [read]
+        data_scope: all
+      - module: sales-target
+        actions: [read]
+        data_scope: own_only
+      - module: delivery-out
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: report-follow-up-customer
+        actions: [read, export]
+        data_scope: own_only
+      - module: D.BusDev
+        actions: [read]
+        data_scope: own_only
+      - module: D.Pelanggan
+        actions: [read]
+        data_scope: all
+      - module: D.PenjualanSample
+        actions: [read]
+        data_scope: all
+      - module: D.PenjualanBarang
+        actions: [read]
+        data_scope: own_only
+      - module: D.ClientSample
+        actions: [read]
+        data_scope: own_only
+      - module: D.ClientProduksi
+        actions: [read]
+        data_scope: own_only
+      - module: D.ClientRO
+        actions: [read]
+        data_scope: own_only
+      - module: D.Lost
+        actions: [read]
+        data_scope: own_only
+      - module: D.Sample
+        actions: [read]
+        data_scope: own_only
+      - module: D.Notifikasi
+        actions: [read]
+        data_scope: own_only
+      - module: D.Eksekutif
+        actions: [read]
+        data_scope: all
+
+  - id: role-nex-head-rnd
+    legacy_id: 8
+    name: HeadResearchAndDevelopment
+    description: Legacy RnD head — full formulation access + approval
+    is_system: false
+    category: legacy_role
+    division: rnd
+    inherits_from: []
+    permissions:
+      - module: formulation
+        actions: [read, create, update, approve]
+        data_scope: all
+      - module: formulation-manage
+        actions: [read, create, update, delete]
+        data_scope: all
+      - module: formulation-adjustment
+        actions: [read, create, update, approve]
+        data_scope: all
+      - module: request-cogs
+        actions: [read, create, update, approve]
+        data_scope: all
+      - module: batch-record
+        actions: [read, approve]
+        data_scope: all
+      - module: goods-manage
+        actions: [read]
+        data_scope: all
+      - module: sales-sample
+        actions: [read, approve]
+        data_scope: all
+      - module: sales-category
+        actions: [read]
+        data_scope: all
+      - module: D.RnD
+        actions: [read]
+        data_scope: division_only
+      - module: D.Sample
+        actions: [read]
+        data_scope: all
+      - module: D.Notifikasi
+        actions: [read]
+        data_scope: own_only
+      - module: D.ClientSample
+        actions: [read]
+        data_scope: all
+      - module: D.ClientProduksi
+        actions: [read]
+        data_scope: all
+      - module: D.ClientRO
+        actions: [read]
+        data_scope: all
+
+  - id: role-nex-research-and-development
+    legacy_id: 9
+    name: ResearchAndDevelopment
+    description: Legacy RnD chemist — formulation work (6 users)
+    is_system: false
+    category: legacy_role
+    division: rnd
+    inherits_from: []
+    permissions:
+      - module: formulation
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: formulation-manage
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: formulation-adjustment
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: request-cogs
+        actions: [read, create]
+        data_scope: own_only
+      - module: batch-record
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: goods-manage
+        actions: [read]
+        data_scope: all
+      - module: sales-sample
+        actions: [read, create]
+        data_scope: own_only
+      - module: D.RnD
+        actions: [read]
+        data_scope: own_only
+      - module: D.Sample
+        actions: [read]
+        data_scope: own_only
+      - module: D.Notifikasi
+        actions: [read]
+        data_scope: own_only
+      - module: D.ClientSample
+        actions: [read]
+        data_scope: own_only
+
+  # ---------- ORPHAN ROLE — NOT MIGRATED (DEC-023) ----------
+  - id: role-nex-orphan-production-mixing-filling
+    legacy_id: 10
+    name: ProductionMixingAndFilling_ORPHAN
+    description: |
+      ORPHAN — 0 users in legacy. Will NOT be migrated to NEX (DEC-023).
+      Reference only for audit traceability.
+    is_system: false
+    category: orphan
+    division: production
+    inherits_from: []
+    migrated: false
+    permissions: []  # intentionally empty — role is retired
+
+  - id: role-nex-legacy-production-packaging
+    legacy_id: 11
+    name: ProductionPackaging
+    description: Legacy packaging operator — packaging runs
+    is_system: false
+    category: legacy_role
+    division: production
+    inherits_from: []
+    permissions:
+      - module: schedule-packaging
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: production-packaging
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: batch-record
+        actions: [read, update]
+        data_scope: own_only
+      - module: formulation
+        actions: [read]
+        data_scope: all
+      - module: goods-manage
+        actions: [read]
+        data_scope: all
+      - module: request-cogs
+        actions: [read]
+        data_scope: own_only
+      - module: D.JadwalProduksi
+        actions: [read]
+        data_scope: own_only
+      - module: D.RealisasiProduksi
+        actions: [read]
+        data_scope: own_only
+      - module: D.Produksi
+        actions: [read]
+        data_scope: own_only
+      - module: D.Notifikasi
+        actions: [read]
+        data_scope: own_only
+      - module: D.Gudang
+        actions: [read]
+        data_scope: all
+      - module: D.ClientProduksi
+        actions: [read]
+        data_scope: all
+      - module: D.ClientRO
+        actions: [read]
+        data_scope: all
+      - module: D.Sample
+        actions: [read]
+        data_scope: all
+      - module: D.BukuTamu
+        actions: [read]
+        data_scope: all
+
+  - id: role-nex-apoteker
+    legacy_id: 12
+    name: ApotekerPenanggungJawab
+    description: Legacy pharmacist-in-charge — QC / BPOM compliance access
+    is_system: false
+    category: legacy_role
+    division: rnd
+    inherits_from: []
+    permissions:
+      - module: batch-record
+        actions: [read, approve]
+        data_scope: all
+      - module: formulation
+        actions: [read]
+        data_scope: all
+      - module: formulation-manage
+        actions: [read]
+        data_scope: all
+      - module: formulation-adjustment
+        actions: [read, approve]
+        data_scope: all
+      - module: request-cogs
+        actions: [read, approve]
+        data_scope: all
+      - module: goods-manage
+        actions: [read]
+        data_scope: all
+      - module: D.RnD
+        actions: [read]
+        data_scope: all
+      - module: D.Notifikasi
+        actions: [read]
+        data_scope: own_only
+
+  - id: role-nex-finance-legacy
+    legacy_id: 13
+    name: FinanceLegacy
+    description: Legacy finance user (will migrate into FinanceStaff/Manager)
+    is_system: false
+    category: legacy_role
+    division: finance
+    inherits_from: []
+    permissions:
+      - module: coa-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: coa-auto-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: general-journal
+        actions: [read, create, update, approve]
+        data_scope: all
+      - module: other-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: other-deposit
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-invoice
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-invoice
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-sample-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-down-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-down-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: report-general-ledger
+        actions: [read, export]
+        data_scope: all
+      - module: report-profit-loss
+        actions: [read, export]
+        data_scope: all
+      - module: report-trial-balance
+        actions: [read, export]
+        data_scope: all
+      - module: report-balance-sheet
+        actions: [read, export]
+        data_scope: all
+      - module: report-stock-valuation
+        actions: [read, export]
+        data_scope: all
+      - module: D.Keuangan
+        actions: [read]
+        data_scope: all
+      - module: D.Notifikasi
+        actions: [read]
+        data_scope: own_only
+      - module: D.Eksekutif
+        actions: [read]
+        data_scope: all
+
+  - id: role-nex-digital-marketing
+    legacy_id: 14
+    name: DigitalMarketing
+    description: Legacy digital marketing — campaign & lead-source dashboards
+    is_system: false
+    category: legacy_role
+    division: marketing
+    inherits_from: []
+    permissions:
+      - module: customer-category-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: customer-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-category
+        actions: [read]
+        data_scope: all
+      - module: sales-target
+        actions: [read]
+        data_scope: all
+      - module: D.DigitalMarketing
+        actions: [read]
+        data_scope: division_only
+      - module: D.Pelanggan
+        actions: [read]
+        data_scope: all
+      - module: D.BusDev
+        actions: [read]
+        data_scope: all
+      - module: D.Notifikasi
+        actions: [read]
+        data_scope: own_only
+
+  - id: role-nex-busdev-plus-hrd
+    legacy_id: 15
+    name: BusDevPlusHRD
+    description: Legacy cross-role — BusDev + HRD combo (1 user)
+    is_system: false
+    category: legacy_combo
+    division: busdev
+    inherits_from: []
+    permissions:
+      - module: customer-my-manage
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-sample
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-down-payment
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-invoice
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-payment
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-target
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: user-manage
+        actions: [read, create, update]
+        data_scope: division_only
+      - module: report-follow-up-customer
+        actions: [read, export]
+        data_scope: own_only
+      - module: report-guest-book
+        actions: [read]
+        data_scope: all
+      - module: D.BusDev
+        actions: [read]
+        data_scope: own_only
+      - module: D.HR
+        actions: [read]
+        data_scope: division_only
+      - module: D.Pelanggan
+        actions: [read]
+        data_scope: all
+      - module: D.PenjualanSample
+        actions: [read]
+        data_scope: all
+      - module: D.PenjualanBarang
+        actions: [read]
+        data_scope: own_only
+      - module: D.ClientSample
+        actions: [read]
+        data_scope: own_only
+      - module: D.ClientProduksi
+        actions: [read]
+        data_scope: own_only
+      - module: D.Lost
+        actions: [read]
+        data_scope: own_only
+      - module: D.Sample
+        actions: [read]
+        data_scope: own_only
+      - module: D.Notifikasi
+        actions: [read]
+        data_scope: own_only
+
+  - id: role-nex-busdev-plus-purchasing
+    legacy_id: 16
+    name: BusDevPlusPurchasing
+    description: Legacy cross-role — BusDev + Purchasing combo (1 user)
+    is_system: false
+    category: legacy_combo
+    division: busdev
+    inherits_from: []
+    permissions:
+      - module: customer-my-manage
+        actions: [read, create, update, delete]
+        data_scope: own_only
+      - module: sales-sample
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-sample-payment
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-return
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-down-payment
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-invoice
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: sales-payment
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: supplier-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: supplier-category-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-invoice
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-return
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-down-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-in
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-return-out
+        actions: [read, create, update]
+        data_scope: all
+      - module: goods-transfer
+        actions: [read, create, update]
+        data_scope: all
+      - module: request-cogs
+        actions: [read, create]
+        data_scope: all
+      - module: report-stock
+        actions: [read, export]
+        data_scope: all
+      - module: report-mutation-goods
+        actions: [read, export]
+        data_scope: all
+      - module: report-stock-valuation
+        actions: [read, export]
+        data_scope: all
+      - module: report-follow-up-customer
+        actions: [read, export]
+        data_scope: own_only
+      - module: D.BusDev
+        actions: [read]
+        data_scope: own_only
+      - module: D.Purchasing
+        actions: [read]
+        data_scope: all
+      - module: D.Pelanggan
+        actions: [read]
+        data_scope: all
+      - module: D.PenjualanSample
+        actions: [read]
+        data_scope: all
+      - module: D.PenjualanBarang
+        actions: [read]
+        data_scope: own_only
+      - module: D.Gudang
+        actions: [read]
+        data_scope: all
+      - module: D.Notifikasi
+        actions: [read]
+        data_scope: own_only
+      - module: D.ClientSample
+        actions: [read]
+        data_scope: own_only
+
+  # =====================================
+  # NEX NEW ROLES (per-division tier system)
+  # =====================================
+
+  # ---------- HR ----------
+  - id: role-nex-hr-admin
+    legacy_id: null
+    name: HRAdmin
+    description: NEX HR division admin — full HR + user manage
+    is_system: false
+    category: division_role
+    division: hr
+    inherits_from: [HRStaff]
+    additional_permissions:
+      - module: user-manage
+        actions: [read, create, update, delete]
+        data_scope: division_only
+      - module: coa-manage
+        actions: [read]
+        data_scope: all
+      - module: D.HR
+        actions: [read]
+        data_scope: all
+
+  - id: role-nex-hr-staff
+    legacy_id: null
+    name: HRStaff
+    description: NEX HR staff — employee data entry + reports
+    is_system: false
+    category: division_role
+    division: hr
+    inherits_from: []
+    permissions:
+      - module: user-manage
+        actions: [read, create, update]
+        data_scope: division_only
+      - module: sales-target
+        actions: [read, create, update]
+        data_scope: division_only
+      - module: report-follow-up-customer
+        actions: [read, export]
+        data_scope: all
+      - module: report-guest-book
+        actions: [read, export]
+        data_scope: all
+      - module: D.HR
+        actions: [read]
+        data_scope: division_only
+
+  # ---------- PURCHASING (SCM) ----------
+  - id: role-nex-purchasing-admin
+    legacy_id: null
+    name: PurchasingAdmin
+    description: NEX SCM admin — full procurement + PO approval
+    is_system: false
+    category: division_role
+    division: scm
+    inherits_from: [PurchasingStaff]
+    additional_permissions:
+      - module: purchase
+        actions: [approve]
+        data_scope: all
+      - module: supplier-manage
+        actions: [delete]
+        data_scope: all
+      - module: request-cogs
+        actions: [approve]
+        data_scope: all
+
+  - id: role-nex-purchasing-staff
+    legacy_id: null
+    name: PurchasingStaff
+    description: NEX SCM staff — daily PR/PO/GR entry
+    is_system: false
+    category: division_role
+    division: scm
+    inherits_from: []
+    permissions:
+      - module: supplier-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: supplier-category-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-invoice
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-return
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-down-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-in
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-return-out
+        actions: [read, create, update]
+        data_scope: all
+      - module: goods-category-manage
+        actions: [read]
+        data_scope: all
+      - module: goods-manage
+        actions: [read]
+        data_scope: all
+      - module: request-cogs
+        actions: [read, create]
+        data_scope: all
+      - module: report-stock
+        actions: [read, export]
+        data_scope: all
+      - module: D.Purchasing
+        actions: [read]
+        data_scope: all
+
+  # ---------- WAREHOUSE ----------
+  - id: role-nex-warehouse-admin
+    legacy_id: null
+    name: WarehouseAdmin
+    description: NEX warehouse admin — full warehouse + master manage
+    is_system: false
+    category: division_role
+    division: warehouse
+    inherits_from: [WarehouseStaff]
+    additional_permissions:
+      - module: warehouse-manage
+        actions: [delete]
+        data_scope: all
+      - module: goods-manage
+        actions: [create, delete]
+        data_scope: all
+
+  - id: role-nex-warehouse-staff
+    legacy_id: null
+    name: WarehouseStaff
+    description: NEX warehouse staff — GR, transfer, opname
+    is_system: false
+    category: division_role
+    division: warehouse
+    inherits_from: []
+    permissions:
+      - module: warehouse-manage
+        actions: [read, create, update]
+        data_scope: warehouse_only
+      - module: goods-manage
+        actions: [read, update]
+        data_scope: warehouse_only
+      - module: goods-transfer
+        actions: [read, create, update]
+        data_scope: warehouse_only
+      - module: purchase-in
+        actions: [read, create, update]
+        data_scope: warehouse_only
+      - module: sales-return-in
+        actions: [read, create, update]
+        data_scope: warehouse_only
+      - module: delivery-out
+        actions: [read, create, update]
+        data_scope: warehouse_only
+      - module: report-stock
+        actions: [read, export]
+        data_scope: warehouse_only
+      - module: report-mutation-goods
+        actions: [read, export]
+        data_scope: warehouse_only
+      - module: D.Gudang
+        actions: [read]
+        data_scope: warehouse_only
+
+  # ---------- BUSDEV ----------
+  - id: role-nex-busdev-manager
+    legacy_id: null
+    name: BusDevManager
+    description: NEX BusDev manager — full BusDev + SO approval (≤ Rp 10M)
+    is_system: false
+    category: division_role
+    division: busdev
+    inherits_from: [BusDevAdmin]
+    additional_permissions:
+      - module: sales
+        actions: [approve]
+        data_scope: division_only
+      - module: sales-sample
+        actions: [approve]
+        data_scope: division_only
+
+  - id: role-nex-busdev-admin
+    legacy_id: null
+    name: BusDevAdmin
+    description: NEX BusDev admin — full BusDev operational + SO approval (≤ Rp 50M)
+    is_system: false
+    category: division_role
+    division: busdev
+    inherits_from: [BusinessDevelopment]
+    additional_permissions:
+      - module: sales
+        actions: [delete, approve]
+        data_scope: division_only
+      - module: customer-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: customer-category-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-category
+        actions: [read, create, update, delete]
+        data_scope: all
+      - module: sales-target
+        actions: [read, create, update, approve, delete]
+        data_scope: all
+
+  - id: role-nex-busdev-staff
+    legacy_id: null
+    name: BusDevStaff
+    description: NEX BusDev staff — lead/SO entry (owner-scoped)
+    is_system: false
+    category: division_role
+    division: busdev
+    inherits_from: [BusinessDevelopment]
+    permissions: []  # inherits all from BusinessDevelopment
+
+  # ---------- RnD ----------
+  - id: role-nex-rnd-manager
+    legacy_id: null
+    name: RnDManager
+    description: NEX RnD manager — full formulation + approve
+    is_system: false
+    category: division_role
+    division: rnd
+    inherits_from: [RnDAdmin]
+    additional_permissions:
+      - module: formulation
+        actions: [approve]
+        data_scope: all
+      - module: formulation-adjustment
+        actions: [approve]
+        data_scope: all
+
+  - id: role-nex-rnd-admin
+    legacy_id: null
+    name: RnDAdmin
+    description: NEX RnD admin — full formulation manage
+    is_system: false
+    category: division_role
+    division: rnd
+    inherits_from: [HeadResearchAndDevelopment]
+    additional_permissions:
+      - module: formulation-manage
+        actions: [delete]
+        data_scope: all
+
+  - id: role-nex-rnd-chemist
+    legacy_id: null
+    name: RnDChemist
+    description: NEX RnD chemist — formulation work (6 user equivalent)
+    is_system: false
+    category: division_role
+    division: rnd
+    inherits_from: [ResearchAndDevelopment]
+    permissions: []  # inherits all from ResearchAndDevelopment
+
+  # ---------- PRODUCTION ----------
+  - id: role-nex-production-admin
+    legacy_id: null
+    name: ProductionAdmin
+    description: NEX production admin — schedule all stages + operator assignment
+    is_system: false
+    category: division_role
+    division: production
+    inherits_from: [ProductionOperatorMixing, ProductionOperatorFilling, ProductionPackaging]
+    additional_permissions:
+      - module: schedule-mixing
+        actions: [create, update, delete, approve]
+        data_scope: all
+      - module: schedule-filling
+        actions: [create, update, delete, approve]
+        data_scope: all
+      - module: schedule-packaging
+        actions: [create, update, delete, approve]
+        data_scope: all
+      - module: batch-record
+        actions: [create, delete, approve]
+        data_scope: all
+
+  - id: role-nex-production-operator-mixing
+    legacy_id: null
+    name: ProductionOperatorMixing
+    description: NEX production operator — mixing stage execution
+    is_system: false
+    category: division_role
+    division: production
+    inherits_from: [ProductionPackaging]
+    permissions:
+      - module: schedule-mixing
+        actions: [read, update]
+        data_scope: own_only
+      - module: production-mixing
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: D.JadwalProduksi
+        actions: [read]
+        data_scope: own_only
+      - module: D.RealisasiProduksi
+        actions: [read]
+        data_scope: own_only
+
+  - id: role-nex-production-operator-filling
+    legacy_id: null
+    name: ProductionOperatorFilling
+    description: NEX production operator — filling stage execution
+    is_system: false
+    category: division_role
+    division: production
+    inherits_from: [ProductionPackaging]
+    permissions:
+      - module: schedule-filling
+        actions: [read, update]
+        data_scope: own_only
+      - module: production-filling
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: D.JadwalProduksi
+        actions: [read]
+        data_scope: own_only
+      - module: D.RealisasiProduksi
+        actions: [read]
+        data_scope: own_only
+
+  - id: role-nex-production-packaging
+    legacy_id: null
+    name: ProductionOperatorPackaging
+    description: NEX production operator — packaging stage execution
+    is_system: false
+    category: division_role
+    division: production
+    inherits_from: []
+    permissions:
+      - module: schedule-packaging
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: production-packaging
+        actions: [read, create, update]
+        data_scope: own_only
+      - module: batch-record
+        actions: [read, update]
+        data_scope: own_only
+      - module: formulation
+        actions: [read]
+        data_scope: all
+      - module: goods-manage
+        actions: [read]
+        data_scope: all
+      - module: request-cogs
+        actions: [read]
+        data_scope: own_only
+      - module: D.JadwalProduksi
+        actions: [read]
+        data_scope: own_only
+      - module: D.RealisasiProduksi
+        actions: [read]
+        data_scope: own_only
+      - module: D.Produksi
+        actions: [read]
+        data_scope: own_only
+      - module: D.Gudang
+        actions: [read]
+        data_scope: all
+
+  # ---------- FINANCE ----------
+  - id: role-nex-finance-manager
+    legacy_id: null
+    name: FinanceManager
+    description: NEX finance manager — full finance + payment approval
+    is_system: false
+    category: division_role
+    division: finance
+    inherits_from: [FinanceAdmin]
+    additional_permissions:
+      - module: general-journal
+        actions: [approve]
+        data_scope: all
+      - module: other-payment
+        actions: [approve]
+        data_scope: all
+      - module: other-deposit
+        actions: [approve]
+        data_scope: all
+      - module: report-balance-sheet
+        actions: [approve, export]
+        data_scope: all
+      - module: report-profit-loss
+        actions: [approve, export]
+        data_scope: all
+      - module: report-trial-balance
+        actions: [approve, export]
+        data_scope: all
+
+  - id: role-nex-finance-admin
+    legacy_id: null
+    name: FinanceAdmin
+    description: NEX finance admin — full CoA + journals + reports
+    is_system: false
+    category: division_role
+    division: finance
+    inherits_from: [FinanceStaff]
+    additional_permissions:
+      - module: coa-manage
+        actions: [delete]
+        data_scope: all
+      - module: coa-auto-manage
+        actions: [delete]
+        data_scope: all
+
+  - id: role-nex-finance-staff
+    legacy_id: null
+    name: FinanceStaff
+    description: NEX finance staff — daily journals + payments
+    is_system: false
+    category: division_role
+    division: finance
+    inherits_from: []
+    permissions:
+      - module: coa-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: coa-auto-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: general-journal
+        actions: [read, create, update]
+        data_scope: all
+      - module: other-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: other-deposit
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-invoice
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-invoice
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-sample-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-down-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: purchase-down-payment
+        actions: [read, create, update]
+        data_scope: all
+      - module: report-general-ledger
+        actions: [read, export]
+        data_scope: all
+      - module: report-profit-loss
+        actions: [read, export]
+        data_scope: all
+      - module: report-trial-balance
+        actions: [read, export]
+        data_scope: all
+      - module: report-balance-sheet
+        actions: [read, export]
+        data_scope: all
+      - module: report-stock-valuation
+        actions: [read, export]
+        data_scope: all
+      - module: D.Keuangan
+        actions: [read]
+        data_scope: all
+      - module: D.Eksekutif
+        actions: [read]
+        data_scope: all
+
+  # ---------- DIGITAL MARKETING ----------
+  - id: role-nex-digital-marketing-admin
+    legacy_id: null
+    name: DigitalMarketingAdmin
+    description: NEX digimar admin — campaign + customer master
+    is_system: false
+    category: division_role
+    division: marketing
+    inherits_from: [DigitalMarketingStaff]
+    additional_permissions:
+      - module: customer-manage
+        actions: [delete]
+        data_scope: all
+      - module: D.DigitalMarketing
+        actions: [read]
+        data_scope: all
+
+  - id: role-nex-digital-marketing-staff
+    legacy_id: null
+    name: DigitalMarketingStaff
+    description: NEX digimar staff — campaign entry + lead source
+    is_system: false
+    category: division_role
+    division: marketing
+    inherits_from: []
+    permissions:
+      - module: customer-category-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: customer-manage
+        actions: [read, create, update]
+        data_scope: all
+      - module: sales-category
+        actions: [read]
+        data_scope: all
+      - module: sales-target
+        actions: [read]
+        data_scope: all
+      - module: D.DigitalMarketing
+        actions: [read]
+        data_scope: division_only
+      - module: D.Pelanggan
+        actions: [read]
+        data_scope: all
+      - module: D.BusDev
+        actions: [read]
+        data_scope: all
+
+  # ---------- LEGALITAS / SCM-COMPLIANCE ----------
+  - id: role-nex-legalitas-admin
+    legacy_id: null
+    name: LegalitasAdmin
+    description: NEX legalitas/SCM-compliance admin — BPOM/HKI/MoU
+    is_system: false
+    category: division_role
+    division: legalitas
+    inherits_from: [LegalitasStaff]
+    additional_permissions:
+      - module: D.Legalitas
+        actions: [read]
+        data_scope: all
+
+  - id: role-nex-legalitas-staff
+    legacy_id: null
+    name: LegalitasStaff
+    description: NEX legalitas staff — compliance doc entry
+    is_system: false
+    category: division_role
+    division: legalitas
+    inherits_from: []
+    permissions:
+      - module: batch-record
+        actions: [read]
+        data_scope: all
+      - module: formulation
+        actions: [read]
+        data_scope: all
+      - module: D.Legalitas
+        actions: [read]
+        data_scope: division_only
+
+  # ---------- CROSS-CUTTING (NEX new) ----------
+  - id: role-nex-executive
+    legacy_id: null
+    name: Executive
+    description: NEX cross-cutting — read-only all modules + executive dashboards
+    is_system: true
+    category: cross_cutting
+    division: null
+    inherits_from: []
+    permissions:
+      - module: '*'
+        actions: [read, export]
+        data_scope: all
+
+  - id: role-nex-director
+    legacy_id: null
+    name: Director
+    description: Director approval principal required by REQUIREMENT.md for final high-value and fund-request approval; read/export rights are inherited from Executive.
+    is_system: true
+    category: cross_cutting
+    division: null
+    inherits_from: [Executive]
+    additional_permissions:
+      - module: sales
+        actions: [approve]
+        data_scope: all
+      - module: purchase
+        actions: [approve]
+        data_scope: all
+      - module: purchase-invoice
+        actions: [approve]
+        data_scope: all
+      - module: general-journal
+        actions: [approve]
+        data_scope: all
+      - module: other-payment
+        actions: [approve]
+        data_scope: all
+      - module: other-deposit
+        actions: [approve]
+        data_scope: all
+
+  - id: role-nex-auditor
+    legacy_id: null
+    name: Auditor
+    description: NEX cross-cutting — read-only all modules + audit_log access (full retention)
+    is_system: true
+    category: cross_cutting
+    division: null
+    inherits_from: []
+    permissions:
+      - module: '*'
+        actions: [read, export]
+        data_scope: all
+      - module: audit_log
+        actions: [read, export]
+        data_scope: all
+
+  - id: role-nex-viewer
+    legacy_id: null
+    name: Viewer
+    description: NEX read-only viewer (lower than Auditor; no audit_log access)
+    is_system: true
+    category: cross_cutting
+    division: null
+    inherits_from: []
+    permissions:
+      - module: '*'
+        actions: [read]
+        data_scope: all
+
+# =====================================
+# PERMISSIONS (77 legacy + NEX cross-cutting permissions; generated count is authoritative)
+# =====================================
+# Format: slug → { module, action, description, legacy }
+# Slugs are canonical keys — never rename. Add new ones, keep old ones (DEC-024).
+
+permissions:
+
+  # ---------- 55 LEGACY SUB-MODULES ----------
+  - { slug: role-manage,            module: auth,         action: 'crud', description: Manage roles and their permissions }
+  - { slug: user-manage,            module: auth,         action: 'crud', description: Manage user accounts (create/update/disable) }
+  - { slug: coa-manage,             module: finance,      action: 'crud', description: Manage Chart of Accounts (master) }
+  - { slug: coa-auto-manage,        module: finance,      action: 'crud', description: Manage auto-journal rules (event → CoA mapping) }
+  - { slug: warehouse-manage,       module: warehouse,    action: 'crud', description: Manage warehouse master (multi-location) }
+  - { slug: warehouse-access-manage, module: warehouse,    action: 'crud', description: Manage warehouse access per user (bin restrictions) }
+  - { slug: goods-category-manage,  module: warehouse,    action: 'crud', description: Manage goods categories }
+  - { slug: goods-manage,           module: warehouse,    action: 'crud', description: Manage goods (SKU/barang) master }
+  - { slug: supplier-category-manage, module: scm,        action: 'crud', description: Manage supplier categories }
+  - { slug: supplier-manage,        module: scm,           action: 'crud', description: Manage vendor master }
+  - { slug: customer-category-manage, module: busdev,     action: 'crud', description: Manage customer categories }
+  - { slug: customer-manage,        module: busdev,        action: 'crud', description: Manage customer master (all) }
+  - { slug: customer-my-manage,     module: busdev,        action: 'crud', description: Manage own customers (BusDev staff personal portfolio) }
+  - { slug: sales-category,         module: busdev,        action: 'crud', description: Manage sales categories (product group taxonomy) }
+  - { slug: sales-target,           module: busdev,        action: 'crud', description: Manage sales targets per period/agent }
+  - { slug: purchase,               module: scm,           action: 'crud', description: Manage Purchase Orders (PO) }
+  - { slug: purchase-invoice,       module: finance,      action: 'crud', description: Manage purchase invoices (AP) }
+  - { slug: purchase-return,        module: scm,           action: 'crud', description: Manage purchase returns }
+  - { slug: purchase-down-payment,  module: finance,      action: 'crud', description: Manage PO down payments }
+  - { slug: purchase-payment,       module: finance,      action: 'crud', description: Manage PO payments (settlement) }
+  - { slug: purchase-in,            module: warehouse,    action: 'crud', description: Goods receipt (inbound from PO) }
+  - { slug: sales-return-in,        module: warehouse,    action: 'crud', description: Receive returned goods from sales }
+  - { slug: goods-transfer,         module: warehouse,    action: 'crud', description: Transfer goods between warehouses }
+  - { slug: delivery-out,           module: warehouse,    action: 'crud', description: Outbound delivery (sales fulfillment) }
+  - { slug: purchase-return-out,    module: warehouse,    action: 'crud', description: Outbound for purchase return }
+  - { slug: sales-sample,           module: busdev,        action: 'crud', description: Manage sales sample requests/dispatches }
+  - { slug: sales-sample-payment,   module: finance,      action: 'crud', description: Manage sample payment receipts }
+  - { slug: sales,                  module: busdev,        action: 'crud', description: Manage Sales Orders (SO) }
+  - { slug: sales-return,           module: busdev,        action: 'crud', description: Manage sales returns }
+  - { slug: sales-down-payment,     module: finance,      action: 'crud', description: Manage SO down payments }
+  - { slug: sales-invoice,          module: finance,      action: 'crud', description: Manage sales invoices (AR) }
+  - { slug: sales-payment,          module: finance,      action: 'crud', description: Manage SO payment receipts }
+  - { slug: formulation-adjustment, module: rnd,           action: 'crud', description: Adjust formulation (post-approval changes) }
+  - { slug: formulation-manage,     module: rnd,           action: 'crud', description: Manage formulation catalog }
+  - { slug: formulation,            module: rnd,           action: 'crud', description: Create / read formulation (work-in-progress) }
+  - { slug: request-cogs,           module: rnd,           action: 'crud', description: Request COGS calculation (R&D → Finance) }
+  - { slug: batch-record,           module: production,   action: 'crud', description: Manage batch records (BR) }
+  - { slug: schedule-mixing,        module: production,   action: 'crud', description: Manage mixing schedule }
+  - { slug: schedule-filling,       module: production,   action: 'crud', description: Manage filling schedule }
+  - { slug: schedule-packaging,     module: production,   action: 'crud', description: Manage packaging schedule }
+  - { slug: production-mixing,      module: production,   action: 'crud', description: Manage mixing run execution }
+  - { slug: production-filling,     module: production,   action: 'crud', description: Manage filling run execution }
+  - { slug: production-packaging,   module: production,   action: 'crud', description: Manage packaging run execution }
+  - { slug: general-journal,        module: finance,      action: 'crud', description: Manage general journal entries }
+  - { slug: other-payment,          module: finance,      action: 'crud', description: Manage other (non-AP) payments }
+  - { slug: other-deposit,          module: finance,      action: 'crud', description: Manage other (non-AR) deposits }
+  - { slug: report-stock,           module: warehouse,    action: 'read', description: Stock level report }
+  - { slug: report-mutation-goods,  module: warehouse,    action: 'read', description: Stock mutation report (movements) }
+  - { slug: report-stock-valuation, module: finance,      action: 'read', description: Stock valuation report }
+  - { slug: report-guest-book,      module: busdev,        action: 'read', description: Guest book / visit log report }
+  - { slug: report-follow-up-customer, module: busdev,    action: 'read', description: Customer follow-up report }
+  - { slug: report-general-ledger,  module: finance,      action: 'read', description: General ledger report }
+  - { slug: report-profit-loss,     module: finance,      action: 'read', description: Profit & loss statement }
+  - { slug: report-trial-balance,   module: finance,      action: 'read', description: Trial balance report }
+  - { slug: report-balance-sheet,   module: finance,      action: 'read', description: Balance sheet report }
+
+  # ---------- 22 LEGACY DASHBOARD WIDGETS (read-only access) ----------
+  - { slug: D.JadwalProduksi,       module: dashboard, action: read, description: Production schedule widget }
+  - { slug: D.RealisasiProduksi,    module: dashboard, action: read, description: Production realization widget }
+  - { slug: D.PenjualanSample,      module: dashboard, action: read, description: Sample sales widget }
+  - { slug: D.PenjualanBarang,      module: dashboard, action: read, description: Goods sales widget }
+  - { slug: D.Pelanggan,            module: dashboard, action: read, description: Customer widget }
+  - { slug: D.Sample,               module: dashboard, action: read, description: Sample consolidation widget }
+  - { slug: D.Eksekutif,            module: dashboard, action: read, description: Executive summary widget }
+  - { slug: D.Notifikasi,           module: dashboard, action: read, description: Notifications widget }
+  - { slug: D.DigitalMarketing,     module: dashboard, action: read, description: Digital marketing widget }
+  - { slug: D.BusDev,               module: dashboard, action: read, description: BusDev widget }
+  - { slug: D.RnD,                  module: dashboard, action: read, description: RnD widget }
+  - { slug: D.Purchasing,           module: dashboard, action: read, description: Purchasing widget }
+  - { slug: D.Legalitas,            module: dashboard, action: read, description: Legalitas widget }
+  - { slug: D.Produksi,             module: dashboard, action: read, description: Production widget }
+  - { slug: D.Gudang,               module: dashboard, action: read, description: Warehouse widget }
+  - { slug: D.HR,                   module: dashboard, action: read, description: HR widget }
+  - { slug: D.Keuangan,             module: dashboard, action: read, description: Finance widget }
+  - { slug: D.BukuTamu,             module: dashboard, action: read, description: Guest book widget }
+  - { slug: D.ClientSample,         module: dashboard, action: read, description: Client sample widget }
+  - { slug: D.ClientProduksi,       module: dashboard, action: read, description: Client production widget }
+  - { slug: D.ClientRO,             module: dashboard, action: read, description: Client repeat-order widget }
+  - { slug: D.Lost,                 module: dashboard, action: read, description: Lost client widget }
+
+  # ---------- 9 NEX NEW PERMISSIONS (granular, cross-cutting) ----------
+  - { slug: audit_log.read,           module: auth,      action: read,   description: Read audit logs (post-2026 only; full via Auditor) }
+  - { slug: audit_log.export,         module: auth,      action: export, description: Export audit logs (CSV/JSON) }
+  - { slug: session.revoke,           module: auth,      action: update, description: Force logout another user }
+  - { slug: user.impersonate,         module: auth,      action: create, description: Impersonate another user (superadmin only) }
+  - { slug: report.export,            module: report,    action: export, description: Export any report (PDF/Excel/CSV) }
+  - { slug: report.schedule,          module: report,    action: create, description: Schedule recurring report delivery }
+  - { slug: notification.configure,   module: comm,      action: update, description: Configure notification preferences / channels }
+  - { slug: mfa.configure,            module: auth,      action: update, description: Enroll / reset MFA TOTP for own or subordinate users }
+  - { slug: dashboard.configure,      module: dashboard, action: update, description: Configure dashboard layout / widgets }
+
+  # ---------- COMMUNICATION PROTOCOL ----------
+  - { slug: note.read,                module: comm, action: read,   description: Read notes when parent entity ACL allows }
+  - { slug: note.create,              module: comm, action: create, description: Add a note to a readable parent entity }
+  - { slug: note.update,              module: comm, action: update, description: Edit own note while policy permits }
+  - { slug: note.delete,              module: comm, action: delete, description: Soft-delete own note or moderate as admin }
+  - { slug: comment.read,             module: comm, action: read,   description: Read comments when parent entity ACL allows }
+  - { slug: comment.create,           module: comm, action: create, description: Add a comment or constrained cross-reference }
+  - { slug: attachment.read,          module: comm, action: read,   description: Read entity attachments under parent ACL }
+  - { slug: attachment.create,        module: comm, action: create, description: Attach a file to a writable parent entity }
+  - { slug: tag.read,                 module: comm, action: read,   description: Read mention tags under parent ACL }
+  - { slug: tag.update,               module: comm, action: update, description: Create/remove own mention tags atomically with content }
+  - { slug: notification.read,        module: comm, action: read,   description: Read own notifications }
+  - { slug: notification.update,      module: comm, action: update, description: Mark own notifications read and change preferences }
+  - { slug: user.read,                module: auth, action: read,   description: Resolve active users constrained by shared entity ACL }
+  - { slug: status-transition.read,   module: comm, action: read,   description: Read status history under parent entity ACL }
+
+  # ---------- PER-PERSON KPI ----------
+  - { slug: kpi.read.own,             module: kpi, action: read,   description: Read own KPI scorecard and evidence }
+  - { slug: kpi.read.division,        module: kpi, action: read,   description: Read KPI scorecards within managed division }
+  - { slug: kpi.read.all,             module: kpi, action: read,   description: Read all employee KPI scorecards }
+  - { slug: kpi.recalculate,          module: kpi, action: update, description: Replay source events without accepting a manual score }
+
+  # ---------- SCREEN CAPABILITY BASES ----------
+  # These bases let screen references use `<slug>.<action>` while server guards
+  # continue to enforce role assignment, tenant scope, and entity ownership.
+  - { slug: auth,                     module: auth, action: read, description: Access authenticated shell and auth-state screens }
+  - { slug: self,                     module: auth, action: update, description: Update own non-privileged profile fields }
+  - { slug: activity-log,             module: audit, action: read, description: Read operational activity log within authorized scope }
+  - { slug: api-token,                module: system, action: crud, description: Manage scoped API tokens; secrets shown once }
+  - { slug: cash-bank,                module: finance, action: crud, description: Manage cash and bank accounts }
+  - { slug: checklist-category,       module: checklist, action: crud, description: Manage checklist templates/categories }
+  - { slug: checklist-progress,       module: checklist, action: read, description: Read checklist progress }
+  - { slug: checklist-tracking,       module: checklist, action: read, description: Read checklist tracking summary }
+  - { slug: checklist,                module: checklist, action: crud, description: Create, assign, and update checklists }
+  - { slug: checklist.assign,         module: checklist, action: update, description: Assign checklist PIC and deadline }
+  - { slug: fixed-asset,              module: finance, action: read, description: Read fixed-asset register }
+  - { slug: qc-inspection,            module: production, action: crud, description: Manage QC inspections }
+  - { slug: report-ap,                module: report, action: read, description: Read AP aging report }
+  - { slug: report-ar,                module: report, action: read, description: Read AR aging report }
+  - { slug: report-budget,            module: report, action: read, description: Read budget versus actual report }
+  - { slug: report-cf,                module: report, action: read, description: Read cash-flow report }
+  - { slug: report-sales-summary,     module: report, action: read, description: Read sales summary report }
+  - { slug: stock-adjustment,         module: warehouse, action: crud, description: Manage stock adjustments }
+  - { slug: stock-opname,             module: warehouse, action: crud, description: Manage and approve stock opname }
+  - { slug: tax,                      module: finance, action: crud, description: Manage tax setup; no e-Faktur automation }
+  - { slug: setting,                  module: system, action: update, description: Update privileged system settings }
+  - { slug: system-health,            module: system, action: read, description: Read redacted health metrics }
+  - { slug: feature-flag,             module: system, action: read, description: Read feature flags }
+  - { slug: integration,              module: system, action: read, description: Read integration connection status }
+  - { slug: license,                  module: system, action: crud, description: Read or activate license configuration }
+  - { slug: template,                 module: system, action: crud, description: Manage communication and document templates }
+  - { slug: i18n,                     module: system, action: crud, description: Read/import translations }
+  - { slug: webhook,                  module: system, action: crud, description: Manage webhooks }
+  - { slug: dashboard.busdev,         module: dashboard, action: read, description: BusDev dashboard }
+  - { slug: dashboard.executive,      module: dashboard, action: read, description: Executive dashboard }
+  - { slug: dashboard.finance,        module: dashboard, action: read, description: Finance dashboard }
+  - { slug: dashboard.hr,             module: dashboard, action: read, description: HR dashboard }
+  - { slug: dashboard.legality,       module: dashboard, action: read, description: Legality dashboard }
+  - { slug: dashboard.marketing,      module: dashboard, action: read, description: Marketing dashboard }
+  - { slug: dashboard.procurement,    module: dashboard, action: read, description: Procurement dashboard }
+  - { slug: dashboard.production,     module: dashboard, action: read, description: Production dashboard }
+  - { slug: dashboard.qc,             module: dashboard, action: read, description: QC dashboard }
+  - { slug: dashboard.rnd,            module: dashboard, action: read, description: R&D dashboard }
+  - { slug: dashboard.system-errors,  module: dashboard, action: read, description: SRE error dashboard }
+  - { slug: dashboard.warehouse,      module: dashboard, action: read, description: Warehouse dashboard }
+
+# =====================================
+# DATA SCOPES
+# =====================================
+# Scope = SQL-level filter applied to queries. Backend guards enforce.
+
+data_scopes:
+  - name: all
+    description: All records in module (no filter)
+    filter_sql: null
+    implementation: passthrough
+
+  - name: own_only
+    description: Only records owned by current user
+    filter_sql: "ownerUserId = :currentUserId"
+    implementation: where-clause injection
+
+  - name: division_only
+    description: Only records in same division as current user
+    filter_sql: "divisionId = :currentUserDivisionId"
+    implementation: where-clause injection
+
+  - name: warehouse_only
+    description: Only records in warehouses user has access to
+    filter_sql: "warehouseId IN (:userAccessibleWarehouseIds)"
+    implementation: where-clause injection (sub-query on user_warehouse_access)
+
+  - name: created_by_only
+    description: Only records created by current user
+    filter_sql: "createdByUserId = :currentUserId"
+    implementation: where-clause injection
+
+# =====================================
+# MODULE × ACTION × ROLE MATRIX (compact view)
+# =====================================
+# Lists role names allowed per (module, action). Read top-to-bottom per action.
+
+matrix:
+  sales:
+    read:      [Administrator, BusDevManager, BusDevAdmin, BusDevStaff, BusinessDevelopment, HeadBusinessDevelopment, Executive, Auditor, Viewer, BusDevPlusHRD, BusDevPlusPurchasing, FinanceManager, FinanceAdmin, FinanceStaff]
+    create:    [Administrator, BusDevManager, BusDevAdmin, BusDevStaff, BusinessDevelopment, HeadBusinessDevelopment, BusDevPlusHRD, BusDevPlusPurchasing]
+    update:    [Administrator, BusDevManager, BusDevAdmin, BusDevStaff, BusinessDevelopment, HeadBusinessDevelopment, BusDevPlusHRD, BusDevPlusPurchasing]
+    delete:    [Administrator, BusDevAdmin]
+    approve:   [Administrator, BusDevManager, BusDevAdmin]
+    export:    [Administrator, BusDevManager, BusDevAdmin, Executive, Auditor, FinanceManager]
+
+  purchase:
+    read:      [Administrator, PurchasingAdmin, PurchasingStaff, PurchasingLegacy, BusDevPlusPurchasing, FinanceManager, FinanceAdmin, FinanceStaff, Executive, Auditor, Viewer]
+    create:    [Administrator, PurchasingAdmin, PurchasingStaff, PurchasingLegacy, BusDevPlusPurchasing]
+    update:    [Administrator, PurchasingAdmin, PurchasingStaff, PurchasingLegacy, BusDevPlusPurchasing]
+    delete:    [Administrator, PurchasingAdmin]
+    approve:   [Administrator, PurchasingAdmin, PurchasingLegacy]
+    export:    [Administrator, PurchasingAdmin, Executive, Auditor, FinanceManager]
+
+  production:
+    read:      [Administrator, ProductionAdmin, ProductionOperatorMixing, ProductionOperatorFilling, ProductionOperatorPackaging, ProductionPackaging, Executive, Auditor, Viewer]
+    create:    [Administrator, ProductionAdmin, ProductionOperatorMixing, ProductionOperatorFilling, ProductionOperatorPackaging, ProductionPackaging]
+    update:    [Administrator, ProductionAdmin, ProductionOperatorMixing, ProductionOperatorFilling, ProductionOperatorPackaging, ProductionPackaging]
+    delete:    [Administrator, ProductionAdmin]
+    approve:   [Administrator, ProductionAdmin]
+    export:    [Administrator, ProductionAdmin, Executive, Auditor]
+
+  rnd_formulation:
+    read:      [Administrator, RnDManager, RnDAdmin, RnDChemist, ResearchAndDevelopment, HeadResearchAndDevelopment, ApotekerPenanggungJawab, Executive, Auditor, Viewer]
+    create:    [Administrator, RnDManager, RnDAdmin, RnDChemist, ResearchAndDevelopment, HeadResearchAndDevelopment]
+    update:    [Administrator, RnDManager, RnDAdmin, RnDChemist, ResearchAndDevelopment, HeadResearchAndDevelopment]
+    delete:    [Administrator, RnDAdmin]
+    approve:   [Administrator, RnDManager, HeadResearchAndDevelopment, ApotekerPenanggungJawab]
+    export:    [Administrator, RnDManager, RnDAdmin, Executive, Auditor]
+
+  warehouse:
+    read:      [Administrator, WarehouseAdmin, WarehouseStaff, WarehouseLegacy, ProductionAdmin, Executive, Auditor, Viewer]
+    create:    [Administrator, WarehouseAdmin, WarehouseStaff, WarehouseLegacy]
+    update:    [Administrator, WarehouseAdmin, WarehouseStaff, WarehouseLegacy]
+    delete:    [Administrator, WarehouseAdmin]
+    approve:   [Administrator, WarehouseAdmin]
+    export:    [Administrator, WarehouseAdmin, Executive, Auditor]
+
+  finance:
+    read:      [Administrator, FinanceManager, FinanceAdmin, FinanceStaff, FinanceLegacy, Executive, Auditor, Viewer]
+    create:    [Administrator, FinanceManager, FinanceAdmin, FinanceStaff, FinanceLegacy]
+    update:    [Administrator, FinanceManager, FinanceAdmin, FinanceStaff, FinanceLegacy]
+    delete:    [Administrator, FinanceAdmin]
+    approve:   [Administrator, FinanceManager, FinanceLegacy]
+    export:    [Administrator, FinanceManager, FinanceAdmin, Executive, Auditor]
+
+  hr:
+    read:      [Administrator, HRAdmin, HRStaff, HRD, Executive, Auditor, Viewer]
+    create:    [Administrator, HRAdmin, HRStaff, HRD]
+    update:    [Administrator, HRAdmin, HRStaff, HRD]
+    delete:    [Administrator, HRAdmin]
+    approve:   [Administrator, HRAdmin]
+    export:    [Administrator, HRAdmin, Executive, Auditor]
+
+  marketing_digimar:
+    read:      [Administrator, DigitalMarketingAdmin, DigitalMarketingStaff, DigitalMarketing, Executive, Auditor, Viewer]
+    create:    [Administrator, DigitalMarketingAdmin, DigitalMarketingStaff, DigitalMarketing]
+    update:    [Administrator, DigitalMarketingAdmin, DigitalMarketingStaff, DigitalMarketing]
+    delete:    [Administrator, DigitalMarketingAdmin]
+    export:    [Administrator, DigitalMarketingAdmin, Executive, Auditor]
+
+  legalitas_scm:
+    read:      [Administrator, LegalitasAdmin, LegalitasStaff, ApotekerPenanggungJawab, Executive, Auditor, Viewer]
+    create:    [Administrator, LegalitasAdmin, LegalitasStaff]
+    update:    [Administrator, LegalitasAdmin, LegalitasStaff]
+    export:    [Administrator, LegalitasAdmin, Executive, Auditor]
+
+  auth_user_management:
+    read:      [Administrator, SuperAdmin, HRAdmin, HRStaff, HRD, BusDevPlusHRD, Executive, Auditor]
+    create:    [Administrator, SuperAdmin, HRAdmin, HRD]
+    update:    [Administrator, SuperAdmin, HRAdmin, HRStaff, HRD]
+    delete:    [Administrator, SuperAdmin]
+    approve:   [SuperAdmin]
+    export:    [Administrator, SuperAdmin, Auditor]
+
+  audit_log:
+    read:      [SuperAdmin, Administrator, Auditor]
+    export:    [SuperAdmin, Auditor]
+
+  kpi:
+    read:      [SuperAdmin, Administrator, HRAdmin, HRStaff, DivisionManager, Executive, Auditor, Viewer]
+    update:    [SuperAdmin, Administrator, HRAdmin]
+
+# =====================================
+# ROLE × ROLE HIERARCHY (inherits_from)
+# =====================================
+# Resolution order: leaf role → walk inherits_from → top of chain.
+# Effective permission set = union of all inherited permissions.
+
+hierarchy:
+  SuperAdmin: []
+  Administrator: []
+  HRAdmin:
+    inherits_from: [HRStaff]
+  HRStaff: []
+  PurchasingAdmin:
+    inherits_from: [PurchasingStaff]
+  PurchasingStaff: []
+  PurchasingLegacy:
+    inherits_from: [PurchasingStaff]
+  WarehouseAdmin:
+    inherits_from: [WarehouseStaff]
+  WarehouseStaff: []
+  WarehouseLegacy:
+    inherits_from: [WarehouseStaff]
+  BusDevManager:
+    inherits_from: [BusDevAdmin]
+  BusDevAdmin:
+    inherits_from: [BusinessDevelopment]
+  BusinessDevelopment: []
+  BusDevStaff:
+    inherits_from: [BusinessDevelopment]
+  HeadBusinessDevelopment:
+    inherits_from: [BusDevAdmin]
+  RnDManager:
+    inherits_from: [RnDAdmin]
+  RnDAdmin:
+    inherits_from: [HeadResearchAndDevelopment]
+  RnDChemist:
+    inherits_from: [ResearchAndDevelopment]
+  ResearchAndDevelopment: []
+  HeadResearchAndDevelopment: []
+  ApotekerPenanggungJawab:
+    inherits_from: [RnDChemist]
+  ProductionAdmin:
+    inherits_from: [ProductionOperatorMixing, ProductionOperatorFilling, ProductionOperatorPackaging]
+  ProductionOperatorMixing:
+    inherits_from: [ProductionOperatorPackaging]
+  ProductionOperatorFilling:
+    inherits_from: [ProductionOperatorPackaging]
+  ProductionOperatorPackaging:
+    inherits_from: [ProductionPackaging]
+  ProductionPackaging: []
+  FinanceManager:
+    inherits_from: [FinanceAdmin]
+  FinanceAdmin:
+    inherits_from: [FinanceStaff]
+  FinanceStaff: []
+  FinanceLegacy:
+    inherits_from: [FinanceStaff]
+  DigitalMarketingAdmin:
+    inherits_from: [DigitalMarketingStaff]
+  DigitalMarketingStaff: []
+  DigitalMarketing:
+    inherits_from: [DigitalMarketingStaff]
+  LegalitasAdmin:
+    inherits_from: [LegalitasStaff]
+  LegalitasStaff: []
+  BusDevPlusHRD:
+    inherits_from: [BusinessDevelopment, HRStaff]
+  BusDevPlusPurchasing:
+    inherits_from: [BusinessDevelopment, PurchasingStaff]
+  HRD:
+    inherits_from: [HRStaff]
+  StaffBackOffice: []
+  Executive: []
+  Auditor: []
+  Viewer: []
+
+# =====================================
+# APPROVAL THRESHOLDS
+# =====================================
+# Per-transaction-type approval ladder. Amount in IDR.
+# Effective from 2026-09-16 (revisable via DEC entry).
+
+approval_thresholds:
+  sales_order:
+    currency: IDR
+    tiers:
+      - tier: self_approve
+        amount_max: 10_000_000
+        approvers: [BusDevStaff]
+        notes: Self-approve for small orders
+      - tier: standard
+        amount_min: 10_000_000
+        amount_max: 50_000_000
+        approvers: [BusDevManager]
+      - tier: vip
+        amount_min: 50_000_000
+        approvers: [BusDevAdmin, Director]
+    requires_finance_ack: true   # FinanceStaff receives copy
+
+  sales_sample:
+    currency: IDR
+    tiers:
+      - tier: self_approve
+        amount_max: 500_000
+        approvers: [BusDevStaff]
+      - tier: standard
+        amount_min: 500_000
+        amount_max: 2_000_000
+        approvers: [BusDevManager]
+      - tier: vip
+        amount_min: 2_000_000
+        approvers: [BusDevAdmin, RnDManager]
+    requires_rnd_ack: true       # RnD needs to approve sample-make feasibility
+
+  purchase_order:
+    currency: IDR
+    tiers:
+      - tier: self_approve
+        amount_max: 5_000_000
+        approvers: [PurchasingStaff]
+      - tier: standard
+        amount_min: 5_000_000
+        amount_max: 100_000_000
+        approvers: [PurchasingAdmin]
+      - tier: vip
+        amount_min: 100_000_000
+        approvers: [PurchasingAdmin, Director]
+    requires_finance_ack: true
+
+  purchase_invoice:
+    currency: IDR
+    tiers:
+      - tier: staff
+        amount_max: 5_000_000
+        approvers: [FinanceStaff]
+      - tier: manager
+        amount_min: 5_000_000
+        amount_max: 100_000_000
+        approvers: [FinanceManager]
+      - tier: vip
+        amount_min: 100_000_000
+        approvers: [FinanceManager, Director]
+
+  payment:
+    currency: IDR
+    tiers:
+      - tier: staff
+        amount_max: 5_000_000
+        approvers: [FinanceStaff]
+      - tier: manager
+        amount_min: 5_000_000
+        amount_max: 100_000_000
+        approvers: [FinanceManager]
+      - tier: vip
+        amount_min: 100_000_000
+        approvers: [FinanceManager, Director]
+
+  formulation_lock:
+    tiers:
+      - tier: self_lock
+        approvers: [RnDChemist]
+        notes: Self-lock for WIP formula (no monetary amount)
+      - tier: manager_lock
+        approvers: [RnDManager]
+        additional_approvers: [ApotekerPenanggungJawab]  # BPOM compliance check
+        notes: "RnDManager + Apoteker both required to LOCK formula"
+
+  batch_record:
+    tiers:
+      - tier: operator_close
+        approvers: [ProductionOperatorPackaging]
+      - tier: admin_close
+        approvers: [ProductionAdmin]
+        additional_approvers: [ApotekerPenanggungJawab]  # QA sign-off
+        notes: "Production + Apoteker both required to CLOSE batch"
+
+  goods_writeoff:
+    currency: IDR
+    tiers:
+      - tier: staff
+        amount_max: 1_000_000
+        approvers: [WarehouseStaff]
+      - tier: admin
+        amount_min: 1_000_000
+        amount_max: 10_000_000
+        approvers: [WarehouseAdmin]
+      - tier: vip
+        amount_min: 10_000_000
+        approvers: [WarehouseAdmin, FinanceManager]
+        notes: "Stock writeoff (rusak/cacad/expired)"
+
+  coa_modify:
+    tiers:
+      - tier: staff
+        approvers: [FinanceStaff]
+        notes: Routine CoA mapping changes
+      - tier: admin
+        approvers: [FinanceAdmin]
+        notes: "CoA code/naming changes require admin"
+
+# =====================================
+# SPECIAL PERMISSIONS
+# =====================================
+# Cross-cutting rules beyond the matrix above.
+
+special:
+
+  authenticated_default_permissions:
+    description: Communication and self-service permissions granted to every authenticated user, always constrained by the parent entity ACL and tenant boundary.
+    permission_slugs: [note.read, note.create, note.update, note.delete, comment.read, comment.create, attachment.read, attachment.create, tag.read, tag.update, notification.read, notification.update, user.read, status-transition.read, kpi.read.own]
+    enforcement: parent-entity ACL plus own-resource constraint
+
+  kpi_scope_permissions:
+    kpi.read.own: [all_authenticated_users]
+    kpi.read.division: [DivisionManager, HRAdmin, HRStaff]
+    kpi.read.all: [SuperAdmin, Administrator, HRAdmin, Executive, Auditor]
+    kpi.recalculate: [SuperAdmin, Administrator, HRAdmin]
+    notes: Recalculate only replays immutable source events; request bodies containing score fields are rejected.
+
+  mfa_required_for:
+    description: Roles that must enroll MFA TOTP before performing sensitive actions
+    roles: [Administrator, FinanceAdmin, FinanceManager, BusDevAdmin, RnDManager, SuperAdmin]
+    actions: [approve, delete]
+    endpoints:
+      - POST /api/v1/sales-orders/:id/approve
+      - POST /api/v1/purchase-orders/:id/approve
+      - POST /api/v1/payments/:id/approve
+      - DELETE /api/v1/{module}/{id}
+    enforcement: role-policy + per-user override
+    reference: _SSOT_AUTH.md §7.3
+
+  audit_log_access:
+    roles: [SuperAdmin, Administrator, Auditor]
+    retention:
+      hot: 12 months          # queryable from primary DB
+      warm: 5 years           # queryable from archive schema
+      cold: indefinite        # S3 cold storage, Auditor can request restore
+    notes: "Auditor gets full retention; Administrator limited to current-year"
+
+  impersonate_user:
+    roles: [SuperAdmin]
+    audit_required: true
+    max_duration_minutes: 60
+    notify_target_user: true     # email + in-app banner to target user
+    require_mfa: true
+    rate_limit: 3                # max 3 impersonation sessions per 24h
+    audit_log_slug: user.impersonate
+    notes: "Every action during impersonation is logged as actor=impersonator, target=impersonated"
+
+  session_revoke:
+    roles: [SuperAdmin, Administrator]
+    endpoints: [DELETE /api/v1/users/:id/sessions]
+    notify_target_user: true
+    audit_log_slug: session.revoke
+
+  field_level_perm:
+    description: Sample of field-level restrictions (not exhaustive)
+    examples:
+      - role: BusinessDevelopment
+        module: sales
+        fields_readonly: [approvedBy, approvedAt, grandTotal]
+        notes: "BusDev cannot edit approval fields on SO"
+      - role: FinanceStaff
+        module: general-journal
+        fields_readonly: [journalNumber, postedAt]
+        notes: "Finance staff cannot edit posted journals"
+      - role: RnDChemist
+        module: formulation
+        fields_readonly: [lockedAt, lockedBy, approvedBy]
+        notes: "RnD chemist cannot edit locked formulas"
+
+  ownership_transfer:
+    description: When a record owner leaves, superadmin can transfer ownership
+    roles: [SuperAdmin]
+    audit_log_slug: ownership.transfer
+    notes: "Target user gets notification; original owner record flagged 'transferred'"
+
+# =====================================
+# ROLE PERMISSION ASSIGNMENT (explicit)
+# =====================================
+# Authoritative list — duplicates the role.permissions block above in
+# role-permission form for fast server-side lookup at boot.
+# Slugs only — resolution via PERMISSIONS table.
+
+role_permission_assignments:
+
+  - role: SuperAdmin
+    permission_slugs: ['*']   # wildcard = all 86 slugs
+
+  - role: Director
+    permission_slugs:
+      - sales
+      - purchase
+      - purchase-invoice
+      - general-journal
+      - other-payment
+      - other-deposit
+      - D.Eksekutif
+
+  - role: Administrator
+    permission_slugs:
+      - user-manage
+      - role-manage
+      - coa-manage
+      - coa-auto-manage
+      - warehouse-manage
+      - warehouse-access-manage
+      - goods-category-manage
+      - goods-manage
+      - supplier-category-manage
+      - supplier-manage
+      - customer-category-manage
+      - customer-manage
+      - customer-my-manage
+      - sales-category
+      - sales-target
+      - purchase
+      - purchase-invoice
+      - purchase-return
+      - purchase-down-payment
+      - purchase-payment
+      - purchase-in
+      - sales-return-in
+      - goods-transfer
+      - delivery-out
+      - purchase-return-out
+      - sales-sample
+      - sales-sample-payment
+      - sales
+      - sales-return
+      - sales-down-payment
+      - sales-invoice
+      - sales-payment
+      - formulation-adjustment
+      - formulation-manage
+      - formulation
+      - request-cogs
+      - batch-record
+      - schedule-mixing
+      - schedule-filling
+      - schedule-packaging
+      - production-mixing
+      - production-filling
+      - production-packaging
+      - general-journal
+      - other-payment
+      - other-deposit
+      - report-stock
+      - report-mutation-goods
+      - report-stock-valuation
+      - report-guest-book
+      - report-follow-up-customer
+      - report-general-ledger
+      - report-profit-loss
+      - report-trial-balance
+      - report-balance-sheet
+      - D.JadwalProduksi
+      - D.RealisasiProduksi
+      - D.PenjualanSample
+      - D.PenjualanBarang
+      - D.Pelanggan
+      - D.Sample
+      - D.Eksekutif
+      - D.Notifikasi
+      - D.DigitalMarketing
+      - D.BusDev
+      - D.RnD
+      - D.Purchasing
+      - D.Legalitas
+      - D.Produksi
+      - D.Gudang
+      - D.HR
+      - D.Keuangan
+      - D.BukuTamu
+      - D.ClientSample
+      - D.ClientProduksi
+      - D.ClientRO
+      - D.Lost
+      - audit_log.read
+      - audit_log.export
+      - session.revoke
+      - report.export
+      - report.schedule
+      - notification.configure
+      - mfa.configure
+      - dashboard.configure
+
+  - role: Executive
+    permission_slugs: ['*']  # all 86 with action=read only
+
+  - role: Auditor
+    permission_slugs: ['*']  # all 86 read + audit_log.export
+
+  - role: Viewer
+    permission_slugs: ['*']  # all 86 with action=read only (no export, no audit)
+
+  - role: BusinessDevelopment
+    permission_slugs: [customer-my-manage, sales-sample, sales-sample-payment, sales, sales-return, sales-down-payment, sales-invoice, sales-payment, sales-category, sales-target, delivery-out, report-follow-up-customer, D.BusDev, D.Pelanggan, D.PenjualanSample, D.PenjualanBarang, D.ClientSample, D.ClientProduksi, D.ClientRO, D.Lost, D.Sample, D.Notifikasi, D.Eksekutif]
+
+  - role: HeadBusinessDevelopment
+    permission_slugs: [sales-category, sales-target, customer-category-manage, customer-manage, customer-my-manage, sales-sample, sales-sample-payment, sales, sales-return, sales-down-payment, sales-invoice, sales-payment, delivery-out, report-follow-up-customer, D.BusDev, D.Pelanggan, D.PenjualanSample, D.PenjualanBarang, D.ClientSample, D.ClientProduksi]
+
+  - role: WarehouseLegacy
+    permission_slugs: [warehouse-manage, warehouse-access-manage, goods-category-manage, goods-manage, goods-transfer, purchase-in, sales-return-in, delivery-out, report-stock, report-mutation-goods, report-stock-valuation, D.Gudang, D.Notifikasi, D.JadwalProduksi, D.RealisasiProduksi]
+
+  - role: FinanceLegacy
+    permission_slugs: [coa-manage, coa-auto-manage, general-journal, other-payment, other-deposit, purchase-payment, purchase-invoice, sales-payment, sales-invoice, sales-sample-payment, sales-down-payment, purchase-down-payment, report-general-ledger, report-profit-loss, report-trial-balance, report-balance-sheet, report-stock-valuation, D.Keuangan, D.Notifikasi, D.Eksekutif]
+
+  - role: HRD
+    permission_slugs: [user-manage, sales-target, report-follow-up-customer, report-guest-book, D.HR, D.Pelanggan, D.Notifikasi, D.ClientSample]
+
+  - role: StaffBackOffice
+    permission_slugs: [customer-my-manage, report-guest-book, D.Notifikasi, D.Pelanggan, D.ClientSample]
+
+  - role: HeadResearchAndDevelopment
+    permission_slugs: [formulation, formulation-manage, formulation-adjustment, request-cogs, batch-record, goods-manage, sales-sample, sales-category, D.RnD, D.Sample, D.Notifikasi, D.ClientSample, D.ClientProduksi, D.ClientRO]
+
+  - role: ResearchAndDevelopment
+    permission_slugs: [formulation, formulation-manage, formulation-adjustment, request-cogs, batch-record, goods-manage, sales-sample, D.RnD, D.Sample, D.Notifikasi, D.ClientSample]
+
+  - role: ProductionPackaging
+    permission_slugs: [schedule-packaging, production-packaging, batch-record, formulation, goods-manage, request-cogs, D.JadwalProduksi, D.RealisasiProduksi, D.Produksi, D.Notifikasi, D.Gudang, D.ClientProduksi, D.ClientRO, D.Sample, D.BukuTamu]
+
+  - role: ApotekerPenanggungJawab
+    permission_slugs: [batch-record, formulation, formulation-manage, formulation-adjustment, request-cogs, goods-manage, D.RnD, D.Notifikasi]
+
+  - role: DigitalMarketing
+    permission_slugs: [customer-category-manage, customer-manage, sales-category, sales-target, D.DigitalMarketing, D.Pelanggan, D.BusDev, D.Notifikasi]
+
+  - role: BusDevPlusHRD
+    permission_slugs: [customer-my-manage, sales-sample, sales, sales-down-payment, sales-invoice, sales-payment, sales-target, user-manage, report-follow-up-customer, report-guest-book, D.BusDev, D.HR, D.Pelanggan, D.PenjualanSample, D.PenjualanBarang, D.ClientSample, D.ClientProduksi, D.Lost, D.Sample, D.Notifikasi]
+
+  - role: BusDevPlusPurchasing
+    permission_slugs: [customer-my-manage, sales-sample, sales-sample-payment, sales, sales-return, sales-down-payment, sales-invoice, sales-payment, supplier-manage, supplier-category-manage, purchase, purchase-invoice, purchase-return, purchase-down-payment, purchase-payment, purchase-in, purchase-return-out, goods-transfer, request-cogs, report-stock, report-mutation-goods, report-stock-valuation, report-follow-up-customer, D.BusDev, D.Purchasing, D.Pelanggan, D.PenjualanSample, D.PenjualanBarang, D.Gudang, D.Notifikasi, D.ClientSample]
+
+  - role: HRAdmin
+    permission_slugs: [user-manage, sales-target, report-follow-up-customer, report-guest-book, D.HR, coa-manage]
+
+  - role: HRStaff
+    permission_slugs: [user-manage, sales-target, report-follow-up-customer, report-guest-book, D.HR]
+
+  - role: PurchasingAdmin
+    permission_slugs: [supplier-category-manage, supplier-manage, purchase, purchase-invoice, purchase-return, purchase-down-payment, purchase-payment, purchase-in, purchase-return-out, goods-category-manage, goods-manage, request-cogs, report-stock, D.Purchasing, D.Notifikasi, D.Gudang]
+
+  - role: PurchasingStaff
+    permission_slugs: [supplier-manage, supplier-category-manage, purchase, purchase-invoice, purchase-return, purchase-down-payment, purchase-payment, purchase-in, purchase-return-out, goods-category-manage, goods-manage, request-cogs, report-stock, D.Purchasing]
+
+  - role: WarehouseAdmin
+    permission_slugs: [warehouse-manage, warehouse-access-manage, goods-manage, goods-transfer, purchase-in, sales-return-in, delivery-out, report-stock, report-mutation-goods, report-stock-valuation, D.Gudang]
+
+  - role: WarehouseStaff
+    permission_slugs: [warehouse-manage, goods-manage, goods-transfer, purchase-in, sales-return-in, delivery-out, report-stock, report-mutation-goods, D.Gudang]
+
+  - role: BusDevManager
+    permission_slugs: [sales, sales-sample, sales-target, customer-manage, customer-category-manage, sales-category, sales-invoice, sales-payment, sales-return, sales-down-payment, sales-sample-payment, delivery-out, customer-my-manage, report-follow-up-customer, D.BusDev, D.Pelanggan, D.PenjualanSample, D.PenjualanBarang, D.ClientSample, D.ClientProduksi]
+
+  - role: BusDevAdmin
+    permission_slugs: [sales, sales-sample, sales-target, customer-manage, customer-category-manage, sales-category, sales-invoice, sales-payment, sales-return, sales-down-payment, sales-sample-payment, delivery-out, customer-my-manage, report-follow-up-customer, D.BusDev, D.Pelanggan, D.PenjualanSample, D.PenjualanBarang, D.ClientSample, D.ClientProduksi, D.ClientRO, D.Lost, D.Sample, D.Notifikasi, D.Eksekutif]
+
+  - role: BusDevStaff
+    permission_slugs: [customer-my-manage, sales-sample, sales-sample-payment, sales, sales-return, sales-down-payment, sales-invoice, sales-payment, sales-category, sales-target, delivery-out, report-follow-up-customer, D.BusDev, D.Pelanggan, D.PenjualanSample, D.PenjualanBarang, D.ClientSample, D.ClientProduksi, D.ClientRO, D.Lost, D.Sample, D.Notifikasi, D.Eksekutif]
+
+  - role: RnDManager
+    permission_slugs: [formulation, formulation-manage, formulation-adjustment, request-cogs, batch-record, goods-manage, sales-sample, sales-category, D.RnD, D.Sample, D.Notifikasi, D.ClientSample, D.ClientProduksi, D.ClientRO]
+
+  - role: RnDAdmin
+    permission_slugs: [formulation, formulation-manage, formulation-adjustment, request-cogs, batch-record, goods-manage, sales-sample, sales-category, D.RnD, D.Sample, D.Notifikasi, D.ClientSample, D.ClientProduksi, D.ClientRO]
+
+  - role: RnDChemist
+    permission_slugs: [formulation, formulation-manage, formulation-adjustment, request-cogs, batch-record, goods-manage, sales-sample, D.RnD, D.Sample, D.Notifikasi, D.ClientSample]
+
+  - role: ProductionAdmin
+    permission_slugs: [schedule-mixing, schedule-filling, schedule-packaging, production-mixing, production-filling, production-packaging, batch-record, formulation, goods-manage, request-cogs, D.JadwalProduksi, D.RealisasiProduksi, D.Produksi, D.Gudang, D.Notifikasi]
+
+  - role: ProductionOperatorMixing
+    permission_slugs: [schedule-mixing, production-mixing, batch-record, formulation, goods-manage, request-cogs, schedule-packaging, production-packaging, D.JadwalProduksi, D.RealisasiProduksi, D.Produksi, D.Gudang, D.Notifikasi, D.ClientProduksi, D.ClientRO, D.Sample, D.BukuTamu]
+
+  - role: ProductionOperatorFilling
+    permission_slugs: [schedule-filling, production-filling, batch-record, formulation, goods-manage, request-cogs, schedule-packaging, production-packaging, D.JadwalProduksi, D.RealisasiProduksi, D.Produksi, D.Gudang, D.Notifikasi, D.ClientProduksi, D.ClientRO, D.Sample, D.BukuTamu]
+
+  - role: ProductionOperatorPackaging
+    permission_slugs: [schedule-packaging, production-packaging, batch-record, formulation, goods-manage, request-cogs, D.JadwalProduksi, D.RealisasiProduksi, D.Produksi, D.Gudang]
+
+  - role: FinanceManager
+    permission_slugs: [coa-manage, coa-auto-manage, general-journal, other-payment, other-deposit, purchase-payment, purchase-invoice, sales-payment, sales-invoice, sales-sample-payment, sales-down-payment, purchase-down-payment, report-general-ledger, report-profit-loss, report-trial-balance, report-balance-sheet, report-stock-valuation, D.Keuangan, D.Eksekutif]
+
+  - role: FinanceAdmin
+    permission_slugs: [coa-manage, coa-auto-manage, general-journal, other-payment, other-deposit, purchase-payment, purchase-invoice, sales-payment, sales-invoice, sales-sample-payment, sales-down-payment, purchase-down-payment, report-general-ledger, report-profit-loss, report-trial-balance, report-balance-sheet, report-stock-valuation, D.Keuangan, D.Eksekutif]
+
+  - role: FinanceStaff
+    permission_slugs: [coa-manage, coa-auto-manage, general-journal, other-payment, other-deposit, purchase-payment, purchase-invoice, sales-payment, sales-invoice, sales-sample-payment, sales-down-payment, purchase-down-payment, report-general-ledger, report-profit-loss, report-trial-balance, report-balance-sheet, report-stock-valuation, D.Keuangan, D.Eksekutif]
+
+  - role: DigitalMarketingAdmin
+    permission_slugs: [customer-category-manage, customer-manage, sales-category, sales-target, D.DigitalMarketing, D.Pelanggan, D.BusDev]
+
+  - role: DigitalMarketingStaff
+    permission_slugs: [customer-category-manage, customer-manage, sales-category, sales-target, D.DigitalMarketing, D.Pelanggan, D.BusDev]
+
+  - role: LegalitasAdmin
+    permission_slugs: [batch-record, formulation, D.Legalitas]
+
+  - role: LegalitasStaff
+    permission_slugs: [batch-record, formulation, D.Legalitas]
+
+# =====================================
+# MIGRATION MAPPING (legacy kil.gserp.id → NEX)
+# =====================================
+# Used during Phase 6 user migration. Each legacy user is remapped to the
+# NEX role via this map. Users without a target remain on legacy until
+# reassigned by HRAdmin.
+
+migration_mapping:
+
+  - legacy_role_id: 1
+    legacy_role_name: Administrator
+    nex_role_name: Administrator
+    legacy_module_count: 123
+    nex_role: role-nex-administrator
+    permissions_preserved: 77
+    notes: "Full admin preserved; user_management excluded for non-SuperAdmin (DEC-024)"
+
+  - legacy_role_id: 2
+    legacy_role_name: HRD
+    nex_role_name: HRAdmin
+    legacy_module_count: 8
+    nex_role: role-nex-hr-admin
+    permissions_preserved: 8
+    notes: "Promote to HRAdmin (NEX adds user-manage delete + dashboard admin)"
+
+  - legacy_role_id: 3
+    legacy_role_name: StaffBackOffice
+    nex_role_name: StaffBackOffice
+    legacy_module_count: 5
+    nex_role: role-nex-staff-back-office
+    permissions_preserved: 5
+    notes: "Single user (1) — kept as legacy role for traceability"
+
+  - legacy_role_id: 4
+    legacy_role_name: Purchasing
+    nex_role_name: PurchasingAdmin
+    legacy_module_count: 18
+    nex_role: role-nex-purchasing-admin
+    permissions_preserved: 18
+    notes: "1 user (lutfie.procurement) — upgrade to admin level"
+
+  - legacy_role_id: 5
+    legacy_role_name: Warehouse
+    nex_role_name: WarehouseStaff
+    legacy_module_count: 18
+    nex_role: role-nex-warehouse-staff
+    permissions_preserved: 15
+    notes: "3 users → WarehouseStaff. Admin module-add granted via inheritance if promoted."
+
+  - legacy_role_id: 6
+    legacy_role_name: HeadBusinessDevelopment
+    nex_role_name: BusDevManager
+    legacy_module_count: 20
+    nex_role: role-nex-busdev-manager
+    permissions_preserved: 20
+    notes: "1 user → BusDevManager (NEX adds approval gate)"
+
+  - legacy_role_id: 7
+    legacy_role_name: BusinessDevelopment
+    nex_role_name: BusinessDevelopment
+    legacy_module_count: 25
+    nex_role: role-nex-business-development
+    permissions_preserved: 25
+    notes: "13 users (largest legacy role). Kept as base role + BusDevStaff inherits."
+
+  - legacy_role_id: 8
+    legacy_role_name: HeadResearchAndDevelopment
+    nex_role_name: RnDManager
+    legacy_module_count: 15
+    nex_role: role-nex-rnd-manager
+    permissions_preserved: 15
+    notes: "1 user → RnDManager (approval gate + Apoteker co-approval for formulation-lock)"
+
+  - legacy_role_id: 9
+    legacy_role_name: ResearchAndDevelopment
+    nex_role_name: RnDChemist
+    legacy_module_count: 11
+    nex_role: role-nex-rnd-chemist
+    permissions_preserved: 11
+    notes: "6 users → RnDChemist (NEX-friendly naming)"
+
+  - legacy_role_id: 10
+    legacy_role_name: ProductionMixingAndFilling
+    nex_role_name: null
+    legacy_module_count: 17
+    nex_role: null
+    permissions_preserved: 0
+    migrated: false
+    notes: "ORPHAN with 0 users — DELETED per DEC-023 before migration"
+
+  - legacy_role_id: 11
+    legacy_role_name: ProductionPackaging
+    nex_role_name: ProductionOperatorPackaging
+    legacy_module_count: 15
+    nex_role: role-nex-production-packaging
+    permissions_preserved: 15
+    notes: "2 users → ProductionOperatorPackaging"
+
+  - legacy_role_id: 12
+    legacy_role_name: ApotekerPenanggungJawab
+    nex_role_name: ApotekerPenanggungJawab
+    legacy_module_count: 8
+    nex_role: role-nex-apoteker
+    permissions_preserved: 8
+    notes: "1 user (pharmacist-in-charge) — preserved as-is for BPOM compliance"
+
+  - legacy_role_id: 13
+    legacy_role_name: Finance
+    nex_role_name: FinanceStaff
+    legacy_module_count: 30
+    nex_role: role-nex-finance-staff
+    permissions_preserved: 27
+    notes: "5 users → FinanceStaff by default; promotion to Manager/Admin handled separately"
+
+  - legacy_role_id: 14
+    legacy_role_name: DigitalMarketing
+    nex_role_name: DigitalMarketingStaff
+    legacy_module_count: 8
+    nex_role: role-nex-digital-marketing-staff
+    permissions_preserved: 8
+    notes: "1 user → DigitalMarketingStaff"
+
+  - legacy_role_id: 15
+    legacy_role_name: BusDevPlusHRD
+    nex_role_name: BusDevPlusHRD
+    legacy_module_count: 20
+    nex_role: role-nex-busdev-plus-hrd
+    permissions_preserved: 20
+    notes: "1 user — kept as legacy combo role. HRAdmin gets User-manage delete via inheritance."
+
+  - legacy_role_id: 16
+    legacy_role_name: BusDevPlusPurchasing
+    nex_role_name: BusDevPlusPurchasing
+    legacy_module_count: 32
+    nex_role: role-nex-busdev-plus-purchasing
+    permissions_preserved: 32
+    notes: "1 user — kept as legacy combo role."
+
+# =====================================
+# VALIDATION CHECKLIST
+# =====================================
+
+validation:
+  legacy_roles_total: 16
+  legacy_roles_migrated: 15         # role 10 deleted (ORPHAN per DEC-023)
+  legacy_roles_deleted: 1           # role 10
+  nex_roles_from_legacy: 16         # one-to-one with legacy_id 1-16 (minus ORPHAN)
+  nex_roles_per_division: 23        # Admin/Staff/Manager tiers across 8 divisions
+  nex_roles_cross_cutting: 5        # SuperAdmin, Director, Executive, Auditor, Viewer
+  total_roles: 44                   # generated by validator
+  legacy_permissions: 77            # 55 sub-modules + 22 dashboard widgets
+  nex_new_permissions: 9            # audit_log, session, impersonate, report, notif, mfa, dashboard
+  total_permissions: 86
+  modules_with_matrix: 11           # 9 ERP + legalitas_scm + auth_user_management
+  approval_threshold_types: 9       # SO, sample, PO, invoice, payment, formulation_lock, batch, writeoff, coa
+  migration_mappings: 16            # all 16 legacy roles mapped (1 with null target)
+  data_scopes: 5                    # all, own_only, division_only, warehouse_only, created_by_only
+  special_permission_categories: 6  # mfa_required, audit_log_access, impersonate, session_revoke, field_level, ownership_transfer
+  hierarchy_entries: 42             # all roles except ProductionMixingAndFilling_ORPHAN
+  role_permission_assignments: 42   # generated by validator
+  target_size_kb: 60-90             # exceeds nominal 15-25 KB target due to comprehensive role+permission enumeration; reduce later if requested

@@ -18,6 +18,30 @@ const nextConfig: NextConfig = {
       "recharts",
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/dna-visual",
+        destination: "/visual-dna",
+        permanent: false,
+      },
+      {
+        source: "/dna-visual/golden-reference",
+        destination: "/visual-dna/golden-reference",
+        permanent: false,
+      },
+      {
+        source: "/master/dna-visual",
+        destination: "/visual-dna",
+        permanent: false,
+      },
+      {
+        source: "/master/dna-visual/golden-reference",
+        destination: "/visual-dna/golden-reference",
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
     return [
@@ -189,6 +213,136 @@ const nextConfig: NextConfig = {
       // 7. Penerimaan Barang 3-Pilar & Laporan
       { source: "/purchase-in", destination: "/pembelian/receiving" },
       { source: "/report-goods-receipt", destination: "/reports/goods-receipt" },
+
+      // =========================================================================
+      // FASE 5: GUDANG 3-PILAR, MUTASI, LOGISTIK & LAPORAN PERSEDIAAN (12 URLs)
+      // =========================================================================
+      // 1. Pengiriman Barang / Delivery Outbound
+      { source: "/delivery-out", destination: "/inventory/outbound" },
+      { source: "/delivery-out/create", destination: "/inventory/outbound?action=create" },
+
+      // 2. Transfer & Mutasi Antar Gudang
+      { source: "/goods-transfer", destination: "/inventory/mutation" },
+      { source: "/goods-transfer/create", destination: "/inventory/mutation?action=create" },
+
+      // 3. Penyesuaian Stok
+      { source: "/stock-adjustment", destination: "/inventory/stock-adjustment" },
+      { source: "/stock-adjustment/create", destination: "/inventory/stock-adjustment?action=create" },
+
+      // 4. Stok Opname Fisik
+      { source: "/stock-opname", destination: "/inventory/stock-opname" },
+      { source: "/stock-opname/create", destination: "/inventory/stock-opname?action=create" },
+
+      // 5. Laporan Persediaan
+      { source: "/report-stock", destination: "/reports/stock" },
+      { source: "/report-mutation-goods", destination: "/reports/mutation-goods" },
+      { source: "/report-stock-valuation", destination: "/reports/stock-valuation" },
+
+      // 6. Dashboard Gudang
+      { source: "/dashboard-warehouse", destination: "/inventory/warehouse-dashboard" },
+
+      // =========================================================================
+      // FASE 6: PRODUKSI PABRIK, SPK & JADWAL PRODUKSI (12 URLs)
+      // =========================================================================
+      // 1. Jadwal Mixing
+      { source: "/schedule-mixing", destination: "/production/schedule-mixing" },
+      { source: "/schedule-mixing/create", destination: "/production/schedule-mixing?action=create" },
+
+      // 2. Jadwal Filling
+      { source: "/schedule-filling", destination: "/production/schedule-filling" },
+      { source: "/schedule-filling/create", destination: "/production/schedule-filling?action=create" },
+
+      // 3. Jadwal Packaging
+      { source: "/schedule-packaging", destination: "/production/schedule-packaging" },
+      { source: "/schedule-packaging/create", destination: "/production/schedule-packaging?action=create" },
+
+      // 4. Realisasi Produksi
+      { source: "/production-mixing", destination: "/production/mixing" },
+      { source: "/production-filling", destination: "/production/filling" },
+      { source: "/production-packaging", destination: "/production/packaging" },
+
+      // 5. Dashboard & Kalender Produksi
+      { source: "/dashboard-production", destination: "/production" },
+      { source: "/dashboard-production-schedule", destination: "/production/schedule-calendar" },
+      { source: "/dashboard-production-realization", destination: "/production/realization-calendar" },
+
+      // =========================================================================
+      // FASE 7: FINANCE CORE, KAS/BANK, AKUNTANSI & JURNAL (24 URLs)
+      // =========================================================================
+      // 1. Kas & Bank
+      { source: "/other-deposit", destination: "/finance/cash-in" },
+      { source: "/other-deposit/create", destination: "/finance/cash-in?action=create" },
+      { source: "/other-payment", destination: "/finance/cash-out" },
+      { source: "/other-payment/create", destination: "/finance/cash-out?action=create" },
+      { source: "/bank-reconciliation", destination: "/finance/bank-reconciliation" },
+
+      // 2. Jurnal & Pengajuan Dana
+      { source: "/general-journal", destination: "/finance/jurnal-umum" },
+      { source: "/general-journal/create", destination: "/finance/jurnal-umum?action=create" },
+      { source: "/adjustment-journal", destination: "/finance/jurnal-umum?type=adjustment" },
+      { source: "/fund-request", destination: "/finance/fund-requests" },
+      { source: "/fund-request/create", destination: "/finance/fund-requests?action=create" },
+
+      // 3. Aset Tetap & Escrow
+      { source: "/client-escrow", destination: "/finance/client-escrow" },
+      { source: "/asset-transfer-disposal", destination: "/finance/assets" },
+      { source: "/depreciation-schedule", destination: "/finance/assets" },
+
+      // 4. Pajak (Tax Purge - dialihkan ke banner/status penonaktifan modul)
+      { source: "/tax-transactions", destination: "/finance/taxes" },
+
+      // 5. Laporan Keuangan
+      { source: "/report-general-ledger", destination: "/finance/ledger" },
+      { source: "/report-trial-balance", destination: "/reports/trial-balance" },
+      { source: "/report-balance-sheet", destination: "/reports/balance-sheet" },
+      { source: "/report-profit-loss", destination: "/finance/laba-rugi" },
+      { source: "/report-cash-flow", destination: "/reports/cash-flow" },
+      { source: "/report-ap-aging", destination: "/finance/ap-aging" },
+      { source: "/report-ar-aging", destination: "/reports/ar-aging" },
+      { source: "/budget-vs-actual", destination: "/finance/budget" },
+      { source: "/cost-variance", destination: "/finance/cost-variance" },
+      { source: "/product-customer-profitability", destination: "/finance/profitability" },
+
+      // =========================================================================
+      // FASE 8: QUALITY CONTROL, APJ, KARANTINA & CHECKLIST (16 URLs)
+      // =========================================================================
+      // 1. Checklist Operasional & Kategori
+      { source: "/checklist", destination: "/quality/checklist" },
+      { source: "/checklist/create", destination: "/quality/checklist?action=create" },
+      { source: "/checklist-progress", destination: "/quality/checklist-progress" },
+      { source: "/checklist-tracking", destination: "/quality/checklist-tracking" },
+      { source: "/closing-checklist", destination: "/finance/closing" },
+      { source: "/checklist-category", destination: "/quality/checklist-category" },
+      { source: "/checklist-category/create", destination: "/quality/checklist-category?action=create" },
+      { source: "/checklist-manage", destination: "/quality/checklist?tab=manage" },
+
+      // 2. QC 4-Tahap, Karantina & Rilis APJ
+      { source: "/quality/inspections", destination: "/quality/inspections" },
+      { source: "/quality/lab-test", destination: "/quality/lab-test" },
+      { source: "/quality/qc-release", destination: "/quality/qc-release" },
+      { source: "/quality/apj-release", destination: "/quality/apj-release" },
+      { source: "/quality/karantina", destination: "/quality/karantina" },
+      { source: "/quality/stability", destination: "/quality/stability" },
+      { source: "/quality/coa", destination: "/quality/coa" },
+      { source: "/dashboard-qc", destination: "/quality/dashboard" },
+
+      // =========================================================================
+      // FASE 9: APPROVAL ENGINE, PERSETUJUAN KOMERSIAL/HPP & KEBUTUHAN BARANG MRP (9 URLs)
+      // =========================================================================
+      // 1. Approval Engine Komersial & Operasional
+      { source: "/sales-approval", destination: "/approvals/sales" },
+      { source: "/sales-sample-approval", destination: "/approvals/sales-sample" },
+      { source: "/request-cogs-approval", destination: "/approvals/request-cogs" },
+      { source: "/sales-return-approval", destination: "/approvals/sales-return" },
+
+      // 2. Kebutuhan Barang (MRP) & Rangkuman Kebutuhan
+      { source: "/need-for-goods", destination: "/pembelian/kebutuhan" },
+      { source: "/need-for-goods/create", destination: "/pembelian/kebutuhan?action=create" },
+      { source: "/report-need-for-goods", destination: "/pembelian/rangkuman-kebutuhan" },
+
+      // 3. Finance Budget Entry & Client Production Pipeline
+      { source: "/budget-entry", destination: "/finance/budget?action=create" },
+      { source: "/client-production", destination: "/penjualan/client-manager?tab=produksi" },
     ];
   },
 };

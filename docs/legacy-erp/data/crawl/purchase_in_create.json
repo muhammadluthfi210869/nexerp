@@ -1,0 +1,13 @@
+{
+  "url": "/purchase-in/create",
+  "http_status": 404,
+  "title": "NOT FOUND",
+  "h1": null,
+  "form_fields": [],
+  "tables": [],
+  "actions": [],
+  "ajax_calls": [],
+  "modals": [],
+  "print_pattern": null,
+  "notes": "Page returned 404 - route does not exist"
+}

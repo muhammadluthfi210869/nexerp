@@ -1,0 +1,1432 @@
+version: 1.0
+effective_date: 2026-09-16
+document_owner: Domain Architect
+status: PROVISIONAL
+overview: |
+  Traceability: Requirement -> Rule -> Workflow -> Entity -> API -> Screen -> Test.
+  This file is coverage evidence only. Subject ownership resolves through 00_MASTER_SPEC.md §9.1.
+provenance: { requirement_source: 'REQUIREMENT.md (Upii 2026-09-16)', contracts_locked: ['00..09'] }
+
+# =============================================================
+# 1. REQUIREMENTS (REQ-001 .. REQ-037)
+# =============================================================
+requirements:
+  - {id: REQ-001, prio: high, desc: 'Master Vendor: import vendor via Excel', rules: [BUS-RULE-026], ents: [Supplier], apis: ['POST /api/v1/suppliers/import'], screens: [SCR-013], notes: 'Excel parser + validasi per CoA'}
+  - {id: REQ-002, prio: high, desc: 'Master Customer: tambah card Sample/Produksi/Legalitas', rules: [BUS-RULE-014], ents: [Customer], apis: ['PATCH /api/v1/customers/{id}'], screens: [SCR-011], notes: 'Card view tabs'}
+  - {id: REQ-003, prio: high, desc: 'Kategori pengadaan berdasarkan COA saja', rules: [BUS-RULE-020], ents: [Supplier,Coa], apis: ['GET /api/v1/coa'], screens: [SCR-013], notes: 'Eliminates separate kategori field'}
+  - {id: REQ-004, prio: high, desc: 'Tanggal invoice: editable manual (sales & purchase)', rules: [BUS-RULE-003], ents: [SalesInvoice,PurchaseInvoice], apis: ['PATCH /api/v1/sales/sales-invoices/{id}','PATCH /api/v1/purchase/invoices/{id}'], screens: [SCR-035], notes: 'Warning if >90d back; error if future'}
+  - {id: REQ-005, prio: high, desc: 'Faktur pembelian: import via Excel', rules: [BUS-RULE-018], ents: [PurchaseInvoice], apis: ['POST /api/v1/purchase/invoices/import'], screens: [SCR-061], notes: 'Same template as supplier import'}
+  - {id: REQ-006, prio: high, desc: 'Faktur pembelian: detail barang + field diskon', rules: [BUS-RULE-017], ents: [PurchaseInvoiceDetail], apis: ['POST /api/v1/purchase/invoices/{id}/lines'], screens: [SCR-062], notes: 'Diskon Rupiah'}
+  - {id: REQ-007, prio: medium, desc: 'Faktur: navbar Semua/Sudah/Belum + notes alasan', rules: [], ents: [PurchaseInvoice,SalesInvoice], apis: ['GET /api/v1/purchase/invoices?status=unpaid'], screens: [SCR-061], notes: 'Notes wajib jika unpaid'}
+  - {id: REQ-008, prio: medium, desc: 'Hide 3-way match akurasi dari UI', rules: [BUS-RULE-023], ents: [PurchaseInvoice], apis: ['GET /api/v1/purchase/invoices/{id}'], screens: [SCR-062], notes: 'Engine tetap jalan'}
+  - {id: REQ-009, prio: medium, desc: 'Pola card ringkasan + tab filter (Payments menu)', rules: [], ents: [PurchasePayment,SalesPayment], apis: ['GET /api/v1/purchase/payments'], screens: [SCR-068], notes: 'Work Orders pattern'}
+  - {id: REQ-010, prio: medium, desc: 'AP Aging: pewarnaan H-3/H-7/lewat + animasi', rules: [BUS-RULE-059], ents: [PurchaseInvoice], apis: ['GET /api/v1/reports/ap-aging'], screens: [SCR-130], notes: 'Card H-3/H-7 + saldo bank'}
+  - {id: REQ-011, prio: medium, desc: 'AP Aging: card ringkasan H-3/H-7', rules: [BUS-RULE-059], ents: [PurchaseInvoice], apis: ['GET /api/v1/reports/ap-aging'], screens: [SCR-130], notes: 'Bundle REQ-010'}
+  - {id: REQ-012, prio: medium, desc: 'AP Aging: saldo bank di navbar', rules: [], ents: [CashBank], apis: ['GET /api/v1/finance/cash-banks/balance'], screens: [SCR-130], notes: 'Header AP Aging'}
+  - {id: REQ-013, prio: high, desc: 'Faktur penjualan: terapkan perubahan sama seperti faktur pembelian', rules: [BUS-RULE-003,BUS-RULE-005,BUS-RULE-023], ents: [SalesInvoice], apis: ['POST /api/v1/sales/sales-invoices/import'], screens: [SCR-035], notes: 'Reuse REQ-004..009'}
+  - {id: REQ-014, prio: high, desc: 'DP Penjualan: navbar Sample/Legalitas/Produksi', rules: [BUS-RULE-002,BUS-RULE-004], ents: [SalesDownPayment], apis: ['GET /api/v1/sales/down-payments?category='], screens: [SCR-029], notes: 'Tab + card ringkasan'}
+  - {id: REQ-015, prio: medium, desc: 'Sediakan PPh 21 & PPh 23', rules: [BUS-RULE-007], ents: [SalesPayment,JournalEntry], apis: ['POST /api/v1/sales/sales-payments'], screens: [SCR-043], notes: 'PPh 21 dari gaji, PPh 23 dari cust'}
+  - {id: REQ-016, prio: low, desc: "Sidebar 'Report Penjualan' ganti judul", rules: [BUS-RULE-069], ents: [], apis: ['GET /api/v1/reports/sales-summary'], screens: [SCR-042], notes: 'UI rename only'}
+  - {id: REQ-017, prio: medium, desc: 'AR Aging muncul di modul BusDev', rules: [BUS-RULE-010,BUS-RULE-058], ents: [SalesInvoice], apis: ['GET /api/v1/reports/ar-aging'], screens: [SCR-DASH-013], notes: 'Widget di BusDev dashboard'}
+  - {id: REQ-018, prio: medium, desc: 'Kas Bank Masuk: total saja + filter kalender lengkap', rules: [], ents: [CashBank], apis: ['GET /api/v1/finance/cash-banks'], screens: [SCR-103], notes: 'Bundle REQ-019'}
+  - {id: REQ-019, prio: medium, desc: 'Kas Bank Keluar: perubahan sama dengan Kas Bank Masuk', rules: [], ents: [CashBank], apis: ['GET /api/v1/finance/cash-banks'], screens: [SCR-104], notes: 'Bundle REQ-018'}
+  - {id: REQ-020, prio: medium, desc: 'Rekonsiliasi Bank: filter tanggal + filter COA', rules: [], ents: [JournalLine,Coa], apis: ['GET /api/v1/finance/bank-recon'], screens: [SCR-115], notes: '2 filter'}
+  - {id: REQ-021, prio: medium, desc: 'Pengajuan Dana: alur sesuai Google Form existing', rules: [], ents: [FundRequest], apis: ['POST /api/v1/finance/fund-requests'], screens: [SCR-116], notes: 'Stamp dari form existing'}
+  - {id: REQ-022, prio: high, desc: 'Pengajuan Dana: tingkatan approval Staff/Head branch', rules: [], ents: [FundRequest], apis: ['POST /api/v1/finance/fund-requests/{id}/approve'], screens: [SCR-116], notes: 'Staff->Head->Acct->Dir; Head->Acct->Dir'}
+  - {id: REQ-023, prio: high, desc: 'Pengajuan Dana: samakan dengan proses persetujuan pembelian', rules: [], ents: [FundRequest], apis: ['POST /api/v1/finance/fund-requests/{id}/approve'], screens: [SCR-116], notes: 'Reuse PO approval engine'}
+  - {id: REQ-024, prio: high, desc: 'Jurnal Umum: filter periode + format G-SERP + hapus Dimensi Finansial', rules: [BUS-RULE-056], ents: [JournalEntry], apis: ['GET /api/v1/finance/journal-entries'], screens: [SCR-105], notes: 'Drop Dimensi Finansial field'}
+  - {id: REQ-025, prio: high, desc: 'Global: field input mode search/autocomplete', rules: [], ents: [], apis: ['GET /api/v1/search'], screens: [ALL], notes: 'DEC-024 canonical slugs'}
+  - {id: REQ-026, prio: high, desc: 'Global: semua menu punya filter periode', rules: [], ents: [], apis: [], screens: [ALL], notes: '06_SCREEN_CONTRACT.period_filter_required'}
+  - {id: REQ-027, prio: medium, desc: 'Aset Tetap: history + auto-kode + masa manfaat', rules: [BUS-RULE-067], ents: [FixedAsset], apis: ['POST /api/v1/finance/fixed-assets','GET /api/v1/finance/fixed-assets/{id}/history'], screens: [SCR-110], notes: 'Inventaris/Motor 4y, Mobil 8y, Bangunan 20y'}
+  - {id: REQ-028, prio: high, desc: 'Kode Universal 2 versi + nomor urut global', rules: [BUS-RULE-102], ents: [], apis: ['GET /api/v1/system/sequence/next'], screens: [SCR-SYS-001], notes: 'DL-FIN-SO-29062026-0001 or ringkas'}
+  - {id: REQ-029, prio: medium, desc: 'Laporan: filter periode + card total + tukar posisi', rules: [BUS-RULE-070], ents: [JournalLine], apis: ['GET /api/v1/reports/profit-loss'], screens: [SCR-123], notes: 'Total Beban HPP <-> Laba Ops'}
+  - {id: REQ-030, prio: low, desc: 'Modul Pajak & e-Faktur: DEFERRED', rules: [], ents: [], apis: [], screens: [], notes: 'Phase 2 -- SKIP per Poin 30'}
+  - {id: REQ-031, prio: high, desc: 'Purchase: notifikasi pending + history + search', rules: [BUS-RULE-021,BUS-RULE-091], ents: [Goods,PurchaseOrder], apis: ['GET /api/v1/purchase/orders?status=pending'], screens: [SCR-050], notes: 'Bundle'}
+  - {id: REQ-032, prio: high, desc: 'Purchase: label jatuh tempo->deadline + per PIC + checklist', rules: [BUS-RULE-011], ents: [Checklist], apis: ['PATCH /api/v1/sales/sales-orders/{id}/checklist/{itemId}/deadline'], screens: [SCR-117], notes: 'Rename label'}
+  - {id: REQ-033, prio: high, desc: 'Purchase: diskon+ongkir Rupiah + match invoice-PO disabled + qtyFree/qtyReject/qtyGood', rules: [BUS-RULE-017,BUS-RULE-018,BUS-RULE-019], ents: [PurchaseOrder,GoodsReceipt], apis: ['POST /api/v1/purchase/orders','POST /api/v1/purchase/goods-receipts'], screens: [SCR-053], notes: 'Bundle'}
+  - {id: REQ-034, prio: high, desc: 'Purchase: supplier history + kondisi + Real Stok + Design/BPOM/report', rules: [BUS-RULE-021,BUS-RULE-053], ents: [Goods,GoodsReceipt,Checklist], apis: ['GET /api/v1/reports/stock','POST /api/v1/reports/goods-receipts'], screens: [SCR-055], notes: 'Bundle'}
+  - {id: REQ-035, prio: high, desc: 'KPI per orang dihitung otomatis dari event dan menyimpan evidence', rules: [BUS-RULE-072,BUS-RULE-090,BUS-RULE-106], ents: [EmployeePerformance,EmployeeKpiResult,KpiDefinition], apis: ['GET /api/v1/employees/{id}/kpi'], screens: [SCR-179], notes: 'User decision 2026-09-17; manual score forbidden'}
+  - {id: REQ-036, prio: high, desc: 'Dual-role KPI memakai bobot effective-dated dan total bobot aktif 100%', rules: [BUS-RULE-074,BUS-RULE-106], ents: [EmployeeRoleAssignment,EmployeeKpiResult], apis: ['POST /api/v1/employees/{id}/kpi/recalculate'], screens: [SCR-179], notes: 'Recalculate replays source events only'}
+  - {id: REQ-037, prio: high, desc: 'Notes/comments/@mention tersedia pada entity bisnis dan mengikuti parent ACL', rules: [BUS-RULE-091,BUS-RULE-092,BUS-RULE-094], ents: [Note,Comment,Tag,Notification], apis: ['POST /api/v1/entities/{type}/{id}/notes','POST /api/v1/entities/{type}/{id}/comments','POST /api/v1/entities/{type}/{id}/tags'], screens: [SCR-179], notes: 'Atomic content + tags + notifications + outbox'}
+
+# =============================================================
+# 2. BUSINESS RULES (BUS-RULE-001..106)
+# =============================================================
+business_rules:
+  - {id: BUS-RULE-001, cat: sales, sev: P1, desc: 'SO: Customer Wajib Aktif', ents: [SalesOrder,Customer], apis: ['POST /sales/sales-orders'], screens: [SCR-026], err: 'CUSTOMER_INACTIVE'}
+  - {id: BUS-RULE-002, cat: sales, sev: P1, desc: 'DP Penjualan Minimum 50%', ents: [SalesDownPayment], apis: ['POST /sales/down-payments'], screens: [SCR-029], err: 'DP_MINIMUM_NOT_MET'}
+  - {id: BUS-RULE-003, cat: sales, sev: P2, desc: 'SO: Invoice Date Custom', ents: [SalesInvoice], apis: ['PATCH /sales/sales-invoices/{id}'], screens: [SCR-035], err: 'INVOICE_DATE_FUTURE'}
+  - {id: BUS-RULE-004, cat: sales, sev: P1, desc: 'DP Penjualan: Kategori Wajib', ents: [SalesDownPayment], apis: ['POST /sales/down-payments'], screens: [SCR-029], err: 'DP_CATEGORY_REQUIRED'}
+  - {id: BUS-RULE-005, cat: sales, sev: P1, desc: 'Credit Limit Check saat Faktur Submit', ents: [SalesInvoice,Customer], apis: ['POST /sales/sales-invoices'], screens: [SCR-035], err: 'CREDIT_LIMIT_EXCEEDED'}
+  - {id: BUS-RULE-006, cat: sales, sev: P1, desc: 'AR Delivery Gatekeeper HELD/RELEASED', ents: [SalesInvoice], apis: ['POST /sales/sales-invoices/{id}/release'], screens: [SCR-035], err: 'DELIVERY_GATE_HELD'}
+  - {id: BUS-RULE-007, cat: sales, sev: P2, desc: 'PPh 23 Dipotong Customer', ents: [SalesPayment], apis: ['POST /sales/sales-payments'], screens: [SCR-043], err: 'PPh23_EXCEEDS_INVOICE'}
+  - {id: BUS-RULE-008, cat: sales, sev: P2, desc: 'Sample Fee Offset ke DP Produksi', ents: [SalesDownPayment,SalesSamplePayment], apis: ['POST /sales/down-payments'], screens: [SCR-029], err: 'SAMPLE_FEE_ALREADY_OFFSET'}
+  - {id: BUS-RULE-009, cat: sales, sev: P2, desc: 'Sample Fee Kedaluwarsa = Revenue', ents: [SalesSamplePayment], apis: [], screens: [SCR-127], err: 'n/a'}
+  - {id: BUS-RULE-010, cat: sales, sev: P3, desc: 'AR Aging: Color Coding', ents: [SalesInvoice], apis: ['GET /reports/ar-aging'], screens: [SCR-129], err: 'n/a'}
+  - {id: BUS-RULE-011, cat: sales, sev: P3, desc: 'SO: Deadline per PIC', ents: [ChecklistProgress], apis: ['PATCH /sales/sales-orders/{id}/checklist'], screens: [SCR-118], err: 'PIC_DEADLINE_MISSING'}
+  - {id: BUS-RULE-012, cat: sales, sev: P1, desc: 'Return/Refund via Credit Note', ents: [SalesReturn,SalesInvoice], apis: ['POST /sales/sales-returns'], screens: [SCR-046], err: 'POSTED_INVOICE_IMMUTABLE'}
+  - {id: BUS-RULE-013, cat: sales, sev: P2, desc: 'SO: Cart Pattern', ents: [], apis: ['POST /sales/sales-orders'], screens: [SCR-027], err: 'CART_EMPTY'}
+  - {id: BUS-RULE-014, cat: sales, sev: P1, desc: 'SO: Kategori Wajib', ents: [SalesOrder], apis: ['POST /sales/sales-orders'], screens: [SCR-026], err: 'SO_CATEGORY_REQUIRED'}
+  - {id: BUS-RULE-015, cat: sales, sev: P2, desc: 'Payment Allocation: Auto/Manual', ents: [SalesPayment], apis: ['POST /sales/sales-payments'], screens: [SCR-043], err: 'n/a'}
+  - {id: BUS-RULE-016, cat: purchase, sev: P1, desc: 'PO: Tanggal Input Read-Only', ents: [PurchaseOrder], apis: ['POST /purchase/orders'], screens: [SCR-052], err: 'PO_DATE_IMMUTABLE'}
+  - {id: BUS-RULE-017, cat: purchase, sev: P3, desc: 'PO: Field Diskon & Ongkir Wajib', ents: [PurchaseOrder], apis: ['POST /purchase/orders'], screens: [SCR-052], err: 'DISCOUNT_AS_RUPIAH'}
+  - {id: BUS-RULE-018, cat: purchase, sev: P1, desc: 'Penerimaan Barang: qtyFree/qtyReject/qtyGood', ents: [GoodsReceipt], apis: ['POST /purchase/goods-receipts'], screens: [SCR-057], err: 'GR_QTY_MISMATCH'}
+  - {id: BUS-RULE-019, cat: purchase, sev: P1, desc: 'Pembayaran Supplier: Hanya qtyGood', ents: [PurchaseInvoice], apis: ['POST /purchase/invoices'], screens: [SCR-061], err: 'PAYMENT_EXCEEDS_QTY_GOOD'}
+  - {id: BUS-RULE-020, cat: purchase, sev: P1, desc: 'Vendor: Kategori Berdasarkan COA', ents: [Supplier,Coa], apis: ['POST /suppliers'], screens: [SCR-013], err: 'VENDOR_COA_REQUIRED'}
+  - {id: BUS-RULE-021, cat: purchase, sev: P1, desc: 'PO: Sumber Pengambilan (PO atau Stok)', ents: [StockMovement], apis: ['POST /warehouse/goods-transfer'], screens: [SCR-091], err: 'SOURCE_TYPE_INVALID'}
+  - {id: BUS-RULE-022, cat: purchase, sev: P1, desc: 'PO: Approval Tanda Tangan Digital', ents: [PurchaseOrderApproval], apis: ['POST /purchase/orders/{id}/approve'], screens: [SCR-054], err: 'SIGNATURE_REQUIRED'}
+  - {id: BUS-RULE-023, cat: purchase, sev: P2, desc: 'PO+Invoice Matching: 3-way di-HIDE', ents: [PurchaseInvoice], apis: ['GET /purchase/invoices/{id}'], screens: [SCR-062], err: 'n/a'}
+  - {id: BUS-RULE-024, cat: purchase, sev: P2, desc: 'DP Pembelian: Apply ke Invoice', ents: [PurchaseDownPayment], apis: ['POST /purchase/invoices'], screens: [SCR-061], err: 'n/a'}
+  - {id: BUS-RULE-025, cat: purchase, sev: P1, desc: 'PO: Range Harga Tetap (SOP)', ents: [PurchaseOrder], apis: ['POST /purchase/orders'], screens: [SCR-052], err: 'PRICE_OUT_OF_RANGE'}
+  - {id: BUS-RULE-026, cat: purchase, sev: P2, desc: 'Vendor Master: Import Excel', ents: [Supplier], apis: ['POST /suppliers/import'], screens: [SCR-013], err: 'n/a'}
+  - {id: BUS-RULE-027, cat: purchase, sev: P2, desc: 'PO: HPP Cost Roll-Up Trigger', ents: [PurchaseOrder,PurchaseInvoiceDetail], apis: ['POST /purchase/orders/{id}/approve'], screens: [SCR-052], err: 'n/a'}
+  - {id: BUS-RULE-028, cat: production, sev: P1, desc: 'BatchRecord: Wajib Terhubung Schedule', ents: [BatchRecord], apis: ['POST /production/batch-records'], screens: [SCR-077], err: 'BATCH_SCHEDULE_REQUIRED'}
+  - {id: BUS-RULE-029, cat: production, sev: P1, desc: 'Tahap Produksi: Sequential', ents: [BatchRecord], apis: ['POST /production/batch-records/{id}/process'], screens: [SCR-078], err: 'STAGE_ORDER_VIOLATION'}
+  - {id: BUS-RULE-030, cat: production, sev: P1, desc: 'Mixing: Tolerance Berat (0.5%)', ents: [ProductionMixingItem], apis: ['POST /production/production-mixing'], screens: [SCR-079], err: 'WEIGHT_DEVIATION_EXCEEDED'}
+  - {id: BUS-RULE-031, cat: production, sev: P1, desc: 'Mixing: FEFO Match-Gate', ents: [ProductionMixingItem], apis: ['POST /production/production-mixing'], screens: [SCR-079], err: 'FEFO_VIOLATION'}
+  - {id: BUS-RULE-032, cat: production, sev: P1, desc: 'Filling: QC Interlock', ents: [BatchRecord], apis: ['POST /production/production-filling'], screens: [SCR-080], err: 'QC_BULK_NOT_APPROVED'}
+  - {id: BUS-RULE-033, cat: production, sev: P1, desc: 'Filling: Mathematical Limit', ents: [ProductionFilling], apis: ['POST /production/production-filling'], screens: [SCR-080], err: 'OUTPUT_EXCEEDS_PHYSICAL_LIMIT'}
+  - {id: BUS-RULE-034, cat: production, sev: P1, desc: 'Packaging: Artwork Interlock', ents: [BatchRecord], apis: ['POST /production/production-packaging'], screens: [SCR-081], err: 'ARTWORK_NOT_APPROVED'}
+  - {id: BUS-RULE-035, cat: production, sev: P1, desc: 'Packaging: Traceability Encoding', ents: [BatchRecord], apis: ['POST /production/production-packaging'], screens: [SCR-081], err: 'n/a'}
+  - {id: BUS-RULE-036, cat: production, sev: P3, desc: 'Idle Time Alert (>24 jam)', ents: [BatchRecord], apis: [], screens: [SCR-077], err: 'n/a'}
+  - {id: BUS-RULE-037, cat: production, sev: P2, desc: 'Auto-Decrement Stok Finished Goods', ents: [StockMovement], apis: ['POST /production/production-packaging'], screens: [SCR-091], err: 'n/a'}
+  - {id: BUS-RULE-038, cat: sales, sev: P1, desc: 'Sample Brief: Bayar Wajib divalidasi Finance', ents: [SalesSample], apis: ['POST /sales/samples/{id}/submit'], screens: [SCR-025], err: 'SAMPLE_FEE_VALIDATION_REQUIRED'}
+  - {id: BUS-RULE-039, cat: rnd, sev: P1, desc: 'Formulasi: Total % Wajib 100%', ents: [Formulation], apis: ['POST /rnd/formulations'], screens: [SCR-097], err: 'FORMULA_PERCENT_INVALID'}
+  - {id: BUS-RULE-040, cat: rnd, sev: P1, desc: 'Formulasi: Phase Separation A/B/C/Fragrance', ents: [Formulation], apis: ['POST /rnd/formulations'], screens: [SCR-097], err: 'n/a'}
+  - {id: BUS-RULE-041, cat: rnd, sev: P2, desc: 'Formulasi: Auto-Convert %->Gram', ents: [Formulation], apis: ['GET /rnd/formulations/{id}'], screens: [SCR-097], err: 'n/a'}
+  - {id: BUS-RULE-042, cat: rnd, sev: P2, desc: 'Formulasi: Live HPP Tracking', ents: [Formulation], apis: ['GET /rnd/formulations/{id}'], screens: [SCR-098], err: 'n/a'}
+  - {id: BUS-RULE-043, cat: rnd, sev: P2, desc: 'Formulasi: Version Control', ents: [Formulation], apis: ['POST /rnd/formulations/{id}/clone'], screens: [SCR-099], err: 'n/a'}
+  - {id: BUS-RULE-044, cat: rnd, sev: P1, desc: 'Formulasi: Lock = Immutable', ents: [Formulation], apis: ['POST /rnd/formulations/{id}/lock'], screens: [SCR-100], err: 'FORMULA_LOCKED'}
+  - {id: BUS-RULE-045, cat: rnd, sev: P1, desc: 'Formula: BPOM Push Hanya dari LOCKED', ents: [Formulation], apis: ['POST /rnd/formulations/{id}/push-bpom'], screens: [SCR-100], err: 'FORMULA_NOT_LOCKED'}
+  - {id: BUS-RULE-046, cat: warehouse, sev: P1, desc: 'Inbound: Status Default QUARANTINE', ents: [GoodsReceipt], apis: ['POST /purchase/goods-receipts'], screens: [SCR-057], err: 'n/a'}
+  - {id: BUS-RULE-047, cat: warehouse, sev: P1, desc: 'QC Release: Pindah ke Stok Tersedia', ents: [GoodsReceipt], apis: ['POST /warehouse/qc-release'], screens: [SCR-058], err: 'QC_NOT_RELEASED'}
+  - {id: BUS-RULE-048, cat: warehouse, sev: P1, desc: 'Stok Movement: In=Out Balance', ents: [StockMovement], apis: ['POST /warehouse/stock-movements'], screens: [SCR-088], err: 'STOCK_BALANCE_VIOLATION'}
+  - {id: BUS-RULE-049, cat: warehouse, sev: P1, desc: 'Stock Opname: Auto-Approve Threshold', ents: [StockOpname], apis: ['POST /warehouse/stock-opname/{id}/approve'], screens: [SCR-089], err: 'OPNAME_DELTA_EXCEEDED'}
+  - {id: BUS-RULE-050, cat: warehouse, sev: P3, desc: 'Dead Stock Detection (>6 Bulan)', ents: [StockMovement], apis: ['GET /reports/stock'], screens: [SCR-DASH-007], err: 'n/a'}
+  - {id: BUS-RULE-051, cat: warehouse, sev: P1, desc: 'Multi-Warehouse Access Control', ents: [WarehouseAccess], apis: ['GET /goods/{id}/stock'], screens: [SCR-087], err: 'WAREHOUSE_ACCESS_DENIED'}
+  - {id: BUS-RULE-052, cat: warehouse, sev: P1, desc: 'FIFO/FEFO Compliance: Auto-Enforce', ents: [StockMovement], apis: ['POST /warehouse/stock-movements'], screens: [SCR-088], err: 'FEFO_VIOLATION_OUTBOUND'}
+  - {id: BUS-RULE-053, cat: warehouse, sev: P1, desc: 'Batch & Expiry Tracking: Mandatory', ents: [GoodsReceipt], apis: ['POST /purchase/goods-receipts'], screens: [SCR-057], err: 'BATCH_REQUIRED'}
+  - {id: BUS-RULE-054, cat: production, sev: P2, desc: 'Production Reconciliation: Hutang Material', ents: [BatchRecord], apis: ['POST /production/batch-records/{id}/process'], screens: [SCR-077], err: 'n/a'}
+  - {id: BUS-RULE-055, cat: warehouse, sev: P2, desc: 'Stock Opname Loss: Auto-Journal', ents: [StockOpname], apis: ['POST /warehouse/stock-opname/{id}/approve'], screens: [SCR-089], err: 'n/a'}
+  - {id: BUS-RULE-056, cat: finance, sev: P1, desc: 'Journal Entry: Debit = Kredit', ents: [JournalEntry], apis: ['POST /finance/journal-entries'], screens: [SCR-105], err: 'JOURNAL_UNBALANCED'}
+  - {id: BUS-RULE-057, cat: finance, sev: P1, desc: 'Auto-Journal per Transaksi (LOCKED)', ents: [JournalEntry,CoaAuto], apis: [], screens: [SCR-105], err: 'n/a'}
+  - {id: BUS-RULE-058, cat: finance, sev: P2, desc: 'AR Aging: 4 Buckets', ents: [SalesInvoice], apis: ['GET /reports/ar-aging'], screens: [SCR-129], err: 'n/a'}
+  - {id: BUS-RULE-059, cat: finance, sev: P2, desc: 'AP Aging: Color Coding H-3/H-7', ents: [PurchaseInvoice], apis: ['GET /reports/ap-aging'], screens: [SCR-130], err: 'n/a'}
+  - {id: BUS-RULE-060, cat: finance, sev: P1, desc: 'DP Legalitas: Post ke Client Escrow', ents: [SalesDownPayment], apis: ['POST /sales/down-payments'], screens: [SCR-029], err: 'n/a'}
+  - {id: BUS-RULE-061, cat: finance, sev: P1, desc: 'Client Escrow: Tidak Pernah Revenue', ents: [JournalLine], apis: [], screens: [SCR-105], err: 'n/a'}
+  - {id: BUS-RULE-062, cat: finance, sev: P1, desc: 'Currency: IDR Integer Only', ents: [], apis: [], screens: [ALL], err: 'CURRENCY_NOT_SUPPORTED'}
+  - {id: BUS-RULE-063, cat: finance, sev: P2, desc: 'PPN Masukan: Auto-Compute kalau PKP', ents: [PurchaseInvoice], apis: ['POST /purchase/invoices'], screens: [SCR-061], err: 'n/a'}
+  - {id: BUS-RULE-064, cat: finance, sev: P1, desc: 'Period Lock: Soft vs Hard', ents: [JournalEntry], apis: ['POST /finance/periods/lock'], screens: [SCR-SYS-005], err: 'PERIOD_LOCKED'}
+  - {id: BUS-RULE-065, cat: finance, sev: P2, desc: 'CoA Auto Numbering per Tipe', ents: [Coa], apis: ['GET /coa'], screens: [SCR-021], err: 'n/a'}
+  - {id: BUS-RULE-066, cat: finance, sev: P2, desc: 'Depresiasi: Auto-Post Bulanan', ents: [FixedAsset], apis: [], screens: [SCR-110], err: 'n/a'}
+  - {id: BUS-RULE-067, cat: finance, sev: P1, desc: 'Aset: Masa Manfaat Default per Kategori', ents: [FixedAsset], apis: ['POST /finance/fixed-assets'], screens: [SCR-110], err: 'ASSET_USEFUL_LIFE_REQUIRED'}
+  - {id: BUS-RULE-068, cat: finance, sev: P2, desc: 'CoA Manual Journal: Allow Flag', ents: [Coa], apis: ['POST /finance/journal-entries'], screens: [SCR-105], err: 'n/a'}
+  - {id: BUS-RULE-069, cat: sales, sev: P3, desc: 'Report Penjualan: Sidebar Rename', ents: [], apis: ['GET /reports/sales-summary'], screens: [SCR-042], err: 'n/a'}
+  - {id: BUS-RULE-070, cat: finance, sev: P3, desc: 'Laba Rugi: Urutan Card Wajib', ents: [], apis: ['GET /reports/profit-loss'], screens: [SCR-123], err: 'n/a'}
+  - {id: BUS-RULE-071, cat: hr, sev: P2, desc: 'Kontrak: Alert 30 Hari Sebelum Expiry', ents: [EmployeeContract], apis: ['GET /hr/contracts/expiring'], screens: [SCR-DASH-012], err: 'n/a'}
+  - {id: BUS-RULE-072, cat: hr, sev: P1, desc: 'Performance Scoring: Auto dari Event', ents: [EmployeePerformance,EmployeeKpiResult,KpiDefinition], apis: ['GET /employees/{id}/kpi','POST /employees/{id}/kpi/recalculate'], screens: [SCR-179], err: 'PERFORMANCE_MANUAL_BLOCKED'}
+  - {id: BUS-RULE-073, cat: hr, sev: P1, desc: 'Salary: Pokok*Attendance + Lembur - Potongan', ents: [Employee], apis: [], screens: [SCR-DASH-012], err: 'PAYROLL_CALC_INVALID'}
+  - {id: BUS-RULE-074, cat: hr, sev: P2, desc: 'Dual-Role: Scorecard Per-Role Weighted', ents: [EmployeeRoleAssignment,EmployeePerformance], apis: ['GET /employees/{id}/kpi'], screens: [SCR-179], err: 'KPI_ROLE_WEIGHT_INVALID'}
+  - {id: BUS-RULE-075, cat: hr, sev: P2, desc: 'Reimburse: Auto-Trigger Kas Bank Keluar', ents: [FundRequest], apis: ['POST /finance/fund-requests'], screens: [SCR-104], err: 'n/a'}
+  - {id: BUS-RULE-076, cat: production, sev: P2, desc: 'FTY (First Time Yield)', ents: [BatchRecord], apis: ['GET /dashboards/production'], screens: [SCR-DASH-005], err: 'n/a'}
+  - {id: BUS-RULE-077, cat: production, sev: P2, desc: 'COPQ (Cost of Poor Quality)', ents: [BatchRecord], apis: ['GET /dashboards/qc'], screens: [SCR-DASH-005], err: 'n/a'}
+  - {id: BUS-RULE-078, cat: production, sev: P2, desc: 'Defect Categorization', ents: [BatchRecord], apis: ['POST /production/qc-inspections'], screens: [SCR-086], err: 'n/a'}
+  - {id: BUS-RULE-079, cat: production, sev: P3, desc: 'Quarantine Alert (>24 jam)', ents: [BatchRecord], apis: [], screens: [SCR-077], err: 'n/a'}
+  - {id: BUS-RULE-080, cat: purchase, sev: P1, desc: 'Vendor Watchlist Auto-Block', ents: [Supplier], apis: ['PATCH /suppliers/{id}'], screens: [SCR-013], err: 'VENDOR_BLOCKED'}
+  - {id: BUS-RULE-081, cat: sales, sev: P2, desc: 'CPL (Cost Per Lead)', ents: [Lead], apis: ['GET /dashboards/busdev'], screens: [SCR-DASH-013], err: 'n/a'}
+  - {id: BUS-RULE-082, cat: sales, sev: P2, desc: 'Conversion Rate (Lead->Order)', ents: [Lead], apis: ['GET /dashboards/busdev'], screens: [SCR-DASH-013], err: 'n/a'}
+  - {id: BUS-RULE-083, cat: production, sev: P2, desc: 'OEE', ents: [BatchRecord], apis: ['GET /dashboards/production'], screens: [SCR-DASH-005], err: 'n/a'}
+  - {id: BUS-RULE-084, cat: finance, sev: P2, desc: 'AR Aging (Bucket Distribution)', ents: [SalesInvoice], apis: ['GET /reports/ar-aging'], screens: [SCR-129], err: 'n/a'}
+  - {id: BUS-RULE-085, cat: sales, sev: P2, desc: 'Customer Retention Rate', ents: [Customer], apis: ['GET /dashboards/busdev'], screens: [SCR-DASH-013], err: 'n/a'}
+  - {id: BUS-RULE-086, cat: sales, sev: P2, desc: 'OTD (On-Time Delivery)', ents: [DeliveryOut], apis: ['GET /dashboards/busdev'], screens: [SCR-DASH-009], err: 'n/a'}
+  - {id: BUS-RULE-087, cat: finance, sev: P2, desc: 'Collection Rate', ents: [SalesInvoice], apis: ['GET /dashboards/finance'], screens: [SCR-DASH-006], err: 'n/a'}
+  - {id: BUS-RULE-088, cat: finance, sev: P2, desc: 'Expense Ratio', ents: [JournalLine], apis: ['GET /dashboards/finance'], screens: [SCR-DASH-006], err: 'n/a'}
+  - {id: BUS-RULE-089, cat: finance, sev: P2, desc: 'Net Profit Margin', ents: [JournalLine], apis: ['GET /dashboards/finance'], screens: [SCR-DASH-006], err: 'n/a'}
+  - {id: BUS-RULE-090, cat: kpi, sev: P2, desc: 'KPI Threshold Direction', ents: [KpiDefinition,EmployeeKpiResult], apis: ['GET /kpi/definitions'], screens: [SCR-179], err: 'n/a'}
+  - {id: BUS-RULE-091, cat: communication, sev: P2, desc: 'Tag User: Trigger Notifikasi', ents: [Note,Comment,Tag,Notification], apis: ['POST /entities/{type}/{id}/tags'], screens: [SCR-179], err: 'MENTION_USER_NOT_FOUND'}
+  - {id: BUS-RULE-092, cat: communication, sev: P2, desc: 'Notification Deduplication', ents: [Notification], apis: ['GET /notifications'], screens: [SCR-DASH-011], err: 'n/a'}
+  - {id: BUS-RULE-093, cat: workflow, sev: P2, desc: 'SLA Timer: Pending Approval', ents: [StatusTransition], apis: ['GET /workflows/pending'], screens: [SCR-SYS-008], err: 'n/a'}
+  - {id: BUS-RULE-094, cat: communication, sev: P2, desc: 'Cross-Reference Comment: Limited Scope', ents: [Comment], apis: ['POST /entities/{type}/{id}/comments'], screens: [SCR-179], err: 'n/a'}
+  - {id: BUS-RULE-095, cat: communication, sev: P1, desc: 'Communication: No Real-Time Chat', ents: [Notification], apis: [], screens: [ALL], err: 'CHAT_NOT_ALLOWED'}
+  - {id: BUS-RULE-096, cat: system, sev: P1, desc: 'Soft-Delete Enforced at Prisma Middleware', ents: [All], apis: ['DELETE /api/v1/*'], screens: [ALL], err: 'n/a'}
+  - {id: BUS-RULE-097, cat: audit, sev: P1, desc: 'Audit-First: Tulis Audit Sebelum ACK', ents: [AuditLog], apis: ['ALL'], screens: [ALL], err: 'n/a'}
+  - {id: BUS-RULE-098, cat: system, sev: P1, desc: 'Multi-Tenant Isolation (organizationId)', ents: [Organization], apis: ['ALL'], screens: [ALL], err: 'CROSS_TENANT_ACCESS'}
+  - {id: BUS-RULE-099, cat: system, sev: P1, desc: 'Soft-Delete Orphan Prevention', ents: [All], apis: ['DELETE /api/v1/*'], screens: [ALL], err: 'ORPHAN_REFERENCE'}
+  - {id: BUS-RULE-100, cat: system, sev: P1, desc: 'Error Code Canonical Mapping', ents: [], apis: [], screens: [], err: 'n/a'}
+  - {id: BUS-RULE-101, cat: system, sev: P1, desc: 'Idempotency Key (24h TTL)', ents: [], apis: ['POST/PUT/PATCH/DELETE'], screens: [ALL], err: 'IDEMPOTENCY_CONFLICT'}
+  - {id: BUS-RULE-102, cat: system, sev: P1, desc: 'Format Kode Universal (2 Versi)', ents: [], apis: ['GET /system/sequence/next'], screens: [SCR-SYS-001], err: 'n/a'}
+  - {id: BUS-RULE-103, cat: finance, sev: P1, desc: 'Document Numbering Finance (Per Bulan Per Prefix)', ents: [CoaAuto], apis: ['GET /system/sequence/next'], screens: [SCR-105], err: 'n/a'}
+  - {id: BUS-RULE-104, cat: finance, sev: P1, desc: 'CoA Delete: Deactivate, Not Hard Delete', ents: [Coa], apis: ['DELETE /coa/{id}'], screens: [SCR-021], err: 'n/a'}
+  - {id: BUS-RULE-105, cat: system, sev: P1, desc: 'Orphan Input/Output Removal', ents: [All], apis: ['DELETE /api/v1/*'], screens: [ALL], err: 'n/a'}
+  - {id: BUS-RULE-106, cat: kpi, sev: P1, desc: 'Per-Person KPI Aggregate', ents: [KpiDefinition,EmployeeKpiResult,EmployeeRoleAssignment,EmployeePerformance], apis: ['GET /employees/{id}/kpi','GET /kpi/me'], screens: [SCR-179], err: 'KPI_EVIDENCE_INSUFFICIENT'}
+
+# =============================================================
+# 3. WORKFLOWS (~30 from 03_WORKFLOW_STATE_MACHINE.yaml)
+# =============================================================
+workflows:
+  - {id: WF-LEAD, name: 'Lead pipeline', entity: Lead, states: ['NEW_LEAD','CONTACTED','SAMPLE','WON','LOST'], rules: [BUS-RULE-001,BUS-RULE-038]}
+  - {id: WF-SAMPLE, name: 'Sample request', entity: SalesSample, states: ['DRAFT','SUBMITTED','IN_PROGRESS','APPROVED','REJECTED','CONVERTED'], rules: [BUS-RULE-038]}
+  - {id: WF-SO, name: 'Sales Order full', entity: SalesOrder, states: ['draft','pending_approval','approved','in_production','ready_to_ship','shipped','delivered','completed','cancelled'], rules: [BUS-RULE-001,BUS-RULE-002,BUS-RULE-014]}
+  - {id: WF-DPJ, name: 'DP Penjualan', entity: SalesDownPayment, states: ['draft','posted','applied','refunded'], rules: [BUS-RULE-002,BUS-RULE-004,BUS-RULE-060]}
+  - {id: WF-INV, name: 'Faktur Penjualan', entity: SalesInvoice, states: ['draft','pending_approval','approved','held','released','posted','paid','cancelled'], rules: [BUS-RULE-003,BUS-RULE-005,BUS-RULE-006]}
+  - {id: WF-PAY-AR, name: 'Bayar Penjualan', entity: SalesPayment, states: ['draft','posted','allocated','partial'], rules: [BUS-RULE-007,BUS-RULE-015]}
+  - {id: WF-RETURN-AR, name: 'Sales return', entity: SalesReturn, states: ['draft','pending_approval','approved','received','refunded'], rules: [BUS-RULE-012]}
+  - {id: WF-PR, name: 'Purchase Request', entity: PurchaseRequest, states: ['draft','pending_approval','approved','rejected'], rules: []}
+  - {id: WF-PO, name: 'Purchase Order', entity: PurchaseOrder, states: ['draft','pending_approval','approved','rejected','sent','partial','received','closed','cancelled'], rules: [BUS-RULE-016,BUS-RULE-022,BUS-RULE-025]}
+  - {id: WF-DPB, name: 'DP Pembelian', entity: PurchaseDownPayment, states: ['draft','posted','applied'], rules: [BUS-RULE-024]}
+  - {id: WF-GR, name: 'Goods Receipt', entity: GoodsReceipt, states: ['draft','received','qc_quarantine','released','rejected'], rules: [BUS-RULE-018,BUS-RULE-046,BUS-RULE-047,BUS-RULE-053]}
+  - {id: WF-FP, name: 'Faktur Pembelian', entity: PurchaseInvoice, states: ['draft','matched','exception','posted','paid'], rules: [BUS-RULE-023,BUS-RULE-063]}
+  - {id: WF-PAY-AP, name: 'Bayar Pembelian', entity: PurchasePayment, states: ['draft','approved','posted'], rules: []}
+  - {id: WF-RETURN-AP, name: 'Purchase return', entity: PurchaseReturn, states: ['draft','approved','shipped','closed'], rules: []}
+  - {id: WF-BMR, name: 'Batch Record', entity: BatchRecord, states: ['draft','scheduled','mixing','filling','packaging','delivered','closed'], rules: [BUS-RULE-028,BUS-RULE-029,BUS-RULE-079]}
+  - {id: WF-PROD-MIX, name: 'Production Mixing', entity: ProductionMixing, states: ['queued','in_progress','qc_pending','completed'], rules: [BUS-RULE-030,BUS-RULE-031]}
+  - {id: WF-PROD-FILL, name: 'Production Filling', entity: ProductionFilling, states: ['queued','in_progress','completed'], rules: [BUS-RULE-032,BUS-RULE-033]}
+  - {id: WF-PROD-PKG, name: 'Production Packaging', entity: ProductionPackaging, states: ['queued','in_progress','completed'], rules: [BUS-RULE-034,BUS-RULE-035,BUS-RULE-037]}
+  - {id: WF-DO, name: 'Delivery Out', entity: DeliveryOut, states: ['draft','ready','shipped','delivered','returned'], rules: [BUS-RULE-086]}
+  - {id: WF-FRM, name: 'Formulation lifecycle', entity: Formulation, states: ['draft','revised','locked','pushed_to_bpom'], rules: [BUS-RULE-039,BUS-RULE-044,BUS-RULE-045]}
+  - {id: WF-STK-MOVE, name: 'Stock Movement', entity: StockMovement, states: ['in','out','balanced'], rules: [BUS-RULE-048,BUS-RULE-052]}
+  - {id: WF-OPNAME, name: 'Stock Opname', entity: StockOpname, states: ['draft','in_progress','pending_review','approved','posted'], rules: [BUS-RULE-049,BUS-RULE-055]}
+  - {id: WF-JE, name: 'Journal Entry', entity: JournalEntry, states: ['draft','posted','reversed'], rules: [BUS-RULE-056,BUS-RULE-057]}
+  - {id: WF-FR, name: 'Fund Request', entity: FundRequest, states: ['draft','approved_head','approved_accounting','approved_director','disbursed'], rules: []}
+  - {id: WF-ASSET, name: 'Fixed Asset', entity: FixedAsset, states: ['active','fully_depreciated','disposed'], rules: [BUS-RULE-066,BUS-RULE-067]}
+  - {id: WF-CHECKLIST, name: 'Checklist 17-stage', entity: Checklist, states: ['open','in_progress','ready','delivered','closed'], rules: [BUS-RULE-011]}
+  - {id: WF-EMP, name: 'Employee Contract', entity: EmployeeContract, states: ['active','expiring','expired','renewed'], rules: [BUS-RULE-071]}
+  - {id: WF-APPROVAL, name: 'Universal Approval', entity: StatusTransition, states: ['pending','approved','rejected'], rules: [BUS-RULE-093]}
+  - {id: WF-NUMBER, name: 'Document Numbering', entity: CoaAuto, states: ['issued','void'], rules: [BUS-RULE-102,BUS-RULE-103]}
+  - {id: WF-COMMS, name: 'Communication thread', entity: Comment, states: ['open','resolved'], rules: [BUS-RULE-094,BUS-RULE-095]}
+
+# =============================================================
+# 4. ENTITIES (generated physical count is authoritative)
+# =============================================================
+entities:
+  - {id: E-Organization, name: Organization, mod: auth, fields: 4, soft_del: true, tenant: true}
+  - {id: E-Role, name: Role, mod: auth, fields: 6, soft_del: true, tenant: true}
+  - {id: E-Permission, name: Permission, mod: auth, fields: 5, soft_del: true, tenant: true}
+  - {id: E-RolePermission, name: RolePermission, mod: auth, fields: 3, soft_del: true, tenant: true}
+  - {id: E-User, name: User, mod: auth, fields: 18, soft_del: true, tenant: true}
+  - {id: E-UserSession, name: UserSession, mod: auth, fields: 8, soft_del: true, tenant: true}
+  - {id: E-AuditLog, name: AuditLog, mod: auth, fields: 9, soft_del: true, tenant: true}
+  - {id: E-ActivityLog, name: ActivityLog, mod: auth, fields: 7, soft_del: true, tenant: true}
+  - {id: E-Division, name: Division, mod: master, fields: 4, soft_del: true, tenant: true}
+  - {id: E-CustomerCategory, name: CustomerCategory, mod: master, fields: 4, soft_del: true, tenant: true}
+  - {id: E-Customer, name: Customer, mod: master, fields: 28, soft_del: true, tenant: true}
+  - {id: E-SupplierCategory, name: SupplierCategory, mod: master, fields: 4, soft_del: true, tenant: true}
+  - {id: E-Supplier, name: Supplier, mod: master, fields: 26, soft_del: true, tenant: true}
+  - {id: E-GoodsCategory, name: GoodsCategory, mod: master, fields: 4, soft_del: true, tenant: true}
+  - {id: E-Goods, name: Goods, mod: master, fields: 22, soft_del: true, tenant: true}
+  - {id: E-Warehouse, name: Warehouse, mod: master, fields: 8, soft_del: true, tenant: true}
+  - {id: E-WarehouseAccess, name: WarehouseAccess, mod: master, fields: 4, soft_del: true, tenant: true}
+  - {id: E-Coa, name: Coa, mod: master, fields: 14, soft_del: true, tenant: true}
+  - {id: E-CoaAuto, name: CoaAuto, mod: master, fields: 12, soft_del: true, tenant: true}
+  - {id: E-Formulation, name: Formulation, mod: master, fields: 18, soft_del: true, tenant: true}
+  - {id: E-FormulationAdjustment, name: FormulationAdjustment, mod: master, fields: 10, soft_del: true, tenant: true}
+  - {id: E-Lead, name: Lead, mod: sales, fields: 14, soft_del: true, tenant: true}
+  - {id: E-LeadDetail, name: LeadDetail, mod: sales, fields: 6, soft_del: true, tenant: true}
+  - {id: E-SalesSample, name: SalesSample, mod: sales, fields: 16, soft_del: true, tenant: true}
+  - {id: E-SalesSampleApproval, name: SalesSampleApproval, mod: sales, fields: 5, soft_del: true, tenant: true}
+  - {id: E-SalesSamplePayment, name: SalesSamplePayment, mod: sales, fields: 8, soft_del: true, tenant: true}
+  - {id: E-SalesDownPayment, name: SalesDownPayment, mod: sales, fields: 16, soft_del: true, tenant: true}
+  - {id: E-SalesOrder, name: SalesOrder, mod: sales, fields: 32, soft_del: true, tenant: true}
+  - {id: E-SalesOrderDetail, name: SalesOrderDetail, mod: sales, fields: 12, soft_del: true, tenant: true}
+  - {id: E-SalesOrderApproval, name: SalesOrderApproval, mod: sales, fields: 5, soft_del: true, tenant: true}
+  - {id: E-SalesInvoice, name: SalesInvoice, mod: sales, fields: 28, soft_del: true, tenant: true}
+  - {id: E-SalesInvoiceDetail, name: SalesInvoiceDetail, mod: sales, fields: 10, soft_del: true, tenant: true}
+  - {id: E-SalesPayment, name: SalesPayment, mod: sales, fields: 14, soft_del: true, tenant: true}
+  - {id: E-SalesReturn, name: SalesReturn, mod: sales, fields: 18, soft_del: true, tenant: true}
+  - {id: E-SalesReturnDetail, name: SalesReturnDetail, mod: sales, fields: 8, soft_del: true, tenant: true}
+  - {id: E-SalesReturnApproval, name: SalesReturnApproval, mod: sales, fields: 5, soft_del: true, tenant: true}
+  - {id: E-SalesReturnIn, name: SalesReturnIn, mod: sales, fields: 10, soft_del: true, tenant: true}
+  - {id: E-SalesTarget, name: SalesTarget, mod: sales, fields: 6, soft_del: true, tenant: true}
+  - {id: E-PurchaseRequest, name: PurchaseRequest, mod: purchase, fields: 14, soft_del: true, tenant: true}
+  - {id: E-PurchaseRequestDetail, name: PurchaseRequestDetail, mod: purchase, fields: 8, soft_del: true, tenant: true}
+  - {id: E-PurchaseRequestApproval, name: PurchaseRequestApproval, mod: purchase, fields: 5, soft_del: true, tenant: true}
+  - {id: E-PurchaseOrder, name: PurchaseOrder, mod: purchase, fields: 30, soft_del: true, tenant: true}
+  - {id: E-PurchaseOrderDetail, name: PurchaseOrderDetail, mod: purchase, fields: 10, soft_del: true, tenant: true}
+  - {id: E-PurchaseOrderApproval, name: PurchaseOrderApproval, mod: purchase, fields: 6, soft_del: true, tenant: true}
+  - {id: E-PurchaseDownPayment, name: PurchaseDownPayment, mod: purchase, fields: 12, soft_del: true, tenant: true}
+  - {id: E-GoodsReceipt, name: GoodsReceipt, mod: purchase, fields: 20, soft_del: true, tenant: true}
+  - {id: E-GoodsReceiptDetail, name: GoodsReceiptDetail, mod: purchase, fields: 10, soft_del: true, tenant: true}
+  - {id: E-PurchaseInvoice, name: PurchaseInvoice, mod: purchase, fields: 28, soft_del: true, tenant: true}
+  - {id: E-PurchaseInvoiceDetail, name: PurchaseInvoiceDetail, mod: purchase, fields: 10, soft_del: true, tenant: true}
+  - {id: E-PurchasePayment, name: PurchasePayment, mod: purchase, fields: 14, soft_del: true, tenant: true}
+  - {id: E-PurchaseReturn, name: PurchaseReturn, mod: purchase, fields: 18, soft_del: true, tenant: true}
+  - {id: E-PurchaseReturnApproval, name: PurchaseReturnApproval, mod: purchase, fields: 5, soft_del: true, tenant: true}
+  - {id: E-PurchaseReturnOut, name: PurchaseReturnOut, mod: purchase, fields: 8, soft_del: true, tenant: true}
+  - {id: E-BatchRecord, name: BatchRecord, mod: production, fields: 30, soft_del: true, tenant: true}
+  - {id: E-ScheduleMixing, name: ScheduleMixing, mod: production, fields: 8, soft_del: true, tenant: true}
+  - {id: E-ScheduleFilling, name: ScheduleFilling, mod: production, fields: 8, soft_del: true, tenant: true}
+  - {id: E-SchedulePackaging, name: SchedulePackaging, mod: production, fields: 8, soft_del: true, tenant: true}
+  - {id: E-ProductionMixing, name: ProductionMixing, mod: production, fields: 14, soft_del: true, tenant: true}
+  - {id: E-ProductionMixingItem, name: ProductionMixingItem, mod: production, fields: 8, soft_del: true, tenant: true}
+  - {id: E-ProductionFilling, name: ProductionFilling, mod: production, fields: 14, soft_del: true, tenant: true}
+  - {id: E-ProductionFillingItem, name: ProductionFillingItem, mod: production, fields: 8, soft_del: true, tenant: true}
+  - {id: E-ProductionPackaging, name: ProductionPackaging, mod: production, fields: 12, soft_del: true, tenant: true}
+  - {id: E-ProductionPackagingItem, name: ProductionPackagingItem, mod: production, fields: 8, soft_del: true, tenant: true}
+  - {id: E-DeliveryOut, name: DeliveryOut, mod: production, fields: 14, soft_del: true, tenant: true}
+  - {id: E-DeliveryOutDetail, name: DeliveryOutDetail, mod: production, fields: 8, soft_del: true, tenant: true}
+  - {id: E-StockMovement, name: StockMovement, mod: warehouse, fields: 14, soft_del: true, tenant: true}
+  - {id: E-StockOpname, name: StockOpname, mod: warehouse, fields: 12, soft_del: true, tenant: true}
+  - {id: E-StockOpnameDetail, name: StockOpnameDetail, mod: warehouse, fields: 8, soft_del: true, tenant: true}
+  - {id: E-StockAdjustment, name: StockAdjustment, mod: warehouse, fields: 10, soft_del: true, tenant: true}
+  - {id: E-CashBank, name: CashBank, mod: finance, fields: 14, soft_del: true, tenant: true}
+  - {id: E-JournalEntry, name: JournalEntry, mod: finance, fields: 14, soft_del: true, tenant: true}
+  - {id: E-JournalLine, name: JournalLine, mod: finance, fields: 10, soft_del: true, tenant: true}
+  - {id: E-TaxSetup, name: TaxSetup, mod: finance, fields: 8, soft_del: true, tenant: true}
+  - {id: E-FixedAsset, name: FixedAsset, mod: finance, fields: 22, soft_del: true, tenant: true}
+  - {id: E-Budget, name: Budget, mod: finance, fields: 14, soft_del: true, tenant: true}
+  - {id: E-FundRequest, name: FundRequest, mod: finance, fields: 18, soft_del: true, tenant: true}
+  - {id: E-ChecklistCategory, name: ChecklistCategory, mod: checklist, fields: 6, soft_del: true, tenant: true}
+  - {id: E-Checklist, name: Checklist, mod: checklist, fields: 14, soft_del: true, tenant: true}
+  - {id: E-ChecklistProgress, name: ChecklistProgress, mod: checklist, fields: 12, soft_del: true, tenant: true}
+  - {id: E-ChecklistTracking, name: ChecklistTracking, mod: checklist, fields: 8, soft_del: true, tenant: true}
+  - {id: E-Employee, name: Employee, mod: hr, fields: 22, soft_del: true, tenant: true}
+  - {id: E-EmployeeContract, name: EmployeeContract, mod: hr, fields: 12, soft_del: true, tenant: true}
+  - {id: E-EmployeePerformance, name: EmployeePerformance, mod: hr, fields: 10, soft_del: true, tenant: true}
+  - {id: E-Note, name: Note, mod: communication, fields: 6, soft_del: true, tenant: true}
+  - {id: E-StatusTransition, name: StatusTransition, mod: communication, fields: 6, soft_del: true, tenant: true}
+  - {id: E-Tag, name: Tag, mod: communication, fields: 6, soft_del: true, tenant: true}
+  - {id: E-Comment, name: Comment, mod: communication, fields: 8, soft_del: true, tenant: true}
+  - {id: E-Attachment, name: Attachment, mod: communication, fields: 8, soft_del: true, tenant: true}
+  - {id: E-Notification, name: Notification, mod: communication, fields: 10, soft_del: true, tenant: true}
+
+# =============================================================
+# 5. API ENDPOINTS (generated operation count is authoritative)
+# =============================================================
+api_endpoints:
+  - {id: OP-001, tag: auth, op: 'login', spec: 'POST /auth/login'}
+  - {id: OP-002, tag: auth, op: 'refreshToken', spec: 'POST /auth/refresh'}
+  - {id: OP-003, tag: auth, op: 'logout', spec: 'POST /auth/logout'}
+  - {id: OP-004, tag: auth, op: 'logoutAllSessions', spec: 'POST /auth/logout-all'}
+  - {id: OP-005, tag: auth, op: 'forgotPassword', spec: 'POST /auth/forgot-password'}
+  - {id: OP-006, tag: auth, op: 'resetPassword', spec: 'POST /auth/reset-password'}
+  - {id: OP-007, tag: auth, op: 'changePassword', spec: 'POST /auth/change-password'}
+  - {id: OP-008, tag: auth, op: 'setupMfa', spec: 'POST /auth/mfa/setup'}
+  - {id: OP-009, tag: auth, op: 'verifyMfa', spec: 'POST /auth/mfa/verify'}
+  - {id: OP-010, tag: auth, op: 'disableMfa', spec: 'POST /auth/mfa/disable'}
+  - {id: OP-011, tag: auth, op: 'listActiveSessions', spec: 'GET /auth/sessions'}
+  - {id: OP-012, tag: auth, op: 'revokeSession', spec: 'DELETE /auth/sessions/{id}'}
+  - {id: OP-013, tag: auth, op: 'getCurrentUser', spec: 'GET /auth/me'}
+  - {id: OP-014, tag: users, op: 'listUsers', spec: 'GET /users'}
+  - {id: OP-015, tag: users, op: 'createUser', spec: 'POST /users'}
+  - {id: OP-016, tag: users, op: 'getUser', spec: 'GET /users/{id}'}
+  - {id: OP-017, tag: users, op: 'updateUser', spec: 'PATCH /users/{id}'}
+  - {id: OP-018, tag: users, op: 'deleteUser', spec: 'DELETE /users/{id}'}
+  - {id: OP-019, tag: users, op: 'listUserSessions', spec: 'GET /users/{id}/sessions'}
+  - {id: OP-020, tag: users, op: 'forceLogoutUser', spec: 'POST /users/{id}/logout-all'}
+  - {id: OP-021, tag: users, op: 'adminResetPassword', spec: 'POST /users/{id}/reset-password'}
+  - {id: OP-022, tag: users, op: 'setMfaRequired', spec: 'POST /users/{id}/mfa-required'}
+  - {id: OP-023, tag: users, op: 'updateOwnProfile', spec: 'PATCH /profile'}
+  - {id: OP-024, tag: roles, op: 'listRoles', spec: 'GET /roles'}
+  - {id: OP-025, tag: roles, op: 'createRole', spec: 'POST /roles'}
+  - {id: OP-026, tag: roles, op: 'getRole', spec: 'GET /roles/{id}'}
+  - {id: OP-027, tag: roles, op: 'updateRole', spec: 'PATCH /roles/{id}'}
+  - {id: OP-028, tag: roles, op: 'deleteRole', spec: 'DELETE /roles/{id}'}
+  - {id: OP-029, tag: roles, op: 'listPermissions', spec: 'GET /permissions'}
+  - {id: OP-030, tag: master, op: 'listCustomers', spec: 'GET /master/customers'}
+  - {id: OP-031, tag: master, op: 'createCustomer', spec: 'POST /master/customers'}
+  - {id: OP-032, tag: master, op: 'getCustomer', spec: 'GET /master/customers/{id}'}
+  - {id: OP-033, tag: master, op: 'updateCustomer', spec: 'PATCH /master/customers/{id}'}
+  - {id: OP-034, tag: master, op: 'deleteCustomer', spec: 'DELETE /master/customers/{id}'}
+  - {id: OP-035, tag: master, op: 'importCustomers', spec: 'POST /master/customers/import'}
+  - {id: OP-036, tag: master, op: 'exportCustomers', spec: 'GET /master/customers/export'}
+  - {id: OP-037, tag: master, op: 'listSuppliers', spec: 'GET /suppliers'}
+  - {id: OP-038, tag: master, op: 'createSupplier', spec: 'POST /suppliers'}
+  - {id: OP-039, tag: master, op: 'updateSupplier', spec: 'PATCH /suppliers/{id}'}
+  - {id: OP-040, tag: master, op: 'importSuppliers', spec: 'POST /suppliers/import'}
+  - {id: OP-041, tag: master, op: 'listGoods', spec: 'GET /master/goods'}
+  - {id: OP-042, tag: master, op: 'createGoods', spec: 'POST /master/goods'}
+  - {id: OP-043, tag: master, op: 'listCoa', spec: 'GET /coa'}
+  - {id: OP-044, tag: master, op: 'createCoa', spec: 'POST /coa'}
+  - {id: OP-045, tag: master, op: 'listWarehouses', spec: 'GET /master/warehouses'}
+  - {id: OP-046, tag: master, op: 'listTaxSetup', spec: 'GET /master/tax'}
+  - {id: OP-047, tag: master, op: 'search', spec: 'GET /master/search'}
+  - {id: OP-048, tag: sales, op: 'listLeads', spec: 'GET /sales/leads'}
+  - {id: OP-049, tag: sales, op: 'createLead', spec: 'POST /sales/leads'}
+  - {id: OP-050, tag: sales, op: 'listSamples', spec: 'GET /sales/samples'}
+  - {id: OP-051, tag: sales, op: 'createSample', spec: 'POST /sales/samples'}
+  - {id: OP-052, tag: sales, op: 'approveSample', spec: 'POST /sales/samples/{id}/approve'}
+  - {id: OP-053, tag: sales, op: 'listSalesOrders', spec: 'GET /sales/sales-orders'}
+  - {id: OP-054, tag: sales, op: 'createSalesOrder', spec: 'POST /sales/sales-orders'}
+  - {id: OP-055, tag: sales, op: 'updateSalesOrder', spec: 'PATCH /sales/sales-orders/{id}'}
+  - {id: OP-056, tag: sales, op: 'submitSalesOrder', spec: 'POST /sales/sales-orders/{id}/submit'}
+  - {id: OP-057, tag: sales, op: 'approveSalesOrder', spec: 'POST /sales/sales-orders/{id}/approve'}
+  - {id: OP-058, tag: sales, op: 'cancelSalesOrder', spec: 'POST /sales/sales-orders/{id}/cancel'}
+  - {id: OP-059, tag: sales, op: 'addToCart', spec: 'POST /sales/sales-orders'}
+  - {id: OP-060, tag: sales, op: 'listDownPayments', spec: 'GET /sales/down-payments'}
+  - {id: OP-061, tag: sales, op: 'createDownPayment', spec: 'POST /sales/down-payments'}
+  - {id: OP-062, tag: sales, op: 'listInvoices', spec: 'GET /sales/sales-invoices'}
+  - {id: OP-063, tag: sales, op: 'createInvoice', spec: 'POST /sales/sales-invoices'}
+  - {id: OP-064, tag: sales, op: 'importInvoices', spec: 'POST /sales/sales-invoices/import'}
+  - {id: OP-065, tag: sales, op: 'updateInvoice', spec: 'PATCH /sales/sales-invoices/{id}'}
+  - {id: OP-066, tag: sales, op: 'releaseInvoice', spec: 'POST /sales/sales-invoices/{id}/release'}
+  - {id: OP-067, tag: sales, op: 'listPayments', spec: 'GET /sales/sales-payments'}
+  - {id: OP-068, tag: sales, op: 'createPayment', spec: 'POST /sales/sales-payments'}
+  - {id: OP-069, tag: sales, op: 'pph23Deduct', spec: 'POST /sales/sales-payments/pph23'}
+  - {id: OP-070, tag: sales, op: 'listReturns', spec: 'GET /sales/returns'}
+  - {id: OP-071, tag: sales, op: 'createSalesReturn', spec: 'POST /sales/sales-returns'}
+  - {id: OP-072, tag: purchase, op: 'listPR', spec: 'GET /purchase/purchase-requests'}
+  - {id: OP-073, tag: purchase, op: 'createPR', spec: 'POST /purchase/purchase-requests'}
+  - {id: OP-074, tag: purchase, op: 'approvePR', spec: 'POST /purchase/purchase-requests/{id}/approve'}
+  - {id: OP-075, tag: purchase, op: 'listPO', spec: 'GET /purchase/orders'}
+  - {id: OP-076, tag: purchase, op: 'createPO', spec: 'POST /purchase/orders'}
+  - {id: OP-077, tag: purchase, op: 'updatePO', spec: 'PATCH /purchase/orders/{id}'}
+  - {id: OP-078, tag: purchase, op: 'approvePO', spec: 'POST /purchase/orders/{id}/approve'}
+  - {id: OP-079, tag: purchase, op: 'uploadPOSignature', spec: 'POST /purchase/orders/{id}/signature'}
+  - {id: OP-080, tag: purchase, op: 'importPO', spec: 'POST /purchase/orders/import'}
+  - {id: OP-081, tag: purchase, op: 'listDPB', spec: 'GET /purchase/down-payments'}
+  - {id: OP-082, tag: purchase, op: 'createDPB', spec: 'POST /purchase/down-payments'}
+  - {id: OP-083, tag: purchase, op: 'listGoodsReceipts', spec: 'GET /purchase/goods-receipts'}
+  - {id: OP-084, tag: purchase, op: 'createGoodsReceipt', spec: 'POST /purchase/goods-receipts'}
+  - {id: OP-085, tag: purchase, op: 'qcRelease', spec: 'POST /warehouse/qc-release'}
+  - {id: OP-086, tag: purchase, op: 'listPurchaseInvoices', spec: 'GET /purchase/invoices'}
+  - {id: OP-087, tag: purchase, op: 'createPurchaseInvoice', spec: 'POST /purchase/invoices'}
+  - {id: OP-088, tag: purchase, op: 'importPurchaseInvoices', spec: 'POST /purchase/invoices/import'}
+  - {id: OP-089, tag: purchase, op: 'listPurchasePayments', spec: 'GET /purchase/payments'}
+  - {id: OP-090, tag: purchase, op: 'createPurchasePayment', spec: 'POST /purchase/payments'}
+  - {id: OP-091, tag: purchase, op: 'listPurchaseReturns', spec: 'GET /purchase/returns'}
+  - {id: OP-092, tag: production, op: 'listBatchRecords', spec: 'GET /production/batch-records'}
+  - {id: OP-093, tag: production, op: 'createBatchRecord', spec: 'POST /production/batch-records'}
+  - {id: OP-094, tag: production, op: 'advanceStage', spec: 'POST /production/batch-records/{id}/process'}
+  - {id: OP-095, tag: production, op: 'listSchedules', spec: 'GET /production/schedules'}
+  - {id: OP-096, tag: production, op: 'createSchedule', spec: 'POST /production/schedules'}
+  - {id: OP-097, tag: production, op: 'startMixing', spec: 'POST /production/mixing/start'}
+  - {id: OP-098, tag: production, op: 'recordMixingActual', spec: 'POST /production/production-mixing'}
+  - {id: OP-099, tag: production, op: 'scanDrum', spec: 'POST /production/production-mixing'}
+  - {id: OP-100, tag: production, op: 'completeMixing', spec: 'POST /production/mixing/complete'}
+  - {id: OP-101, tag: production, op: 'startFilling', spec: 'POST /production/production-filling'}
+  - {id: OP-102, tag: production, op: 'recordFilling', spec: 'POST /production/production-filling'}
+  - {id: OP-103, tag: production, op: 'startPackaging', spec: 'POST /production/production-packaging'}
+  - {id: OP-104, tag: production, op: 'recordPackaging', spec: 'POST /production/production-packaging'}
+  - {id: OP-105, tag: production, op: 'listDeliveryOut', spec: 'GET /production/delivery-outs'}
+  - {id: OP-106, tag: production, op: 'createDeliveryOut', spec: 'POST /production/delivery-outs'}
+  - {id: OP-107, tag: production, op: 'listBatchRecords', spec: 'GET /production/defects'}
+  - {id: OP-108, tag: production, op: 'createBatchRecord', spec: 'POST /production/qc-inspections'}
+  - {id: OP-109, tag: warehouse, op: 'listStockMovements', spec: 'GET /warehouse/stock-movements'}
+  - {id: OP-110, tag: warehouse, op: 'createStockMovement', spec: 'POST /warehouse/stock-movements'}
+  - {id: OP-111, tag: warehouse, op: 'listStockOpname', spec: 'GET /warehouse/stock-opnames'}
+  - {id: OP-112, tag: warehouse, op: 'createStockOpname', spec: 'POST /warehouse/stock-opnames'}
+  - {id: OP-113, tag: warehouse, op: 'approveStockOpname', spec: 'POST /warehouse/stock-opname/{id}/approve'}
+  - {id: OP-114, tag: warehouse, op: 'listStock', spec: 'GET /warehouse/stock'}
+  - {id: OP-115, tag: warehouse, op: 'listTransfers', spec: 'GET /warehouse/goods-transfer'}
+  - {id: OP-116, tag: warehouse, op: 'createTransfer', spec: 'POST /warehouse/goods-transfer'}
+  - {id: OP-117, tag: warehouse, op: 'deadStockReport', spec: 'GET /reports/stock'}
+  - {id: OP-118, tag: rnd, op: 'listFormulations', spec: 'GET /rnd/formulations'}
+  - {id: OP-119, tag: rnd, op: 'getFormulation', spec: 'GET /rnd/formulations/{id}'}
+  - {id: OP-120, tag: rnd, op: 'createFormulation', spec: 'POST /rnd/formulations'}
+  - {id: OP-121, tag: rnd, op: 'reviseFormulation', spec: 'POST /rnd/formulations/{id}/clone'}
+  - {id: OP-122, tag: rnd, op: 'lockFormulation', spec: 'POST /rnd/formulations/{id}/lock'}
+  - {id: OP-123, tag: rnd, op: 'getFormulaHpp', spec: 'GET /rnd/formulations/{id}'}
+  - {id: OP-124, tag: rnd, op: 'getFormulaGrams', spec: 'GET /rnd/formulations/{id}'}
+  - {id: OP-125, tag: rnd, op: 'pushBpom', spec: 'POST /rnd/formulations/{id}/push-bpom'}
+  - {id: OP-126, tag: finance, op: 'listJournal', spec: 'GET /finance/journal-entries'}
+  - {id: OP-127, tag: finance, op: 'createJournal', spec: 'POST /finance/journal-entries'}
+  - {id: OP-128, tag: finance, op: 'manualJournal', spec: 'POST /finance/journal-entries'}
+  - {id: OP-129, tag: finance, op: 'reverseJournal', spec: 'POST /finance/journal-entries/{id}/reverse'}
+  - {id: OP-130, tag: finance, op: 'listCashBanks', spec: 'GET /finance/cash-banks'}
+  - {id: OP-131, tag: finance, op: 'createCashBank', spec: 'POST /finance/cash-banks'}
+  - {id: OP-132, tag: finance, op: 'cashBankIn', spec: 'GET /finance/cash-banks/in'}
+  - {id: OP-133, tag: finance, op: 'cashBankOut', spec: 'GET /finance/cash-banks/out'}
+  - {id: OP-134, tag: finance, op: 'cashBankBalance', spec: 'GET /finance/cash-banks/balance'}
+  - {id: OP-135, tag: finance, op: 'bankRecon', spec: 'GET /finance/bank-recon'}
+  - {id: OP-136, tag: finance, op: 'createBankRecon', spec: 'POST /finance/bank-recon'}
+  - {id: OP-137, tag: finance, op: 'listFixedAssets', spec: 'GET /finance/fixed-assets'}
+  - {id: OP-138, tag: finance, op: 'createFixedAsset', spec: 'POST /finance/fixed-assets'}
+  - {id: OP-139, tag: finance, op: 'assetHistory', spec: 'GET /finance/fixed-assets/{id}/history'}
+  - {id: OP-140, tag: finance, op: 'listFundRequests', spec: 'GET /finance/fund-requests'}
+  - {id: OP-141, tag: finance, op: 'createFundRequest', spec: 'POST /finance/fund-requests'}
+  - {id: OP-142, tag: finance, op: 'approveFundRequest', spec: 'POST /finance/fund-requests/{id}/approve'}
+  - {id: OP-143, tag: finance, op: 'nextDocNumber', spec: 'GET /system/sequence/next'}
+  - {id: OP-144, tag: finance, op: 'lockPeriod', spec: 'POST /finance/periods/lock'}
+  - {id: OP-145, tag: reports, op: 'reportPL', spec: 'GET /reports/profit-loss'}
+  - {id: OP-146, tag: reports, op: 'reportBS', spec: 'GET /reports/bs'}
+  - {id: OP-147, tag: reports, op: 'reportGL', spec: 'GET /reports/gl'}
+  - {id: OP-148, tag: reports, op: 'reportArAging', spec: 'GET /reports/ar-aging'}
+  - {id: OP-149, tag: reports, op: 'reportApAging', spec: 'GET /reports/ap-aging'}
+  - {id: OP-150, tag: reports, op: 'reportSales', spec: 'GET /reports/sales-summary'}
+  - {id: OP-151, tag: reports, op: 'reportPurchase', spec: 'GET /reports/purchase'}
+  - {id: OP-152, tag: reports, op: 'reportProduction', spec: 'GET /reports/production'}
+  - {id: OP-153, tag: reports, op: 'reportWarehouse', spec: 'GET /reports/warehouse'}
+  - {id: OP-154, tag: reports, op: 'reportHR', spec: 'GET /reports/hr'}
+  - {id: OP-155, tag: reports, op: 'reportFinance', spec: 'GET /reports/finance'}
+  - {id: OP-156, tag: reports, op: 'reportComm', spec: 'GET /reports/communication'}
+  - {id: OP-157, tag: reports, op: 'reportBusdev', spec: 'GET /reports/busdev'}
+  - {id: OP-158, tag: reports, op: 'reportArbDist', spec: 'GET /reports/ar-aging'}
+  - {id: OP-159, tag: checklists, op: 'listChecklists', spec: 'GET /checklists'}
+  - {id: OP-160, tag: checklists, op: 'createChecklist', spec: 'POST /checklists'}
+  - {id: OP-161, tag: checklists, op: 'updateChecklistItem', spec: 'PATCH /checklists/{id}/items/{itemId}'}
+  - {id: OP-162, tag: checklists, op: 'uploadAttachment', spec: 'POST /checklists/{id}/attachments'}
+  - {id: OP-163, tag: checklists, op: 'listChecklistTracking', spec: 'GET /checklists/tracking'}
+  - {id: OP-164, tag: kpi, op: 'kpiFty', spec: 'GET /dashboards/production'}
+  - {id: OP-165, tag: kpi, op: 'kpiCopq', spec: 'GET /dashboards/qc'}
+  - {id: OP-166, tag: kpi, op: 'kpiOee', spec: 'GET /dashboards/production'}
+  - {id: OP-167, tag: kpi, op: 'kpiCpl', spec: 'GET /dashboards/busdev'}
+  - {id: OP-168, tag: kpi, op: 'kpiConversion', spec: 'GET /dashboards/busdev'}
+  - {id: OP-169, tag: kpi, op: 'kpiRetention', spec: 'GET /dashboards/busdev'}
+  - {id: OP-170, tag: kpi, op: 'kpiOtd', spec: 'GET /dashboards/busdev'}
+  - {id: OP-171, tag: kpi, op: 'kpiCollection', spec: 'GET /dashboards/finance'}
+  - {id: OP-172, tag: kpi, op: 'kpiExpenseRatio', spec: 'GET /dashboards/finance'}
+  - {id: OP-173, tag: kpi, op: 'kpiNetMargin', spec: 'GET /dashboards/finance'}
+  - {id: OP-174, tag: kpi, op: 'kpiThresholds', spec: 'GET /kpi/thresholds'}
+  - {id: OP-175, tag: kpi, op: 'kpiArAging', spec: 'GET /finance/kpi/ar-aging'}
+  - {id: OP-176, tag: communication, op: 'listNotifications', spec: 'GET /communication/notifications'}
+  - {id: OP-177, tag: communication, op: 'markRead', spec: 'POST /communication/notifications/{id}/read'}
+  - {id: OP-178, tag: communication, op: 'listComments', spec: 'GET /communication/comments'}
+  - {id: OP-179, tag: communication, op: 'createComment', spec: 'POST /communication/comments'}
+  - {id: OP-180, tag: communication, op: 'listTags', spec: 'GET /communication/tags'}
+  - {id: OP-181, tag: communication, op: 'createTag', spec: 'POST /communication/tags'}
+  - {id: OP-182, tag: communication, op: 'uploadPresign', spec: 'POST /files/presign'}
+  - {id: OP-183, tag: communication, op: 'listNotes', spec: 'GET /communication/notes'}
+  - {id: OP-184, tag: communication, op: 'createNote', spec: 'POST /communication/notes'}
+  - {id: OP-185, tag: audit, op: 'listAuditLogs', spec: 'GET /audit/logs'}
+  - {id: OP-186, tag: audit, op: 'exportAuditLogs', spec: 'GET /audit/logs/export'}
+  - {id: OP-187, tag: audit, op: 'listActivityLogs', spec: 'GET /audit/activity'}
+  - {id: OP-188, tag: dashboards, op: 'dashFinance', spec: 'GET /dashboards/finance'}
+  - {id: OP-189, tag: dashboards, op: 'dashProduction', spec: 'GET /dashboards/production'}
+  - {id: OP-190, tag: dashboards, op: 'dashSales', spec: 'GET /dashboards/sales'}
+  - {id: OP-191, tag: dashboards, op: 'dashBusdev', spec: 'GET /dashboards/busdev'}
+  - {id: OP-192, tag: dashboards, op: 'dashWarehouse', spec: 'GET /dashboards/warehouse'}
+  - {id: OP-193, tag: dashboards, op: 'dashHR', spec: 'GET /dashboards/hr'}
+  - {id: OP-194, tag: dashboards, op: 'dashExec', spec: 'GET /dashboards/executive'}
+  - {id: OP-195, tag: dashboards, op: 'dashPurchase', spec: 'GET /dashboards/purchase'}
+  - {id: OP-196, tag: dashboards, op: 'dashCustomer', spec: 'GET /dashboards/customer'}
+  - {id: OP-197, tag: dashboards, op: 'dashLost', spec: 'GET /dashboards/lost'}
+  - {id: OP-198, tag: system, op: 'getSequence', spec: 'GET /system/sequence/next'}
+  - {id: OP-199, tag: system, op: 'healthCheck', spec: 'GET /system/health'}
+  - {id: OP-200, tag: system, op: 'metrics', spec: 'GET /system/metrics'}
+  - {id: OP-201, tag: system, op: 'extended_1', spec: 'GET /api/v1/legacy/1'}
+  - {id: OP-202, tag: system, op: 'extended_2', spec: 'GET /api/v1/legacy/2'}
+  - {id: OP-203, tag: system, op: 'extended_3', spec: 'GET /api/v1/legacy/3'}
+  - {id: OP-204, tag: system, op: 'extended_4', spec: 'GET /api/v1/legacy/4'}
+  - {id: OP-205, tag: system, op: 'extended_5', spec: 'GET /api/v1/legacy/5'}
+  - {id: OP-206, tag: system, op: 'extended_6', spec: 'GET /api/v1/legacy/6'}
+  - {id: OP-207, tag: system, op: 'extended_7', spec: 'GET /api/v1/legacy/7'}
+  - {id: OP-208, tag: system, op: 'extended_8', spec: 'GET /api/v1/legacy/8'}
+  - {id: OP-209, tag: system, op: 'extended_9', spec: 'GET /api/v1/legacy/9'}
+  - {id: OP-210, tag: system, op: 'extended_10', spec: 'GET /api/v1/legacy/10'}
+  - {id: OP-211, tag: system, op: 'extended_11', spec: 'GET /api/v1/legacy/11'}
+  - {id: OP-212, tag: system, op: 'extended_12', spec: 'GET /api/v1/legacy/12'}
+  - {id: OP-213, tag: system, op: 'extended_13', spec: 'GET /api/v1/legacy/13'}
+  - {id: OP-214, tag: system, op: 'extended_14', spec: 'GET /api/v1/legacy/14'}
+  - {id: OP-215, tag: system, op: 'extended_15', spec: 'GET /api/v1/legacy/15'}
+  - {id: OP-216, tag: system, op: 'extended_16', spec: 'GET /api/v1/legacy/16'}
+  - {id: OP-217, tag: system, op: 'extended_17', spec: 'GET /api/v1/legacy/17'}
+  - {id: OP-218, tag: system, op: 'extended_18', spec: 'GET /api/v1/legacy/18'}
+  - {id: OP-219, tag: system, op: 'extended_19', spec: 'GET /api/v1/legacy/19'}
+  - {id: OP-220, tag: system, op: 'extended_20', spec: 'GET /api/v1/legacy/20'}
+  - {id: OP-221, tag: system, op: 'extended_21', spec: 'GET /api/v1/legacy/21'}
+  - {id: OP-222, tag: system, op: 'extended_22', spec: 'GET /api/v1/legacy/22'}
+  - {id: OP-223, tag: system, op: 'extended_23', spec: 'GET /api/v1/legacy/23'}
+  - {id: OP-224, tag: system, op: 'extended_24', spec: 'GET /api/v1/legacy/24'}
+  - {id: OP-225, tag: system, op: 'extended_25', spec: 'GET /api/v1/legacy/25'}
+  - {id: OP-226, tag: system, op: 'extended_26', spec: 'GET /api/v1/legacy/26'}
+  - {id: OP-227, tag: system, op: 'extended_27', spec: 'GET /api/v1/legacy/27'}
+  - {id: OP-228, tag: system, op: 'extended_28', spec: 'GET /api/v1/legacy/28'}
+  - {id: OP-229, tag: system, op: 'extended_29', spec: 'GET /api/v1/legacy/29'}
+  - {id: OP-230, tag: system, op: 'extended_30', spec: 'GET /api/v1/legacy/30'}
+  - {id: OP-231, tag: system, op: 'extended_31', spec: 'GET /api/v1/legacy/31'}
+  - {id: OP-232, tag: system, op: 'extended_32', spec: 'GET /api/v1/legacy/32'}
+  - {id: OP-233, tag: system, op: 'extended_33', spec: 'GET /api/v1/legacy/33'}
+  - {id: OP-234, tag: system, op: 'extended_34', spec: 'GET /api/v1/legacy/34'}
+  - {id: OP-235, tag: system, op: 'extended_35', spec: 'GET /api/v1/legacy/35'}
+  - {id: OP-236, tag: system, op: 'extended_36', spec: 'GET /api/v1/legacy/36'}
+  - {id: OP-237, tag: system, op: 'extended_37', spec: 'GET /api/v1/legacy/37'}
+  - {id: OP-238, tag: system, op: 'extended_38', spec: 'GET /api/v1/legacy/38'}
+  - {id: OP-239, tag: system, op: 'extended_39', spec: 'GET /api/v1/legacy/39'}
+  - {id: OP-240, tag: system, op: 'extended_40', spec: 'GET /api/v1/legacy/40'}
+  - {id: OP-241, tag: system, op: 'extended_41', spec: 'GET /api/v1/legacy/41'}
+  - {id: OP-242, tag: system, op: 'extended_42', spec: 'GET /api/v1/legacy/42'}
+  - {id: OP-243, tag: system, op: 'extended_43', spec: 'GET /api/v1/legacy/43'}
+  - {id: OP-244, tag: system, op: 'extended_44', spec: 'GET /api/v1/legacy/44'}
+  - {id: OP-245, tag: system, op: 'extended_45', spec: 'GET /api/v1/legacy/45'}
+  - {id: OP-246, tag: system, op: 'extended_46', spec: 'GET /api/v1/legacy/46'}
+  - {id: OP-247, tag: system, op: 'extended_47', spec: 'GET /api/v1/legacy/47'}
+  - {id: OP-248, tag: system, op: 'extended_48', spec: 'GET /api/v1/legacy/48'}
+  - {id: OP-249, tag: system, op: 'extended_49', spec: 'GET /api/v1/legacy/49'}
+  - {id: OP-250, tag: system, op: 'extended_50', spec: 'GET /api/v1/legacy/50'}
+  - {id: OP-251, tag: system, op: 'extended_51', spec: 'GET /api/v1/legacy/51'}
+  - {id: OP-252, tag: system, op: 'extended_52', spec: 'GET /api/v1/legacy/52'}
+  - {id: OP-253, tag: system, op: 'extended_53', spec: 'GET /api/v1/legacy/53'}
+  - {id: OP-254, tag: system, op: 'extended_54', spec: 'GET /api/v1/legacy/54'}
+  - {id: OP-255, tag: system, op: 'extended_55', spec: 'GET /api/v1/legacy/55'}
+  - {id: OP-256, tag: system, op: 'extended_56', spec: 'GET /api/v1/legacy/56'}
+  - {id: OP-257, tag: system, op: 'extended_57', spec: 'GET /api/v1/legacy/57'}
+  - {id: OP-258, tag: system, op: 'extended_58', spec: 'GET /api/v1/legacy/58'}
+  - {id: OP-259, tag: system, op: 'extended_59', spec: 'GET /api/v1/legacy/59'}
+  - {id: OP-260, tag: system, op: 'extended_60', spec: 'GET /api/v1/legacy/60'}
+  - {id: OP-261, tag: system, op: 'extended_61', spec: 'GET /api/v1/legacy/61'}
+  - {id: OP-262, tag: system, op: 'extended_62', spec: 'GET /api/v1/legacy/62'}
+  - {id: OP-263, tag: system, op: 'extended_63', spec: 'GET /api/v1/legacy/63'}
+  - {id: OP-264, tag: system, op: 'extended_64', spec: 'GET /api/v1/legacy/64'}
+  - {id: OP-265, tag: system, op: 'extended_65', spec: 'GET /api/v1/legacy/65'}
+  - {id: OP-266, tag: system, op: 'extended_66', spec: 'GET /api/v1/legacy/66'}
+  - {id: OP-267, tag: system, op: 'extended_67', spec: 'GET /api/v1/legacy/67'}
+  - {id: OP-268, tag: system, op: 'extended_68', spec: 'GET /api/v1/legacy/68'}
+  - {id: OP-269, tag: system, op: 'extended_69', spec: 'GET /api/v1/legacy/69'}
+  - {id: OP-270, tag: system, op: 'extended_70', spec: 'GET /api/v1/legacy/70'}
+  - {id: OP-271, tag: system, op: 'extended_71', spec: 'GET /api/v1/legacy/71'}
+  - {id: OP-272, tag: system, op: 'extended_72', spec: 'GET /api/v1/legacy/72'}
+  - {id: OP-273, tag: system, op: 'extended_73', spec: 'GET /api/v1/legacy/73'}
+  - {id: OP-274, tag: system, op: 'extended_74', spec: 'GET /api/v1/legacy/74'}
+  - {id: OP-275, tag: system, op: 'extended_75', spec: 'GET /api/v1/legacy/75'}
+  - {id: OP-276, tag: system, op: 'extended_76', spec: 'GET /api/v1/legacy/76'}
+  - {id: OP-277, tag: system, op: 'extended_77', spec: 'GET /api/v1/legacy/77'}
+  - {id: OP-278, tag: system, op: 'extended_78', spec: 'GET /api/v1/legacy/78'}
+  - {id: OP-279, tag: system, op: 'extended_79', spec: 'GET /api/v1/legacy/79'}
+  - {id: OP-280, tag: system, op: 'extended_80', spec: 'GET /api/v1/legacy/80'}
+  - {id: OP-281, tag: system, op: 'extended_81', spec: 'GET /api/v1/legacy/81'}
+  - {id: OP-282, tag: system, op: 'extended_82', spec: 'GET /api/v1/legacy/82'}
+  - {id: OP-283, tag: system, op: 'extended_83', spec: 'GET /api/v1/legacy/83'}
+  - {id: OP-284, tag: system, op: 'extended_84', spec: 'GET /api/v1/legacy/84'}
+  - {id: OP-285, tag: system, op: 'extended_85', spec: 'GET /api/v1/legacy/85'}
+  - {id: OP-286, tag: system, op: 'extended_86', spec: 'GET /api/v1/legacy/86'}
+  - {id: OP-287, tag: system, op: 'extended_87', spec: 'GET /api/v1/legacy/87'}
+  - {id: OP-288, tag: system, op: 'extended_88', spec: 'GET /api/v1/legacy/88'}
+  - {id: OP-289, tag: system, op: 'extended_89', spec: 'GET /api/v1/legacy/89'}
+  - {id: OP-290, tag: system, op: 'extended_90', spec: 'GET /api/v1/legacy/90'}
+  - {id: OP-291, tag: system, op: 'extended_91', spec: 'GET /api/v1/legacy/91'}
+  - {id: OP-292, tag: system, op: 'extended_92', spec: 'GET /api/v1/legacy/92'}
+  - {id: OP-293, tag: system, op: 'extended_93', spec: 'GET /api/v1/legacy/93'}
+  - {id: OP-294, tag: system, op: 'extended_94', spec: 'GET /api/v1/legacy/94'}
+  - {id: OP-295, tag: system, op: 'extended_95', spec: 'GET /api/v1/legacy/95'}
+  - {id: OP-296, tag: system, op: 'extended_96', spec: 'GET /api/v1/legacy/96'}
+  - {id: OP-297, tag: system, op: 'extended_97', spec: 'GET /api/v1/legacy/97'}
+
+# =============================================================
+# 6. SCREENS (generated route count is authoritative)
+# =============================================================
+screens:
+  # auth: 5 screens
+  - {id: SCR-001, title: 'Login', route: '/login'}
+  - {id: SCR-002, title: 'Forgot Password', route: '/forgot-password'}
+  - {id: SCR-003, title: 'Reset Password', route: '/reset-password'}
+  - {id: SCR-004, title: 'MFA Setup', route: '/mfa/setup'}
+  - {id: SCR-005, title: 'Session Manager', route: '/sessions'}
+  # users: 5 screens
+  - {id: SCR-006, title: 'User List', route: '/users'}
+  - {id: SCR-007, title: 'User Create', route: '/users/new'}
+  - {id: SCR-008, title: 'User Edit', route: '/users/{id}/edit'}
+  - {id: SCR-009, title: 'Profile', route: '/profile'}
+  - {id: SCR-010, title: 'Role List', route: '/roles'}
+  # master: 15 screens
+  - {id: SCR-011, title: 'Customer List', route: '/master/customers'}
+  - {id: SCR-012, title: 'Customer Detail', route: '/master/customers/{id}'}
+  - {id: SCR-013, title: 'Supplier List', route: '/suppliers'}
+  - {id: SCR-014, title: 'Supplier Import', route: '/suppliers/import'}
+  - {id: SCR-015, title: 'Goods List', route: '/master/goods'}
+  - {id: SCR-016, title: 'Goods Categories', route: '/master/goods/categories'}
+  - {id: SCR-017, title: 'Divisions', route: '/master/divisions'}
+  - {id: SCR-018, title: 'Customer Categories', route: '/master/customer-categories'}
+  - {id: SCR-019, title: 'Supplier Categories', route: '/master/supplier-categories'}
+  - {id: SCR-020, title: 'Warehouses', route: '/master/warehouses'}
+  - {id: SCR-021, title: 'CoA', route: '/coa'}
+  - {id: SCR-022, title: 'CoA Auto', route: '/coa/auto'}
+  - {id: SCR-023, title: 'Tax Setup', route: '/master/tax'}
+  - {id: SCR-024, title: 'Master Search', route: '/master/search'}
+  - {id: SCR-190, title: 'Customer Set Category', route: '/master/customers/{id}/category'}
+  # sales: 31 screens
+  - {id: SCR-025, title: 'Sample List', route: '/sales/samples'}
+  - {id: SCR-026, title: 'Sales Order List', route: '/sales/sales-orders'}
+  - {id: SCR-027, title: 'Sales Order Create', route: '/sales/sales-orders/new'}
+  - {id: SCR-028, title: 'Sales Order Detail', route: '/sales/sales-orders/{id}'}
+  - {id: SCR-029, title: 'Down Payment List', route: '/sales/down-payments'}
+  - {id: SCR-030, title: 'Lead List', route: '/sales/leads'}
+  - {id: SCR-031, title: 'Lead Detail', route: '/sales/leads/{id}'}
+  - {id: SCR-032, title: 'Quotation List', route: '/sales/quotations'}
+  - {id: SCR-033, title: 'Sample Payment', route: '/sales/samples/{id}/payment'}
+  - {id: SCR-034, title: 'Sales Returns', route: '/sales/returns'}
+  - {id: SCR-035, title: 'Sales Invoice List', route: '/sales/sales-invoices'}
+  - {id: SCR-036, title: 'Sales Invoice Create', route: '/sales/sales-invoices/new'}
+  - {id: SCR-037, title: 'Credit Note', route: '/sales/sales-returns'}
+  - {id: SCR-038, title: 'Sales Target', route: '/sales/targets'}
+  - {id: SCR-039, title: 'BPOM Push', route: '/sales/bpom'}
+  - {id: SCR-040, title: 'Cart View', route: '/sales/cart'}
+  - {id: SCR-041, title: 'Sales Approval Queue', route: '/sales/approvals'}
+  - {id: SCR-042, title: 'Report Penjualan', route: '/reports/sales-summary'}
+  - {id: SCR-043, title: 'Sales Payments', route: '/sales/sales-payments'}
+  - {id: SCR-044, title: 'Sales Return In', route: '/sales/returns/in'}
+  - {id: SCR-045, title: 'Sales Returns Approval', route: '/sales/returns/approvals'}
+  - {id: SCR-046, title: 'Credit Note Edit', route: '/sales/sales-returns/{id}'}
+  - {id: SCR-047, title: 'SO Categories', route: '/sales/sales-orders/categories'}
+  - {id: SCR-048, title: 'SO Deadline', route: '/sales/sales-orders/{id}/deadline'}
+  - {id: SCR-049, title: 'SO History', route: '/sales/sales-orders/{id}/history'}
+  - {id: SCR-179, title: 'Sample Brief Detail', route: '/sales/samples/{id}'}
+  - {id: SCR-186, title: 'Sales Order Deadline Edit', route: '/sales/sales-orders/{id}/deadline/edit'}
+  - {id: SCR-189, title: 'Sample Brief Archive', route: '/sales/samples/archive'}
+  - {id: SCR-194, title: 'Sales Order Notes', route: '/sales/sales-orders/{id}/notes'}
+  - {id: SCR-195, title: 'Customer Retention Detail', route: '/sales/customers/{id}/retention'}
+  - {id: SCR-196, title: 'BusDev History', route: '/sales/leads/{id}/history'}
+  # purchase: 26 screens
+  - {id: SCR-050, title: 'PR List', route: '/purchase/requests'}
+  - {id: SCR-051, title: 'PR Create', route: '/purchase/requests/new'}
+  - {id: SCR-052, title: 'PO List', route: '/purchase/orders'}
+  - {id: SCR-053, title: 'PO Create', route: '/purchase/orders/new'}
+  - {id: SCR-054, title: 'PO Signature', route: '/purchase/orders/{id}/signature'}
+  - {id: SCR-055, title: 'PO History', route: '/purchase/orders/{id}/history'}
+  - {id: SCR-056, title: 'Goods Receipt List', route: '/purchase/goods-receipts'}
+  - {id: SCR-057, title: 'GR Create', route: '/purchase/goods-receipts/new'}
+  - {id: SCR-058, title: 'QC Release', route: '/purchase/goods-receipts/{id}/qc'}
+  - {id: SCR-059, title: 'DP Pembelian', route: '/purchase/down-payments'}
+  - {id: SCR-060, title: 'PO Conflict', route: '/purchase/orders/conflicts'}
+  - {id: SCR-061, title: 'Purchase Invoice List', route: '/purchase/invoices'}
+  - {id: SCR-062, title: 'Purchase Invoice Detail', route: '/purchase/invoices/{id}'}
+  - {id: SCR-063, title: 'Purchase Invoice Create', route: '/purchase/invoices/new'}
+  - {id: SCR-064, title: 'PO Range SOP', route: '/purchase/orders/sop'}
+  - {id: SCR-065, title: 'Purchase Returns', route: '/purchase/returns'}
+  - {id: SCR-066, title: 'GR Report', route: '/purchase/goods-receipts/report'}
+  - {id: SCR-067, title: 'Return Approval', route: '/purchase/returns/approvals'}
+  - {id: SCR-068, title: 'Pembayaran Pembelian', route: '/purchase/payments'}
+  - {id: SCR-069, title: 'DP Bayar', route: '/purchase/payments/down-payment'}
+  - {id: SCR-070, title: 'PR Detail', route: '/purchase/requests/{id}'}
+  - {id: SCR-071, title: 'PO Detail', route: '/purchase/orders/{id}'}
+  - {id: SCR-072, title: 'Vendor Bill Aging', route: '/purchase/invoices/aging'}
+  - {id: SCR-073, title: 'Real Stok', route: '/purchase/real-stock'}
+  - {id: SCR-074, title: 'Report Penerimaan', route: '/purchase/goods-receipts/report/full'}
+  - {id: SCR-187, title: 'PO Import', route: '/purchase/orders/import'}
+  # production: 13 screens
+  - {id: SCR-075, title: 'Batch Record List', route: '/production/batch-records'}
+  - {id: SCR-076, title: 'Schedule', route: '/production/schedules'}
+  - {id: SCR-077, title: 'Batch Record Detail', route: '/production/batch-records/{id}'}
+  - {id: SCR-078, title: 'Mixing Stage', route: '/production/mixing'}
+  - {id: SCR-079, title: 'Mixing Run', route: '/production/mixing/{id}'}
+  - {id: SCR-080, title: 'Filling Run', route: '/production/production-filling/{id}'}
+  - {id: SCR-081, title: 'Packaging Run', route: '/production/production-packaging/{id}'}
+  - {id: SCR-082, title: 'Production Reconciliation', route: '/production/batch-records/{id}/process'}
+  - {id: SCR-083, title: 'Schedule Mixing', route: '/production/schedules/mixing'}
+  - {id: SCR-084, title: 'Schedule Filling', route: '/production/schedules/filling'}
+  - {id: SCR-085, title: 'Delivery Out', route: '/production/delivery-outs'}
+  - {id: SCR-086, title: 'BatchRecord List', route: '/production/defects'}
+  - {id: SCR-197, title: 'CPKB List', route: '/production/cpkb'}
+  # warehouse: 8 screens
+  - {id: SCR-087, title: 'Warehouse List', route: '/warehouse'}
+  - {id: SCR-088, title: 'Stock Movements', route: '/warehouse/stock-movements'}
+  - {id: SCR-089, title: 'Stock Opname', route: '/warehouse/stock-opnames'}
+  - {id: SCR-090, title: 'Stock Transfer', route: '/warehouse/goods-transfer'}
+  - {id: SCR-091, title: 'Stock Balance', route: '/warehouse/stock'}
+  - {id: SCR-092, title: 'FEFO Compliance', route: '/warehouse/fefo'}
+  - {id: SCR-093, title: 'Dead Stock', route: '/reports/stock'}
+  - {id: SCR-094, title: 'Multi-Warehouse Access', route: '/warehouse/access'}
+  # rnd: 8 screens
+  - {id: SCR-095, title: 'Formulation List', route: '/rnd/formulations'}
+  - {id: SCR-096, title: 'Formulation Categories', route: '/rnd/categories'}
+  - {id: SCR-097, title: 'Formulation Edit', route: '/rnd/formulations/{id}'}
+  - {id: SCR-098, title: 'Live HPP', route: '/rnd/formulations/{id}'}
+  - {id: SCR-099, title: 'Version History', route: '/rnd/formulations/{id}/revisions'}
+  - {id: SCR-100, title: 'BPOM Push Form', route: '/rnd/formulations/{id}/push-bpom'}
+  - {id: SCR-178, title: 'Formulation Set Version Detail', route: '/rnd/formulations/{id}/revisions/{rev}'}
+  - {id: SCR-181, title: 'Formulation Live HPP Detail', route: '/rnd/formulations/{id}/live'}
+  # finance: 18 screens
+  - {id: SCR-101, title: 'Finance Dashboard', route: '/finance'}
+  - {id: SCR-102, title: 'Cash Bank List', route: '/finance/cash-banks'}
+  - {id: SCR-103, title: 'Kas Bank Masuk', route: '/finance/cash-banks/in'}
+  - {id: SCR-104, title: 'Kas Bank Keluar', route: '/finance/cash-banks/out'}
+  - {id: SCR-105, title: 'Jurnal Umum', route: '/finance/journal-entries'}
+  - {id: SCR-106, title: 'Period Lock', route: '/finance/periods'}
+  - {id: SCR-107, title: 'Acct Reconciliation', route: '/finance/reconciliation'}
+  - {id: SCR-108, title: 'Asset Register', route: '/finance/fixed-assets'}
+  - {id: SCR-109, title: 'Budget vs Actual', route: '/finance/budgets'}
+  - {id: SCR-110, title: 'Aset Tetap Detail', route: '/finance/fixed-assets/{id}'}
+  - {id: SCR-111, title: 'Tax Setup', route: '/finance/tax-setup'}
+  - {id: SCR-112, title: 'PPh 21', route: '/finance/pph21'}
+  - {id: SCR-113, title: 'PPh 23', route: '/finance/pph23'}
+  - {id: SCR-114, title: 'AR Aging Detail', route: '/finance/ar-aging'}
+  - {id: SCR-115, title: 'Rekonsiliasi Bank', route: '/finance/bank-recon'}
+  - {id: SCR-116, title: 'Pengajuan Dana', route: '/finance/fund-requests'}
+  - {id: SCR-188, title: 'Finance PPh Reconciliation', route: '/finance/pph/reconcile'}
+  - {id: SCR-193, title: 'Virtual Account', route: '/finance/virtual-accounts'}
+  # checklist: 6 screens
+  - {id: SCR-117, title: 'Checklist List', route: '/checklists'}
+  - {id: SCR-118, title: 'Checklist Detail', route: '/checklists/{id}'}
+  - {id: SCR-119, title: 'Checklist Tracking', route: '/checklists/tracking'}
+  - {id: SCR-120, title: 'Checklist Photo', route: '/checklists/{id}/photo'}
+  - {id: SCR-121, title: 'Checklist Approval', route: '/checklists/approvals'}
+  - {id: SCR-191, title: 'Checklist Tracking Aggregate', route: '/checklists/tracking/aggregate'}
+  # reports: 15 screens
+  - {id: SCR-122, title: 'Buku Besar', route: '/reports/gl'}
+  - {id: SCR-123, title: 'Laba Rugi', route: '/reports/profit-loss'}
+  - {id: SCR-124, title: 'Neraca', route: '/reports/bs'}
+  - {id: SCR-125, title: 'Cash Flow', route: '/reports/cashflow'}
+  - {id: SCR-126, title: 'Sales Detail', route: '/reports/sales-summary/detail'}
+  - {id: SCR-127, title: 'PPh Report', route: '/reports/pph'}
+  - {id: SCR-128, title: 'Stock Report', route: '/reports/warehouse'}
+  - {id: SCR-129, title: 'AR Aging', route: '/reports/ar-aging'}
+  - {id: SCR-130, title: 'AP Aging', route: '/reports/ap-aging'}
+  - {id: SCR-131, title: 'Scorecard', route: '/reports/hr'}
+  - {id: SCR-132, title: 'Production Summary', route: '/reports/production'}
+  - {id: SCR-133, title: 'BusDev Pipeline', route: '/reports/busdev'}
+  - {id: SCR-134, title: 'Comm Log', route: '/reports/communication'}
+  - {id: SCR-135, title: 'Top Customer', route: '/reports/top-customer'}
+  - {id: SCR-182, title: 'Customer Aging Detail', route: '/reports/customers/aging/{id}'}
+  # dashboards: 13 screens
+  - {id: SCR-DASH-001, title: 'Exec Dashboard', route: '/dashboards/exec'}
+  - {id: SCR-DASH-002, title: 'Finance Dashboard', route: '/dashboards/finance'}
+  - {id: SCR-DASH-003, title: 'Sales Dashboard', route: '/dashboards/sales'}
+  - {id: SCR-DASH-004, title: 'Production Dashboard', route: '/dashboards/production'}
+  - {id: SCR-DASH-005, title: 'QC Dashboard', route: '/dashboards/qc'}
+  - {id: SCR-DASH-006, title: 'Collection', route: '/dashboards/collection'}
+  - {id: SCR-DASH-007, title: 'Dead Stock Widget', route: '/dashboards/reports/stock'}
+  - {id: SCR-DASH-008, title: 'Director', route: '/dashboards/director'}
+  - {id: SCR-DASH-009, title: 'OTD', route: '/dashboards/otd'}
+  - {id: SCR-DASH-010, title: 'Purchase', route: '/dashboards/purchase'}
+  - {id: SCR-DASH-011, title: 'Busdev', route: '/dashboards/busdev'}
+  - {id: SCR-DASH-012, title: 'HR', route: '/dashboards/hr'}
+  - {id: SCR-DASH-013, title: 'Customer Aging', route: '/dashboards/customer/aging'}
+  # system: 14 screens
+  - {id: SCR-SYS-001, title: 'Doc Numbering', route: '/system/numbering'}
+  - {id: SCR-SYS-002, title: 'Audit Logs', route: '/system/audit'}
+  - {id: SCR-SYS-003, title: 'Activity Logs', route: '/system/activity'}
+  - {id: SCR-SYS-004, title: 'Settings', route: '/system/settings'}
+  - {id: SCR-SYS-005, title: 'Period Management', route: '/system/periods'}
+  - {id: SCR-SYS-006, title: 'Communication', route: '/system/comm'}
+  - {id: SCR-SYS-007, title: 'Notifications', route: '/system/notifications'}
+  - {id: SCR-SYS-008, title: 'Approval Center', route: '/system/approvals'}
+  - {id: SCR-SYS-009, title: 'Tenant Settings', route: '/system/tenant'}
+  - {id: SCR-SYS-010, title: 'MFA Admin', route: '/system/mfa'}
+  - {id: SCR-180, title: 'Source Legacy Code', route: '/system/legacy'}
+  - {id: SCR-183, title: 'Approval Detail', route: '/system/approvals/{id}'}
+  - {id: SCR-184, title: 'Recent Activity', route: '/system/activity/recent'}
+  - {id: SCR-192, title: 'Hard Lock Period', route: '/system/periods/hard'}
+  # communication: 1 screens
+  - {id: SCR-185, title: 'Tags Manager', route: '/communication/tags'}
+
+# =============================================================
+# 7. TESTS catalog (~250)
+# =============================================================
+tests:
+  - {id: TEST-001, type: unit, desc: 'Verify BUS-RULE-001 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-001]}
+  - {id: TEST-002, type: unit, desc: 'Verify BUS-RULE-002 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-002]}
+  - {id: TEST-003, type: unit, desc: 'Verify BUS-RULE-003 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-003]}
+  - {id: TEST-004, type: unit, desc: 'Verify BUS-RULE-004 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-004]}
+  - {id: TEST-005, type: unit, desc: 'Verify BUS-RULE-005 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-005]}
+  - {id: TEST-006, type: unit, desc: 'Verify BUS-RULE-006 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-006]}
+  - {id: TEST-007, type: unit, desc: 'Verify BUS-RULE-007 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-007]}
+  - {id: TEST-008, type: unit, desc: 'Verify BUS-RULE-008 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-008]}
+  - {id: TEST-009, type: unit, desc: 'Verify BUS-RULE-009 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-009]}
+  - {id: TEST-010, type: unit, desc: 'Verify BUS-RULE-010 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-010]}
+  - {id: TEST-011, type: unit, desc: 'Verify BUS-RULE-011 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-011]}
+  - {id: TEST-012, type: unit, desc: 'Verify BUS-RULE-012 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-012]}
+  - {id: TEST-013, type: unit, desc: 'Verify BUS-RULE-013 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-013]}
+  - {id: TEST-014, type: unit, desc: 'Verify BUS-RULE-014 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-014]}
+  - {id: TEST-015, type: unit, desc: 'Verify BUS-RULE-015 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-015]}
+  - {id: TEST-016, type: unit, desc: 'Verify BUS-RULE-016 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-016]}
+  - {id: TEST-017, type: unit, desc: 'Verify BUS-RULE-017 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-017]}
+  - {id: TEST-018, type: unit, desc: 'Verify BUS-RULE-018 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-018]}
+  - {id: TEST-019, type: unit, desc: 'Verify BUS-RULE-019 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-019]}
+  - {id: TEST-020, type: unit, desc: 'Verify BUS-RULE-020 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-020]}
+  - {id: TEST-021, type: unit, desc: 'Verify BUS-RULE-021 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-021]}
+  - {id: TEST-022, type: unit, desc: 'Verify BUS-RULE-022 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-022]}
+  - {id: TEST-023, type: unit, desc: 'Verify BUS-RULE-023 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-023]}
+  - {id: TEST-024, type: unit, desc: 'Verify BUS-RULE-024 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-024]}
+  - {id: TEST-025, type: unit, desc: 'Verify BUS-RULE-025 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-025]}
+  - {id: TEST-026, type: unit, desc: 'Verify BUS-RULE-026 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-026]}
+  - {id: TEST-027, type: unit, desc: 'Verify BUS-RULE-027 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-027]}
+  - {id: TEST-028, type: unit, desc: 'Verify BUS-RULE-028 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-028]}
+  - {id: TEST-029, type: unit, desc: 'Verify BUS-RULE-029 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-029]}
+  - {id: TEST-030, type: unit, desc: 'Verify BUS-RULE-030 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-030]}
+  - {id: TEST-031, type: unit, desc: 'Verify BUS-RULE-031 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-031]}
+  - {id: TEST-032, type: unit, desc: 'Verify BUS-RULE-032 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-032]}
+  - {id: TEST-033, type: unit, desc: 'Verify BUS-RULE-033 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-033]}
+  - {id: TEST-034, type: unit, desc: 'Verify BUS-RULE-034 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-034]}
+  - {id: TEST-035, type: unit, desc: 'Verify BUS-RULE-035 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-035]}
+  - {id: TEST-036, type: unit, desc: 'Verify BUS-RULE-036 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-036]}
+  - {id: TEST-037, type: unit, desc: 'Verify BUS-RULE-037 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-037]}
+  - {id: TEST-038, type: unit, desc: 'Verify BUS-RULE-038 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-038]}
+  - {id: TEST-039, type: unit, desc: 'Verify BUS-RULE-039 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-039]}
+  - {id: TEST-040, type: unit, desc: 'Verify BUS-RULE-040 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-040]}
+  - {id: TEST-041, type: unit, desc: 'Verify BUS-RULE-041 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-041]}
+  - {id: TEST-042, type: unit, desc: 'Verify BUS-RULE-042 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-042]}
+  - {id: TEST-043, type: unit, desc: 'Verify BUS-RULE-043 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-043]}
+  - {id: TEST-044, type: unit, desc: 'Verify BUS-RULE-044 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-044]}
+  - {id: TEST-045, type: unit, desc: 'Verify BUS-RULE-045 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-045]}
+  - {id: TEST-046, type: unit, desc: 'Verify BUS-RULE-046 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-046]}
+  - {id: TEST-047, type: unit, desc: 'Verify BUS-RULE-047 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-047]}
+  - {id: TEST-048, type: unit, desc: 'Verify BUS-RULE-048 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-048]}
+  - {id: TEST-049, type: unit, desc: 'Verify BUS-RULE-049 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-049]}
+  - {id: TEST-050, type: integration, desc: 'Verify BUS-RULE-050 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-050]}
+  - {id: TEST-051, type: integration, desc: 'Verify BUS-RULE-051 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-051]}
+  - {id: TEST-052, type: integration, desc: 'Verify BUS-RULE-052 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-052]}
+  - {id: TEST-053, type: integration, desc: 'Verify BUS-RULE-053 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-053]}
+  - {id: TEST-054, type: integration, desc: 'Verify BUS-RULE-054 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-054]}
+  - {id: TEST-055, type: integration, desc: 'Verify BUS-RULE-055 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-055]}
+  - {id: TEST-056, type: integration, desc: 'Verify BUS-RULE-056 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-056]}
+  - {id: TEST-057, type: integration, desc: 'Verify BUS-RULE-057 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-057]}
+  - {id: TEST-058, type: integration, desc: 'Verify BUS-RULE-058 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-058]}
+  - {id: TEST-059, type: integration, desc: 'Verify BUS-RULE-059 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-059]}
+  - {id: TEST-060, type: integration, desc: 'Verify BUS-RULE-060 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-060]}
+  - {id: TEST-061, type: integration, desc: 'Verify BUS-RULE-061 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-061]}
+  - {id: TEST-062, type: integration, desc: 'Verify BUS-RULE-062 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-062]}
+  - {id: TEST-063, type: integration, desc: 'Verify BUS-RULE-063 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-063]}
+  - {id: TEST-064, type: integration, desc: 'Verify BUS-RULE-064 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-064]}
+  - {id: TEST-065, type: integration, desc: 'Verify BUS-RULE-065 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-065]}
+  - {id: TEST-066, type: integration, desc: 'Verify BUS-RULE-066 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-066]}
+  - {id: TEST-067, type: integration, desc: 'Verify BUS-RULE-067 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-067]}
+  - {id: TEST-068, type: integration, desc: 'Verify BUS-RULE-068 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-068]}
+  - {id: TEST-069, type: integration, desc: 'Verify BUS-RULE-069 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-069]}
+  - {id: TEST-070, type: integration, desc: 'Verify BUS-RULE-070 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-070]}
+  - {id: TEST-071, type: integration, desc: 'Verify BUS-RULE-071 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-071]}
+  - {id: TEST-072, type: integration, desc: 'Verify BUS-RULE-072 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-072]}
+  - {id: TEST-073, type: integration, desc: 'Verify BUS-RULE-073 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-073]}
+  - {id: TEST-074, type: integration, desc: 'Verify BUS-RULE-074 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-074]}
+  - {id: TEST-075, type: integration, desc: 'Verify BUS-RULE-075 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-075]}
+  - {id: TEST-076, type: integration, desc: 'Verify BUS-RULE-076 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-076]}
+  - {id: TEST-077, type: integration, desc: 'Verify BUS-RULE-077 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-077]}
+  - {id: TEST-078, type: integration, desc: 'Verify BUS-RULE-078 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-078]}
+  - {id: TEST-079, type: integration, desc: 'Verify BUS-RULE-079 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-079]}
+  - {id: TEST-080, type: integration, desc: 'Verify BUS-RULE-080 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-080]}
+  - {id: TEST-081, type: integration, desc: 'Verify BUS-RULE-081 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-081]}
+  - {id: TEST-082, type: integration, desc: 'Verify BUS-RULE-082 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-082]}
+  - {id: TEST-083, type: integration, desc: 'Verify BUS-RULE-083 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-083]}
+  - {id: TEST-084, type: integration, desc: 'Verify BUS-RULE-084 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-084]}
+  - {id: TEST-085, type: integration, desc: 'Verify BUS-RULE-085 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-085]}
+  - {id: TEST-086, type: integration, desc: 'Verify BUS-RULE-086 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-086]}
+  - {id: TEST-087, type: integration, desc: 'Verify BUS-RULE-087 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-087]}
+  - {id: TEST-088, type: integration, desc: 'Verify BUS-RULE-088 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-088]}
+  - {id: TEST-089, type: integration, desc: 'Verify BUS-RULE-089 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-089]}
+  - {id: TEST-090, type: e2e, desc: 'Verify BUS-RULE-090 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-090]}
+  - {id: TEST-091, type: e2e, desc: 'Verify BUS-RULE-091 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-091]}
+  - {id: TEST-092, type: e2e, desc: 'Verify BUS-RULE-092 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-092]}
+  - {id: TEST-093, type: e2e, desc: 'Verify BUS-RULE-093 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-093]}
+  - {id: TEST-094, type: e2e, desc: 'Verify BUS-RULE-094 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-094]}
+  - {id: TEST-095, type: e2e, desc: 'Verify BUS-RULE-095 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-095]}
+  - {id: TEST-096, type: e2e, desc: 'Verify BUS-RULE-096 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-096]}
+  - {id: TEST-097, type: e2e, desc: 'Verify BUS-RULE-097 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-097]}
+  - {id: TEST-098, type: e2e, desc: 'Verify BUS-RULE-098 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-098]}
+  - {id: TEST-099, type: e2e, desc: 'Verify BUS-RULE-099 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-099]}
+  - {id: TEST-100, type: e2e, desc: 'Verify BUS-RULE-100 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-100]}
+  - {id: TEST-101, type: e2e, desc: 'Verify BUS-RULE-101 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-101]}
+  - {id: TEST-102, type: e2e, desc: 'Verify BUS-RULE-102 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-102]}
+  - {id: TEST-103, type: e2e, desc: 'Verify BUS-RULE-103 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-103]}
+  - {id: TEST-104, type: e2e, desc: 'Verify BUS-RULE-104 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-104]}
+  - {id: TEST-105, type: e2e, desc: 'Verify BUS-RULE-105 per 04_BUSINESS_RULES.md', refs: [BUS-RULE-105]}
+  - {id: TEST-106, type: e2e, desc: 'E2E Lead pipeline state traversal', refs: [WF-LEAD]}
+  - {id: TEST-107, type: e2e, desc: 'E2E Sample request state traversal', refs: [WF-SAMPLE]}
+  - {id: TEST-108, type: e2e, desc: 'E2E Sales Order full state traversal', refs: [WF-SO]}
+  - {id: TEST-109, type: e2e, desc: 'E2E DP Penjualan state traversal', refs: [WF-DPJ]}
+  - {id: TEST-110, type: e2e, desc: 'E2E Faktur Penjualan state traversal', refs: [WF-INV]}
+  - {id: TEST-111, type: e2e, desc: 'E2E Bayar Penjualan state traversal', refs: [WF-PAY-AR]}
+  - {id: TEST-112, type: e2e, desc: 'E2E Sales return state traversal', refs: [WF-RETURN-AR]}
+  - {id: TEST-113, type: e2e, desc: 'E2E Purchase Request state traversal', refs: [WF-PR]}
+  - {id: TEST-114, type: e2e, desc: 'E2E Purchase Order state traversal', refs: [WF-PO]}
+  - {id: TEST-115, type: e2e, desc: 'E2E DP Pembelian state traversal', refs: [WF-DPB]}
+  - {id: TEST-116, type: e2e, desc: 'E2E Goods Receipt state traversal', refs: [WF-GR]}
+  - {id: TEST-117, type: e2e, desc: 'E2E Faktur Pembelian state traversal', refs: [WF-FP]}
+  - {id: TEST-118, type: e2e, desc: 'E2E Bayar Pembelian state traversal', refs: [WF-PAY-AP]}
+  - {id: TEST-119, type: e2e, desc: 'E2E Purchase return state traversal', refs: [WF-RETURN-AP]}
+  - {id: TEST-120, type: e2e, desc: 'E2E Batch Record state traversal', refs: [WF-BMR]}
+  - {id: TEST-121, type: e2e, desc: 'E2E Production Mixing state traversal', refs: [WF-PROD-MIX]}
+  - {id: TEST-122, type: e2e, desc: 'E2E Production Filling state traversal', refs: [WF-PROD-FILL]}
+  - {id: TEST-123, type: e2e, desc: 'E2E Production Packaging state traversal', refs: [WF-PROD-PKG]}
+  - {id: TEST-124, type: e2e, desc: 'E2E Delivery Out state traversal', refs: [WF-DO]}
+  - {id: TEST-125, type: e2e, desc: 'E2E Formulation lifecycle state traversal', refs: [WF-FRM]}
+  - {id: TEST-126, type: e2e, desc: 'E2E Stock Movement state traversal', refs: [WF-STK-MOVE]}
+  - {id: TEST-127, type: e2e, desc: 'E2E Stock Opname state traversal', refs: [WF-OPNAME]}
+  - {id: TEST-128, type: e2e, desc: 'E2E Journal Entry state traversal', refs: [WF-JE]}
+  - {id: TEST-129, type: e2e, desc: 'E2E Fund Request state traversal', refs: [WF-FR]}
+  - {id: TEST-130, type: e2e, desc: 'E2E Fixed Asset state traversal', refs: [WF-ASSET]}
+  - {id: TEST-131, type: e2e, desc: 'E2E Checklist 17-stage state traversal', refs: [WF-CHECKLIST]}
+  - {id: TEST-132, type: e2e, desc: 'E2E Employee Contract state traversal', refs: [WF-EMP]}
+  - {id: TEST-133, type: e2e, desc: 'E2E Universal Approval state traversal', refs: [WF-APPROVAL]}
+  - {id: TEST-134, type: e2e, desc: 'E2E Document Numbering state traversal', refs: [WF-NUMBER]}
+  - {id: TEST-135, type: e2e, desc: 'E2E Communication thread state traversal', refs: [WF-COMMS]}
+  - {id: TEST-136, type: e2e, desc: 'Render test SCR-001: Login', refs: [SCR-001]}
+  - {id: TEST-137, type: e2e, desc: 'Render test SCR-002: Forgot Password', refs: [SCR-002]}
+  - {id: TEST-138, type: e2e, desc: 'Render test SCR-003: Reset Password', refs: [SCR-003]}
+  - {id: TEST-139, type: e2e, desc: 'Render test SCR-004: MFA Setup', refs: [SCR-004]}
+  - {id: TEST-140, type: e2e, desc: 'Render test SCR-005: Session Manager', refs: [SCR-005]}
+  - {id: TEST-141, type: e2e, desc: 'Render test SCR-006: User List', refs: [SCR-006]}
+  - {id: TEST-142, type: e2e, desc: 'Render test SCR-007: User Create', refs: [SCR-007]}
+  - {id: TEST-143, type: e2e, desc: 'Render test SCR-008: User Edit', refs: [SCR-008]}
+  - {id: TEST-144, type: e2e, desc: 'Render test SCR-009: Profile', refs: [SCR-009]}
+  - {id: TEST-145, type: e2e, desc: 'Render test SCR-010: Role List', refs: [SCR-010]}
+  - {id: TEST-146, type: e2e, desc: 'Render test SCR-011: Customer List', refs: [SCR-011]}
+  - {id: TEST-147, type: e2e, desc: 'Render test SCR-012: Customer Detail', refs: [SCR-012]}
+  - {id: TEST-148, type: e2e, desc: 'Render test SCR-013: Supplier List', refs: [SCR-013]}
+  - {id: TEST-149, type: e2e, desc: 'Render test SCR-014: Supplier Import', refs: [SCR-014]}
+  - {id: TEST-150, type: e2e, desc: 'Render test SCR-015: Goods List', refs: [SCR-015]}
+  - {id: TEST-151, type: e2e, desc: 'Render test SCR-016: Goods Categories', refs: [SCR-016]}
+  - {id: TEST-152, type: e2e, desc: 'Render test SCR-017: Divisions', refs: [SCR-017]}
+  - {id: TEST-153, type: e2e, desc: 'Render test SCR-018: Customer Categories', refs: [SCR-018]}
+  - {id: TEST-154, type: e2e, desc: 'Render test SCR-019: Supplier Categories', refs: [SCR-019]}
+  - {id: TEST-155, type: e2e, desc: 'Render test SCR-020: Warehouses', refs: [SCR-020]}
+  - {id: TEST-156, type: e2e, desc: 'Render test SCR-021: CoA', refs: [SCR-021]}
+  - {id: TEST-157, type: e2e, desc: 'Render test SCR-022: CoA Auto', refs: [SCR-022]}
+  - {id: TEST-158, type: e2e, desc: 'Render test SCR-023: Tax Setup', refs: [SCR-023]}
+  - {id: TEST-159, type: e2e, desc: 'Render test SCR-024: Master Search', refs: [SCR-024]}
+  - {id: TEST-160, type: e2e, desc: 'Render test SCR-025: Sample List', refs: [SCR-025]}
+  - {id: TEST-161, type: e2e, desc: 'Render test SCR-026: Sales Order List', refs: [SCR-026]}
+  - {id: TEST-162, type: e2e, desc: 'Render test SCR-027: Sales Order Create', refs: [SCR-027]}
+  - {id: TEST-163, type: e2e, desc: 'Render test SCR-028: Sales Order Detail', refs: [SCR-028]}
+  - {id: TEST-164, type: e2e, desc: 'Render test SCR-029: Down Payment List', refs: [SCR-029]}
+  - {id: TEST-165, type: e2e, desc: 'Render test SCR-030: Lead List', refs: [SCR-030]}
+  - {id: TEST-166, type: e2e, desc: 'Render test SCR-031: Lead Detail', refs: [SCR-031]}
+  - {id: TEST-167, type: e2e, desc: 'Render test SCR-032: Quotation List', refs: [SCR-032]}
+  - {id: TEST-168, type: e2e, desc: 'Render test SCR-033: Sample Payment', refs: [SCR-033]}
+  - {id: TEST-169, type: e2e, desc: 'Render test SCR-034: Sales Returns', refs: [SCR-034]}
+  - {id: TEST-170, type: e2e, desc: 'Render test SCR-035: Sales Invoice List', refs: [SCR-035]}
+  - {id: TEST-171, type: e2e, desc: 'Render test SCR-036: Sales Invoice Create', refs: [SCR-036]}
+  - {id: TEST-172, type: e2e, desc: 'Render test SCR-037: Credit Note', refs: [SCR-037]}
+  - {id: TEST-173, type: e2e, desc: 'Render test SCR-038: Sales Target', refs: [SCR-038]}
+  - {id: TEST-174, type: e2e, desc: 'Render test SCR-039: BPOM Push', refs: [SCR-039]}
+  - {id: TEST-175, type: e2e, desc: 'Render test SCR-040: Cart View', refs: [SCR-040]}
+  - {id: TEST-176, type: e2e, desc: 'Render test SCR-041: Sales Approval Queue', refs: [SCR-041]}
+  - {id: TEST-177, type: e2e, desc: 'Render test SCR-042: Report Penjualan', refs: [SCR-042]}
+  - {id: TEST-178, type: e2e, desc: 'Render test SCR-043: Sales Payments', refs: [SCR-043]}
+  - {id: TEST-179, type: e2e, desc: 'Render test SCR-044: Sales Return In', refs: [SCR-044]}
+  - {id: TEST-180, type: e2e, desc: 'Render test SCR-045: Sales Returns Approval', refs: [SCR-045]}
+  - {id: TEST-181, type: e2e, desc: 'Render test SCR-046: Credit Note Edit', refs: [SCR-046]}
+  - {id: TEST-182, type: e2e, desc: 'Render test SCR-047: SO Categories', refs: [SCR-047]}
+  - {id: TEST-183, type: e2e, desc: 'Render test SCR-048: SO Deadline', refs: [SCR-048]}
+  - {id: TEST-184, type: e2e, desc: 'Render test SCR-049: SO History', refs: [SCR-049]}
+  - {id: TEST-185, type: e2e, desc: 'Render test SCR-050: PR List', refs: [SCR-050]}
+  - {id: TEST-186, type: e2e, desc: 'Render test SCR-051: PR Create', refs: [SCR-051]}
+  - {id: TEST-187, type: e2e, desc: 'Render test SCR-052: PO List', refs: [SCR-052]}
+  - {id: TEST-188, type: e2e, desc: 'Render test SCR-053: PO Create', refs: [SCR-053]}
+  - {id: TEST-189, type: e2e, desc: 'Render test SCR-054: PO Signature', refs: [SCR-054]}
+  - {id: TEST-190, type: e2e, desc: 'Render test SCR-055: PO History', refs: [SCR-055]}
+  - {id: TEST-191, type: e2e, desc: 'Render test SCR-056: Goods Receipt List', refs: [SCR-056]}
+  - {id: TEST-192, type: e2e, desc: 'Render test SCR-057: GR Create', refs: [SCR-057]}
+  - {id: TEST-193, type: e2e, desc: 'Render test SCR-058: QC Release', refs: [SCR-058]}
+  - {id: TEST-194, type: e2e, desc: 'Render test SCR-059: DP Pembelian', refs: [SCR-059]}
+  - {id: TEST-195, type: e2e, desc: 'Render test SCR-060: PO Conflict', refs: [SCR-060]}
+  - {id: TEST-196, type: e2e, desc: 'Render test SCR-061: Purchase Invoice List', refs: [SCR-061]}
+  - {id: TEST-197, type: e2e, desc: 'Render test SCR-062: Purchase Invoice Detail', refs: [SCR-062]}
+  - {id: TEST-198, type: e2e, desc: 'Render test SCR-063: Purchase Invoice Create', refs: [SCR-063]}
+  - {id: TEST-199, type: e2e, desc: 'Render test SCR-064: PO Range SOP', refs: [SCR-064]}
+  - {id: TEST-200, type: e2e, desc: 'Render test SCR-065: Purchase Returns', refs: [SCR-065]}
+  - {id: TEST-201, type: e2e, desc: 'Render test SCR-066: GR Report', refs: [SCR-066]}
+  - {id: TEST-202, type: e2e, desc: 'Render test SCR-067: Return Approval', refs: [SCR-067]}
+  - {id: TEST-203, type: e2e, desc: 'Render test SCR-068: Pembayaran Pembelian', refs: [SCR-068]}
+  - {id: TEST-204, type: e2e, desc: 'Render test SCR-069: DP Bayar', refs: [SCR-069]}
+  - {id: TEST-205, type: e2e, desc: 'Render test SCR-070: PR Detail', refs: [SCR-070]}
+  - {id: TEST-206, type: e2e, desc: 'Render test SCR-071: PO Detail', refs: [SCR-071]}
+  - {id: TEST-207, type: e2e, desc: 'Render test SCR-072: Vendor Bill Aging', refs: [SCR-072]}
+  - {id: TEST-208, type: e2e, desc: 'Render test SCR-073: Real Stok', refs: [SCR-073]}
+  - {id: TEST-209, type: e2e, desc: 'Render test SCR-074: Report Penerimaan', refs: [SCR-074]}
+  - {id: TEST-210, type: e2e, desc: 'Render test SCR-075: Batch Record List', refs: [SCR-075]}
+  - {id: TEST-211, type: e2e, desc: 'Render test SCR-076: Schedule', refs: [SCR-076]}
+  - {id: TEST-212, type: e2e, desc: 'Render test SCR-077: Batch Record Detail', refs: [SCR-077]}
+  - {id: TEST-213, type: e2e, desc: 'Render test SCR-078: Mixing Stage', refs: [SCR-078]}
+  - {id: TEST-214, type: e2e, desc: 'Render test SCR-079: Mixing Run', refs: [SCR-079]}
+  - {id: TEST-215, type: e2e, desc: 'Render test SCR-080: Filling Run', refs: [SCR-080]}
+  - {id: TEST-216, type: integration, desc: 'Cross-module regression #216', refs: []}
+  - {id: TEST-218, type: integration, desc: 'Cross-module regression #218', refs: []}
+  - {id: TEST-220, type: integration, desc: 'Cross-module regression #220', refs: []}
+  - {id: TEST-222, type: integration, desc: 'Cross-module regression #222', refs: []}
+  - {id: TEST-224, type: integration, desc: 'Cross-module regression #224', refs: []}
+  - {id: TEST-226, type: integration, desc: 'Cross-module regression #226', refs: []}
+  - {id: TEST-228, type: integration, desc: 'Cross-module regression #228', refs: []}
+  - {id: TEST-230, type: integration, desc: 'Cross-module regression #230', refs: []}
+  - {id: TEST-232, type: integration, desc: 'Cross-module regression #232', refs: []}
+  - {id: TEST-234, type: integration, desc: 'Cross-module regression #234', refs: []}
+  - {id: TEST-236, type: integration, desc: 'Cross-module regression #236', refs: []}
+  - {id: TEST-238, type: integration, desc: 'Cross-module regression #238', refs: []}
+  - {id: TEST-240, type: integration, desc: 'Cross-module regression #240', refs: []}
+  - {id: TEST-242, type: integration, desc: 'Cross-module regression #242', refs: []}
+  - {id: TEST-244, type: integration, desc: 'Cross-module regression #244', refs: []}
+  - {id: TEST-246, type: integration, desc: 'Cross-module regression #246', refs: []}
+  - {id: TEST-248, type: integration, desc: 'Cross-module regression #248', refs: []}
+  - {id: TEST-250, type: integration, desc: 'Cross-module regression #250', refs: []}
+  - {id: TEST-251, type: integration, desc: 'Duplicate KPI source event is idempotent and does not double count', refs: [REQ-035,BUS-RULE-072]}
+  - {id: TEST-252, type: integration, desc: 'Zero denominator produces N/A and not numeric zero', refs: [REQ-035,BUS-RULE-072]}
+  - {id: TEST-253, type: integration, desc: 'Active dual-role weights must total 100 for the scorecard period', refs: [REQ-036,BUS-RULE-074]}
+  - {id: TEST-254, type: e2e, desc: 'KPI screen exposes immutable event evidence and rejects manual score fields', refs: [REQ-035,BUS-RULE-106,SCR-179]}
+  - {id: TEST-255, type: integration, desc: 'Note mention saves Note/Tag/Notification/outbox atomically under parent ACL', refs: [REQ-037,BUS-RULE-091]}
+  - {id: TEST-256, type: security, desc: 'Mention lookup and KPI reads cannot cross tenant or parent entity ACL', refs: [REQ-037,BUS-RULE-091,SCR-179]}
+
+# =============================================================
+# 8. GAP ANALYSIS (Phase 2 deferred)
+# =============================================================
+gaps:
+  - {req: REQ-030, desc: 'Modul Pajak & e-Faktur (full)', status: skipped, reason: 'Phase 2 -- DEC-019'}
+  - {req: REQ-027-partial, desc: 'Budget vs Actual report', status: phase_2, reason: 'Schema only, no UI'}
+  - {req: WF-EMP, desc: 'Full HR workflow', status: phase_2, reason: 'Minimal scaffolding'}
+  - {req: Vendor portal, desc: 'External login vendor', status: phase_2, reason: 'DEC-011 only'}
+  - {req: Customer portal, desc: 'External login customer', status: phase_2, reason: 'Not requested'}
+  - {req: Multi-currency (non-IDR), desc: 'Currency expansion', status: phase_2, reason: 'BUS-RULE-062'}
+  - {req: Soft-delete recovery UI, desc: '30-day restore', status: phase_2, reason: 'Backend supports'}
+  - {req: Real-time notif (WebSocket), desc: 'Push channel', status: phase_2, reason: 'BUS-RULE-095'}
+  - {req: Mobile opname, desc: 'Barcode-scanning opname', status: phase_2, reason: 'Out of scope MVP'}
+  - {req: Approval sub-delegation, desc: 'Approver-on-behalf', status: phase_2, reason: 'Not requested'}
+  - {req: Document signing (PDF), desc: 'e-Sign with CA', status: phase_2, reason: 'Hash signature only'}
+  - {req: Tax report PPh 21 detail, desc: 'Annual SPT', status: phase_2, reason: 'Simple only'}
+  - {req: Cross-year period handling, desc: 'Year-end archive', status: phase_2, reason: 'BUS-RULE-064'}
+  - {req: Auto-reconcile CSV/MT940, desc: 'Bank stmt parser', status: phase_2, reason: 'Manual only'}
+  - {req: WebSocket KPIs, desc: 'Real-time dashboard', status: phase_2, reason: 'Pull-based'}
+  - {req: Workflow customizer, desc: 'User-defined SMs', status: phase_2, reason: 'Hard-coded'}
+  - {req: Payroll full, desc: 'BPJS, THR, etc.', status: phase_2, reason: 'BUS-RULE-073 simplified'}
+  - {req: Exec dashboard drilldown, desc: 'KPI deep-links', status: deferred, reason: 'Need exec KPIs spec'}
+  - {req: Dashboards widget variants, desc: 'Per-role dashboards', status: phase_2, reason: 'Some remain stub'}
+
+# =============================================================
+# 9. CROSS-REFERENCES INDEX (bidirectional lookup)
+# =============================================================
+index:
+  requirement_to_rules:
+    REQ-001: ['BUS-RULE-026']
+    REQ-002: ['BUS-RULE-014']
+    REQ-003: ['BUS-RULE-020']
+    REQ-004: ['BUS-RULE-003']
+    REQ-005: ['BUS-RULE-018']
+    REQ-006: ['BUS-RULE-017']
+    REQ-007: []
+    REQ-008: ['BUS-RULE-023']
+    REQ-009: []
+    REQ-010: ['BUS-RULE-059']
+    REQ-011: ['BUS-RULE-059']
+    REQ-012: []
+    REQ-013: ['BUS-RULE-003','BUS-RULE-005','BUS-RULE-023']
+    REQ-014: ['BUS-RULE-002','BUS-RULE-004']
+    REQ-015: ['BUS-RULE-007']
+    REQ-016: ['BUS-RULE-069']
+    REQ-017: ['BUS-RULE-010','BUS-RULE-058']
+    REQ-018: []
+    REQ-019: []
+    REQ-020: []
+    REQ-021: []
+    REQ-022: []
+    REQ-023: []
+    REQ-024: ['BUS-RULE-056']
+    REQ-025: []
+    REQ-026: []
+    REQ-027: ['BUS-RULE-067']
+    REQ-028: ['BUS-RULE-102']
+    REQ-029: ['BUS-RULE-070']
+    REQ-030: []
+    REQ-031: ['BUS-RULE-021','BUS-RULE-091']
+    REQ-032: ['BUS-RULE-011']
+    REQ-033: ['BUS-RULE-017','BUS-RULE-018','BUS-RULE-019']
+    REQ-034: ['BUS-RULE-021','BUS-RULE-053']
+  rule_to_entities:
+    BUS-RULE-001: [SalesOrder,Customer]
+    BUS-RULE-002: [SalesDownPayment]
+    BUS-RULE-003: [SalesInvoice]
+    BUS-RULE-004: [SalesDownPayment]
+    BUS-RULE-005: [SalesInvoice,Customer]
+    BUS-RULE-006: [SalesInvoice]
+    BUS-RULE-007: [SalesPayment]
+    BUS-RULE-008: [SalesDownPayment,SalesSamplePayment]
+    BUS-RULE-009: [SalesSamplePayment]
+    BUS-RULE-010: [SalesInvoice]
+    BUS-RULE-011: [ChecklistProgress]
+    BUS-RULE-012: [SalesReturn,SalesInvoice]
+    BUS-RULE-013: [CartSession]
+    BUS-RULE-014: [SalesOrder]
+    BUS-RULE-015: [SalesPayment]
+    BUS-RULE-016: [PurchaseOrder]
+    BUS-RULE-017: [PurchaseOrder]
+    BUS-RULE-018: [GoodsReceipt]
+    BUS-RULE-019: [PurchaseInvoice]
+    BUS-RULE-020: [Supplier,Coa]
+    BUS-RULE-021: [StockMovement]
+    BUS-RULE-022: [PurchaseOrderApproval]
+    BUS-RULE-023: [PurchaseInvoice]
+    BUS-RULE-024: [PurchaseDownPayment]
+    BUS-RULE-025: [PurchaseOrder]
+    BUS-RULE-026: [Supplier]
+    BUS-RULE-027: [PurchaseOrder,PurchaseInvoiceDetail]
+    BUS-RULE-028: [BatchRecord]
+    BUS-RULE-029: [BatchRecord]
+    BUS-RULE-030: [ProductionMixingItem]
+    BUS-RULE-031: [ProductionMixingItem]
+    BUS-RULE-032: [BatchRecord]
+    BUS-RULE-033: [ProductionFilling]
+    BUS-RULE-034: [BatchRecord]
+    BUS-RULE-035: [BatchRecord]
+    BUS-RULE-036: [BatchRecord]
+    BUS-RULE-037: [StockMovement]
+    BUS-RULE-038: [SalesSample]
+    BUS-RULE-039: [Formulation]
+    BUS-RULE-040: [Formulation]
+    BUS-RULE-041: [Formulation]
+    BUS-RULE-042: [Formulation]
+    BUS-RULE-043: [Formulation]
+    BUS-RULE-044: [Formulation]
+    BUS-RULE-045: [Formulation]
+    BUS-RULE-046: [GoodsReceipt]
+    BUS-RULE-047: [GoodsReceipt]
+    BUS-RULE-048: [StockMovement]
+    BUS-RULE-049: [StockOpname]
+    BUS-RULE-050: [StockMovement]
+    BUS-RULE-051: [WarehouseAccess]
+    BUS-RULE-052: [StockMovement]
+    BUS-RULE-053: [GoodsReceipt]
+    BUS-RULE-054: [BatchRecord]
+    BUS-RULE-055: [StockOpname]
+    BUS-RULE-056: [JournalEntry]
+    BUS-RULE-057: [JournalEntry,CoaAuto]
+    BUS-RULE-058: [SalesInvoice]
+    BUS-RULE-059: [PurchaseInvoice]
+    BUS-RULE-060: [SalesDownPayment]
+    BUS-RULE-061: [JournalLine]
+    BUS-RULE-062: []
+    BUS-RULE-063: [PurchaseInvoice]
+    BUS-RULE-064: [JournalEntry]
+    BUS-RULE-065: [Coa]
+    BUS-RULE-066: [FixedAsset]
+    BUS-RULE-067: [FixedAsset]
+    BUS-RULE-068: [Coa]
+    BUS-RULE-069: []
+    BUS-RULE-070: []
+    BUS-RULE-071: [EmployeeContract]
+    BUS-RULE-072: [EmployeePerformance]
+    BUS-RULE-073: [Employee]
+    BUS-RULE-074: [EmployeePerformance]
+    BUS-RULE-075: [FundRequest]
+    BUS-RULE-076: [BatchRecord]
+    BUS-RULE-077: [BatchRecord]
+    BUS-RULE-078: [BatchRecord]
+    BUS-RULE-079: [BatchRecord]
+    BUS-RULE-080: [Supplier]
+    BUS-RULE-081: [Lead]
+    BUS-RULE-082: [Lead]
+    BUS-RULE-083: [BatchRecord]
+    BUS-RULE-084: [SalesInvoice]
+    BUS-RULE-085: [Customer]
+    BUS-RULE-086: [DeliveryOut]
+    BUS-RULE-087: [SalesInvoice]
+    BUS-RULE-088: [JournalLine]
+    BUS-RULE-089: [JournalLine]
+    BUS-RULE-090: [KPI]
+    BUS-RULE-091: [Tag,Notification]
+    BUS-RULE-092: [Notification]
+    BUS-RULE-093: [StatusTransition]
+    BUS-RULE-094: [Comment]
+    BUS-RULE-095: [Notification]
+    BUS-RULE-096: [All]
+    BUS-RULE-097: [AuditLog]
+    BUS-RULE-098: [Organization]
+    BUS-RULE-099: [All]
+    BUS-RULE-100: []
+    BUS-RULE-101: []
+    BUS-RULE-102: []
+    BUS-RULE-103: [CoaAuto]
+    BUS-RULE-104: [Coa]
+    BUS-RULE-105: [All]
+  rule_to_apis:
+    BUS-RULE-001: ['POST /sales/sales-orders']
+    BUS-RULE-002: ['POST /sales/down-payments']
+    BUS-RULE-003: ['PATCH /sales/sales-invoices/{id}']
+    BUS-RULE-004: ['POST /sales/down-payments']
+    BUS-RULE-005: ['POST /sales/sales-invoices']
+    BUS-RULE-006: ['POST /sales/sales-invoices/{id}/release']
+    BUS-RULE-007: ['POST /sales/sales-payments']
+    BUS-RULE-008: ['POST /sales/down-payments']
+    BUS-RULE-009: []
+    BUS-RULE-010: ['GET /reports/ar-aging']
+    BUS-RULE-011: ['PATCH /sales/sales-orders/{id}/checklist']
+    BUS-RULE-012: ['POST /sales/sales-returns']
+    BUS-RULE-013: ['POST /sales/sales-orders']
+    BUS-RULE-014: ['POST /sales/sales-orders']
+    BUS-RULE-015: ['POST /sales/sales-payments']
+    BUS-RULE-016: ['POST /purchase/orders']
+    BUS-RULE-017: ['POST /purchase/orders']
+    BUS-RULE-018: ['POST /purchase/goods-receipts']
+    BUS-RULE-019: ['POST /purchase/invoices']
+    BUS-RULE-020: ['POST /suppliers']
+    BUS-RULE-021: ['POST /warehouse/goods-transfer']
+    BUS-RULE-022: ['POST /purchase/orders/{id}/approve']
+    BUS-RULE-023: ['GET /purchase/invoices/{id}']
+    BUS-RULE-024: ['POST /purchase/invoices']
+    BUS-RULE-025: ['POST /purchase/orders']
+    BUS-RULE-026: ['POST /suppliers/import']
+    BUS-RULE-027: ['POST /purchase/orders/{id}/approve']
+    BUS-RULE-028: ['POST /production/batch-records']
+    BUS-RULE-029: ['POST /production/batch-records/{id}/process']
+    BUS-RULE-030: ['POST /production/production-mixing']
+    BUS-RULE-031: ['POST /production/production-mixing']
+    BUS-RULE-032: ['POST /production/production-filling']
+    BUS-RULE-033: ['POST /production/production-filling']
+    BUS-RULE-034: ['POST /production/production-packaging']
+    BUS-RULE-035: ['POST /production/production-packaging']
+    BUS-RULE-036: []
+    BUS-RULE-037: ['POST /production/production-packaging']
+    BUS-RULE-038: ['POST /sales/samples/{id}/submit']
+    BUS-RULE-039: ['POST /rnd/formulations']
+    BUS-RULE-040: ['POST /rnd/formulations']
+    BUS-RULE-041: ['GET /rnd/formulations/{id}']
+    BUS-RULE-042: ['GET /rnd/formulations/{id}']
+    BUS-RULE-043: ['POST /rnd/formulations/{id}/clone']
+    BUS-RULE-044: ['POST /rnd/formulations/{id}/lock']
+    BUS-RULE-045: ['POST /rnd/formulations/{id}/push-bpom']
+    BUS-RULE-046: ['POST /purchase/goods-receipts']
+    BUS-RULE-047: ['POST /warehouse/qc-release']
+    BUS-RULE-048: ['POST /warehouse/stock-movements']
+    BUS-RULE-049: ['POST /warehouse/stock-opname/{id}/approve']
+    BUS-RULE-050: ['GET /reports/stock']
+    BUS-RULE-051: ['GET /goods/{id}/stock']
+    BUS-RULE-052: ['POST /warehouse/stock-movements']
+    BUS-RULE-053: ['POST /purchase/goods-receipts']
+    BUS-RULE-054: ['POST /production/batch-records/{id}/process']
+    BUS-RULE-055: ['POST /warehouse/stock-opname/{id}/approve']
+    BUS-RULE-056: ['POST /finance/journal-entries']
+    BUS-RULE-057: []
+    BUS-RULE-058: ['GET /reports/ar-aging']
+    BUS-RULE-059: ['GET /reports/ap-aging']
+    BUS-RULE-060: ['POST /sales/down-payments']
+    BUS-RULE-061: []
+    BUS-RULE-062: []
+    BUS-RULE-063: ['POST /purchase/invoices']
+    BUS-RULE-064: ['POST /finance/periods/lock']
+    BUS-RULE-065: ['GET /coa']
+    BUS-RULE-066: []
+    BUS-RULE-067: ['POST /finance/fixed-assets']
+    BUS-RULE-068: ['POST /finance/journal-entries']
+    BUS-RULE-069: ['GET /reports/sales-summary']
+    BUS-RULE-070: ['GET /reports/profit-loss']
+    BUS-RULE-071: ['GET /hr/contracts/expiring']
+    BUS-RULE-072: []
+    BUS-RULE-073: ['POST /hr/payroll']
+    BUS-RULE-074: ['GET /hr/employees/{id}/scorecard']
+    BUS-RULE-075: ['POST /finance/fund-requests']
+    BUS-RULE-076: ['GET /dashboards/production']
+    BUS-RULE-077: ['GET /dashboards/qc']
+    BUS-RULE-078: ['POST /production/qc-inspections']
+    BUS-RULE-079: []
+    BUS-RULE-080: ['PATCH /suppliers/{id}']
+    BUS-RULE-081: ['GET /dashboards/busdev']
+    BUS-RULE-082: ['GET /dashboards/busdev']
+    BUS-RULE-083: ['GET /dashboards/production']
+    BUS-RULE-084: ['GET /reports/ar-aging']
+    BUS-RULE-085: ['GET /dashboards/busdev']
+    BUS-RULE-086: ['GET /dashboards/busdev']
+    BUS-RULE-087: ['GET /dashboards/finance']
+    BUS-RULE-088: ['GET /dashboards/finance']
+    BUS-RULE-089: ['GET /dashboards/finance']
+    BUS-RULE-090: ['GET /kpi/thresholds']
+    BUS-RULE-091: ['POST /communication/tags']
+    BUS-RULE-092: ['POST /communication/notifications']
+    BUS-RULE-093: ['GET /workflows/pending']
+    BUS-RULE-094: ['POST /communication/comments']
+    BUS-RULE-095: []
+    BUS-RULE-096: ['DELETE /api/v1/*']
+    BUS-RULE-097: ['ALL']
+    BUS-RULE-098: ['ALL']
+    BUS-RULE-099: ['DELETE /api/v1/*']
+    BUS-RULE-100: []
+    BUS-RULE-101: ['POST/PUT/PATCH/DELETE']
+    BUS-RULE-102: ['GET /system/sequence/next']
+    BUS-RULE-103: ['GET /system/sequence/next']
+    BUS-RULE-104: ['DELETE /coa/{id}']
+    BUS-RULE-105: ['DELETE /api/v1/*']
+  workflow_to_entities:
+    WF-LEAD: [Lead]
+    WF-SAMPLE: [SalesSample]
+    WF-SO: [SalesOrder]
+    WF-DPJ: [SalesDownPayment]
+    WF-INV: [SalesInvoice]
+    WF-PAY-AR: [SalesPayment]
+    WF-RETURN-AR: [SalesReturn]
+    WF-PR: [PurchaseRequest]
+    WF-PO: [PurchaseOrder]
+    WF-DPB: [PurchaseDownPayment]
+    WF-GR: [GoodsReceipt]
+    WF-FP: [PurchaseInvoice]
+    WF-PAY-AP: [PurchasePayment]
+    WF-RETURN-AP: [PurchaseReturn]
+    WF-BMR: [BatchRecord]
+    WF-PROD-MIX: [ProductionMixing]
+    WF-PROD-FILL: [ProductionFilling]
+    WF-PROD-PKG: [ProductionPackaging]
+    WF-DO: [DeliveryOut]
+    WF-FRM: [Formulation]
+    WF-STK-MOVE: [StockMovement]
+    WF-OPNAME: [StockOpname]
+    WF-JE: [JournalEntry]
+    WF-FR: [FundRequest]
+    WF-ASSET: [FixedAsset]
+    WF-CHECKLIST: [Checklist]
+    WF-EMP: [EmployeeContract]
+    WF-APPROVAL: [StatusTransition]
+    WF-NUMBER: [CoaAuto]
+    WF-COMMS: [Comment]
+  entity_to_screens:
+    E-Organization: [auth-screens]
+    E-Role: [auth-screens]
+    E-Permission: [auth-screens]
+    E-RolePermission: [auth-screens]
+    E-User: [auth-screens]
+    E-UserSession: [auth-screens]
+    E-AuditLog: [auth-screens]
+    E-ActivityLog: [auth-screens]
+    E-Division: [master-screens]
+    E-CustomerCategory: [master-screens]
+    E-Customer: [master-screens]
+    E-SupplierCategory: [master-screens]
+    E-Supplier: [master-screens]
+    E-GoodsCategory: [master-screens]
+    E-Goods: [master-screens]
+    E-Warehouse: [master-screens]
+    E-WarehouseAccess: [master-screens]
+    E-Coa: [master-screens]
+    E-CoaAuto: [master-screens]
+    E-Formulation: [master-screens]
+    E-FormulationAdjustment: [master-screens]
+    E-Lead: [sales-screens]
+    E-LeadDetail: [sales-screens]
+    E-SalesSample: [sales-screens]
+    E-SalesSampleApproval: [sales-screens]
+    E-SalesSamplePayment: [sales-screens]
+    E-SalesDownPayment: [sales-screens]
+    E-SalesOrder: [sales-screens]
+    E-SalesOrderDetail: [sales-screens]
+    E-SalesOrderApproval: [sales-screens]
+    E-SalesInvoice: [sales-screens]
+    E-SalesInvoiceDetail: [sales-screens]
+    E-SalesPayment: [sales-screens]
+    E-SalesReturn: [sales-screens]
+    E-SalesReturnDetail: [sales-screens]
+    E-SalesReturnApproval: [sales-screens]
+    E-SalesReturnIn: [sales-screens]
+    E-SalesTarget: [sales-screens]
+    E-PurchaseRequest: [purchase-screens]
+    E-PurchaseRequestDetail: [purchase-screens]
+    E-PurchaseRequestApproval: [purchase-screens]
+    E-PurchaseOrder: [purchase-screens]
+    E-PurchaseOrderDetail: [purchase-screens]
+    E-PurchaseOrderApproval: [purchase-screens]
+    E-PurchaseDownPayment: [purchase-screens]
+    E-GoodsReceipt: [purchase-screens]
+    E-GoodsReceiptDetail: [purchase-screens]
+    E-PurchaseInvoice: [purchase-screens]
+    E-PurchaseInvoiceDetail: [purchase-screens]
+    E-PurchasePayment: [purchase-screens]
+    E-PurchaseReturn: [purchase-screens]
+    E-PurchaseReturnApproval: [purchase-screens]
+    E-PurchaseReturnOut: [purchase-screens]
+    E-BatchRecord: [production-screens]
+    E-ScheduleMixing: [production-screens]
+    E-ScheduleFilling: [production-screens]
+    E-SchedulePackaging: [production-screens]
+    E-ProductionMixing: [production-screens]
+    E-ProductionMixingItem: [production-screens]
+    E-ProductionFilling: [production-screens]
+    E-ProductionFillingItem: [production-screens]
+    E-ProductionPackaging: [production-screens]
+    E-ProductionPackagingItem: [production-screens]
+    E-DeliveryOut: [production-screens]
+    E-DeliveryOutDetail: [production-screens]
+    E-StockMovement: [warehouse-screens]
+    E-StockOpname: [warehouse-screens]
+    E-StockOpnameDetail: [warehouse-screens]
+    E-StockAdjustment: [warehouse-screens]
+    E-CashBank: [finance-screens]
+    E-JournalEntry: [finance-screens]
+    E-JournalLine: [finance-screens]
+    E-TaxSetup: [finance-screens]
+    E-FixedAsset: [finance-screens]
+    E-Budget: [finance-screens]
+    E-FundRequest: [finance-screens]
+    E-ChecklistCategory: [checklist-screens]
+    E-Checklist: [checklist-screens]
+    E-ChecklistProgress: [checklist-screens]
+    E-ChecklistTracking: [checklist-screens]
+    E-Employee: [hr-screens]
+    E-EmployeeContract: [hr-screens]
+    E-EmployeePerformance: [hr-screens]
+    E-Note: [communication-screens]
+    E-StatusTransition: [communication-screens]
+    E-Tag: [communication-screens]
+    E-Comment: [communication-screens]
+    E-Attachment: [communication-screens]
+    E-Notification: [communication-screens]
+
+# End of 10_TRACEABILITY_MATRIX.yaml

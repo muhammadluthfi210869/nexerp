@@ -34,7 +34,11 @@ export class FinanceGateHelper {
    */
   async assertNotClosed(label: string, closed: boolean): Promise<void> {
     if (closed) {
-      throw new GateBlockedException(label, `Document already closed/finalized`, { label });
+      throw new GateBlockedException(
+        label,
+        `Document already closed/finalized`,
+        { label },
+      );
     }
   }
 
@@ -43,7 +47,11 @@ export class FinanceGateHelper {
    * Use for: AP verify, adjustment journal review/approve,
    * bank reconciliation finalize, etc.
    */
-  assertDifferentUser(action: string, createdBy: string | null, actorId: string | null): void {
+  assertDifferentUser(
+    action: string,
+    createdBy: string | null,
+    actorId: string | null,
+  ): void {
     if (!createdBy || !actorId) return;
     if (createdBy === actorId) {
       throw new SoDViolationException(action);

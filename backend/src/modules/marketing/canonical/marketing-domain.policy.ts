@@ -33,6 +33,8 @@ export type SocialStatus = (typeof SOCIAL_STATUSES)[number];
 export type MarketingViewer = {
   id: string;
   email?: string | null;
+  fullName?: string | null;
+  name?: string | null;
   roles: string[];
 };
 
@@ -59,9 +61,73 @@ const SOCIAL_TRANSITIONS: Record<SocialStatus, readonly SocialStatus[]> = {
 };
 
 export function isMarketingManager(viewer: MarketingViewer) {
-  return viewer.roles.some((role) =>
-    ['SUPER_ADMIN', 'HEAD_OPS', 'MARKETING'].includes(role),
+  const viewerEmail = (viewer.email || '').toLowerCase();
+  const viewerName = (viewer.fullName || (viewer as any).name || '').toLowerCase();
+  const isRevita = viewerEmail.includes('revita') || viewerName.includes('revita');
+
+  return (
+    isRevita ||
+    viewer.roles.some((role) =>
+      ['SUPER_ADMIN', 'HEAD_OPS', 'MARKETING'].includes(role),
+    )
   );
+}
+
+export function isRahmatViewer(viewer: MarketingViewer): boolean {
+  const viewerIdentifier = (
+    viewer.email?.split('@')[0] ||
+    viewer.fullName ||
+    (viewer as any).name ||
+    ''
+  ).toLowerCase();
+  return viewerIdentifier.includes('rahmat');
+}
+
+/**
+ * @complexity-rationale Branching handles role hierarchy (manager, self, peer-delegation, unassigned).
+ */
+export function canAssignMarketingTask(
+  viewer: MarketingViewer,
+  assignee: {
+    id: string;
+    email?: string | null;
+    fullName?: string | null;
+    name?: string | null;
+  },
+): boolean {
+  // 1. Marketing Manager (Revita, Super Admin, Head of Ops, Marketing role) can assign to all staff
+  if (isMarketingManager(viewer)) {
+    return true;
+  }
+
+  // 2. Self assignment is always allowed
+  const isSelf =
+    assignee.id === viewer.id ||
+    (Boolean(assignee.email) &&
+      Boolean(viewer.email) &&
+      assignee.email?.split('@')[0].toLowerCase() ===
+        viewer.email?.split('@')[0].toLowerCase());
+  if (isSelf) {
+    return true;
+  }
+
+  // 3. Rahmat has delegated authority to assign tasks to Zarkasi and Gusti
+  const isRahmat = isRahmatViewer(viewer);
+
+  if (isRahmat) {
+    const assigneeEmailName = (assignee.email?.split('@')[0] || '').toLowerCase();
+    const assigneeDisplayName = (assignee.fullName || assignee.name || '').toLowerCase();
+    const isTargetZarkasi =
+      assigneeEmailName.includes('zarkasi') || assigneeDisplayName.includes('zarkasi');
+    const isTargetGusti =
+      assigneeEmailName.includes('gusti') || assigneeDisplayName.includes('gusti');
+
+    if (isTargetZarkasi || isTargetGusti) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export function ensureMarketingTaskRole(viewer: MarketingViewer) {
@@ -90,6 +156,9 @@ export function ensureSocialWriteRole(viewer: MarketingViewer) {
   }
 }
 
+/**
+ * @complexity-rationale State machine validation enforcing CANCELLED, DONE, REOPEN invariants and checklist gates.
+ */
 export function assertTaskTransition(input: {
   from: TaskStatus;
   to: TaskStatus;
@@ -152,6 +221,9 @@ export function assertTaskTransition(input: {
   }
 }
 
+/**
+ * @complexity-rationale Transition matrix for social campaign publishing states.
+ */
 export function assertSocialTransition(input: {
   from: SocialStatus;
   to: SocialStatus;

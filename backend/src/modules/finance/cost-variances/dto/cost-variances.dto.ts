@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsString, IsIn, IsNumber, IsOptional, Min } from 'class-validator';
+import {
+  IsUUID,
+  IsString,
+  IsIn,
+  IsNumber,
+  IsOptional,
+  Min,
+} from 'class-validator';
 
 export class CreateCostVarianceDto {
   @ApiProperty({ example: 'uuid', description: 'Job Order ID' })

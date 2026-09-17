@@ -50,18 +50,16 @@ async function bootstrap() {
   const corsOrigin =
     process.env.NODE_ENV === 'production'
       ? Array.from(
-          new Set(
-            [
-              ...(process.env.CORS_ORIGIN || 'https://nexerp.id')
-                .split(',')
-                .map((s) => s.trim())
-                .filter(Boolean),
-              'https://nexerp.id',
-              'https://www.nexerp.id',
-              'https://dreamlab.id',
-              'https://www.dreamlab.id',
-            ],
-          ),
+          new Set([
+            ...(process.env.CORS_ORIGIN || 'https://nexerp.id')
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean),
+            'https://nexerp.id',
+            'https://www.nexerp.id',
+            'https://dreamlab.id',
+            'https://www.dreamlab.id',
+          ]),
         )
       : true;
   app.enableCors({

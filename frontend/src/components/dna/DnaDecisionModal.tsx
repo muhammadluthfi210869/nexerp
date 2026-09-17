@@ -19,11 +19,11 @@ import {
   DnaDialogDescription,
   DnaDialogFooter,
   DnaDialogClose,
-  DnaButton,
-  DnaSelect,
-  DnaTextarea,
-} from "@/components/dna";
-import { useDnaToast } from "@/components/dna/DnaToast";
+} from "./DnaDialog";
+import { DnaButton } from "./DnaButton";
+import { DnaSelect } from "./DnaSelect";
+import { DnaTextarea } from "./DnaTextarea";
+import { useDnaToast } from "./DnaToast";
 import { api, extractApiError } from "@/lib/api";
 
 export type DecisionAction = "APPROVE" | "REJECT" | "DEFER";

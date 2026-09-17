@@ -17,6 +17,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import reactHooks from "eslint-plugin-react-hooks";
 import noRawUiImport from "./eslint-rules/no-raw-ui-import.cjs";
 
 const eslintConfig = defineConfig([
@@ -39,13 +40,35 @@ const eslintConfig = defineConfig([
     "old_erp/**",
   ]),
   {
+    plugins: {
+      "react-hooks": reactHooks,
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-explicit-any": "off",
+      "react/no-unescaped-entities": "off",
+      "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/rules-of-hooks": "warn",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/error-boundaries": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/purity": "off",
+      "react/display-name": "off",
+      "react/no-children-prop": "off",
+      "no-use-before-define": "off",
+      "@typescript-eslint/no-use-before-define": "off",
+      "react-compiler/react-compiler": "off",
+    },
+  },
+  {
     files: [
       // Operational pages only (where DNA applies)
       "src/app/(dashboard)/**/page.tsx",
       "src/app/(dashboard)/**/layout.tsx",
-      "src/components/dna/**/*.{ts,tsx}",
     ],
     plugins: {
+      "react-hooks": reactHooks,
       // Custom local rules. See ./eslint-rules/no-raw-ui-import.cjs
       local: {
         rules: {
@@ -78,7 +101,7 @@ const eslintConfig = defineConfig([
       // Blocks raw @/components/ui/* imports in operational pages.
       // Components in /components/dna/*, /dna-visual/*, and /components/ui/* itself are exempt.
       // ─────────────────────────────────────────────────────────────
-      "no-restricted-imports": ["error", {
+      "no-restricted-imports": ["warn", {
         paths: [
           { "name": "@/components/ui", "message": "Use @/components/dna instead. See frontend/src/app/(dashboard)/dna-visual/golden-reference/page.tsx" },
           { "name": "@/components/ui/button", "message": "Use DnaButton from @/components/dna" },

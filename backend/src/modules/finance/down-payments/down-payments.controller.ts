@@ -39,7 +39,11 @@ export class DownPaymentsController {
 
   @Post(':id/post')
   @ApiOperation({ summary: 'Post down-payment (mark as PAID, create journal)' })
-  post(@Req() req: any, @Param('id') id: string, @Body() dto: PostDownPaymentDto) {
+  post(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: PostDownPaymentDto,
+  ) {
     const userId = req.user?.id;
     return this.service.post(userId, id, dto);
   }

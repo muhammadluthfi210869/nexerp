@@ -1,0 +1,85 @@
+{
+  "url": "/sales-invoice",
+  "http_status": 200,
+  "title": "GsERP KIL - Faktur Penjualan",
+  "form_fields": [],
+  "tables": [
+    {
+      "headers": [
+        "#",
+        "Kode DO",
+        "Kode Sales",
+        "Tanggal",
+        "Pelanggan",
+        "Total",
+        "Pembuat",
+        "Status",
+        "#"
+      ],
+      "rows": 0
+    }
+  ],
+  "actions": [
+    {
+      "text": "Riwayat",
+      "type": "button"
+    },
+    {
+      "text": "&times;",
+      "type": "button"
+    },
+    {
+      "text": "Tutup",
+      "type": "button"
+    },
+    {
+      "text": "Akun Saya",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account"
+    }
+  ],
+  "ajax_calls": [
+    "https://kil.gserp.id/sales-invoice/detailDO",
+    "https://kil.gserp.id/sales-invoice/detail",
+    "https://kil.gserp.id/purchase-approval/badge",
+    "https://kil.gserp.id/purchase-return-approval/badge",
+    "https://kil.gserp.id/sales-sample-approval/badge",
+    "https://kil.gserp.id/sales-approval/badge",
+    "https://kil.gserp.id/sales-return-approval/badge",
+    "https://kil.gserp.id/request-cogs-approval/badge",
+    "https://kil.gserp.id/purchase-request-approval/badge",
+    "https://kil.gserp.id/goods-request-approval/badge",
+    "https://kil.gserp.id/checklist-progress/badge",
+    "https://kil.gserp.id/purchase/badge",
+    "https://kil.gserp.id/purchase-invoice/badge",
+    "https://kil.gserp.id/purchase-return/badge",
+    "https://kil.gserp.id/purchase-down-payment/badge",
+    "https://kil.gserp.id/purchase-payment/badge",
+    "https://kil.gserp.id/need-for-goods/badge",
+    "https://kil.gserp.id/goods-request/badge",
+    "https://kil.gserp.id/purchase-request/badge",
+    "https://kil.gserp.id/purchase-in/badge",
+    "https://kil.gserp.id/sales-return-in/badge",
+    "https://kil.gserp.id/delivery-out/badge",
+    "https://kil.gserp.id/purchase-return-out/badge",
+    "https://kil.gserp.id/sales-sample/badge",
+    "https://kil.gserp.id/sales-sample-payment/badge",
+    "https://kil.gserp.id/sales/badge",
+    "https://kil.gserp.id/sales-return/badge",
+    "https://kil.gserp.id/sales-down-payment/badge",
+    "https://kil.gserp.id/sales-invoice/badge",
+    "https://kil.gserp.id/sales-payment/badge",
+    "https://kil.gserp.id/formulation-manage/badge",
+    "https://kil.gserp.id/formulation/badge",
+    "https://kil.gserp.id/request-cogs/badge",
+    "https://kil.gserp.id/batch-record/badge",
+    "https://kil.gserp.id/schedule-mixing/badge",
+    "https://kil.gserp.id/schedule-filling/badge",
+    "https://kil.gserp.id/schedule-packaging/badge",
+    "https://kil.gserp.id/production-mixing/badge",
+    "https://kil.gserp.id/production-filling/badge",
+    "https://kil.gserp.id/production-packaging/badge"
+  ],
+  "modals": [],
+  "print_pattern": null,
+  "notes": "DataTables, select2, rich-editor, daterangepicker"
+}

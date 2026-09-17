@@ -1,0 +1,715 @@
+{
+  "1": {
+    "sub_modules": [
+      {
+        "slug": "role-manage",
+        "label": "Hak Akses"
+      },
+      {
+        "slug": "user-manage",
+        "label": "Pengguna"
+      },
+      {
+        "slug": "coa-manage",
+        "label": "CoA"
+      },
+      {
+        "slug": "coa-auto-manage",
+        "label": "CoA Jurnal Otomatis"
+      },
+      {
+        "slug": "warehouse-manage",
+        "label": "Gudang"
+      },
+      {
+        "slug": "warehouse-access-manage",
+        "label": "Hak Akses Gudang"
+      },
+      {
+        "slug": "goods-category-manage",
+        "label": "Kategori Barang"
+      },
+      {
+        "slug": "goods-manage",
+        "label": "Barang"
+      },
+      {
+        "slug": "supplier-category-manage",
+        "label": "Kategori Supplier"
+      },
+      {
+        "slug": "supplier-manage",
+        "label": "Supplier"
+      },
+      {
+        "slug": "customer-category-manage",
+        "label": "Kategori Pelanggan"
+      },
+      {
+        "slug": "customer-manage",
+        "label": "Pelanggan"
+      },
+      {
+        "slug": "customer-my-manage",
+        "label": "Pelanggan Saya"
+      },
+      {
+        "slug": "sales-category",
+        "label": "Kategori Penjualan"
+      },
+      {
+        "slug": "sales-target",
+        "label": "Target Penjualan"
+      },
+      {
+        "slug": "purchase",
+        "label": "Buat Pembelian"
+      },
+      {
+        "slug": "purchase-invoice",
+        "label": "Faktur Pembelian"
+      },
+      {
+        "slug": "purchase-return",
+        "label": "Retur Pembelian"
+      },
+      {
+        "slug": "purchase-down-payment",
+        "label": "DP Pembelian"
+      },
+      {
+        "slug": "purchase-payment",
+        "label": "Bayar Pembelian"
+      },
+      {
+        "slug": "purchase-in",
+        "label": "Pembelian Masuk"
+      },
+      {
+        "slug": "sales-return-in",
+        "label": "Retur Penjualan"
+      },
+      {
+        "slug": "goods-transfer",
+        "label": "Transfer Barang"
+      },
+      {
+        "slug": "delivery-out",
+        "label": "Pengiriman Barang"
+      },
+      {
+        "slug": "purchase-return-out",
+        "label": "Retur Pembelian"
+      },
+      {
+        "slug": "sales-sample",
+        "label": "Penjualan Sample"
+      },
+      {
+        "slug": "sales-sample-payment",
+        "label": "Bayar Sample"
+      },
+      {
+        "slug": "sales",
+        "label": "Penjualan"
+      },
+      {
+        "slug": "sales-return",
+        "label": "Retur Penjualan"
+      },
+      {
+        "slug": "sales-down-payment",
+        "label": "DP Penjualan"
+      },
+      {
+        "slug": "sales-invoice",
+        "label": "Faktur Penjualan"
+      },
+      {
+        "slug": "sales-payment",
+        "label": "Bayar Penjualan"
+      },
+      {
+        "slug": "formulation-adjustment",
+        "label": "Penyesuaian Formulasi"
+      },
+      {
+        "slug": "formulation-manage",
+        "label": "Kelola Formulasi"
+      },
+      {
+        "slug": "formulation",
+        "label": "Formulasi"
+      },
+      {
+        "slug": "request-cogs",
+        "label": "Permintaan HPP"
+      },
+      {
+        "slug": "batch-record",
+        "label": "Batch Record"
+      },
+      {
+        "slug": "schedule-mixing",
+        "label": "Jadwal Mixing"
+      },
+      {
+        "slug": "schedule-filling",
+        "label": "Jadwal Filling"
+      },
+      {
+        "slug": "schedule-packaging",
+        "label": "Jadwal Packaging"
+      },
+      {
+        "slug": "production-mixing",
+        "label": "Produksi Mixing"
+      },
+      {
+        "slug": "production-filling",
+        "label": "Produksi Filling"
+      },
+      {
+        "slug": "production-packaging",
+        "label": "Produksi Packaging"
+      },
+      {
+        "slug": "general-journal",
+        "label": "Jurnal Umum"
+      },
+      {
+        "slug": "other-payment",
+        "label": "Kas Bank Keluar"
+      },
+      {
+        "slug": "other-deposit",
+        "label": "Kas Bank Masuk"
+      },
+      {
+        "slug": "report-stock",
+        "label": "Stok"
+      },
+      {
+        "slug": "report-mutation-goods",
+        "label": "Mutasi Barang"
+      },
+      {
+        "slug": "report-stock-valuation",
+        "label": "Stok Valuation"
+      },
+      {
+        "slug": "report-guest-book",
+        "label": "Buku Tamu"
+      },
+      {
+        "slug": "report-follow-up-customer",
+        "label": "Follow Up Pelanggan"
+      },
+      {
+        "slug": "report-general-ledger",
+        "label": "Buku Besar"
+      },
+      {
+        "slug": "report-profit-loss",
+        "label": "Laba Rugi"
+      },
+      {
+        "slug": "report-trial-balance",
+        "label": "Neraca Saldo"
+      },
+      {
+        "slug": "report-balance-sheet",
+        "label": "Neraca"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi",
+      "Penjualan Sample",
+      "Penjualan Barang",
+      "Pelanggan",
+      "Sample",
+      "Eksekutif",
+      "Notifikasi",
+      "Digital Marketing",
+      "BusDev",
+      "RnD",
+      "Purchasing",
+      "Legalitas",
+      "Produksi",
+      "Gudang",
+      "HR",
+      "Keuangan",
+      "Buku Tamu",
+      "Client Sample",
+      "Client Produksi",
+      "Client RO",
+      "Lost"
+    ]
+  },
+  "2": {
+    "sub_modules": [
+      {
+        "slug": "user-manage",
+        "label": "Pengguna"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi"
+    ]
+  },
+  "3": {
+    "sub_modules": [],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi"
+    ]
+  },
+  "4": {
+    "sub_modules": [
+      {
+        "slug": "goods-manage",
+        "label": "Barang"
+      },
+      {
+        "slug": "supplier-category-manage",
+        "label": "Kategori Supplier"
+      },
+      {
+        "slug": "supplier-manage",
+        "label": "Supplier"
+      },
+      {
+        "slug": "purchase",
+        "label": "Buat Pembelian"
+      },
+      {
+        "slug": "purchase-return",
+        "label": "Retur Pembelian"
+      },
+      {
+        "slug": "report-stock",
+        "label": "Stok"
+      },
+      {
+        "slug": "report-mutation-goods",
+        "label": "Mutasi Barang"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi"
+    ]
+  },
+  "5": {
+    "sub_modules": [
+      {
+        "slug": "purchase-in",
+        "label": "Pembelian Masuk"
+      },
+      {
+        "slug": "sales-return-in",
+        "label": "Retur Penjualan"
+      },
+      {
+        "slug": "goods-transfer",
+        "label": "Transfer Barang"
+      },
+      {
+        "slug": "delivery-out",
+        "label": "Pengiriman Barang"
+      },
+      {
+        "slug": "purchase-return-out",
+        "label": "Retur Pembelian"
+      },
+      {
+        "slug": "report-stock",
+        "label": "Stok"
+      },
+      {
+        "slug": "report-mutation-goods",
+        "label": "Mutasi Barang"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi"
+    ]
+  },
+  "6": {
+    "sub_modules": [
+      {
+        "slug": "customer-manage",
+        "label": "Pelanggan"
+      },
+      {
+        "slug": "customer-my-manage",
+        "label": "Pelanggan Saya"
+      },
+      {
+        "slug": "sales-sample",
+        "label": "Penjualan Sample"
+      },
+      {
+        "slug": "sales",
+        "label": "Penjualan"
+      },
+      {
+        "slug": "sales-return",
+        "label": "Retur Penjualan"
+      },
+      {
+        "slug": "request-cogs",
+        "label": "Permintaan HPP"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi"
+    ]
+  },
+  "7": {
+    "sub_modules": [
+      {
+        "slug": "customer-my-manage",
+        "label": "Pelanggan Saya"
+      },
+      {
+        "slug": "sales-sample",
+        "label": "Penjualan Sample"
+      },
+      {
+        "slug": "sales",
+        "label": "Penjualan"
+      },
+      {
+        "slug": "sales-return",
+        "label": "Retur Penjualan"
+      },
+      {
+        "slug": "request-cogs",
+        "label": "Permintaan HPP"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi",
+      "BusDev",
+      "Buku Tamu",
+      "Client Sample",
+      "Client Produksi",
+      "Client RO",
+      "Lost"
+    ]
+  },
+  "8": {
+    "sub_modules": [
+      {
+        "slug": "formulation-adjustment",
+        "label": "Penyesuaian Formulasi"
+      },
+      {
+        "slug": "formulation-manage",
+        "label": "Kelola Formulasi"
+      },
+      {
+        "slug": "formulation",
+        "label": "Formulasi"
+      },
+      {
+        "slug": "report-stock",
+        "label": "Stok"
+      },
+      {
+        "slug": "report-mutation-goods",
+        "label": "Mutasi Barang"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi",
+      "Sample"
+    ]
+  },
+  "9": {
+    "sub_modules": [
+      {
+        "slug": "formulation",
+        "label": "Formulasi"
+      },
+      {
+        "slug": "report-stock",
+        "label": "Stok"
+      },
+      {
+        "slug": "report-mutation-goods",
+        "label": "Mutasi Barang"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi"
+    ]
+  },
+  "10": {
+    "sub_modules": [
+      {
+        "slug": "batch-record",
+        "label": "Batch Record"
+      },
+      {
+        "slug": "schedule-mixing",
+        "label": "Jadwal Mixing"
+      },
+      {
+        "slug": "schedule-filling",
+        "label": "Jadwal Filling"
+      },
+      {
+        "slug": "production-mixing",
+        "label": "Produksi Mixing"
+      },
+      {
+        "slug": "production-filling",
+        "label": "Produksi Filling"
+      },
+      {
+        "slug": "report-stock",
+        "label": "Stok"
+      },
+      {
+        "slug": "report-mutation-goods",
+        "label": "Mutasi Barang"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi"
+    ]
+  },
+  "11": {
+    "sub_modules": [
+      {
+        "slug": "delivery-out",
+        "label": "Pengiriman Barang"
+      },
+      {
+        "slug": "schedule-packaging",
+        "label": "Jadwal Packaging"
+      },
+      {
+        "slug": "production-packaging",
+        "label": "Produksi Packaging"
+      },
+      {
+        "slug": "report-stock",
+        "label": "Stok"
+      },
+      {
+        "slug": "report-mutation-goods",
+        "label": "Mutasi Barang"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi"
+    ]
+  },
+  "12": {
+    "sub_modules": [
+      {
+        "slug": "report-stock",
+        "label": "Stok"
+      },
+      {
+        "slug": "report-mutation-goods",
+        "label": "Mutasi Barang"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi"
+    ]
+  },
+  "13": {
+    "sub_modules": [
+      {
+        "slug": "coa-manage",
+        "label": "CoA"
+      },
+      {
+        "slug": "coa-auto-manage",
+        "label": "CoA Jurnal Otomatis"
+      },
+      {
+        "slug": "purchase-invoice",
+        "label": "Faktur Pembelian"
+      },
+      {
+        "slug": "purchase-down-payment",
+        "label": "DP Pembelian"
+      },
+      {
+        "slug": "purchase-payment",
+        "label": "Bayar Pembelian"
+      },
+      {
+        "slug": "sales-sample-payment",
+        "label": "Bayar Sample"
+      },
+      {
+        "slug": "sales-down-payment",
+        "label": "DP Penjualan"
+      },
+      {
+        "slug": "sales-invoice",
+        "label": "Faktur Penjualan"
+      },
+      {
+        "slug": "sales-payment",
+        "label": "Bayar Penjualan"
+      },
+      {
+        "slug": "general-journal",
+        "label": "Jurnal Umum"
+      },
+      {
+        "slug": "other-payment",
+        "label": "Kas Bank Keluar"
+      },
+      {
+        "slug": "other-deposit",
+        "label": "Kas Bank Masuk"
+      },
+      {
+        "slug": "report-stock",
+        "label": "Stok"
+      },
+      {
+        "slug": "report-mutation-goods",
+        "label": "Mutasi Barang"
+      },
+      {
+        "slug": "report-general-ledger",
+        "label": "Buku Besar"
+      },
+      {
+        "slug": "report-profit-loss",
+        "label": "Laba Rugi"
+      },
+      {
+        "slug": "report-trial-balance",
+        "label": "Neraca Saldo"
+      },
+      {
+        "slug": "report-balance-sheet",
+        "label": "Neraca"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi"
+    ]
+  },
+  "14": {
+    "sub_modules": [
+      {
+        "slug": "report-guest-book",
+        "label": "Buku Tamu"
+      },
+      {
+        "slug": "report-follow-up-customer",
+        "label": "Follow Up Pelanggan"
+      }
+    ],
+    "dashboard_modules": [
+      "Buku Tamu"
+    ]
+  },
+  "15": {
+    "sub_modules": [
+      {
+        "slug": "customer-my-manage",
+        "label": "Pelanggan Saya"
+      },
+      {
+        "slug": "sales-sample",
+        "label": "Penjualan Sample"
+      },
+      {
+        "slug": "sales",
+        "label": "Penjualan"
+      },
+      {
+        "slug": "sales-return",
+        "label": "Retur Penjualan"
+      },
+      {
+        "slug": "request-cogs",
+        "label": "Permintaan HPP"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi"
+    ]
+  },
+  "16": {
+    "sub_modules": [
+      {
+        "slug": "goods-manage",
+        "label": "Barang"
+      },
+      {
+        "slug": "supplier-category-manage",
+        "label": "Kategori Supplier"
+      },
+      {
+        "slug": "supplier-manage",
+        "label": "Supplier"
+      },
+      {
+        "slug": "customer-my-manage",
+        "label": "Pelanggan Saya"
+      },
+      {
+        "slug": "purchase",
+        "label": "Buat Pembelian"
+      },
+      {
+        "slug": "purchase-return",
+        "label": "Retur Pembelian"
+      },
+      {
+        "slug": "sales-sample",
+        "label": "Penjualan Sample"
+      },
+      {
+        "slug": "sales",
+        "label": "Penjualan"
+      },
+      {
+        "slug": "sales-return",
+        "label": "Retur Penjualan"
+      },
+      {
+        "slug": "request-cogs",
+        "label": "Permintaan HPP"
+      },
+      {
+        "slug": "report-stock",
+        "label": "Stok"
+      },
+      {
+        "slug": "report-mutation-goods",
+        "label": "Mutasi Barang"
+      }
+    ],
+    "dashboard_modules": [
+      "Jadwal Produksi",
+      "Realisasi Produksi"
+    ]
+  }
+}

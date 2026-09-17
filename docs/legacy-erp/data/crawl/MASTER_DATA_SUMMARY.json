@@ -1,0 +1,269 @@
+{
+  "audit_meta": {
+    "site": "kil.gserp.id",
+    "auth": "zaki@dreamlab.id",
+    "scope": "Master Data CRUD schemas (read-only crawl)",
+    "pages_crawled": 22,
+    "errors": [
+      {"path": "/formulation-manage/create", "status": 404, "note": "Formulation create requires parent ID: /formulation-manage/{id}/create (e.g., /formulation-manage/1001/create used as proxy)"}
+    ]
+  },
+
+  "summary_by_entity": {
+
+    "customer": {
+      "list_url": "/customer-manage",
+      "create_url": "/customer-manage/create",
+      "edit_pattern": "/customer-manage/edit/{id}",
+      "table_columns": ["#", "Nama", "Telepon", "Kategori", "Kota", "Penginput", "SO Sample", "SO Produk", "Nominal SO Produk", "#"],
+      "create_fields": [
+        {"name": "name", "type": "text", "required": true, "label": "Nama Pelanggan"},
+        {"name": "code", "type": "text", "required": false, "label": "Kode Pelanggan"},
+        {"name": "category", "type": "select", "required": true, "label": "Kategori", "options_from": "/customer-category-manage"},
+        {"name": "phone", "type": "text", "required": true, "label": "Telepon"},
+        {"name": "email", "type": "email", "required": false, "label": "Email"},
+        {"name": "date_birth", "type": "text", "required": false, "label": "Tanggal Lahir", "note": "datetimepicker YYYY-MM-DD"},
+        {"name": "user", "type": "select", "required": false, "label": "Business Development", "options_from": "/user-manage", "note": "salesperson assignment"},
+        {"name": "province", "type": "select", "required": true, "label": "Provinsi", "options": "34 provinces, pre-rendered"},
+        {"name": "city", "type": "select", "required": true, "label": "Kota", "ajax": "GET /customer-manage/cities?province={id}"},
+        {"name": "address", "type": "textarea", "required": false, "label": "Alamat"}
+      ],
+      "category_options": ["Calon Pelanggan", "Pelanggan Sample", "Pelanggan Produk", "Pelanggan RO"]
+    },
+
+    "customer_my": {
+      "list_url": "/customer-my-manage",
+      "note": "Filtered list of customers owned by current user (BusDev). Same columns as /customer-manage minus sales stats.",
+      "create_url": "/customer-my-manage/create"
+    },
+
+    "customer_category": {
+      "list_url": "/customer-category-manage",
+      "table_columns": ["#", "Kategori", "Deskripsi", "#"],
+      "categories": ["Calon Pelanggan", "Pelanggan Sample", "Pelanggan Produk", "Pelanggan RO"]
+    },
+
+    "supplier": {
+      "list_url": "/supplier-manage",
+      "create_url": "/supplier-manage/create",
+      "table_columns": ["#", "Supplier", "PIC", "Telepon", "Kategori", "Kota", "Pajak (%)", "#"],
+      "create_fields": [
+        {"name": "name", "type": "text", "required": true, "label": "Nama Supplier"},
+        {"name": "category", "type": "select", "required": true, "label": "Kategori", "options_from": "/supplier-category-manage"},
+        {"name": "phone", "type": "text", "required": true, "label": "Telepon"},
+        {"name": "pic", "type": "text", "required": true, "label": "Kontak Person"},
+        {"name": "tax", "type": "text", "required": true, "label": "Pajak (%)"},
+        {"name": "description", "type": "textarea", "required": false, "label": "Deskripsi"},
+        {"name": "province", "type": "select", "required": true, "label": "Provinsi"},
+        {"name": "city", "type": "select", "required": true, "label": "Kota", "ajax": "GET /supplier-manage/cities?province={id}"},
+        {"name": "address", "type": "textarea", "required": false, "label": "Alamat"}
+      ],
+      "category_options": ["Bahan Baku", "Kemasan Primer", "Kemasan Sekunder", "Bahan Pembantu"]
+    },
+
+    "supplier_category": {
+      "list_url": "/supplier-category-manage",
+      "table_columns": ["#", "Kategori", "Deskripsi", "#"],
+      "categories": ["Bahan Baku", "Kemasan Primer", "Kemasan Sekunder", "Bahan Pembantu"]
+    },
+
+    "goods": {
+      "list_url": "/goods-manage",
+      "create_url": "/goods-manage/create",
+      "table_columns": ["#", "Kode", "Barang", "Harga Beli", "Kategori", "Sub Kategori", "Satuan", "#"],
+      "secondary_table": ["Tanggal", "No. Pembelian", "Supplier", "Qty", "Harga"],
+      "create_fields": [
+        {"name": "category", "type": "select", "required": true, "label": "Kategori", "options_from": "/goods-category-manage"},
+        {"name": "sub_category", "type": "select", "required": false, "label": "Sub Kategori", "static_map": {
+          "1": ["Base", "Active", "Fragrance", "Essential Oil", "Coloring & Accessories"],
+          "5": ["Botol", "Tutup", "Parfum", "Jar", "Serum", "Tube"],
+          "6": ["Label/Stiker", "Box", "Plastik Shrink"]
+        }},
+        {"name": "code", "type": "text", "required": true, "label": "Kode"},
+        {"name": "name", "type": "text", "required": true, "label": "Nama Barang"},
+        {"name": "description", "type": "textarea", "required": false, "label": "Deskripsi"},
+        {"name": "price", "type": "text", "required": true, "label": "Harga Beli", "note": "number2 decimal"},
+        {"name": "lowest_stock", "type": "text", "required": true, "label": "Stok Terendah"},
+        {"name": "unit", "type": "select", "required": true, "label": "Satuan", "options": ["pcs", "gr", "ml"]},
+        {"name": "photo", "type": "file", "required": false, "label": "Foto"},
+        {"name": "coa_1", "type": "select", "required": true, "label": "Akun Persediaan", "options_from": "/coa-manage", "options_count": 162},
+        {"name": "coa_2", "type": "select", "required": true, "label": "Akun Penjualan"},
+        {"name": "coa_3", "type": "select", "required": true, "label": "Akun Retur Penjualan"},
+        {"name": "coa_4", "type": "select", "required": true, "label": "Akun Diskon Penjualan"},
+        {"name": "coa_5", "type": "select", "required": true, "label": "Persediaan (Perjalanan)"},
+        {"name": "coa_6", "type": "select", "required": true, "label": "Akun COGS"},
+        {"name": "coa_7", "type": "select", "required": true, "label": "Akun Retur Pembelian"},
+        {"name": "coa_8", "type": "select", "required": true, "label": "Akun Barang Belum Faktur"}
+      ],
+      "key_observation": "Goods has 8 COA account mappings (inventory, sales, return, discount, in-transit, COGS, purchase return, uninvoiced). This is the GL posting blueprint for all goods transactions."
+    },
+
+    "goods_category": {
+      "list_url": "/goods-category-manage",
+      "table_columns": ["#", "Kode", "Kategori", "Deskripsi", "#"],
+      "categories": [
+        {"code": "BBK", "name": "Bahan Baku"},
+        {"code": "RU", "name": "Barang Ruahan"},
+        {"code": "WIP", "name": "Barang Setengah Jadi"},
+        {"code": "BP", "name": "Barang Pembantu"},
+        {"code": "KP", "name": "Kemasan Primer"},
+        {"code": "KS", "name": "Kemasan Sekunder"},
+        {"code": "BJ", "name": "Barang Jadi"}
+      ]
+    },
+
+    "warehouse": {
+      "list_url": "/warehouse-manage",
+      "create_url": "/warehouse-manage/create",
+      "table_columns": ["#", "Gudang", "Lokasi", "Telepon", "#"],
+      "create_fields": [
+        {"name": "name", "type": "text", "required": true, "label": "Nama"},
+        {"name": "phone", "type": "text", "required": false, "label": "Telepon"},
+        {"name": "province", "type": "select", "required": true, "label": "Provinsi"},
+        {"name": "city", "type": "select", "required": true, "label": "Kota", "ajax": "GET /warehouse-manage/cities"},
+        {"name": "address", "type": "textarea", "required": true, "label": "Alamat"}
+      ]
+    },
+
+    "warehouse_access": {
+      "list_url": "/warehouse-access-manage",
+      "note": "M:N matrix user↔warehouse. Inline edit via modal; AJAX-driven. No standalone create page.",
+      "table_columns": ["#", "Nama", "Email", "Nomor Telepon", "Hak Akses", "Gudang", "#"],
+      "ajax": {
+        "detail": "GET /warehouse-access-manage/detail?id={userId}",
+        "save_likely": "POST /warehouse-access-manage/save"
+      }
+    },
+
+    "user": {
+      "list_url": "/user-manage",
+      "create_url": "/user-manage/create",
+      "table_columns": ["#", "Kode/NIP", "Nama", "Email", "Nomor Telepon", "Hak Akses", "#"],
+      "create_fields": [
+        {"name": "code", "type": "text", "required": false, "label": "Kode/NIP"},
+        {"name": "name", "type": "text", "required": true, "label": "Nama"},
+        {"name": "photo", "type": "file", "required": false, "label": "Foto"},
+        {"name": "email", "type": "email", "required": false, "label": "Email"},
+        {"name": "phone", "type": "text", "required": false, "label": "Nomor Telepon"},
+        {"name": "password", "type": "password", "required": true, "label": "Kata Sandi"},
+        {"name": "password_confirm", "type": "password", "required": true, "label": "Konfirmasi Kata Sandi"},
+        {"name": "role", "type": "select", "required": true, "label": "Hak Akses", "options_count": 16}
+      ],
+      "role_options": [
+        "Administrator", "HRD", "Staff Back Office", "Purchasing", "Warehouse",
+        "Head Business Development", "Business Development",
+        "Head Research and Development", "Research and Development",
+        "Production Mixing & Filling", "Production Packaging", "Apoteker Penanggung Jawab",
+        "Finance", "Digital Marketing", "BusDev + HRD", "BusDev + Purchasing"
+      ]
+    },
+
+    "role": {
+      "list_url": "/role-manage",
+      "create_url": "/role-manage/create",
+      "table_columns": ["#", "Hak Akses", "#"],
+      "create_fields": [{"name": "name", "type": "text", "required": true, "label": "Nama Role"}],
+      "edit_form": {
+        "note": "Edit page (not crawled separately) is JS-driven: AJAX load of menu tree + checkboxes",
+        "checkbox_field": "module[]",
+        "menu_value_format": "{moduleCode}_{menuId}",
+        "ajax": {"detail": "GET /role-manage/detail?id={id}"},
+        "menu_modules": "Hierarchical with codes like 1001, 1002, 1101, 1201 (4-digit, grouped by first 2 digits)"
+      }
+    },
+
+    "coa": {
+      "list_url": "/coa-manage",
+      "create_url": "/coa-manage/create",
+      "table_columns": ["#", "Kode", "Nama", "Tipe", "#"],
+      "create_fields": [
+        {"name": "code", "type": "text", "required": true, "label": "Kode"},
+        {"name": "name", "type": "text", "required": true, "label": "Nama"},
+        {"name": "type", "type": "select", "required": true, "label": "Tipe", "options": [
+          "Kas/Bank", "Piutang Dagang", "Persediaan", "Aktiva Lancar Lainnya",
+          "Akun Hutang", "Aktiva Tetap", "Akumulasi Penyusutan", "Aset Lainnya",
+          "Hutang Lancar Lainnya", "Ekuitas", "Pendapatan", "Harga Pokok Penjualan",
+          "Beban", "Pendapatan Lain-lain", "Beban Lain-lain"
+        ]},
+        {"name": "parent", "type": "select", "required": false, "label": "Induk", "options": "self-referential: every COA except 'Tidak Ada'"},
+        {"name": "head", "type": "checkbox", "required": false, "label": "Header (header account, no postings)"}
+      ],
+      "structure": "Self-referential tree via parent field. Header accounts mark grouping nodes (no postings). Code is hierarchical numeric (e.g., 11110, 11111, 11411).",
+      "sample_coa": ["11110 - KAS", "11111 - Kas Utama", "11112 - Kas Kecil", "11201 - Investasi", "11212 - BCA (2640351589)", "11411 - Piutang Dagang"]
+    },
+
+    "coa_auto": {
+      "list_url": "/coa-auto-manage",
+      "note": "Auto-journal mapping config: which GL account each transaction event posts to. One form with 12 COA selectors.",
+      "fields": [
+        {"name": "coa_1", "label": "Hutang Dagang (purchase invoice)"},
+        {"name": "coa_2", "label": "Potongan Pembayaran (purchase invoice discount)"},
+        {"name": "coa_3", "label": "Beban Lainnya (purchase invoice other expenses)"},
+        {"name": "coa_4", "label": "PPN Masukan (input VAT)"},
+        {"name": "coa_5", "label": "Koreksi Stok (stock opname offset)"},
+        {"name": "coa_6", "label": "Persediaan Dalam Perjalanan (in-transit inventory)"},
+        {"name": "coa_7", "label": "Piutang Dagang (sales invoice)"},
+        {"name": "coa_8", "label": "Potongan Penjualan (sales discount)"},
+        {"name": "coa_9", "label": "PPN Keluaran (output VAT)"},
+        {"name": "coa_10", "label": "Uang Muka Pembelian (purchase advance)"},
+        {"name": "coa_11", "label": "Uang Muka Penjualan (sales advance)"},
+        {"name": "coa_12", "label": "Selisih Harga Pembelian (purchase return price diff)"}
+      ]
+    },
+
+    "formulation": {
+      "list_url": "/formulation-manage",
+      "note": "Formulation create requires a parent product ID: /formulation-manage/{parent_goods_id}/create. Sampled with parent_id=1001.",
+      "create_url_pattern": "/formulation-manage/{parent_goods_id}/create",
+      "table_columns": ["#", "Kode", "Tanggal", "Nama Produk", "Rev", "Netto", "Pelanggan", "BusDev", "Formulator", "Status", "#"],
+      "create_fields": [
+        {"name": "date", "type": "text", "required": true, "label": "Tanggal", "note": "datetimepicker"},
+        {"name": "name", "type": "text", "required": false, "label": "Nama Formula", "note": "auto-generated"},
+        {"name": "note", "type": "textarea", "required": false, "label": "Catatan"}
+      ],
+      "sample_row": {"kode": "SS-202607-000076", "tanggal": "2026-09-16", "produk": "2 in 1 MOIST & SUNSCREEN FOR MEN", "rev": "Rev 1", "netto": "30.0000 ml", "status": "Revise"}
+    }
+  },
+
+  "cross_references": [
+    {"from": "customer", "field": "category", "to": "customer_category", "fk_pattern": "category_id → id"},
+    {"from": "customer", "field": "user", "to": "user", "fk_pattern": "user_id → id (BusDev owner)"},
+    {"from": "supplier", "field": "category", "to": "supplier_category", "fk_pattern": "category_id → id"},
+    {"from": "goods", "field": "category", "to": "goods_category", "fk_pattern": "category_id → id"},
+    {"from": "goods", "field": "sub_category", "to": "static map (no FK table)", "note": "sub_category values are hardcoded in JS, not a DB table"},
+    {"from": "goods", "field": "unit", "to": "static (pcs/gr/ml)", "note": "static options"},
+    {"from": "goods", "field": "coa_1..coa_8", "to": "coa", "fk_pattern": "each COA slot maps a transaction category to a default GL account"},
+    {"from": "user", "field": "role", "to": "role", "fk_pattern": "role_id → id"},
+    {"from": "warehouse_access", "field": "user+warehouse", "to": "user+warehouse", "fk_pattern": "M:N junction table, configured per-user warehouse access"},
+    {"from": "role", "field": "module[]", "to": "side_menu", "fk_pattern": "module_id format {module}_{menuId}, hierarchical (1001, 1101, 1201 groups)"},
+    {"from": "coa", "field": "parent", "to": "coa", "fk_pattern": "self-referential tree, head=true marks non-posting header"},
+    {"from": "formulation", "field": "(parent)", "to": "goods", "fk_pattern": "parent_goods_id in URL, formulation is child of a product master"}
+  ],
+
+  "ajax_endpoint_pattern": "{module}/detail?id={id} for inline-edit modals; {module}/cities?province={id} for province→city cascade; {module}/coa for COA filter; role-manage/detail?id={id} returns menu tree with checked flags.",
+
+  "ui_framework": "AdminLTE 3 + Bootstrap 4 + jQuery, plugins: select2, datetimepicker (tempusdominus), daterangepicker, summernote, ekko-lightbox, fullcalendar, overlayScrollbars. CSRF: hidden csrf_gs input present in all POST forms (CI3/CI4 standard).",
+
+  "validation_observations": [
+    "All POST forms include csrf_gs hidden field.",
+    "select2 used for most selects — controlled dropdowns with data-placeholder='Pilih X'.",
+    "Province→City is AJAX-driven across all master forms that have location.",
+    "Goods.create has 8 separate COA selectors (coa_1..coa_8) — one per transaction GL bucket.",
+    "User.create has password + password_confirm — client-side equality check standard.",
+    "COA.create has 'head' checkbox — header accounts cannot receive postings."
+  ],
+
+  "files": {
+    "html_dir": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\docs\\legacy-erp\\_crawl",
+    "per_page_html": "22 files (one per URL)",
+    "per_page_json": "22 files (one per URL)",
+    "consolidated": [
+      "_crawl_manifest.json (crawl HTTP results)",
+      "_schemas_create.json (create-form schemas with all field opts)",
+      "_schemas_list.json (list-page tables/filters)",
+      "_select_options.json (all select option values)",
+      "_ajax_endpoints.json (AJAX endpoints per page)",
+      "MASTER_DATA_SUMMARY.json (this file)"
+    ]
+  }
+}

@@ -88,7 +88,7 @@ export default function TaskWorkspaceV2({ memberSlug }: { memberSlug: string }) 
     department: m.department ?? '',
   })), [membersQuery.data]);
   // ponytail: hook types are leaner than marketing-api; cast to canonical shape (runtime data has all fields).
-  const tasks: MarketingTask[] = useMemo(() => (tasksQuery.data?.data ?? []) as MarketingTask[], [tasksQuery.data]);
+  const rawTasks: MarketingTask[] = useMemo(() => (tasksQuery.data?.data ?? []) as MarketingTask[], [tasksQuery.data]);
   const loading = tasksQuery.isLoading || membersQuery.isLoading;
   const loadError = (tasksQuery.error ?? membersQuery.error) ? "Data Management Task tidak dapat dimuat." : null;
   const refresh = useCallback(() => {
@@ -110,6 +110,41 @@ export default function TaskWorkspaceV2({ memberSlug }: { memberSlug: string }) 
   const viewer = useMemo<MarketingViewer | null>(() =>
     user ? { id: user.id, email: user.email, name: user.fullName, roles: user.roles } : null,
   [user]);
+
+  const tasks: MarketingTask[] = useMemo(() => {
+    if (!viewer) return rawTasks;
+    const emailName = (viewer.email?.split('@')[0] || '').toLowerCase();
+    const fullName = (viewer.name || '').toLowerCase();
+    const isSuperAdminOrHead = viewer.roles?.some((r: string) => ['SUPER_ADMIN', 'HEAD_OPS'].includes(r));
+    const isRevita = emailName.includes('revita') || fullName.includes('revita') || viewer.roles?.includes('MARKETING');
+    const isRahmat = emailName.includes('rahmat') || fullName.includes('rahmat');
+
+    if (isSuperAdminOrHead || isRevita) {
+      return rawTasks;
+    }
+
+    if (isRahmat) {
+      return rawTasks.filter((t) => {
+        const assName = (t.assignee?.name || '').toLowerCase();
+        return (
+          t.assigneeId === viewer.id ||
+          assName.includes('rahmat') ||
+          assName.includes('zarkasi') ||
+          assName.includes('gusti')
+        );
+      });
+    }
+
+    return rawTasks.filter((t) => {
+      const assName = (t.assignee?.name || '').toLowerCase();
+      return (
+        t.assigneeId === viewer.id ||
+        assName === emailName ||
+        fullName.includes(assName) ||
+        assName.includes(emailName)
+      );
+    });
+  }, [rawTasks, viewer]);
 
   // Check if memberSlug is a specific team member
   const currentMember = useMemo(() => {

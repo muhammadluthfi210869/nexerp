@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { PaymentStatus } from '@prisma/client';
 import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
@@ -59,10 +63,13 @@ export class SalesInvoicesService {
     const customer = await this.prisma.customer.findUnique({
       where: { id: dto.customerId },
     });
-    if (!customer) throw new NotFoundException(`Customer ${dto.customerId} not found`);
+    if (!customer)
+      throw new NotFoundException(`Customer ${dto.customerId} not found`);
 
     if (dto.lineItems.length === 0) {
-      throw new BadRequestException(`Sales invoice must have at least one line item`);
+      throw new BadRequestException(
+        `Sales invoice must have at least one line item`,
+      );
     }
 
     // Calculate totals
@@ -140,8 +147,16 @@ export class SalesInvoicesService {
             sourceDocumentType: 'SALES_ORDER' as any,
             lines: {
               create: [
-                { accountId: arAcc.id, debit: Number(inv.totalAmount), credit: 0 },
-                { accountId: revAcc.id, debit: 0, credit: Number(inv.subtotal) },
+                {
+                  accountId: arAcc.id,
+                  debit: Number(inv.totalAmount),
+                  credit: 0,
+                },
+                {
+                  accountId: revAcc.id,
+                  debit: 0,
+                  credit: Number(inv.subtotal),
+                },
               ],
             },
           },

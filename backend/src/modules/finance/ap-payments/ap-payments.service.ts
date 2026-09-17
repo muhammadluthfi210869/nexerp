@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { PaymentStatus } from '@prisma/client';
 import { FinanceGateHelper } from '../../../common/helpers/gate.helper';
@@ -16,10 +20,14 @@ export class APPaymentsService {
       where: filter,
       include: {
         vendor: { select: { id: true, name: true } },
-        bankAccount: { select: { id: true, bankName: true, accountNumber: true } },
+        bankAccount: {
+          select: { id: true, bankName: true, accountNumber: true },
+        },
         verifier: { select: { id: true, fullName: true } },
         billAllocations: {
-          include: { bill: { select: { id: true, billNumber: true, grandTotal: true } } },
+          include: {
+            bill: { select: { id: true, billNumber: true, grandTotal: true } },
+          },
         },
       },
       orderBy: { paymentDate: 'desc' },
@@ -76,7 +84,9 @@ export class APPaymentsService {
         paymentDate: now,
         totalAmount: dto.totalAmount,
         bankAccountId: dto.bankAccountId,
-        notes: dto.notes ? `${dto.notes} [created by ${userId}]` : `[created by ${userId}]`,
+        notes: dto.notes
+          ? `${dto.notes} [created by ${userId}]`
+          : `[created by ${userId}]`,
         attachmentUrls: dto.attachmentUrls || [],
         status: PaymentStatus.PENDING, // PENDING until verified
       },
@@ -87,10 +97,7 @@ export class APPaymentsService {
    * Verify AP payment (2-person rule: verifier must be different from creator).
    * After verify, status remains PENDING until marked paid.
    */
-  async verify(
-    userId: string,
-    id: string,
-  ) {
+  async verify(userId: string, id: string) {
     const payment = await this.prisma.aPPayment.findUnique({
       where: { id },
       include: { billAllocations: true },
@@ -172,7 +179,9 @@ export class APPaymentsService {
       where: { id: payment.bankAccountId },
     });
     if (!bankAcc) {
-      throw new NotFoundException(`Bank account ${payment.bankAccountId} not found`);
+      throw new NotFoundException(
+        `Bank account ${payment.bankAccountId} not found`,
+      );
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -195,8 +204,16 @@ export class APPaymentsService {
             sourceDocumentType: 'PAYMENT' as any,
             lines: {
               create: [
-                { accountId: apAcc.id, debit: Number(payment.totalAmount), credit: 0 },
-                { accountId: bankAcc.id, debit: 0, credit: Number(payment.totalAmount) },
+                {
+                  accountId: apAcc.id,
+                  debit: Number(payment.totalAmount),
+                  credit: 0,
+                },
+                {
+                  accountId: bankAcc.id,
+                  debit: 0,
+                  credit: Number(payment.totalAmount),
+                },
               ],
             },
           },
@@ -244,7 +261,8 @@ export class APPaymentsService {
       where: { id: paymentId },
       include: { billAllocations: true },
     });
-    if (!payment) throw new NotFoundException(`AP payment ${paymentId} not found`);
+    if (!payment)
+      throw new NotFoundException(`AP payment ${paymentId} not found`);
 
     if (payment.status === PaymentStatus.PAID) {
       throw new BadRequestException(
@@ -252,7 +270,9 @@ export class APPaymentsService {
       );
     }
 
-    const bill = await this.prisma.bill.findUnique({ where: { id: dto.billId } });
+    const bill = await this.prisma.bill.findUnique({
+      where: { id: dto.billId },
+    });
     if (!bill) throw new NotFoundException(`Bill ${dto.billId} not found`);
     if (bill.vendorId !== payment.vendorId) {
       throw new BadRequestException(

@@ -1,0 +1,31 @@
+{
+  "url": "/supplier-manage",
+  "type": "list",
+  "file": "supplier_manage.html",
+  "title": "GsERP KIL - Supplier",
+  "forms": [],
+  "tables": [
+    {
+      "index": 1,
+      "headers": [
+        "#",
+        "Supplier",
+        "PIC",
+        "Telepon",
+        "Kategori",
+        "Kota",
+        "Pajak (%)",
+        "#"
+      ],
+      "rowCount": 178
+    }
+  ],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [
+    "https://kil.gserp.id/supplier-manage/detail",
+    "https://kil.gserp.id/supplier-manage/cities"
+  ],
+  "notes": [],
+  "addUrl": "https://kil.gserp.id/supplier-manage/create"
+}

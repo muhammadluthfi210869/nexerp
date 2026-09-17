@@ -2,7 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsDateString, MinLength } from 'class-validator';
 
 export class LockPeriodDto {
-  @ApiProperty({ example: '2026-09-01', description: 'First day of month to lock' })
+  @ApiProperty({
+    example: '2026-09-01',
+    description: 'First day of month to lock',
+  })
   @IsDateString()
   period: string;
 

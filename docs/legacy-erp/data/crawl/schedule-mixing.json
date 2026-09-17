@@ -1,0 +1,116 @@
+{
+  "module": "Production",
+  "path": "/schedule-mixing",
+  "size_bytes": 164160,
+  "title": "GsERP KIL - Jadwal Mixing",
+  "h_titles": [
+    "Jadwal Mixing"
+  ],
+  "breadcrumbs": [
+    "Beranda",
+    "Pra Produksi",
+    "Jadwal Mixing"
+  ],
+  "forms": [],
+  "tables": [
+    {
+      "id": "GSTable1",
+      "headers": [
+        "#",
+        "Kode",
+        "Tanggal",
+        "Batch Record",
+        "Pelanggan",
+        "Produk",
+        "Target (PCS)",
+        "Hasil Upscale",
+        "Status",
+        "#"
+      ],
+      "rows_visible": 1
+    }
+  ],
+  "buttons": [
+    "Riwayat",
+    "Buat",
+    "Pending"
+  ],
+  "ajax_endpoints": [
+    "https://kil.gserp.id/schedule-mixing/detail",
+    "https://kil.gserp.id/schedule-mixing/get-batch-detail",
+    "https://kil.gserp.id/schedule-mixing/get-batch-records",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fbatch\\x2Drecord\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fchecklist\\x2Dprogress\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fdelivery\\x2Dout\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fformulation\\x2Dmanage\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fformulation\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fgoods\\x2Drequest\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fgoods\\x2Drequest\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fneed\\x2Dfor\\x2Dgoods\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fproduction\\x2Dfilling\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fproduction\\x2Dmixing\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fproduction\\x2Dpackaging\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Ddown\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Din\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dinvoice\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Drequest\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Drequest\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Dout\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Dreturn\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fpurchase\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frequest\\x2Dcogs\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frequest\\x2Dcogs\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Ddown\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dinvoice\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Din\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dreturn\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Dapproval\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Dpayment\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Dsample\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fsales\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fschedule\\x2Dfilling\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fschedule\\x2Dmixing\\x2Fbadge",
+    "https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Fschedule\\x2Dpackaging\\x2Fbadge"
+  ],
+  "modals": [
+    "modal-sm",
+    "modal-sm-content",
+    "modal-md",
+    "modal-md-content",
+    "modal-lg",
+    "modal-lg-content",
+    "modal-xl",
+    "modal-xl-content"
+  ],
+  "links": [],
+  "print_patterns": [
+    "class=\"fas fa-print\""
+  ],
+  "status_badges": [],
+  "status_keywords": [
+    "pending",
+    "mixing",
+    "filling",
+    "packaging",
+    "sample",
+    "production",
+    "ready",
+    "open"
+  ],
+  "machine_equipment": [],
+  "input_names": [],
+  "select_names": [],
+  "datatables_init": [
+    {
+      "selector": "GSTable1",
+      "config_snippet": "{\n\t\t\t\"responsive\": false,\n\t\t\t\"autoWidth\": false,\n\t\t\t\"columnDefs\": [{\n\t\t\t\t\"targets\": 'no-sort',\n\t\t\t\t\"orderable\": false,\n\t\t\t\t\"responsivePriority\": 1\n\t\t\t}],\n\t\t}"
+    }
+  ],
+  "column_defs": []
+}

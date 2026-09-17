@@ -1,0 +1,27 @@
+{
+  "url": "/goods-category-manage",
+  "type": "list",
+  "file": "goods_category_manage.html",
+  "title": "GsERP KIL - Kategori Barang",
+  "forms": [],
+  "tables": [
+    {
+      "index": 1,
+      "headers": [
+        "#",
+        "Kode",
+        "Kategori",
+        "Deskripsi",
+        "#"
+      ],
+      "rowCount": 8
+    }
+  ],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [
+    "https://kil.gserp.id/goods-category-manage/detail"
+  ],
+  "notes": [],
+  "addUrl": "https://kil.gserp.id/goods-category-manage/create"
+}

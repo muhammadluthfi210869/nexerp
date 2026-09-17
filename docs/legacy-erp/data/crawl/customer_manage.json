@@ -1,0 +1,35 @@
+{
+  "url": "/customer-manage",
+  "type": "list",
+  "file": "customer_manage.html",
+  "title": "GsERP KIL - Pelanggan",
+  "forms": [],
+  "tables": [
+    {
+      "index": 1,
+      "headers": [
+        "#",
+        "Nama",
+        "Telepon",
+        "Kategori",
+        "Kota",
+        "Penginput",
+        "SO Sample",
+        "SO Produk",
+        "Nominal SO Produk",
+        "#"
+      ],
+      "rowCount": 830
+    }
+  ],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [
+    "https://kil.gserp.id/customer-manage/detail",
+    "https://kil.gserp.id/customer-manage",
+    "https://kil.gserp.id/customer-manage/export",
+    "https://kil.gserp.id/customer-manage/cities"
+  ],
+  "notes": [],
+  "addUrl": "https://kil.gserp.id/customer-manage/create"
+}

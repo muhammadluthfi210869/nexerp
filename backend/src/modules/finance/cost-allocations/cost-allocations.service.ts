@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 type Method = 'DIRECT' | 'STEP_DOWN' | 'RECIPROCAL';
@@ -22,8 +26,11 @@ export class CostAllocationsService {
   }
 
   async findOne(id: string) {
-    const allocation = await this.prisma.costAllocation.findUnique({ where: { id } });
-    if (!allocation) throw new NotFoundException(`Cost allocation ${id} not found`);
+    const allocation = await this.prisma.costAllocation.findUnique({
+      where: { id },
+    });
+    if (!allocation)
+      throw new NotFoundException(`Cost allocation ${id} not found`);
     return allocation;
   }
 
@@ -31,18 +38,23 @@ export class CostAllocationsService {
    * Create one allocation entry.
    * For bulk operations, call createBulk() instead.
    */
-  async create(_userId: string, dto: {
-    allocationDate: string;
-    amount: number;
-    fromCostCenter: string;
-    toCostCenter: string;
-    allocationMethod?: Method;
-    basis?: string;
-    notes?: string;
-  }) {
+  async create(
+    _userId: string,
+    dto: {
+      allocationDate: string;
+      amount: number;
+      fromCostCenter: string;
+      toCostCenter: string;
+      allocationMethod?: Method;
+      basis?: string;
+      notes?: string;
+    },
+  ) {
     if (dto.amount <= 0) throw new BadRequestException('amount must be > 0');
     if (dto.fromCostCenter === dto.toCostCenter) {
-      throw new BadRequestException('fromCostCenter must differ from toCostCenter');
+      throw new BadRequestException(
+        'fromCostCenter must differ from toCostCenter',
+      );
     }
     return this.prisma.costAllocation.create({
       data: {
@@ -65,10 +77,23 @@ export class CostAllocationsService {
       where: { allocationDate: { gte: from, lte: to } },
     });
 
-    const flows: Record<string, { costCenter: string; inflow: number; outflow: number; net: number }> = {};
+    const flows: Record<
+      string,
+      { costCenter: string; inflow: number; outflow: number; net: number }
+    > = {};
     for (const a of allocations) {
-      flows[a.fromCostCenter] ??= { costCenter: a.fromCostCenter, inflow: 0, outflow: 0, net: 0 };
-      flows[a.toCostCenter] ??= { costCenter: a.toCostCenter, inflow: 0, outflow: 0, net: 0 };
+      flows[a.fromCostCenter] ??= {
+        costCenter: a.fromCostCenter,
+        inflow: 0,
+        outflow: 0,
+        net: 0,
+      };
+      flows[a.toCostCenter] ??= {
+        costCenter: a.toCostCenter,
+        inflow: 0,
+        outflow: 0,
+        net: 0,
+      };
       flows[a.fromCostCenter].outflow += Number(a.amount);
       flows[a.toCostCenter].inflow += Number(a.amount);
     }

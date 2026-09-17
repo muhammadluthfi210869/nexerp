@@ -25,7 +25,9 @@ export class DepreciationSchedulesController {
   }
 
   @Get('calculate/:assetId')
-  @ApiOperation({ summary: 'Calculate monthly depreciation amount for an asset' })
+  @ApiOperation({
+    summary: 'Calculate monthly depreciation amount for an asset',
+  })
   calculate(@Param('assetId') assetId: string) {
     return this.service.calculateMonthly(assetId);
   }
@@ -37,13 +39,17 @@ export class DepreciationSchedulesController {
   }
 
   @Post('generate/:assetId')
-  @ApiOperation({ summary: 'Generate full depreciation schedule for an asset (idempotent)' })
+  @ApiOperation({
+    summary: 'Generate full depreciation schedule for an asset (idempotent)',
+  })
   generate(@Param('assetId') assetId: string) {
     return this.service.generate(assetId);
   }
 
   @Post(':id/post-journal')
-  @ApiOperation({ summary: 'Post a depreciation entry to GL (creates journal entry)' })
+  @ApiOperation({
+    summary: 'Post a depreciation entry to GL (creates journal entry)',
+  })
   postJournal(@Req() req: any, @Param('id') id: string) {
     const userId = req.user?.id;
     return this.service.postJournal(userId, id);

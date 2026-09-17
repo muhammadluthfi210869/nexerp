@@ -268,7 +268,11 @@ export class RndService {
       if (!current) throw new NotFoundException('Sample request not found');
 
       // Validate state transition via canonical service
-      this.stateTransition.validateTransition('SampleStage', current.stage, dto.newStage);
+      this.stateTransition.validateTransition(
+        'SampleStage',
+        current.stage,
+        dto.newStage,
+      );
 
       const updateData: any = {
         stage: dto.newStage,

@@ -33,7 +33,9 @@ export class BillsController {
   }
 
   @Post(':id/post')
-  @ApiOperation({ summary: 'Post bill — mark as ready for payment, create journal' })
+  @ApiOperation({
+    summary: 'Post bill — mark as ready for payment, create journal',
+  })
   post(@Req() req: any, @Param('id') id: string) {
     const userId = req.user?.id;
     return this.service.post(userId, id);
@@ -41,11 +43,7 @@ export class BillsController {
 
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Cancel a bill (only if not yet paid)' })
-  cancel(
-    @Req() req: any,
-    @Param('id') id: string,
-    @Body() dto: CancelBillDto,
-  ) {
+  cancel(@Req() req: any, @Param('id') id: string, @Body() dto: CancelBillDto) {
     const userId = req.user?.id;
     return this.service.cancel(userId, id, dto.reason);
   }

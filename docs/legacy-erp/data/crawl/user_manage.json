@@ -1,0 +1,26 @@
+{
+  "url": "/user-manage",
+  "type": "list",
+  "file": "user_manage.html",
+  "title": "GsERP KIL - Pengguna",
+  "forms": [],
+  "tables": [
+    {
+      "index": 1,
+      "headers": [
+        "#",
+        "Kode/NIP",
+        "Nama",
+        "Email",
+        "Nomor Telepon",
+        "Hak Akses",
+        "#"
+      ],
+      "rowCount": 46
+    }
+  ],
+  "filters": [],
+  "actions": [],
+  "ajaxEndpoints": [],
+  "notes": []
+}

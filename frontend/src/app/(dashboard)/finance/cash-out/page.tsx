@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -56,11 +57,26 @@ const FALLBACK_CASH_OUT: CashOutItem[] = [
 ];
 
 export default function CashOutPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Kas Keluar...</div>}>
+      <CashOutContent />
+    </Suspense>
+  );
+}
+
+function CashOutContent() {
+  const searchParams = useSearchParams();
   const toast = useDnaToast();
   const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedDetail, setSelectedDetail] = useState<CashOutItem | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setIsCreateModalOpen(true);
+    }
+  }, [searchParams]);
 
   // Form states (SCR-084)
   const [formData, setFormData] = useState({

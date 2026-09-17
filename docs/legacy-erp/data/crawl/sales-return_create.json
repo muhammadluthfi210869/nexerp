@@ -1,0 +1,165 @@
+{
+  "url": "/sales-return/create",
+  "http_status": 200,
+  "title": "GsERP KIL - Buat Retur Penjualan",
+  "form_fields": [
+    {
+      "name": "csrf_gs",
+      "type": "hidden",
+      "required": false,
+      "id": null,
+      "options": null
+    },
+    {
+      "name": "sales_returns_date",
+      "type": "text",
+      "required": true,
+      "id": "sales_returns_date",
+      "options": null
+    },
+    {
+      "name": "sales_returns_tax",
+      "type": "hidden",
+      "required": false,
+      "id": "sales_returns_tax",
+      "options": null
+    },
+    {
+      "name": "goods_id[",
+      "type": "hidden",
+      "required": false,
+      "id": null,
+      "options": null
+    },
+    {
+      "name": "price[",
+      "type": "hidden",
+      "required": false,
+      "id": null,
+      "options": null
+    },
+    {
+      "name": "sales_invoices_id",
+      "type": "select",
+      "required": true,
+      "id": "sales_invoices_id",
+      "options": [
+        {
+          "value": "",
+          "text": "-- Pilih Faktur Penjualan --"
+        }
+      ]
+    },
+    {
+      "name": "sales_returns_notes",
+      "type": "textarea",
+      "required": false,
+      "id": "sales_returns_notes",
+      "options": ""
+    }
+  ],
+  "tables": [
+    {
+      "headers": [
+        "Kode Faktur",
+        ": -"
+      ],
+      "rows": 2
+    },
+    {
+      "headers": [
+        "Pelanggan",
+        ": -"
+      ],
+      "rows": 1
+    },
+    {
+      "headers": [
+        "#",
+        "Barang",
+        "Satuan",
+        "Qty Faktur",
+        "Sudah Diretur",
+        "Qty Tersedia",
+        "Qty Retur",
+        "Catatan",
+        "Total"
+      ],
+      "rows": 2
+    },
+    {
+      "headers": [
+        "Grand Total",
+        "Rp 0"
+      ],
+      "rows": 3
+    }
+  ],
+  "actions": [
+    {
+      "text": "Kembali",
+      "type": "button"
+    },
+    {
+      "text": "Simpan",
+      "type": "submit"
+    },
+    {
+      "text": "&times;",
+      "type": "button"
+    },
+    {
+      "text": "Tutup",
+      "type": "button"
+    },
+    {
+      "text": "Akun Saya",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account"
+    }
+  ],
+  "ajax_calls": [
+    "https://kil.gserp.id/sales-return/get-sales-invoice/",
+    "https://kil.gserp.id/sales-return/detail",
+    "https://kil.gserp.id/purchase-approval/badge",
+    "https://kil.gserp.id/purchase-return-approval/badge",
+    "https://kil.gserp.id/sales-sample-approval/badge",
+    "https://kil.gserp.id/sales-approval/badge",
+    "https://kil.gserp.id/sales-return-approval/badge",
+    "https://kil.gserp.id/request-cogs-approval/badge",
+    "https://kil.gserp.id/purchase-request-approval/badge",
+    "https://kil.gserp.id/goods-request-approval/badge",
+    "https://kil.gserp.id/checklist-progress/badge",
+    "https://kil.gserp.id/purchase/badge",
+    "https://kil.gserp.id/purchase-invoice/badge",
+    "https://kil.gserp.id/purchase-return/badge",
+    "https://kil.gserp.id/purchase-down-payment/badge",
+    "https://kil.gserp.id/purchase-payment/badge",
+    "https://kil.gserp.id/need-for-goods/badge",
+    "https://kil.gserp.id/goods-request/badge",
+    "https://kil.gserp.id/purchase-request/badge",
+    "https://kil.gserp.id/purchase-in/badge",
+    "https://kil.gserp.id/sales-return-in/badge",
+    "https://kil.gserp.id/delivery-out/badge",
+    "https://kil.gserp.id/purchase-return-out/badge",
+    "https://kil.gserp.id/sales-sample/badge",
+    "https://kil.gserp.id/sales-sample-payment/badge",
+    "https://kil.gserp.id/sales/badge",
+    "https://kil.gserp.id/sales-return/badge",
+    "https://kil.gserp.id/sales-down-payment/badge",
+    "https://kil.gserp.id/sales-invoice/badge",
+    "https://kil.gserp.id/sales-payment/badge",
+    "https://kil.gserp.id/formulation-manage/badge",
+    "https://kil.gserp.id/formulation/badge",
+    "https://kil.gserp.id/request-cogs/badge",
+    "https://kil.gserp.id/batch-record/badge",
+    "https://kil.gserp.id/schedule-mixing/badge",
+    "https://kil.gserp.id/schedule-filling/badge",
+    "https://kil.gserp.id/schedule-packaging/badge",
+    "https://kil.gserp.id/production-mixing/badge",
+    "https://kil.gserp.id/production-filling/badge",
+    "https://kil.gserp.id/production-packaging/badge"
+  ],
+  "modals": [],
+  "print_pattern": null,
+  "notes": "csrf_gs, DataTables, select2, rich-editor, daterangepicker"
+}

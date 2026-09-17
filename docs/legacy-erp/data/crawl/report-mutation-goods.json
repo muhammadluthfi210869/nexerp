@@ -1,0 +1,429 @@
+{
+  "url_path": "report-mutation-goods",
+  "title": "GsERP KIL - Laporan Mutasi Barang",
+  "page_heading": "Laporan Mutasi Barang",
+  "forms": [],
+  "inputs": [
+    {
+      "name": "periode",
+      "type": "text",
+      "placeholder": "",
+      "id": "periode"
+    }
+  ],
+  "filters": [
+    {
+      "name": "warehouse",
+      "options": [
+        {
+          "value": "",
+          "text": "-- Pilih Gudang --"
+        },
+        {
+          "value": "",
+          "text": "Semua Gudang"
+        },
+        {
+          "value": "",
+          "text": "Gudang Bahan Baku"
+        },
+        {
+          "value": "",
+          "text": "Gudang Kemasan"
+        },
+        {
+          "value": "",
+          "text": "Gudang Barang Jadi"
+        },
+        {
+          "value": "",
+          "text": "Gudang Surabaya"
+        },
+        {
+          "value": "",
+          "text": "Gudang Laboratorium"
+        },
+        {
+          "value": "",
+          "text": "Gudang Produksi Mixing"
+        },
+        {
+          "value": "",
+          "text": "Gudang Produksi Filling"
+        },
+        {
+          "value": "",
+          "text": "Gudang Produksi Packaging"
+        },
+        {
+          "value": "",
+          "text": "Gudang Barang Setengah Jadi"
+        },
+        {
+          "value": "",
+          "text": "Gudang Sekunder"
+        },
+        {
+          "value": "",
+          "text": "Gudang Bahan Baku (Client)"
+        },
+        {
+          "value": "",
+          "text": "Gudang Kemasan (Client)"
+        },
+        {
+          "value": "",
+          "text": "Gudang Sekunder (Client)"
+        },
+        {
+          "value": "",
+          "text": "Gudang Reject"
+        },
+        {
+          "value": "",
+          "text": "Gudang Supplier"
+        },
+        {
+          "value": "",
+          "text": "Gudang Sample"
+        }
+      ]
+    },
+    {
+      "name": "goods",
+      "options": [
+        {
+          "value": "",
+          "text": "Semua Barang"
+        },
+        {
+          "value": "",
+          "text": "BRU00001 - BODY LOTION"
+        },
+        {
+          "value": "",
+          "text": "BRU00002 - Deodorant spray"
+        },
+        {
+          "value": "",
+          "text": "BRU00003 - Body Spray"
+        },
+        {
+          "value": "",
+          "text": "BRU00004 - Deodorant Spray"
+        },
+        {
+          "value": "",
+          "text": "BRU00005 - Sabun Batang"
+        },
+        {
+          "value": "",
+          "text": "BRU00006 - Serum wajah"
+        },
+        {
+          "value": "",
+          "text": "BRU00007 - BODY TONER"
+        },
+        {
+          "value": "",
+          "text": "BRU00008 - Masker wajah"
+        },
+        {
+          "value": "",
+          "text": "BRU00009 - BRIGHTENNING MOISTURIZER"
+        },
+        {
+          "value": "",
+          "text": "BRU00010 - Body lotion Brightening"
+        },
+        {
+          "value": "",
+          "text": "BRU00011 - Body lotion whitenning"
+        },
+        {
+          "value": "",
+          "text": "BRU00012 - Body lotion white sun protector"
+        },
+        {
+          "value": "",
+          "text": "BRU00013 - Moisturizer"
+        },
+        {
+          "value": "",
+          "text": "BRU00014 - hand cream"
+        },
+        {
+          "value": "",
+          "text": "BRU00015 - Paket Skincare OIM Brightening"
+        },
+        {
+          "value": "",
+          "text": "BRU00016 - Paket Skincare OEM ACNE"
+        },
+        {
+          "value": "",
+          "text": "BRU00017 - Parfum EDP LV Dupe"
+        },
+        {
+          "value": "",
+          "text": "BRU00018 - BODY LOTION"
+        },
+        {
+          "value": "",
+          "text": "BRU00019 - Mousturizer hair cream"
+        }
+      ]
+    }
+  ],
+  "tables": [],
+  "nav_links": [
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;en",
+      "text": "English"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;id",
+      "text": "Indonesia"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account",
+      "text": "Akun Saya"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;",
+      "text": "GsERP KIL"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;",
+      "text": "Beranda"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-schedule",
+      "text": "D. Jadwal Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-realization",
+      "text": "D. Realisasi Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-sample",
+      "text": "D. Penjualan Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-product",
+      "text": "D. Penjualan Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-customer",
+      "text": "D. Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sample",
+      "text": "D. Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-executive",
+      "text": "D. Eksekutif"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-notification",
+      "text": "D. Notifikasi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-digital-marketing",
+      "text": "D. Digital Marketing"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-business-development",
+      "text": "D. BusDev"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-rnd",
+      "text": "D. RnD"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-purchasing",
+      "text": "D. Purchasing"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-legality",
+      "text": "D. Legalitas"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production",
+      "text": "D. Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-warehouse",
+      "text": "D. Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-human-resources",
+      "text": "D. HR"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-finance",
+      "text": "D. Keuangan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-guest-book",
+      "text": "D. Buku Tamu"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-sample",
+      "text": "D. Client Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-production",
+      "text": "D. Client Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-repeat-order",
+      "text": "D. Client RO"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-lost",
+      "text": "D. Lost"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;role-manage",
+      "text": "Hak Akses"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;user-manage",
+      "text": "Pengguna"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-manage",
+      "text": "CoA"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-auto-manage",
+      "text": "CoA Jurnal Otomatis"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-manage",
+      "text": "Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-access-manage",
+      "text": "Hak Akses Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-category-manage",
+      "text": "Kategori Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-manage",
+      "text": "Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-category-manage",
+      "text": "Kategori Supplier"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-manage",
+      "text": "Supplier"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-category-manage",
+      "text": "Kategori Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-manage",
+      "text": "Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-my-manage",
+      "text": "Pelanggan Saya"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-category",
+      "text": "Kategori Penjualan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-target",
+      "text": "Target Penjualan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-approval",
+      "text": "Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-approval",
+      "text": "Retur Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-approval",
+      "text": "Penjualan Sample ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-approval",
+      "text": "Penjualan Produk ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-approval",
+      "text": "Retur Penjualan ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs-approval",
+      "text": "Permintaan HPP ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request-approval",
+      "text": "Permintaan Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request-approval",
+      "text": "Permintaan Barang ~"
+    }
+  ],
+  "headings": [
+    {
+      "level": 1,
+      "text": "Laporan Mutasi Barang"
+    },
+    {
+      "level": 3,
+      "text": "Laporan Mutasi Barang"
+    },
+    {
+      "level": 4,
+      "text": "Detail Transaksi"
+    },
+    {
+      "level": 4,
+      "text": "Kesalahan"
+    },
+    {
+      "level": 4,
+      "text": "Kesalahan"
+    },
+    {
+      "level": 4,
+      "text": "Kesalahan"
+    },
+    {
+      "level": 4,
+      "text": "Kesalahan"
+    }
+  ],
+  "ajax_endpoints": [],
+  "aggregations": [
+    "mutation",
+    "transfer",
+    "opname",
+    "valuation",
+    "balance"
+  ],
+  "summary": {
+    "page_title": "GsERP KIL - Laporan Mutasi Barang",
+    "heading": "Laporan Mutasi Barang",
+    "form_count": 0,
+    "filter_count": 2,
+    "table_count": 0,
+    "has_daterange": true,
+    "has_datatable": true,
+    "has_chart": false
+  }
+}

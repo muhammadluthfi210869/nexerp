@@ -17,7 +17,7 @@ import { PrismaService } from '../../../prisma/prisma/prisma.service';
 @ApiTags('qc')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller(['qc', 'v1/qc'])
+@Controller('qc')
 export class QcController {
   constructor(
     private readonly qcService: QCAuditsService,

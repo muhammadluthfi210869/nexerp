@@ -2340,7 +2340,10 @@ export class FinanceService {
     for (const item of po.items) {
       // Use qtyBagus when populated by inbound QC; fall back to quantity when QC
       // hasn't happened yet (so POs in transit still show full value).
-      const qty = Number(item.qtyBagus) > 0 ? Number(item.qtyBagus) : Number(item.quantity);
+      const qty =
+        Number(item.qtyBagus) > 0
+          ? Number(item.qtyBagus)
+          : Number(item.quantity);
       const itemTotal = qty * Number(item.unitPrice);
       const rejectTotal = Number(item.qtyReject) * Number(item.unitPrice);
       subtotal += itemTotal;

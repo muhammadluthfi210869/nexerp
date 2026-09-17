@@ -57,14 +57,17 @@ describe('NotificationGateway', () => {
       user: { findUnique: jest.fn() },
     };
     server = makeServerMock();
-    gateway = new NotificationGateway(jwt as any, prisma as any);
+    gateway = new NotificationGateway(jwt as any, prisma);
     gateway.server = server as any;
   });
 
   describe('handleConnection', () => {
     it('joins user.{userId} room when JWT is valid', async () => {
       jwt.verifyAsync.mockResolvedValueOnce({ sub: 'u-1' });
-      prisma.user.findUnique.mockResolvedValueOnce({ id: 'u-1', status: 'ACTIVE' });
+      prisma.user.findUnique.mockResolvedValueOnce({
+        id: 'u-1',
+        status: 'ACTIVE',
+      });
       const sock = makeSocket({
         handshake: { auth: { token: 'valid.jwt' }, headers: {} },
       });
@@ -73,14 +76,20 @@ describe('NotificationGateway', () => {
 
       expect(sock.join).toHaveBeenCalledWith('user.u-1');
       expect(sock.disconnect).not.toHaveBeenCalled();
-      expect(sock.emit).toHaveBeenCalledWith('connected', expect.objectContaining({ userId: 'u-1' }));
+      expect(sock.emit).toHaveBeenCalledWith(
+        'connected',
+        expect.objectContaining({ userId: 'u-1' }),
+      );
     });
 
     it('disconnects on missing token', async () => {
       const sock = makeSocket({ handshake: { auth: {}, headers: {} } });
       await gateway.handleConnection(sock as any);
       expect(sock.disconnect).toHaveBeenCalledWith(true);
-      expect(sock.emit).toHaveBeenCalledWith('error', expect.objectContaining({ code: 'UNAUTHENTICATED' }));
+      expect(sock.emit).toHaveBeenCalledWith(
+        'error',
+        expect.objectContaining({ code: 'UNAUTHENTICATED' }),
+      );
     });
 
     it('disconnects on bad token', async () => {
@@ -90,12 +99,18 @@ describe('NotificationGateway', () => {
       });
       await gateway.handleConnection(sock as any);
       expect(sock.disconnect).toHaveBeenCalledWith(true);
-      expect(sock.emit).toHaveBeenCalledWith('error', expect.objectContaining({ code: 'INVALID_TOKEN' }));
+      expect(sock.emit).toHaveBeenCalledWith(
+        'error',
+        expect.objectContaining({ code: 'INVALID_TOKEN' }),
+      );
     });
 
     it('disconnects inactive users', async () => {
       jwt.verifyAsync.mockResolvedValueOnce({ sub: 'u-1' });
-      prisma.user.findUnique.mockResolvedValueOnce({ id: 'u-1', status: 'INACTIVE' });
+      prisma.user.findUnique.mockResolvedValueOnce({
+        id: 'u-1',
+        status: 'INACTIVE',
+      });
       const sock = makeSocket({
         handshake: { auth: { token: 'valid.jwt' }, headers: {} },
       });
@@ -176,7 +191,7 @@ describe('NotificationGateway', () => {
 
       // Read the ring buffer for u-1 — lastEventId of "m-A_*" should replay
       // only the second event.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const ring: any[] = (gateway as any).ringByUser.get('u-1') ?? [];
       expect(ring.length).toBe(2);
       const lastEventId = ring[0].id;
@@ -186,7 +201,7 @@ describe('NotificationGateway', () => {
         id: 'sock-second',
         handshake: { auth: { token: 'valid.jwt', lastEventId }, headers: {} },
       });
-      const replayEmits = sock2.emit as jest.Mock;
+      const replayEmits = sock2.emit;
       await gateway.handleConnection(sock2 as any);
 
       // Replayed event(s) should be emitted to the second socket.
@@ -194,7 +209,7 @@ describe('NotificationGateway', () => {
         ([event]: [string]) => event === 'notification',
       );
       expect(replayCalls).toHaveLength(1);
-      expect((replayCalls[0][1] as any).type).toBe('mention');
+      expect(replayCalls[0][1].type).toBe('mention');
     });
   });
 });

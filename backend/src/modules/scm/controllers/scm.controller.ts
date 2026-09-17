@@ -16,7 +16,7 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { UserRole, User } from '@prisma/client';
 
 @ApiTags('scm')
-@Controller(['scm', 'v1/scm'])
+@Controller('scm')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ScmController {
   constructor(private readonly scmService: ScmService) {}

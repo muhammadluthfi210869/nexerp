@@ -1,0 +1,271 @@
+# Execution/certification registry. Not runtime business authority.
+version: 1.1
+effective_date: 2026-09-17
+target: FULL_ERP_READY_FOR_UAT
+policy:
+  sequencing: strict
+  allow_deadline_waiver: false
+  pass_rule: all_required_gates_must_pass
+  on_failure: REMEDIATION_THEN_RETEST_SAME_PHASE
+  allowed_statuses: [NOT_STARTED, IN_PROGRESS, TESTING, FAIL, PASS]
+  defect_threshold:
+    p0_open: 0
+    p1_open: 0
+  tests:
+    unexpected_skips: 0
+    flaky_or_quarantined: 0
+  evidence_pack_required: true
+
+verification_cadence:
+  plan: _BATCH_VERIFICATION_PLAN.md
+  shorthand_examples: [verifikasi fase 1-5, verifikasi 1-5 fase, verifikasi P01-P05]
+  range_is_inclusive: true
+  normalize_bare_numbers_to_two_digit_phase_ids: true
+  maximum_phases_per_batch: 5
+  split_larger_ranges_automatically: true
+  per_phase_self_verification_required: true
+  independent_batch_audit_required: true
+  certification_order: strict_ascending
+  stop_certification_at_first_failed_phase: true
+  allow_downstream_diagnostic_inspection_after_failure: true
+  full_global_suite_each_phase: false
+  full_global_suite_required_for: [P20, P21, P22]
+  dedicated_depth_phases: [P15, P19, P20, P21, P22]
+  preferred_batches:
+    - [P00, P03]
+    - [P04, P06]
+    - [P07, P10]
+    - [P11, P14]
+    - [P15, P15]
+    - [P16, P18]
+    - [P19, P19]
+    - [P20, P22]
+  allowed_batch_verdicts: [PASS, PARTIAL_PASS, FAIL, USER_DECISION_REQUIRED, NOT_VERIFIED]
+  verifier_default_scope: read_only_application_audit_plus_evidence_and_status_documentation
+  remediation_requires_separate_user_request: true
+  evidence_path_template: docs/legacy-erp/verification/evidence/batches/Pxx-Pyy_BATCH_VERIFICATION_YYYY-MM-DD.md
+
+permanent_thresholds:
+  ssot: {passed: 19, failed: 0, blocking_decisions: 0}
+  canonical_mapping_percent: 100
+  build_errors: 0
+  type_errors: 0
+  lint_errors: 0
+  lint_warnings_at_final: 0
+  unit_coverage_business_logic_percent: 70
+  critical_branch_coverage_percent: 90
+  production_vulnerabilities: {critical: 0, high: 0}
+  accessibility: {standard: WCAG_2_1_AA, axe_critical: 0, axe_serious: 0}
+  ui_dna_compliance:
+    canonical_visual_route: /visual-dna
+    canonical_golden_route: /visual-dna/golden-reference
+    public_import_boundary: "@/components/dna"
+    canonical_and_extension_screen_coverage_percent: 100
+    direct_ui_kit_imports_outside_dna: 0
+    dna_subpath_imports_outside_dna: 0
+    raw_interactive_primitives_outside_dna: 0
+    duplicated_dna_primitives: 0
+    unregistered_hardcoded_visual_values: 0
+    divergent_reference_implementations: 0
+    broken_or_ambiguous_barrel_exports: 0
+    expired_or_invalid_exceptions: 0
+    standard: _UI_DNA_COMPLIANCE_STANDARD.md
+  performance:
+    fcp_ms_max: 1500
+    lcp_ms_max: 2500
+    cls_max: 0.1
+    list_api_p95_ms_max: 200
+    report_api_p95_ms_max: 500
+    oltp_query_p95_ms_max: 100
+    report_query_p95_ms_max: 1000
+  recovery: {rpo_hours_max: 24, rto_hours_max: 4}
+  architecture_maintainability:
+    module_ownership_percent: 100
+    forbidden_module_boundary_violations: 0
+    forbidden_circular_dependencies: 0
+    unexplained_orphan_objects: 0
+    unused_direct_production_dependencies: 0
+    unexplained_dead_or_duplicate_objects: 0
+    changed_code_duplication_percent_max: 1
+    codebase_duplication_percent_max: 3
+    changed_function_cyclomatic_complexity_max: 10
+    complexity_exception_absolute_max: 15
+    architecture_checks_blocking_in_ci: true
+    standard: _ARCHITECTURE_MAINTAINABILITY_STANDARD.md
+  change_rehearsal:
+    expected_monthly_change_volume_min: 8
+    expected_monthly_change_volume_max: 15
+    required_archetypes: [persisted_field, business_rule_workflow, ui_api, report_kpi, integration_event]
+    unrelated_domain_edits_allowed: 0
+    deploy_and_reversal_proof_required: true
+
+changeability_policy:
+  lifecycle_classifications: [CANONICAL, APPROVED_EXTENSION, COMPATIBILITY_ADAPTER, DUPLICATE, DEPRECATED, DEAD_CODE, DECISION_REQUIRED]
+  applies_to_every_phase: true
+  applies_to_domain_phases: [P06, P07, P08, P09, P10, P11, P12, P13, P14, P15, P16, P17, P18]
+  no_new_debt_ratchet: true
+  affected_scope_requirements:
+    - owner and module boundary declared
+    - no new unexplained dead duplicate deprecated orphan or compatibility path
+    - no new forbidden import or circular dependency
+    - business logic is not duplicated in controller UI report or integration adapter
+    - architecture and affected regression tests pass
+    - backward compatibility rollback or roll-forward is proven where applicable
+    - material architecture decision is recorded
+    - affected UI imports primitives only through the DNA barrel and passes all scoped DNA checks
+  evidence_required:
+    - pre-change impact map
+    - lifecycle classification delta
+    - dependency graph delta
+    - unused duplication and complexity results
+    - unrelated-domain change explanation
+    - deploy and reversal notes
+    - ADR or decision references
+
+ui_dna_policy:
+  applies_to_all_application_ui: true
+  applies_to_canonical_and_approved_extensions: true
+  dna_implementation_root: frontend/src/components/dna
+  only_public_import: "@/components/dna"
+  canonical_reference_routes: [/visual-dna, /visual-dna/golden-reference]
+  compatibility_redirects_only: [/dna-visual, /dna-visual/golden-reference, /master/dna-visual, /master/dna-visual/golden-reference]
+  allowed_outside_dna:
+    - semantic non-interactive document containers and text
+    - approved structural layout classes using DNA spacing tokens
+    - narrow registered chart or canvas geometry exceptions
+  forbidden_outside_dna:
+    - direct @/components/ui import
+    - direct Radix shadcn or alternate UI kit import
+    - direct DNA implementation subpath import
+    - raw or reimplemented interactive primitive
+    - duplicate local DNA primitive
+    - hardcoded color typography spacing radius shadow breakpoint z-index or animation token
+    - arbitrary Tailwind visual value
+    - inline visual style
+    - copied golden-reference markup instead of a DNA export
+  missing_component_rule: extend_test_export_and_document_dna_before_consumer
+  exception_registry: frontend/src/components/dna/dna-exceptions.yaml
+  exceptions_must_be: [narrow, owned, justified, tested, approved, time_bounded, linked_to_dna_extension]
+  non_waivable_exception_topics: [duplicate_primitive, hardcoded_brand_or_status_token, accessibility_regression, existing_equivalent_dna_export]
+  blocking_tests:
+    - dna_import_boundary_ast
+    - dna_native_interactive_scan
+    - dna_primitive_duplication_scan
+    - dna_hardcoded_visual_scan
+    - dna_barrel_integrity
+    - dna_reference_route_and_composition
+    - dna_screen_coverage_manifest
+    - dna_exception_registry_validation
+    - dna_visual_regression
+    - dna_accessibility_keyboard_focus
+    - dna_responsive_browser_matrix
+
+baseline:
+  verified_readiness_percent: 14.0
+  remaining_gap_percent: 86.0
+  source: _FULL_ERP_GAP_ASSESSMENT.md
+  current_failures:
+    - four SSOT business decisions
+    - frontend production build
+    - backend unit tests
+    - frontend unit tests
+    - frontend lint
+    - local compose environment parsing
+    - backend and frontend production dependency audit
+    - contract-to-code reconciliation
+
+phases:
+  - id: P00
+    name: Stop-the-line containment
+    status: PASS
+    depends_on: []
+    required_gates:
+      - no active exposed or default production credential
+      - every exposed credential rotated and old value revoked
+      - docker compose config parses in clean environment
+      - every critical/high dependency finding has an approved remediation path
+    required_tests: [secret_scan_with_history, env_schema_validation, docker_compose_config, npm_audit_production]
+
+  - id: P01
+    name: Business certainty and SSOT lock
+    status: PASS
+    depends_on: [P00]
+    required_gates:
+      - OD-SM-01 resolved
+      - OD-SM-02 resolved
+      - DECISION_REQUIRED-002 resolved
+      - DECISION_REQUIRED-003 resolved
+      - SSOT validator reports 19 PASS and 0 FAIL
+    required_tests: [ssot_validation, decision_consistency, locked_status_integrity]
+
+  - id: P02
+    name: Contract-to-code and lifecycle reconciliation
+    status: PASS
+    depends_on: [P01]
+    required_gates:
+      - 100 percent canonical models classified and mapped
+      - 100 percent API operations classified and mapped
+      - 100 percent screen routes classified and mapped
+      - implementation-only objects use the canonical lifecycle classifications
+      - every route screen model controller service job event migration export and production dependency is classified or proven reachable
+      - every compatibility adapter and deprecated path has an owner and removal condition
+      - every screen has a DNA import hardcode and migration classification
+      - duplicate and double-prefix routes removed
+    required_tests: [implementation_readiness_audit, schema_diff, openapi_diff, route_diff, rbac_diff, event_workflow_diff, caller_import_registration_scan, orphan_scan, unused_export_dependency_scan, duplicate_implementation_scan, lifecycle_registry_validation, dna_screen_import_inventory, dna_hardcoded_visual_inventory, dna_migration_disposition]
+
+  - id: P03
+    name: Reproducible build architecture gates and CI
+    status: PASS
+    depends_on: [P02]
+    required_gates:
+      - clean install and production build pass for backend and frontend
+      - typecheck and lint pass
+      - CI enforces SSOT, build, static, unit, migration, security, and scoped E2E gates
+      - CI blocks forbidden boundaries circular dependencies unused production dependencies orphan objects and duplication regression
+      - CI blocks every DNA import native-interactive duplicate-primitive hardcoded-token barrel reference coverage and exception violation
+      - architecture debt baseline can only ratchet downward and cannot be informational-only
+      - test memory and worker configuration is deterministic
+    required_tests: [clean_checkout_build, typecheck, lint, unit_smoke, container_build, ci_required_check_test, module_boundary_test, dependency_direction_test, circular_dependency_scan, unused_export_dependency_scan, orphan_object_scan, duplicate_code_scan, changed_complexity_check, dna_import_boundary_ast, dna_native_interactive_scan, dna_primitive_duplication_scan, dna_hardcoded_visual_scan, dna_barrel_integrity, dna_reference_route_and_composition, dna_screen_coverage_manifest, dna_exception_registry_validation]
+
+  - id: P04
+    name: Canonical database and migration chain
+    status: TESTING
+    depends_on: [P03]
+    required_gates:
+      - one canonical physical schema
+      - no unapproved schema drift
+      - empty and upgrade migrations pass
+      - rollback and backfill are rehearsed
+      - expand migrate contract compatibility supports the declared rolling deployment window
+    required_tests: [prisma_validate_generate, empty_db_migrate, baseline_upgrade, migration_idempotency, rollback_rehearsal, constraint_index_audit, expand_contract_compatibility, old_new_version_coexistence]
+
+  - id: P05
+    name: Platform architecture maintainability and controls
+    status: NOT_STARTED
+    depends_on: [P04]
+    required_gates:
+      - auth session MFA RBAC tenant scope audit and maker-checker verified
+      - communication mention notification outbox and idempotency verified
+      - canonical error and audit envelopes verified
+      - domain ownership boundaries dependency direction and shared kernel policy are enforced
+      - no forbidden domain cycle direct cross-domain persistence reach-through or generic shared dumping ground
+      - representative module change does not require unexplained unrelated-domain edits
+    required_tests: [architecture_fitness_suite, module_owner_registry, dependency_graph_snapshot, module_boundary_test, circular_dependency_scan, coupling_complexity_scan, duplicate_code_scan, representative_module_change_test, auth_session_mfa, role_permission_matrix, tenant_isolation, immutable_audit, maker_checker, outbox_retry_dedup, communication_acl, error_contract]
+
+  - {id: P06, name: Master data and system configuration, status: NOT_STARTED, depends_on: [P05], required_gates: [all master capabilities live-data backed, no production mock or fallback, referential integrity verified], required_tests: [master_crud, import_export, soft_delete, uniqueness, role_scope, audit]}
+  - {id: P07, name: CRM marketing guest book and BusDev, status: NOT_STARTED, depends_on: [P06], required_gates: [lead-to-qualified-opportunity golden thread passes], required_tests: [dedup, ownership_reassignment, attribution, followup_sla, consent, role_visibility, dashboard_reconciliation]}
+  - {id: P08, name: Sample RnD formulation creative and legality, status: NOT_STARTED, depends_on: [P07], required_gates: [sample-to-approved-release golden thread passes], required_tests: [revision_immutability, adjustment_lineage, approval_rework, attachment_version, stability_expiry, segregation_of_duties]}
+  - {id: P09, name: Sales DP delivery AR and returns, status: NOT_STARTED, depends_on: [P08], required_gates: [sales golden thread passes with exact journals and stock effects], required_tests: [pricing_discount, credit_limit, dp_amend_cancel, delivery_proof, invoice_receipt_allocation, return_credit_note, reversal, concurrency]}
+  - {id: P10, name: SCM MRP procurement AP and matching, status: NOT_STARTED, depends_on: [P09], required_gates: [procurement golden thread passes with exact reconciliation], required_tests: [mrp_shortage, pr_po_approval, partial_receipt, four_leg_zero_tolerance_match, debit_note, duplicate_invoice, ap_payment_reversal]}
+  - {id: P11, name: Warehouse and inventory, status: NOT_STARTED, depends_on: [P10], required_gates: [inventory quantity and value reconcile under concurrency], required_tests: [no_negative_stock, lot_expiry, quarantine, reservation_race, transfer, opname_threshold, adjustment_approval, reverse_logistics]}
+  - {id: P12, name: Production planning and dispatch, status: NOT_STARTED, depends_on: [P11], required_gates: [approved demand produces feasible traced work order], required_tests: [mrp_to_work_order, capacity_conflict, material_shortage, schedule_collision, reschedule_audit, idempotent_dispatch]}
+  - {id: P13, name: Production execution, status: NOT_STARTED, depends_on: [P12], required_gates: [complete immutable batch genealogy and balanced material movements], required_tests: [stage_order, quantity_conservation, issue_return, yield_shrinkage, breakdown_recovery, concurrent_scan, invalid_transition, offline_retry]}
+  - {id: P14, name: QC quarantine release and traceability, status: NOT_STARTED, depends_on: [P13], required_gates: [only authorized QC release creates available FG, recall trace complete], required_tests: [quarantine_default, pass_reject, partial_disposition, retest, release_idempotency, unauthorized_release, recall_trace]}
+  - {id: P15, name: Finance costing accounting and closing, status: NOT_STARTED, depends_on: [P14], required_gates: [source documents post exactly once, subledgers equal GL, balanced journals, lock enforced], required_tests: [double_entry_property, valuation_cogs, tax_rounding, allocation, maker_checker, period_close_lock, adjustment_reversal, financial_statement_reconciliation]}
+  - {id: P16, name: HR personnel payroll scope and KPI, status: NOT_STARTED, depends_on: [P15], required_gates: [employee and KPI results evidence-backed permission-safe and reproducible], required_tests: [effective_dates, multi_role_weight, actor_at_event, zero_denominator, finalized_period_immutability, pii_scope, payroll_arithmetic_if_in_scope]}
+  - {id: P17, name: Documents communication integrations and automation, status: NOT_STARTED, depends_on: [P16], required_gates: [no silent loss or duplicate side effect, documents reproducible, integrations degrade safely], required_tests: [upload_security, signed_access, document_snapshot, retry_dlq, webhook_signature, duplicate_out_of_order_event, scheduler_overlap, provider_outage]}
+  - {id: P18, name: Reporting executive analytics and KPI governance, status: NOT_STARTED, depends_on: [P17], required_gates: [every published metric reconciles to transactional truth], required_tests: [report_reconciliation, filter_timezone, drilldown, export_parity, row_level_access, cache_freshness, large_data_performance]}
+  - {id: P19, name: Strict DNA migration UI UX frontend consolidation and accessibility, status: NOT_STARTED, depends_on: [P18], required_gates: [100 percent canonical and approved extension screens have DNA evidence, all UI primitives import only from @/components/dna, canonical visual and golden routes render real DNA exports, all DNA static and rendered thresholds pass, WCAG AA met, lint zero errors and warnings, no unexplained orphan duplicate primitive or production mock fallback], required_tests: [route_component_store_inventory, dna_import_boundary_ast, dna_native_interactive_scan, dna_primitive_duplication_scan, dna_hardcoded_visual_scan, dna_barrel_integrity, dna_reference_route_and_composition, dna_screen_coverage_manifest, dna_exception_registry_validation, frontend_unused_orphan_scan, api_client_duplication_scan, visual_regression, axe, keyboard_focus, screen_reader_sample, responsive_matrix, browser_matrix, ui_state_matrix]}
+  - {id: P20, name: System-wide maintainability verification and resilience, status: NOT_STARTED, depends_on: [P19], required_gates: [all required suites pass, all architecture maintainability and UI DNA thresholds pass, security and performance thresholds met, zero P0 or P1], required_tests: [full_unit, full_integration, full_contract, full_e2e, golden_threads, full_architecture_fitness, full_dependency_graph, full_unused_orphan_duplicate_scan, full_dna_compliance_scan, full_dna_rendered_matrix, changed_complexity_check, critical_logic_mutation_sample, sast, dependency_scan, container_scan, dast, load_soak, chaos_retry, memory_leak]}
+  - {id: P21, name: Migration change delivery operations cutover and DR rehearsal, status: NOT_STARTED, depends_on: [P20], required_gates: [two identical clean migration rehearsals, all five change archetypes pass without unexplained unrelated-domain edits, zero unexplained data delta, backward compatibility and deploy reversal proven, RPO and RTO met], required_tests: [migration_rehearsal_1, migration_rehearsal_2, persisted_field_change_rehearsal, business_rule_workflow_change_rehearsal, ui_api_change_rehearsal, report_kpi_change_rehearsal, integration_event_change_rehearsal, old_new_version_coexistence, control_totals, file_transfer, backup_restore, rollback_rollforward, alert_drill, deploy_smoke, runbook_simulation]}
+  - {id: P22, name: Independent pre-UAT DNA and maintainability certification, status: NOT_STARTED, depends_on: [P21], required_gates: [fresh clean-room pass of every permanent threshold, independent architecture lifecycle and DNA source/render audit, 100 percent per-screen DNA evidence accepted, change rehearsal evidence accepted, immutable release candidate, complete UAT pack, technical READY_FOR_UAT certificate], required_tests: [clean_room_full_gate, independent_dependency_graph_audit, lifecycle_registry_sampling, architecture_exception_audit, independent_dna_source_sampling, independent_dna_rendered_sampling, dna_exception_audit, change_rehearsal_evidence_audit, traceability_sampling, evidence_audit, uat_role_data_script_validation, go_no_go_review]}

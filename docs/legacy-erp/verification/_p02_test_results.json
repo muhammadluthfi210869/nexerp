@@ -1,0 +1,128 @@
+{
+  "generated_at": "2026-09-17T14:18:45.316Z",
+  "phase": "P02",
+  "passed_tests": 14,
+  "total_tests": 14,
+  "verdict": "PASS",
+  "failures": [],
+  "results": {
+    "implementation_readiness_audit": {
+      "status": "PASS",
+      "details": {
+        "canonical_models_reconciliation_coverage_percent": 100,
+        "canonical_api_reconciliation_coverage_percent": 100,
+        "canonical_screens_reconciliation_coverage_percent": 100,
+        "implemented_models_percent": 95.65,
+        "implemented_api_percent": 3.45,
+        "implemented_screens_percent": 3.91,
+        "missing_blocker_count": 0,
+        "unexplained_objects": 0,
+        "no_summary_manipulation": true
+      }
+    },
+    "schema_diff": {
+      "status": "PASS",
+      "canonical_models": 92,
+      "reconciled_canonical_models": 92,
+      "implementation_models": 194,
+      "classified_implementation_models": 194,
+      "typed_mappings_verified": true,
+      "invalid_targets": []
+    },
+    "openapi_diff": {
+      "status": "PASS",
+      "canonical_operations_count": 377,
+      "reconciled_canonical_operations": 377,
+      "implementation_operations_count": 940,
+      "classified_implementation_operations": 940,
+      "invalid_operations": []
+    },
+    "route_diff": {
+      "status": "PASS",
+      "canonical_screens_count": 179,
+      "reconciled_canonical_screens": 179,
+      "implementation_screens_count": 272,
+      "classified_implementation_screens": 272,
+      "invalid_screens": []
+    },
+    "rbac_diff": {
+      "status": "PASS",
+      "canonical_roles": 44,
+      "canonical_permissions": 144,
+      "implementation_auth_type": "Enum UserRole + dynamic employee role mapping + RBAC guards"
+    },
+    "event_workflow_diff": {
+      "status": "PASS",
+      "canonical_integration_events": 76,
+      "canonical_workflow_state_machines": 37,
+      "implementation_events_count": 217,
+      "events_diff": {
+        "missing": [],
+        "extraneous": [],
+        "pass": true
+      },
+      "event_errors": [],
+      "implementation_event_mechanism": "NestJS EventEmitter2 + StateTransitionLog + Audit outbox"
+    },
+    "caller_import_registration_scan": {
+      "status": "PASS",
+      "backend_controllers_registered": 96,
+      "backend_services_registered": 118,
+      "backend_modules_registered": 70,
+      "reachable_count": 253,
+      "dead_count": 31,
+      "errors": []
+    },
+    "orphan_scan": {
+      "status": "PASS",
+      "dynamically_computed_unexplained": 0,
+      "registry_reported_unexplained": 0,
+      "missing_blocker_count": 0,
+      "orphan_details": []
+    },
+    "unused_export_dependency_scan": {
+      "status": "PASS",
+      "backend_production_dependencies": 38,
+      "frontend_production_dependencies": 26,
+      "dep_errors": []
+    },
+    "duplicate_implementation_scan": {
+      "status": "PASS",
+      "v1_double_prefix_controllers_remaining": 0,
+      "v1_controllers_list": [],
+      "duplicate_routes_removed": true
+    },
+    "lifecycle_registry_validation": {
+      "status": "PASS",
+      "compatibility_adapters_valid": true,
+      "adapters_count": 10,
+      "invalid_adapters": []
+    },
+    "dna_screen_import_inventory": {
+      "status": "PASS",
+      "total_screens_inventoried": 272,
+      "screens_importing_dna": 213,
+      "screens_importing_ui_kit": 37,
+      "manifest_coverage_percent": 100
+    },
+    "dna_hardcoded_visual_inventory": {
+      "status": "PASS",
+      "total_screens_scanned": 272,
+      "screens_with_hex_colors": 42,
+      "screens_with_inline_styles": 29,
+      "screens_with_raw_buttons": 79,
+      "inventory_complete": true
+    },
+    "dna_migration_disposition": {
+      "status": "PASS",
+      "total_screens_dispositioned": 272,
+      "disposition_breakdown": {
+        "PARTIALLY_MIGRATED": 103,
+        "ALREADY_DNA": 110,
+        "SCHEDULED_P19_MIGRATION": 57,
+        "REDIRECT_ONLY": 2
+      },
+      "coverage_percent": 100
+    }
+  }
+}

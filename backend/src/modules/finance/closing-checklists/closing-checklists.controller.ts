@@ -13,7 +13,9 @@ export class ClosingChecklistsController {
   constructor(private service: ClosingChecklistsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List checklist items (filter by period, department, completion)' })
+  @ApiOperation({
+    summary: 'List checklist items (filter by period, department, completion)',
+  })
   findAll(
     @Query('period') period?: string,
     @Query('department') department?: string,
@@ -23,12 +25,16 @@ export class ClosingChecklistsController {
       period,
       department,
       completed:
-        completed === undefined ? undefined : completed === 'true' || completed === '1',
+        completed === undefined
+          ? undefined
+          : completed === 'true' || completed === '1',
     });
   }
 
   @Get('progress')
-  @ApiOperation({ summary: 'Get progress summary for a period (overall + per department)' })
+  @ApiOperation({
+    summary: 'Get progress summary for a period (overall + per department)',
+  })
   progress(@Query('period') period: string) {
     return this.service.getProgress(period);
   }
@@ -40,7 +46,10 @@ export class ClosingChecklistsController {
   }
 
   @Post('generate')
-  @ApiOperation({ summary: 'Generate standard monthly close checklist (idempotent per period)' })
+  @ApiOperation({
+    summary:
+      'Generate standard monthly close checklist (idempotent per period)',
+  })
   generate(@Req() req: any, @Body() dto: GenerateChecklistDto) {
     const userId = req.user?.id;
     return this.service.generateMonthlyChecklist(userId, dto);

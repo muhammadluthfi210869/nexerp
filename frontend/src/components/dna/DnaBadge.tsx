@@ -7,6 +7,7 @@ export type BadgeStatus =
   | "warning"
   | "critical"
   | "purple"
+  | "indigo"
   | "default"
   | "danger"
   | "neutral"
@@ -15,6 +16,7 @@ export type BadgeStatus =
   | "WARNING"
   | "CRITICAL"
   | "PURPLE"
+  | "INDIGO"
   | "DEFAULT"
   | "DANGER"
   | "NEUTRAL";
@@ -34,6 +36,7 @@ const statusClasses: Record<string, string> = {
   critical: "bg-[#FEF2F2] text-[#DC2626] border-[#FECDD3]",
   danger: "bg-[#FEF2F2] text-[#DC2626] border-[#FECDD3]",
   purple: "bg-purple-50 text-purple-600 border-purple-100",
+  indigo: "bg-indigo-50 text-indigo-600 border-indigo-100",
   neutral: "bg-slate-50 text-slate-600 border-slate-100",
   default: "bg-slate-50 text-slate-600 border-slate-100",
 };

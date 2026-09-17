@@ -3,6 +3,7 @@ import { RndService } from '../../src/modules/rnd/rnd.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IdGeneratorService } from '../../src/modules/system/id-generator.service';
+import { StateTransitionService } from '../../src/modules/system/state-transition.service';
 import { TestModule } from '../utilities/test-module';
 import { SampleStage } from '@prisma/client';
 
@@ -21,6 +22,13 @@ describe('RndService — Unit', () => {
         {
           provide: IdGeneratorService,
           useValue: { generateId: jest.fn().mockResolvedValue('SMP-00001') },
+        },
+        {
+          provide: StateTransitionService,
+          useValue: {
+            validateTransition: jest.fn(),
+            executeTransition: jest.fn(),
+          },
         },
       ],
     }).compile();

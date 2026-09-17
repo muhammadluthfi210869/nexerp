@@ -1,0 +1,993 @@
+{
+  "url_path": "need-for-goods",
+  "title": "GsERP KIL - Kebutuhan Barang",
+  "page_heading": "Kebutuhan Barang",
+  "forms": [],
+  "inputs": [
+    {
+      "name": "",
+      "type": "hidden",
+      "placeholder": "",
+      "id": "note-goods-id"
+    },
+    {
+      "name": "",
+      "type": "hidden",
+      "placeholder": "",
+      "id": "qty-order-goods-id"
+    },
+    {
+      "name": "",
+      "type": "text",
+      "placeholder": "Masukkan jumlah order",
+      "id": "qty-order-val"
+    }
+  ],
+  "filters": [],
+  "tables": [
+    {
+      "idx": 0,
+      "headers": [
+        "#",
+        "Kode",
+        "Tanggal",
+        "Sales / Customer / Produk / Brand",
+        "Pembuat",
+        "Status",
+        "#"
+      ],
+      "sample_rows": [
+        [
+          "1",
+          "NG-202609-000007",
+          "2026-09-11",
+          "SO-202609-000008 APARI VARIANT 4 APARI (105.00 pcs - 50.00 ml/gr) APARI",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "2",
+          "NG-202609-000003",
+          "2026-09-08",
+          "SO-202607-000036 Benny gunawan Lumière Bloom (250.00 pcs - 30.00 ml/gr) JO&amp;LA",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "3",
+          "NG-202609-000005",
+          "2026-09-08",
+          "SO-202608-000009 Benny gunawan Sky (250.00 pcs - 30.00 ml/gr) JO&amp;LA",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "4",
+          "NG-202609-000006",
+          "2026-09-08",
+          "SO-202608-000003 Devina Rizky Laurentia Glow Refining Body Toner (300.00 pcs - 100.00 ml/gr) VINALUXEA",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "5",
+          "NG-202609-000002",
+          "2026-09-02",
+          "SO-202609-000005 RAHMAT TUNGGAK (LAWO) DARKSPOT CREAM (1,000.00 pcs - 15.00 ml/gr) LAWO",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "6",
+          "NG-202608-000011",
+          "2026-08-28",
+          "SO-202608-000017 prof dr Noor Zaman Khan DJ GLOW COLLAGEN BRIGHTENING NIGHT CREAM (300.00 pcs - 10.00 ml/gr) DRNZK DJ GLOW",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "7",
+          "NG-202608-000012",
+          "2026-08-28",
+          "SO-202608-000017 prof dr Noor Zaman Khan DJ GLOW COLLAGEN BRIGHTENING FACIAL WASH (300.00 pcs - 100.00 ml/gr) DRNZK DJ GLOW",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "8",
+          "NG-202608-000013",
+          "2026-08-28",
+          "SO-202608-000017 prof dr Noor Zaman Khan DJ GLOW COLLAGEN BRIGHTENING SERUM (300.00 pcs - 20.00 ml/gr) DRNZK DJ GLOW",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "9",
+          "NG-202608-000010",
+          "2026-08-27",
+          "SO-202608-000017 prof dr Noor Zaman Khan DJ GLOW COLLAGEN BRIGHTENING DAY CREAM (300.00 pcs - 10.00 ml/gr) DRNZK DJ GLOW",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "10",
+          "NG-202608-000007",
+          "2026-08-06",
+          "SO-202608-000004 Fenska Seipalla Whitening Cream tekstur light (moist) (1,000.00 pcs - 20.00 ml/gr) Glaven",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "11",
+          "NG-202607-000008",
+          "2026-07-30",
+          "SO-202607-000019 Dian Mardiyana Forge (300.00 pcs - 50.00 ml/gr) ALV",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "12",
+          "NG-202607-000009",
+          "2026-07-30",
+          "SO-202607-000019 Dian Mardiyana King Royale (300.00 pcs - 50.00 ml/gr) ALV",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "13",
+          "NG-202607-000010",
+          "2026-07-30",
+          "SO-202607-000019 Dian Mardiyana Imperium (300.00 pcs - 50.00 ml/gr) ALV",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "14",
+          "NG-202607-000011",
+          "2026-07-30",
+          "SO-202607-000019 Dian Mardiyana Signature (300.00 pcs - 50.00 ml/gr) ALV",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "15",
+          "NG-202607-000012",
+          "2026-07-30",
+          "SO-202607-000018 Orieza Sativa N Active Shield UV Sun Spray (1,000.00 pcs - 100.00 ml/gr) ZALVOR",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "16",
+          "NG-202607-000013",
+          "2026-07-30",
+          "SO-202607-000020 Yusril Multipurpose Spray For Man (300.00 pcs - 20.00 ml/gr) LUKSATRIYO",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "17",
+          "NG-202607-000014",
+          "2026-07-30",
+          "SO-202607-000012 Angel ⁠UV Brightening Shield &amp; Tone-Up (300.00 pcs - 30.00 ml/gr) L’or de Chaqié by Anjely.A",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "18",
+          "NG-202607-000015",
+          "2026-07-30",
+          "SO-202607-000027 Angel Gentle Glow UV Protect (200.00 pcs - 30.00 ml/gr) L’or de Chaqié by Anjely.A",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "19",
+          "NG-202607-000016",
+          "2026-07-30",
+          "SO-202606-000015 EVI SURIANI Crystal Tone Booster (500.00 pcs - 50.00 ml/gr) VIECERA",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ],
+        [
+          "20",
+          "NG-202607-000017",
+          "2026-07-30",
+          "SO-202606-000016 Evi Suriani AHA Radiance Body Toner (500.00 pcs - 100.00 ml/gr) VIECERA",
+          "Achmad Bagir",
+          "Process",
+          ""
+        ]
+      ],
+      "total_rows": 63
+    },
+    {
+      "idx": 1,
+      "headers": [
+        "#",
+        "Nama Barang",
+        "Kebutuhan Qty",
+        "Stok",
+        "Selisih",
+        "Qty Order",
+        "Catatan",
+        "Tanggal",
+        "No. Pembelian",
+        "Supplier",
+        "Qty",
+        "Harga"
+      ],
+      "sample_rows": [
+        [
+          "#",
+          "Nama Barang",
+          "Kebutuhan Qty",
+          "Stok",
+          "Selisih",
+          "Qty Order",
+          "Catatan"
+        ],
+        [
+          "1",
+          "BBK00449 - ACH - Aluminum Clorohydrate 50% (gr) Detail Info Detail Sales Order (Kebutuhan): SO-202605-000006 (SILENZA - DryFresh Daily Protection Deo (1,000.00 pcs - 50.00 ml/gr)): 5,500.00 SO-202607-000020 (LUKSATRIYO - Multipurpose Spray For Man (300.00 pcs - 20.00 ml/gr)): 660.00 Riwayat Pembelian (Supplier): Tanggal",
+          "No. Pembelian",
+          "Supplier",
+          "Qty",
+          "Harga"
+        ],
+        [
+          "2026-07-13",
+          "PO-202607-000013",
+          "SMK (Sinar Multi Kemindo",
+          "30,000.00",
+          "90.35"
+        ]
+      ],
+      "total_rows": 3
+    },
+    {
+      "idx": 2,
+      "headers": [
+        "Tanggal",
+        "No. Pembelian",
+        "Supplier",
+        "Qty",
+        "Harga"
+      ],
+      "sample_rows": [
+        [
+          "Tanggal",
+          "No. Pembelian",
+          "Supplier",
+          "Qty",
+          "Harga"
+        ],
+        [
+          "2026-04-17",
+          "PO-202604-000018",
+          "Saldo Awal",
+          "0.00",
+          "0.00"
+        ],
+        [
+          "2026-04-10",
+          "PO-202604-000012",
+          "Saldo Awal",
+          "640.00",
+          "0.00"
+        ],
+        [
+          "2026-02-23",
+          "PO-202602-000026",
+          "Saldo Awal",
+          "0.00",
+          "0.00"
+        ],
+        [
+          "2026-02-09",
+          "PO-202602-000012",
+          "Saldo Awal",
+          "0.00",
+          "0.00"
+        ]
+      ],
+      "total_rows": 5
+    },
+    {
+      "idx": 3,
+      "headers": [
+        "Tanggal",
+        "No. Pembelian",
+        "Supplier",
+        "Qty",
+        "Harga"
+      ],
+      "sample_rows": [
+        [
+          "Tanggal",
+          "No. Pembelian",
+          "Supplier",
+          "Qty",
+          "Harga"
+        ],
+        [
+          "2026-09-03",
+          "PO-202609-000009",
+          "King Parfum",
+          "6,000.00",
+          "2,075.00"
+        ]
+      ],
+      "total_rows": 2
+    },
+    {
+      "idx": 4,
+      "headers": [
+        "Tanggal",
+        "No. Pembelian",
+        "Supplier",
+        "Qty",
+        "Harga"
+      ],
+      "sample_rows": [
+        [
+          "Tanggal",
+          "No. Pembelian",
+          "Supplier",
+          "Qty",
+          "Harga"
+        ],
+        [
+          "2026-07-06",
+          "PO-202607-000009",
+          "Tanobel/ Cleo",
+          "228,000.00",
+          "1.10"
+        ],
+        [
+          "2026-07-02",
+          "PO-202607-000004",
+          "Tanobel/ Cleo",
+          "323,000.00",
+          "1.10"
+        ],
+        [
+          "2026-06-25",
+          "PO-202606-000060",
+          "Tanobel/ Cleo",
+          "247,000.00",
+          "1.10"
+        ],
+        [
+          "2026-06-08",
+          "PO-202606-000025",
+          "Tanobel/ Cleo",
+          "116,000.00",
+          "1.10"
+        ],
+        [
+          "2026-05-06",
+          "PO-202605-000008",
+          "Tanobel/ Cleo",
+          "3,000,000.00",
+          "1.10"
+        ],
+        [
+          "2026-04-29",
+          "PO-202604-000033",
+          "Tanobel/ Cleo",
+          "134,350.00",
+          "1.10"
+        ],
+        [
+          "2026-04-29",
+          "PO-202604-000032",
+          "Tanobel/ Cleo",
+          "134,350.00",
+          "1.10"
+        ],
+        [
+          "2026-04-17",
+          "PO-202604-000018",
+          "Saldo Awal",
+          "147,260.00",
+          "0.00"
+        ],
+        [
+          "2026-04-10",
+          "PO-202604-000012",
+          "Saldo Awal",
+          "147,260.00",
+          "0.00"
+        ],
+        [
+          "2026-03-03",
+          "PO-202603-000007",
+          "Tanobel/ Cleo",
+          "304,000.00",
+          "1.10"
+        ]
+      ],
+      "total_rows": 11
+    },
+    {
+      "idx": 5,
+      "headers": [
+        "Tanggal",
+        "No. Pembelian",
+        "Supplier",
+        "Qty",
+        "Harga"
+      ],
+      "sample_rows": [
+        [
+          "Tanggal",
+          "No. Pembelian",
+          "Supplier",
+          "Qty",
+          "Harga"
+        ],
+        [
+          "2026-04-17",
+          "PO-202604-000018",
+          "Saldo Awal",
+          "0.00",
+          "0.00"
+        ],
+        [
+          "2026-04-10",
+          "PO-202604-000012",
+          "Saldo Awal",
+          "0.00",
+          "0.00"
+        ],
+        [
+          "2026-02-23",
+          "PO-202602-000026",
+          "Saldo Awal",
+          "0.00",
+          "0.00"
+        ],
+        [
+          "2026-02-09",
+          "PO-202602-000012",
+          "Saldo Awal",
+          "0.00",
+          "0.00"
+        ]
+      ],
+      "total_rows": 5
+    },
+    {
+      "idx": 6,
+      "headers": [
+        "Tanggal",
+        "No. Pembelian",
+        "Supplier",
+        "Qty",
+        "Harga"
+      ],
+      "sample_rows": [
+        [
+          "Tanggal",
+          "No. Pembelian",
+          "Supplier",
+          "Qty",
+          "Harga"
+        ],
+        [
+          "2026-07-24",
+          "PO-202608-000002",
+          "PT Nilam Widuri",
+          "1,000.00",
+          "955.80"
+        ],
+        [
+          "2026-04-17",
+          "PO-202604-000018",
+          "Saldo Awal",
+          "0.00",
+          "0.00"
+        ],
+        [
+          "2026-04-10",
+          "PO-202604-000012",
+          "Saldo Awal",
+          "19,290.00",
+          "0.00"
+        ],
+        [
+          "2026-02-23",
+          "PO-202602-000026",
+          "Saldo Awal",
+          "0.00",
+          "0.00"
+        ],
+        [
+          "2026-02-09",
+          "PO-202602-000012",
+          "Saldo Awal",
+          "0.00",
+          "0.00"
+        ],
+        [
+          "2024-07-14",
+          "PO-202601-000017",
+          "Stok Awal BBK",
+          "1,485.00",
+          "900.00"
+        ]
+      ],
+      "total_rows": 7
+    },
+    {
+      "idx": 7,
+      "headers": [
+        "Tanggal",
+        "No. Pembelian",
+        "Supplier",
+        "Qty",
+        "Harga"
+      ],
+      "sample_rows": [
+        [
+          "Tanggal",
+          "No. Pembelian",
+          "Supplier",
+          "Qty",
+          "Harga"
+        ],
+        [
+          "2026-08-10",
+          "PO-202608-000004",
+          "Chemico",
+          "2,000.00",
+          "625.10"
+        ],
+        [
+          "2026-06-09",
+          "PO-202606-000031",
+          "Chemico",
+          "1,000.00",
+          "896.00"
+        ],
+        [
+          "2026-04-17",
+          "PO-202604-000018",
+          "Saldo Awal",
+          "570.00",
+          "0.00"
+        ],
+        [
+          "2026-04-10",
+          "PO-202604-000012",
+          "Saldo Awal",
+          "180.00",
+          "0.00"
+        ],
+        [
+          "2026-02-23",
+          "PO-202602-000026",
+          "Saldo Awal",
+          "1,015.00",
+          "0.00"
+        ],
+        [
+          "2026-02-09",
+          "PO-202602-000012",
+          "Saldo Awal",
+          "1,215.00",
+          "0.00"
+        ],
+        [
+          "2024-08-05",
+          "PO-202601-000070",
+          "Chemico",
+          "2,000.00",
+          "896.00"
+        ],
+        [
+          "2024-07-14",
+          "PO-202601-000016",
+          "Stok Awal BBK",
+          "1,075.00",
+          "930.00"
+        ]
+      ],
+      "total_rows": 9
+    },
+    {
+      "idx": 8,
+      "headers": [
+        "Tanggal",
+        "No. Pembelian",
+        "Supplier",
+        "Qty",
+        "Harga"
+      ],
+      "sample_rows": [
+        [
+          "Tanggal",
+          "No. Pembelian",
+          "Supplier",
+          "Qty",
+          "Harga"
+        ],
+        [
+          "2026-07-24",
+          "PO-202607-000036",
+          "Petra Kemindo Pratama Mandiri",
+          "5,000.00",
+          "1,500.00"
+        ],
+        [
+          "2026-06-03",
+          "PO-202606-000006",
+          "Petra Kemindo Pratama Mandiri",
+          "11,000.00",
+          "1,500.00"
+        ],
+        [
+          "2026-05-26",
+          "PO-202605-000030",
+          "Petra Kemindo Pratama Mandiri",
+          "2,000.00",
+          "1,500.00"
+        ],
+        [
+          "2026-04-17",
+          "PO-202604-000018",
+          "Saldo Awal",
+          "1,280.00",
+          "0.00"
+        ],
+        [
+          "2026-04-10",
+          "PO-202604-000012",
+          "Saldo Awal",
+          "22,400.00",
+          "0.00"
+        ],
+        [
+          "2026-02-23",
+          "PO-202602-000026",
+          "Saldo Awal",
+          "7,520.00",
+          "0.00"
+        ],
+        [
+          "2026-02-09",
+          "PO-202602-000012",
+          "Saldo Awal",
+          "695.00",
+          "0.00"
+        ],
+        [
+          "2024-08-26",
+          "PO-202601-000108",
+          "Petra Kemindo Pratama Mandiri",
+          "3,000.00",
+          "1,900.00"
+        ],
+        [
+          "2024-07-14",
+          "PO-202601-000016",
+          "Stok Awal BBK",
+          "2,000.00",
+          "2,500.00"
+        ]
+      ],
+      "total_rows": 10
+    },
+    {
+      "idx": 9,
+      "headers": [
+        "Tanggal",
+        "No. Pembelian",
+        "Supplier",
+        "Qty",
+        "Harga"
+      ],
+      "sample_rows": [
+        [
+          "Tanggal",
+          "No. Pembelian",
+          "Supplier",
+          "Qty",
+          "Harga"
+        ],
+        [
+          "2026-06-04",
+          "PO-202606-000015",
+          "Chemico",
+          "1,000.00",
+          "10,002.16"
+        ],
+        [
+          "2026-04-17",
+          "PO-202604-000018",
+          "Saldo Awal",
+          "435.00",
+          "0.00"
+        ],
+        [
+          "2026-04-10",
+          "PO-202604-000012",
+          "Saldo Awal",
+          "190.00",
+          "0.00"
+        ],
+        [
+          "2026-02-23",
+          "PO-202602-000026",
+          "Saldo Awal",
+          "435.00",
+          "0.00"
+        ],
+        [
+          "2026-02-09",
+          "PO-202602-000012",
+          "Saldo Awal",
+          "445.00",
+          "0.00"
+        ],
+        [
+          "2025-07-11",
+          "PO-202601-000371",
+          "Chemico",
+          "1,000.00",
+          "9,343.80"
+        ]
+      ],
+      "total_rows": 7
+    }
+  ],
+  "nav_links": [
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;en",
+      "text": "English"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;id",
+      "text": "Indonesia"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account",
+      "text": "Akun Saya"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;",
+      "text": "GsERP KIL"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;",
+      "text": "Beranda"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-schedule",
+      "text": "D. Jadwal Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-realization",
+      "text": "D. Realisasi Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-sample",
+      "text": "D. Penjualan Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-product",
+      "text": "D. Penjualan Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-customer",
+      "text": "D. Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sample",
+      "text": "D. Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-executive",
+      "text": "D. Eksekutif"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-notification",
+      "text": "D. Notifikasi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-digital-marketing",
+      "text": "D. Digital Marketing"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-business-development",
+      "text": "D. BusDev"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-rnd",
+      "text": "D. RnD"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-purchasing",
+      "text": "D. Purchasing"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-legality",
+      "text": "D. Legalitas"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production",
+      "text": "D. Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-warehouse",
+      "text": "D. Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-human-resources",
+      "text": "D. HR"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-finance",
+      "text": "D. Keuangan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-guest-book",
+      "text": "D. Buku Tamu"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-sample",
+      "text": "D. Client Sample"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-production",
+      "text": "D. Client Produksi"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-repeat-order",
+      "text": "D. Client RO"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-lost",
+      "text": "D. Lost"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;role-manage",
+      "text": "Hak Akses"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;user-manage",
+      "text": "Pengguna"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-manage",
+      "text": "CoA"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-auto-manage",
+      "text": "CoA Jurnal Otomatis"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-manage",
+      "text": "Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-access-manage",
+      "text": "Hak Akses Gudang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-category-manage",
+      "text": "Kategori Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-manage",
+      "text": "Barang"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-category-manage",
+      "text": "Kategori Supplier"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-manage",
+      "text": "Supplier"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-category-manage",
+      "text": "Kategori Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-manage",
+      "text": "Pelanggan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-my-manage",
+      "text": "Pelanggan Saya"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-category",
+      "text": "Kategori Penjualan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-target",
+      "text": "Target Penjualan"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-approval",
+      "text": "Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-approval",
+      "text": "Retur Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-approval",
+      "text": "Penjualan Sample ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-approval",
+      "text": "Penjualan Produk ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-approval",
+      "text": "Retur Penjualan ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs-approval",
+      "text": "Permintaan HPP ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request-approval",
+      "text": "Permintaan Pembelian ~"
+    },
+    {
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request-approval",
+      "text": "Permintaan Barang ~"
+    }
+  ],
+  "headings": [
+    {
+      "level": 1,
+      "text": "Kebutuhan Barang"
+    },
+    {
+      "level": 4,
+      "text": "Modal"
+    }
+  ],
+  "ajax_endpoints": [],
+  "aggregations": [
+    "transfer",
+    "opname",
+    "valuation",
+    "total"
+  ],
+  "summary": {
+    "page_title": "GsERP KIL - Kebutuhan Barang",
+    "heading": "Kebutuhan Barang",
+    "form_count": 0,
+    "filter_count": 0,
+    "table_count": 10,
+    "has_daterange": true,
+    "has_datatable": true,
+    "has_chart": false
+  }
+}

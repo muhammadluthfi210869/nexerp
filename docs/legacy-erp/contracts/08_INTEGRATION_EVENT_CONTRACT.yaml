@@ -1,0 +1,1159 @@
+version: 1.0
+effective_date: 2026-09-16
+status: PROVISIONAL
+authority_map: 00_MASTER_SPEC.md#91-canonical-subject-based-authority-map
+overview: |
+  Defines all asynchronous cross-module events for NEX ERP. Format follows CloudEvents
+  spec (subset). Events are emitted by services, consumed by subscribers, and processed
+  via Redis Streams (or alternative queue broker).
+
+  Pattern:
+    emit:       producer_service emits event via Redis Stream
+    consume:    subscriber_service(s) register for event types
+    process:    handler function called (must be idempotent)
+    retry:      up to 3 attempts with exponential backoff (1s -> 60s)
+    DLQ:        dead-letter queue (events.dlq) for failed events after max retries
+
+  Source-of-truth references:
+    - 03_WORKFLOW_STATE_MACHINE.yaml  — every state transition emits an event
+    - 04_BUSINESS_RULES.md            — BUS-RULE-037 (FG auto-increment), BUS-RULE auto-journal
+    - 02_DATA_OWNERSHIP.yaml          — cross-module write rules + delegations
+    - _SSOT_COMMUNICATION.md          — note + transfer-acknowledgement events, SLA escalation
+    - raw/ERP_INPUT_OUTPUT_LINEAGE.md — orphan-output gap (now closed by FG-stock event)
+
+# ===========================================
+# COMMON EVENT SCHEMA (CloudEvents-style)
+# ===========================================
+common_schema:
+  spec_version: "1.0"
+  attributes:
+    id: { type: string, format: uuid, description: "Unique event ID (used for idempotency)" }
+    source: { type: string, description: "service.entity.action, e.g., 'sales.sales-order.approved'" }
+    type: { type: string, description: "Event type, e.g., 'sales.sales-order.approved'" }
+    time: { type: string, format: date-time, description: "When event occurred (ISO 8601 UTC)" }
+    subject: { type: string, description: "Entity ID (e.g., sales-order UUID)" }
+    correlation_id: { type: string, format: uuid, description: "Trace ID for distributed tracing" }
+    tenant: { type: string, description: "organizationId (multi-tenant isolation)" }
+    version: { type: string, default: "1.0", description: "Event schema version" }
+    data:
+      type: object
+      description: "Event payload (specific per event type — see per-event payload blocks)"
+
+# ===========================================
+# COMMON PATTERNS
+# ===========================================
+common_patterns:
+  fan_out:
+    description: "Event emitted once and consumed by multiple independent services"
+    example: "sales.sales-order.approved -> production + finance + warehouse + notification + checklist"
+
+  chain:
+    description: "Event triggers another event in a downstream service"
+    example: "production.mixing.completed -> production.filling.completed (auto-create filling schedule)"
+
+  fire_and_forget:
+    description: "Emit without expecting a response (e.g., notifications, audit, analytics)"
+    delivery_guarantee: at_least_once
+
+  request_response:
+    description: "Synchronous request to another service (NOT an event — listed for completeness)"
+    delivery_guarantee: synchronous
+    note: "Use REST/gRPC, not events."
+
+# ===========================================
+# SALES EVENTS
+# ===========================================
+sales_events:
+
+  sales.lead.created:
+    description: "New lead captured"
+    emit_by: sales-service
+    consume_by:
+      - notification-service
+    payload:
+      lead_id: { type: string, format: uuid }
+      owner_user_id: { type: string, format: uuid }
+      customer_name: { type: string }
+      source: { type: string, enum: [direct, wa_inbound, kommo_inbound, referral] }
+      created_at: { type: string, format: date-time }
+    side_effects:
+      - notification.send_to(BusDevStaff, "New lead assigned")
+    delivery_guarantee: at_least_once
+
+  sales.lead.converted:
+    description: "Lead -> Sample transition"
+    emit_by: sales-service
+    consume_by:
+      - notification-service
+      - analytics-service
+    payload:
+      lead_id: { type: string, format: uuid }
+      sales_sample_id: { type: string, format: uuid }
+      converted_by: { type: string, format: uuid }
+      converted_at: { type: string, format: date-time }
+
+  sales.sample.submitted:
+    description: "Sample submitted for BusDevManager approval"
+    emit_by: sales-service
+    consume_by:
+      - notification-service
+    payload:
+      sales_sample_id: { type: string, format: uuid }
+      submitted_by: { type: string, format: uuid }
+      sample_code: { type: string }
+      customer_id: { type: string, format: uuid }
+
+  sales.sample.approved:
+    description: "Sample approved by manager"
+    emit_by: sales-service
+    consume_by:
+      - rnd-service
+      - finance-service
+      - notification-service
+    payload:
+      sales_sample_id: { type: string, format: uuid }
+      approved_by: { type: string, format: uuid }
+      approved_at: { type: string, format: date-time }
+      total_amount: { type: integer, description: "IDR integer" }
+      customer_id: { type: string, format: uuid }
+    side_effects:
+      - formulation_request.queue
+      - notification.send_to(BusDevStaff, RnDManager, "Sample approved")
+
+  sales.sample.paid:
+    description: "Sample fee paid"
+    emit_by: finance-service
+    consume_by:
+      - rnd-service
+      - notification-service
+    payload:
+      sales_sample_id: { type: string, format: uuid }
+      payment_id: { type: string, format: uuid }
+      paid_amount: { type: integer }
+      paid_at: { type: string, format: date-time }
+
+  sales.sales-order.created:
+    description: "New SO created (draft)"
+    emit_by: sales-service
+    consume_by:
+      - notification-service
+    payload:
+      sales_order_id: { type: string, format: uuid }
+      created_by: { type: string, format: uuid }
+      customer_id: { type: string, format: uuid }
+
+  sales.sales-order.submitted:
+    description: "SO submitted for approval"
+    emit_by: sales-service
+    consume_by:
+      - notification-service
+    payload:
+      sales_order_id: { type: string, format: uuid }
+      total_amount: { type: integer }
+      submitted_by: { type: string, format: uuid }
+
+  sales.sales-order.approved:
+    description: |
+      SO approved (CRITICAL fan-out event). Triggers production prep, DP gate,
+      material reservation, checklist auto-create, and stakeholder notifications.
+    emit_by: sales-service
+    consume_by:
+      - production-service
+      - finance-service
+      - warehouse-service
+      - notification-service
+      - checklist-service
+    payload:
+      sales_order_id: { type: string, format: uuid }
+      approved_by: { type: string, format: uuid }
+      approved_at: { type: string, format: date-time }
+      customer_id: { type: string, format: uuid }
+      total_amount: { type: integer }
+      down_payment_required: { type: integer, description: "50% of total (DP gate per BUS-RULE)" }
+      expected_delivery_date: { type: string, format: date, nullable: true }
+    side_effects:
+      - BatchRecord.create(draft)
+      - checklist.create(template=ProdukBaru OR ProdukRO)
+      - notification.send_to(ProductionManager, FinanceStaff, BusDevStaff, "SO approved")
+      - stock_reserve_check(soft)
+    retry_policy: exponential_backoff(max=3, base=1s, max=60s)
+
+  sales.sales-order.dp_received:
+    description: "Down payment received — unblocks production per DP gate BUS-RULE"
+    emit_by: finance-service
+    consume_by:
+      - sales-service
+      - production-service
+    payload:
+      sales_order_id: { type: string, format: uuid }
+      down_payment_id: { type: string, format: uuid }
+      amount: { type: integer }
+      received_at: { type: string, format: date-time }
+    delivery_guarantee: at_least_once
+
+  sales.sales-order.in_production:
+    description: "SO moved to in_production (production started)"
+    emit_by: production-service
+    consume_by:
+      - sales-service
+      - notification-service
+    payload:
+      sales_order_id: { type: string, format: uuid }
+      batch_record_id: { type: string, format: uuid }
+      started_at: { type: string, format: date-time }
+
+  sales.sales-order.ready_to_ship:
+    description: "Production done, ready to ship"
+    emit_by: production-service
+    consume_by:
+      - warehouse-service
+      - sales-service
+      - notification-service
+    payload:
+      sales_order_id: { type: string, format: uuid }
+      batch_record_id: { type: string, format: uuid }
+      qty: { type: integer }
+      completed_at: { type: string, format: date-time }
+
+  sales.sales-order.shipped:
+    description: "SO shipped to customer (DO created)"
+    emit_by: warehouse-service
+    consume_by:
+      - sales-service
+      - finance-service
+      - notification-service
+    payload:
+      sales_order_id: { type: string, format: uuid }
+      delivery_out_id: { type: string, format: uuid }
+      tracking_number: { type: string }
+      shipped_at: { type: string, format: date-time }
+      qty_shipped: { type: integer }
+    side_effects:
+      - qr_code.generate(delivery_out_id)
+      - wa_message.send(customer.phone, "DO tracking info")
+      - stock_movement.create(out)
+
+  sales.sales-order.delivered:
+    description: |
+      Customer received goods. CRITICAL — this is the FINAL INVOICE GATEKEEPER
+      per BUS-RULE (invoice only fires after delivery confirmation).
+    emit_by: sales-service
+    consume_by:
+      - finance-service
+      - notification-service
+    payload:
+      sales_order_id: { type: string, format: uuid }
+      delivered_at: { type: string, format: date-time }
+      delivered_proof_url: { type: string, format: uri, nullable: true }
+
+  sales.sales-invoice.created:
+    description: "Invoice auto-created from delivered SO"
+    emit_by: finance-service
+    consume_by:
+      - sales-service
+      - notification-service
+    payload:
+      sales_invoice_id: { type: string, format: uuid }
+      sales_order_id: { type: string, format: uuid }
+      amount: { type: integer }
+      created_at: { type: string, format: date-time }
+
+  sales.sales-payment.received:
+    description: "AR payment received"
+    emit_by: finance-service
+    consume_by:
+      - sales-service
+      - analytics-service
+    payload:
+      sales_invoice_id: { type: string, format: uuid }
+      payment_id: { type: string, format: uuid }
+      amount: { type: integer }
+      payment_method: { type: string, enum: [bank_transfer, cash, qris, other] }
+      received_at: { type: string, format: date-time }
+
+  sales.sales-return.created:
+    description: "Sales return initiated"
+    emit_by: sales-service
+    consume_by:
+      - finance-service
+      - warehouse-service
+    payload:
+      sales_return_id: { type: string, format: uuid }
+      sales_invoice_id: { type: string, format: uuid }
+      total_return: { type: integer }
+
+  sales.sales-return.approved:
+    description: "Sales return approved"
+    emit_by: sales-service
+    consume_by:
+      - finance-service
+      - warehouse-service
+    payload:
+      sales_return_id: { type: string, format: uuid }
+      approved_by: { type: string, format: uuid }
+      refund_amount: { type: integer }
+
+  sales.sales-return-in.received:
+    description: "Physical return received in warehouse"
+    emit_by: warehouse-service
+    consume_by:
+      - inventory-service
+      - finance-service
+    payload:
+      sales_return_in_id: { type: string, format: uuid }
+      qty_good: { type: integer }
+      qty_reject: { type: integer }
+      received_at: { type: string, format: date-time }
+
+# ===========================================
+# PURCHASE EVENTS
+# ===========================================
+purchase_events:
+
+  purchase.request.created:
+    description: "PR created"
+    emit_by: scm-service
+    consume_by:
+      - notification-service
+    payload:
+      purchase_request_id: { type: string, format: uuid }
+      requester_user_id: { type: string, format: uuid }
+
+  purchase.request.approved:
+    description: "PR approved -> auto-create PO draft"
+    emit_by: scm-service
+    consume_by:
+      - scm-service
+      - notification-service
+    payload:
+      purchase_request_id: { type: string, format: uuid }
+      approved_by: { type: string, format: uuid }
+
+  purchase.order.created:
+    description: "PO created (draft)"
+    emit_by: scm-service
+    consume_by:
+      - notification-service
+    payload:
+      purchase_order_id: { type: string, format: uuid }
+      supplier_id: { type: string, format: uuid }
+      total_amount: { type: integer }
+
+  purchase.order.submitted:
+    description: "PO submitted for approval"
+    emit_by: scm-service
+    consume_by:
+      - notification-service
+      - finance-service
+    payload:
+      purchase_order_id: { type: string, format: uuid }
+      total_amount: { type: integer }
+      submitted_by: { type: string, format: uuid }
+
+  purchase.order.approved:
+    description: |
+      PO approved. Unblocks GR + AP invoice + supplier performance tracking.
+    emit_by: scm-service
+    consume_by:
+      - warehouse-service
+      - finance-service
+      - notification-service
+    payload:
+      purchase_order_id: { type: string, format: uuid }
+      approved_by: { type: string, format: uuid }
+      supplier_id: { type: string, format: uuid }
+      total_amount: { type: integer }
+    side_effects:
+      - notification.send_to(WarehouseStaff, "PO approved, ready for GR")
+      - supplier_performance_score.update(lead_time)
+
+  purchase.order.dp_received:
+    description: "DP to supplier paid"
+    emit_by: finance-service
+    consume_by:
+      - scm-service
+      - notification-service
+    payload:
+      purchase_order_id: { type: string, format: uuid }
+      down_payment_id: { type: string, format: uuid }
+      amount: { type: integer }
+
+  purchase.goods-receipt.created:
+    description: |
+      GR created. CHILD of PO per DEC-016. Triggers stock_in movement
+      + supplier quality scoring + finance readiness for AP invoice.
+    emit_by: warehouse-service
+    consume_by:
+      - inventory-service
+      - finance-service
+      - analytics-service
+      - notification-service
+    payload:
+      goods_receipt_id: { type: string, format: uuid }
+      purchase_order_id: { type: string, format: uuid }
+      warehouse_id: { type: string, format: uuid }
+      qty_good: { type: integer }
+      qty_reject: { type: integer }
+      qty_free: { type: integer }
+      coa_verified: { type: boolean }
+    side_effects:
+      - stock_movement.create(in, qty_good)
+      - stock_quality_pillar.update(supplier_id, reject_rate)
+
+  purchase.goods-receipt.completed:
+    description: "GR fully received (all POs done)"
+    emit_by: warehouse-service
+    consume_by:
+      - scm-service
+      - finance-service
+    payload:
+      goods_receipt_id: { type: string, format: uuid }
+      purchase_order_id: { type: string, format: uuid }
+
+  purchase.invoice.created:
+    description: "AP invoice created. CHILD of PO/GR per DEC-016"
+    emit_by: finance-service
+    consume_by:
+      - scm-service
+      - notification-service
+    payload:
+      purchase_invoice_id: { type: string, format: uuid }
+      purchase_order_id: { type: string, format: uuid }
+      goods_receipt_id: { type: string, format: uuid, nullable: true }
+      total_amount: { type: integer }
+      dp_already_paid: { type: integer, description: "Deducted from total" }
+      amount_due: { type: integer }
+
+  purchase.payment.made:
+    description: "AP payment made"
+    emit_by: finance-service
+    consume_by:
+      - scm-service
+      - analytics-service
+    payload:
+      purchase_invoice_id: { type: string, format: uuid }
+      payment_id: { type: string, format: uuid }
+      amount: { type: integer }
+
+  purchase.return.created:
+    description: "Purchase return created"
+    emit_by: scm-service
+    consume_by:
+      - warehouse-service
+      - notification-service
+    payload:
+      purchase_return_id: { type: string, format: uuid }
+      goods_receipt_id: { type: string, format: uuid }
+      qty_returned: { type: integer }
+
+  purchase.return.approved:
+    description: "Purchase return approved"
+    emit_by: scm-service
+    consume_by:
+      - finance-service
+      - warehouse-service
+    payload:
+      purchase_return_id: { type: string, format: uuid }
+
+  purchase.return-out.executed:
+    description: "Physical return to supplier"
+    emit_by: warehouse-service
+    consume_by:
+      - finance-service
+      - inventory-service
+    payload:
+      purchase_return_out_id: { type: string, format: uuid }
+      qty_out: { type: integer }
+
+# ===========================================
+# PRODUCTION EVENTS
+# ===========================================
+production_events:
+
+  production.batch-record.created:
+    description: |
+      BatchRecord created from approved SO per BUS-RULE-037.
+      Production can prep (but DP gate still blocks start).
+    emit_by: production-service
+    consume_by:
+      - notification-service
+    payload:
+      batch_record_id: { type: string, format: uuid }
+      sales_order_id: { type: string, format: uuid }
+      goods_id: { type: string, format: uuid }
+
+  production.batch-record.in_progress:
+    description: "Mixing started"
+    emit_by: production-service
+    consume_by:
+      - sales-service
+      - inventory-service
+      - notification-service
+    payload:
+      batch_record_id: { type: string, format: uuid }
+      schedule_mixing_id: { type: string, format: uuid }
+      started_at: { type: string, format: date-time }
+
+  production.mixing.completed:
+    description: |
+      Mixing done, ready for filling. Bulk inventory created for transfer
+      to filling station.
+    emit_by: production-service
+    consume_by:
+      - production-service
+      - qc-service
+    payload:
+      production_mixing_id: { type: string, format: uuid }
+      batch_record_id: { type: string, format: uuid }
+      qty_bulk: { type: integer }
+      completed_at: { type: string, format: date-time }
+    side_effects:
+      - bulk_inventory.create(qty_bulk, batch_record_id)
+
+  production.filling.completed:
+    description: "Filling done, ready for packaging"
+    emit_by: production-service
+    consume_by:
+      - production-service
+      - qc-service
+    payload:
+      production_filling_id: { type: string, format: uuid }
+      batch_record_id: { type: string, format: uuid }
+      qty_bottled: { type: integer }
+      qty_reject: { type: integer }
+
+  production.packaging.completed:
+    description: |
+      CRITICAL — Packaging done. Physical FG is created as QUARANTINE;
+      it is not allocatable/sellable until QC release creates AVAILABLE stock.
+    emit_by: production-service
+    consume_by:
+      - inventory-service
+      - sales-service
+      - warehouse-service
+      - qc-service
+    payload:
+      production_packaging_id: { type: string, format: uuid }
+      batch_record_id: { type: string, format: uuid }
+      qty_finished_good: { type: integer }
+      completed_at: { type: string, format: date-time }
+    side_effects:
+      - stock_movement.create(out, WIP, qty_finished_good)
+      - stock_movement.create(in, FG, availability=QUARANTINE, qty_finished_good)
+      - notification.send_to(QC, WarehouseStaff, "FG quarantine ready for final QC")
+    retry_policy: at_most_once_then_alert  # idempotent via batch_record_id
+
+  production.batch.completed:
+    description: |
+      All stages done (mixing + filling + packaging). Closes BatchRecord.
+      Maps to event.emit(production.batch_completed) in workflow state machine.
+    emit_by: production-service
+    consume_by:
+      - sales-service
+      - notification-service
+      - analytics-service
+    payload:
+      batch_record_id: { type: string, format: uuid }
+      sales_order_id: { type: string, format: uuid }
+      qty_finished_good: { type: integer }
+      completed_at: { type: string, format: date-time }
+
+# ===========================================
+# R&D EVENTS
+# ===========================================
+rnd_events:
+
+  rnd.formulation.created:
+    description: "New formulation created"
+    emit_by: rnd-service
+    consume_by:
+      - notification-service
+    payload:
+      formulation_id: { type: string, format: uuid }
+      goods_id: { type: string, format: uuid }
+      created_by: { type: string, format: uuid }
+      rev: { type: integer, default: 0 }
+
+  rnd.formulation.locked:
+    description: |
+      Formulation LOCKED. Frozen — no edits. BOM available for BatchRecord
+      + BusDev staff notified that formula is client-confirmed.
+    emit_by: rnd-service
+    consume_by:
+      - production-service
+      - sales-service
+      - notification-service
+    payload:
+      formulation_id: { type: string, format: uuid }
+      locked_by: { type: string, format: uuid }
+      locked_at: { type: string, format: date-time }
+    delivery_guarantee: at_least_once
+
+# ===========================================
+# FINANCE EVENTS (auto-journal + critical alerts)
+# ===========================================
+finance_events:
+
+  finance.journal-entry.posted:
+    description: |
+      Journal entry posted. CRITICAL — must satisfy total_debit == total_credit
+      invariant. Maps to event.emit(finance.journal_posted) in workflow state machine.
+    emit_by: finance-service
+    consume_by:
+      - ledger-service
+      - reporting-service
+    payload:
+      journal_entry_id: { type: string, format: uuid }
+      total_debit: { type: integer }
+      total_credit: { type: integer }
+      invariant_satisfied: { type: boolean }
+      posted_by: { type: string, format: uuid }
+    delivery_guarantee: exactly_once
+    side_effects:
+      - ledger.balance.update
+
+  finance.journal-entry.failed_balance:
+    description: |
+      Auto-journal unbalanced. CRITICAL ALERT — must page FinanceAdmin
+      and write incident to audit log.
+    emit_by: finance-service
+    consume_by:
+      - notification-service
+      - audit-service
+    payload:
+      transaction_id: { type: string, format: uuid }
+      transaction_type: { type: string }
+      total_debit: { type: integer }
+      total_credit: { type: integer }
+      difference: { type: integer }
+      posted_at: { type: string, format: date-time }
+    alert_priority: critical
+
+  finance.payment.received:
+    description: "Any payment received (sales or purchase)"
+    emit_by: finance-service
+    consume_by:
+      - reporting-service
+      - analytics-service
+    payload:
+      payment_id: { type: string, format: uuid }
+      direction: { type: string, enum: [incoming, outgoing] }
+      amount: { type: integer }
+      counterparty_type: { type: string, enum: [customer, supplier] }
+
+  finance.payment.disbursed:
+    description: "AP payment disbursed (maps to event.emit(finance.payment_disbursed))"
+    emit_by: finance-service
+    consume_by:
+      - scm-service
+      - reporting-service
+    payload:
+      payment_id: { type: string, format: uuid }
+      purchase_invoice_id: { type: string, format: uuid }
+      amount: { type: integer }
+      disbursed_at: { type: string, format: date-time }
+
+  finance.period.locked:
+    description: "Monthly accounting period locked (no further postings allowed)"
+    emit_by: finance-service
+    consume_by:
+      - notification-service
+      - audit-service
+    payload:
+      period: { type: string, description: "YYYY-MM" }
+      locked_by: { type: string, format: uuid }
+      locked_at: { type: string, format: date-time }
+
+# ===========================================
+# WAREHOUSE / INVENTORY EVENTS
+# ===========================================
+warehouse_events:
+
+  warehouse.inbound.received:
+    description: |
+      Goods physically received into warehouse. Maps to
+      event.emit(warehouse.inbound.received) per workflow state machine.
+      Triggers stock_movement (in) + auto-journal (BPB).
+    emit_by: warehouse-service
+    consume_by:
+      - inventory-service
+      - finance-service
+      - notification-service
+    payload:
+      inbound_id: { type: string, format: uuid }
+      goods_receipt_id: { type: string, format: uuid, nullable: true }
+      warehouse_id: { type: string, format: uuid }
+      qty: { type: integer }
+      received_at: { type: string, format: date-time }
+    side_effects:
+      - stock_movement.create(in)
+      - journal_entry.auto_post(transaction_type=BPB)
+
+  warehouse.outbound.dispatched:
+    description: |
+      Goods dispatched out of warehouse (delivery_out). Maps to
+      event.emit(logistics.delivery_dispatched) per workflow state machine.
+      Triggers stock_movement (out) + auto-journal (BKB).
+    emit_by: warehouse-service
+    consume_by:
+      - sales-service
+      - finance-service
+      - notification-service
+    payload:
+      delivery_out_id: { type: string, format: uuid }
+      sales_order_id: { type: string, format: uuid }
+      warehouse_id: { type: string, format: uuid }
+      qty: { type: integer }
+      dispatched_at: { type: string, format: date-time }
+    side_effects:
+      - stock_movement.create(out)
+      - journal_entry.auto_post(transaction_type=BKB)
+      - qr_code.generate(delivery_out_id)
+
+  warehouse.stock.low:
+    description: "Stock fell below reorder threshold"
+    emit_by: inventory-service
+    consume_by:
+      - scm-service
+      - notification-service
+    payload:
+      goods_id: { type: string, format: uuid }
+      warehouse_id: { type: string, format: uuid }
+      current_qty: { type: integer }
+      reorder_threshold: { type: integer }
+
+# ===========================================
+# COMMUNICATION EVENTS (per _SSOT_COMMUNICATION.md)
+# ===========================================
+communication_events:
+
+  entity.note.added:
+    description: |
+      Note added to any entity (per DEC-004 cross-reference comments).
+      All @mentioned users get in-app + email notification.
+    emit_by: communication-service
+    consume_by:
+      - all-tagged-users (in-app + email)
+    payload:
+      note_id: { type: string, format: uuid }
+      entity_type: { type: string }
+      entity_id: { type: string, format: uuid }
+      author_user_id: { type: string, format: uuid }
+      tagged_user_ids: { type: array, items: { type: string, format: uuid } }
+    delivery_guarantee: at_least_once
+
+  entity.comment.added:
+    description: Comment added to an entity; parent entity ACL is mandatory.
+    emit_by: communication-service
+    consume_by: [notification-service, audit-service]
+    payload:
+      comment_id: { type: string, format: uuid }
+      entity_type: { type: string }
+      entity_id: { type: string, format: uuid }
+      author_user_id: { type: string, format: uuid }
+    delivery_guarantee: at_least_once
+
+  entity.mention.created:
+    description: Atomic outbox event emitted after a Note/Comment and its Tag rows commit.
+    emit_by: communication-service
+    consume_by: [notification-service, kpi-service]
+    payload:
+      context_type: { type: string, enum: [NOTE, COMMENT, TRANSITION] }
+      context_id: { type: string, format: uuid }
+      entity_type: { type: string }
+      entity_id: { type: string, format: uuid }
+      mentioned_by_user_id: { type: string, format: uuid }
+      tagged_user_ids: { type: array, items: { type: string, format: uuid } }
+    delivery_guarantee: at_least_once
+
+  entity.status-transition.completed:
+    description: |
+      Document transfer acknowledged by recipient (per DEC SLA).
+      Sender is notified that the document reached its target.
+    emit_by: notification-service
+    consume_by:
+      - sender-service
+    payload:
+      transition_id: { type: string, format: uuid }
+      entity_type: { type: string }
+      entity_id: { type: string, format: uuid }
+      acknowledged_by: { type: string, format: uuid }
+      sla_met: { type: boolean }
+
+  entity.status-transition.sla_breach:
+    description: |
+      SLA breached (overdue threshold per transfer type, see
+      _SSOT_COMMUNICATION §3.3). Escalates after 2x SLA.
+    emit_by: notification-service
+    consume_by:
+      - recipient
+      - role_manager
+    payload:
+      transition_id: { type: string, format: uuid }
+      sla_deadline: { type: string, format: date-time }
+      breach_duration_minutes: { type: integer }
+
+  notification.sla.escalate:
+    description: "Auto-escalation after 2x SLA"
+    emit_by: notification-service
+    consume_by:
+      - role_manager
+    payload:
+      original_transition_id: { type: string, format: uuid }
+      escalation_level: { type: integer, default: 1 }
+      reason: { type: string }
+
+# ===========================================
+# KPI EVENTS
+# ===========================================
+kpi_events:
+
+  kpi.employee.metric_updated:
+    description: One employee KPI result was recomputed from source-event evidence.
+    emit_by: kpi-service
+    consume_by: [reporting-service, audit-service]
+    payload:
+      employee_id: { type: string, format: uuid }
+      definition_id: { type: string, format: uuid }
+      period: { type: string }
+      result_id: { type: string, format: uuid }
+      source_event_ids: { type: array, items: { type: string, format: uuid } }
+      calculation_version: { type: string }
+    delivery_guarantee: at_least_once
+
+  kpi.employee.scorecard_recalculated:
+    description: Employee period aggregate was recalculated; score may be null when evidence is insufficient.
+    emit_by: kpi-service
+    consume_by: [notification-service, reporting-service, audit-service]
+    payload:
+      employee_id: { type: string, format: uuid }
+      performance_id: { type: string, format: uuid }
+      period: { type: string }
+      kpi_score: { type: number, nullable: true }
+      calculation_version: { type: string }
+    delivery_guarantee: at_least_once
+
+# ===========================================
+# AUTH EVENTS
+# ===========================================
+auth_events:
+
+  auth.user.created:
+    description: "New user created"
+    emit_by: auth-service
+    consume_by:
+      - notification-service
+      - audit-service
+    payload:
+      user_id: { type: string, format: uuid }
+      email: { type: string, format: email }
+      created_by: { type: string, format: uuid }
+
+  auth.user.login_succeeded:
+    description: "Successful login"
+    emit_by: auth-service
+    consume_by:
+      - audit-service
+    payload:
+      user_id: { type: string, format: uuid }
+      email: { type: string, format: email }
+      ip_address: { type: string }
+      user_agent: { type: string }
+      timestamp: { type: string, format: date-time }
+
+  auth.user.login_failed:
+    description: |
+      Failed login attempt. Notification fires only if rate exceeded
+      (>5 fails/min from same IP).
+    emit_by: auth-service
+    consume_by:
+      - audit-service
+      - notification-service
+    payload:
+      email: { type: string, format: email }
+      ip_address: { type: string }
+      reason: { type: string, enum: [invalid_credentials, mfa_failed, account_locked] }
+
+  auth.user.password_changed:
+    description: "Password changed"
+    emit_by: auth-service
+    consume_by:
+      - audit-service
+      - notification-service
+    payload:
+      user_id: { type: string, format: uuid }
+      changed_by: { type: string, format: uuid, description: "self or admin id" }
+      forced: { type: boolean }
+      timestamp: { type: string, format: date-time }
+
+# ===========================================
+# CHECKLIST EVENTS
+# ===========================================
+checklist_events:
+
+  checklist.stage.due:
+    description: "Checklist stage reached its due date"
+    emit_by: checklist-service
+    consume_by:
+      - notification-service
+    payload:
+      checklist_id: { type: string, format: uuid }
+      stage_name: { type: string }
+      owner_user_id: { type: string, format: uuid }
+      sla_days: { type: integer }
+
+  checklist.stage.completed:
+    description: "Stage marked as done — activates next stage"
+    emit_by: checklist-service
+    consume_by:
+      - notification-service
+      - checklist-service
+    payload:
+      checklist_id: { type: string, format: uuid }
+      stage_name: { type: string }
+      completed_by: { type: string, format: uuid }
+      next_stage_name: { type: string, nullable: true }
+
+  checklist.stage.sla_breach:
+    description: |
+      Stage overdue >2x SLA. Auto-blocks downstream production per
+      _SSOT_COMMUNICATION SLA escalation rules.
+    emit_by: checklist-service
+    consume_by:
+      - notification-service
+      - production-service
+    payload:
+      checklist_id: { type: string, format: uuid }
+      stage_name: { type: string }
+      breach_hours: { type: integer }
+      auto_blocked: { type: boolean }
+
+# ===========================================
+# AUDIT EVENTS
+# ===========================================
+audit_events:
+
+  audit.critical_action:
+    description: |
+      Critical action performed (admin actions, financial ops). Every entry
+      triggers audit-service write + admin high-risk alert.
+    emit_by: any-service
+    consume_by:
+      - audit-service
+      - notification-service
+    payload:
+      actor_id: { type: string, format: uuid }
+      action: { type: string, enum: [user_create, role_change, password_reset_admin, fund_request_approve, journal_reverse, period_lock, asset_dispose] }
+      entity_type: { type: string }
+      entity_id: { type: string, format: uuid }
+      timestamp: { type: string, format: date-time }
+
+# Events required by canonical workflow transitions but absent from the original
+# event catalog. Names, producer, consumer, and payload are owned here.
+workflow_extension_events:
+  sales.sales-order.cancelled:
+    description: Sales order cancelled before fulfillment; distinct from a post-delivery sales return.
+    emit_by: sales-service
+    consume_by: [production-service, warehouse-service, finance-service, notification-service]
+    payload: { sales_order_id: { type: string, format: uuid }, cancelled_by: { type: string, format: uuid }, reason: { type: string } }
+  sales.sales-order.closed:
+    description: Sales order closed after invoice settlement.
+    emit_by: finance-service
+    consume_by: [sales-service, reporting-service]
+    payload: { sales_order_id: { type: string, format: uuid }, payment_id: { type: string, format: uuid } }
+  purchase.request.submitted:
+    description: Purchase request submitted for approval.
+    emit_by: scm-service
+    consume_by: [notification-service]
+    payload: { purchase_request_id: { type: string, format: uuid }, submitted_by: { type: string, format: uuid } }
+  purchase.invoice.posted:
+    description: Purchase invoice posted after matching controls.
+    emit_by: finance-service
+    consume_by: [scm-service, ledger-service]
+    payload: { purchase_invoice_id: { type: string, format: uuid }, journal_id: { type: string, format: uuid } }
+  production.quarantine.triggered:
+    description: Finished production batch entered quarantine pending QC release.
+    emit_by: production-service
+    consume_by: [qc-service, inventory-service]
+    payload: { batch_record_id: { type: string, format: uuid }, stock_movement_id: { type: string, format: uuid } }
+  rnd.formulation.submitted:
+    description: Formulation submitted for R&D approval.
+    emit_by: rnd-service
+    consume_by: [notification-service]
+    payload: { formulation_id: { type: string, format: uuid }, rev_number: { type: integer } }
+  rnd.formulation.approved:
+    description: Formulation approved before lock.
+    emit_by: rnd-service
+    consume_by: [sales-service, notification-service]
+    payload: { formulation_id: { type: string, format: uuid }, approved_by: { type: string, format: uuid } }
+  warehouse.batch.status_changed:
+    description: Canonical stock-quality state changed for a production batch.
+    emit_by: inventory-service
+    consume_by: [production-service, sales-service]
+    payload: { batch_record_id: { type: string, format: uuid }, new_status: { type: string } }
+  warehouse.opname.approved:
+    description: Stock opname approved and ready for adjustment posting.
+    emit_by: inventory-service
+    consume_by: [finance-service, reporting-service]
+    payload: { stock_opname_id: { type: string, format: uuid }, loss_value: { type: integer } }
+  warehouse.adjustment.approved:
+    description: Stock adjustment approved.
+    emit_by: inventory-service
+    consume_by: [finance-service, reporting-service]
+    payload: { stock_adjustment_id: { type: string, format: uuid }, loss_value: { type: integer } }
+  warehouse.outbound.verified:
+    description: Delivered outbound shipment verified from proof of delivery.
+    emit_by: inventory-service
+    consume_by: [sales-service, finance-service]
+    payload: { delivery_out_id: { type: string, format: uuid }, sales_order_id: { type: string, format: uuid } }
+  checklist.stage.started:
+    description: Checklist stage work started.
+    emit_by: checklist-service
+    consume_by: [notification-service]
+    payload: { checklist_id: { type: string, format: uuid }, stage_name: { type: string } }
+  checklist.stage.blocked:
+    description: Checklist stage blocked for a recorded reason.
+    emit_by: checklist-service
+    consume_by: [notification-service, production-service]
+    payload: { checklist_id: { type: string, format: uuid }, stage_name: { type: string }, reason: { type: string } }
+
+# ===========================================
+# EVENT INFRASTRUCTURE
+# ===========================================
+infrastructure:
+  broker: redis_streams
+  retention_period_days: 7
+  max_retry: 3
+  retry_backoff: exponential(base=1s, max=60s)
+  dead_letter_queue: events.dlq
+  ordering: best_effort  # per-stream FIFO; cross-stream no global ordering guarantee
+
+  consumer_groups:
+    sales-service:
+      - "sales.sales-order.*"
+      - "production.batch-record.in_progress"
+      - "production.batch.completed"
+      - "rnd.formulation.locked"
+      - "sales.sales-order.shipped"
+      - "purchase.payment.made"
+    production-service:
+      - "production.*"
+      - "sales.sales-order.approved"
+      - "sales.sales-order.dp_received"
+      - "rnd.formulation.locked"
+      - "checklist.stage.sla_breach"
+    finance-service:
+      - "finance.*"
+      - "sales.sales-order.approved"
+      - "sales.sales-order.delivered"
+      - "sales.sales-order.shipped"
+      - "sales.sales-return.*"
+      - "sales.sales-payment.received"
+      - "purchase.goods-receipt.*"
+      - "purchase.order.approved"
+      - "purchase.return.*"
+      - "purchase.payment.made"
+      - "warehouse.inbound.received"
+      - "warehouse.outbound.dispatched"
+    inventory-service:
+      - "production.batch-record.in_progress"
+      - "production.packaging.completed"
+      - "purchase.goods-receipt.created"
+      - "purchase.return-out.executed"
+      - "sales.sales-return-in.received"
+    rnd-service:
+      - "sales.sample.approved"
+      - "sales.sample.paid"
+    scm-service:
+      - "purchase.*"
+      - "warehouse.stock.low"
+      - "finance.payment.disbursed"
+    warehouse-service:
+      - "sales.sales-order.ready_to_ship"
+      - "sales.sales-order.approved"
+      - "sales.sales-return.*"
+      - "purchase.order.approved"
+      - "purchase.return.*"
+    qc-service:
+      - "production.mixing.completed"
+      - "production.filling.completed"
+      - "production.packaging.completed"
+    notification-service:
+      - "*"  # wildcard — feeds in-app notification center for all events
+    audit-service:
+      - "auth.*"
+      - "audit.*"
+      - "finance.journal-entry.failed_balance"
+      - "finance.period.locked"
+    checklist-service:
+      - "checklist.*"
+      - "sales.sales-order.approved"
+    communication-service:
+      - "entity.*"
+    kpi-service:
+      - "sales.*"
+      - "purchase.*"
+      - "production.*"
+      - "warehouse.*"
+      - "finance.*"
+      - "rnd.*"
+    ledger-service:
+      - "finance.journal-entry.posted"
+    reporting-service:
+      - "finance.journal-entry.posted"
+      - "finance.payment.received"
+      - "finance.payment.disbursed"
+    analytics-service:
+      - "sales.*"
+      - "production.batch.completed"
+      - "purchase.goods-receipt.created"
+      - "finance.payment.received"
+      - "finance.payment.disbursed"
+
+# ===========================================
+# EVENT VERSIONING
+# ===========================================
+versioning:
+  policy: "Per event type, v1.0 initial. Breaking changes increment MAJOR (v2.0). Additive changes increment MINOR (v1.1)."
+  schema_evolution: additive_only
+  deprecation_period_months: 6
+  backward_compatibility: minimum_2_versions
+
+# ===========================================
+# DELIVERY GUARANTEES
+# ===========================================
+delivery_guarantees:
+  at_least_once:
+    description: "Event delivered at least once. Consumers MUST be idempotent (use event.id as dedup key)."
+    retries: 3
+    dlq_after: 3
+    examples:
+      - "sales.sales-order.approved"
+      - "purchase.order.approved"
+      - "production.packaging.completed"
+      - "rnd.formulation.locked"
+
+  at_most_once:
+    description: "Event delivered 0 or 1 times. Use for non-critical notifications + analytics counters."
+    retries: 0
+    examples:
+      - "notification.*"
+      - "audit.*"
+
+  exactly_once:
+    description: "Use idempotency keys + dedup logic in handler. Strongest guarantee."
+    requires: idempotent_consumer_logic
+    examples:
+      - "finance.journal-entry.posted"
+      - "finance.payment.received"
+      - "auth.user.password_changed"
+
+# ===========================================
+# OPEN QUESTIONS (for user)
+# ===========================================
+resolved_decisions:
+  - { id: EVENT-DECISION-01, resolution: "Keep stage events and the production.batch.completed rollup; they serve different consumers." }
+  - { id: EVENT-DECISION-02, resolution: "Failed-balance alerts use in-app + email; WA remains an external-customer channel." }
+  - { id: EVENT-DECISION-03, resolution: "KPI does not consume auth.user.*; only eligible operational evidence events contribute." }
+  - { id: EVENT-DECISION-04, resolution: "warehouse.stock.low notifies SCM and does not create a PurchaseRequest automatically." }
+  - { id: EVENT-DECISION-05, resolution: "sales.sales-order.cancelled is distinct from sales.sales-return.created." }
