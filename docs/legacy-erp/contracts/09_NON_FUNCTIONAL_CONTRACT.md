@@ -363,6 +363,30 @@ Dev:         http://localhost:4000/api/v1/
 | 500 | Internal Server Error |
 | 503 | Service Unavailable (maintenance, DB down) |
 
+### P05 Platform Control Error Codes (canonical, §7)
+
+| Code | HTTP | Description |
+|------|------|-------------|
+| `AUTH_INVALID_CREDENTIALS` | 401 | Email/password mismatch (constant-time, enumeration-safe) |
+| `AUTH_REFRESH_REPLAY` | 401 | Refresh token replay detected; family revoked |
+| `AUTH_SESSION_REVOKED` | 401 | Session explicitly revoked (logout, logout-all, password reset) |
+| `AUTH_MFA_REQUIRED` | 401 | MFA pending; cannot authorize without verification |
+| `AUTH_MFA_INVALID` | 401 | MFA TOTP/recovery code invalid |
+| `PERMISSION_DENIED` | 403 | Canonical permission slug denied |
+| `PERMISSION_DATA_SCOPE_DENIED` | 403 | Permission granted but data scope mismatch |
+| `TENANT_ISOLATION_VIOLATION` | 403 | Cross-tenant access attempt rejected |
+| `FIELD_SCOPE_LEAK` | 403 | Field scope violation masked at output |
+| `AUDIT_NOT_ATOMIC` | 500 | Audit row not written in same transaction as mutation |
+| `OUTBOX_NOT_ATOMIC` | 500 | Outbox row not written in same transaction as mutation |
+| `OUTBOX_DUPLICATE` | 409 | Outbox idempotency key collision |
+| `OUTBOX_LEASE_LOST` | 409 | Outbox lease expired or reclaimed by another worker |
+| `PARENT_ACL_DENIED` | 403 | Note/comment on a parent resource without read permission |
+| `CROSS_TENANT_MENTION` | 403 | Mention target in another tenant |
+| `WEAK_CONFIGURATION` | 503 | Startup validation rejected a required secret |
+| `STALE_EVIDENCE` | 503 | Evidence references stale base SHA |
+| `PERMISSION_DENY_DEFAULT` | 403 | Deny-by-default policy |
+| `TENANT_FROM_CLIENT_REJECTED` | 403 | Tenant ID supplied in client request body/query rejected |
+
 ### Rate Limiting
 
 | Scope | Limit |

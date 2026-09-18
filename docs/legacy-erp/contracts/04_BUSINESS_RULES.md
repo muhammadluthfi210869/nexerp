@@ -1857,4 +1857,25 @@ Tidak ada precedence chain lokal. Gunakan satu peta otoritas berbasis subjek di 
 
 ---
 
-**Dokumen ini FINAL untuk dirujuk. Update WAJIB lewat DEC baru di `_PROCESS_DECISIONS_LOG.md`. | Versi: 1.0 | Tanggal: 2026-09-16**
+## BUS-RULE-AUDIT-ATOMIC (P05)
+
+Setiap governed mutation (state-changing business operation) WAJIB menulis audit row
+dalam transaksi database yang sama dengan mutasi itu sendiri. Setelah mutasi
+berhasil, audit row HARUS sudah ada (`AUDIT_NOT_ATOMIC` jika sebaliknya). Audit
+row immutable: UPDATE/DELETE pada `audit_logs` selalu gagal
+(`AUDIT_MUTATION_FORBIDDEN`). Lihat `09_NON_FUNCTIONAL_CONTRACT.md §8` dan
+`backend/src/platform/audit/audit.service.ts`.
+
+## BUS-RULE-OUTBOX-ATOMIC (P05)
+
+Setiap mutasi yang menghasilkan event eksternal WAJIB menulis outbox row dalam
+transaksi database yang sama dengan mutasi (`OUTBOX_NOT_ATOMIC` jika sebaliknya).
+Idempotency key = sha256(eventType + aggregateType + aggregateId + payloadDigest).
+Worker reclaim lease (30s) — duplicate key ditolak unique constraint
+(`OUTBOX_DUPLICATE`). Backoff 1s/5s/30s/2m/10m, 5 attempt lalu `DEAD_LETTER`.
+Lihat `08_INTEGRATION_EVENT_CONTRACT.yaml`, `09_NON_FUNCTIONAL_CONTRACT.md §8`,
+dan `backend/src/platform/outbox/outbox.service.ts`.
+
+---
+
+**Dokumen ini FINAL untuk dirujuk. Update WAJIB lewat DEC baru di `_PROCESS_DECISIONS_LOG.md`. | Versi: 1.1 | Tanggal: 2026-09-18**

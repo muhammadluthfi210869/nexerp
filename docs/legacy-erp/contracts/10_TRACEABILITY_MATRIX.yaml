@@ -1429,4 +1429,19 @@ index:
     E-Attachment: [communication-screens]
     E-Notification: [communication-screens]
 
+# =============================================================
+# P05 PLATFORM CONTROLS (added 2026-09-18 per P05 frozen acceptance contract)
+# Each control cites canonical contract sections, not SSOT provenance.
+# =============================================================
+p05_platform_controls:
+  - {id: auth.session, owners: [backend/src/platform/auth/session.service.ts], cite: ['09_NON_FUNCTIONAL_CONTRACT.md §7', '04_BUSINESS_RULES.md']}
+  - {id: auth.mfa, owners: [backend/src/platform/auth/mfa.service.ts], cite: ['09_NON_FUNCTIONAL_CONTRACT.md §7', '04_BUSINESS_RULES.md']}
+  - {id: policy.tenant, owners: [backend/src/platform/policy/policy.service.ts, backend/src/platform/scope/scope.service.ts], cite: ['07_RBAC_MATRIX.yaml', '09_NON_FUNCTIONAL_CONTRACT.md §8']}
+  - {id: audit.immutable, owners: [backend/src/platform/audit/audit.service.ts], cite: ['09_NON_FUNCTIONAL_CONTRACT.md §8', '04_BUSINESS_RULES.md']}
+  - {id: approval.maker_checker, owners: [backend/src/platform/approval/approval.service.ts], cite: ['03_WORKFLOW_STATE_MACHINE.yaml', '04_BUSINESS_RULES.md']}
+  - {id: outbox.atomic, owners: [backend/src/platform/outbox/outbox.service.ts], cite: ['08_INTEGRATION_EVENT_CONTRACT.yaml', '09_NON_FUNCTIONAL_CONTRACT.md §8']}
+  - {id: communication.acl, owners: [backend/src/platform/communication/acl.adapter.ts], cite: ['08_INTEGRATION_EVENT_CONTRACT.yaml', '05_API_CONTRACT.yaml']}
+  - {id: errors.canonical, owners: [backend/src/platform/errors/error.factory.ts, backend/src/platform/errors/error.filter.ts], cite: ['09_NON_FUNCTIONAL_CONTRACT.md §7', '05_API_CONTRACT.yaml']}
+  - {id: config.typed, owners: [backend/src/platform/config/config.module.ts], cite: ['09_NON_FUNCTIONAL_CONTRACT.md §9']}
+
 # End of 10_TRACEABILITY_MATRIX.yaml
