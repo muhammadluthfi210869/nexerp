@@ -3,11 +3,11 @@
   "level": "PHASE_GATE",
   "contract_version": "1.0.0",
   "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-  "candidate_sha": "34a90cfd38baf758d50c301fca037977db3ef6fd",
-  "started_at": "2026-09-18T14:40:59.347Z",
-  "completed_at": "2026-09-18T14:41:03.460Z",
+  "candidate_sha": "8bb83ada79851fa683fc83e8850dd1efef46fc9c",
+  "started_at": "2026-09-18T14:41:27.743Z",
+  "completed_at": "2026-09-18T14:41:31.885Z",
   "verdict": "FAIL",
   "token": null,
   "result": null,
-  "failure": "P05GateError: [contract_consistency] EVIDENCE_VALIDATION_FAILED: Check coupling_complexity_scan zero/unparseable targets\n    at assert (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:20:20)\n    at validateP05Evidence (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:50:5)\n    at Object.certifyP05 (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:362:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:97:20)"
+  "failure": "P05GateError: [contract_consistency] EVIDENCE_VALIDATION_FAILED: Check auth_session_mfa status is not PASS\n    at assert (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:20:20)\n    at validateP05Evidence (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:38:5)\n    at Object.certifyP05 (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:362:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:97:20)"
 }
