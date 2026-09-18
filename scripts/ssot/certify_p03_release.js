@@ -318,7 +318,7 @@ async function certify() {
   run('root_npm_ci', 'npm', ['ci', '--ignore-scripts=false', '--no-audit'], { cwd: checkout, env: certEnv });
   run('backend_npm_ci', 'npm', ['ci', '--ignore-scripts=false', '--no-audit'], { cwd: path.join(checkout, 'backend'), env: certEnv });
   run('frontend_npm_ci', 'npm', ['ci', '--ignore-scripts=false', '--no-audit'], { cwd: path.join(checkout, 'frontend'), env: certEnv });
-  run('prisma_validate', 'npm', ['--prefix', 'backend', 'exec', '--', 'prisma', 'validate'], { cwd: checkout, env: certEnv });
+  run('prisma_validate', 'npm', ['--prefix', 'backend', 'exec', '--', 'prisma', 'validate', '--schema=backend/prisma/schema'], { cwd: checkout, env: certEnv });
   run('prisma_generate', 'npm', ['--prefix', 'backend', 'run', 'prisma:generate'], { cwd: checkout, env: certEnv });
 
   run('ssot', 'node', ['scripts/ssot/validate_ssot.js'], { cwd: checkout, env: certEnv });
