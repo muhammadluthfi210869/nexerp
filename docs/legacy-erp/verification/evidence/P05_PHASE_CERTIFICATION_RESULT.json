@@ -3,15 +3,15 @@
   "level": "PHASE_GATE",
   "contract_version": "1.0.0",
   "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-  "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
-  "started_at": "2026-09-18T14:46:16.638Z",
-  "completed_at": "2026-09-18T14:46:20.043Z",
+  "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
+  "started_at": "2026-09-18T14:46:46.119Z",
+  "completed_at": "2026-09-18T14:46:48.806Z",
   "verdict": "PHASE_PASS",
-  "token": "P05:d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33:PHASE_PASS",
+  "token": "P05:4d7275e28764ab5c8e4f08abb246111f4cc54abb:PHASE_PASS",
   "result": {
     "phase": "P05",
     "level": "PHASE_GATE",
-    "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+    "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
     "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
     "synthetic": false,
     "skipped_count": 0,
@@ -22,12 +22,12 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 324,
+        "duration_ms": 180,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
-            "command": "git merge-base 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+            "command": "git merge-base 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a 4d7275e28764ab5c8e4f08abb246111f4cc54abb",
             "exit_code": 0
           },
           {
@@ -50,9 +50,9 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 5,
+        "duration_ms": 2,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "grep 10_TRACEABILITY_MATRIX.yaml",
@@ -82,7 +82,7 @@
         "skipped": false,
         "duration_ms": 0,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "analyzer presence check",
@@ -99,9 +99,9 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 58,
+        "duration_ms": 30,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "node p05_analyzers.deriveModuleOwnership",
@@ -125,9 +125,9 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 95,
+        "duration_ms": 60,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "node p05_analyzers.deriveDependencyGraph",
@@ -148,9 +148,9 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 94,
+        "duration_ms": 64,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "forbidden-domain-import scan",
@@ -172,9 +172,9 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 83,
+        "duration_ms": 63,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "circular-dependency scan",
@@ -191,9 +191,9 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 93,
+        "duration_ms": 56,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "complexity scan",
@@ -212,9 +212,9 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 84,
+        "duration_ms": 51,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "duplicate scan",
@@ -238,12 +238,12 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 116,
+        "duration_ms": 78,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
-            "command": "git diff --name-only 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a..d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+            "command": "git diff --name-only 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a..4d7275e28764ab5c8e4f08abb246111f4cc54abb",
             "exit_code": 0
           }
         ],
@@ -261,7 +261,7 @@
         "skipped": false,
         "duration_ms": 0,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "platform/auth/session.service.ts roundtrip",
@@ -273,7 +273,7 @@
         "metrics": {
           "auth_bypasses": 0
         },
-        "db": "nex_p05_d3fb4219_28712_main"
+        "db": "nex_p05_4d7275e2_29860_main"
       },
       {
         "id": "role_permission_matrix",
@@ -283,7 +283,7 @@
         "skipped": false,
         "duration_ms": 0,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "platform/policy/policy.service.ts roundtrip",
@@ -292,7 +292,7 @@
         ],
         "target_count": 5,
         "mutation_count": 5,
-        "db": "nex_p05_d3fb4219_28712_main"
+        "db": "nex_p05_4d7275e2_29860_main"
       },
       {
         "id": "tenant_isolation",
@@ -302,7 +302,7 @@
         "skipped": false,
         "duration_ms": 0,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "platform/scope/scope.service.ts roundtrip",
@@ -311,7 +311,7 @@
         ],
         "target_count": 4,
         "mutation_count": 4,
-        "db": "nex_p05_d3fb4219_28712_main"
+        "db": "nex_p05_4d7275e2_29860_main"
       },
       {
         "id": "immutable_audit",
@@ -321,7 +321,7 @@
         "skipped": false,
         "duration_ms": 0,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "platform/audit/audit.service.ts roundtrip",
@@ -330,7 +330,7 @@
         ],
         "target_count": 3,
         "mutation_count": 3,
-        "db": "nex_p05_d3fb4219_28712_main"
+        "db": "nex_p05_4d7275e2_29860_main"
       },
       {
         "id": "maker_checker",
@@ -340,7 +340,7 @@
         "skipped": false,
         "duration_ms": 0,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "platform/approval/approval.service.ts roundtrip",
@@ -349,7 +349,7 @@
         ],
         "target_count": 4,
         "mutation_count": 4,
-        "db": "nex_p05_d3fb4219_28712_main"
+        "db": "nex_p05_4d7275e2_29860_main"
       },
       {
         "id": "outbox_retry_dedup",
@@ -359,7 +359,7 @@
         "skipped": false,
         "duration_ms": 0,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "platform/outbox/outbox.service.ts roundtrip",
@@ -368,7 +368,7 @@
         ],
         "target_count": 4,
         "mutation_count": 4,
-        "db": "nex_p05_d3fb4219_28712_main"
+        "db": "nex_p05_4d7275e2_29860_main"
       },
       {
         "id": "communication_acl",
@@ -378,7 +378,7 @@
         "skipped": false,
         "duration_ms": 0,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "platform/communication/acl.adapter.ts roundtrip",
@@ -387,7 +387,7 @@
         ],
         "target_count": 4,
         "mutation_count": 4,
-        "db": "nex_p05_d3fb4219_28712_main"
+        "db": "nex_p05_4d7275e2_29860_main"
       },
       {
         "id": "canonical_error_contract",
@@ -397,7 +397,7 @@
         "skipped": false,
         "duration_ms": 0,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "platform/errors/error.filter.ts roundtrip",
@@ -413,9 +413,9 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 52,
+        "duration_ms": 51,
         "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-        "candidate_sha": "d3fb4219bc0162bc21f2d26ed26ac3fed4d38b33",
+        "candidate_sha": "4d7275e28764ab5c8e4f08abb246111f4cc54abb",
         "commands": [
           {
             "command": "direct process.env scan",
@@ -437,36 +437,36 @@
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateCircularDependencyScan",
-        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-BgFAIX\\cycle-a.ts",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-MWQl7x\\cycle-a.ts",
         "gate_id": "circular_dependency_scan",
         "reason_code": "DOMAIN_CYCLE_DETECTED",
         "rejection_reason": "temp fixture creates domain module import cycle",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.561Z"
+        "occurred_at": "2026-09-18T14:46:47.469Z"
       },
       {
         "id": "P05-FORBIDDEN-DOMAIN-IMPORT",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateModuleBoundaryTest",
-        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-9xq6NW\\forbidden.ts",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-81OoEA\\forbidden.ts",
         "gate_id": "module_boundary_test",
         "reason_code": "FORBIDDEN_DOMAIN_IMPORT",
         "rejection_reason": "temp fixture declared cross-module import not through DI port",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.617Z"
+        "occurred_at": "2026-09-18T14:46:47.544Z"
       },
       {
         "id": "P05-CROSS-DOMAIN-PERSISTENCE",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateModuleBoundaryTest",
-        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-MIDCvp\\cross.ts",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-pZmmQk\\cross.ts",
         "gate_id": "module_boundary_test",
         "reason_code": "DIRECT_CROSS_DOMAIN_PERSISTENCE",
         "rejection_reason": "temp fixture reaches into another module prisma delegate",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.619Z"
+        "occurred_at": "2026-09-18T14:46:47.546Z"
       },
       {
         "id": "P05-UNOWNED-MODULE",
@@ -478,79 +478,79 @@
         "reason_code": "MODULE_MISSING_OWNER",
         "rejection_reason": "temp module dir created without OWNER.md",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.620Z"
+        "occurred_at": "2026-09-18T14:46:47.548Z"
       },
       {
         "id": "P05-SHARED-DUMPING-GROUND",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateModuleBoundaryTest",
-        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-8QkrJz\\shared-dump.ts",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-GfEwzU\\shared-dump.ts",
         "gate_id": "module_boundary_test",
         "reason_code": "SHARED_DUMPING_GROUND",
         "rejection_reason": "temp shared file contains domain business logic",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.622Z"
+        "occurred_at": "2026-09-18T14:46:47.550Z"
       },
       {
         "id": "P05-UNUSED-PRODUCTION-DEPENDENCY",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateDuplicateDeadCodeScan",
-        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-iIi9l6\\unused-dep.json",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-90rOb3\\unused-dep.json",
         "gate_id": "duplicate_dead_code_scan",
         "reason_code": "UNUSED_PRODUCTION_DEPENDENCY",
         "rejection_reason": "temp package.json declares unused production dep",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.623Z"
+        "occurred_at": "2026-09-18T14:46:47.551Z"
       },
       {
         "id": "P05-ORPHAN-PROVIDER",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateDuplicateDeadCodeScan",
-        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-ydmvmW\\orphan-provider.ts",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-uj5tmY\\orphan-provider.ts",
         "gate_id": "duplicate_dead_code_scan",
         "reason_code": "ORPHAN_PROVIDER",
         "rejection_reason": "temp @Injectable not registered in any module",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.625Z"
+        "occurred_at": "2026-09-18T14:46:47.553Z"
       },
       {
         "id": "P05-CHANGED-COMPLEXITY-REGRESSION",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateCouplingComplexityScan",
-        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-c7PW9m\\complex.ts",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-GctGUo\\complex.ts",
         "gate_id": "coupling_complexity_scan",
         "reason_code": "CHANGED_COMPLEXITY_OVER_THRESHOLD",
         "rejection_reason": "temp fixture introduces function with cyclomatic complexity > 10",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.627Z"
+        "occurred_at": "2026-09-18T14:46:47.554Z"
       },
       {
         "id": "P05-DUPLICATE-RULE",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateDuplicateDeadCodeScan",
-        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-w69H8R\\dup-rule.ts",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-LsmoiF\\dup-rule.ts",
         "gate_id": "duplicate_dead_code_scan",
         "reason_code": "DUPLICATE_RULE",
         "rejection_reason": "temp fixture duplicates existing rule",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.628Z"
+        "occurred_at": "2026-09-18T14:46:47.555Z"
       },
       {
         "id": "P05-REPRESENTATIVE-CHANGE-BLAST-RADIUS",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateRepresentativeModuleChangeTest",
-        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-eDXVEp\\blast-radius.txt",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-KoO9No\\blast-radius.txt",
         "gate_id": "representative_module_change_test",
         "reason_code": "UNRELATED_CHANGE_PATH",
         "rejection_reason": "temp fixture represents unrelated change outside predicted blast radius",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.629Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-REVOKED-SESSION-REUSE",
@@ -562,7 +562,7 @@
         "reason_code": "SESSION_REVOKED",
         "rejection_reason": "simulated session revoke reuse attempt",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-REFRESH-TOKEN-REPLAY",
@@ -574,7 +574,7 @@
         "reason_code": "REFRESH_REPLAY",
         "rejection_reason": "replayed refresh token after first rotation detected",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-MFA-BYPASS",
@@ -586,7 +586,7 @@
         "reason_code": "MFA_BYPASS_ATTEMPT",
         "rejection_reason": "request attempted with mfaPending=true session",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-LOGIN-ENUMERATION",
@@ -598,7 +598,7 @@
         "reason_code": "LOGIN_ENUMERATION_DETECTED",
         "rejection_reason": "login timing differs between known vs unknown email",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-PERMISSION-DENY-BYPASS",
@@ -610,7 +610,7 @@
         "reason_code": "PERMISSION_DENY_DEFAULT",
         "rejection_reason": "permission forged in request body rejected by deny-by-default policy",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-TENANT-CROSS-READ",
@@ -622,7 +622,7 @@
         "reason_code": "CROSS_TENANT_READ",
         "rejection_reason": "cross-tenant UUID guess rejected",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-FIELD-SCOPE-LEAK",
@@ -634,7 +634,7 @@
         "reason_code": "FIELD_SCOPE_LEAK",
         "rejection_reason": "division-scoped field read blocked at output boundary",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-AUDIT-AFTER-SUCCESS",
@@ -646,7 +646,7 @@
         "reason_code": "AUDIT_NOT_ATOMIC",
         "rejection_reason": "audit row written in separate transaction rejected",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-AUDIT-MUTATION",
@@ -658,7 +658,7 @@
         "reason_code": "AUDIT_UPDATE_BLOCKED",
         "rejection_reason": "audit_logs UPDATE blocked by audit_immutable trigger",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-MAKER-CHECKER-SELF-APPROVE",
@@ -670,7 +670,7 @@
         "reason_code": "SELF_APPROVAL_FORBIDDEN",
         "rejection_reason": "maker cannot approve own governed record",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-OUTBOX-NONATOMIC",
@@ -682,7 +682,7 @@
         "reason_code": "OUTBOX_NOT_ATOMIC",
         "rejection_reason": "outbox row written after mutation success rejected",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-OUTBOX-DUPLICATE",
@@ -694,7 +694,7 @@
         "reason_code": "OUTBOX_DUPLICATE_REJECTED",
         "rejection_reason": "duplicate idempotency key enqueue rejected by unique constraint",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-OUTBOX-RETRY-LOSS",
@@ -706,7 +706,7 @@
         "reason_code": "OUTBOX_LEASE_RECLAIMED",
         "rejection_reason": "worker crash mid-ack triggers lease reclaim",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-NOTE-PARENT-ACL-BYPASS",
@@ -718,7 +718,7 @@
         "reason_code": "PARENT_ACL_DENIED",
         "rejection_reason": "note attempted without parent read permission",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.557Z"
       },
       {
         "id": "P05-MENTION-UNAUTHORIZED-TARGET",
@@ -730,7 +730,7 @@
         "reason_code": "CROSS_TENANT_MENTION",
         "rejection_reason": "mention target in another tenant rejected",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.558Z"
       },
       {
         "id": "P05-MENTION-DUPLICATE-NOTIFICATION",
@@ -742,7 +742,7 @@
         "reason_code": "MENTION_DUPLICATE_NOTIFICATION_REJECTED",
         "rejection_reason": "duplicate mention in one transaction rejected",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.558Z"
       },
       {
         "id": "P05-ERROR-ENVELOPE-BYPASS",
@@ -754,7 +754,7 @@
         "reason_code": "ERROR_ENVELOPE_MISSING",
         "rejection_reason": "raw throw bypassing filter rejected",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.558Z"
       },
       {
         "id": "P05-ERROR-PII-LEAK",
@@ -766,43 +766,43 @@
         "reason_code": "PII_OR_SECRET_IN_ERROR",
         "rejection_reason": "error message containing SQL + passwordHash scrubbed",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.630Z"
+        "occurred_at": "2026-09-18T14:46:47.558Z"
       },
       {
         "id": "P05-CONFIG-DEFAULT-SECRET",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateConfigurationOwnershipTest",
-        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-NjXp0f\\weak-secret.env",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-TNljqn\\weak-secret.env",
         "gate_id": "configuration_ownership_test",
         "reason_code": "WEAK_DEFAULT_SECRET",
         "rejection_reason": "committed JWT_SECRET=changeme rejected by config module validation",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.631Z"
+        "occurred_at": "2026-09-18T14:46:47.559Z"
       },
       {
         "id": "P05-STALE-SHA-EVIDENCE",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gatePredecessorScopeAndSafety",
-        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-7DLQ7c\\stale-evidence.json",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-ZqgGRi\\stale-evidence.json",
         "gate_id": "predecessor_scope_and_safety",
         "reason_code": "STALE_SHA_EVIDENCE",
         "rejection_reason": "evidence file references stale base SHA",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.634Z"
+        "occurred_at": "2026-09-18T14:46:47.560Z"
       },
       {
         "id": "P05-UNEXPECTED-SKIP",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gatePredecessorScopeAndSafety",
-        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-e6U3jC\\skip-marker.json",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\p05-mut-5v0nmX\\skip-marker.json",
         "gate_id": "predecessor_scope_and_safety",
         "reason_code": "UNEXPECTED_SKIP_DETECTED",
         "rejection_reason": "injected skipped test counter rejected by gate",
         "duration_ms": 0,
-        "occurred_at": "2026-09-18T14:46:18.635Z"
+        "occurred_at": "2026-09-18T14:46:47.561Z"
       }
     ],
     "metrics": {
@@ -836,20 +836,20 @@
       "source_database_fingerprint": "fb0a5da9e048eb82a7011b23a588cdeed095d1641b003d8d3145a51a263a9a62",
       "source_database_tables": 194,
       "created_databases": [
-        "nex_p05_d3fb4219_28712_main"
+        "nex_p05_4d7275e2_29860_main"
       ],
       "dropped_databases": [
-        "nex_p05_d3fb4219_28712_main"
+        "nex_p05_4d7275e2_29860_main"
       ]
     },
     "evidence": {
-      "ownership_manifest_sha256": "a31effeb057905e20af0e473c3cf22c79f140e135624110f959048c34da37ce0",
-      "dependency_graph_sha256": "a3078b4f4facf7e537e1f612b3641ce8ddc0ddede0b405257bb89437382039c2",
-      "control_matrix_sha256": "8ed8a179ac4e9eecc499e398d5a5657b3675382819713d2cf9c69c3b20472c69",
-      "scope_manifest_sha256": "96992d0891b2109678608a9cac673ddeb9f9917b3de5cd731cef29b74096994f"
+      "ownership_manifest_sha256": "f49b732e26d99c89f15575b73275e8ce71d1d67f4dd8846f81e730e3c6700a6f",
+      "dependency_graph_sha256": "0cc22297fcb24f36819d0319216aec06b94eb675429b2a568e2ed28c687e3293",
+      "control_matrix_sha256": "b7f9779dda8b89b32e4ba9ec38e9906ae1efd64d47c6634e5ea1d07f1f6e413b",
+      "scope_manifest_sha256": "7921997e279870b19ccc6739fd90703fd68fa70f32dba9a9bfa699e1a39867c2"
     },
     "verdict": "PASS",
-    "duration_ms": 2707
+    "duration_ms": 2023
   },
   "failure": null
 }
