@@ -79,18 +79,26 @@ jobs:
         run: |
           node scripts/ssot/certify_p03_phase.js
 
+      - name: "P04 Phase Certification & Database Migration Gates"
+        run: |
+          node scripts/ssot/certify_p04_phase.js
+
       - name: "Post-Run Source Integrity Check"
         run: |
           git diff --exit-code -- . \
             ':(exclude)docs/legacy-erp/verification/evidence/P03_PHASE_CERTIFICATION_RESULT.json' \
             ':(exclude)docs/legacy-erp/verification/evidence/P03_CHANGE_SCOPE_MANIFEST.json' \
             ':(exclude)docs/legacy-erp/verification/evidence/P03_CHANGE_SCOPE_LEDGER.md' \
+            ':(exclude)docs/legacy-erp/verification/evidence/P04_PHASE_CERTIFICATION_RESULT.json' \
+            ':(exclude)docs/legacy-erp/verification/evidence/P04_MIGRATION_SCOPE_MANIFEST.json' \
             ':(exclude)docs/legacy-erp/verification/_SSOT_VALIDATION_REPORT.md' \
             ':(exclude)docs/legacy-erp/verification/_ssot_validation.json' \
             ':(exclude)docs/legacy-erp/verification/_p02_test_results.json' \
             ':(exclude)docs/legacy-erp/verification/_p03_test_results.json' \
+            ':(exclude)docs/legacy-erp/verification/_p04_test_results.json' \
             ':(exclude)docs/legacy-erp/verification/_clean_checkout_build_evidence.json' \
             ':(exclude)docs/legacy-erp/generated/INPUT_OUTPUT_LINEAGE.md'
+
 
       - name: "Run All Regression & Contract Tests"
         run: |

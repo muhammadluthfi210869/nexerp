@@ -54,19 +54,13 @@ grep -q "no-store" nginx.conf && ok "nginx no-store cache guard" || bad "nginx k
 grep -q "token=" backend/src/modules/auth/jwt.strategy.ts \
   && ok "jwt cookie-fallback untuk attachment <img> (fix light)" \
   || bad "jwt cookie-fallback hilang"
-grep -q "db push" backend/init-db.sh && ! grep -q "migrate deploy" backend/init-db.sh \
-  && ok "init-db.sh pakai db push (bukan migrate deploy)" || bad "init-db.sh salah filosofi schema"
+grep -q "migrate deploy" backend/init-db.sh && ! grep -q "db push" backend/init-db.sh \
+  && ok "init-db.sh pakai migrate deploy (bukan db push)" || bad "init-db.sh salah filosofi schema"
 grep -q "DRIFT_MARKER" backend/init-db.sh \
   && ok "init-db.sh idempotent (drift marker)" || bad "init-db.sh kehilangan drift marker"
-# Urutan aman: pemanggilan `npx prisma db push` pertama harus TANPA --accept-data-loss
-FIRST_PUSH=$(grep -n "npx prisma db push" backend/init-db.sh | head -1)
-if echo "$FIRST_PUSH" | grep -vq -- "--accept-data-loss" && [ -n "$FIRST_PUSH" ]; then
-  ok "init-db.sh: safe-first push (tanpa accept-data-loss duluan)"
-else
-  bad "init-db.sh: accept-data-loss langsung (berbahaya)"
-fi
-grep -q -- "--print" backend/init-db.sh \
-  && ok "init-db.sh: dry-run gate sebelum accept-data-loss" || bad "init-db.sh tidak punya dry-run gate"
+! grep -q -- "--accept-data-loss" backend/init-db.sh \
+  && ok "init-db.sh: bebas accept-data-loss" || bad "init-db.sh masih punya accept-data-loss"
+
 
 # ── 4. Halaman marketing hasil recovery + fix produksi ──
 MT="frontend/src/app/(dashboard)/marketing/management-task"

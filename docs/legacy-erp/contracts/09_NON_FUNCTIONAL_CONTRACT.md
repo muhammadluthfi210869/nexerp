@@ -652,11 +652,25 @@ Backup storage: separate physical host, encrypted at rest.
 | Merge strategy | Squash merge + auto-delete branch |
 | Deploy trigger | Automatic on `main` merge → GHCR image → VPS via `deploy.sh` |
 | Rollback | `rollback.sh <image-tag>` (per-image-tag rollback) |
-| DB migrations | `prisma db push` safe-first; destructive ops blocked per `ARCHITECTURE.md` |
+| DB migrations | `prisma migrate deploy` only; `prisma db push` and `--accept-data-loss` forbidden in production/CI/init |
 | Secrets | GitHub Secrets for CI; Doppler/Vault for production runtime |
 | Pre-commit | Husky + lint-staged (ESLint + Prettier) |
 
 **Branch protection on `main`**: require PR, require status checks (lint, type-check, tests), no direct push.
+
+### 17.1 Database Migration & Evolution Policy (LOCKED)
+
+Per Phase P04 Canonical Database and Migration Contract:
+- **Migration Authority**: The canonical database schema is governed strictly via Prisma migrations located in `backend/prisma/migrations/`. Schema changes must be recorded as monotonic, deterministic migrations deployed via `prisma migrate deploy`.
+- **Forbidden Operations**: `prisma db push`, `--accept-data-loss`, `prisma migrate resolve` to hide failures, and uncontrolled raw DDL synchronization are strictly forbidden in production, staging, CI, container boot scripts, and certification suites.
+- **Upgrade Baseline**: The canonical upgrade baseline is the complete migration state materialized from the frozen P03 phase-base commit (`cf8b725d9fec4c808937c50217a3bc45050d271a`). Candidate migrations apply strictly on top of this immutable baseline.
+- **Migration Immutability**: All migration files present at the phase-base commit are immutable. Any database repair or structural change must be introduced via a new forward migration, never by modifying existing migration SQL.
+- **Expand/Migrate/Contract Policy**: Schema evolution follows the expand -> migrate/backfill -> contract pattern:
+  1. *Expand*: Add new tables, nullable columns, or columns with safe defaults. Destructive operations (`DROP TABLE`, `DROP COLUMN`, type narrowing, removing enum values, non-null without default) are strictly rejected.
+  2. *Migrate/Backfill*: Deterministic backfills populate new fields without data loss or row corruption. Backfill operations must be idempotent and reconcilable.
+  3. *Contract*: Retirement of obsolete columns/tables occurs only after N-1 application instances are decommissioned in a subsequent deployment window.
+- **Rolling Deployment Compatibility**: Dual-read/write compatibility between version N-1 and version N is guaranteed across a minimum of one rolling deployment window. Every schema modification must support concurrent queries from both N-1 and N application runtimes.
+
 
 ---
 

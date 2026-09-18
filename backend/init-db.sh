@@ -11,60 +11,33 @@ chmod 755 /app/data
 echo "Waiting 8 seconds for database to be ready..."
 sleep 8
 
-echo "=== Step 1: prisma db push (additive-gated, idempotent) ==="
-# Policy (consolidation 2026-09):
-#   1. Try `prisma db push` WITHOUT --accept-data-loss (safe default).
-#   2. If blocked, run --accept-data-loss --force --print dry-run and inspect.
-#      - Purely additive  -> apply with --accept-data-loss.
-#      - Any DROP         -> REFUSE. Exit loudly (no silent marker skip).
-#   3. On genuine failure, write a drift marker so restarts don't crash-loop,
-#      but print it LOUDLY every boot until an operator clears it.
+echo "=== Step 1: prisma migrate deploy (canonical, idempotent) ==="
+# Policy (Phase P04 canonical migration standard):
+#   1. Execute `prisma migrate deploy` to safely apply pending migrations.
+#   2. Unmanaged schema sync or unsafe data-loss bypass is forbidden.
+#   3. On failure, log loudly and persist drift marker so container avoids boot-looping.
 DRIFT_MARKER="/app/data/.schema-drift-acknowledged"
 
 if [ -f "$DRIFT_MARKER" ]; then
-  echo "🔴🔴🔴 🔔 SCHEMA DRIFT ACK MARKER PRESENT — db push SKIPPED this boot."
+  echo "🔴🔴🔴 🔔 SCHEMA DRIFT ACK MARKER PRESENT — migrate deploy SKIPPED this boot."
   echo "    Contents: $(cat "$DRIFT_MARKER")"
   echo "    ⚠️  DB schema may be OUT OF SYNC with code. Starting app anyway"
   echo "    (traffic > boot-loop). Operator MUST review and delete:"
   echo "    $DRIFT_MARKER"
 else
   set +e
-  npx prisma db push 2>&1
-  PUSH_EXIT=$?
+  npx prisma migrate deploy 2>&1
+  MIGRATE_EXIT=$?
   set -e
 
-  if [ $PUSH_EXIT -ne 0 ]; then
-    echo "db push blocked by data-loss guard — checking whether changes are additive..."
-    set +e
-    npx prisma db push --accept-data-loss --force --print 2>&1 | tee /tmp/db-push-plan.sql
-    DRY_EXIT=$?
-    set -e
-    if [ $DRY_EXIT -ne 0 ]; then
-      echo "❌ Dry-run itself failed — cannot classify schema delta. NOT applying."
-      echo "manual-review $(date -Iseconds): dry-run failed" > "$DRIFT_MARKER"
-    elif grep -qiE "DROP (TABLE|COLUMN|TYPE)|ALTER TABLE .* DROP" /tmp/db-push-plan.sql; then
-      echo "🔴 DROPS detected in the planned migration — REFUSING to auto-apply."
-      echo "   Review /tmp/db-push-plan.sql, migrate the data by hand, then delete"
-      echo "   the marker and restart. Plan saved to $DRIFT_MARKER.plan"
-      cp /tmp/db-push-plan.sql "$DRIFT_MARKER.plan" 2>/dev/null || true
-      echo "drops-blocked $(date -Iseconds)" > "$DRIFT_MARKER"
-    else
-      echo "✅ Changes are additive. Applying with --accept-data-loss..."
-      set +e
-      npx prisma db push --accept-data-loss 2>&1
-      PUSH_EXIT=$?
-      set -e
-      if [ $PUSH_EXIT -ne 0 ]; then
-        echo "⚠️  db push still failing after additive apply attempt. Writing drift marker."
-        echo "push-failed $(date -Iseconds)" > "$DRIFT_MARKER"
-      else
-        echo "✅ prisma db push succeeded"
-      fi
-    fi
+  if [ $MIGRATE_EXIT -ne 0 ]; then
+    echo "⚠️  prisma migrate deploy failed (exit code $MIGRATE_EXIT). Writing drift marker."
+    echo "migration-failed $(date -Iseconds): exit code $MIGRATE_EXIT" > "$DRIFT_MARKER"
   else
-    echo "✅ prisma db push succeeded (no data-loss guard hit)"
+    echo "✅ prisma migrate deploy succeeded"
   fi
 fi
+
 
 echo "=== Step 2: Seed default users (only if empty) ==="
 # Prisma v7 WAJIB driver adapter (new PrismaClient() polos akan error & count selalu 0,
