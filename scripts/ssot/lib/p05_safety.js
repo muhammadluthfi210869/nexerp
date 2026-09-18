@@ -69,7 +69,7 @@ function redactSecrets(input, env = process.env) {
     result = result.replace(/eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g, '[REDACTED_JWT]');
     result = result.replace(/Bearer\s+[A-Za-z0-9._-]{16,}/g, 'Bearer [REDACTED_TOKEN]');
     result = result.replace(/\b[\w.+-]+@[\w-]+\.[\w.-]+\b/g, '[REDACTED_EMAIL]');
-    result = result.replace(/(?<![\d])\+?6?2?0?[\d\s-]{9,15}\d(?![\d-])/g, '[REDACTED_PHONE]');
+    result = result.replace(/(?<![-\d])\+?6?2?0?[\d\s-]{9,15}\d(?![-\dT:.\d])/g, '[REDACTED_PHONE]');
     result = result.replace(/(?<![\d])\d{16}(?![\d])/g, '[REDACTED_NIK]');
     result = result.replace(/passwordHash\s*[:=]\s*['"][^'"]{4,}['"]/gi, 'passwordHash=[REDACTED]');
     result = result.replace(/set-cookie:\s*[^\s;,]+/gi, 'set-cookie: [REDACTED]');
@@ -141,7 +141,7 @@ function assertNoSecrets(value, env = process.env, path = 'root') {
         `Email-shaped value detected at ${currentPath}`, { path: currentPath }
       );
     }
-    if (/(?<![\d])\+?6?2?0?[\d\s-]{9,15}\d(?![\d-])/.test(str)) {
+    if (/(?<![-\d])\+?6?2?0?[\d\s-]{9,15}\d(?![-\dT:.\d])/.test(str)) {
       throw new P05GateError(
         'predecessor_scope_and_safety', 'PII_IN_EVIDENCE',
         `Phone-shaped value detected at ${currentPath}`, { path: currentPath }
