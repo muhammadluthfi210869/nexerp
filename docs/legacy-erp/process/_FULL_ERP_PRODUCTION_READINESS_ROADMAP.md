@@ -32,6 +32,7 @@ Rules:
 - A batch does not weaken sequential certification: the first failed phase prevents certification of later phases, even if later diagnostics happen to pass.
 - Prefer audit milestones `P00–P03`, `P04–P06`, `P07–P10`, `P11–P14`, `P15`, `P16–P18`, `P19`, and `P20–P22`. P15 and P19–P22 receive dedicated depth due to financial, UI, system, migration/DR, and pre-UAT risk.
 - The shorthand `verifikasi fase X-Y` is sufficient to invoke the complete batch protocol; ranges above five phases are split automatically.
+- Per-phase commands are bounded `PHASE_GATE` checks and should normally finish in roughly 10–25 minutes on a prepared workspace. Clean-room installs, Docker/runtime, cumulative E2E, load/browser matrices, deployment and DR belong to integration checkpoints or P20–P22 unless a phase explicitly owns them.
 
 ## Universal Definition of Done
 

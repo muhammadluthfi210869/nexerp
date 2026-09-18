@@ -9,6 +9,7 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
   >
     <header
       class="flex justify-between items-center border-b border-slate-100 pb-3 mb-[var(--section-gap)]"
+      style="margin-bottom: var(--section-gap);"
     >
       <div>
         <h1
@@ -23,14 +24,16 @@ exports[`Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marke
           </span>
         </h1>
         <p
-          class="font-bold text-slate-400 tracking-tight mt-1.5 text-[var(--module-subtitle-size)]"
+          class="font-bold text-slate-400 tracking-tight mt-1.5"
+          style="font-size: var(--module-subtitle-size);"
         >
           Hyper-Unified Audit Interface. Monitoring cross-departmental UX integrity and data interlocks across the entire ERP ecosystem from a single encrypted link.
         </p>
       </div>
     </header>
     <div
-      class="flex flex-col gap-[var(--section-gap)]"
+      class="flex flex-col"
+      style="gap: var(--section-gap);"
     >
       <div
         class="grid grid-cols-4 gap-8 mb-6"

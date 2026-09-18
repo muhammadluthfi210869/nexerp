@@ -8,6 +8,18 @@ This standard minimizes auditor–executor loops. Every phase receives one compl
 
 One-pass success is the engineering target, not permission to hide unknown defects. Correctness, security, authorization, data integrity, and destructive-operation safety always take precedence over speed.
 
+## Three-level verification cadence
+
+Do not run release-depth certification in every phase.
+
+| Level | When | Default scope |
+|---|---|---|
+| `PHASE_GATE` | Every phase | Contract/traceability, lockfile dry-run when relevant, affected type/lint/unit/contract tests, production build for touched application, targeted architecture/DNA/security/data checks |
+| `INTEGRATION_CHECKPOINT` | Every 3–5 phases or at declared domain boundary | Clean install, cumulative integration/golden threads, migration rehearsal, optional image build/runtime smoke when the batch affects runtime packaging |
+| `RELEASE_CERTIFICATION` | P20–P22 | Full clean-room, Docker/runtime, complete E2E, security, performance/load, browser/visual, migration/cutover/DR and pre-UAT evidence |
+
+Normal phase gates must not deploy, push images, run full browser/load/DR suites, or require Docker runtime unless the phase specifically owns that capability. Prefer a 10–25 minute bounded phase command; use parallel groups with a concurrency limit appropriate to available memory.
+
 ## Mandatory package for every phase
 
 Before the executor starts phase `Pxx`, the auditor prepares all of the following:
@@ -56,8 +68,8 @@ No finding may be silently deferred. A deferral requires an allowed canonical sc
 
 The single phase runner must:
 
-1. certify one immutable candidate SHA and record its reviewed merge base;
-2. use a safe clean copy without shared dependencies or build artifacts;
+1. certify one committed candidate SHA and record its reviewed merge base;
+2. use the isolation level declared for the cadence: clean committed workspace for `PHASE_GATE`, safe clean copy for integration/release;
 3. fail on missing tools/services, ambiguous output, timeout, worker crash, unexpected skip, stale evidence, or environment boot failure;
 4. execute prerequisites and earlier fast gates;
 5. execute every phase-required test and independently verify every gate;
@@ -65,7 +77,7 @@ The single phase runner must:
 7. execute phase-specific adversarial mutations through the same production code path used in CI;
 8. verify no source checkout, external data, or unrelated user work was damaged;
 9. produce a structured evidence artifact containing all raw result metadata;
-10. emit a token shaped like `Pxx:<candidate-sha>:CERTIFIED_PASS` only when every required check passes.
+10. emit `Pxx:<candidate-sha>:PHASE_PASS` for a phase gate or `Pxx:<candidate-sha>:CERTIFIED_PASS` for release depth only when every required check at that level passes.
 
 Diagnostic modes may exist, but they must exit non-zero or clearly emit `NON_CERTIFYING`. No partial result is equivalent to PASS.
 
@@ -110,7 +122,7 @@ Before handoff, the executor confirms:
 - tracked candidate state is committed and the scope ledger explains all changed paths;
 - contracts and traceability precede implementation changes;
 - every remediation-map item is closed with positive and negative proof;
-- all phase tests plus earlier fast gates pass on a clean copy;
+- all phase tests plus earlier fast gates pass at the phase's declared isolation level;
 - no unexpected skip/retry/quarantine/only/OOM/timeout exists;
 - migrations and data totals are reproducible and reversible where applicable;
 - RBAC/data scope/audit/communication/event side effects are proven;
@@ -124,4 +136,3 @@ Before handoff, the executor confirms:
 ## Auditor response guarantee
 
 For the frozen phase contract, the auditor will use the same authoritative command and declared manual review items. If the unchanged candidate independently reproduces the SHA-bound PASS and no new P0/P1 defect is discovered, the phase is accepted as PASS and progression may continue. Ordinary preferences or previously undisclosed non-critical criteria cannot be used to force another revision.
-

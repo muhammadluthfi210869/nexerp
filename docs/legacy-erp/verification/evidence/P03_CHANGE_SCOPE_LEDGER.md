@@ -977,3 +977,63 @@ In the transition from Phase P02 to Phase P03, commit `ff47ed36` encompassed bot
 | 946 | `frontend/src/app/(dashboard)/system/audit-logs/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
 | 947 | `frontend/src/app/(dashboard)/visual-dna/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
 | 948 | `frontend/src/app/(dashboard)/visual-dna/golden-reference/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 949 | `frontend/next.config.ts` | P03 | Build & CI Hardening Infrastructure | YES |
+| 950 | `frontend/src/app/(dashboard)/finance/audit-ledger/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 951 | `frontend/src/components/layout/DashboardShell.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 952 | `frontend/src/components/layout/DataTable.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 953 | `frontend/src/components/layout/FormShell.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 954 | `frontend/src/components/layout/ModuleHeader.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 955 | `frontend/src/components/layout/SectionDivider.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 956 | `frontend/src/components/layout/TableShell.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 957 | `scripts/ssot/certify_p03_phase.js` | P03 | Build & CI Hardening Infrastructure | YES |
+| 958 | `docs/legacy-erp/verification/prompts/P03_ONE_PASS_REMEDIATION_PROMPT.md` | P03 | P03 Verification & Audit Evidence | YES |
+| 959 | `docs/legacy-erp/verification/prompts/_PHASE_ONE_PASS_PROMPT_TEMPLATE.md` | P03 | P03 Verification & Audit Evidence | YES |
+| 960 | `docs/verification/_REMEDIATION_LEDGER.md` | P03 | P03 Verification & Audit Evidence | YES |
+| 960 | `.github/PULL_REQUEST_TEMPLATE/ssot-change.md` | P03 | Build & CI Hardening Infrastructure | YES |
+| 961 | `backend/prisma/diff_p04.sql` | P04 | Future Migration SQL Artifact | NO |
+| 962 | `backend/prisma/seed-fase10-dashboards.js` | P10 | Seed Script | NO |
+| 963 | `backend/prisma/seed-fase5-warehouse.js` | P05 | Seed Script | NO |
+| 964 | `backend/prisma/seed-fase6-production.js` | P06 | Seed Script | NO |
+| 965 | `backend/prisma/seed-fase7-finance.js` | P07 | Seed Script | NO |
+| 966 | `backend/prisma/seed-fase8-quality.js` | P08 | Seed Script | NO |
+| 967 | `backend/prisma/seed-fase9-approvals.js` | P09 | Seed Script | NO |
+| 968 | `backend/scripts/prepare-p04-migration.js` | P04 | Migration Tooling | NO |
+| 969 | `docs/legacy-erp/verification/evidence/P03_CERTIFICATION_RESULT.json` | P03 | P03 Verification & Audit Evidence | YES |
+| 970 | `docs/reference/05_master_business_process_blueprint.md` | Reference | Reference Documentation & Requirements | NO |
+| 971 | `docs/reference/06_implementation_log_financial_gates.md` | Reference | Reference Documentation & Requirements | NO |
+| 972 | `docs/reference/07_full_stack_integrity_plan.md` | Reference | Reference Documentation & Requirements | NO |
+| 973 | `docs/reference/2026-09-08-agent-orchestration-design.md` | Reference | Reference Documentation & Requirements | NO |
+| 974 | `docs/reference/AMI - ACTIVITY WORK - JULI (1).csv` | Reference | Reference Documentation & Requirements | NO |
+| 975 | `docs/reference/Client_Sample_Busdev.csv` | Reference | Reference Documentation & Requirements | NO |
+| 976 | `docs/reference/DATA_DASHBOARD.md` | Reference | Reference Documentation & Requirements | NO |
+| 977 | `docs/reference/Daily_tracking_RND.csv` | Reference | Reference Documentation & Requirements | NO |
+| 978 | `docs/reference/ERP_BUSINESS_FLOW_GAP.md` | Reference | Reference Documentation & Requirements | NO |
+| 979 | `docs/reference/ERP_ENTERPRISE_AUDIT_LEDGER.md` | Reference | Reference Documentation & Requirements | NO |
+| 980 | `docs/reference/ERP_FUNCTIONAL_PARITY_MATRIX.md` | Reference | Reference Documentation & Requirements | NO |
+| 981 | `docs/reference/ERP_INPUT_OUTPUT_LINEAGE.md` | Reference | Reference Documentation & Requirements | NO |
+| 982 | `docs/reference/ERP_NEW_ADVANCEMENT_MAP.md` | Reference | Reference Documentation & Requirements | NO |
+| 983 | `docs/reference/ERP_NEW_SYSTEM_INVENTORY.md` | Reference | Reference Documentation & Requirements | NO |
+| 984 | `docs/reference/ERP_OLD_BUSINESS_FLOW.md` | Reference | Reference Documentation & Requirements | NO |
+| 985 | `docs/reference/HR.md` | Reference | Reference Documentation & Requirements | NO |
+| 986 | `docs/reference/KPI_REFERENCE.md` | Reference | Reference Documentation & Requirements | NO |
+| 987 | `docs/reference/LEGACY_ERP_AUDIT.md` | Reference | Reference Documentation & Requirements | NO |
+| 988 | `docs/reference/LEGACY_ERP_SPEC.md` | Reference | Reference Documentation & Requirements | NO |
+| 989 | `docs/reference/NEX-Finance-Module-Full-Spec (1).md` | Reference | Reference Documentation & Requirements | NO |
+| 990 | `docs/reference/NEX_FINANCE_FINAL_SPEC.md` | Reference | Reference Documentation & Requirements | NO |
+| 991 | `docs/reference/Project_Monitoring_RND.csv` | Reference | Reference Documentation & Requirements | NO |
+| 992 | `docs/reference/REQUIREMENT.md` | Reference | Reference Documentation & Requirements | NO |
+| 993 | `docs/reference/VPS_DEPLOYMENT.md` | Reference | Reference Documentation & Requirements | NO |
+| 994 | `docs/reference/_RND Tracking AGUSTUS 2026 - Daily Tracking.csv` | Reference | Reference Documentation & Requirements | NO |
+| 995 | `docs/reference/_RND Tracking AGUSTUS 2026 - Project Monitoring.csv` | Reference | Reference Documentation & Requirements | NO |
+| 996 | `docs/reference/database.md` | Reference | Reference Documentation & Requirements | NO |
+| 997 | `docs/reference/databasev2.md` | Reference | Reference Documentation & Requirements | NO |
+| 998 | `docs/reference/design-packing.md` | Reference | Reference Documentation & Requirements | NO |
+| 999 | `docs/reference/input-ouput.md` | Reference | Reference Documentation & Requirements | NO |
+| 1000 | `docs/reference/kil_erp_full_inventory.csv` | Reference | Reference Documentation & Requirements | NO |
+| 1001 | `docs/reference/kil_erp_full_inventory_v1.csv` | Reference | Reference Documentation & Requirements | NO |
+| 1002 | `docs/reference/kil_erp_full_inventory_v2.csv` | Reference | Reference Documentation & Requirements | NO |
+| 1003 | `docs/reference/legalitas.md` | Reference | Reference Documentation & Requirements | NO |
+| 1004 | `docs/reference/production.md` | Reference | Reference Documentation & Requirements | NO |
+| 1005 | `docs/reference/quality_control.md` | Reference | Reference Documentation & Requirements | NO |
+| 1006 | `docs/reference/r&d.md` | Reference | Reference Documentation & Requirements | NO |
+| 1007 | `docs/reference/warehouse.md` | Reference | Reference Documentation & Requirements | NO |

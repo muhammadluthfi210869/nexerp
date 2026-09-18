@@ -1,0 +1,324 @@
+{
+  "schema_version": 1,
+  "phase": "P03",
+  "verdict": "FAIL",
+  "certification_token": null,
+  "started_at": "2026-09-18T01:05:54.792Z",
+  "completed_at": "2026-09-18T01:11:29.525Z",
+  "candidate_sha": "6d9e0c066eb6a10a44b862cbd70be18e9145bbbc",
+  "base_sha": "7a449e0af719c86ec0f57e362ed75d39b0af7ff0",
+  "environment": {
+    "platform": "win32",
+    "node": "v20.20.2",
+    "npm": "10.8.2"
+  },
+  "required_tests": [
+    "clean_checkout_build",
+    "typecheck",
+    "lint",
+    "unit_smoke",
+    "container_build",
+    "ci_required_check_test",
+    "module_boundary_test",
+    "dependency_direction_test",
+    "circular_dependency_scan",
+    "unused_export_dependency_scan",
+    "orphan_object_scan",
+    "duplicate_code_scan",
+    "changed_complexity_check",
+    "dna_import_boundary_ast",
+    "dna_native_interactive_scan",
+    "dna_primitive_duplication_scan",
+    "dna_hardcoded_visual_scan",
+    "dna_barrel_integrity",
+    "dna_reference_route_and_composition",
+    "dna_screen_coverage_manifest",
+    "dna_exception_registry_validation"
+  ],
+  "required_mutations": [
+    "BB-LOCK-MISMATCH",
+    "BB-CI-ISOLATION",
+    "BB-SENTINEL-SURVIVAL",
+    "BB-PRISMA-CLIENT-MISSING",
+    "BB-DOCKER-UNAVAILABLE",
+    "BB-CHANGED-DUP-6PLUS",
+    "BB-CHANGED-COMPLEXITY-6PLUS",
+    "BB-CHANGED-LINT-WARNING",
+    "BB-STALE-REGISTRY",
+    "BB-DNA-CHILD-COMPONENT",
+    "BB-DNA-ALIAS-REEXPORT",
+    "BB-DNA-NATIVE-SELECT",
+    "BB-DNA-CLICK-DIV",
+    "BB-DNA-STYLE-OBJECT",
+    "BB-DNA-RAW-VISUAL-TOKEN",
+    "BB-DNA-RENAMED-PRIMITIVE",
+    "BB-DNA-EXCEPTED-FILE-SECOND-OCCURRENCE",
+    "BB-CI-ARTIFACT-BYPASS"
+  ],
+  "checks": [
+    {
+      "id": "node_runtime_matches_ci",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": {
+        "required": 20,
+        "observed": "v20.20.2"
+      }
+    },
+    {
+      "id": "npm_version",
+      "command": "npm --version",
+      "cwd": ".",
+      "exit_code": 0,
+      "signal": null,
+      "duration_ms": 676,
+      "stdout": "10.8.2\n",
+      "stderr": ""
+    },
+    {
+      "id": "candidate_sha_is_full",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "6d9e0c066eb6a10a44b862cbd70be18e9145bbbc"
+    },
+    {
+      "id": "base_sha_is_full",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "7a449e0af719c86ec0f57e362ed75d39b0af7ff0"
+    },
+    {
+      "id": "tracked_tree_is_clean",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "Commit every tracked certification input before running; untracked files are recorded but excluded from HEAD"
+    },
+    {
+      "id": "runner_is_committed",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "scripts/ssot/certify_p03_release.js"
+    },
+    {
+      "id": "design_file_verify_clean_checkout_build.js",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\verify_clean_checkout_build.js"
+    },
+    {
+      "id": "design_file_p03_analyzers.js",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p03_analyzers.js"
+    },
+    {
+      "id": "design_file_ci.yml",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\.github\\workflows\\ci.yml"
+    },
+    {
+      "id": "design_file_Dockerfile",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\Dockerfile"
+    },
+    {
+      "id": "design_file_Dockerfile",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\frontend\\Dockerfile"
+    },
+    {
+      "id": "safe_clean_checkout_design",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": {
+        "verifierForbidden": []
+      }
+    },
+    {
+      "id": "unit_gate_executes_real_suites",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "checkUnitSmoke must execute backend and frontend suites, not count files"
+    },
+    {
+      "id": "container_gate_fails_closed",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "checkContainerBuild must execute real builds and evaluate subprocess status"
+    },
+    {
+      "id": "no_large_change_threshold_relaxation",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "changed-code thresholds may not relax when 6+ files change"
+    },
+    {
+      "id": "no_hard_coded_diff_base",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "derive and record the reviewed merge base"
+    },
+    {
+      "id": "ci_calls_authoritative_runner",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "CI must invoke this exact certifying entry point"
+    },
+    {
+      "id": "ci_has_no_install_fallback",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "npm install fallback is forbidden"
+    },
+    {
+      "id": "ci_enforces_security",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "CI must enforce both history-aware secret scan and environment validation"
+    },
+    {
+      "id": "ci_enforces_scoped_e2e",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "CI must enforce scoped deployed API and pre-flight E2E smoke"
+    },
+    {
+      "id": "dockerfiles_use_clean_install",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "Docker build stages must use lockfile-clean npm ci; declare every package in package.json/lockfile"
+    },
+    {
+      "id": "security_secret_history",
+      "command": "node scripts/security/secret_scan_with_history.js",
+      "cwd": ".",
+      "exit_code": 0,
+      "signal": null,
+      "duration_ms": 1853,
+      "stdout": "=== P00: Running Secret Scan on Tracked Files ===\nScanning 3095 tracked files...\n\n--- Scan Results ---\n✅ PASS: No exposed secrets detected in tracked files.\n",
+      "stderr": ""
+    },
+    {
+      "id": "security_environment",
+      "command": "node scripts/security/validate_env.js",
+      "cwd": ".",
+      "exit_code": 0,
+      "signal": null,
+      "duration_ms": 134,
+      "stdout": "=== P00: Running Environment & Schema Validation ===\n\n--- Validation Results ---\n✅ PASS: All environment files and schemas are valid and syntax-compliant.\n",
+      "stderr": ""
+    },
+    {
+      "id": "archive_candidate",
+      "command": "git archive --format=tar -o C:\\Users\\Luthfi\\AppData\\Local\\Temp\\nex-p03-cert-9NU9i1\\candidate.tar 6d9e0c066eb6a10a44b862cbd70be18e9145bbbc",
+      "cwd": ".",
+      "exit_code": 0,
+      "signal": null,
+      "duration_ms": 1202,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "extract_candidate",
+      "command": "tar -xf C:\\Users\\Luthfi\\AppData\\Local\\Temp\\nex-p03-cert-9NU9i1\\candidate.tar -C C:\\Users\\Luthfi\\AppData\\Local\\Temp\\nex-p03-cert-9NU9i1\\checkout",
+      "cwd": ".",
+      "exit_code": 0,
+      "signal": null,
+      "duration_ms": 3701,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "archive_has_no_node_modules",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "node_modules"
+    },
+    {
+      "id": "archive_has_no_backend_node_modules",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "backend/node_modules"
+    },
+    {
+      "id": "archive_has_no_frontend_node_modules",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "frontend/node_modules"
+    },
+    {
+      "id": "root_npm_ci",
+      "command": "npm ci --ignore-scripts=false --no-audit",
+      "cwd": "..\\..\\..\\..\\Users\\Luthfi\\AppData\\Local\\Temp\\nex-p03-cert-9NU9i1\\checkout",
+      "exit_code": 0,
+      "signal": null,
+      "duration_ms": 8786,
+      "stdout": "\nadded 39 packages in 8s\n\n5 packages are looking for funding\n  run `npm fund` for details\n",
+      "stderr": ""
+    },
+    {
+      "id": "backend_npm_ci",
+      "command": "npm ci --ignore-scripts=false --no-audit",
+      "cwd": "..\\..\\..\\..\\Users\\Luthfi\\AppData\\Local\\Temp\\nex-p03-cert-9NU9i1\\checkout\\backend",
+      "exit_code": 0,
+      "signal": null,
+      "duration_ms": 106372,
+      "stdout": "\nadded 1242 packages in 2m\n\n227 packages are looking for funding\n  run `npm fund` for details\n",
+      "stderr": "npm warn EBADENGINE Unsupported engine {\nnpm warn EBADENGINE   package: '@prisma/streams-local@0.1.11',\nnpm warn EBADENGINE   required: { bun: '>=1.2.0', node: '>=22.0.0' },\nnpm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }\nnpm warn EBADENGINE }\nnpm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.\nnpm warn deprecated lodash.pick@4.4.0: This package is deprecated. Use destructuring assignment syntax instead.\nnpm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported\nnpm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\nnpm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\nnpm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead\nnpm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\nnpm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\nnpm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\nnpm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\nnpm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\nnpm warn deprecated puppeteer@10.4.0: < 24.15.0 is no longer supported\nnpm warn cleanup Failed to remove some directories [\nnpm warn cleanup   [\nnpm warn cleanup     'C:\\\\Users\\\\Luthfi\\\\AppData\\\\Local\\\\Temp\\\\nex-p03-cert-9NU9i1\\\\checkout\\\\backend\\\\node_modules\\\\buildcheck',\nnpm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir 'C:\\Users\\Luthfi\\AppData\\Local\\Temp\\nex-p03-cert-9NU9i1\\checkout\\backend\\node_modules\\buildcheck'] {\nnpm warn cleanup       errno: -4051,\nnpm warn cleanup       code: 'ENOTEMPTY',\nnpm warn cleanup       syscall: 'rmdir',\nnpm warn cleanup       path: 'C:\\\\Users\\\\Luthfi\\\\AppData\\\\Local\\\\Temp\\\\nex-p03-cert-9NU9i1\\\\checkout\\\\backend\\\\node_modules\\\\buildcheck'\nnpm warn cleanup     }\nnpm warn cleanup   ],\nnpm warn cleanup   [\nnpm warn cleanup     'C:\\\\Users\\\\Luthfi\\\\AppData\\\\Local\\\\Temp\\\\nex-p03-cert-9NU9i1\\\\checkout\\\\backend\\\\node_modules\\\\cpu-features',\nnpm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir 'C:\\Users\\Luthfi\\AppData\\Local\\Temp\\nex-p03-cert-9NU9i1\\checkout\\backend\\node_modules\\cpu-features'] {\nnpm warn cleanup       errno: -4051,\nnpm warn cleanup       code: 'ENOTEMPTY',\nnpm warn cleanup       syscall: 'rmdir',\nnpm warn cleanup       path: 'C:\\\\Users\\\\Luthfi\\\\AppData\\\\Local\\\\Temp\\\\nex-p03-cert-9NU9i1\\\\checkout\\\\backend\\\\node_modules\\\\cpu-features'\nnpm warn cleanup     }\nnpm warn cleanup   ]\nnpm warn cleanup ]\n"
+    },
+    {
+      "id": "frontend_npm_ci",
+      "command": "npm ci --ignore-scripts=false --no-audit",
+      "cwd": "..\\..\\..\\..\\Users\\Luthfi\\AppData\\Local\\Temp\\nex-p03-cert-9NU9i1\\checkout\\frontend",
+      "exit_code": 0,
+      "signal": null,
+      "duration_ms": 96308,
+      "stdout": "\n> frontend@0.1.0 prepare\n> husky\n\n.git can't be found\nadded 994 packages in 2m\n\n302 packages are looking for funding\n  run `npm fund` for details\n",
+      "stderr": "npm warn EBADENGINE Unsupported engine {\nnpm warn EBADENGINE   package: '@prisma/streams-local@0.1.2',\nnpm warn EBADENGINE   required: { bun: '>=1.3.6', node: '>=22.0.0' },\nnpm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }\nnpm warn EBADENGINE }\nnpm warn deprecated git-raw-commits@4.0.0: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.\n"
+    },
+    {
+      "id": "prisma_validate",
+      "command": "npm --prefix backend exec -- prisma validate --schema=backend/prisma/schema",
+      "cwd": "..\\..\\..\\..\\Users\\Luthfi\\AppData\\Local\\Temp\\nex-p03-cert-9NU9i1\\checkout",
+      "exit_code": 0,
+      "signal": null,
+      "duration_ms": 32033,
+      "stdout": "The schemas at backend\\prisma\\schema are valid 🚀\n",
+      "stderr": "Prisma schema loaded from backend\\prisma\\schema.\n\nPrisma schema warning:\n- Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\n"
+    },
+    {
+      "id": "prisma_generate",
+      "command": "npm --prefix backend run prisma:generate",
+      "cwd": "..\\..\\..\\..\\Users\\Luthfi\\AppData\\Local\\Temp\\nex-p03-cert-9NU9i1\\checkout",
+      "exit_code": 0,
+      "signal": null,
+      "duration_ms": 9369,
+      "stdout": "\n> backend@0.0.1 prisma:generate\n> prisma generate\n\n\n✔ Generated Prisma Client (v7.10.0) to .\\node_modules\\@prisma\\client in 3.65s\n\nStart by importing your Prisma Client (See: https://pris.ly/d/importing-client)\n\n\n\nwarn The globally installed prisma@7.10.0 does not match the local package @prisma/client@7.8.0 installed in this project.\nThis may generate Prisma Client artifacts that are incompatible with the local runtime.\nRun npx prisma generate to use the local Prisma CLI, or align your global and local Prisma versions.\n",
+      "stderr": "Loaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma\\schema.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\n┌─────────────────────────────────────────────────────────┐\n│  Update available 7.10.0 -> 8.0.0-rc.15                 │\n│                                                         │\n│  This is a major update - please follow the guide at    │\n│  https://pris.ly/d/major-version-upgrade                │\n│                                                         │\n│  Run the following to update                            │\n│    npm i -g prisma@latest                               │\n│    npm i @prisma/client@latest                          │\n└─────────────────────────────────────────────────────────┘\n"
+    },
+    {
+      "id": "ssot",
+      "command": "node scripts/ssot/validate_ssot.js",
+      "cwd": "..\\..\\..\\..\\Users\\Luthfi\\AppData\\Local\\Temp\\nex-p03-cert-9NU9i1\\checkout",
+      "exit_code": 0,
+      "signal": null,
+      "duration_ms": 5737,
+      "stdout": "{\n  \"generated_at\": \"2026-09-18T01:10:17.228Z\",\n  \"gates\": {\n    \"yaml_parse\": {\n      \"status\": \"PASS\",\n      \"files\": 6\n    },\n    \"json_parse\": {\n      \"status\": \"PASS\",\n      \"files\": 1\n    },\n    \"prisma_validate\": {\n      \"status\": \"PASS\",\n      \"message\": \" | Prisma schema loaded from ..\\\\tmp\\\\ssot-prisma7-compat.schema.prisma. |  | Validated through Prisma 7 compatibility projection; canonical schema targets Prisma 5.\"\n    },\n    \"openapi_structure\": {\n      \"status\": \"PASS\",\n      \"duplicate_operation_ids\": [],\n      \"dangling_schema_refs\": []\n    },\n    \"rbac_ids_and_inheritance\": {\n      \"status\": \"PASS\",\n      \"duplicate_role_ids\": [],\n      \"duplicate_role_names\": [],\n      \"duplicate_permissions\": [],\n      \"dangling_inheritance\": [],\n      \"dangling_assignment_roles\": [],\n      \"dangling_assignment_permissions\": []\n    },\n    \"screen_ids\": {\n      \"status\": \"PASS\",\n      \"duplicates\": []\n    },\n    \"screen_api_refs\": {\n      \"status\": \"PASS\",\n      \"checked\": 209,\n      \"dangling\": []\n    },\n    \"screen_rbac_refs\": {\n      \"status\": \"PASS\",\n      \"checked\": 372,\n      \"dangling\": []\n    },\n    \"business_rule_ids\": {\n      \"status\": \"PASS\",\n      \"duplicates\": []\n    },\n    \"workflow_ids_entities_actors\": {\n      \"status\": \"PASS\",\n      \"duplicate_entities\": [],\n      \"dangling_entities\": [],\n      \"dangling_actors\": []\n    },\n    \"workflow_event_refs\": {\n      \"status\": \"PASS\",\n      \"checked\": 33,\n      \"dangling\": []\n    },\n    \"workflow_rule_refs\": {\n      \"status\": \"PASS\",\n      \"checked\": 1769,\n      \"dangling\": []\n    },\n    \"event_ids\": {\n      \"status\": \"PASS\",\n      \"duplicates\": []\n    },\n    \"data_ownership_coverage\": {\n      \"status\": \"PASS\",\n      \"schema_models_checked\": 92,\n      \"missing_models\": [],\n      \"entries_without_writer\": []\n    },\n    \"traceability_ids\": {\n      \"status\": \"PASS\",\n      \"duplicate_requirements\": [],\n      \"duplicate_rules\": [],\n      \"duplicate_workflows\": [],\n      \"duplicate_entities\": [],\n      \"duplicate_screens\": [],\n      \"duplicate_tests\": []\n    },\n    \"traceability_refs\": {\n      \"status\": \"PASS\",\n      \"checked_requirements\": 37,\n      \"dangling\": []\n    },\n    \"business_rule_test_refs\": {\n      \"status\": \"PASS\",\n      \"checked_rules\": 106,\n      \"rules_without_tests\": []\n    },\n    \"blocking_decisions_zero\": {\n      \"status\": \"PASS\",\n      \"decisions\": []\n    },\n    \"locked_status_integrity\": {\n      \"status\": \"PASS\",\n      \"locked_with_open_markers\": []\n    }\n  },\n  \"counts\": {\n    \"prisma_models\": 92,\n    \"api_operations\": 377,\n    \"roles\": 44,\n    \"permissions\": 144,\n    \"screens\": 179,\n    \"screen_api_refs\": 209,\n    \"screen_permission_refs\": 372,\n    \"business_rules\": 106,\n    \"workflows\": 37,\n    \"integration_events\": 76,\n    \"requirements\": 37,\n    \"trace_tests\": 239\n  },\n  \"unresolved\": {\n    \"open_decisions\": []\n  },\n  \"files\": {\n    \"02_DATA_OWNERSHIP.yaml\": {\n      \"parse\": \"PASS\"\n    },\n    \"03_WORKFLOW_STATE_MACHINE.yaml\": {\n      \"parse\": \"PASS\"\n    },\n    \"05_API_CONTRACT.yaml\": {\n      \"parse\": \"PASS\"\n    },\n    \"07_RBAC_MATRIX.yaml\": {\n      \"parse\": \"PASS\"\n    },\n    \"08_INTEGRATION_EVENT_CONTRACT.yaml\": {\n      \"parse\": \"PASS\"\n    },\n    \"10_TRACEABILITY_MATRIX.yaml\": {\n      \"parse\": \"PASS\"\n    },\n    \"06_SCREEN_CONTRACT.json\": {\n      \"parse\": \"PASS\"\n    }\n  },\n  \"summary\": {\n    \"pass\": 19,\n    \"fail\": 0,\n    \"certification\": \"CERTIFIED\",\n    \"warnings\": []\n  }\n}\n",
+      "stderr": ""
+    },
+    {
+      "id": "p02_audit",
+      "command": "node scripts/ssot/audit_lifecycle_reconciliation.js",
+      "cwd": "..\\..\\..\\..\\Users\\Luthfi\\AppData\\Local\\Temp\\nex-p03-cert-9NU9i1\\checkout",
+      "exit_code": 1,
+      "signal": null,
+      "duration_ms": 14792,
+      "stdout": "Running Phase P02 Independent Lifecycle & Reconciliation Audit...\n\n=======================================================\nPHASE P02 TEST RESULTS (9/14 REQUIRED TESTS)\n=======================================================\n✅ PASS | implementation_readiness_audit\n❌ FAIL | schema_diff\n✅ PASS | openapi_diff\n❌ FAIL | route_diff\n✅ PASS | rbac_diff\n✅ PASS | event_workflow_diff\n✅ PASS | caller_import_registration_scan\n✅ PASS | orphan_scan\n✅ PASS | unused_export_dependency_scan\n✅ PASS | duplicate_implementation_scan\n✅ PASS | lifecycle_registry_validation\n❌ FAIL | dna_screen_import_inventory\n❌ FAIL | dna_hardcoded_visual_inventory\n❌ FAIL | dna_migration_disposition\n=======================================================\nTOTAL: 9/14 tests passed.\nOVERALL PHASE P02 VERDICT: FAIL\n=======================================================\n\n",
+      "stderr": "Audit Failures:\n  - schema_diff: Extraneous migration in registry: \"backend/prisma/migrations/20260917000000_p04_canonical_database_alignment/migration.sql\" (count: 1)\n  - route_diff: Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/inventory/stock-adjustment/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/inventory/stock-opname/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/production/realization-calendar/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/production/schedule-calendar/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/production/schedule-filling/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/production/schedule-mixing/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/production/schedule-packaging/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/quality/karantina/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/reports/mutation-goods/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/reports/stock/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/reports/stock-valuation/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/rnd/project-monitoring/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/system/audit-logs/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/visual-dna/golden-reference/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/visual-dna/page.tsx\n  - dna_screen_import_inventory: Screen count mismatch in DNA inventory\n  - dna_hardcoded_visual_inventory: Inventory incomplete\n  - dna_migration_disposition: Disposition count or enum invalid\n"
+    }
+  ],
+  "failure": "Error: p02_audit failed (exit 1): Audit Failures:\n  - schema_diff: Extraneous migration in registry: \"backend/prisma/migrations/20260917000000_p04_canonical_database_alignment/migration.sql\" (count: 1)\n  - route_diff: Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/inventory/stock-adjustment/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/inventory/stock-opname/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/production/realization-calendar/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/production/schedule-calendar/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/production/schedule-filling/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/production/schedule-mixing/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/production/schedule-packaging/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/quality/karantina/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/reports/mutation-goods/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/reports/stock/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/reports/stock-valuation/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/rnd/project-monitoring/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/system/audit-logs/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/visual-dna/golden-reference/page.tsx; Fake implementation screen file not in frontend: frontend/src/app/(dashboard)/visual-dna/page.tsx\n  - dna_screen_import_inventory: Screen count mismatch in DNA inventory\n  - dna_hardcoded_visual_inventory: Inventory incomplete\n  - dna_migration_disposition: Disposition count or enum invalid\n\n    at run (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p03_release.js:135:11)\n    at certify (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p03_release.js:325:3)\n    at C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p03_release.js:427:11\n    at Object.<anonymous> (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p03_release.js:457:3)\n    at Module._compile (node:internal/modules/cjs/loader:1521:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)\n    at Module.load (node:internal/modules/cjs/loader:1266:32)\n    at Module._load (node:internal/modules/cjs/loader:1091:12)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)\n    at node:internal/main/run_main_module:28:49"
+}

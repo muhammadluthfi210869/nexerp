@@ -11,6 +11,10 @@
 
 The implementor suite reports 21/21 tests and 36/36 negative scenarios as PASS. Independent execution proves that result is a false positive: the root clean install fails, the isolated clean build fails, backend unit tests fail in clean state, and the container gate returns PASS without a working Docker daemon.
 
+### Cadence override approved after R3
+
+The user subsequently selected bounded phase gates to avoid running release-depth checks in every phase. For P03 progression, Docker image build/runtime, deployed E2E, full clean-room installation, load/browser suites, deployment and DR are deferred to integration/release checkpoints. Historical findings below remain valid engineering evidence, but those heavy checks are not P03 `PHASE_PASS` blockers. P03 still requires lockfile reproducibility dry-runs, real type/lint/unit/build, architecture/DNA gates, and the bounded adversarial set.
+
 ## Independently reproduced results
 
 | Check | Result | Evidence |
@@ -192,27 +196,16 @@ The 36 tests pass but omit the exact failure modes above. Some use synthetic ove
 9. Run the full acceptance sequence from an immutable clean copy and a real CI run.
 10. Generate evidence from results; only then set P03 to PASS. Do not set P04 certifiable in the same step.
 
-## Required final acceptance sequence
+## Required P03 phase acceptance sequence
 
-All commands must run against the same SHA and every certifying command must exit 0:
-
-1. Safe isolated clean pipeline: three `npm ci`, Prisma validate/generate, typechecks, lints, units, builds.
-2. `node scripts/ssot/validate_ssot.js`.
-3. P02 audit and P02 adversarial suite.
-4. P03 architecture audit with no fast/skip/artifacts-only mode.
-5. Expanded P03 black-box negative suite.
-6. Empty-database Prisma migration rehearsal.
-7. Real backend and frontend Docker builds plus runtime health/HTTP smoke.
-8. Git diff/status check proving evidence belongs to the recorded candidate and no verifier changed/deleted source checkout content.
-
-P03 may be marked PASS only when these checks are green, the reported metrics match raw outputs, and an independent rerun reproduces them.
+The bounded phase runner executes against one clean committed workspace and must exit 0. It performs parallel lockfile dry-runs, Prisma generation, SSOT/P02 regression, backend/frontend typecheck, lint, unit and production build, P03 architecture/DNA checks, and the required bounded adversarial mutations. Heavy release checks are recorded for their later checkpoint rather than executed here.
 
 ## Auditor–executor single-command contract
 
 The sole P03 finish command is:
 
 ```text
-node scripts/ssot/certify_p03_release.js
+node scripts/ssot/certify_p03_phase.js
 ```
 
-Only exit code `0` plus `CERTIFIED_PASS` and a SHA-bound certification token is acceptable. The runner creates an immutable clean copy, installs dependencies independently, executes the complete gate chain, requires all R3 mutation identifiers, performs real Docker build/runtime smoke, verifies source-checkout safety, and writes `docs/legacy-erp/verification/evidence/P03_CERTIFICATION_RESULT.json`. No partial mode can certify.
+Only exit code `0` plus `PHASE_PASS` and token `P03:<candidate-sha>:PHASE_PASS` is acceptable for phase progression. The runner writes `docs/legacy-erp/verification/evidence/P03_PHASE_CERTIFICATION_RESULT.json`. Full release certification remains owned by later checkpoints and P20–P22.

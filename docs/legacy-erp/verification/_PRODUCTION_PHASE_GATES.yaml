@@ -224,16 +224,17 @@ phases:
     name: Reproducible build architecture gates and CI
     status: FAIL
     depends_on: [P02]
-    certification_command: node scripts/ssot/certify_p03_release.js
-    certification_success: exit code 0 plus CERTIFIED_PASS and a token bound to the immutable candidate SHA
+    certification_command: node scripts/ssot/certify_p03_phase.js
+    certification_success: exit code 0 plus PHASE_PASS and a token bound to the committed candidate SHA
     required_gates:
-      - clean install and production build pass for backend and frontend
+      - lockfile reproducibility and production build pass for backend and frontend
       - typecheck and lint pass
       - CI enforces SSOT, build, static, unit, migration, security, and scoped E2E gates
       - CI blocks forbidden boundaries circular dependencies unused production dependencies orphan objects and duplication regression
       - CI blocks every DNA import native-interactive duplicate-primitive hardcoded-token barrel reference coverage and exception violation
       - architecture debt baseline can only ratchet downward and cannot be informational-only
       - test memory and worker configuration is deterministic
+      - heavy clean-room Docker runtime deployed E2E load browser and DR checks are deferred to their declared integration or release phases
     required_tests: [clean_checkout_build, typecheck, lint, unit_smoke, container_build, ci_required_check_test, module_boundary_test, dependency_direction_test, circular_dependency_scan, unused_export_dependency_scan, orphan_object_scan, duplicate_code_scan, changed_complexity_check, dna_import_boundary_ast, dna_native_interactive_scan, dna_primitive_duplication_scan, dna_hardcoded_visual_scan, dna_barrel_integrity, dna_reference_route_and_composition, dna_screen_coverage_manifest, dna_exception_registry_validation]
 
   - id: P04

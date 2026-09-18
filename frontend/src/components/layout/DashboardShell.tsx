@@ -31,7 +31,7 @@ export function DashboardShell({ title, titleAccent, subtitle, actions, children
           subtitle={subtitle}
           actions={actions}
         />
-        <div className="flex flex-col gap-[var(--section-gap)]">
+        <div className="flex flex-col" style={{ gap: 'var(--section-gap)' }}>
           {children}
         </div>
       </div>

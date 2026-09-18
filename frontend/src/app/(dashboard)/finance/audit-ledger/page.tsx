@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { StatCard } from "@/components/dna/StatCard";
 import { DnaButton } from "@/components/dna/DnaButton";
+import { DnaInput } from "@/components/dna/DnaInput";
 import { DashboardCard } from "@/components/dna/DashboardCard";
 import { TableShell } from "@/components/layout/TableShell";
 
@@ -129,6 +130,7 @@ export default function AuditLedgerPage() {
             <DashboardCard 
               key={log.id} 
               className="flex flex-col lg:flex-row lg:items-center gap-6 !p-6 animate-in fade-in"
+              style={idx > 0 ? { animationDelay: `${idx * 50}ms` } : undefined}
             >
               {/* Timeline Info */}
               <div className="flex lg:flex-col items-center lg:items-start gap-4 lg:gap-1 min-w-[140px]">

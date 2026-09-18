@@ -337,9 +337,17 @@ try {
       'BB-PRISMA-CLIENT-MISSING: Missing generated Prisma Client fails unit_smoke closed immediately');
   }
 
+  // Scenario BB-N2b: Unit test suite command failure strictly fails unit_smoke
+  {
+    const res = analyzers.checkUnitSmoke(ROOT, { testCommandFail: true });
+    assert(!res.pass && res.error.includes('Backend unit test suite failed'),
+      'BB-UNIT-COMMAND-FAILURE: Unit test command failure or broken spec strictly fails unit_smoke gate');
+  }
+
   // Scenario BB-N3: Unavailable Docker daemon / invalid compose syntax
   {
     const res = analyzers.checkContainerBuild(ROOT, {
+      requireDaemon: true,
       syntheticStatus: {
         pass: false,
         status: 'NOT_VERIFIED',

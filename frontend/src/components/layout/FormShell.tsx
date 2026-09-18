@@ -34,19 +34,20 @@ export function FormShell({
         actions={actions}
       />
       {sidebar ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-[var(--section-gap)]">
-          <div className="lg:col-span-2 flex flex-col gap-[var(--section-gap)]">
+        <div className="grid grid-cols-1 lg:grid-cols-3" style={{ gap: 'var(--section-gap)' }}>
+          <div className="lg:col-span-2 flex flex-col" style={{ gap: 'var(--section-gap)' }}>
             {children}
           </div>
           <div className="lg:col-span-1">
-            <div className="lg:sticky lg:top-[var(--page-py)] flex flex-col gap-[var(--subsection-gap)]">
+            <div className="lg:sticky lg:top-[var(--page-py)] flex flex-col" style={{ gap: 'var(--subsection-gap)' }}>
               {sidebar}
             </div>
           </div>
         </div>
       ) : (
         <div
-          className={fullWidth ? "w-full flex flex-col gap-[var(--section-gap)]" : "max-w-4xl flex flex-col gap-[var(--section-gap)]"}
+          className={fullWidth ? "w-full flex flex-col" : "max-w-4xl flex flex-col"}
+          style={{ gap: 'var(--section-gap)' }}
         >
           {children}
         </div>

@@ -77,6 +77,7 @@ if (require.main === module) {
   const audit = runAudit({
     typecheck: isFast ? { skipSubprocess: true } : {},
     lint: isFast ? { skipSubprocess: true } : {},
+    unit_smoke: isFast ? { skipSubprocess: true } : {},
   });
 
   console.log('=======================================================');

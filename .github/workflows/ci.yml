@@ -109,7 +109,7 @@ jobs:
         run: |
           node scripts/ssot/audit_p03_architecture_gates.js
           node scripts/ssot/test_p03_architecture_gates_negative.js
-          node scripts/ssot/certify_p03_release.js
+          node scripts/ssot/certify_p03_phase.js
 
       - name: "Run All Regression & Contract Tests"
         run: |

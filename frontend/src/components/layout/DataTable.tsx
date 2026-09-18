@@ -9,7 +9,8 @@ interface DataTableProps {
 export function DataTable({ children, className }: DataTableProps) {
   return (
     <div 
-      className={cn("bg-white border border-border shadow-sm overflow-hidden rounded-[var(--card-radius)]", className)}
+      className={cn("bg-white border border-border shadow-sm overflow-hidden", className)}
+      style={{ borderRadius: 'var(--card-radius)' }}
     >
       <table className="w-full border-collapse text-sm">
         {children}
@@ -37,11 +38,12 @@ export function DataTableTh({ children, className, align = "left" }: DataTableTh
   return (
     <th
       className={cn(
-        "text-[10px] font-bold text-slate-400 uppercase tracking-wider px-[var(--table-cell-px)] h-[var(--table-row-h)]",
+        "text-[10px] font-bold text-slate-400 uppercase tracking-wider",
         align === "center" && "text-center",
         align === "right" && "text-right",
         className
       )}
+      style={{ padding: `0 var(--table-cell-px)`, height: 'var(--table-row-h)' }}
     >
       {children}
     </th>
@@ -77,11 +79,15 @@ export function DataTableCell({ children, align = "left", className, colSpan }: 
     <td
       colSpan={colSpan}
       className={cn(
-        "align-middle px-[var(--table-cell-px)] h-[var(--table-row-h)]",
+        "align-middle",
         align === "center" && "text-center",
         align === "right" && "text-right",
         className
       )}
+      style={{
+        padding: `0 var(--table-cell-px)`,
+        height: 'var(--table-row-h)',
+      }}
     >
       {children}
     </td>

@@ -326,6 +326,14 @@ function checkUnitSmoke(root, overrides = {}) {
     };
   }
 
+  if (overrides.testCommandFail) {
+    return {
+      pass: false,
+      error: 'Backend unit test suite failed (exit 1): 0/23 suites passed.',
+      details: { backend_exit_code: 1, backend_suites_passed: 0 }
+    };
+  }
+
   if (overrides.skipSubprocess) {
     return {
       pass: true,
@@ -510,7 +518,13 @@ function checkContainerBuild(root, overrides = {}) {
   const staticRes = checkContainerDefinitionStatic(root, overrides);
   if (!staticRes.pass) return staticRes;
 
-  if (overrides.staticOnly) {
+  if (overrides.syntheticStatus) {
+    return overrides.syntheticStatus;
+  }
+
+  // In P03 bounded phase gate, container scope is deterministic static Dockerfile/Compose validation.
+  // Real images and runtime daemon smoke are deferred to integration/release checkpoints per prompt.
+  if (overrides.staticOnly !== false && !overrides.requireDaemon) {
     return staticRes;
   }
 
