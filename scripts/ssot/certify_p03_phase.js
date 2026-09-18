@@ -71,7 +71,9 @@ function short(value, limit = EVIDENCE_LOG_LIMIT) {
 function record(id, command, code, started, stdout, stderr) {
   const entry = {
     id, command, exit_code: code, duration_ms: Date.now() - started,
-    stdout: short(stdout), stderr: short(stderr)
+    stdout: short(stdout), stderr: short(stderr),
+    full_stdout: stdout,
+    full_stderr: stderr
   };
   result.checks.push(entry);
   return entry;
@@ -302,12 +304,13 @@ async function main() {
 
   // R5-B4: machine-readable result parsing — captures truthful counts before any truncation.
   // Jest/Vitest/ESLint write summaries to stderr under npm; concatenate so the
-  // parser doesn't depend on stream routing.
+  // parser doesn't depend on stream routing. Use `full_stdout`/`full_stderr`
+  // (preserved at FULL_LOG_LIMIT) instead of the evidence-truncated fields.
   const metrics = {
-    backend_jest: parseBackendTestResult(unitOutputs[0].stdout, unitOutputs[0].exit_code, unitOutputs[0].stderr),
-    frontend_vitest: parseFrontendTestResult(unitOutputs[1].stdout, unitOutputs[1].exit_code, unitOutputs[1].stderr),
-    backend_eslint: parseEslintResult(lintOutputs[0].stdout, lintOutputs[0].exit_code, lintOutputs[0].stderr),
-    frontend_eslint: parseEslintResult(lintOutputs[1].stdout, lintOutputs[1].exit_code, lintOutputs[1].stderr)
+    backend_jest: parseBackendTestResult(unitOutputs[0].full_stdout, unitOutputs[0].exit_code, unitOutputs[0].full_stderr),
+    frontend_vitest: parseFrontendTestResult(unitOutputs[1].full_stdout, unitOutputs[1].exit_code, unitOutputs[1].full_stderr),
+    backend_eslint: parseEslintResult(lintOutputs[0].full_stdout, lintOutputs[0].exit_code, lintOutputs[0].full_stderr),
+    frontend_eslint: parseEslintResult(lintOutputs[1].full_stdout, lintOutputs[1].exit_code, lintOutputs[1].full_stderr)
   };
   result.metrics = metrics;
   assertCheck('metrics_present', Boolean(metrics.backend_jest && metrics.frontend_vitest && metrics.frontend_eslint && metrics.backend_eslint),
@@ -326,12 +329,12 @@ async function main() {
       frontend: result.checks.find(c => c.id === 'frontend_typecheck')
     },
     lint: {
-      backend: lintOutputs[0],
-      frontend: lintOutputs[1]
+      backend: { exit_code: lintOutputs[0].exit_code, duration_ms: lintOutputs[0].duration_ms, stdout: lintOutputs[0].full_stdout, stderr: lintOutputs[0].full_stderr },
+      frontend: { exit_code: lintOutputs[1].exit_code, duration_ms: lintOutputs[1].duration_ms, stdout: lintOutputs[1].full_stdout, stderr: lintOutputs[1].full_stderr }
     },
     unit_smoke: {
-      backend: unitOutputs[0],
-      frontend: unitOutputs[1]
+      backend: { exit_code: unitOutputs[0].exit_code, duration_ms: unitOutputs[0].duration_ms, stdout: unitOutputs[0].full_stdout, stderr: unitOutputs[0].full_stderr },
+      frontend: { exit_code: unitOutputs[1].exit_code, duration_ms: unitOutputs[1].duration_ms, stdout: unitOutputs[1].full_stdout, stderr: unitOutputs[1].full_stderr }
     }
   });
   record('p03_static_architecture_dna', 'runProductionAudit after real type/lint/unit/build', audit.verdict === 'PASS' ? 0 : 1,
