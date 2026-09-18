@@ -1687,7 +1687,13 @@ function checkDnaImportBoundary(root, options = {}) {
     return { pass: false, error: ledgerError, details: { total_screens_scanned: 0 } };
   }
 
+  // R5-B6: The DNA implementation root is the single barrel boundary. Files
+  // OUTSIDE this root may not import DNA subpaths directly; they must use the
+  // barrel `@/components/dna` (re-exports the public surface in `index.ts`).
+  const dnaImplRoot = path.resolve(root, 'frontend/src/components/dna') + path.sep;
+
   const unhandled = [];
+  const subpathViolations = [];
   const scannedClosureFiles = new Set();
 
   for (const file of screens) {
@@ -1704,11 +1710,20 @@ function checkDnaImportBoundary(root, options = {}) {
       const sf = ts.createSourceFile(cf, code, ts.ScriptTarget.Latest, true);
 
       let hasRawUiImport = false;
+      // R5-B6: collect direct DNA subpath imports (`@/components/dna/X`) —
+      // bare `@/components/dna` (barrel) is allowed.
+      const dnaSubpathSpecs = [];
       ts.forEachChild(sf, node => {
         if (ts.isImportDeclaration(node)) {
           const spec = node.moduleSpecifier?.text;
-          if (spec && (spec.startsWith('@/components/ui/') || spec.startsWith('@radix-ui/'))) {
+          if (!spec) return;
+          if (spec.startsWith('@/components/ui/') || spec.startsWith('@radix-ui/')) {
             hasRawUiImport = true;
+          }
+          // Skip the canonical barrel import itself
+          if (spec === '@/components/dna') return;
+          if (spec.startsWith('@/components/dna/')) {
+            dnaSubpathSpecs.push(spec);
           }
         }
       });
@@ -1720,11 +1735,26 @@ function checkDnaImportBoundary(root, options = {}) {
           unhandled.push(rel);
         }
       }
+
+      // R5-B6: enforce DNA implementation-root boundary. A direct subpath
+      // import is permitted only from inside `frontend/src/components/dna/`.
+      const cfAbs = path.resolve(cf);
+      const insideDnaRoot = cfAbs.startsWith(dnaImplRoot);
+      if (!insideDnaRoot && dnaSubpathSpecs.length > 0) {
+        subpathViolations.push({
+          file: rel,
+          screen: normalizePath(path.relative(root, file)),
+          subpath_imports: dnaSubpathSpecs
+        });
+      }
     }
   }
 
   if (options.syntheticViolations) {
     unhandled.push(...options.syntheticViolations);
+  }
+  if (options.syntheticSubpathImports) {
+    subpathViolations.push(...options.syntheticSubpathImports);
   }
 
   // R4-B2: Zero applicable targets fail closed
@@ -1738,20 +1768,37 @@ function checkDnaImportBoundary(root, options = {}) {
       details: {
         total_screens_scanned: screens.length,
         total_closure_files_scanned: scannedClosureFiles.size,
-        unhandled_ui_kit_imports_count: unhandled.length
+        unhandled_ui_kit_imports_count: unhandled.length,
+        unhandled_subpath_count: subpathViolations.length
       },
       error: 'Zero applicable targets resolved for critical gate despite changed frontend source files'
     };
   }
 
-  const pass = unhandled.length === 0;
+  const unhandledSubpath = subpathViolations.length;
+  const pass = unhandled.length === 0 && unhandledSubpath === 0;
+  if (!pass && (unhandledSubpath > 0 && unhandled.length === 0)) {
+    return {
+      pass: false,
+      details: {
+        total_screens_scanned: screens.length,
+        total_closure_files_scanned: scannedClosureFiles.size,
+        unhandled_ui_kit_imports_count: 0,
+        unhandled_subpath_count: unhandledSubpath,
+        subpath_violations: subpathViolations
+      },
+      error: `DNA import boundary violation: ${unhandledSubpath} file(s) outside the DNA implementation root import raw @/components/dna/* subpaths; use the @/components/dna barrel instead`
+    };
+  }
   return {
     pass,
     details: {
       total_screens_scanned: screens.length,
       total_closure_files_scanned: scannedClosureFiles.size,
       unhandled_ui_kit_imports_count: unhandled.length,
-      unhandled_screens: unhandled
+      unhandled_subpath_count: unhandledSubpath,
+      unhandled_screens: unhandled,
+      subpath_violations: subpathViolations
     },
     error: pass ? null : `DNA import boundary violation: ${unhandled.length} file(s) in screen closure import raw UI kit without registered scoped DNA exception`
   };
@@ -2220,25 +2267,65 @@ function checkNodeEngine(root, overrides = {}) {
 }
 
 function checkPrismaToolchain(root, overrides = {}) {
+  // R5-B5: Resolve `cliVersion` and `clientVersion` from authoritative sources.
+  //   CLI version: declared in `backend/package.json` (or override).
+  //   Client version: installed `backend/node_modules/@prisma/client/package.json`,
+  //                    NOT the CLI's stdout "mismatch" / "Not found" string.
   let cliVersion = overrides.cliVersion;
   let clientVersion = overrides.clientVersion;
-  if (!cliVersion || !clientVersion) {
+  let clientSource = overrides.clientSource || 'declared';
+  let parseError = null;
+
+  if (!cliVersion) {
     const pkgPath = path.join(root, 'backend/package.json');
     if (fs.existsSync(pkgPath)) {
       try {
         const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-        cliVersion = cliVersion || pkg.devDependencies?.prisma || pkg.dependencies?.prisma;
-        clientVersion = clientVersion || pkg.dependencies?.['@prisma/client'];
+        cliVersion = pkg.devDependencies?.prisma || pkg.dependencies?.prisma;
       } catch (_) {}
     }
   }
+
+  if (!clientVersion) {
+    const installedPkg = path.join(root, 'backend/node_modules/@prisma/client/package.json');
+    if (fs.existsSync(installedPkg)) {
+      try {
+        const installed = JSON.parse(fs.readFileSync(installedPkg, 'utf8'));
+        if (typeof installed.version === 'string' && installed.version.trim() !== '') {
+          clientVersion = installed.version.trim();
+          clientSource = 'installed';
+        } else {
+          parseError = 'installed package.json present but `version` missing or empty';
+        }
+      } catch (e) {
+        parseError = `installed package.json unparseable: ${e.message}`;
+      }
+    } else {
+      parseError = '@prisma/client installed package not found';
+    }
+  }
+
+  // Allow override of installed-source to "fallback" for negative tests
+  if (overrides.simulateClientMissing) {
+    clientVersion = null;
+    parseError = 'simulated: @prisma/client Not found';
+  }
+
   const cleanCli = (cliVersion || '').replace(/[\^~]/g, '');
   const cleanClient = (clientVersion || '').replace(/[\^~]/g, '');
-  const pass = Boolean(cleanCli && cleanClient && cleanCli === cleanClient);
+
+  const ok = Boolean(cleanCli && cleanClient && cleanCli === cleanClient && !parseError);
   return {
-    pass,
-    details: { cli_version: cliVersion, client_version: clientVersion },
-    error: pass ? null : `Prisma toolchain version mismatch: CLI (${cliVersion}) does not match @prisma/client (${clientVersion})`
+    pass: ok,
+    details: {
+      cli_version: cliVersion,
+      client_version: clientVersion || null,
+      client_source: clientSource,
+      parse_error: parseError || null
+    },
+    error: ok ? null : (parseError
+      ? `Prisma toolchain check rejected: ${parseError}`
+      : `Prisma toolchain version mismatch: CLI (${cliVersion}) does not match @prisma/client (${clientVersion})`)
   };
 }
 

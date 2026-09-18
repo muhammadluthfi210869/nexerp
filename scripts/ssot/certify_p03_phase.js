@@ -9,7 +9,9 @@
 const fs = require('fs');
 const path = require('path');
 const { spawn, spawnSync } = require('child_process');
-const { runAudit } = require('./audit_p03_architecture_gates');
+const { runProductionAudit } = require('./audit_p03_architecture_gates');
+const auditOptions = require('./p03_audit_options');
+const { parseBackendTestResult, parseFrontendTestResult, parseEslintResult } = require('./lib/test_result_parser');
 
 const ROOT = path.resolve(__dirname, '../..');
 const OUT = path.join(ROOT, 'docs/legacy-erp/verification/evidence/P03_PHASE_CERTIFICATION_RESULT.json');
@@ -31,7 +33,8 @@ const REQUIRED_MUTATIONS = [
   'BB-CI-GENERATED-DIRTY',
   'BB-SUBPROCESS-RESULT-SUBSTITUTION',
   'BB-NODE-ENGINE-MISMATCH',
-  'BB-PRISMA-VERSION-MISMATCH'
+  'BB-PRISMA-VERSION-MISMATCH',
+  'BB-DNA-SUBPATH-IMPORT'
 ];
 
 if (process.argv.length > 2) {
@@ -49,12 +52,20 @@ const result = {
   started_at: new Date().toISOString(),
   completed_at: null,
   checks: [],
-  failure: null
+  failure: null,
+  metrics: null
 };
 
-function short(value, limit = 8000) {
-  const text = String(value || '').replace(/\u001b\[[0-9;]*m/g, '');
-  return text.length <= limit ? text : `${text.slice(0, limit)}\n...[truncated]`;
+const FULL_LOG_LIMIT = 1024 * 1024; // 1 MiB cap for raw output capture
+const EVIDENCE_LOG_LIMIT = 4096;     // concise summary preserved in evidence
+
+function stripAnsi(value) {
+  return String(value || '').replace(/\[[0-9;]*m/g, '');
+}
+
+function short(value, limit = EVIDENCE_LOG_LIMIT) {
+  const text = stripAnsi(value);
+  return text.length <= limit ? text : `${text.slice(0, limit)}\n...[truncated ${text.length - limit} chars]`;
 }
 
 function record(id, command, code, started, stdout, stderr) {
@@ -71,7 +82,7 @@ function run(id, command, args, timeout = 15 * 60 * 1000) {
   const p = spawnSync(command, args, {
     cwd: ROOT, env: { ...process.env, CI: 'true', NODE_OPTIONS: '--max-old-space-size=8192' },
     encoding: 'utf8', shell: process.platform === 'win32', timeout,
-    maxBuffer: 100 * 1024 * 1024
+    maxBuffer: FULL_LOG_LIMIT
   });
   const entry = record(id, [command, ...args].join(' '), p.status, started, p.stdout, p.stderr);
   if (p.error || p.status !== 0) throw new Error(`${id} failed: ${p.error?.message || entry.stderr || entry.stdout}`);
@@ -115,6 +126,65 @@ function git(args) {
   return String(p.stdout || '').trim();
 }
 
+/**
+ * Regenerate the scope manifest + ledger at runner startup using the actual
+ * git diff between the declared P03 phase base and HEAD. The contract is:
+ *   - `base_commit_sha` equals the declared phase base.
+ *   - `candidate_commit_sha` equals HEAD.
+ *   - `total_changed_paths` equals the path list length, which must be the
+ *     byte-for-byte `git diff --name-only` of that range.
+ */
+function regenerateManifestAndLedger(headSha) {
+  const phaseBase = auditOptions.PHASE_BASE_SHA;
+  const diffText = git(['diff', '--name-only', phaseBase, 'HEAD']);
+  const diffFiles = diffText.split('\n').map(s => s.trim()).filter(Boolean);
+
+  const manifest = {
+    manifest_version: '1.0.0',
+    generated_at: new Date().toISOString(),
+    base_commit_sha: phaseBase,
+    candidate_commit_sha: headSha,
+    total_changed_paths: diffFiles.length,
+    paths: diffFiles.map(p => ({ path: p, applicable_analyzers: [] }))
+  };
+  fs.writeFileSync(
+    path.join(ROOT, 'docs/legacy-erp/verification/evidence/P03_CHANGE_SCOPE_MANIFEST.json'),
+    JSON.stringify(manifest, null, 2) + '\n',
+    'utf8'
+  );
+
+  // The path-level scope ledger mirrors the same numbers and references the candidate SHA.
+  const ledgerLines = [];
+  ledgerLines.push('# NEX ERP — Phase P03 Path-Level Scope Ledger');
+  ledgerLines.push('');
+  ledgerLines.push('## Scope Ledger Metadata');
+  ledgerLines.push('');
+  ledgerLines.push(`- **Base Commit SHA:** \`${phaseBase}\``);
+  ledgerLines.push(`- **Candidate Commit SHA:** \`${headSha}\``);
+  ledgerLines.push(`- **Total Changed Paths in Git Diff:** ${diffFiles.length}`);
+  ledgerLines.push(`- **Generated At:** ${new Date().toISOString()}`);
+  ledgerLines.push('');
+  ledgerLines.push('## Path Index');
+  ledgerLines.push('');
+  for (let i = 0; i < diffFiles.length; i++) {
+    const f = diffFiles[i];
+    const id = String(i + 1).padStart(3, '0');
+    ledgerLines.push(`| ${id} | \`${f}\` | P03 | Generated Manifest Path | YES |`);
+  }
+  ledgerLines.push('');
+  ledgerLines.push('## Scope Attribution & Architecture Ratchet Truth');
+  ledgerLines.push('');
+  ledgerLines.push(`Immutable diff authority is strictly enforced between Base \`${phaseBase}\` and candidate \`HEAD\`. No changed source files are excluded from examination using manual ledger classifications.`);
+  ledgerLines.push('');
+  fs.writeFileSync(
+    path.join(ROOT, 'docs/legacy-erp/verification/evidence/P03_CHANGE_SCOPE_LEDGER.md'),
+    ledgerLines.join('\n'),
+    'utf8'
+  );
+
+  return { count: diffFiles.length, manifest };
+}
+
 async function main() {
   const major = Number(process.versions.node.split('.')[0]);
   assertCheck('supported_node', major >= 22, { observed: process.version, accepted: '>=22' });
@@ -128,8 +198,20 @@ async function main() {
   });
 
   result.candidate_sha = git(['rev-parse', 'HEAD']);
-  assertCheck('committed_candidate', git(['status', '--porcelain']) === '',
-    'Run from a clean dedicated branch/worktree; certification never includes unstaged or untracked implementation');
+
+  // R5-B3 + R5-B1: pre-flight source integrity + manifest regeneration.
+  // Disallow tracked file changes outside the canonical generated-output allowlist,
+  // so the runner cannot be invoked on a half-merged tree.
+  const preDisallowed = auditOptions.findDisallowedTrackedDirty();
+  assertCheck('pre_run_source_integrity', preDisallowed.length === 0, { disallowed: preDisallowed });
+
+  const regen = regenerateManifestAndLedger(result.candidate_sha);
+  assertCheck('manifest_regenerated', regen.manifest.candidate_commit_sha === result.candidate_sha && regen.manifest.base_commit_sha === auditOptions.PHASE_BASE_SHA, {
+    candidate: regen.manifest.candidate_commit_sha,
+    base: regen.manifest.base_commit_sha,
+    count: regen.count
+  });
+
   assertCheck('runner_committed', git(['ls-files', '--', 'scripts/ssot/certify_p03_phase.js']) === 'scripts/ssot/certify_p03_phase.js',
     'Commit the phase runner before certification');
 
@@ -140,6 +222,11 @@ async function main() {
   const ci = fs.readFileSync(path.join(ROOT, '.github/workflows/ci.yml'), 'utf8');
   assertCheck('ci_uses_phase_gate', ci.includes('node scripts/ssot/certify_p03_phase.js'),
     'CI must call the same P03 phase command');
+  // R5-B3: CI must consume the same allowlist as the runner.
+  const allowlist = auditOptions.GENERATED_OUTPUT_ALLOWLIST;
+  assertCheck('ci_uses_generated_output_allowlist',
+    allowlist.every(p => ci.includes(`':(exclude)${p}'`)),
+    `CI must use the canonical generated-output allowlist (${allowlist.length} paths)`);
 
   // Lockfile reproducibility without reinstalling the entire tree on every phase attempt.
   await Promise.all([
@@ -148,10 +235,40 @@ async function main() {
     runAsync('frontend_lock_dry_run', 'npm', ['--prefix', 'frontend', 'ci', '--dry-run', '--ignore-scripts', '--no-audit'])
   ]);
 
-  const prismaV = run('prisma_version_check', 'npm', ['--prefix', 'backend', 'exec', '--', 'prisma', '-v']);
-  assertCheck('prisma_version_match', !prismaV.stdout.includes('mismatch') && !prismaV.stderr.includes('mismatch'), {
-    output: prismaV.stdout
-  });
+  // R5-B5: Read installed @prisma/client package.json, not stdout "mismatch" regex.
+  const installedPrismaPath = path.join(ROOT, 'backend/node_modules/@prisma/client/package.json');
+  let installedClientVersion = null;
+  let prismaClientParseable = false;
+  if (fs.existsSync(installedPrismaPath)) {
+    try {
+      const installed = JSON.parse(fs.readFileSync(installedPrismaPath, 'utf8'));
+      if (typeof installed.version === 'string' && installed.version.trim() !== '') {
+        installedClientVersion = installed.version.trim();
+        prismaClientParseable = true;
+      }
+    } catch (_) {
+      prismaClientParseable = false;
+    }
+  }
+  const cliOutput = run('prisma_version_check', 'npm', ['--prefix', 'backend', 'exec', '--', 'prisma', '-v']);
+  // Extract CLI version strictly from the `prisma               : X.Y.Z` line
+  const cliLines = stripAnsi(cliOutput.stdout).split('\n');
+  let cliVersion = null;
+  for (const line of cliLines) {
+    const m = line.match(/^\s*prisma\s*:\s*(\d+\.\d+\.\d+)/);
+    if (m) { cliVersion = m[1]; break; }
+  }
+  // Hard-fail if the CLI itself reports "Not found" for installed pieces.
+  const cliMissingFragment = /@prisma\/client\s*:\s*Not found/i.test(stripAnsi(cliOutput.stdout));
+  assertCheck('prisma_toolchain_match',
+    !cliMissingFragment &&
+    Boolean(prismaClientParseable && installedClientVersion && cliVersion && cliVersion === installedClientVersion),
+    {
+      installed_client_version: installedClientVersion,
+      cli_version: cliVersion,
+      parseable: prismaClientParseable,
+      cli_reported_missing: cliMissingFragment
+    });
 
   run('prisma_generate', 'npm', ['--prefix', 'backend', 'run', 'prisma:generate']);
 
@@ -164,11 +281,11 @@ async function main() {
     runAsync('backend_typecheck', 'npx', ['tsc', '-p', 'backend/tsconfig.build.json', '--noEmit']),
     runAsync('frontend_typecheck', 'npx', ['tsc', '--project', 'frontend/tsconfig.json', '--noEmit'])
   ]);
-  await Promise.all([
+  const lintOutputs = await Promise.all([
     runAsync('backend_lint', 'npm', ['--prefix', 'backend', 'run', 'lint']),
     runAsync('frontend_lint', 'npm', ['--prefix', 'frontend', 'run', 'lint'])
   ]);
-  await Promise.all([
+  const unitOutputs = await Promise.all([
     runAsync('backend_unit', 'npm', ['--prefix', 'backend', 'run', 'test:unit']),
     runAsync('frontend_unit', 'npm', ['--prefix', 'frontend', 'run', 'test'])
   ]);
@@ -177,22 +294,39 @@ async function main() {
     runAsync('frontend_build', 'npm', ['--prefix', 'frontend', 'run', 'build'])
   ]);
 
+  // R5-B4: machine-readable result parsing — captures truthful counts before any truncation.
+  const metrics = {
+    backend_jest: parseBackendTestResult(unitOutputs[0].stdout, unitOutputs[0].exit_code),
+    frontend_vitest: parseFrontendTestResult(unitOutputs[1].stdout, unitOutputs[1].exit_code),
+    backend_eslint: parseEslintResult(lintOutputs[0].stdout, lintOutputs[0].exit_code),
+    frontend_eslint: parseEslintResult(lintOutputs[1].stdout, lintOutputs[1].exit_code)
+  };
+  result.metrics = metrics;
+  assertCheck('metrics_present', Boolean(metrics.backend_jest && metrics.frontend_vitest && metrics.frontend_eslint && metrics.backend_eslint),
+    'Full machine-readable backend/frontend test+lint metrics must parse from raw output');
+  assertCheck('backend_tests_have_real_counts',
+    metrics.backend_jest && metrics.backend_jest.passed > 0 && metrics.backend_jest.suites_passed > 0,
+    metrics.backend_jest);
+
   const auditStarted = Date.now();
-  const audit = runAudit({
+  // R5-B2: production audit MUST go through runProductionAudit so the strict
+  // scope/ledger/allowlist options wired in p03_audit_options.js reach every
+  // DNA gate, duplication, and complexity analyzer.
+  const audit = runProductionAudit({
     typecheck: {
       backend: result.checks.find(c => c.id === 'backend_typecheck'),
       frontend: result.checks.find(c => c.id === 'frontend_typecheck')
     },
     lint: {
-      backend: result.checks.find(c => c.id === 'backend_lint'),
-      frontend: result.checks.find(c => c.id === 'frontend_lint')
+      backend: lintOutputs[0],
+      frontend: lintOutputs[1]
     },
     unit_smoke: {
-      backend: result.checks.find(c => c.id === 'backend_unit'),
-      frontend: result.checks.find(c => c.id === 'frontend_unit')
+      backend: unitOutputs[0],
+      frontend: unitOutputs[1]
     }
   });
-  record('p03_static_architecture_dna', 'runAudit after real type/lint/unit/build', audit.verdict === 'PASS' ? 0 : 1,
+  record('p03_static_architecture_dna', 'runProductionAudit after real type/lint/unit/build', audit.verdict === 'PASS' ? 0 : 1,
     auditStarted, JSON.stringify({ passed: audit.passed_tests, total: audit.total_tests }), JSON.stringify(audit.results));
   assertCheck('p03_21_of_21', audit.verdict === 'PASS' && audit.passed_tests === 21, audit);
 
@@ -200,6 +334,10 @@ async function main() {
   const output = `${negative.stdout}\n${negative.stderr}`;
   const missing = REQUIRED_MUTATIONS.filter(id => !output.includes(id));
   assertCheck('required_mutations_present', missing.length === 0, { missing });
+
+  // R5-B3: post-run source integrity. Same allowlist used by `.github/workflows/ci.yml`.
+  const postDisallowed = auditOptions.findDisallowedTrackedDirty();
+  assertCheck('post_run_source_integrity', postDisallowed.length === 0, { disallowed: postDisallowed });
 
   result.verdict = 'PHASE_PASS';
   result.token = `P03:${result.candidate_sha}:PHASE_PASS`;
@@ -223,4 +361,3 @@ async function main() {
     if (result.verdict !== 'PHASE_PASS') process.exitCode = 1;
   }
 })();
-

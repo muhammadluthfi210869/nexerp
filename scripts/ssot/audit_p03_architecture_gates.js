@@ -8,12 +8,30 @@
 const fs = require('fs');
 const path = require('path');
 const analyzers = require('./lib/p03_analyzers');
+const { buildP03AuditOptions } = require('./p03_audit_options');
 
 const ROOT = path.resolve(__dirname, '../..');
 const VERIFY = path.join(ROOT, 'docs/legacy-erp/verification');
 
 function runAudit(options = {}) {
+  // R5-B2: Production audit call assembles a strict bundle from the canonical
+  // builder. Callers (including the runner and production diagnostics) cannot
+  // silently skip scope/ledger/allowlist options.
+  const baseSha = options.baseSha;
+  const requireValidLedger = options.requireValidLedger;
+  const changedFiles = options.changedFiles;
+  const ledgerPath = options.ledgerPath;
   const root = options.root || ROOT;
+
+  // Wire the strict scope fields through to every gate that accepts them.
+  const strict = (gateOpts = {}) => ({
+    ...gateOpts,
+    ...(baseSha !== undefined ? { baseSha } : {}),
+    ...(changedFiles !== undefined ? { changedFiles } : {}),
+    ...(ledgerPath !== undefined ? { ledgerPath } : {}),
+    ...(requireValidLedger !== undefined ? { requireValidLedger } : {})
+  });
+
   const results = {};
 
   const testDefinitions = [
@@ -28,12 +46,12 @@ function runAudit(options = {}) {
     { id: 'circular_dependency_scan', fn: () => analyzers.detectCircularDependencies(root, options.circular_dependency_scan) },
     { id: 'unused_export_dependency_scan', fn: () => analyzers.checkUnusedProductionDependencies(root, options.unused_export_dependency_scan) },
     { id: 'orphan_object_scan', fn: () => analyzers.checkOrphanObjects(root, options.orphan_object_scan) },
-    { id: 'duplicate_code_scan', fn: () => analyzers.checkDuplicateCode(root, options.duplicate_code_scan) },
-    { id: 'changed_complexity_check', fn: () => analyzers.checkCyclomaticComplexity(root, options.changed_complexity_check) },
-    { id: 'dna_import_boundary_ast', fn: () => analyzers.checkDnaImportBoundary(root, options.dna_import_boundary_ast) },
-    { id: 'dna_native_interactive_scan', fn: () => analyzers.checkDnaNativeInteractive(root, options.dna_native_interactive_scan) },
-    { id: 'dna_primitive_duplication_scan', fn: () => analyzers.checkDnaPrimitiveDuplication(root, options.dna_primitive_duplication_scan) },
-    { id: 'dna_hardcoded_visual_scan', fn: () => analyzers.checkDnaHardcodedVisual(root, options.dna_hardcoded_visual_scan) },
+    { id: 'duplicate_code_scan', fn: () => analyzers.checkDuplicateCode(root, strict(options.duplicate_code_scan)) },
+    { id: 'changed_complexity_check', fn: () => analyzers.checkCyclomaticComplexity(root, strict(options.changed_complexity_check)) },
+    { id: 'dna_import_boundary_ast', fn: () => analyzers.checkDnaImportBoundary(root, strict(options.dna_import_boundary_ast)) },
+    { id: 'dna_native_interactive_scan', fn: () => analyzers.checkDnaNativeInteractive(root, strict(options.dna_native_interactive_scan)) },
+    { id: 'dna_primitive_duplication_scan', fn: () => analyzers.checkDnaPrimitiveDuplication(root, strict(options.dna_primitive_duplication_scan)) },
+    { id: 'dna_hardcoded_visual_scan', fn: () => analyzers.checkDnaHardcodedVisual(root, strict(options.dna_hardcoded_visual_scan)) },
     { id: 'dna_barrel_integrity', fn: () => analyzers.checkDnaBarrelIntegrity(root, options.dna_barrel_integrity) },
     { id: 'dna_reference_route_and_composition', fn: () => analyzers.checkDnaReferenceRoutes(root, options.dna_reference_route_and_composition) },
     { id: 'dna_screen_coverage_manifest', fn: () => analyzers.checkDnaScreenCoverageManifest(root, options.dna_screen_coverage_manifest) },
@@ -107,4 +125,23 @@ if (require.main === module) {
   }
 }
 
-module.exports = { runAudit };
+module.exports = { runAudit, runProductionAudit };
+
+/**
+ * Production-only audit entrypoint. Assembles options via the canonical
+ * builder so the runner and any external automation always exercise the
+ * strict scope path. Test code (negative suite, sandbox ts) must call
+ * `runAudit` directly with intentionally-weakened options; doing so is
+ * forbidden by the negative suite (see `test_p03_architecture_gates_negative.js`).
+ *
+ * @param {object} [callOptions] Per-gate options forwarded to `runAudit` (e.g.,
+ *                              typecheck/lint/unit_smoke result bundles).
+ */
+function runProductionAudit(callOptions = {}) {
+  const strict = buildP03AuditOptions();
+  // Per-gate result bundles (typecheck/lint/unit_smoke) are passed through verbatim.
+  return runAudit({
+    ...strict,
+    ...callOptions
+  });
+}

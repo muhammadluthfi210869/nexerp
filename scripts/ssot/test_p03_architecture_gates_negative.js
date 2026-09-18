@@ -570,6 +570,56 @@ try {
       'BB-PRISMA-VERSION-MISMATCH: Version divergence between Prisma CLI and @prisma/client fails toolchain check');
   }
 
+  // Scenario BB-DNA-SUBPATH-IMPORT: Direct @/components/dna subpath import outside the DNA
+  // implementation root strictly fails the production DNA import boundary gate.
+  {
+    const fakeAppDir = path.join(tempSandbox, 'app_dna_subpath');
+    const fakeScreenDir = path.join(fakeAppDir, 'subpath_screen');
+    fs.mkdirSync(fakeScreenDir, { recursive: true });
+    const fakePage = path.join(fakeScreenDir, 'page.tsx');
+    fs.writeFileSync(fakePage,
+      "import { DnaButton } from '@/components/dna/DnaButton';\nexport default function Page(){ return <DnaButton />; }",
+      'utf8'
+    );
+
+    const res = analyzers.checkDnaImportBoundary(ROOT, { appDir: fakeAppDir });
+    assert(!res.pass && res.details.unhandled_subpath_count > 0,
+      'BB-DNA-SUBPATH-IMPORT: Direct @/components/dna/DnaButton subpath import outside the DNA implementation root strictly fails DNA import boundary');
+  }
+
+  // Scenario BB-DNA-SUBPATH-INJECTED: Synthetic subpath violation injected via the
+  // production analyzer option. Ensures the gate can be tripped even when
+  // fixture mutation isn't feasible (e.g., the new strict mode adds prod-path
+  // mutation coverage without the test-only synthetic Violations plumbing).
+  {
+    const fakeAppDir = path.join(tempSandbox, 'app_dna_subpath_synth');
+    const fakeScreenDir = path.join(fakeAppDir, 'synth_screen');
+    fs.mkdirSync(fakeScreenDir, { recursive: true });
+    const fakePage = path.join(fakeScreenDir, 'page.tsx');
+    fs.writeFileSync(fakePage,
+      'export default function Page(){ return null; }',
+      'utf8'
+    );
+
+    const res = analyzers.checkDnaImportBoundary(ROOT, {
+      appDir: fakeAppDir,
+      syntheticSubpathImports: [{ file: 'synth/page.tsx', screen: 'synth/page.tsx', subpath_imports: ['@/components/dna/DnaButton'] }]
+    });
+    assert(!res.pass && res.details.unhandled_subpath_count > 0,
+      'BB-DNA-SUBPATH-INJECTED: Injected direct @/components/dna/DnaButton subpath violation strictly fails DNA import boundary');
+  }
+
+  // Scenario BB-PRISMA-NOT-FOUND: `@prisma/client: Not found` from the CLI used to slip
+  // through; the strict installed-package check now rejects the unchecked state.
+  {
+    const res = analyzers.checkPrismaToolchain(ROOT, {
+      cliVersion: '7.10.0',
+      simulateClientMissing: true
+    });
+    assert(!res.pass && res.details.client_version === null,
+      'BB-PRISMA-NOT-FOUND: Prisma client "Not found" simulation strictly fails the toolchain check');
+  }
+
 } finally {
   // Clean up temporary sandbox fixtures
   try {

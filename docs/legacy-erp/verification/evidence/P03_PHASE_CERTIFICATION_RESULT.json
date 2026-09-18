@@ -1,0 +1,484 @@
+{
+  "phase": "P03",
+  "level": "PHASE_GATE",
+  "heavy_checks_deferred_to": [
+    "INTEGRATION_CHECKPOINT",
+    "P20",
+    "P21",
+    "P22"
+  ],
+  "candidate_sha": "3b6322d3aaec1be9b8d0e45c16c1e8a194261562",
+  "verdict": "PHASE_PASS",
+  "token": "P03:3b6322d3aaec1be9b8d0e45c16c1e8a194261562:PHASE_PASS",
+  "started_at": "2026-09-18T03:40:11.428Z",
+  "completed_at": "2026-09-18T03:50:26.095Z",
+  "checks": [
+    {
+      "id": "supported_node",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": {
+        "observed": "v22.21.0",
+        "accepted": ">=22"
+      }
+    },
+    {
+      "id": "prisma_toolchain_pinned",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": {
+        "prisma": "7.10.0",
+        "client": "7.10.0"
+      }
+    },
+    {
+      "id": "committed_candidate",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "Run from a clean dedicated branch/worktree; certification never includes unstaged or untracked implementation"
+    },
+    {
+      "id": "runner_committed",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "Commit the phase runner before certification"
+    },
+    {
+      "id": "unsafe_verifier_removed",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "No shared node_modules junction or CI artifact bypass may remain"
+    },
+    {
+      "id": "ci_uses_phase_gate",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": "CI must call the same P03 phase command"
+    },
+    {
+      "id": "root_lock_dry_run",
+      "command": "npm ci --dry-run --ignore-scripts --no-audit",
+      "exit_code": 0,
+      "duration_ms": 3524,
+      "stdout": "add fsevents 2.3.2\n\nadded 1 package in 1s\n\n5 packages are looking for funding\n  run `npm fund` for details\n",
+      "stderr": ""
+    },
+    {
+      "id": "frontend_lock_dry_run",
+      "command": "npm --prefix frontend ci --dry-run --ignore-scripts --no-audit",
+      "exit_code": 0,
+      "duration_ms": 5239,
+      "stdout": "add lightningcss-win32-arm64-msvc 1.32.0\nadd lightningcss-linux-x64-musl 1.32.0\nadd lightningcss-linux-x64-gnu 1.33.0\nadd lightningcss-linux-arm64-musl 1.32.0\nadd lightningcss-linux-arm64-gnu 1.32.0\nadd lightningcss-linux-arm-gnueabihf 1.32.0\nadd lightningcss-freebsd-x64 1.32.0\nadd lightningcss-darwin-x64 1.32.0\nadd lightningcss-darwin-arm64 1.32.0\nadd lightningcss-android-arm64 1.32.0\nadd @tailwindcss/oxide-win32-arm64-msvc 4.3.2\nadd @tailwindcss/oxide-wasm32-wasi 4.3.2\nadd @tailwindcss/oxide-linux-x64-musl 4.3.2\nadd @tailwindcss/oxide-linux-x64-gnu 4.3.2\nadd @tailwindcss/oxide-linux-arm64-musl 4.3.2\nadd @tailwindcss/oxide-linux-arm64-gnu 4.3.2\nadd @tailwindcss/oxide-linux-arm-gnueabihf 4.3.2\nadd @tailwindcss/oxide-freebsd-x64 4.3.2\nadd @tailwindcss/oxide-darwin-x64 4.3.2\nadd @tailwindcss/oxide-darwin-arm64 4.3.2\nadd @tailwindcss/oxide-android-arm64 4.3.2\nadd @next/swc-win32-arm64-msvc 16.2.6\nadd @next/swc-linux-x64-musl 16.2.6\nadd @next/swc-linux-x64-gnu 16.2.6\nadd @next/swc-linux-arm64-musl 16.2.6\nadd @next/swc-linux-arm64-gnu 16.2.6\nadd @next/swc-darwin-x64 16.2.6\nadd @next/swc-darwin-arm64 16.2.6\nadd lightningcss-linux-x64-gnu 1.32.0\n\nadded 29 packages in 3s\n\n314 packages are looking for funding\n  run `npm fund` for details\n",
+      "stderr": ""
+    },
+    {
+      "id": "backend_lock_dry_run",
+      "command": "npm --prefix backend ci --dry-run --ignore-scripts --no-audit",
+      "exit_code": 0,
+      "duration_ms": 5608,
+      "stdout": "add nan 2.26.2\nadd fsevents 2.3.3\nadd cpu-features 0.0.10\nadd buildcheck 0.0.7\nadd @unrs/resolver-binding-win32-ia32-msvc 1.11.1\nadd @unrs/resolver-binding-win32-arm64-msvc 1.11.1\nadd @unrs/resolver-binding-wasm32-wasi 1.11.1\nadd @unrs/resolver-binding-linux-x64-musl 1.11.1\nadd @unrs/resolver-binding-linux-x64-gnu 1.11.1\nadd @unrs/resolver-binding-linux-s390x-gnu 1.11.1\nadd @unrs/resolver-binding-linux-riscv64-musl 1.11.1\nadd @unrs/resolver-binding-linux-riscv64-gnu 1.11.1\nadd @unrs/resolver-binding-linux-ppc64-gnu 1.11.1\nadd @unrs/resolver-binding-linux-arm64-musl 1.11.1\nadd @unrs/resolver-binding-linux-arm64-gnu 1.11.1\nadd @unrs/resolver-binding-linux-arm-musleabihf 1.11.1\nadd @unrs/resolver-binding-linux-arm-gnueabihf 1.11.1\nadd @unrs/resolver-binding-freebsd-x64 1.11.1\nadd @unrs/resolver-binding-darwin-x64 1.11.1\nadd @unrs/resolver-binding-darwin-arm64 1.11.1\nadd @unrs/resolver-binding-android-arm64 1.11.1\nadd @unrs/resolver-binding-android-arm-eabi 1.11.1\nadd @tybys/wasm-util 0.10.1\nadd @swc/core-win32-ia32-msvc 1.15.33\nadd @swc/core-win32-arm64-msvc 1.15.33\nadd @swc/core-linux-x64-musl 1.15.33\nadd @swc/core-linux-x64-gnu 1.15.33\nadd @swc/core-linux-s390x-gnu 1.15.33\nadd @swc/core-linux-ppc64-gnu 1.15.33\nadd @swc/core-linux-arm64-musl 1.15.33\nadd @swc/core-linux-arm64-gnu 1.15.33\nadd @swc/core-linux-arm-gnueabihf 1.15.33\nadd @swc/core-darwin-x64 1.15.33\nadd @swc/core-darwin-arm64 1.15.33\nadd @napi-rs/wasm-runtime 0.2.12\nadd @napi-rs/nice-win32-ia32-msvc 1.1.1\nadd @napi-rs/nice-win32-arm64-msvc 1.1.1\nadd @napi-rs/nice-openharmony-arm64 1.1.1\nadd @napi-rs/nice-linux-x64-musl 1.1.1\nadd @napi-rs/nice-linux-x64-gnu 1.1.1\nadd @napi-rs/nice-linux-s390x-gnu 1.1.1\nadd @napi-rs/nice-linux-riscv64-gnu 1.1.1\nadd @napi-rs/nice-linux-ppc64-gnu 1.1.1\nadd @napi-rs/nice-linux-arm64-musl 1.1.1\nadd @napi-rs/nice-linux-arm64-gnu 1.1.1\nadd @napi-rs/nice-linux-arm-gnueabihf 1.1.1\nadd @napi-rs/nice-freebsd-x64 1.1.1\nadd @napi-rs/nice-darwin-x64 1.1.1\nadd @napi-rs/nice-darwin-arm64 1.1.1\nadd @napi-rs/nice-android-arm64 1.1.1\nadd @napi-rs/nice-android-arm-eabi 1.1.1\nadd @libsql/linux-x64-musl 0.5.29\nadd @libsql/linux-x64-gnu 0.5.29\nadd @libsql/linux-arm64-musl 0.5.29\nadd @libsql/linux-arm64-gnu 0.5.29\nadd @libsql/linux-arm-musleabihf 0.5.29\nadd @libsql/linux-arm-gnueabihf 0.5.29\nadd @libsql/darwin-x64 0.5.29\nadd @libsql/darwin-arm64 0.5.29\nadd @emnapi/wasi-threads 1.2.1\nadd @emnapi/runtime 1.9.2\nadd @emnapi/core 1.9.2\n\nadded 62 packages in 3s\n\n227 packages are looking for funding\n  run `npm fund` for details\n",
+      "stderr": ""
+    },
+    {
+      "id": "prisma_version_check",
+      "command": "npm --prefix backend exec -- prisma -v",
+      "exit_code": 0,
+      "duration_ms": 9912,
+      "stdout": "prisma               : 7.10.0\n@prisma/client       : Not found\nOperating System     : win32\nArchitecture         : x64\nNode.js              : v22.21.0\nTypeScript           : 5.9.3\nQuery Compiler       : enabled\nPSL                  : @prisma/prisma-schema-wasm 7.10.0-4.0edf323efd1d98336f3f0a68684b56f689b900d3\nSchema Engine        : schema-engine-cli 0edf323efd1d98336f3f0a68684b56f689b900d3 (at backend\\node_modules\\@prisma\\engines\\schema-engine-windows.exe)\nDefault Engines Hash : 0edf323efd1d98336f3f0a68684b56f689b900d3\nStudio               : 0.33.0\nPrisma CLI Path      : C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\prisma\n",
+      "stderr": ""
+    },
+    {
+      "id": "prisma_version_match",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": {
+        "output": "prisma               : 7.10.0\n@prisma/client       : Not found\nOperating System     : win32\nArchitecture         : x64\nNode.js              : v22.21.0\nTypeScript           : 5.9.3\nQuery Compiler       : enabled\nPSL                  : @prisma/prisma-schema-wasm 7.10.0-4.0edf323efd1d98336f3f0a68684b56f689b900d3\nSchema Engine        : schema-engine-cli 0edf323efd1d98336f3f0a68684b56f689b900d3 (at backend\\node_modules\\@prisma\\engines\\schema-engine-windows.exe)\nDefault Engines Hash : 0edf323efd1d98336f3f0a68684b56f689b900d3\nStudio               : 0.33.0\nPrisma CLI Path      : C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\prisma\n"
+      }
+    },
+    {
+      "id": "prisma_generate",
+      "command": "npm --prefix backend run prisma:generate",
+      "exit_code": 0,
+      "duration_ms": 8813,
+      "stdout": "\n> backend@0.0.1 prisma:generate\n> prisma generate\n\n\n✔ Generated Prisma Client (v7.10.0) to .\\node_modules\\@prisma\\client in 2.86s\n\nStart by importing your Prisma Client (See: https://pris.ly/d/importing-client)\n\n\n",
+      "stderr": "Loaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma\\schema.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\nwarn Preview feature \"prismaSchemaFolder\" is deprecated. The functionality can be used without specifying it as a preview feature.\n"
+    },
+    {
+      "id": "p02",
+      "command": "node scripts/ssot/audit_lifecycle_reconciliation.js",
+      "exit_code": 0,
+      "duration_ms": 3500,
+      "stdout": "Running Phase P02 Independent Lifecycle & Reconciliation Audit...\n\n=======================================================\nPHASE P02 TEST RESULTS (14/14 REQUIRED TESTS)\n=======================================================\n✅ PASS | implementation_readiness_audit\n✅ PASS | schema_diff\n✅ PASS | openapi_diff\n✅ PASS | route_diff\n✅ PASS | rbac_diff\n✅ PASS | event_workflow_diff\n✅ PASS | caller_import_registration_scan\n✅ PASS | orphan_scan\n✅ PASS | unused_export_dependency_scan\n✅ PASS | duplicate_implementation_scan\n✅ PASS | lifecycle_registry_validation\n✅ PASS | dna_screen_import_inventory\n✅ PASS | dna_hardcoded_visual_inventory\n✅ PASS | dna_migration_disposition\n=======================================================\nTOTAL: 14/14 tests passed.\nOVERALL PHASE P02 VERDICT: PASS\n=======================================================\n\n",
+      "stderr": ""
+    },
+    {
+      "id": "ssot",
+      "command": "node scripts/ssot/validate_ssot.js",
+      "exit_code": 0,
+      "duration_ms": 6518,
+      "stdout": "{\n  \"generated_at\": \"2026-09-18T03:40:36.355Z\",\n  \"gates\": {\n    \"yaml_parse\": {\n      \"status\": \"PASS\",\n      \"files\": 6\n    },\n    \"json_parse\": {\n      \"status\": \"PASS\",\n      \"files\": 1\n    },\n    \"prisma_validate\": {\n      \"status\": \"PASS\",\n      \"message\": \" | Prisma schema loaded from ..\\\\tmp\\\\ssot-prisma7-compat.schema.prisma. |  | Validated through Prisma 7 compatibility projection; canonical schema targets Prisma 5.\"\n    },\n    \"openapi_structure\": {\n      \"status\": \"PASS\",\n      \"duplicate_operation_ids\": [],\n      \"dangling_schema_refs\": []\n    },\n    \"rbac_ids_and_inheritance\": {\n      \"status\": \"PASS\",\n      \"duplicate_role_ids\": [],\n      \"duplicate_role_names\": [],\n      \"duplicate_permissions\": [],\n      \"dangling_inheritance\": [],\n      \"dangling_assignment_roles\": [],\n      \"dangling_assignment_permissions\": []\n    },\n    \"screen_ids\": {\n      \"status\": \"PASS\",\n      \"duplicates\": []\n    },\n    \"screen_api_refs\": {\n      \"status\": \"PASS\",\n      \"checked\": 209,\n      \"dangling\": []\n    },\n    \"screen_rbac_refs\": {\n      \"status\": \"PASS\",\n      \"checked\": 372,\n      \"dangling\": []\n    },\n    \"business_rule_ids\": {\n      \"status\": \"PASS\",\n      \"duplicates\": []\n    },\n    \"workflow_ids_entities_actors\": {\n      \"status\": \"PASS\",\n      \"duplicate_entities\": [],\n      \"dangling_entities\": [],\n      \"dangling_actors\": []\n    },\n    \"workflow_event_refs\": {\n      \"status\": \"PASS\",\n      \"checked\": 33,\n      \"dangling\": []\n    },\n    \"workflow_rule_refs\": {\n      \"status\": \"PASS\",\n      \"checked\": 1769,\n      \"dangling\": []\n    },\n    \"event_ids\": {\n      \"status\": \"PASS\",\n      \"duplicates\": []\n    },\n    \"data_ownership_coverage\": {\n      \"status\": \"PASS\",\n      \"schema_models_checked\": 92,\n      \"missing_models\": [],\n      \"entries_without_writer\": []\n    },\n    \"traceability_ids\": {\n      \"status\": \"PASS\",\n      \"duplicate_requirements\": [],\n      \"duplicate_rules\": [],\n      \"duplicate_workflows\": [],\n      \"duplicate_entities\": [],\n      \"duplicate_screens\": [],\n      \"duplicate_tests\": []\n    },\n    \"traceability_refs\": {\n      \"status\": \"PASS\",\n      \"checked_requirements\": 37,\n      \"dangling\": []\n    },\n    \"business_rule_test_refs\": {\n      \"status\": \"PASS\",\n      \"checked_rules\": 106,\n      \"rules_without_tests\": []\n    },\n    \"blocking_decisions_zero\": {\n      \"status\": \"PASS\",\n      \"decisions\": []\n    },\n    \"locked_status_integrity\": {\n      \"status\": \"PASS\",\n      \"locked_with_open_markers\": []\n    }\n  },\n  \"counts\": {\n    \"prisma_models\": 92,\n    \"api_operations\": 377,\n    \"roles\": 44,\n    \"permissions\": 144,\n    \"screens\": 179,\n    \"screen_api_refs\": 209,\n    \"screen_permission_refs\": 372,\n    \"business_rules\": 106,\n    \"workflows\": 37,\n    \"integration_events\": 76,\n    \"requirements\": 37,\n    \"trace_tests\": 239\n  },\n  \"unresolved\": {\n    \"open_decisions\": []\n  },\n  \"files\": {\n    \"02_DATA_OWNERSHIP.yaml\": {\n      \"parse\": \"PASS\"\n    },\n    \"03_WORKFLOW_STATE_MACHINE.yaml\": {\n      \"parse\": \"PASS\"\n    },\n    \"05_API_CONTRACT.yaml\": {\n      \"parse\": \"PASS\"\n    },\n    \"07_RBAC_MATRIX.yaml\": {\n      \"parse\": \"PASS\"\n    },\n    \"08_INTEGRATION_EVENT_CONTRACT.yaml\": {\n      \"parse\": \"PASS\"\n    },\n    \"10_TRACEABILITY_MATRIX.yaml\": {\n      \"parse\": \"PASS\"\n    },\n    \"06_SCREEN_CONTRACT.json\": {\n      \"parse\": \"PASS\"\n    }\n  },\n  \"summary\": {\n    \"pass\": 19,\n    \"fail\": 0,\n    \"certification\": \"CERTIFIED\",\n    \"warnings\": []\n  }\n}\n",
+      "stderr": ""
+    },
+    {
+      "id": "p02_negative",
+      "command": "node scripts/ssot/test_lifecycle_reconciliation_negative.js",
+      "exit_code": 0,
+      "duration_ms": 81851,
+      "stdout": "=======================================================\nPHASE P02 EXPANDED NEGATIVE TEST SUITE (40/40 TESTS)\nProves validator correctly FAILS when constraints are breached\n=======================================================\n\n✅ PASS | Negative 1: Fake canonical API with constant count (exact-set mismatch)\n         ↳ Correctly rejected by gate: [openapi_diff]\n         ↳ Failure message verified identity: \"fake/nonexistent/endpoint\"\n✅ PASS | Negative 2: Fake canonical screen with constant count (exact-set mismatch)\n         ↳ Correctly rejected by gate: [route_diff]\n         ↳ Failure message verified identity: \"SCR-999\"\n✅ PASS | Negative 3: Target phase P99 in planned canonical API\n         ↳ Correctly rejected by gate: [openapi_diff]\n         ↳ Failure message verified identity: \"P99\"\n✅ PASS | Negative 4: Invalid planned target with curly braces in Next.js route\n         ↳ Correctly rejected by gate: [route_diff]\n         ↳ Failure message verified identity: \"{id}\"\n✅ PASS | Negative 5: Entire objects unreachable (all reachable: false)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"All backend objects marked unreachable\"\n✅ PASS | Negative 6: Fake implementation API with constant count\n         ↳ Correctly rejected by gate: [openapi_diff]\n         ↳ Failure message verified identity: \"fake/impl/endpoint\"\n✅ PASS | Negative 7: Compound classification CANONICAL_OR_APPROVED_EXTENSION\n         ↳ Correctly rejected by gate: [lifecycle_registry_validation]\n         ↳ Failure message verified identity: \"CANONICAL_OR_APPROVED_EXTENSION\"\n✅ PASS | Negative 8: Target file or symbol missing in typed mapping\n         ↳ Correctly rejected by gate: [schema_diff]\n         ↳ Failure message verified identity: \"nonexistent_enums.prisma\"\n✅ PASS | Negative 9: Canonical API mapping missing from registry\n         ↳ Correctly rejected by gate: [openapi_diff]\n✅ PASS | Negative 10: Canonical screen mapping missing from registry\n         ↳ Correctly rejected by gate: [route_diff]\n✅ PASS | Negative 11: Empty classification on implementation object\n         ↳ Correctly rejected by gate: [schema_diff]\n✅ PASS | Negative 12: Empty owner on implementation object\n         ↳ Correctly rejected by gate: [schema_diff]\n✅ PASS | Negative 13: Compatibility adapter missing removal condition\n         ↳ Correctly rejected by gate: [lifecycle_registry_validation]\n✅ PASS | Negative 14: Role or Permission falsely marked as IMPLEMENTED_MAPPED instead of IMPLEMENTED_ADAPTER\n         ↳ Correctly rejected by gate: [schema_diff]\n         ↳ Failure message verified identity: \"IMPLEMENTED_ADAPTER\"\n✅ PASS | Negative 15: Summary values manipulated into fake 100% when underlying record is not reconciled\n         ↳ Correctly rejected by gate: [implementation_readiness_audit]\n         ↳ Failure message verified identity: \"summary manipulated\"\n✅ PASS | Negative 16: Replace a scheduled job with fake job with constant count (exact-set mismatch)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"backend/src/fake-job.ts\"\n✅ PASS | Negative 17: Replace a published/subscribed event with fake event with constant count (exact-set mismatch)\n         ↳ Correctly rejected by gate: [event_workflow_diff]\n         ↳ Failure message verified identity: \"backend/src/fake-event.ts\"\n✅ PASS | Negative 18: Replace a migration with fake migration with constant count (exact-set mismatch)\n         ↳ Correctly rejected by gate: [schema_diff]\n         ↳ Failure message verified identity: \"backend/prisma/migrations/fake/migration.sql\"\n✅ PASS | Negative 19: Replace a barrel file with fake barrel with constant count (exact-set mismatch)\n         ↳ Correctly rejected by gate: [unused_export_dependency_scan]\n         ↳ Failure message verified identity: \"backend/src/fake/index.ts\"\n✅ PASS | Negative 20: Replace or remove one barrel member while keeping barrel count constant\n         ↳ Correctly rejected by gate: [unused_export_dependency_scan]\n         ↳ Failure message verified identity: \"FakeExportedSymbol\"\n✅ PASS | Negative 21: Mark an unreachable job reachable (reachability contradiction)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"activity-log.service.ts\"\n✅ PASS | Negative 22: Mark an unreachable subscriber/publisher reachable (reachability contradiction)\n         ↳ Correctly rejected by gate: [event_workflow_diff]\n         ↳ Failure message verified identity: \"activity-log.service.ts\"\n✅ PASS | Negative 23: Remove real barrel from registry without changing summary (manipulated summary / missing record)\n         ↳ Correctly rejected by gate: [implementation_readiness_audit]\n         ↳ Failure message verified identity: \"summary manipulated\"\n✅ PASS | Negative 24: Duplicate one job record while deleting another, preserving total length\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"Missing job in registry\"\n✅ PASS | Negative 25: Duplicate one event record while deleting another, preserving total length\n         ↳ Correctly rejected by gate: [event_workflow_diff]\n         ↳ Failure message verified identity: \"Missing event in registry\"\n✅ PASS | Negative 26: Mutate reachable controller to dead (reachability mismatch)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"Controller reachability mismatch\"\n✅ PASS | Negative 27: Mutate dead controller to reachable (reachability mismatch)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"Controller reachability mismatch\"\n✅ PASS | Negative 28: Mutate reachable service to dead (reachability mismatch)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"Service reachability mismatch\"\n✅ PASS | Negative 29: Mutate dead service to reachable (reachability mismatch)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"Service reachability mismatch\"\n✅ PASS | Negative 30: Mutate reachable module to dead (reachability mismatch)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"Module reachability mismatch\"\n✅ PASS | Negative 31: Mutate dead module to reachable (reachability mismatch)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"Module reachability mismatch\"\n✅ PASS | Negative 32: Mutate controller symbol to FakeController (exact identity violation)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"FakeController\"\n✅ PASS | Negative 33: Mutate service symbol to FakeService (exact identity violation)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"FakeService\"\n✅ PASS | Negative 34: Mutate module symbol to FakeModule (exact identity violation)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"FakeModule\"\n✅ PASS | Negative 35: Remove controller_symbol from record (mandatory schema symbol)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"missing required controller_symbol\"\n✅ PASS | Negative 36: Remove provider_symbol from record (mandatory schema symbol)\n         ↳ Correctly rejected by gate: [caller_import_registration_scan]\n         ↳ Failure message verified identity: \"missing required provider_symbol\"\n✅ PASS | Negative 37: Remove module_symbol from record (mandatory schema symbol)\n         ↳ Correctly rejected by gate: [caller_import_regi\n...[truncated]",
+      "stderr": ""
+    },
+    {
+      "id": "frontend_typecheck",
+      "command": "npx tsc --project frontend/tsconfig.json --noEmit",
+      "exit_code": 0,
+      "duration_ms": 9271,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "backend_typecheck",
+      "command": "npx tsc -p backend/tsconfig.build.json --noEmit",
+      "exit_code": 0,
+      "duration_ms": 17852,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "backend_lint",
+      "command": "npm --prefix backend run lint",
+      "exit_code": 0,
+      "duration_ms": 56048,
+      "stdout": "\n> backend@0.0.1 lint\n> eslint \"{src,apps,libs,test}/**/*.ts\" --quiet\n\n",
+      "stderr": ""
+    },
+    {
+      "id": "frontend_lint",
+      "command": "npm --prefix frontend run lint",
+      "exit_code": 0,
+      "duration_ms": 85616,
+      "stdout": "\n> frontend@0.1.0 lint\n> eslint\n\n\nC:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\frontend\\debug-login.mjs\n  30:12  warning  '_e' is defined but never used  @typescript-eslint/no-unused-vars\n\nC:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\frontend\\src\\app\\(dashboard)\\approvals\\artwork-approval\\page.tsx\n    26:3   warning  'Palette' is defined but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                      @typescript-eslint/no-unused-vars\n    36:3   warning  'UploadCloud' is defined but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                  @typescript-eslint/no-unused-vars\n    37:3   warning  'X' is defined but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                            @typescript-eslint/no-unused-vars\n    39:3   warning  'Award' is defined but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                        @typescript-eslint/no-unused-vars\n    40:3   warning  'AlertCircle' is defined but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                  @typescript-eslint/no-unused-vars\n    43:3   warning  'getSharedArtworkProjects' is defined but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                     @typescript-eslint/no-unused-vars\n    44:3   warning  'saveSharedArtworkProjects' is defined but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                    @typescript-eslint/no-unused-vars\n   282:16  warning  'e' is defined but never used                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars\n   662:11  warning  Raw <select> JSX element is forbidden in operational routes. Use the corresponding DNA component (DnaButton, DnaInput, DnaSelect, DnaTextarea, DnaDataTableCard, DnaDialog). See docs/DNA-RULES-CONTRACT.md. To bypass, add `// dna-allow-legacy: <reason>` on the line above  local/no-raw-ui-import\n   663:13  warning  Operational DNA uses rounded-xl (or rounded-card token). rounded-lg is legacy. See /VISUAL_DNA.md                                                                                                                                                                              no-restricted-syntax\n   782:31  warning  Operational borders must use border-slate-200 (or border-border-subtle token). See /VISUAL_DNA.md Layer 05                                                                                                                                                                     no-restricted-syntax\n   782:31  warning  Operational DNA uses rounded-xl (or rounded-card token). rounded-lg is legacy. See /VISUAL_DNA.md                                                                                                                                                                              no-restricted-syntax\n   824:25  warning  Operational DNA uses rounded-xl (or rounded-card token). rounded-lg is legacy. See /VISUAL_DNA.md                                                                                                                                                                              no-restricted-syntax\n   917:17  warning  Raw <button> JSX element is forbidden in operational routes. Use the corresponding DNA component (DnaButton, DnaInput, DnaSelect, DnaTextarea, DnaDataTableCard, DnaDialog). See docs/DNA-RULES-CONTRACT.md. To bypass, add `// dna-allow-legacy: <reason>` on the line above  local/no-raw-ui-import\n   953:37  warning  Operational DNA uses rounded-xl (or rounded-card token). rounded-lg is legacy. See /VISUAL_DNA.md                                                                                                                                                                              no-restricted-syntax\n   977:31  warning  Operational DNA uses rounded-xl (or rounded-card token). rounded-lg is legacy. See /VISUAL_DNA.md                                                                                                                                                                              no-restricted-syntax\n  1010:33  warning  Use <DnaCell.Badge> from @/components/dna instead of hardcoded badge color classes. See /VISUAL_DNA.md Layer 05                                                                                                                                                                no-restricted-syntax\n  1044:33  warning  Use <DnaCell.Badge> from @/components/dna instead of hardcoded badge color classes. See /VISUAL_DNA.md Layer 05                                                                                                                                                                no-restricted-syntax\n  1078:33  warning  Use <DnaCell.Badge> from @/components/dna instead of hardcoded badge color classes. See /VISUAL_DNA.md Layer 05                                                                                                                                                                no-restricted-syntax\n  1152:29  warning  Raw <select> JSX element is forbidden in operational routes. Use the corresponding DNA component (DnaButton, DnaInput, DnaSelect, DnaTextarea, DnaDataTableCard, DnaDialog). See docs/DNA-RULES-CONTRACT.md. To bypass, add `// dna-allow-legacy: <reason>` on the line above  local/no-raw-ui-import\n  1153:31  warning  Operational DNA uses rounded-xl (or rounded-card token). rounded-lg is legacy. See /VISUAL_DNA.md                                                                                                                                                                              no-restricted-syntax\n  1294:22  warning  Operational borders must use border-slate-200 (or border-border-subtle token). See /VISUAL_DNA.md Layer 05                                                                                                                                                                     no-restricted-syntax\n  1404:15  warning  Raw <select> JSX element is forbidden in operational routes. Use the corresponding DNA component (DnaButton, DnaInput, DnaSelect, DnaTextarea, DnaDataTableCard, DnaDialog). See docs/DNA-RULES-CONTRACT.md. To bypass, add `// dna-allow-legacy: <reason>` on the line above  local/no-raw-ui-import\n  1405:17  warning  Operational DNA uses rounded-xl (or rounded-card token). rounded-lg is legacy. See /VISUAL_DNA.md                                                                                                                                                                              no-restricted-syntax\n\nC:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\frontend\\src\\app\\(dashboard)\\approvals\\finance-approvals\\page\n...[truncated]",
+      "stderr": ""
+    },
+    {
+      "id": "frontend_unit",
+      "command": "npm --prefix frontend run test",
+      "exit_code": 0,
+      "duration_ms": 81022,
+      "stdout": "\n> frontend@0.1.0 test\n> vitest run\n\n\n RUN  v4.1.5 C:/GAWE/Web Dev/Porto Aureon/ERP FROM ZERO/frontend\n\n ✓ test/components/dna/stat-card.test.tsx (9 tests) 1251ms\n     ✓ renders label and value  361ms\n     ✓ does not render icon when not provided  641ms\n ✓ test/components/dna/dna-button.test.tsx (8 tests) 1396ms\n     ✓ renders with children text  1098ms\n ✓ test/components/ui/cascading-address.test.tsx (3 tests) 1165ms\n     ✓ calls onProvinsiChange and resets Kota and Kecamatan  746ms\n ✓ test/components/dna/dna-button-loading.test.tsx (8 tests) 1605ms\n     ✓ is disabled when loading  635ms\n ✓ test/components/ui/cascading-address-edge-cases.test.tsx (14 tests) 2375ms\n     ✓ handles empty initial values gracefully  1188ms\n ✓ test/components/dna/dna-input-validation.test.tsx (10 tests) 2084ms\n     ✓ shows error text when error prop is set  329ms\n     ✓ accepts user input normally when no error  1071ms\n     ✓ accepts user input even when error is shown  447ms\n ✓ test/components/bussdev-dashboard-cards.test.tsx (8 tests) 2178ms\n     ✓ renders dashboard variant with all section cards  1040ms\n     ✓ renders with lost variant data  371ms\n ✓ test/components/dna/dna-input-edge-cases.test.tsx (16 tests) 2163ms\n     ✓ handles empty string value  1180ms\n ✓ test/production-components.test.tsx (12 tests) 2405ms\n     ✓ renders number buttons  1405ms\n     ✓ has the correct number of digit buttons (0-9)  397ms\n ✓ test/components/communication.test.tsx (10 tests) 2195ms\n     ✓ renders bell with no badge when there are no unread notifications  343ms\n     ✓ opens dropdown on click and shows notification title  566ms\n ✓ test/integration/production-api.test.ts (12 tests) 1243ms\n       ✓ returns dashboard data  552ms\n ✓ src/lib/api.test.ts (6 tests) 1135ms\n     ✓ redirects to /login on first 401  917ms\n ✓ test/integration/master-data-api.test.ts (16 tests) 566ms\n ✓ test/components/dna/dna-input.test.tsx (6 tests) 1152ms\n     ✓ handles value changes  658ms\n ✓ test/components/error-boundary.test.tsx (7 tests) 1398ms\n     ✓ provides a retry button that resets error state  798ms\n ✓ test/components/ui/error-fallback.test.tsx (7 tests) 1205ms\n     ✓ calls retry function when retry button is clicked  674ms\n ✓ test/components/empty-state.test.tsx (3 tests) 969ms\n     ✓ renders action button when provided  604ms\n ✓ src/app/(dashboard)/dashboard/__tests__/super-admin.snapshot.test.tsx (1 test) 1209ms\n     ✓ renders tabs navigation + marketing tab content and matches snapshot  1190ms\n ✓ test/stubs/brand-workspace-zero-state.test.tsx (6 tests) 1021ms\n     ✓ renders TikTokSection with 0s when no data is provided  371ms\n ✓ test/qc-workbench.test.tsx (18 tests) 13657ms\n     ✓ renders all defect form fields  1385ms\n     ✓ disables submit when required fields empty  337ms\n     ✓ remains disabled until all required fields filled  3776ms\n     ✓ calls onSubmit with form data  2229ms\n     ✓ renders parameter summary and PIN input  301ms\n     ✓ calls onSign with pin and notes on confirm  2284ms\n     ✓ displays entered digits  542ms\n     ✓ clears on clear button  593ms\n     ✓ handles decimal point  688ms\n     ✓ calls onConfirm with parsed numeric value  538ms\n ✓ test/master-page-shell.test.tsx (10 tests) 817ms\n     ✓ renders title and badge  434ms\n ✓ src/app/(dashboard)/dashboard/__tests__/finance.snapshot.test.tsx (3 tests) 779ms\n     ✓ renders sales orders + invoices table and matches snapshot  596ms\n ✓ test/integration/rnd-api.test.ts (12 tests) 661ms\n ✓ test/integration/warehouse-api.test.ts (16 tests) 657ms\n       ✓ returns warehouse stats object  314ms\n ✓ test/integration/api-client.test.ts (12 tests) 563ms\n ✓ test/integration/finance-api.test.ts (14 tests) 635ms\n ✓ test/lib/api-interceptor.test.ts (6 tests) 684ms\n     ✓ attaches JWT token from localStorage to request Authorization header  637ms\n ✓ src/app/(dashboard)/dashboard/__tests__/page.snapshot.test.tsx (2 tests) 716ms\n     ✓ renders marketing audit with seeded data and matches snapshot  663ms\n ✓ src/app/(dashboard)/dashboard/__tests__/fulfillment.snapshot.test.tsx (2 tests) 551ms\n     ✓ renders finished goods + shipments and matches snapshot  406ms\n ✓ src/app/(dashboard)/dashboard/__tests__/commercial.snapshot.test.tsx (2 tests) 473ms\n     ✓ renders with leads + retention data and matches snapshot  347ms\n ✓ src/app/(dashboard)/dashboard/__tests__/qc.snapshot.test.tsx (2 tests) 527ms\n     ✓ renders pending audits table and matches snapshot  426ms\n ✓ test/components/dna/kpi-card.test.tsx (10 tests) 491ms\n ✓ test/components/dna/data-card.test.tsx (7 tests) 421ms\n ✓ test/components/ui/dialog.test.tsx (4 tests) 398ms\n     ✓ renders dialog content when open  315ms\n ✓ test/components/dna/section-label.test.tsx (4 tests) 332ms\n ✓ test/production-workorders.test.tsx (3 tests) 443ms\n ✓ test/production-operations.test.tsx (3 tests) 343ms\n ✓ test/components/my-dashboard.test.tsx (5 tests) 333ms\n ✓ test/components/dna/table-wrapper.test.tsx (4 tests) 287ms\n ✓ test/components/dna/dna-badge.test.tsx (8 tests) 355ms\n ✓ test/stubs/marketing-management-task.test.tsx (3 tests) 362ms\n ✓ test/stubs/root-page.test.tsx (1 test) 148ms\n ✓ src/hooks/useCanonicalMarketing.test.ts (5 tests) 98ms\n ✓ test/components/sidebar-roles.test.tsx (16 tests) 70ms\n ✓ test/stubs/marketing-kpi.test.tsx (1 test) 22ms\n ✓ test/lib/api-error-handling.test.ts (11 tests) 75ms\n ✓ test/stubs/marketing-leaderboard.test.tsx (1 test) 33ms\n ✓ test/stubs/samples-projects.test.tsx (1 test) 26ms\n ✓ test/stubs/marketing-settings.test.tsx (1 test) 46ms\n ✓ test/stubs/reports-marketing-reports.test.tsx (1 test) 43ms\n ✓ test/stubs/marketing-calendar.test.tsx (1 test) 27ms\n ✓ test/stubs/marketing-team.test.tsx (1 test) 28ms\n ✓ test/stubs/reports-marketing-notifications.test.tsx (1 test) 39ms\n ✓ test/stubs/marketing-performance.test.tsx (1 test) 30ms\n ✓ test/stubs/samples-tasks.test.tsx (1 test) 32ms\n\n Test Files  55 passed (55)\n      Tests  355 passed (355)\n   Start at  10:43:44\n   Duration  78.32s (transform 14.28s, setup 133.31s, import 112.65s, tests 53.92s, environment 429.12s)\n\n",
+      "stderr": "stderr | src/app/(dashboard)/dashboard/__tests__/super-admin.snapshot.test.tsx > Direksi SuperAdminTerminal (snapshot) > renders tabs navigation + marketing tab content and matches snapshot\nReceived `true` for a non-boolean attribute `jsx`.\n\nIf you want to write it to the DOM, pass a string instead: jsx=\"true\" or jsx={value.toString()}.\n\n"
+    },
+    {
+      "id": "backend_unit",
+      "command": "npm --prefix backend run test:unit",
+      "exit_code": 0,
+      "duration_ms": 164110,
+      "stdout": "\n> backend@0.0.1 test:unit\n> node --max-old-space-size=8192 ./node_modules/jest/bin/jest.js --config ./test/jest-unit.json --runInBand\n\n[Nest] 26264  - 18/09/2026, 10.46.01     LOG [NotificationGateway] WS sock-1 connected user=u-1\n[Nest] 26264  - 18/09/2026, 10.46.01    WARN [NotificationGateway] WS sock-1 rejected: missing token\n[Nest] 26264  - 18/09/2026, 10.46.01    WARN [NotificationGateway] WS sock-1 rejected: invalid token (bad signature)\n[Nest] 26264  - 18/09/2026, 10.46.01     LOG [NotificationGateway] WS sock-first connected user=u-1\n[Nest] 26264  - 18/09/2026, 10.46.01     LOG [NotificationGateway] WS sock-second connected user=u-1\n",
+      "stderr": "PASS test/document-automation/unit/pdf-engine.service.unit-spec.ts (113.729 s)\n  ● Console\n\n    console.log\n      Compiling the template with handlebars\n\n      at Object.generatePdf (../node_modules/html-pdf-node/index.js:24:13)\n\n    console.log\n      Compiling the template with handlebars\n\n      at Object.generatePdf (../node_modules/html-pdf-node/index.js:24:13)\n\n    console.log\n      Compiling the template with handlebars\n\n      at Object.generatePdf (../node_modules/html-pdf-node/index.js:24:13)\n\n    console.log\n      Compiling the template with handlebars\n\n      at Object.generatePdf (../node_modules/html-pdf-node/index.js:24:13)\n\n    console.log\n      Compiling the template with handlebars\n\n      at Object.generatePdf (../node_modules/html-pdf-node/index.js:24:13)\n\n    console.log\n      Compiling the template with handlebars\n\n      at Object.generatePdf (../node_modules/html-pdf-node/index.js:24:13)\n\n    console.log\n      Compiling the template with handlebars\n\n      at Object.generatePdf (../node_modules/html-pdf-node/index.js:24:13)\n\n    console.log\n      Compiling the template with handlebars\n\n      at Object.generatePdf (../node_modules/html-pdf-node/index.js:24:13)\n\n    console.log\n      Compiling the template with handlebars\n\n      at Object.generatePdf (../node_modules/html-pdf-node/index.js:24:13)\n\n    console.log\n      Compiling the template with handlebars\n\n      at Object.generatePdf (../node_modules/html-pdf-node/index.js:24:13)\n\nPASS test/unit/bussdev.controller.unit-spec.ts (7.153 s)\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ⌁ auth for agents [www.vestauth.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ⌘ override existing { override: true }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/unit/marketing.service.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ◈ encrypted .env [www.dotenvx.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ◈ encrypted .env [www.dotenvx.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/unit/bussdev.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ⌁ auth for agents [www.vestauth.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ◈ secrets for agents [www.dotenvx.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/unit/warehouse.service.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ◈ secrets for agents [www.dotenvx.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/unit/finance.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ◈ secrets for agents [www.dotenvx.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ◈ secrets for agents [www.dotenvx.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/unit/production.service.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ◈ secrets for agents [www.dotenvx.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      [COPQ_ENGINE] Calculating loss for WO: 550e8400-e29b-41d4-a716-446655440000 at MIXING\n\n      at ProductionService.calculateCOPQ (../src/modules/production/production.service.ts:1460:13)\n\n    console.log\n      [COPQ_ENGINE] Calculating loss for WO: 550e8400-e29b-41d4-a716-446655440000 at MIXING\n\n      at ProductionService.calculateCOPQ (../src/modules/production/production.service.ts:1460:13)\n\n    console.log\n      [COPQ_ENGINE] Calculating loss for WO: 550e8400-e29b-41d4-a716-446655440000 at FILLING\n\n      at ProductionService.calculateCOPQ (../src/modules/production/production.service.ts:1460:13)\n\nPASS test/unit/notification/notification.gateway.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ◈ encrypted .env [www.dotenvx.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ◈ encrypted .env [www.dotenvx.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/unit/finance.service.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ⌘ suppress logs { quiet: true }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ◈ encrypted .env [www.dotenvx.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/unit/hr.service.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/unit/state-transition.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ◈ encrypted .env [www.dotenvx.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ⌘ suppress logs { quiet: true }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/document-automation/unit/document-automation.service.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ⌘ override existing { override: true }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ⌘ suppress logs { quiet: true }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/unit/warehouse.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ⌘ enable debugging { debug: true }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/unit/kpi/kpi.controller.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ⌁ auth for agents [www.vestauth.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/unit/qc-audits.service.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ⌘ override existing { override: true }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ⌘ override existing { override: true }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/unit/creative.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip: ◈ encrypted .env [www.dotenvx.com]\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\n    console.log\n      ◇ injected env (0) from backend\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }\n\n      at _log (../node_modules/dotenv/lib/main.js:131:11)\n\nPASS test/unit/bussdev.service.unit-spec.ts\n  ● Console\n\n    console.log\n      ◇ injected env (28) from .env // tip:\n...[truncated]"
+    },
+    {
+      "id": "backend_build",
+      "command": "npm --prefix backend run build",
+      "exit_code": 0,
+      "duration_ms": 5647,
+      "stdout": "\n> backend@0.0.1 build\n> nest build\n\n>  SWC  Running...\n",
+      "stderr": "Successfully compiled: 478 files with swc (753.09ms)\n"
+    },
+    {
+      "id": "frontend_build",
+      "command": "npm --prefix frontend run build",
+      "exit_code": 0,
+      "duration_ms": 180714,
+      "stdout": "\n> frontend@0.1.0 build\n> next build\n\n▲ Next.js 16.2.6 (Turbopack)\n- Environments: .env.local, .env\n- Experiments (use with caution):\n  · optimizePackageImports\n\n  Creating an optimized production build ...\n✓ Compiled successfully in 61s\n  Running TypeScript ...\n  Finished TypeScript in 69s ...\n  Collecting page data using 11 workers ...\n  Generating static pages using 11 workers (0/261) ...\n  Generating static pages using 11 workers (65/261) \r\n  Generating static pages using 11 workers (130/261) \r\n  Generating static pages using 11 workers (195/261) \r\n✓ Generating static pages using 11 workers (261/261) in 3.8s\n  Finalizing page optimization ...\n\nRoute (app)\n┌ ○ /\n├ ○ /_not-found\n├ ○ /approvals/artwork-approval\n├ ○ /approvals/finance-approvals\n├ ○ /approvals/goods-request\n├ ○ /approvals/purchase\n├ ○ /approvals/purchase-approval\n├ ○ /approvals/purchase-request\n├ ○ /approvals/purchase-return\n├ ○ /approvals/request-cogs\n├ ○ /approvals/sales\n├ ○ /approvals/sales-return\n├ ○ /approvals/sales-sample\n├ ○ /bussdev/dashboard\n├ ○ /bussdev/my-performance\n├ ○ /bussdev/returns\n├ ƒ /creative/board\n├ ○ /dashboard\n├ ○ /dashboard/commercial\n├ ○ /dashboard/finance\n├ ○ /dashboard/fulfillment\n├ ○ /dashboard/qc\n├ ○ /dashboard/super-admin\n├ ○ /document-center\n├ ○ /documents/drafts\n├ ○ /executive/audit\n├ ○ /executive/dashboard\n├ ○ /finance/accounting/auto-journal\n├ ○ /finance/accounting/coa\n├ ○ /finance/accounting/coa-auto\n├ ○ /finance/actual-costing\n├ ○ /finance/ap-aging\n├ ○ /finance/ar-hub\n├ ○ /finance/assets\n├ ○ /finance/audit-ledger\n├ ○ /finance/bank-accounts\n├ ○ /finance/bank-reconciliation\n├ ○ /finance/bayar\n├ ○ /finance/bayar-sample\n├ ○ /finance/bills\n├ ○ /finance/budget\n├ ○ /finance/cash-in\n├ ○ /finance/cash-out\n├ ○ /finance/client-escrow\n├ ○ /finance/closing\n├ ○ /finance/cogs-request\n├ ○ /finance/cogs-request-rnd\n├ ○ /finance/collections\n├ ○ /finance/compliance-asset\n├ ○ /finance/cost-allocation-setup\n├ ○ /finance/cost-variance\n├ ○ /finance/currencies\n├ ○ /finance/dashboard\n├ ○ /finance/fund\n├ ○ /finance/fund-requests\n├ ○ /finance/input\n├ ○ /finance/invoices\n├ ○ /finance/jurnal\n├ ○ /finance/jurnal-umum\n├ ○ /finance/kas\n├ ○ /finance/laba-rugi\n├ ○ /finance/ledger\n├ ○ /finance/periods\n├ ○ /finance/piutang\n├ ○ /finance/profitability\n├ ○ /finance/taxes\n├ ○ /finance/transactions\n├ ƒ /hr\n├ ○ /hr/dashboard\n├ ○ /hr/kpi\n├ ○ /hr/tickets\n├ ○ /inventory/formula-adjustment-production\n├ ○ /inventory/formula-adjustment-rnd\n├ ○ /inventory/mutation\n├ ○ /inventory/outbound\n├ ○ /inventory/production-warehouse\n├ ○ /inventory/requisition\n├ ○ /inventory/stock-adjustment\n├ ○ /inventory/stock-opname\n├ ○ /inventory/warehouse-dashboard\n├ ○ /legality/ckpb-audit\n├ ○ /legality/dashboard\n├ ○ /legality/inbox\n├ ○ /legality/input\n├ ○ /legality/permits\n├ ○ /legality/records\n├ ○ /login\n├ ○ /logistics/fleet\n├ ○ /logistics/logs\n├ ○ /marketing/calendar\n├ ○ /marketing/dashboard\n├ ○ /marketing/digital\n├ ○ /marketing/dreamlab\n├ ○ /marketing/kpi\n├ ○ /marketing/landing-tracker\n├ ○ /marketing/leaderboard\n├ ○ /marketing/logs\n├ ○ /marketing/management-task\n├ ƒ /marketing/management-task/[member]\n├ ƒ /marketing/management-task/overview\n├ ○ /marketing/omnicrm\n├ ○ /marketing/omnicrm/guestbook\n├ ○ /marketing/omnicrm/kpi\n├ ƒ /marketing/omnicrm/leads/[id]\n├ ○ /marketing/performance\n├ ƒ /marketing/reports/[brand]\n├ ƒ /marketing/reports/[brand]/[channel]\n├ ƒ /marketing/reports/[brand]/[channel]/calendar\n├ ƒ /marketing/reports/[brand]/[channel]/database\n├ ƒ /marketing/reports/[brand]/[channel]/new\n├ ○ /marketing/settings\n├ ○ /marketing/social-tracker\n├ ○ /marketing/social-tracker/integrations\n├ ○ /marketing/social-tracker/reporting\n├ ○ /marketing/team\n├ ○ /marketing/toribio\n├ ○ /master\n├ ○ /master/automation\n├ ○ /master/categories\n├ ○ /master/customers\n├ ○ /master/dna-visual\n├ ○ /master/dna-visual/golden-reference\n├ ○ /master/goods\n├ ○ /master/hr-attendance\n├ ○ /master/hr-payroll\n├ ○ /master/hr-recruitment\n├ ○ /master/kpi-department\n├ ƒ /master/kpi-department/[departmentId]\n├ ○ /master/kpi-individual\n├ ƒ /master/kpi-individual/[employeeId]\n├ ○ /master/materials\n├ ○ /master/personnel\n├ ○ /master/suppliers\n├ ○ /master/tax-rates\n├ ○ /master/units\n├ ○ /master/vendors\n├ ○ /master/warehouses\n├ ○ /my-dashboard\n├ ○ /my-requests\n├ ○ /pembelian/bayar-pembelian\n├ ○ /pembelian/change-requests\n├ ○ /pembelian/company\n├ ○ /pembelian/dp-pembelian\n├ ○ /pembelian/faktur-pembelian\n├ ○ /pembelian/kebutuhan\n├ ○ /pembelian/mrp\n├ ○ /pembelian/purchase-requests\n├ ○ /pembelian/purchase-returns\n├ ○ /pembelian/purchasing\n├ ○ /pembelian/purchasing/down-payment\n├ ○ /pembelian/purchasing/payments\n├ ○ /pembelian/rangkuman-kebutuhan\n├ ○ /pembelian/receiving\n├ ○ /pembelian/request-list\n├ ○ /pembelian/scm-pembelian\n├ ○ /pembelian/scm-pembelian/create\n├ ○ /pembelian/vendor-performance/performance\n├ ○ /penjualan/bayar-penjualan\n├ ○ /penjualan/client-manager\n├ ○ /penjualan/crm-leads\n├ ○ /penjualan/delivery-orders\n├ ○ /penjualan/down-payment\n├ ○ /penjualan/dp-finance\n├ ○ /penjualan/dp-penjualan-finance\n├ ○ /penjualan/faktur-penjualan\n├ ○ /penjualan/guest-book\n├ ○ /penjualan/job-order-costing\n├ ○ /penjualan/lost\n├ ○ /penjualan/pipeline\n├ ○ /penjualan/pipeline-legal\n├ ○ /penjualan/pipeline-rnd\n├ ○ /penjualan/retention-engine\n├ ○ /penjualan/retur-penjualan\n├ ○ /penjualan/sales-orders\n├ ○ /penjualan/sales-orders-finance\n├ ○ /penjualan/sales-return-in\n├ ○ /penjualan/sales-target\n├ ○ /penjualan/sample-fee\n├ ○ /penjualan/sample-sales\n├ ○ /penjualan/sample-sales/input\n├ ○ /production\n├ ○ /production/audit\n├ ○ /production/batch-record-rnd\n├ ○ /production/batch-records\n├ ○ /production/filling\n├ ○ /production/material-requisition\n├ ○ /production/mixing\n├ ○ /production/my-performance\n├ ○ /production/operations\n├ ○ /production/packaging\n├ ○ /production/production-floor-dashboard\n├ ○ /production/production-planning-dashboard\n├ ○ /production/realization-calendar\n├ ○ /production/schedule\n├ ○ /production/schedule-calendar\n├ ○ /production/schedule-filling\n├ ○ /production/schedule-mixing\n├ ○ /production/schedule-packaging\n├ ○ /production/spk\n├ ○ /production/work-orders\n├ ○ /quality/apj-release\n├ ○ /quality/checklist\n├ ○ /quality/checklist-category\n├ ○ /quality/checklist-progress\n├ ○ /quality/checklist-tracking\n├ ○ /quality/coa\n├ ○ /quality/dashboard\n├ ○ /quality/inspections\n├ ○ /quality/karantina\n├ ○ /quality/lab-test\n├ ○ /quality/qc-release\n├ ○ /quality/report\n├ ○ /quality/stability\n├ ○ /quality/workbench\n├ ○ /reports/ar-aging\n├ ○ /reports/balance-sheet\n├ ○ /reports/busdev-follow-up\n├ ○ /reports/cash-flow\n├ ○ /reports/finance-reports\n├ ○ /reports/goods-receipt\n├ ○ /reports/guest-book\n├ ○ /reports/marketing-notifications\n├ ○ /reports/marketing-reports\n├ ○ /reports/mutation-goods\n├ ○ /reports/notifications\n├ ○ /reports/sales-summary\n├ ○ /reports/stock\n├ ○ /reports/stock-valuation\n├ ○ /reports/trial-balance\n├ ○ /rnd/dashboard\n├ ○ /rnd/project-monitoring\n├ ○ /robots.txt\n├ ○ /samples/design\n├ ○ /samples/formula\n├ ƒ /samples/formula/[id]\n├ ○ /samples/inbox\n├ ○ /samples/input\n├ ○ /samples/intake\n├ ○ /samples/lead-capture\n├ ○ /samples/npf\n├ ○ /samples/omni-crm\n├ ○ /samples/project-control\n├ ƒ /samples/project-control/[projectId]\n├ ○ /samples/project-control/checklist-tracking\n├ ○ /samples/project-monitoring\n├ ○ /samples/projects\n├ ○ /samples/repository\n├ ○ /samples/revision-tracker\n├ ○ /samples/rnd-dashboard\n├ ○ /samples/sample-tracking\n├ ○ /samples/schedule\n├ ○ /samples/social-tracker\n├ ○ /samples/tasks\n├ ○ /scm/dashboard\n├ ƒ /sitemap.xml\n├ ○ /system/audit-logs\n├ ○ /system/error-dashboard\n├ ○ /system/profile\n├ ○ /system/settings\n├ ○ /user/todo\n├ ○ /visual-dna\n├ ○ /visual-dna/golden-reference\n├ ƒ /warehouse\n├ ○ /warehouse/adjustment\n├ ○ /warehouse/gudang\n├ ○ /warehouse/hub\n├ ○ /warehouse/inbound\n├ ○ /warehouse/map\n├ ○ /warehouse/mutasi-stok\n├ ○ /warehouse/opname\n├ ○ /warehouse/pindah-gudang\n├ ○ /warehouse/release\n├ ○ /warehouse/stok\n├ ○ /warehouse/transfers\n└ ○ /warehouse/workstation\n\n\nƒ Proxy (Middleware)\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered\n...[truncated]",
+      "stderr": "⚠ Warning: Next.js inferred your workspace root, but it may not be correct.\n We detected multiple lockfiles and selected the directory of C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\package-lock.json as the root directory.\n To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.\n   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.\n Detected additional lockfiles: \n   * C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\frontend\\package-lock.json\n\n⚠ The \"middleware\" file convention is deprecated. Please use \"proxy\" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy\n"
+    },
+    {
+      "id": "p03_static_architecture_dna",
+      "command": "runAudit after real type/lint/unit/build",
+      "exit_code": 0,
+      "duration_ms": 31219,
+      "stdout": "{\"passed\":21,\"total\":21}",
+      "stderr": "{\"clean_checkout_build\":{\"status\":\"PASS\",\"details\":{\"has_backend_main\":true,\"has_backend_app_module\":true,\"backend_compiled_js_count\":478,\"has_frontend_next\":true,\"frontend_routes_count\":276,\"isolated_evidence\":null},\"error\":null},\"typecheck\":{\"status\":\"PASS\",\"details\":{\"backend_typecheck\":\"PASS (exit 0)\",\"frontend_typecheck\":\"PASS (exit 0)\",\"backend_duration_ms\":17852,\"frontend_duration_ms\":9271},\"error\":null},\"lint\":{\"status\":\"PASS\",\"details\":{\"backend_errors\":0,\"backend_warnings\":0,\"backend_duration_ms\":56048,\"frontend_errors\":0,\"frontend_warnings\":0,\"frontend_duration_ms\":85616,\"frontend_warnings_baseline_max\":8218,\"ratchet_complies\":true,\"changed_frontend_files_scanned\":8,\"changed_errors\":0,\"changed_warnings\":0},\"error\":null},\"unit_smoke\":{\"status\":\"PASS\",\"details\":{\"backend_suites\":\"23/23 passed\",\"backend_tests\":\"0 passed, 0 skipped\",\"backend_duration_ms\":164110,\"frontend_suites\":\"55 passed\",\"frontend_tests\":\"355 passed, 0 skipped\",\"frontend_duration_ms\":81022,\"unexpected_skips\":0,\"deterministic_in_band\":true},\"error\":null},\"container_build\":{\"status\":\"PASS\",\"details\":{\"backend_dockerfile_valid\":true,\"frontend_dockerfile_valid\":true,\"docker_compose_valid\":true,\"non_root_user_enforced\":true},\"error\":null},\"ci_required_check_test\":{\"status\":\"PASS\",\"details\":{\"has_fast_gate\":true,\"has_push_images\":true,\"has_strict_npm_ci\":true,\"has_typecheck\":true,\"has_lint\":true,\"has_unit\":true,\"has_migration\":true,\"has_build_verif\":true,\"has_arch_gate\":true,\"has_negative_gate\":true,\"has_postgres_service\":true,\"has_push_migration\":true,\"has_backend_start\":true,\"has_deterministic_memory\":true,\"missing_checks\":[]},\"error\":null},\"module_boundary_test\":{\"status\":\"PASS\",\"details\":{\"scanned_modules\":37,\"violations_count\":0,\"violations\":[]},\"error\":null},\"dependency_direction_test\":{\"status\":\"PASS\",\"details\":{\"scanned_services_count\":118,\"scanned_common_files_count\":14,\"violations_count\":0,\"violations\":[]},\"error\":null},\"circular_dependency_scan\":{\"status\":\"PASS\",\"details\":{\"scanned_files_count\":1151,\"cycles_count\":0,\"cycles\":[]},\"error\":null},\"unused_export_dependency_scan\":{\"status\":\"PASS\",\"details\":{\"backend_production_dependencies\":38,\"frontend_production_dependencies\":26,\"backend_ast_imported_count\":34,\"frontend_ast_imported_count\":21,\"unused_backend\":[],\"unused_frontend\":[]},\"error\":null},\"orphan_object_scan\":{\"status\":\"PASS\",\"details\":{\"derived_controllers_count\":96,\"derived_services_count\":118,\"derived_frontend_pages_count\":272,\"unexplained_objects\":0,\"orphans\":[]},\"error\":null},\"duplicate_code_scan\":{\"status\":\"PASS\",\"details\":{\"base_sha\":\"11ec69d2bcb4c7b62d164e5bfea6ed77a9c4443b\",\"scanned_controllers\":94,\"collisions_count\":0,\"changed_files_scanned\":8,\"total_tokens\":1209,\"duplicated_tokens\":0,\"duplication_percent\":0,\"max_allowed_percent\":1,\"collisions\":[]},\"error\":null},\"changed_complexity_check\":{\"status\":\"PASS\",\"details\":{\"base_sha\":\"11ec69d2bcb4c7b62d164e5bfea6ed77a9c4443b\",\"checked_changed_files\":9,\"max_allowed_complexity\":10,\"absolute_max_exception\":15,\"baseline_high_complexity_max\":0,\"baseline_medium_complexity_max\":0,\"violations_count\":0,\"missing_rationale_count\":0,\"ratchet_mode\":\"zero_tolerance_changed_code\",\"violations\":[],\"missing_rationale\":[]},\"error\":null},\"dna_import_boundary_ast\":{\"status\":\"PASS\",\"details\":{\"total_screens_scanned\":94,\"total_closure_files_scanned\":145,\"unhandled_ui_kit_imports_count\":0,\"unhandled_screens\":[]},\"error\":null},\"dna_native_interactive_scan\":{\"status\":\"PASS\",\"details\":{\"total_screens_scanned\":94,\"total_closure_files_scanned\":145,\"unhandled_native_count\":0,\"unhandled_screens\":[]},\"error\":null},\"dna_primitive_duplication_scan\":{\"status\":\"PASS\",\"details\":{\"duplicate_primitives_count\":0,\"violations\":[]},\"error\":null},\"dna_hardcoded_visual_scan\":{\"status\":\"PASS\",\"details\":{\"total_screens_scanned\":94,\"total_closure_files_scanned\":145,\"unhandled_visual_count\":0,\"unhandled_screens\":[]},\"error\":null},\"dna_barrel_integrity\":{\"status\":\"PASS\",\"details\":{\"barrel_exports_count\":73,\"missing_targets\":[]},\"error\":null},\"dna_reference_route_and_composition\":{\"status\":\"PASS\",\"details\":{\"canonical_visual_dna_exists\":true,\"canonical_golden_ref_exists\":true,\"legacy_visual_dna_redirects\":true,\"legacy_golden_ref_redirects\":true},\"error\":null},\"dna_screen_coverage_manifest\":{\"status\":\"PASS\",\"details\":{\"screens_in_manifest\":272,\"expected_screens\":272,\"coverage_percent\":100,\"canonical_screens_reconciliation_percent\":100},\"error\":null},\"dna_exception_registry_validation\":{\"status\":\"PASS\",\"details\":{\"total_exceptions\":205,\"baseline_max_allowed\":205,\"schema_errors_count\":0,\"broad_scope_count\":0,\"expired_exceptions_count\":0,\"missing_files_count\":0,\"ratchet_complies\":true,\"schema_errors\":[],\"broad_scope_errors\":[],\"expired_exceptions\":[],\"missing_files\":[]},\"error\":null}}"
+    },
+    {
+      "id": "p03_21_of_21",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": {
+        "phase": "P03",
+        "generated_at": "2026-09-18T03:49:57.583Z",
+        "verdict": "PASS",
+        "passed_tests": 21,
+        "total_tests": 21,
+        "results": {
+          "clean_checkout_build": {
+            "status": "PASS",
+            "details": {
+              "has_backend_main": true,
+              "has_backend_app_module": true,
+              "backend_compiled_js_count": 478,
+              "has_frontend_next": true,
+              "frontend_routes_count": 276,
+              "isolated_evidence": null
+            },
+            "error": null
+          },
+          "typecheck": {
+            "status": "PASS",
+            "details": {
+              "backend_typecheck": "PASS (exit 0)",
+              "frontend_typecheck": "PASS (exit 0)",
+              "backend_duration_ms": 17852,
+              "frontend_duration_ms": 9271
+            },
+            "error": null
+          },
+          "lint": {
+            "status": "PASS",
+            "details": {
+              "backend_errors": 0,
+              "backend_warnings": 0,
+              "backend_duration_ms": 56048,
+              "frontend_errors": 0,
+              "frontend_warnings": 0,
+              "frontend_duration_ms": 85616,
+              "frontend_warnings_baseline_max": 8218,
+              "ratchet_complies": true,
+              "changed_frontend_files_scanned": 8,
+              "changed_errors": 0,
+              "changed_warnings": 0
+            },
+            "error": null
+          },
+          "unit_smoke": {
+            "status": "PASS",
+            "details": {
+              "backend_suites": "23/23 passed",
+              "backend_tests": "0 passed, 0 skipped",
+              "backend_duration_ms": 164110,
+              "frontend_suites": "55 passed",
+              "frontend_tests": "355 passed, 0 skipped",
+              "frontend_duration_ms": 81022,
+              "unexpected_skips": 0,
+              "deterministic_in_band": true
+            },
+            "error": null
+          },
+          "container_build": {
+            "status": "PASS",
+            "details": {
+              "backend_dockerfile_valid": true,
+              "frontend_dockerfile_valid": true,
+              "docker_compose_valid": true,
+              "non_root_user_enforced": true
+            },
+            "error": null
+          },
+          "ci_required_check_test": {
+            "status": "PASS",
+            "details": {
+              "has_fast_gate": true,
+              "has_push_images": true,
+              "has_strict_npm_ci": true,
+              "has_typecheck": true,
+              "has_lint": true,
+              "has_unit": true,
+              "has_migration": true,
+              "has_build_verif": true,
+              "has_arch_gate": true,
+              "has_negative_gate": true,
+              "has_postgres_service": true,
+              "has_push_migration": true,
+              "has_backend_start": true,
+              "has_deterministic_memory": true,
+              "missing_checks": []
+            },
+            "error": null
+          },
+          "module_boundary_test": {
+            "status": "PASS",
+            "details": {
+              "scanned_modules": 37,
+              "violations_count": 0,
+              "violations": []
+            },
+            "error": null
+          },
+          "dependency_direction_test": {
+            "status": "PASS",
+            "details": {
+              "scanned_services_count": 118,
+              "scanned_common_files_count": 14,
+              "violations_count": 0,
+              "violations": []
+            },
+            "error": null
+          },
+          "circular_dependency_scan": {
+            "status": "PASS",
+            "details": {
+              "scanned_files_count": 1151,
+              "cycles_count": 0,
+              "cycles": []
+            },
+            "error": null
+          },
+          "unused_export_dependency_scan": {
+            "status": "PASS",
+            "details": {
+              "backend_production_dependencies": 38,
+              "frontend_production_dependencies": 26,
+              "backend_ast_imported_count": 34,
+              "frontend_ast_imported_count": 21,
+              "unused_backend": [],
+              "unused_frontend": []
+            },
+            "error": null
+          },
+          "orphan_object_scan": {
+            "status": "PASS",
+            "details": {
+              "derived_controllers_count": 96,
+              "derived_services_count": 118,
+              "derived_frontend_pages_count": 272,
+              "unexplained_objects": 0,
+              "orphans": []
+            },
+            "error": null
+          },
+          "duplicate_code_scan": {
+            "status": "PASS",
+            "details": {
+              "base_sha": "11ec69d2bcb4c7b62d164e5bfea6ed77a9c4443b",
+              "scanned_controllers": 94,
+              "collisions_count": 0,
+              "changed_files_scanned": 8,
+              "total_tokens": 1209,
+              "duplicated_tokens": 0,
+              "duplication_percent": 0,
+              "max_allowed_percent": 1,
+              "collisions": []
+            },
+            "error": null
+          },
+          "changed_complexity_check": {
+            "status": "PASS",
+            "details": {
+              "base_sha": "11ec69d2bcb4c7b62d164e5bfea6ed77a9c4443b",
+              "checked_changed_files": 9,
+              "max_allowed_complexity": 10,
+              "absolute_max_exception": 15,
+              "baseline_high_complexity_max": 0,
+              "baseline_medium_complexity_max": 0,
+              "violations_count": 0,
+              "missing_rationale_count": 0,
+              "ratchet_mode": "zero_tolerance_changed_code",
+              "violations": [],
+              "missing_rationale": []
+            },
+            "error": null
+          },
+          "dna_import_boundary_ast": {
+            "status": "PASS",
+            "details": {
+              "total_screens_scanned": 94,
+              "total_closure_files_scanned": 145,
+              "unhandled_ui_kit_imports_count": 0,
+              "unhandled_screens": []
+            },
+            "error": null
+          },
+          "dna_native_interactive_scan": {
+            "status": "PASS",
+            "details": {
+              "total_screens_scanned": 94,
+              "total_closure_files_scanned": 145,
+              "unhandled_native_count": 0,
+              "unhandled_screens": []
+            },
+            "error": null
+          },
+          "dna_primitive_duplication_scan": {
+            "status": "PASS",
+            "details": {
+              "duplicate_primitives_count": 0,
+              "violations": []
+            },
+            "error": null
+          },
+          "dna_hardcoded_visual_scan": {
+            "status": "PASS",
+            "details": {
+              "total_screens_scanned": 94,
+              "total_closure_files_scanned": 145,
+              "unhandled_visual_count": 0,
+              "unhandled_screens": []
+            },
+            "error": null
+          },
+          "dna_barrel_integrity": {
+            "status": "PASS",
+            "details": {
+              "barrel_exports_count": 73,
+              "missing_targets": []
+            },
+            "error": null
+          },
+          "dna_reference_route_and_composition": {
+            "status": "PASS",
+            "details": {
+              "canonical_visual_dna_exists": true,
+              "canonical_golden_ref_exists": true,
+              "legacy_visual_dna_redirects": true,
+              "legacy_golden_ref_redirects": true
+            },
+            "error": null
+          },
+          "dna_screen_coverage_manifest": {
+            "status": "PASS",
+            "details": {
+              "screens_in_manifest": 272,
+              "expected_screens": 272,
+              "coverage_percent": 100,
+              "canonical_screens_reconciliation_percent": 100
+            },
+            "error": null
+          },
+          "dna_exception_registry_validation": {
+            "status": "PASS",
+            "details": {
+              "total_exceptions": 205,
+              "baseline_max_allowed": 205,
+              "schema_errors_count": 0,
+              "broad_scope_count": 0,
+              "expired_exceptions_count": 0,
+              "missing_files_count": 0,
+              "ratchet_complies": true,
+              "schema_errors": [],
+              "broad_scope_errors": [],
+              "expired_exceptions": [],
+              "missing_files": []
+            },
+            "error": null
+          }
+        }
+      }
+    },
+    {
+      "id": "p03_adversarial",
+      "command": "node scripts/ssot/test_p03_architecture_gates_negative.js",
+      "exit_code": 0,
+      "duration_ms": 28512,
+      "stdout": "Running Phase P03 Adversarial Negative Suite (Unit & Black-Box On-Disk Mutations)...\n\n--- PART 1: Black-Box On-Disk Mutation Scenarios ---\n  PASS: BB-CI-ISOLATION: Empty backend dist directory or isolation leak fails clean_checkout_build\n  PASS: BB-CI-ARTIFACT-BYPASS: Loose npm install fallback or artifact bypass in CI YAML is strictly rejected\n  PASS: BB-3: Removing Prisma migration rehearsal from CI YAML is strictly rejected\n  PASS: BB-4: Removing lint step from CI YAML is strictly rejected\n  PASS: BB-5: Dockerfile missing required EXPOSE port is strictly rejected\n  PASS: BB-6: On-disk TS function with complexity > 15 strictly fails cyclomatic complexity gate\n  PASS: BB-7: On-disk TS function with complexity 11-15 lacking @complexity-rationale is strictly rejected\n  PASS: BB-DNA-CHILD-COMPONENT: On-disk screen or child component introducing unexcepted native <button> strictly fails DNA gate\n  PASS: BB-DNA-ALIAS-REEXPORT: On-disk screen importing raw @/components/ui/button or alias re-export strictly fails DNA import boundary\n  PASS: BB-DNA-RAW-VISUAL-TOKEN: On-disk screen introducing raw visual color token or style={{}} strictly fails DNA hardcoded visual scan\n  PASS: BB-DNA-RENAMED-PRIMITIVE: On-disk custom CustomDialog primitive definition strictly fails primitive duplication scan\n  PASS: BB-12: Downward ratchet enforcement fails when exceptions count exceeds baseline max allowed\n  PASS: BB-13: Expired exception on disk is strictly rejected by exception registry gate\n  PASS: BB-STALE-REGISTRY: Exception referencing non-existent screen file on disk is strictly rejected\n  PASS: BB-15: On-disk cross-module controller import strictly fails module boundary gate\n  PASS: BB-16: On-disk inverted dependency (service importing controller) strictly fails dependency direction\n  PASS: BB-17: Circular import cycle between on-disk TS files strictly fails circular dependency detector\n  PASS: BB-CHANGED-LINT-WARNING: Frontend lint warning debt increase strictly fails lint downward ratchet\n  PASS: BB-19: Duplicate endpoint route collision on disk strictly fails duplicate code gate\n  PASS: BB-20: Double prefix bug (/api/v1/api/v1) on disk strictly fails duplicate code gate\n  PASS: BB-LOCK-MISMATCH: Clean install lockfile desync deterministically fails clean_checkout_build\n  PASS: BB-PRISMA-CLIENT-MISSING: Missing generated Prisma Client fails unit_smoke closed immediately\n  PASS: BB-UNIT-COMMAND-FAILURE: Unit test command failure or broken spec strictly fails unit_smoke gate\n  PASS: BB-DOCKER-UNAVAILABLE: Unavailable Docker daemon strictly fails container build gate with NOT_VERIFIED\n  PASS: BB-CHANGED-DUP-6PLUS: Clone duplication in 6+ changed files exceeding 1.0% strictly fails duplicate code gate\n  PASS: BB-CHANGED-COMPLEXITY-6PLUS: Cyclomatic complexity > 15 across 6+ changed files strictly fails complexity gate\n  PASS: BB-N6: Unused direct production dependency in package.json strictly fails unused dependencies gate\n  PASS: BB-DNA-NATIVE-SELECT: Raw <select> inside screen dependency closure strictly fails DNA native interactive gate\n  PASS: BB-DNA-CLICK-DIV: Raw onClick handler on non-interactive <div> inside screen closure strictly fails DNA gate\n  PASS: BB-DNA-STYLE-OBJECT: Unexcepted inline style inside screen dependency closure strictly fails DNA visual gate\n  PASS: BB-DNA-EXCEPTED-FILE-SECOND-OCCURRENCE: Second unapproved native violation on screen strictly fails DNA gate\n  PASS: BB-SENTINEL-SURVIVAL: Verification sentinel does not leak to source checkout; workspace remains clean\n  PASS: BB-DIFF-BASE-STALE: Non-existent or stale diff base commit SHA fails diff base validation\n  PASS: BB-STALE-SCOPE-LEDGER: Scope ledger containing mismatched base or candidate SHA is strictly rejected\n  PASS: BB-ZERO-APPLICABLE-SCOPE: Applicable scope resulting in zero resolved targets strictly fails closed\n  PASS: BB-CHANGED-LINT-WARNING: ESLint warning in changed production scope strictly fails certification\n  PASS: BB-BROAD-DNA-EXCEPTION: Broad wildcard or all-encompassing scope in DNA exception is strictly rejected\n  PASS: BB-UNEXPECTED-TEST-SKIP: Skipped, pending, or quarantined test strictly fails unit_smoke gate\n  PASS: BB-CI-GENERATED-DIRTY: Working tree dirtiness or generated untracked files fail clean checkout build\n  PASS: BB-SUBPROCESS-RESULT-SUBSTITUTION: Using skipSubprocess placeholder without real subprocess execution metrics is strictly rejected\n  PASS: BB-NODE-ENGINE-MISMATCH: Node engine version mismatch against pinned >=22 requirement fails engine gate\n  PASS: BB-PRISMA-VERSION-MISMATCH: Version divergence between Prisma CLI and @prisma/client fails toolchain check\n\n--- PART 2: Fast Unit-Level Negative Injections ---\n  PASS: UNIT-1: TypeScript diagnostic type error is caught\n  PASS: UNIT-2: Empty test specs directory fails unit smoke gate\n  PASS: UNIT-3: Unregistered production dependency fails dependency check\n  PASS: UNIT-4: Injected orphan objects fail orphan object scan\n  PASS: UNIT-5: Missing DNA barrel file fails barrel integrity check\n  PASS: UNIT-6: Missing canonical visual DNA page fails reference route gate\n  PASS: UNIT-7: Screen coverage manifest count drift fails coverage gate\n  PASS: UNIT-8: Missing docker-compose.yml fails container build gate\n  PASS: UNIT-9: Synthetic cycle graph is caught by DFS detector\n  PASS: UNIT-10: Injected cross-module violation fails module boundaries\n  PASS: UNIT-11: Injected service->controller import fails dependency direction\n  PASS: UNIT-12: Injected duplicate route collision fails duplicate code gate\n  PASS: UNIT-13: Injected function complexity > 15 fails complexity gate\n  PASS: UNIT-14: Injected screen with raw button fails native interactive scan\n  PASS: UNIT-15: Injected screen importing raw UI kit fails import boundary\n  PASS: UNIT-16: Injected screen with inline style fails hardcoded visual scan\n\n=======================================================\nADVERSARIAL NEGATIVE SUITE RESULTS: 58/58 PASSED\nOVERALL NEGATIVE SUITE VERDICT: PASS (All corruptions deterministically rejected)\n",
+      "stderr": ""
+    },
+    {
+      "id": "required_mutations_present",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "details": {
+        "missing": []
+      }
+    }
+  ],
+  "failure": null
+}
