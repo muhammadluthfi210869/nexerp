@@ -3,11 +3,1897 @@
   "level": "PHASE_GATE",
   "contract_version": "1.0.0",
   "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-  "candidate_sha": "8d99b909dda1c8e8415c79ee1b8c1a49cc2a285c",
-  "started_at": "2026-09-18T12:38:35.440Z",
-  "completed_at": "2026-09-18T12:38:35.753Z",
-  "verdict": "FAIL",
-  "token": null,
-  "result": null,
-  "failure": "Error: Dirty files outside P04 evidence allowlist: [{\"status\":\"M \",\"file\":\"ocs/legacy-erp/verification/_p04_test_results.json\"}]\n    at assert (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p04_phase.js:32:25)\n    at main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p04_phase.js:113:5)\n    at Object.<anonymous> (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p04_phase.js:146:1)\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)"
+  "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+  "started_at": "2026-09-18T12:52:12.275Z",
+  "completed_at": "2026-09-18T12:58:14.114Z",
+  "verdict": "PHASE_PASS",
+  "token": "P04:5195fa2aaa838ebb7faea2a3b207f27689b7ed4a:PHASE_PASS",
+  "result": {
+    "phase": "P04",
+    "level": "PHASE_GATE",
+    "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+    "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+    "synthetic": false,
+    "skipped_count": 0,
+    "checks": [
+      {
+        "id": "predecessor_and_target_safety",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 1123,
+        "timeout_state": "NONE",
+        "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+        "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "database": "source-read-only",
+        "database_purpose": "source_integrity_baseline",
+        "host_class": "loopback",
+        "postgres_major": 16,
+        "command": "node backend/node_modules/prisma/build/index.js --version",
+        "commands": [
+          {
+            "command": "node backend/node_modules/prisma/build/index.js --version",
+            "exit_code": 0
+          },
+          {
+            "command": "psql SELECT version()",
+            "exit_code": 0
+          },
+          {
+            "command": "psql SELECT rolcreatedb FROM pg_roles",
+            "exit_code": 0
+          }
+        ],
+        "exit_code": 0,
+        "node_version": "v22.21.0",
+        "prisma_version": "7.10.0",
+        "postgres_version": 16,
+        "source_database_fingerprint": "fb0a5da9e048eb82a7011b23a588cdeed095d1641b003d8d3145a51a263a9a62",
+        "source_database_tables": 194
+      },
+      {
+        "id": "contract_consistency",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 3,
+        "timeout_state": "NONE",
+        "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+        "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "database": "source-read-only",
+        "database_purpose": "contract_audit",
+        "host_class": "loopback",
+        "postgres_major": 16,
+        "command": "inspect docs/legacy-erp/contracts/09_NON_FUNCTIONAL_CONTRACT.md",
+        "commands": [
+          {
+            "command": "inspect docs/legacy-erp/contracts/09_NON_FUNCTIONAL_CONTRACT.md",
+            "exit_code": 0
+          }
+        ],
+        "exit_code": 0,
+        "schema_authority": "backend/prisma/migrations/",
+        "policy": "prisma migrate deploy only",
+        "expand_contract_window": "N-1 / N rolling window verified"
+      },
+      {
+        "id": "prisma_validate_generate",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 13708,
+        "timeout_state": "NONE",
+        "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+        "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "database": "source-read-only",
+        "database_purpose": "schema_validation",
+        "host_class": "loopback",
+        "postgres_major": 16,
+        "command": "prisma validate && prisma generate",
+        "commands": [
+          {
+            "command": "node \"C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\prisma\\build\\index.js\" validate",
+            "exit_code": 0
+          },
+          {
+            "command": "node \"C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\prisma\\build\\index.js\" generate",
+            "exit_code": 0
+          }
+        ],
+        "exit_code": 0,
+        "canonical_models_total": 92,
+        "canonical_models_reconciled": 92,
+        "implementation_models_total": 194
+      },
+      {
+        "id": "migration_chain_integrity",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 6208,
+        "timeout_state": "NONE",
+        "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+        "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "database": "source-read-only",
+        "database_purpose": "migration_chain_audit",
+        "host_class": "loopback",
+        "postgres_major": 16,
+        "command": "git ls-tree -r cf8b725d9fec4c808937c50217a3bc45050d271a backend/prisma/migrations",
+        "commands": [
+          {
+            "command": "git ls-tree -r cf8b725d9fec4c808937c50217a3bc45050d271a backend/prisma/migrations",
+            "exit_code": 0
+          }
+        ],
+        "exit_code": 0,
+        "total_migrations": 43,
+        "edited_prebase_migrations": 0,
+        "candidate_migrations": [
+          "20260918120000_p04_deduplicate_slug_indexes"
+        ],
+        "candidate_migrations_scanned": 1,
+        "affected_tables": [
+          "articles",
+          "website_products"
+        ]
+      },
+      {
+        "id": "empty_db_migrate",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 21840,
+        "timeout_state": "NONE",
+        "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+        "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "database": "nex_p04_5195fa2a_23524_empty",
+        "database_purpose": "empty_db_migrate_target",
+        "host_class": "loopback",
+        "postgres_major": 16,
+        "command": "prisma migrate deploy && prisma migrate status && prisma migrate diff",
+        "commands": [
+          {
+            "command": "node \"C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\prisma\\build\\index.js\" migrate deploy",
+            "exit_code": 0
+          },
+          {
+            "command": "node \"C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\prisma\\build\\index.js\" migrate status",
+            "exit_code": 0
+          },
+          {
+            "command": "node \"C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\prisma\\build\\index.js\" migrate diff --from-schema prisma/schema --to-config-datasource --exit-code",
+            "exit_code": 0
+          }
+        ],
+        "exit_code": 0,
+        "runtime_truth": {
+          "tables": 195,
+          "columns": 2214,
+          "constraints": 488,
+          "indexes": 422,
+          "ledger": 43
+        },
+        "schema_drift": 0,
+        "empty_db_name": "nex_p04_5195fa2a_23524_empty",
+        "migration_checksums": [
+          {
+            "name": "20260430122705_phase1",
+            "checksum": "1b88c9445da037d4ec7ed09d86b3c0a2ce10f2843e17621f1b13eb21c6461dbf"
+          },
+          {
+            "name": "20260430123412_phase2_hpp_integrity",
+            "checksum": "63aa89c55df2cfee0aa7fb4fc2b0c4498749aa65394c6d22fb250ebe9c103e2d"
+          },
+          {
+            "name": "20260720_add_mkt_proto_tables",
+            "checksum": "397dee6cf6521b1c33944598bc7e679b3ca894621b1c90f00d9a1e5fb644c0ee"
+          },
+          {
+            "name": "20260721_add_rnd_tasks_and_projects",
+            "checksum": "0b8a9dba772c75aac0f3d24b29737ee05b2034500fbcba3873b0ff9ba995b86c"
+          },
+          {
+            "name": "20260822080000_r4_fix_legacy_leadstatus_unused_enum",
+            "checksum": "ddd43d86ae70e860e22497d1abe381e18714a11c614bbdcc267a03fc153b9829"
+          },
+          {
+            "name": "20260822081953_lead_attribution_journey",
+            "checksum": "fce05a0ed968ad1ec11e2cb654172bb335aca57a25cc4df1c1870cde44425945"
+          },
+          {
+            "name": "20260822085000_r4_fix_formulas_id_to_uuid",
+            "checksum": "f7dccd934166813a6f9032cdf29f55dc2962a1a9fa906d97b5d6cac66398b942"
+          },
+          {
+            "name": "20260822085000_r4_fix_text_id_columns_to_uuid",
+            "checksum": "68f4352156635bf5b0a14efdfee93c67f4a6cb60c4bd4fad4e6831efb65ddc25"
+          },
+          {
+            "name": "20260822086000_r4_create_missing_goods_requirement_tables",
+            "checksum": "876af6fffd4a6d40362854ae40f4fe98d127c69f9a09b210bdcda68c3aacd935"
+          },
+          {
+            "name": "20260822095959_marketing_batch3_placeholder_repair",
+            "checksum": "2325a73dbe1799ce59b8204fd378d31905bd599d09267e43d7a8481c910f3589"
+          },
+          {
+            "name": "20260822100000_batch3_so_formula_pinning",
+            "checksum": "c6d1073d5c4cf6d2c63c57a43ed5d2b52c4849ee7a7dc7df0e23b2730366bb46"
+          },
+          {
+            "name": "20260822110000_batch3_legal_applicability",
+            "checksum": "89135e753a719831627530630726cde073c8e8340ad1f481610ec546bd35401a"
+          },
+          {
+            "name": "20260822120000_regulatory_pipeline_unique",
+            "checksum": "16e4ef641dfab92a3e3473b25314a260f3b335fe8aaff31bf6210040e50ffb81"
+          },
+          {
+            "name": "20260823090000_batch4_requirement_procurement_lineage",
+            "checksum": "ee6a9f79569ec55df6a7cb8288f9f0c825124137a75380ac2e3a0b98347ee8f2"
+          },
+          {
+            "name": "20260823093000_batch5_receiving_inventory_integrity",
+            "checksum": "95ede52ce64b2fbff3caa9447cec01cad9210490ca062bb09254d4722f1131fa"
+          },
+          {
+            "name": "20260823130000_batch5_requisition_issue_return",
+            "checksum": "3911f895a93f89f3c39586222e87f01f8e4fa079d4a03337fa282acb2c4ce8a4"
+          },
+          {
+            "name": "20260823150000_batch6_production_qc_finished_flow",
+            "checksum": "14cdcaad413d6e58e733f0a0db70adea6f0fe89f31430796c130767efdad7d90"
+          },
+          {
+            "name": "20260823170000_batch7_finance_lineage",
+            "checksum": "c1703d22a9011235229079b3ebfa6fc14f85658ab7c46b7ef127917343641166"
+          },
+          {
+            "name": "20260823200000_r4_create_self_qr_devices",
+            "checksum": "5851bbd6856cf3580660ef22c13262fe4151353c28fe35855e04713fc8db16b2"
+          },
+          {
+            "name": "20260824090000_marketing_sales_roster_alignment",
+            "checksum": "7311ac6b6514ea16816188c8143a79a378158252e983137a3b5dce55b3c67f7a"
+          },
+          {
+            "name": "20260824200000_r2_shipment_lot_lineage",
+            "checksum": "06641ff8dc73dfa8f44b48a83f580dec08645159073788edbbe4c629d496defc"
+          },
+          {
+            "name": "20260825090000_r4_prodlight_to_canonical",
+            "checksum": "090d257607ec0cd3b42243526d716f0004af3bda3735e2998fd49c6ab730ea83"
+          },
+          {
+            "name": "20260902120000_phase2_marketing_command",
+            "checksum": "a883c94495094299d44d74e3f0a7a32638498e86b3ce782556d1575144294427"
+          },
+          {
+            "name": "20260902140000_add_director_user_role",
+            "checksum": "86c2e07a9d343279cc4fbae1e4e83b094e7cdcd5e3211cbc6ae8c789773b544d"
+          },
+          {
+            "name": "20260902150000_zaki_director_role",
+            "checksum": "03bd81231523ce77c0d4c7695337a44189c49d33cfd2add28eaf5bf1ef708e21"
+          },
+          {
+            "name": "20260902180000_lead_captures_kommo_columns",
+            "checksum": "76a2b671c381562154fa66e36ce41ba287352105c7150e37a9faf101778d66df"
+          },
+          {
+            "name": "20260902200000_omni_crm_state",
+            "checksum": "ee31a3711b53f335a739bf7565d6e53be36d05c514cf333ef197e158e4df98db"
+          },
+          {
+            "name": "20260902210000_marketing_tasks",
+            "checksum": "97267f544028cd73d06f695dfc2e23dd7f3868bbbe52b5aa70cf1ebf33e78d09"
+          },
+          {
+            "name": "20260902220000_omni_crm_and_tasks",
+            "checksum": "eb819a0f25cf43706abe3535671001dd53906e416e1fce9bef4c6f5e1114c87f"
+          },
+          {
+            "name": "20260904120000_marketing_management_tasks_full",
+            "checksum": "f9f39248e3f01bf566f3c1637ee1677481594b794c7f53d9464097b42c33ee26"
+          },
+          {
+            "name": "20260908230000_fix_marketing_tasks_columns",
+            "checksum": "6330769bddee246f7be27e645844e77c51d16f7763dee9146f5f3f58f9d413c3"
+          },
+          {
+            "name": "20260909033000_add_marketing_task_owner_id",
+            "checksum": "959d659a36f5d30e69dd247b5a4c574fdbe6aa47bc070ffcb1379e1ed87374a1"
+          },
+          {
+            "name": "20260909034500_align_management_task_runtime_schema",
+            "checksum": "d298d6bbd9b68aeff7170589801b1be09519eee4b6fff0a59473143c4aeec6bd"
+          },
+          {
+            "name": "20260909060000_add_social_tracker_tables",
+            "checksum": "c3d7a5655b06dfa0616738b89a127e9a53c004a5333bc30bc80da05011f5415c"
+          },
+          {
+            "name": "20260910150000_marketing_task_social_foundation",
+            "checksum": "90a32bcd4e1e5a09a0321f59a70f4e5f90da76d28a21e175d6898a9fae7cf4ac"
+          },
+          {
+            "name": "20260910170000_marketing_api_idempotency",
+            "checksum": "5e0734ad206a2da86b037f334effa1ad3cae944013b6b8133cfc3eb719f7b5a4"
+          },
+          {
+            "name": "20260911183500_add_marketing_team_members",
+            "checksum": "5e820be2528c449528ff097e454ac8f9d67927a8728e3cc0893c9524d6a711c2"
+          },
+          {
+            "name": "20260911225751_omnicrm_foundation",
+            "checksum": "0153734354ca1122569d2dc7caa0535d0a8756508500b1c0e89e64584f060402"
+          },
+          {
+            "name": "20260913000000_add_communication_entities",
+            "checksum": "8a9c598b9aef7061b567386d7e0a646f13a586cb1dcbed7597ff66506892e8d7"
+          },
+          {
+            "name": "20260914120000_omnicrm_live_projection",
+            "checksum": "f20b6199f3ab859dcf27a9be9f1ea574b8f339a623521fe8b19be5fd3317ab76"
+          },
+          {
+            "name": "20260917000000_p04_canonical_database_alignment",
+            "checksum": "ecf0590022e48bbc20753fd087309c58ea356b7dbe904f557f839a80543a7656"
+          },
+          {
+            "name": "20260918120000_p04_deduplicate_slug_indexes",
+            "checksum": "9119f7ca4bbafb23491e28c74e76f1bb6f1b5083243372339512289aff9ce345"
+          },
+          {
+            "name": "add_assigned_phone",
+            "checksum": "ec897ba56e7e447af0eceee39f75491b12752a4bebf2ef3f8e8b998037dd09c0"
+          }
+        ]
+      },
+      {
+        "id": "baseline_upgrade",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 32220,
+        "timeout_state": "NONE",
+        "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+        "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "database": "nex_p04_5195fa2a_23524_baseline",
+        "database_purpose": "baseline_upgrade_target",
+        "host_class": "loopback",
+        "postgres_major": 16,
+        "command": "prisma migrate deploy (baseline) && prisma migrate deploy (candidate)",
+        "commands": [
+          {
+            "command": "node \"C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\prisma\\build\\index.js\" migrate deploy",
+            "exit_code": 0
+          },
+          {
+            "command": "node \"C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\prisma\\build\\index.js\" migrate deploy",
+            "exit_code": 0
+          }
+        ],
+        "exit_code": 0,
+        "materialized_base_path": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\nex_p04_base_mig_1789735977350",
+        "reconciled_tables": 2,
+        "data_loss_rows": 0,
+        "baseline_schema_digest": "7813fe9d011e8ecc1064357d7de854fddfa2e9a2e9d0924f93bda5d809956d23",
+        "candidate_schema_digest": "5c5b0575ceff68dbe1a3b0f5d2f69cf58a4d6567778ec047d7de757f1b65f47e",
+        "ledger_before": [
+          {
+            "migration_name": "20260430122705_phase1",
+            "checksum": "94fe9f12ff73c5ca11129b238435ee153be36e9cd05b814974b0e8ed4bdb12b8",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260430123412_phase2_hpp_integrity",
+            "checksum": "2918da3416b6d052d6891d7b3178944c4a3a59acde455860e60597c74cb3ddcc",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260720_add_mkt_proto_tables",
+            "checksum": "00b75185f5dfdfef477d53f99886ec2ff695d1da0c30f8bff723b068173734e2",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260721_add_rnd_tasks_and_projects",
+            "checksum": "053a112df36295bf5e0c42a8d6d2807cba73ed46f50b1a6f2f33845cfdb7c7de",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822080000_r4_fix_legacy_leadstatus_unused_enum",
+            "checksum": "dfabbf0154571389916883694236f87f2480ef6f8c328d8e792f385c62ee5a1c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822081953_lead_attribution_journey",
+            "checksum": "fb49c720ec0d816577ea3b705966558da89d23d5c3ac6b4f01e17e1e0d1f481c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822085000_r4_fix_formulas_id_to_uuid",
+            "checksum": "c9439d2625ca1892b30358816e669d1ede44ba86bef54803efa431e2e149b3b9",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822085000_r4_fix_text_id_columns_to_uuid",
+            "checksum": "abd8550d17cb1a6d13a13ab368844da7906c8ed6b0520d097fa1a3aa8fc1fa41",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822086000_r4_create_missing_goods_requirement_tables",
+            "checksum": "c0b82ed86102c680131ecdbc59c548bac344dfdd57e8647050dcb9fed0e653b0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822095959_marketing_batch3_placeholder_repair",
+            "checksum": "d9b52a0a628922c66db94efd59db00e2e42963a9c468109a7da92d462fd3f8f5",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822100000_batch3_so_formula_pinning",
+            "checksum": "ce3d5bf0e71023ef37e1255aa0961f1804c4f6a957ba10bf48f84a156e65b99f",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822110000_batch3_legal_applicability",
+            "checksum": "761b9dd481f5be54178416cd3b13cec6378af0e3655f5bcf04fc474c97f60619",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822120000_regulatory_pipeline_unique",
+            "checksum": "281972d0d68ec318ac6e4257e9f77584d6832b3e4b92df0127d094e57f0a335b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823090000_batch4_requirement_procurement_lineage",
+            "checksum": "efa9e1e26edc25379b2c12436918ae983bfe2e004920ba817b8cb0f180c5aca7",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823093000_batch5_receiving_inventory_integrity",
+            "checksum": "81cf158385415c5189068edca23ae3f292e26df946c5204c52803a5aea469ae5",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823130000_batch5_requisition_issue_return",
+            "checksum": "7bd16018fa9ff1d53cd614a99dd2ea0c496a1f7bf93486786913360209eaaa71",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823150000_batch6_production_qc_finished_flow",
+            "checksum": "82e331411e4479f28f4b198c9341f5e096741430fbd58a1152d6cdbc579d0981",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823170000_batch7_finance_lineage",
+            "checksum": "fc887df4b8e1074524bb8189416411b9bd259c87bfaad73b964568f10a25ff4e",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823200000_r4_create_self_qr_devices",
+            "checksum": "40376943f99e4769a001319efa675839c22ff3ab312f832314b49732bd9cb894",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260824090000_marketing_sales_roster_alignment",
+            "checksum": "13bd7de03a5b5d75f555d7992f7df9fe61825bfdfd0675a15bbfc2ed931fbd85",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260824200000_r2_shipment_lot_lineage",
+            "checksum": "138e99feedeab03932ade73bc2f320df796034579a5e41a1af307bb0c9560134",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260825090000_r4_prodlight_to_canonical",
+            "checksum": "21e62b572432cd6364334026a64184c0b3776c16962d99a3ea1958a713f2af15",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902120000_phase2_marketing_command",
+            "checksum": "93e87eaf78d3e0616628d4e81093fa032bdbaa71aa2180cdba7b0badc67f317c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902140000_add_director_user_role",
+            "checksum": "6eb8ed67c0e7554dd4ecaa69275e30e9d9bdfcd97e154f049f0ac3625c0bd670",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902150000_zaki_director_role",
+            "checksum": "faf9e377f359e98a48d47fa174623abee1936526c72fa0ada6f9e25bf0093850",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902180000_lead_captures_kommo_columns",
+            "checksum": "f30a73b42e3ae0a069f3ce561b82dcac4cec4795fa5fef140fe26ab3f4f964e0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902200000_omni_crm_state",
+            "checksum": "017a6f64802a99427e9cde84dbccebdb02228aeda61d12e1aeb52ae7d932d55b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902210000_marketing_tasks",
+            "checksum": "3990385891ce86a8382c4337e9675cc3cac4077adf0437b7c428feb894a807c9",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902220000_omni_crm_and_tasks",
+            "checksum": "02caa6d3bb6e392f9b4f01a79ff2464164b77e50d468c3dbb5fd27237c95e94b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260904120000_marketing_management_tasks_full",
+            "checksum": "39c86dc03c1365fcd8a3f931d1430e7ff46c6395daef4fbf278ce13aa67d1896",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260908230000_fix_marketing_tasks_columns",
+            "checksum": "9d6c744089eada034f04f9640403d87dca9472d077c1af2e0004a1327a0ef5a3",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909033000_add_marketing_task_owner_id",
+            "checksum": "4274a41149f3d63d43881c1648ed0f7a9b68d2240da3a51f500c2017d1afc263",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909034500_align_management_task_runtime_schema",
+            "checksum": "daf4156fa85458112db6fd8485edf9e6760ef6aac718f61ee55d771c884a1217",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909060000_add_social_tracker_tables",
+            "checksum": "56a5eadb16676270276834afc607bab3d771578701436a2d8977ec82965016fe",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260910150000_marketing_task_social_foundation",
+            "checksum": "d21ab5c91e6cf508d2bdc6017a72e609e4ba4a9b77f2913a7e211b91edd6c8b0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260910170000_marketing_api_idempotency",
+            "checksum": "0c30812b9908620cbd5232b72715fbf688af841c2639090429a4da28c4a56670",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260911183500_add_marketing_team_members",
+            "checksum": "28ee27f2b20676477644964469ae8dfb7079f0942b945c956b0505ded24f29ab",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260911225751_omnicrm_foundation",
+            "checksum": "5b60d361155dcceb714e41218d04e5ac5568aa0e8d38c3bc6d3a5661584fea7c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260913000000_add_communication_entities",
+            "checksum": "ac5207ff2588066f01ec03ecb232ada7b62932af955fe3e41c324fcf89ef5e18",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260914120000_omnicrm_live_projection",
+            "checksum": "ec3abd30f85a2c2fe5dd8987296b4539c71f536dbeb4e38882540ee471f6da5d",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260917000000_p04_canonical_database_alignment",
+            "checksum": "ecf0590022e48bbc20753fd087309c58ea356b7dbe904f557f839a80543a7656",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "add_assigned_phone",
+            "checksum": "49069d9187cd8aab63430d8971fbc60d0d10fcf515cfca903caa94c63d46ff6a",
+            "is_rolled_back": false
+          }
+        ],
+        "ledger_after": [
+          {
+            "migration_name": "20260430122705_phase1",
+            "checksum": "94fe9f12ff73c5ca11129b238435ee153be36e9cd05b814974b0e8ed4bdb12b8",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260430123412_phase2_hpp_integrity",
+            "checksum": "2918da3416b6d052d6891d7b3178944c4a3a59acde455860e60597c74cb3ddcc",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260720_add_mkt_proto_tables",
+            "checksum": "00b75185f5dfdfef477d53f99886ec2ff695d1da0c30f8bff723b068173734e2",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260721_add_rnd_tasks_and_projects",
+            "checksum": "053a112df36295bf5e0c42a8d6d2807cba73ed46f50b1a6f2f33845cfdb7c7de",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822080000_r4_fix_legacy_leadstatus_unused_enum",
+            "checksum": "dfabbf0154571389916883694236f87f2480ef6f8c328d8e792f385c62ee5a1c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822081953_lead_attribution_journey",
+            "checksum": "fb49c720ec0d816577ea3b705966558da89d23d5c3ac6b4f01e17e1e0d1f481c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822085000_r4_fix_formulas_id_to_uuid",
+            "checksum": "c9439d2625ca1892b30358816e669d1ede44ba86bef54803efa431e2e149b3b9",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822085000_r4_fix_text_id_columns_to_uuid",
+            "checksum": "abd8550d17cb1a6d13a13ab368844da7906c8ed6b0520d097fa1a3aa8fc1fa41",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822086000_r4_create_missing_goods_requirement_tables",
+            "checksum": "c0b82ed86102c680131ecdbc59c548bac344dfdd57e8647050dcb9fed0e653b0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822095959_marketing_batch3_placeholder_repair",
+            "checksum": "d9b52a0a628922c66db94efd59db00e2e42963a9c468109a7da92d462fd3f8f5",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822100000_batch3_so_formula_pinning",
+            "checksum": "ce3d5bf0e71023ef37e1255aa0961f1804c4f6a957ba10bf48f84a156e65b99f",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822110000_batch3_legal_applicability",
+            "checksum": "761b9dd481f5be54178416cd3b13cec6378af0e3655f5bcf04fc474c97f60619",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822120000_regulatory_pipeline_unique",
+            "checksum": "281972d0d68ec318ac6e4257e9f77584d6832b3e4b92df0127d094e57f0a335b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823090000_batch4_requirement_procurement_lineage",
+            "checksum": "efa9e1e26edc25379b2c12436918ae983bfe2e004920ba817b8cb0f180c5aca7",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823093000_batch5_receiving_inventory_integrity",
+            "checksum": "81cf158385415c5189068edca23ae3f292e26df946c5204c52803a5aea469ae5",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823130000_batch5_requisition_issue_return",
+            "checksum": "7bd16018fa9ff1d53cd614a99dd2ea0c496a1f7bf93486786913360209eaaa71",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823150000_batch6_production_qc_finished_flow",
+            "checksum": "82e331411e4479f28f4b198c9341f5e096741430fbd58a1152d6cdbc579d0981",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823170000_batch7_finance_lineage",
+            "checksum": "fc887df4b8e1074524bb8189416411b9bd259c87bfaad73b964568f10a25ff4e",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823200000_r4_create_self_qr_devices",
+            "checksum": "40376943f99e4769a001319efa675839c22ff3ab312f832314b49732bd9cb894",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260824090000_marketing_sales_roster_alignment",
+            "checksum": "13bd7de03a5b5d75f555d7992f7df9fe61825bfdfd0675a15bbfc2ed931fbd85",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260824200000_r2_shipment_lot_lineage",
+            "checksum": "138e99feedeab03932ade73bc2f320df796034579a5e41a1af307bb0c9560134",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260825090000_r4_prodlight_to_canonical",
+            "checksum": "21e62b572432cd6364334026a64184c0b3776c16962d99a3ea1958a713f2af15",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902120000_phase2_marketing_command",
+            "checksum": "93e87eaf78d3e0616628d4e81093fa032bdbaa71aa2180cdba7b0badc67f317c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902140000_add_director_user_role",
+            "checksum": "6eb8ed67c0e7554dd4ecaa69275e30e9d9bdfcd97e154f049f0ac3625c0bd670",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902150000_zaki_director_role",
+            "checksum": "faf9e377f359e98a48d47fa174623abee1936526c72fa0ada6f9e25bf0093850",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902180000_lead_captures_kommo_columns",
+            "checksum": "f30a73b42e3ae0a069f3ce561b82dcac4cec4795fa5fef140fe26ab3f4f964e0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902200000_omni_crm_state",
+            "checksum": "017a6f64802a99427e9cde84dbccebdb02228aeda61d12e1aeb52ae7d932d55b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902210000_marketing_tasks",
+            "checksum": "3990385891ce86a8382c4337e9675cc3cac4077adf0437b7c428feb894a807c9",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902220000_omni_crm_and_tasks",
+            "checksum": "02caa6d3bb6e392f9b4f01a79ff2464164b77e50d468c3dbb5fd27237c95e94b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260904120000_marketing_management_tasks_full",
+            "checksum": "39c86dc03c1365fcd8a3f931d1430e7ff46c6395daef4fbf278ce13aa67d1896",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260908230000_fix_marketing_tasks_columns",
+            "checksum": "9d6c744089eada034f04f9640403d87dca9472d077c1af2e0004a1327a0ef5a3",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909033000_add_marketing_task_owner_id",
+            "checksum": "4274a41149f3d63d43881c1648ed0f7a9b68d2240da3a51f500c2017d1afc263",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909034500_align_management_task_runtime_schema",
+            "checksum": "daf4156fa85458112db6fd8485edf9e6760ef6aac718f61ee55d771c884a1217",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909060000_add_social_tracker_tables",
+            "checksum": "56a5eadb16676270276834afc607bab3d771578701436a2d8977ec82965016fe",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260910150000_marketing_task_social_foundation",
+            "checksum": "d21ab5c91e6cf508d2bdc6017a72e609e4ba4a9b77f2913a7e211b91edd6c8b0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260910170000_marketing_api_idempotency",
+            "checksum": "0c30812b9908620cbd5232b72715fbf688af841c2639090429a4da28c4a56670",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260911183500_add_marketing_team_members",
+            "checksum": "28ee27f2b20676477644964469ae8dfb7079f0942b945c956b0505ded24f29ab",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260911225751_omnicrm_foundation",
+            "checksum": "5b60d361155dcceb714e41218d04e5ac5568aa0e8d38c3bc6d3a5661584fea7c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260913000000_add_communication_entities",
+            "checksum": "ac5207ff2588066f01ec03ecb232ada7b62932af955fe3e41c324fcf89ef5e18",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260914120000_omnicrm_live_projection",
+            "checksum": "ec3abd30f85a2c2fe5dd8987296b4539c71f536dbeb4e38882540ee471f6da5d",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260917000000_p04_canonical_database_alignment",
+            "checksum": "ecf0590022e48bbc20753fd087309c58ea356b7dbe904f557f839a80543a7656",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260918120000_p04_deduplicate_slug_indexes",
+            "checksum": "9119f7ca4bbafb23491e28c74e76f1bb6f1b5083243372339512289aff9ce345",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "add_assigned_phone",
+            "checksum": "49069d9187cd8aab63430d8971fbc60d0d10fcf515cfca903caa94c63d46ff6a",
+            "is_rolled_back": false
+          }
+        ],
+        "fixture_totals": {
+          "before": 2,
+          "after": 2
+        },
+        "backfill_stats": {
+          "affected": 1,
+          "updated": 1,
+          "skipped": 0,
+          "rejected": 0
+        },
+        "backfill_digests": {
+          "before": "d292adc8ec99b488705e7302577751be44810de9f3d6b1d5dc87514d52168dbc",
+          "pass1": "ca5d3a90e086a8e795eda829d24186d1d81ee3149ec224c23d0aca4f2030a158",
+          "pass2": "ca5d3a90e086a8e795eda829d24186d1d81ee3149ec224c23d0aca4f2030a158",
+          "stable": true
+        },
+        "baseline_db_name": "nex_p04_5195fa2a_23524_baseline"
+      },
+      {
+        "id": "migration_idempotency",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 43015,
+        "timeout_state": "NONE",
+        "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+        "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "database": "nex_p04_5195fa2a_23524_baseline",
+        "database_purpose": "migration_idempotency_target",
+        "host_class": "loopback",
+        "postgres_major": 16,
+        "command": "prisma migrate deploy (concurrent & idempotent rerun)",
+        "commands": [
+          {
+            "command": "node prisma migrate deploy (rerun)",
+            "exit_code": 0
+          },
+          {
+            "command": "competing deploy pid 28028",
+            "exit_code": 0
+          },
+          {
+            "command": "competing deploy pid 6708",
+            "exit_code": 0
+          }
+        ],
+        "exit_code": 0,
+        "rerun_pending_migrations": 0,
+        "idempotency_confirmed": true,
+        "concurrency_verified": true,
+        "competing_deploy_processes": 2,
+        "competing_processes_results": [
+          {
+            "pid": 28028,
+            "exit_code": 0,
+            "duration_ms": 2408,
+            "stdout_redacted": "Datasource \"db\": PostgreSQL database \"nex_p04_5195fa2a_23524_concurrency\", schema \"public\" at \"localhost:5432\"\n\n43 migrations found in prisma/migrations\n\nApplying migration `20260918120000_p04_deduplicate_slug_indexes`\n\nThe following migration(s) have been applied:\n\nmigrations/\n  └─ 20260918120000_p",
+            "stderr_redacted": "Loaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma\\schema.\n"
+          },
+          {
+            "pid": 6708,
+            "exit_code": 0,
+            "duration_ms": 2406,
+            "stdout_redacted": "Datasource \"db\": PostgreSQL database \"nex_p04_5195fa2a_23524_concurrency\", schema \"public\" at \"localhost:5432\"\n\n43 migrations found in prisma/migrations\n\n\nNo pending migrations to apply.\n",
+            "stderr_redacted": "Loaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma\\schema.\n"
+          }
+        ],
+        "ledger_row_count": 43,
+        "candidate_applied_once": true,
+        "unhealthy_migrations_count": 0
+      },
+      {
+        "id": "rollback_rehearsal",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 34820,
+        "timeout_state": "NONE",
+        "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+        "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "database": "nex_p04_5195fa2a_23524_rollback",
+        "database_purpose": "rollback_rehearsal_target",
+        "host_class": "loopback",
+        "postgres_major": 16,
+        "command": "prisma migrate deploy -> down.sql -> prisma migrate deploy",
+        "commands": [
+          {
+            "command": "node \"C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\prisma\\build\\index.js\" migrate deploy",
+            "exit_code": 0
+          },
+          {
+            "command": "node \"C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\prisma\\build\\index.js\" migrate deploy",
+            "exit_code": 0
+          },
+          {
+            "command": "execute candidate down.sql",
+            "exit_code": 0
+          },
+          {
+            "command": "node \"C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\prisma\\build\\index.js\" migrate deploy",
+            "exit_code": 0
+          }
+        ],
+        "exit_code": 0,
+        "rehearsal_database": "nex_p04_5195fa2a_23524_rollback",
+        "baseline_schema_digest": "7813fe9d011e8ecc1064357d7de854fddfa2e9a2e9d0924f93bda5d809956d23",
+        "candidate_schema_digest": "5c5b0575ceff68dbe1a3b0f5d2f69cf58a4d6567778ec047d7de757f1b65f47e",
+        "rolled_back_schema_digest": "7813fe9d011e8ecc1064357d7de854fddfa2e9a2e9d0924f93bda5d809956d23",
+        "restored_schema_digest": "5c5b0575ceff68dbe1a3b0f5d2f69cf58a4d6567778ec047d7de757f1b65f47e",
+        "baseline_fixture_digest": "8278280961b8f08923d55339fc64eac06db71cd5d4efdae5cb0b4e7a1d46ee85",
+        "rolled_back_fixture_digest": "8278280961b8f08923d55339fc64eac06db71cd5d4efdae5cb0b4e7a1d46ee85",
+        "restored_fixture_digest": "8278280961b8f08923d55339fc64eac06db71cd5d4efdae5cb0b4e7a1d46ee85",
+        "ledger_before_rollback": [
+          {
+            "migration_name": "20260430122705_phase1",
+            "checksum": "94fe9f12ff73c5ca11129b238435ee153be36e9cd05b814974b0e8ed4bdb12b8",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260430123412_phase2_hpp_integrity",
+            "checksum": "2918da3416b6d052d6891d7b3178944c4a3a59acde455860e60597c74cb3ddcc",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260720_add_mkt_proto_tables",
+            "checksum": "00b75185f5dfdfef477d53f99886ec2ff695d1da0c30f8bff723b068173734e2",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260721_add_rnd_tasks_and_projects",
+            "checksum": "053a112df36295bf5e0c42a8d6d2807cba73ed46f50b1a6f2f33845cfdb7c7de",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822080000_r4_fix_legacy_leadstatus_unused_enum",
+            "checksum": "dfabbf0154571389916883694236f87f2480ef6f8c328d8e792f385c62ee5a1c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822081953_lead_attribution_journey",
+            "checksum": "fb49c720ec0d816577ea3b705966558da89d23d5c3ac6b4f01e17e1e0d1f481c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822085000_r4_fix_formulas_id_to_uuid",
+            "checksum": "c9439d2625ca1892b30358816e669d1ede44ba86bef54803efa431e2e149b3b9",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822085000_r4_fix_text_id_columns_to_uuid",
+            "checksum": "abd8550d17cb1a6d13a13ab368844da7906c8ed6b0520d097fa1a3aa8fc1fa41",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822086000_r4_create_missing_goods_requirement_tables",
+            "checksum": "c0b82ed86102c680131ecdbc59c548bac344dfdd57e8647050dcb9fed0e653b0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822095959_marketing_batch3_placeholder_repair",
+            "checksum": "d9b52a0a628922c66db94efd59db00e2e42963a9c468109a7da92d462fd3f8f5",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822100000_batch3_so_formula_pinning",
+            "checksum": "ce3d5bf0e71023ef37e1255aa0961f1804c4f6a957ba10bf48f84a156e65b99f",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822110000_batch3_legal_applicability",
+            "checksum": "761b9dd481f5be54178416cd3b13cec6378af0e3655f5bcf04fc474c97f60619",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822120000_regulatory_pipeline_unique",
+            "checksum": "281972d0d68ec318ac6e4257e9f77584d6832b3e4b92df0127d094e57f0a335b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823090000_batch4_requirement_procurement_lineage",
+            "checksum": "efa9e1e26edc25379b2c12436918ae983bfe2e004920ba817b8cb0f180c5aca7",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823093000_batch5_receiving_inventory_integrity",
+            "checksum": "81cf158385415c5189068edca23ae3f292e26df946c5204c52803a5aea469ae5",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823130000_batch5_requisition_issue_return",
+            "checksum": "7bd16018fa9ff1d53cd614a99dd2ea0c496a1f7bf93486786913360209eaaa71",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823150000_batch6_production_qc_finished_flow",
+            "checksum": "82e331411e4479f28f4b198c9341f5e096741430fbd58a1152d6cdbc579d0981",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823170000_batch7_finance_lineage",
+            "checksum": "fc887df4b8e1074524bb8189416411b9bd259c87bfaad73b964568f10a25ff4e",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823200000_r4_create_self_qr_devices",
+            "checksum": "40376943f99e4769a001319efa675839c22ff3ab312f832314b49732bd9cb894",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260824090000_marketing_sales_roster_alignment",
+            "checksum": "13bd7de03a5b5d75f555d7992f7df9fe61825bfdfd0675a15bbfc2ed931fbd85",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260824200000_r2_shipment_lot_lineage",
+            "checksum": "138e99feedeab03932ade73bc2f320df796034579a5e41a1af307bb0c9560134",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260825090000_r4_prodlight_to_canonical",
+            "checksum": "21e62b572432cd6364334026a64184c0b3776c16962d99a3ea1958a713f2af15",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902120000_phase2_marketing_command",
+            "checksum": "93e87eaf78d3e0616628d4e81093fa032bdbaa71aa2180cdba7b0badc67f317c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902140000_add_director_user_role",
+            "checksum": "6eb8ed67c0e7554dd4ecaa69275e30e9d9bdfcd97e154f049f0ac3625c0bd670",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902150000_zaki_director_role",
+            "checksum": "faf9e377f359e98a48d47fa174623abee1936526c72fa0ada6f9e25bf0093850",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902180000_lead_captures_kommo_columns",
+            "checksum": "f30a73b42e3ae0a069f3ce561b82dcac4cec4795fa5fef140fe26ab3f4f964e0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902200000_omni_crm_state",
+            "checksum": "017a6f64802a99427e9cde84dbccebdb02228aeda61d12e1aeb52ae7d932d55b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902210000_marketing_tasks",
+            "checksum": "3990385891ce86a8382c4337e9675cc3cac4077adf0437b7c428feb894a807c9",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902220000_omni_crm_and_tasks",
+            "checksum": "02caa6d3bb6e392f9b4f01a79ff2464164b77e50d468c3dbb5fd27237c95e94b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260904120000_marketing_management_tasks_full",
+            "checksum": "39c86dc03c1365fcd8a3f931d1430e7ff46c6395daef4fbf278ce13aa67d1896",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260908230000_fix_marketing_tasks_columns",
+            "checksum": "9d6c744089eada034f04f9640403d87dca9472d077c1af2e0004a1327a0ef5a3",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909033000_add_marketing_task_owner_id",
+            "checksum": "4274a41149f3d63d43881c1648ed0f7a9b68d2240da3a51f500c2017d1afc263",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909034500_align_management_task_runtime_schema",
+            "checksum": "daf4156fa85458112db6fd8485edf9e6760ef6aac718f61ee55d771c884a1217",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909060000_add_social_tracker_tables",
+            "checksum": "56a5eadb16676270276834afc607bab3d771578701436a2d8977ec82965016fe",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260910150000_marketing_task_social_foundation",
+            "checksum": "d21ab5c91e6cf508d2bdc6017a72e609e4ba4a9b77f2913a7e211b91edd6c8b0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260910170000_marketing_api_idempotency",
+            "checksum": "0c30812b9908620cbd5232b72715fbf688af841c2639090429a4da28c4a56670",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260911183500_add_marketing_team_members",
+            "checksum": "28ee27f2b20676477644964469ae8dfb7079f0942b945c956b0505ded24f29ab",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260911225751_omnicrm_foundation",
+            "checksum": "5b60d361155dcceb714e41218d04e5ac5568aa0e8d38c3bc6d3a5661584fea7c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260913000000_add_communication_entities",
+            "checksum": "ac5207ff2588066f01ec03ecb232ada7b62932af955fe3e41c324fcf89ef5e18",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260914120000_omnicrm_live_projection",
+            "checksum": "ec3abd30f85a2c2fe5dd8987296b4539c71f536dbeb4e38882540ee471f6da5d",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260917000000_p04_canonical_database_alignment",
+            "checksum": "ecf0590022e48bbc20753fd087309c58ea356b7dbe904f557f839a80543a7656",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "add_assigned_phone",
+            "checksum": "49069d9187cd8aab63430d8971fbc60d0d10fcf515cfca903caa94c63d46ff6a",
+            "is_rolled_back": false
+          }
+        ],
+        "ledger_after_rollback": [
+          {
+            "migration_name": "20260430122705_phase1",
+            "checksum": "94fe9f12ff73c5ca11129b238435ee153be36e9cd05b814974b0e8ed4bdb12b8",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260430123412_phase2_hpp_integrity",
+            "checksum": "2918da3416b6d052d6891d7b3178944c4a3a59acde455860e60597c74cb3ddcc",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260720_add_mkt_proto_tables",
+            "checksum": "00b75185f5dfdfef477d53f99886ec2ff695d1da0c30f8bff723b068173734e2",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260721_add_rnd_tasks_and_projects",
+            "checksum": "053a112df36295bf5e0c42a8d6d2807cba73ed46f50b1a6f2f33845cfdb7c7de",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822080000_r4_fix_legacy_leadstatus_unused_enum",
+            "checksum": "dfabbf0154571389916883694236f87f2480ef6f8c328d8e792f385c62ee5a1c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822081953_lead_attribution_journey",
+            "checksum": "fb49c720ec0d816577ea3b705966558da89d23d5c3ac6b4f01e17e1e0d1f481c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822085000_r4_fix_formulas_id_to_uuid",
+            "checksum": "c9439d2625ca1892b30358816e669d1ede44ba86bef54803efa431e2e149b3b9",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822085000_r4_fix_text_id_columns_to_uuid",
+            "checksum": "abd8550d17cb1a6d13a13ab368844da7906c8ed6b0520d097fa1a3aa8fc1fa41",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822086000_r4_create_missing_goods_requirement_tables",
+            "checksum": "c0b82ed86102c680131ecdbc59c548bac344dfdd57e8647050dcb9fed0e653b0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822095959_marketing_batch3_placeholder_repair",
+            "checksum": "d9b52a0a628922c66db94efd59db00e2e42963a9c468109a7da92d462fd3f8f5",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822100000_batch3_so_formula_pinning",
+            "checksum": "ce3d5bf0e71023ef37e1255aa0961f1804c4f6a957ba10bf48f84a156e65b99f",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822110000_batch3_legal_applicability",
+            "checksum": "761b9dd481f5be54178416cd3b13cec6378af0e3655f5bcf04fc474c97f60619",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822120000_regulatory_pipeline_unique",
+            "checksum": "281972d0d68ec318ac6e4257e9f77584d6832b3e4b92df0127d094e57f0a335b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823090000_batch4_requirement_procurement_lineage",
+            "checksum": "efa9e1e26edc25379b2c12436918ae983bfe2e004920ba817b8cb0f180c5aca7",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823093000_batch5_receiving_inventory_integrity",
+            "checksum": "81cf158385415c5189068edca23ae3f292e26df946c5204c52803a5aea469ae5",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823130000_batch5_requisition_issue_return",
+            "checksum": "7bd16018fa9ff1d53cd614a99dd2ea0c496a1f7bf93486786913360209eaaa71",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823150000_batch6_production_qc_finished_flow",
+            "checksum": "82e331411e4479f28f4b198c9341f5e096741430fbd58a1152d6cdbc579d0981",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823170000_batch7_finance_lineage",
+            "checksum": "fc887df4b8e1074524bb8189416411b9bd259c87bfaad73b964568f10a25ff4e",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823200000_r4_create_self_qr_devices",
+            "checksum": "40376943f99e4769a001319efa675839c22ff3ab312f832314b49732bd9cb894",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260824090000_marketing_sales_roster_alignment",
+            "checksum": "13bd7de03a5b5d75f555d7992f7df9fe61825bfdfd0675a15bbfc2ed931fbd85",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260824200000_r2_shipment_lot_lineage",
+            "checksum": "138e99feedeab03932ade73bc2f320df796034579a5e41a1af307bb0c9560134",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260825090000_r4_prodlight_to_canonical",
+            "checksum": "21e62b572432cd6364334026a64184c0b3776c16962d99a3ea1958a713f2af15",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902120000_phase2_marketing_command",
+            "checksum": "93e87eaf78d3e0616628d4e81093fa032bdbaa71aa2180cdba7b0badc67f317c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902140000_add_director_user_role",
+            "checksum": "6eb8ed67c0e7554dd4ecaa69275e30e9d9bdfcd97e154f049f0ac3625c0bd670",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902150000_zaki_director_role",
+            "checksum": "faf9e377f359e98a48d47fa174623abee1936526c72fa0ada6f9e25bf0093850",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902180000_lead_captures_kommo_columns",
+            "checksum": "f30a73b42e3ae0a069f3ce561b82dcac4cec4795fa5fef140fe26ab3f4f964e0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902200000_omni_crm_state",
+            "checksum": "017a6f64802a99427e9cde84dbccebdb02228aeda61d12e1aeb52ae7d932d55b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902210000_marketing_tasks",
+            "checksum": "3990385891ce86a8382c4337e9675cc3cac4077adf0437b7c428feb894a807c9",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902220000_omni_crm_and_tasks",
+            "checksum": "02caa6d3bb6e392f9b4f01a79ff2464164b77e50d468c3dbb5fd27237c95e94b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260904120000_marketing_management_tasks_full",
+            "checksum": "39c86dc03c1365fcd8a3f931d1430e7ff46c6395daef4fbf278ce13aa67d1896",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260908230000_fix_marketing_tasks_columns",
+            "checksum": "9d6c744089eada034f04f9640403d87dca9472d077c1af2e0004a1327a0ef5a3",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909033000_add_marketing_task_owner_id",
+            "checksum": "4274a41149f3d63d43881c1648ed0f7a9b68d2240da3a51f500c2017d1afc263",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909034500_align_management_task_runtime_schema",
+            "checksum": "daf4156fa85458112db6fd8485edf9e6760ef6aac718f61ee55d771c884a1217",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909060000_add_social_tracker_tables",
+            "checksum": "56a5eadb16676270276834afc607bab3d771578701436a2d8977ec82965016fe",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260910150000_marketing_task_social_foundation",
+            "checksum": "d21ab5c91e6cf508d2bdc6017a72e609e4ba4a9b77f2913a7e211b91edd6c8b0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260910170000_marketing_api_idempotency",
+            "checksum": "0c30812b9908620cbd5232b72715fbf688af841c2639090429a4da28c4a56670",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260911183500_add_marketing_team_members",
+            "checksum": "28ee27f2b20676477644964469ae8dfb7079f0942b945c956b0505ded24f29ab",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260911225751_omnicrm_foundation",
+            "checksum": "5b60d361155dcceb714e41218d04e5ac5568aa0e8d38c3bc6d3a5661584fea7c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260913000000_add_communication_entities",
+            "checksum": "ac5207ff2588066f01ec03ecb232ada7b62932af955fe3e41c324fcf89ef5e18",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260914120000_omnicrm_live_projection",
+            "checksum": "ec3abd30f85a2c2fe5dd8987296b4539c71f536dbeb4e38882540ee471f6da5d",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260917000000_p04_canonical_database_alignment",
+            "checksum": "ecf0590022e48bbc20753fd087309c58ea356b7dbe904f557f839a80543a7656",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "add_assigned_phone",
+            "checksum": "49069d9187cd8aab63430d8971fbc60d0d10fcf515cfca903caa94c63d46ff6a",
+            "is_rolled_back": false
+          }
+        ],
+        "ledger_after_rollforward": [
+          {
+            "migration_name": "20260430122705_phase1",
+            "checksum": "94fe9f12ff73c5ca11129b238435ee153be36e9cd05b814974b0e8ed4bdb12b8",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260430123412_phase2_hpp_integrity",
+            "checksum": "2918da3416b6d052d6891d7b3178944c4a3a59acde455860e60597c74cb3ddcc",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260720_add_mkt_proto_tables",
+            "checksum": "00b75185f5dfdfef477d53f99886ec2ff695d1da0c30f8bff723b068173734e2",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260721_add_rnd_tasks_and_projects",
+            "checksum": "053a112df36295bf5e0c42a8d6d2807cba73ed46f50b1a6f2f33845cfdb7c7de",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822080000_r4_fix_legacy_leadstatus_unused_enum",
+            "checksum": "dfabbf0154571389916883694236f87f2480ef6f8c328d8e792f385c62ee5a1c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822081953_lead_attribution_journey",
+            "checksum": "fb49c720ec0d816577ea3b705966558da89d23d5c3ac6b4f01e17e1e0d1f481c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822085000_r4_fix_formulas_id_to_uuid",
+            "checksum": "c9439d2625ca1892b30358816e669d1ede44ba86bef54803efa431e2e149b3b9",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822085000_r4_fix_text_id_columns_to_uuid",
+            "checksum": "abd8550d17cb1a6d13a13ab368844da7906c8ed6b0520d097fa1a3aa8fc1fa41",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822086000_r4_create_missing_goods_requirement_tables",
+            "checksum": "c0b82ed86102c680131ecdbc59c548bac344dfdd57e8647050dcb9fed0e653b0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822095959_marketing_batch3_placeholder_repair",
+            "checksum": "d9b52a0a628922c66db94efd59db00e2e42963a9c468109a7da92d462fd3f8f5",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822100000_batch3_so_formula_pinning",
+            "checksum": "ce3d5bf0e71023ef37e1255aa0961f1804c4f6a957ba10bf48f84a156e65b99f",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822110000_batch3_legal_applicability",
+            "checksum": "761b9dd481f5be54178416cd3b13cec6378af0e3655f5bcf04fc474c97f60619",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260822120000_regulatory_pipeline_unique",
+            "checksum": "281972d0d68ec318ac6e4257e9f77584d6832b3e4b92df0127d094e57f0a335b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823090000_batch4_requirement_procurement_lineage",
+            "checksum": "efa9e1e26edc25379b2c12436918ae983bfe2e004920ba817b8cb0f180c5aca7",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823093000_batch5_receiving_inventory_integrity",
+            "checksum": "81cf158385415c5189068edca23ae3f292e26df946c5204c52803a5aea469ae5",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823130000_batch5_requisition_issue_return",
+            "checksum": "7bd16018fa9ff1d53cd614a99dd2ea0c496a1f7bf93486786913360209eaaa71",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823150000_batch6_production_qc_finished_flow",
+            "checksum": "82e331411e4479f28f4b198c9341f5e096741430fbd58a1152d6cdbc579d0981",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823170000_batch7_finance_lineage",
+            "checksum": "fc887df4b8e1074524bb8189416411b9bd259c87bfaad73b964568f10a25ff4e",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260823200000_r4_create_self_qr_devices",
+            "checksum": "40376943f99e4769a001319efa675839c22ff3ab312f832314b49732bd9cb894",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260824090000_marketing_sales_roster_alignment",
+            "checksum": "13bd7de03a5b5d75f555d7992f7df9fe61825bfdfd0675a15bbfc2ed931fbd85",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260824200000_r2_shipment_lot_lineage",
+            "checksum": "138e99feedeab03932ade73bc2f320df796034579a5e41a1af307bb0c9560134",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260825090000_r4_prodlight_to_canonical",
+            "checksum": "21e62b572432cd6364334026a64184c0b3776c16962d99a3ea1958a713f2af15",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902120000_phase2_marketing_command",
+            "checksum": "93e87eaf78d3e0616628d4e81093fa032bdbaa71aa2180cdba7b0badc67f317c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902140000_add_director_user_role",
+            "checksum": "6eb8ed67c0e7554dd4ecaa69275e30e9d9bdfcd97e154f049f0ac3625c0bd670",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902150000_zaki_director_role",
+            "checksum": "faf9e377f359e98a48d47fa174623abee1936526c72fa0ada6f9e25bf0093850",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902180000_lead_captures_kommo_columns",
+            "checksum": "f30a73b42e3ae0a069f3ce561b82dcac4cec4795fa5fef140fe26ab3f4f964e0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902200000_omni_crm_state",
+            "checksum": "017a6f64802a99427e9cde84dbccebdb02228aeda61d12e1aeb52ae7d932d55b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902210000_marketing_tasks",
+            "checksum": "3990385891ce86a8382c4337e9675cc3cac4077adf0437b7c428feb894a807c9",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260902220000_omni_crm_and_tasks",
+            "checksum": "02caa6d3bb6e392f9b4f01a79ff2464164b77e50d468c3dbb5fd27237c95e94b",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260904120000_marketing_management_tasks_full",
+            "checksum": "39c86dc03c1365fcd8a3f931d1430e7ff46c6395daef4fbf278ce13aa67d1896",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260908230000_fix_marketing_tasks_columns",
+            "checksum": "9d6c744089eada034f04f9640403d87dca9472d077c1af2e0004a1327a0ef5a3",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909033000_add_marketing_task_owner_id",
+            "checksum": "4274a41149f3d63d43881c1648ed0f7a9b68d2240da3a51f500c2017d1afc263",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909034500_align_management_task_runtime_schema",
+            "checksum": "daf4156fa85458112db6fd8485edf9e6760ef6aac718f61ee55d771c884a1217",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260909060000_add_social_tracker_tables",
+            "checksum": "56a5eadb16676270276834afc607bab3d771578701436a2d8977ec82965016fe",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260910150000_marketing_task_social_foundation",
+            "checksum": "d21ab5c91e6cf508d2bdc6017a72e609e4ba4a9b77f2913a7e211b91edd6c8b0",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260910170000_marketing_api_idempotency",
+            "checksum": "0c30812b9908620cbd5232b72715fbf688af841c2639090429a4da28c4a56670",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260911183500_add_marketing_team_members",
+            "checksum": "28ee27f2b20676477644964469ae8dfb7079f0942b945c956b0505ded24f29ab",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260911225751_omnicrm_foundation",
+            "checksum": "5b60d361155dcceb714e41218d04e5ac5568aa0e8d38c3bc6d3a5661584fea7c",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260913000000_add_communication_entities",
+            "checksum": "ac5207ff2588066f01ec03ecb232ada7b62932af955fe3e41c324fcf89ef5e18",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260914120000_omnicrm_live_projection",
+            "checksum": "ec3abd30f85a2c2fe5dd8987296b4539c71f536dbeb4e38882540ee471f6da5d",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260917000000_p04_canonical_database_alignment",
+            "checksum": "ecf0590022e48bbc20753fd087309c58ea356b7dbe904f557f839a80543a7656",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "20260918120000_p04_deduplicate_slug_indexes",
+            "checksum": "9119f7ca4bbafb23491e28c74e76f1bb6f1b5083243372339512289aff9ce345",
+            "is_rolled_back": false
+          },
+          {
+            "migration_name": "add_assigned_phone",
+            "checksum": "49069d9187cd8aab63430d8971fbc60d0d10fcf515cfca903caa94c63d46ff6a",
+            "is_rolled_back": false
+          }
+        ],
+        "rollback_and_rollforward_verified": true
+      },
+      {
+        "id": "constraint_index_audit",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 159,
+        "timeout_state": "NONE",
+        "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+        "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "database": "nex_p04_5195fa2a_23524_baseline",
+        "database_purpose": "constraint_index_audit_target",
+        "host_class": "loopback",
+        "postgres_major": 16,
+        "command": "audit pg_constraint, pg_indexes, and verify SQLSTATE 23505",
+        "commands": [
+          {
+            "command": "SELECT conname FROM pg_constraint WHERE NOT convalidated",
+            "exit_code": 0
+          },
+          {
+            "command": "INSERT duplicate PK (SQLSTATE 23505 probe)",
+            "exit_code": 0
+          }
+        ],
+        "exit_code": 0,
+        "unvalidated_constraints": 0,
+        "invalid_indexes": 0,
+        "orphan_foreign_keys": 0,
+        "duplicate_indexes": 0,
+        "sqlstate_23505_verified": true
+      },
+      {
+        "id": "expand_contract_compatibility",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 2,
+        "timeout_state": "NONE",
+        "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+        "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "database": "source-read-only",
+        "database_purpose": "contract_ddl_compatibility_scan",
+        "host_class": "loopback",
+        "postgres_major": 16,
+        "command": "AST regex scan candidate migrations DDL",
+        "commands": [
+          {
+            "command": "AST analyze candidate migrations",
+            "exit_code": 0
+          }
+        ],
+        "exit_code": 0,
+        "candidate_migrations_scanned": 1,
+        "unsafe_contract_ddl": 0,
+        "expand_contract_verified": true
+      },
+      {
+        "id": "old_new_version_coexistence",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 149,
+        "timeout_state": "NONE",
+        "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+        "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "database": "nex_p04_5195fa2a_23524_baseline",
+        "database_purpose": "version_coexistence_probe_target",
+        "host_class": "loopback",
+        "postgres_major": 16,
+        "command": "execute N-1 and N probe operations for affected tables",
+        "commands": [
+          {
+            "command": "execute N-1/N CRUD probes",
+            "exit_code": 0
+          }
+        ],
+        "exit_code": 0,
+        "coverage_percent": 100,
+        "probed_tables": 2,
+        "manifest_tables": [
+          "articles",
+          "website_products"
+        ],
+        "table_probe_results": {
+          "articles": {
+            "table": "articles",
+            "status": "PASS",
+            "n_minus_1_read": true,
+            "n_minus_1_write": true,
+            "n_read": true,
+            "n_write": true,
+            "operations": {
+              "n_minus_1_create_id": "00000000-0000-4000-a000-000000000701",
+              "n_update_meta": "N Meta Description"
+            }
+          },
+          "website_products": {
+            "table": "website_products",
+            "status": "PASS",
+            "n_minus_1_read": true,
+            "n_minus_1_write": true,
+            "n_read": true,
+            "n_write": true,
+            "operations": {
+              "n_minus_1_create_id": "00000000-0000-4000-a000-000000000702",
+              "n_update_meta": "N Product Meta"
+            }
+          }
+        }
+      }
+    ],
+    "mutations": [
+      {
+        "id": "P04-REMOTE-TARGET-REFUSED",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gatePredecessorAndTargetSafety",
+        "mutated_target": "target.hostname: 103.93.134.215 (non-loopback target)",
+        "gate_id": "predecessor_and_target_safety",
+        "reason_code": "REMOTE_TARGET_REFUSED",
+        "rejection_reason": "[predecessor_and_target_safety] REMOTE_TARGET_REFUSED: Non-loopback target refused: 103.93.134.215. P04 certification is restricted to local loopback."
+      },
+      {
+        "id": "P04-UNSAFE-DB-NAME-REFUSED",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gatePredecessorAndTargetSafety",
+        "mutated_target": "tempDatabaseNameValidationAttempt: erp_p04_test (unsafe temporary database name)",
+        "gate_id": "predecessor_and_target_safety",
+        "reason_code": "UNSAFE_DB_NAME_REFUSED",
+        "rejection_reason": "[predecessor_and_target_safety] UNSAFE_DB_NAME_REFUSED: Unsafe temporary database name refused: \"erp_p04_test\". Name must match ^nex_p04_[a-z0-9_]+$"
+      },
+      {
+        "id": "P04-SOURCE-DB-DROP-REFUSED",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gatePredecessorAndTargetSafety",
+        "mutated_target": "dropTargetDbAttempt: erp_db_test (source database drop protection)",
+        "gate_id": "predecessor_and_target_safety",
+        "reason_code": "SOURCE_DB_DROP_REFUSED",
+        "rejection_reason": "[predecessor_and_target_safety] SOURCE_DB_DROP_REFUSED: Dropping source database is strictly forbidden: \"erp_db_test\""
+      },
+      {
+        "id": "P04-PREBASE-MIGRATION-EDIT",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateMigrationChainIntegrity",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\nex_p04_mut_prebase_1789736087126\\20260430122705_phase1\\migration.sql (adversarial prebase migration SQL edit)",
+        "gate_id": "migration_chain_integrity",
+        "reason_code": "PREBASE_MIGRATION_EDITED",
+        "rejection_reason": "[migration_chain_integrity] PREBASE_MIGRATION_EDITED: Prebase migration modified: checksum mismatch for backend/prisma/migrations/20260430122705_phase1/migration.sql"
+      },
+      {
+        "id": "P04-MISSING-MIGRATION-SQL",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateMigrationChainIntegrity",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\nex_p04_mut_missing_1789736087773\\20260999000000_corrupted (migration directory missing migration.sql)",
+        "gate_id": "migration_chain_integrity",
+        "reason_code": "MISSING_MIGRATION_SQL",
+        "rejection_reason": "[migration_chain_integrity] MISSING_MIGRATION_SQL: Migration directory missing migration.sql: 20260999000000_corrupted"
+      },
+      {
+        "id": "P04-MIGRATION-DRIFT",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateEmptyDbMigrate",
+        "mutated_target": "isolated_db:nex_p04_drift_1789736087779_probe (unmanaged drift table injected)",
+        "gate_id": "empty_db_migrate",
+        "reason_code": "SCHEMA_DRIFT_DETECTED",
+        "rejection_reason": "[empty_db_migrate] SCHEMA_DRIFT_DETECTED: Schema drift detected on empty db deploy: \n[+] Added tables\n  - unmanaged_drift_table\n"
+      },
+      {
+        "id": "P04-SECOND-DEPLOY-NOT-NOOP",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateMigrationIdempotency",
+        "mutated_target": "isolated_db:nex_p04_idemp_1789736110087_probe (failed migration injected into ledger)",
+        "gate_id": "migration_idempotency",
+        "reason_code": "SECOND_DEPLOY_NOT_NOOP",
+        "rejection_reason": "[migration_idempotency] SECOND_DEPLOY_NOT_NOOP: Second deploy is not a no-op: Loaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma\\schema.\nError: P3009\n\nmigrate found failed migrations in the target database, new migrations will not be applied. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\nThe `unhealthy_pending_migration` migration started at 2026-09-18 12:55:18.723191 UTC failed\n\n\n"
+      },
+      {
+        "id": "P04-BASELINE-UPGRADE-DATA-LOSS",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateBaselineUpgrade",
+        "mutated_target": "isolated_db:nex_p04_dataloss_1789736123017_probe (fixture row mutated before upgrade)",
+        "gate_id": "baseline_upgrade",
+        "reason_code": "BASELINE_UPGRADE_DATA_LOSS",
+        "rejection_reason": "[baseline_upgrade] BASELINE_UPGRADE_DATA_LOSS: Data loss or value divergence detected in baseline upgrade: Row 00000000-0000-4000-a000-000000000101 in articles value changed for field metaDescription: before=\"Meta summary   \", after=\"Corrupted Value\""
+      },
+      {
+        "id": "P04-BACKFILL-NONDETERMINISTIC",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateBaselineUpgrade",
+        "mutated_target": "isolated_db:nex_p04_backfill_1789736157209_probe (non-deterministic backfill query updating random values on pass 2)",
+        "gate_id": "baseline_upgrade",
+        "reason_code": "BACKFILL_NONDETERMINISTIC",
+        "rejection_reason": "[baseline_upgrade] BACKFILL_NONDETERMINISTIC: Backfill pass 2 was not idempotent: pass2_updated=1 (expected 0), digest1=6a1bb66041586393f88c899137c1b14a00577a0e329a6f9890968dd529bb8ebd, digest2=6f0dc94d8394fce2a6d32d9f528a5f14d6250b8ad5320a4faa2d3c64e605061a"
+      },
+      {
+        "id": "P04-ROLLBACK-SCHEMA-MISMATCH",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateRollbackRehearsal",
+        "mutated_target": "isolated_db:nex_p04_rbschema_1789736193618_probe (down.sql creates extra table drift)",
+        "gate_id": "rollback_rehearsal",
+        "reason_code": "ROLLBACK_SCHEMA_MISMATCH",
+        "rejection_reason": "[rollback_rehearsal] ROLLBACK_SCHEMA_MISMATCH: Rollback schema mismatch with baseline: baseline=7813fe9d011e8ecc1064357d7de854fddfa2e9a2e9d0924f93bda5d809956d23 rollback=8f95530a14018d550d2a644fa6aa8dafa40f01567116ff3c5ee5bfddffa43a56"
+      },
+      {
+        "id": "P04-ROLLBACK-DATA-LOSS",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateRollbackRehearsal",
+        "mutated_target": "isolated_db:nex_p04_rbdata_1789736231795_probe (fixture data deleted before rollback)",
+        "gate_id": "rollback_rehearsal",
+        "reason_code": "ROLLBACK_DATA_LOSS",
+        "rejection_reason": "[rollback_rehearsal] ROLLBACK_DATA_LOSS: Data loss detected after rollback: digest mismatch (baseline=cf326a817957802489a69980e1ac5b885e23c06fce0b02ac84b05a64a8c0fb0c, rollback=2c2980de3d0e58947316f91ebf0cd432356ce33b76bf4f6b1c59fd75cbd611fd)"
+      },
+      {
+        "id": "P04-UNSAFE-CONTRACT-DDL",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateExpandContractCompatibility",
+        "mutated_target": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\nex_p04_mut_ddl_1789736268901\\migration.sql (ALTER TABLE articles DROP COLUMN title)",
+        "gate_id": "expand_contract_compatibility",
+        "reason_code": "UNSAFE_CONTRACT_DDL",
+        "rejection_reason": "[expand_contract_compatibility] UNSAFE_CONTRACT_DDL: Unsafe contract DDL detected (1 violations): [L1] FORBIDDEN_DROP_COLUMN: ALTER TABLE \"articles\" DROP COLUMN \"title\";"
+      },
+      {
+        "id": "P04-INVALID-CONSTRAINT-OR-INDEX",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateConstraintIndexAudit",
+        "mutated_target": "isolated_db:nex_p04_invcon_1789736268910_probe (NOT VALID constraint added to articles)",
+        "gate_id": "constraint_index_audit",
+        "reason_code": "UNVALIDATED_CONSTRAINT",
+        "rejection_reason": "[constraint_index_audit] UNVALIDATED_CONSTRAINT: Unvalidated constraints found: articles.chk_val"
+      },
+      {
+        "id": "P04-MISSING-N1-N-COMPATIBILITY-PROBE",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateOldNewVersionCoexistence",
+        "mutated_target": "probeTablesOverride: [articles] (omitting website_products from probe execution)",
+        "gate_id": "old_new_version_coexistence",
+        "reason_code": "MISSING_COMPATIBILITY_PROBE",
+        "rejection_reason": "[old_new_version_coexistence] MISSING_COMPATIBILITY_PROBE: Missing compatibility probes for affected tables (50% coverage): website_products"
+      },
+      {
+        "id": "P04-STALE-SHA-EVIDENCE",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gatePredecessorAndTargetSafety",
+        "mutated_target": "candidateShaOverride: 0000000000000000000000000000000000000000",
+        "gate_id": "predecessor_and_target_safety",
+        "reason_code": "STALE_SHA_EVIDENCE",
+        "rejection_reason": "[predecessor_and_target_safety] STALE_SHA_EVIDENCE: Stale candidate SHA: evidence has 0000000000000000000000000000000000000000, expected 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a"
+      },
+      {
+        "id": "P04-UNEXPECTED-SKIP",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gatePredecessorAndTargetSafety",
+        "mutated_target": "skippedCheckOverride: empty_db_migrate",
+        "gate_id": "predecessor_and_target_safety",
+        "reason_code": "UNEXPECTED_SKIP",
+        "rejection_reason": "[predecessor_and_target_safety] UNEXPECTED_SKIP: Unexpected skipped checks are forbidden: empty_db_migrate"
+      }
+    ],
+    "metrics": {
+      "schema_drift_count": 0,
+      "failed_or_pending_migrations": 0,
+      "edited_prebase_migrations": 0,
+      "unvalidated_constraints": 0,
+      "invalid_indexes": 0,
+      "orphan_foreign_keys": 0,
+      "unexpected_skips": 0,
+      "data_loss_rows": 0,
+      "duplicate_or_missing_migration_ids": 0,
+      "unsafe_contract_ddl": 0,
+      "compatibility_probe_coverage_percent": 100
+    },
+    "safety": {
+      "source_database_untouched": true,
+      "created_databases": [
+        "nex_p04_5195fa2a_23524_empty",
+        "nex_p04_5195fa2a_23524_baseline",
+        "nex_p04_5195fa2a_23524_concurrency",
+        "nex_p04_5195fa2a_23524_rollback",
+        "nex_p04_drift_1789736087779_probe",
+        "nex_p04_idemp_1789736110087_probe",
+        "nex_p04_dataloss_1789736123017_probe",
+        "nex_p04_backfill_1789736157209_probe",
+        "nex_p04_rbschema_1789736193618_probe",
+        "nex_p04_rbdata_1789736231795_probe",
+        "nex_p04_invcon_1789736268910_probe",
+        "nex_p04_probe_1789736278466_probe"
+      ],
+      "dropped_databases": [
+        "nex_p04_5195fa2a_23524_concurrency",
+        "nex_p04_drift_1789736087779_probe",
+        "nex_p04_idemp_1789736110087_probe",
+        "nex_p04_dataloss_1789736123017_probe",
+        "nex_p04_backfill_1789736157209_probe",
+        "nex_p04_rbschema_1789736193618_probe",
+        "nex_p04_rbdata_1789736231795_probe",
+        "nex_p04_invcon_1789736268910_probe",
+        "nex_p04_probe_1789736278466_probe",
+        "nex_p04_5195fa2a_23524_empty",
+        "nex_p04_5195fa2a_23524_baseline",
+        "nex_p04_5195fa2a_23524_rollback"
+      ]
+    },
+    "verdict": "PASS",
+    "duration_ms": 359735
+  },
+  "failure": null
 }

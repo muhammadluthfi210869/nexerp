@@ -1,0 +1,170 @@
+// P05 Platform Controls schema additions.
+// Includes auth sessions, MFA, audit log (immutable via DB trigger), approvals,
+// outbox events, tenant scopes, and communication ACL policies.
+//
+// Migration applied via backend/prisma/migrations/20260918_p05_platform_controls/migration.sql
+
+enum OutboxStatus {
+  PENDING
+  IN_FLIGHT
+  PUBLISHED
+  DEAD_LETTER
+}
+
+enum ApprovalDecision {
+  APPROVED
+  REJECTED
+}
+
+model AuthSession {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid
+  refreshTokenHash String   @unique
+  accessExpiresAt DateTime
+  refreshExpiresAt DateTime
+  mfaPending      Boolean   @default(false)
+  mfaMethod       String?
+  familyId        String    @db.Uuid
+  parentSessionId String?   @db.Uuid
+  ipHash          String?
+  userAgentHash   String?
+  revokedAt       DateTime?
+  revokedReason   String?
+  replacedById    String?   @db.Uuid
+  lastUsedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([userId, revokedAt])
+  @@index([familyId])
+  @@map("auth_sessions")
+}
+
+model MfaSecret {
+  id                String    @id @default(uuid()) @db.Uuid
+  userId            String    @unique @db.Uuid
+  encryptedSecret   String
+  recoveryCodesHash String[]  @default([])
+  confirmedAt       DateTime?
+  enrolledAt        DateTime  @default(now())
+  required          Boolean   @default(false)
+
+  @@map("mfa_secrets")
+}
+
+model MfaChallenge {
+  id        String    @id @default(uuid()) @db.Uuid
+  sessionId String    @db.Uuid
+  codeHash  String
+  expiresAt DateTime
+  consumedAt DateTime?
+  attempts  Int       @default(0)
+
+  @@index([sessionId])
+  @@map("mfa_challenges")
+}
+
+model AuditLog {
+  id                     String    @id @default(uuid()) @db.Uuid
+  actorUserId            String?   @db.Uuid
+  actorRoleSlug          String?
+  actorPermissionSnapshot Json
+  tenantId               String?   @db.Uuid
+  correlationId          String    @db.Uuid
+  idempotencyKey         String?
+  source                 String
+  entityType             String
+  entityId               String    @db.Uuid
+  entityVersion          Int?
+  action                 String
+  beforeSnapshot         Json?
+  afterSnapshot          Json?
+  occurredAt             DateTime  @default(now())
+  txId                   String
+
+  @@index([entityType, entityId])
+  @@index([correlationId])
+  @@index([actorUserId])
+  @@map("audit_logs")
+}
+
+model Approval {
+  id                  String    @id @default(uuid()) @db.Uuid
+  governedEntityType  String
+  governedEntityId    String    @db.Uuid
+  action              String
+  requestedById       String    @db.Uuid
+  requestedAt         DateTime
+  decision            ApprovalDecision?
+  decidedById         String?   @db.Uuid
+  decidedAt           DateTime?
+  version             Int
+  thresholdRequired   Int
+  thresholdCount      Int       @default(0)
+
+  @@index([governedEntityType, governedEntityId, version])
+  @@map("approvals")
+}
+
+model OutboxEvent {
+  id              String       @id @default(uuid()) @db.Uuid
+  eventType       String
+  aggregateType   String
+  aggregateId     String       @db.Uuid
+  idempotencyKey  String       @unique
+  payload         Json
+  correlationId   String       @db.Uuid
+  tenantId        String?      @db.Uuid
+  status          OutboxStatus @default(PENDING)
+  attempts        Int          @default(0)
+  lastAttemptAt   DateTime?
+  leaseOwner      String?
+  leaseExpiresAt  DateTime?
+  nextAttemptAt   DateTime?
+  createdAt       DateTime     @default(now())
+  publishedAt     DateTime?
+  deadLetteredAt  DateTime?
+  failureReason   String?
+
+  @@index([status, nextAttemptAt])
+  @@index([aggregateType, aggregateId])
+  @@map("outbox_events")
+}
+
+model OutboxDlq {
+  id            String   @id @default(uuid()) @db.Uuid
+  outboxEventId String   @db.Uuid
+  payload       Json
+  deadLetteredAt DateTime
+  reason        String
+
+  @@index([outboxEventId])
+  @@map("outbox_dlq")
+}
+
+model TenantScope {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  organizationId String   @db.Uuid
+  divisionId    String?   @db.Uuid
+  departmentId  String?   @db.Uuid
+  regionId      String?   @db.Uuid
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  primary       Boolean   @default(false)
+
+  @@index([userId, organizationId, effectiveTo])
+  @@map("tenant_scopes")
+}
+
+model CommunicationPolicy {
+  id                       String   @id @default(uuid()) @db.Uuid
+  contextType              String
+  parentEntityType         String
+  requiredPermission       String
+  dataScope                String   @default("tenant")
+  allowMentionsAcrossTenant Boolean @default(false)
+  allowedTargetRoles       String[]
+
+  @@index([contextType])
+  @@map("communication_policies")
+}

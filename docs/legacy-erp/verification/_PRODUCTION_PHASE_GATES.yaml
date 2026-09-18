@@ -241,8 +241,9 @@ phases:
 
   - id: P04
     name: Canonical database and migration chain
-    status: NOT_STARTED
+    status: PASS
     depends_on: [P03]
+    candidate_sha: 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a
     acceptance_contract: P04_FROZEN_ACCEPTANCE_CONTRACT.md
     certification_command: node scripts/ssot/certify_p04_phase.js
     certification_success: exit code 0 plus PHASE_PASS and P04 candidate SHA-bound token
@@ -258,6 +259,9 @@ phases:
     name: Platform architecture maintainability and controls
     status: NOT_STARTED
     depends_on: [P04]
+    acceptance_contract: P05_FROZEN_ACCEPTANCE_CONTRACT.md
+    certification_command: node scripts/ssot/certify_p05_phase.js
+    certification_success: exit 0 and token P05:<candidate-full-sha>:PHASE_PASS
     required_gates:
       - auth session MFA RBAC tenant scope audit and maker-checker verified
       - communication mention notification outbox and idempotency verified
@@ -265,7 +269,7 @@ phases:
       - domain ownership boundaries dependency direction and shared kernel policy are enforced
       - no forbidden domain cycle direct cross-domain persistence reach-through or generic shared dumping ground
       - representative module change does not require unexplained unrelated-domain edits
-    required_tests: [architecture_fitness_suite, module_owner_registry, dependency_graph_snapshot, module_boundary_test, circular_dependency_scan, coupling_complexity_scan, duplicate_code_scan, representative_module_change_test, auth_session_mfa, role_permission_matrix, tenant_isolation, immutable_audit, maker_checker, outbox_retry_dedup, communication_acl, error_contract]
+    required_tests: [predecessor_scope_and_safety, canonical_traceability, architecture_fitness_suite, module_owner_registry, dependency_graph_snapshot, module_boundary_test, circular_dependency_scan, coupling_complexity_scan, duplicate_dead_code_scan, representative_module_change_test, auth_session_mfa, role_permission_matrix, tenant_isolation, immutable_audit, maker_checker, outbox_retry_dedup, communication_acl, canonical_error_contract, configuration_ownership_test]
 
   - {id: P06, name: Master data and system configuration, status: NOT_STARTED, depends_on: [P05], required_gates: [all master capabilities live-data backed, no production mock or fallback, referential integrity verified], required_tests: [master_crud, import_export, soft_delete, uniqueness, role_scope, audit]}
   - {id: P07, name: CRM marketing guest book and BusDev, status: NOT_STARTED, depends_on: [P06], required_gates: [lead-to-qualified-opportunity golden thread passes], required_tests: [dedup, ownership_reassignment, attribution, followup_sla, consent, role_visibility, dashboard_reconciliation]}

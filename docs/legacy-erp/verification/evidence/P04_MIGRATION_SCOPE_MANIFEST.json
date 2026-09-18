@@ -1,8 +1,8 @@
 {
   "manifest_version": "1.0.0",
-  "candidate_sha": "f629fb5b2035aa57d4be77c6c14149ba26110a4f",
+  "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
   "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-  "generated_at": "2026-09-18T11:43:20.931Z",
+  "generated_at": "2026-09-18T12:54:47.101Z",
   "probes": [
     {
       "table": "articles",

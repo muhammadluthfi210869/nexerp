@@ -1,9 +1,9 @@
 {
   "phase": "P04",
   "name": "Canonical database and migration chain",
-  "timestamp": "2026-09-18T11:46:32.219Z",
+  "timestamp": "2026-09-18T12:58:13.048Z",
   "verdict": "PASS",
-  "candidate_sha": "f629fb5b2035aa57d4be77c6c14149ba26110a4f",
+  "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
   "candidate_migrations": [
     "20260918120000_p04_deduplicate_slug_indexes"
   ],
@@ -23,11 +23,14 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 860,
+      "duration_ms": 1123,
       "timeout_state": "NONE",
       "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-      "candidate_sha": "f629fb5b2035aa57d4be77c6c14149ba26110a4f",
-      "database": "erp_db_test",
+      "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "database": "source-read-only",
+      "database_purpose": "source_integrity_baseline",
+      "host_class": "loopback",
+      "postgres_major": 16,
       "command": "node backend/node_modules/prisma/build/index.js --version",
       "commands": [
         {
@@ -56,11 +59,14 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 1,
+      "duration_ms": 3,
       "timeout_state": "NONE",
       "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-      "candidate_sha": "f629fb5b2035aa57d4be77c6c14149ba26110a4f",
-      "database": "docs/legacy-erp/contracts",
+      "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "database": "source-read-only",
+      "database_purpose": "contract_audit",
+      "host_class": "loopback",
+      "postgres_major": 16,
       "command": "inspect docs/legacy-erp/contracts/09_NON_FUNCTIONAL_CONTRACT.md",
       "commands": [
         {
@@ -79,11 +85,14 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 9250,
+      "duration_ms": 13708,
       "timeout_state": "NONE",
       "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-      "candidate_sha": "f629fb5b2035aa57d4be77c6c14149ba26110a4f",
-      "database": "backend/prisma/schema",
+      "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "database": "source-read-only",
+      "database_purpose": "schema_validation",
+      "host_class": "loopback",
+      "postgres_major": 16,
       "command": "prisma validate && prisma generate",
       "commands": [
         {
@@ -106,11 +115,14 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 5817,
+      "duration_ms": 6208,
       "timeout_state": "NONE",
       "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-      "candidate_sha": "f629fb5b2035aa57d4be77c6c14149ba26110a4f",
-      "database": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\prisma\\migrations",
+      "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "database": "source-read-only",
+      "database_purpose": "migration_chain_audit",
+      "host_class": "loopback",
+      "postgres_major": 16,
       "command": "git ls-tree -r cf8b725d9fec4c808937c50217a3bc45050d271a backend/prisma/migrations",
       "commands": [
         {
@@ -136,11 +148,14 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 15206,
+      "duration_ms": 21840,
       "timeout_state": "NONE",
       "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-      "candidate_sha": "f629fb5b2035aa57d4be77c6c14149ba26110a4f",
-      "database": "nex_p04_f629fb5b_20636_empty",
+      "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "database": "nex_p04_5195fa2a_23524_empty",
+      "database_purpose": "empty_db_migrate_target",
+      "host_class": "loopback",
+      "postgres_major": 16,
       "command": "prisma migrate deploy && prisma migrate status && prisma migrate diff",
       "commands": [
         {
@@ -165,8 +180,7 @@
         "ledger": 43
       },
       "schema_drift": 0,
-      "empty_db_name": "nex_p04_f629fb5b_20636_empty",
-      "empty_db_url": "postgresql://***:***@localhost:5432/nex_p04_f629fb5b_20636_empty?schema=public",
+      "empty_db_name": "nex_p04_5195fa2a_23524_empty",
       "migration_checksums": [
         {
           "name": "20260430122705_phase1",
@@ -348,11 +362,14 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 28706,
+      "duration_ms": 32220,
       "timeout_state": "NONE",
       "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-      "candidate_sha": "f629fb5b2035aa57d4be77c6c14149ba26110a4f",
-      "database": "nex_p04_f629fb5b_20636_baseline",
+      "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "database": "nex_p04_5195fa2a_23524_baseline",
+      "database_purpose": "baseline_upgrade_target",
+      "host_class": "loopback",
+      "postgres_major": 16,
       "command": "prisma migrate deploy (baseline) && prisma migrate deploy (candidate)",
       "commands": [
         {
@@ -365,7 +382,7 @@
         }
       ],
       "exit_code": 0,
-      "materialized_base_path": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\nex_p04_base_mig_1789731700136",
+      "materialized_base_path": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\nex_p04_base_mig_1789735977350",
       "reconciled_tables": 2,
       "data_loss_rows": 0,
       "baseline_schema_digest": "7813fe9d011e8ecc1064357d7de854fddfa2e9a2e9d0924f93bda5d809956d23",
@@ -810,13 +827,12 @@
         "rejected": 0
       },
       "backfill_digests": {
-        "before": "e83b69d804f77af31c2bcb83446c81add7caf87be725c2be420af3d9ad5a9889",
-        "pass1": "71e5f1fcc344bb55ce74a54684407c022cf2d56cf4ba87273d5f004f0fec5be6",
-        "pass2": "71e5f1fcc344bb55ce74a54684407c022cf2d56cf4ba87273d5f004f0fec5be6",
+        "before": "d292adc8ec99b488705e7302577751be44810de9f3d6b1d5dc87514d52168dbc",
+        "pass1": "ca5d3a90e086a8e795eda829d24186d1d81ee3149ec224c23d0aca4f2030a158",
+        "pass2": "ca5d3a90e086a8e795eda829d24186d1d81ee3149ec224c23d0aca4f2030a158",
         "stable": true
       },
-      "baseline_db_name": "nex_p04_f629fb5b_20636_baseline",
-      "baseline_db_url": "postgresql://***:***@localhost:5432/nex_p04_f629fb5b_20636_baseline?schema=public"
+      "baseline_db_name": "nex_p04_5195fa2a_23524_baseline"
     },
     "migration_idempotency": {
       "id": "migration_idempotency",
@@ -824,11 +840,14 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 36529,
+      "duration_ms": 43015,
       "timeout_state": "NONE",
       "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-      "candidate_sha": "f629fb5b2035aa57d4be77c6c14149ba26110a4f",
-      "database": "postgresql://postgres:66luthfi29@localhost:5432/nex_p04_f629fb5b_20636_baseline?schema=public",
+      "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "database": "nex_p04_5195fa2a_23524_baseline",
+      "database_purpose": "migration_idempotency_target",
+      "host_class": "loopback",
+      "postgres_major": 16,
       "command": "prisma migrate deploy (concurrent & idempotent rerun)",
       "commands": [
         {
@@ -836,11 +855,11 @@
           "exit_code": 0
         },
         {
-          "command": "competing deploy pid 13216",
+          "command": "competing deploy pid 28028",
           "exit_code": 0
         },
         {
-          "command": "competing deploy pid 5200",
+          "command": "competing deploy pid 6708",
           "exit_code": 0
         }
       ],
@@ -851,17 +870,17 @@
       "competing_deploy_processes": 2,
       "competing_processes_results": [
         {
-          "pid": 13216,
+          "pid": 28028,
           "exit_code": 0,
-          "duration_ms": 4401,
-          "stdout_redacted": "Datasource \"db\": PostgreSQL database \"nex_p04_f629fb5b_20636_concurrency\", schema \"public\" at \"localhost:5432\"\n\n43 migrations found in prisma/migrations\n\nApplying migration `20260918120000_p04_deduplicate_slug_indexes`\n\nThe following migration(s) have been applied:\n\nmigrations/\n  └─ 20260918120000_p",
+          "duration_ms": 2408,
+          "stdout_redacted": "Datasource \"db\": PostgreSQL database \"nex_p04_5195fa2a_23524_concurrency\", schema \"public\" at \"localhost:5432\"\n\n43 migrations found in prisma/migrations\n\nApplying migration `20260918120000_p04_deduplicate_slug_indexes`\n\nThe following migration(s) have been applied:\n\nmigrations/\n  └─ 20260918120000_p",
           "stderr_redacted": "Loaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma\\schema.\n"
         },
         {
-          "pid": 5200,
+          "pid": 6708,
           "exit_code": 0,
-          "duration_ms": 4457,
-          "stdout_redacted": "Datasource \"db\": PostgreSQL database \"nex_p04_f629fb5b_20636_concurrency\", schema \"public\" at \"localhost:5432\"\n\n43 migrations found in prisma/migrations\n\n\nNo pending migrations to apply.\n",
+          "duration_ms": 2406,
+          "stdout_redacted": "Datasource \"db\": PostgreSQL database \"nex_p04_5195fa2a_23524_concurrency\", schema \"public\" at \"localhost:5432\"\n\n43 migrations found in prisma/migrations\n\n\nNo pending migrations to apply.\n",
           "stderr_redacted": "Loaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma\\schema.\n"
         }
       ],
@@ -875,11 +894,14 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 35818,
+      "duration_ms": 34820,
       "timeout_state": "NONE",
       "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-      "candidate_sha": "f629fb5b2035aa57d4be77c6c14149ba26110a4f",
-      "database": "nex_p04_f629fb5b_20636_rollback",
+      "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "database": "nex_p04_5195fa2a_23524_rollback",
+      "database_purpose": "rollback_rehearsal_target",
+      "host_class": "loopback",
+      "postgres_major": 16,
       "command": "prisma migrate deploy -> down.sql -> prisma migrate deploy",
       "commands": [
         {
@@ -900,14 +922,14 @@
         }
       ],
       "exit_code": 0,
-      "rehearsal_database": "nex_p04_f629fb5b_20636_rollback",
+      "rehearsal_database": "nex_p04_5195fa2a_23524_rollback",
       "baseline_schema_digest": "7813fe9d011e8ecc1064357d7de854fddfa2e9a2e9d0924f93bda5d809956d23",
       "candidate_schema_digest": "5c5b0575ceff68dbe1a3b0f5d2f69cf58a4d6567778ec047d7de757f1b65f47e",
       "rolled_back_schema_digest": "7813fe9d011e8ecc1064357d7de854fddfa2e9a2e9d0924f93bda5d809956d23",
       "restored_schema_digest": "5c5b0575ceff68dbe1a3b0f5d2f69cf58a4d6567778ec047d7de757f1b65f47e",
-      "baseline_fixture_digest": "63a44f6a3fb67d8e37b76b035e99e33e8838cb8f4509ae56a9b233e4a5cb2a48",
-      "rolled_back_fixture_digest": "63a44f6a3fb67d8e37b76b035e99e33e8838cb8f4509ae56a9b233e4a5cb2a48",
-      "restored_fixture_digest": "63a44f6a3fb67d8e37b76b035e99e33e8838cb8f4509ae56a9b233e4a5cb2a48",
+      "baseline_fixture_digest": "8278280961b8f08923d55339fc64eac06db71cd5d4efdae5cb0b4e7a1d46ee85",
+      "rolled_back_fixture_digest": "8278280961b8f08923d55339fc64eac06db71cd5d4efdae5cb0b4e7a1d46ee85",
+      "restored_fixture_digest": "8278280961b8f08923d55339fc64eac06db71cd5d4efdae5cb0b4e7a1d46ee85",
       "ledger_before_rollback": [
         {
           "migration_name": "20260430122705_phase1",
@@ -1557,11 +1579,14 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 177,
+      "duration_ms": 159,
       "timeout_state": "NONE",
       "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-      "candidate_sha": "f629fb5b2035aa57d4be77c6c14149ba26110a4f",
-      "database": "postgresql://postgres:66luthfi29@localhost:5432/nex_p04_f629fb5b_20636_baseline?schema=public",
+      "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "database": "nex_p04_5195fa2a_23524_baseline",
+      "database_purpose": "constraint_index_audit_target",
+      "host_class": "loopback",
+      "postgres_major": 16,
       "command": "audit pg_constraint, pg_indexes, and verify SQLSTATE 23505",
       "commands": [
         {
@@ -1589,8 +1614,11 @@
       "duration_ms": 2,
       "timeout_state": "NONE",
       "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-      "candidate_sha": "f629fb5b2035aa57d4be77c6c14149ba26110a4f",
-      "database": "candidate_migrations",
+      "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "database": "source-read-only",
+      "database_purpose": "contract_ddl_compatibility_scan",
+      "host_class": "loopback",
+      "postgres_major": 16,
       "command": "AST regex scan candidate migrations DDL",
       "commands": [
         {
@@ -1609,11 +1637,14 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 117,
+      "duration_ms": 149,
       "timeout_state": "NONE",
       "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-      "candidate_sha": "f629fb5b2035aa57d4be77c6c14149ba26110a4f",
-      "database": "postgresql://postgres:66luthfi29@localhost:5432/nex_p04_f629fb5b_20636_baseline?schema=public",
+      "candidate_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "database": "nex_p04_5195fa2a_23524_baseline",
+      "database_purpose": "version_coexistence_probe_target",
+      "host_class": "loopback",
+      "postgres_major": 16,
       "command": "execute N-1 and N probe operations for affected tables",
       "commands": [
         {
