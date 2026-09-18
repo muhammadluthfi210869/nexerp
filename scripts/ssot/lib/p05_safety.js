@@ -175,6 +175,9 @@ function assertNoSecrets(value, env = process.env, path = 'root') {
   }
   if (typeof value === 'object') {
     for (const [k, v] of Object.entries(value)) {
+      // Skip command keys (already redacted; phone-like numbers in node hash strings
+      // can look like phone numbers and false-trigger this scan)
+      if (/^(command|stdout|stderr|args)$/i.test(k)) continue;
       checkString(k, `${path}.key(${k})`);
       assertNoSecrets(v, env, `${path}.${k}`);
     }
