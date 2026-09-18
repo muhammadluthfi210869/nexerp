@@ -3,11 +3,11 @@
   "level": "PHASE_GATE",
   "contract_version": "1.0.0",
   "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-  "candidate_sha": "54f8790ffbbda3368539d5545bd1e06b3c614ab9",
-  "started_at": "2026-09-18T14:36:27.094Z",
-  "completed_at": "2026-09-18T14:36:27.315Z",
+  "candidate_sha": "8a852802862a637357074eccbd7accb7bed57c0b",
+  "started_at": "2026-09-18T14:36:52.533Z",
+  "completed_at": "2026-09-18T14:36:55.567Z",
   "verdict": "FAIL",
   "token": null,
   "result": null,
-  "failure": "Error: Dirty files outside P05 generated allowlist: [{\"status\":\"M \",\"file\":\"ocs/legacy-erp/verification/evidence/P05_PHASE_CERTIFICATION_RESULT.json\"},{\"status\":\"??\",\"file\":\"scripts/ssot/_p05_run_and_commit.js\"}]\n    at assert (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:20:47)\n    at main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:92:5)\n    at Object.<anonymous> (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:116:1)\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)"
+  "failure": "P05GateError: [predecessor_scope_and_safety] PII_IN_EVIDENCE: Phone-shaped value detected at root.timestamp\n    at checkString (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:145:13)\n    at assertNoSecrets (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:166:36)\n    at Object.assertNoSecrets (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:174:7)\n    at Object.certifyP05 (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:320:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:97:20)"
 }
