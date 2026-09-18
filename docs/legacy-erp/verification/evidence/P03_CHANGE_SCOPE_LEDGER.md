@@ -960,3 +960,20 @@ In the transition from Phase P02 to Phase P03, commit `ff47ed36` encompassed bot
 | 929 | `scripts/ssot/validate_screen_mappings.js` | P03 | Build & CI Hardening Infrastructure | YES |
 | 930 | `scripts/ssot/validate_ssot.js` | P03 | Build & CI Hardening Infrastructure | YES |
 | 931 | `scripts/ssot/verify_clean_checkout_build.js` | P03 | Build & CI Hardening Infrastructure | YES |
+| 932 | `backend/prisma/migrations/20260917000000_p04_canonical_database_alignment/migration.sql` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 933 | `backend/prisma/migrations/20260917000000_p04_canonical_database_alignment/down.sql` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 934 | `frontend/src/app/(dashboard)/inventory/stock-adjustment/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 935 | `frontend/src/app/(dashboard)/inventory/stock-opname/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 936 | `frontend/src/app/(dashboard)/production/realization-calendar/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 937 | `frontend/src/app/(dashboard)/production/schedule-calendar/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 938 | `frontend/src/app/(dashboard)/production/schedule-filling/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 939 | `frontend/src/app/(dashboard)/production/schedule-mixing/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 940 | `frontend/src/app/(dashboard)/production/schedule-packaging/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 941 | `frontend/src/app/(dashboard)/quality/karantina/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 942 | `frontend/src/app/(dashboard)/reports/mutation-goods/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 943 | `frontend/src/app/(dashboard)/reports/stock-valuation/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 944 | `frontend/src/app/(dashboard)/reports/stock/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 945 | `frontend/src/app/(dashboard)/rnd/project-monitoring/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 946 | `frontend/src/app/(dashboard)/system/audit-logs/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 947 | `frontend/src/app/(dashboard)/visual-dna/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
+| 948 | `frontend/src/app/(dashboard)/visual-dna/golden-reference/page.tsx` | P02 | Inherited Contract-to-Code Reconciliation | NO |
