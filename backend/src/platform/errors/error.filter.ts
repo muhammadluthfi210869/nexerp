@@ -9,6 +9,19 @@ import {
 import { Response, Request } from 'express';
 import { NexError, scrub, getRegistered } from './error.factory';
 import { randomUUID } from 'crypto';
+interface ErrorPayload {
+  status: number;
+  code: string;
+  message: string;
+  fieldErrors?: Record<string, string>;
+  correlationId?: string;
+}
+
+const ERROR_CODE_MAP: Record<string, { status: number; code: string; message: string }> = {
+  SESSION_REVOKED: { status: HttpStatus.UNAUTHORIZED, code: 'AUTH_SESSION_REVOKED', message: 'Session revoked' },
+  REFRESH_REPLAY: { status: HttpStatus.UNAUTHORIZED, code: 'AUTH_REFRESH_REPLAY', message: 'Refresh token replay detected' },
+  SELF_APPROVAL_FORBIDDEN: { status: HttpStatus.FORBIDDEN, code: 'MAKER_CHECKER_SELF_APPROVE', message: 'Maker cannot approve own request' }
+};
 
 @Catch()
 @Injectable()
@@ -17,66 +30,74 @@ export class CanonicalErrorFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    const correlationId = this.getCorrelationId(request);
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let code = 'INTERNAL_ERROR';
-    let message = 'An unexpected error occurred';
-    let fieldErrors: Record<string, string> | undefined = undefined;
-    const correlationId = (request?.headers?.['x-correlation-id'] as string) || randomUUID();
-
-    if (exception instanceof NexError) {
-      status = exception.http;
-      code = exception.code;
-      message = exception.safeMessage;
-      fieldErrors = exception.fieldErrors;
-    } else if (exception instanceof HttpException) {
-      status = exception.getStatus();
-      const res = exception.getResponse();
-      if (typeof res === 'string') {
-        message = res;
-      } else if (typeof res === 'object' && res !== null) {
-        const anyRes = res as any;
-        message = anyRes.message || exception.message;
-        code = anyRes.error || anyRes.code || code;
-        if (Array.isArray(anyRes.message)) {
-          message = anyRes.message.join(', ');
-        }
-      }
-    } else if (exception instanceof Error) {
-      const anyErr = exception as any;
-      if (anyErr.code && getRegistered(anyErr.code)) {
-        const reg = getRegistered(anyErr.code)!;
-        status = reg.http;
-        code = anyErr.code;
-        message = reg.safeMessage;
-      } else if (anyErr.code === 'SESSION_REVOKED') {
-        status = HttpStatus.UNAUTHORIZED;
-        code = 'AUTH_SESSION_REVOKED';
-        message = 'Session revoked';
-      } else if (anyErr.code === 'REFRESH_REPLAY') {
-        status = HttpStatus.UNAUTHORIZED;
-        code = 'AUTH_REFRESH_REPLAY';
-        message = 'Refresh token replay detected';
-      } else if (anyErr.code === 'SELF_APPROVAL_FORBIDDEN') {
-        status = HttpStatus.FORBIDDEN;
-        code = 'MAKER_CHECKER_SELF_APPROVE';
-        message = 'Maker cannot approve own request';
-      } else {
-        message = exception.message || message;
-      }
-    }
-
-    const safeMessage = scrub(String(message || ''));
+    const payload = this.resolvePayload(exception);
+    payload.correlationId = correlationId;
+    payload.message = scrub(payload.message);
 
     if (response && typeof response.status === 'function') {
-      response.status(status).json({
+      response.status(payload.status).json({
         error: {
-          code,
-          message: safeMessage,
-          correlationId,
-          ...(fieldErrors ? { fieldErrors } : {})
+          code: payload.code,
+          message: payload.message,
+          correlationId: payload.correlationId,
+          ...(payload.fieldErrors ? { fieldErrors: payload.fieldErrors } : {})
         }
       });
     }
+  }
+
+  private getCorrelationId(request: Request): string {
+    const h = request?.headers?.['x-correlation-id'];
+    return typeof h === 'string' ? h : randomUUID();
+  }
+
+  private resolvePayload(exception: unknown): ErrorPayload {
+    if (exception instanceof NexError) {
+      return this.fromNexError(exception);
+    }
+    if (exception instanceof HttpException) {
+      return this.fromHttp(exception);
+    }
+    if (exception instanceof Error) {
+      return this.fromError(exception);
+    }
+    return { status: HttpStatus.INTERNAL_SERVER_ERROR, code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' };
+  }
+
+  private fromNexError(err: NexError): ErrorPayload {
+    return {
+      status: err.http,
+      code: err.code,
+      message: err.safeMessage,
+      fieldErrors: err.fieldErrors
+    };
+  }
+
+  private fromHttp(err: HttpException): ErrorPayload {
+    const status = err.getStatus();
+    const res: any = err.getResponse();
+    let msg = err.message;
+    let code = 'HTTP_ERROR';
+    if (typeof res === 'string') {
+      msg = res;
+    } else if (res && typeof res === 'object') {
+      msg = Array.isArray(res.message) ? res.message.join(', ') : (res.message || err.message);
+      code = res.error || res.code || code;
+    }
+    return { status, code, message: msg };
+  }
+
+  private fromError(err: any): ErrorPayload {
+    const reg = err.code ? getRegistered(err.code) : null;
+    if (reg) {
+      return { status: reg.http, code: err.code, message: reg.safeMessage };
+    }
+    const mapped = err.code ? ERROR_CODE_MAP[err.code] : null;
+    if (mapped) {
+      return { status: mapped.status, code: mapped.code, message: mapped.message };
+    }
+    return { status: HttpStatus.INTERNAL_SERVER_ERROR, code: 'INTERNAL_ERROR', message: err.message || 'An unexpected error occurred' };
   }
 }

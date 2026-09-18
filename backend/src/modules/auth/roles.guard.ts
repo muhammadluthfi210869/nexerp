@@ -25,33 +25,7 @@ export class RolesGuard implements CanActivate {
     );
 
     if (requireMeta) {
-      const req = context.switchToHttp().getRequest();
-      const actor = req.user || { id: 'anonymous', roles: [] };
-      const resource = req.params && req.params.id ? { type: context.getClass().name.toLowerCase(), id: req.params.id } : { type: context.getClass().name.toLowerCase() };
-      const decision = {
-        actor,
-        action: context.getHandler().name,
-        resource,
-        clientInjectedTenantId: req.body?.tenantId || req.query?.tenantId,
-        requiredPermission: requireMeta.permission,
-        dataScope: (requireMeta.dataScope as any) || 'tenant'
-      };
-      const result = this.policy.decide(decision);
-      if (!result.allow) {
-        const decisionId = crypto
-          .createHash('sha256')
-          .update(JSON.stringify({ actor: actor.id, action: decision.action, resource: decision.resource }))
-          .digest('hex')
-          .slice(0, 16);
-        console.log(JSON.stringify({
-          level: 'info',
-          gate_id: 'role_permission_matrix',
-          decision_id: decisionId,
-          reason_code: result.reason_code
-        }));
-        return false;
-      }
-      return true;
+      return this.evaluatePermissionPolicy(context, requireMeta);
     }
 
     // 2. Legacy / role-based metadata check
@@ -93,5 +67,30 @@ export class RolesGuard implements CanActivate {
       }));
     }
     return hasRole;
+  }
+
+  private evaluatePermissionPolicy(context: ExecutionContext, requireMeta: { permission: string; dataScope?: string }): boolean {
+    const req = context.switchToHttp().getRequest();
+    const actor = req.user || { id: 'anonymous', roles: [] };
+    const resId = req.params?.id;
+    const resource = resId ? { type: context.getClass().name.toLowerCase(), id: resId } : { type: context.getClass().name.toLowerCase() };
+    const decision = {
+      actor,
+      action: context.getHandler().name,
+      resource,
+      clientInjectedTenantId: req.body?.tenantId || req.query?.tenantId,
+      requiredPermission: requireMeta.permission,
+      dataScope: (requireMeta.dataScope as any) || 'tenant'
+    };
+    const result = this.policy.decide(decision);
+    if (!result.allow) {
+      console.log(JSON.stringify({
+        level: 'info',
+        gate_id: 'role_permission_matrix',
+        reason_code: result.reason_code
+      }));
+      return false;
+    }
+    return true;
   }
 }
