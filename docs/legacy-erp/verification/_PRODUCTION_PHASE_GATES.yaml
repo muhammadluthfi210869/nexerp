@@ -15,6 +15,13 @@ policy:
     unexpected_skips: 0
     flaky_or_quarantined: 0
   evidence_pack_required: true
+  one_pass_execution_standard: _ONE_PASS_PHASE_EXECUTION_STANDARD.md
+  one_prompt_per_phase_required: true
+  frozen_acceptance_contract_required_before_execution: true
+  authoritative_certification_command_required_per_phase: true
+  sha_bound_certification_token_required: true
+  independent_same_sha_reproduction_required: true
+  no_post_hoc_noncritical_acceptance_criteria: true
 
 verification_cadence:
   plan: _BATCH_VERIFICATION_PLAN.md
@@ -215,8 +222,10 @@ phases:
 
   - id: P03
     name: Reproducible build architecture gates and CI
-    status: PASS
+    status: FAIL
     depends_on: [P02]
+    certification_command: node scripts/ssot/certify_p03_release.js
+    certification_success: exit code 0 plus CERTIFIED_PASS and a token bound to the immutable candidate SHA
     required_gates:
       - clean install and production build pass for backend and frontend
       - typecheck and lint pass
@@ -229,7 +238,7 @@ phases:
 
   - id: P04
     name: Canonical database and migration chain
-    status: TESTING
+    status: NOT_STARTED
     depends_on: [P03]
     required_gates:
       - one canonical physical schema

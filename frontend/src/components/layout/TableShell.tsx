@@ -29,7 +29,7 @@ export function TableShell({ title, titleAccent, subtitle, actions, filters, pag
           {filters}
         </div>
       )}
-      <div className="flex flex-col" style={{ gap: 'var(--section-gap)' }}>
+      <div className="flex flex-col gap-[var(--section-gap)]">
         {children}
       </div>
       {pagination && (

@@ -13,7 +13,7 @@ ARG JWT_SECRET
 ENV JWT_SECRET=$JWT_SECRET
 
 COPY package*.json ./
-RUN npm install && npm install lightningcss-linux-x64-gnu
+RUN npm ci
 
 COPY . .
 RUN npm run build
@@ -33,6 +33,8 @@ ENV JWT_SECRET=$JWT_SECRET
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+
+USER node
 
 EXPOSE 3000
 

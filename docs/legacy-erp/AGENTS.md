@@ -36,6 +36,8 @@ When the user writes `verifikasi fase X-Y`, `verifikasi X-Y fase`, `verifikasi P
 
 Implementation is presumed wrong when it conflicts with a canonical contract until the owning contract is explicitly changed. Emergency code-first hotfixes require contract backfill before incident closure.
 
+For phase implementation/remediation, read `verification/_ONE_PASS_PHASE_EXECUTION_STANDARD.md` and the phase-specific prompt. Do not claim the phase complete until its registry-declared authoritative certification command exits `0` with the SHA-bound PASS token; diagnostic or partial suites cannot substitute for it.
+
 ## Narrow-context example
 
 For `REQ-XXX`, follow only its trace to `BUS-RULE-*`, workflow entity, canonical entities, API operation, screen, permission, events, NFR controls, and tests. Do not load or alter unrelated ERP behavior.

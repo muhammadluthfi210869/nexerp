@@ -27,7 +27,8 @@
     "db:status": "ts-node scripts/db-status.ts",
     "db:audit-migrations": "ts-node scripts/audit-migration-history.ts",
     "db:repair-migrations": "ts-node scripts/repair-migration-history.ts",
-    "db:rehearse-marketing-phase2": "ts-node scripts/rehearse-marketing-phase2.ts"
+    "db:rehearse-marketing-phase2": "ts-node scripts/rehearse-marketing-phase2.ts",
+    "prisma:generate": "prisma generate"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.5",

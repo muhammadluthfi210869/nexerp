@@ -22,6 +22,8 @@ Rules:
 6. Every phase reruns all earlier fast gates. Every domain phase reruns affected golden threads. `P20`–`P22` rerun the complete suite.
 7. A phase is green only when machine evidence and human review agree.
 8. Every change must preserve or improve changeability: no new unexplained dead code, duplicate implementation, forbidden dependency, circular dependency, or undocumented architectural exception.
+9. Every phase uses the one-pass package in `verification/_ONE_PASS_PHASE_EXECUTION_STANDARD.md`: one complete prompt, one frozen acceptance contract, one authoritative command, adversarial proof, pre-certification checklist, and independent rerun.
+10. A phase executor continues through remediation and retest until the authoritative command passes, except for an explicit decision/authority/external-system/destructive-action blocker; partial green results are not a handoff condition.
 
 ### Verification cadence
 

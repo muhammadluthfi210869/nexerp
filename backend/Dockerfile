@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Install dependencies first (better caching)
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 # Copy source and prisma schema
 COPY . .
@@ -35,6 +35,8 @@ RUN sed -i 's/\r$//' init-db.sh && chmod +x init-db.sh
 # Install production dependencies only
 RUN npm ci --omit=dev && npm cache clean --force
 RUN npx prisma generate
+
+USER node
 
 EXPOSE 3001
 

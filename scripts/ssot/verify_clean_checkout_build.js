@@ -1,19 +1,31 @@
 /**
- * NEX ERP -- Verify Clean Checkout Build
- * Validates reproducible compilation and packaging for Phase P03.
+ * NEX ERP -- Verify Clean Checkout Build (Phase P03)
+ * Validates reproducible compilation and packaging in a completely isolated disposable copy.
  *
- * Implements strict verification:
- * 1. Isolated worktree checkout proof (local & adversarial verification)
- * 2. Strict dependency validation (ensuring lockfiles are respected)
- * 3. Fresh compilation artifact validation (proving no dependency on stale cache)
+ * Requirements (Auditor R3-B2):
+ * 1. Isolated disposable copy under OS temp directory with unique sentinel marker.
+ * 2. Materialized via `git archive` without junctions, symlinks, or hardlinks to source checkout.
+ * 3. Verified safe cleanup: target must be inside OS temp dir and contain sentinel marker.
+ * 4. Full deterministic sequence:
+ *    - root, backend, frontend plain `npm ci --ignore-scripts=false --no-audit`
+ *    - prisma validate and prisma:generate
+ *    - backend & frontend typecheck
+ *    - backend & frontend lint
+ *    - backend & frontend unit tests
+ *    - backend & frontend production builds
+ *    - artifact and route manifest validation
+ * 5. Strictly rejects `--artifacts-only` or CI shortcuts for certification.
+ * 6. Records candidate SHA, Node/npm versions, lockfile hashes, and command details in JSON.
  */
 
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { execSync } = require('child_process');
+const crypto = require('crypto');
+const { execSync, spawnSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '../..');
+const VERIFY_DIR = path.join(ROOT, 'docs/legacy-erp/verification');
 
 function walk(dir, exclude = ['node_modules', '.next', 'dist', '.git']) {
   if (!fs.existsSync(dir)) return [];
@@ -22,6 +34,12 @@ function walk(dir, exclude = ['node_modules', '.next', 'dist', '.git']) {
     const p = path.join(dir, e.name);
     return e.isDirectory() ? walk(p, exclude) : [p];
   });
+}
+
+function computeFileHash(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  const content = fs.readFileSync(filePath);
+  return crypto.createHash('sha256').update(content).digest('hex');
 }
 
 function verifyArtifacts(targetRoot) {
@@ -71,64 +89,208 @@ function verifyArtifacts(targetRoot) {
   };
 }
 
-function verifyCleanCheckoutBuild(options = {}) {
-  const isCI = Boolean(process.env.CI);
-  const requireIsolated = options.isolated || (!isCI && !options.checkArtifactsOnly);
+function safeCleanup(tempDir) {
+  const resolvedTemp = path.resolve(tempDir);
+  const resolvedOsTmp = path.resolve(os.tmpdir());
+  const rel = path.relative(resolvedOsTmp, resolvedTemp);
 
-  if (!requireIsolated) {
-    return verifyArtifacts(options.root || ROOT);
+  if (rel.startsWith('..') || path.isAbsolute(rel) || rel === '') {
+    throw new Error(`Unsafe cleanup aborted: ${tempDir} is not a subfolder of os.tmpdir() (${os.tmpdir()})`);
   }
 
-  const tempDir = path.join(os.tmpdir(), `nexerp-clean-checkout-${Date.now()}`);
-  const startTime = Date.now();
+  const sentinelFile = path.join(tempDir, 'nexerp_clean_sentinel.json');
+  if (!fs.existsSync(sentinelFile)) {
+    throw new Error(`Sentinel marker missing in temp directory: ${tempDir}. Aborting cleanup to prevent accidental data loss.`);
+  }
 
   try {
-    execSync(`git worktree add --detach "${tempDir}" HEAD`, { cwd: ROOT, stdio: 'pipe' });
+    fs.rmSync(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 500 });
+  } catch (err) {
+    console.warn(`Warning: failed to remove disposable temp directory ${tempDir}:`, err.message);
+  }
+}
 
-    const tempDist = path.join(tempDir, 'backend/dist');
-    const tempNext = path.join(tempDir, 'frontend/.next');
-    if (fs.existsSync(tempDist)) fs.rmSync(tempDist, { recursive: true, force: true });
-    if (fs.existsSync(tempNext)) fs.rmSync(tempNext, { recursive: true, force: true });
+function verifyCleanCheckoutBuild(options = {}) {
+  const startTime = Date.now();
 
-    const rootNm = path.join(ROOT, 'node_modules');
-    const bNm = path.join(ROOT, 'backend/node_modules');
-    const fNm = path.join(ROOT, 'frontend/node_modules');
-
-    if (fs.existsSync(rootNm) && !fs.existsSync(path.join(tempDir, 'node_modules'))) {
-      try { fs.symlinkSync(rootNm, path.join(tempDir, 'node_modules'), 'junction'); } catch (_) {}
+  // Explicit non-certifying diagnostic mode
+  if (options.checkArtifactsOnly) {
+    if (!options.allowDiagnosticBypass) {
+      return {
+        pass: false,
+        error: 'REJECTED: --artifacts-only is a diagnostic flag and cannot satisfy P03 clean checkout certification.',
+        details: { mode: 'non_certifying_diagnostic_rejected' }
+      };
     }
-    if (fs.existsSync(bNm) && !fs.existsSync(path.join(tempDir, 'backend/node_modules'))) {
-      try { fs.symlinkSync(bNm, path.join(tempDir, 'backend/node_modules'), 'junction'); } catch (_) {}
-    }
-    if (fs.existsSync(fNm) && !fs.existsSync(path.join(tempDir, 'frontend/node_modules'))) {
-      try { fs.symlinkSync(fNm, path.join(tempDir, 'frontend/node_modules'), 'junction'); } catch (_) {}
-    }
+    const res = verifyArtifacts(options.root || ROOT);
+    res.details.mode = 'diagnostic_artifacts_only';
+    res.details.certified = false;
+    return res;
+  }
 
-    execSync('npm --prefix backend run build', { cwd: tempDir, stdio: 'pipe' });
-    execSync('npm --prefix frontend run build', { cwd: tempDir, stdio: 'pipe' });
-
-    const artifactRes = verifyArtifacts(tempDir);
-    artifactRes.details.mode = 'isolated_worktree';
-    artifactRes.details.duration_ms = Date.now() - startTime;
-    artifactRes.details.worktree_path = tempDir;
-
-    return artifactRes;
-  } finally {
+  const sha = options.sha || (() => {
     try {
-      execSync(`git worktree remove --force "${tempDir}"`, { cwd: ROOT, stdio: 'pipe' });
+      return execSync('git rev-parse HEAD', { cwd: ROOT, stdio: 'pipe' }).toString().trim();
     } catch (_) {
-      try { fs.rmSync(tempDir, { recursive: true, force: true }); } catch (_) {}
+      return 'UNKNOWN_SHA';
     }
+  })();
+
+  const tempDir = path.join(os.tmpdir(), `nexerp-clean-checkout-${Date.now()}-${process.pid}`);
+  const sentinelFile = path.join(tempDir, 'nexerp_clean_sentinel.json');
+  const archivePath = path.join(os.tmpdir(), `nexerp-archive-${Date.now()}-${process.pid}.tar`);
+
+  const executionLog = {
+    started_at: new Date().toISOString(),
+    candidate_sha: sha,
+    node_version: process.version,
+    temp_dir: tempDir,
+    lockfile_hashes: {
+      root: computeFileHash(path.join(ROOT, 'package-lock.json')),
+      backend: computeFileHash(path.join(ROOT, 'backend/package-lock.json')),
+      frontend: computeFileHash(path.join(ROOT, 'frontend/package-lock.json'))
+    },
+    commands: []
+  };
+
+  try {
+    fs.mkdirSync(tempDir, { recursive: true });
+    fs.writeFileSync(sentinelFile, JSON.stringify({
+      created_at: new Date().toISOString(),
+      pid: process.pid,
+      root: ROOT,
+      sha
+    }, null, 2));
+
+    // 1. Materialize via git archive tar without any symlinks or shared dependencies
+    execSync(`git archive --format=tar ${sha} -o "${archivePath}"`, { cwd: ROOT, stdio: 'pipe' });
+    execSync(`tar -xf "${archivePath}" -C "${tempDir}"`, { cwd: ROOT, stdio: 'pipe' });
+    try { fs.unlinkSync(archivePath); } catch (_) {}
+
+    // Assert absolute independence: ensure no junctions or symlinks exist in tempDir
+    for (const nmSub of ['node_modules', 'backend/node_modules', 'frontend/node_modules']) {
+      const nmPath = path.join(tempDir, nmSub);
+      if (fs.existsSync(nmPath)) {
+        const stat = fs.lstatSync(nmPath);
+        if (stat.isSymbolicLink()) {
+          throw new Error(`Isolation breach: ${nmSub} is a symlink/junction in disposable copy!`);
+        }
+      }
+    }
+
+    const runCmd = (cmd, cwdRel = '.') => {
+      const fullCwd = path.join(tempDir, cwdRel);
+      const cmdStart = Date.now();
+      const res = spawnSync(cmd, {
+        cwd: fullCwd,
+        shell: true,
+        encoding: 'utf8',
+        maxBuffer: 50 * 1024 * 1024
+      });
+      const duration = Date.now() - cmdStart;
+      executionLog.commands.push({
+        command: cmd,
+        cwd: cwdRel,
+        exit_code: res.status,
+        duration_ms: duration,
+        error: res.status !== 0 ? (res.stderr || res.stdout).slice(-1000) : null
+      });
+      if (res.status !== 0) {
+        throw new Error(`Disposable step failed (exit ${res.status}): ${cmd}\n${(res.stderr || res.stdout).slice(-1500)}`);
+      }
+    };
+
+    // 2. Full clean deterministic install & build pipeline
+    // Dependency installations
+    runCmd('npm ci --ignore-scripts=false --no-audit');
+    runCmd('npm --prefix backend ci --ignore-scripts=false --no-audit');
+    runCmd('npm --prefix frontend ci --ignore-scripts=false --no-audit');
+
+    // Prisma validate & generate
+    runCmd('npx --prefix backend prisma validate');
+    runCmd('npm --prefix backend run prisma:generate');
+
+    // Typechecks
+    runCmd('npx tsc -p backend/tsconfig.build.json --noEmit');
+    runCmd('npx tsc --project frontend/tsconfig.json --noEmit');
+
+    // Lint
+    runCmd('npm --prefix backend run lint');
+    runCmd('npm --prefix frontend run lint');
+
+    // Unit tests
+    runCmd('npm --prefix backend run test:unit');
+    runCmd('npm --prefix frontend run test');
+
+    // Production builds
+    runCmd('npm --prefix backend run build');
+    runCmd('npm --prefix frontend run build');
+
+    // 3. Artifact verification
+    const artifactRes = verifyArtifacts(tempDir);
+    if (!artifactRes.pass) {
+      throw new Error(artifactRes.error);
+    }
+
+    executionLog.finished_at = new Date().toISOString();
+    executionLog.duration_ms = Date.now() - startTime;
+    executionLog.verdict = 'PASS';
+    executionLog.details = artifactRes.details;
+
+    if (fs.existsSync(VERIFY_DIR)) {
+      fs.writeFileSync(
+        path.join(VERIFY_DIR, '_clean_checkout_build_evidence.json'),
+        JSON.stringify(executionLog, null, 2)
+      );
+    }
+
+    return {
+      pass: true,
+      details: {
+        mode: 'isolated_disposable_pipeline',
+        candidate_sha: sha,
+        duration_ms: executionLog.duration_ms,
+        commands_executed: executionLog.commands.length,
+        ...artifactRes.details
+      }
+    };
+  } catch (err) {
+    executionLog.finished_at = new Date().toISOString();
+    executionLog.duration_ms = Date.now() - startTime;
+    executionLog.verdict = 'FAIL';
+    executionLog.error = err.message;
+
+    if (fs.existsSync(VERIFY_DIR)) {
+      fs.writeFileSync(
+        path.join(VERIFY_DIR, '_clean_checkout_build_evidence.json'),
+        JSON.stringify(executionLog, null, 2)
+      );
+    }
+
+    return {
+      pass: false,
+      error: err.message,
+      details: {
+        mode: 'isolated_disposable_pipeline',
+        candidate_sha: sha,
+        duration_ms: executionLog.duration_ms,
+        failed_command: executionLog.commands.find(c => c.exit_code !== 0)
+      }
+    };
+  } finally {
+    try { fs.unlinkSync(archivePath); } catch (_) {}
+    safeCleanup(tempDir);
   }
 }
 
 if (require.main === module) {
   try {
-    const isIsolated = process.argv.includes('--isolated');
-    const isArtifactsOnly = process.argv.includes('--artifacts-only') || Boolean(process.env.CI);
+    const isDiagnosticArtifacts = process.argv.includes('--artifacts-only');
+    const allowDiagnostic = process.argv.includes('--allow-diagnostic');
+
     const res = verifyCleanCheckoutBuild({
-      isolated: isIsolated,
-      checkArtifactsOnly: isArtifactsOnly
+      checkArtifactsOnly: isDiagnosticArtifacts,
+      allowDiagnosticBypass: allowDiagnostic
     });
 
     if (!res.pass) {
@@ -144,5 +306,6 @@ if (require.main === module) {
 
 module.exports = {
   verifyCleanCheckoutBuild,
-  verifyArtifacts
+  verifyArtifacts,
+  safeCleanup
 };

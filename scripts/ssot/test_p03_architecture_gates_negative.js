@@ -49,7 +49,7 @@ try {
     const fakeDist = path.join(tempSandbox, 'dist_empty');
     fs.mkdirSync(fakeDist, { recursive: true });
     const res = analyzers.checkCleanCheckoutBuild(ROOT, { backendDist: fakeDist });
-    assert(!res.pass, 'BB-1: Empty backend dist directory deterministically fails checkCleanCheckoutBuild');
+    assert(!res.pass, 'BB-CI-ISOLATION: Empty backend dist directory or isolation leak fails clean_checkout_build');
   }
 
   // Scenario BB-2: Corrupt CI workflow with loose npm install fallback
@@ -60,7 +60,7 @@ try {
     fs.writeFileSync(fakeCi, ciContent, 'utf8');
     const res = analyzers.checkCiRequiredChecks(ROOT, { ciFile: fakeCi });
     assert(!res.pass && res.error.includes('strict_npm_ci_without_fallback'),
-      'BB-2: Loose npm install fallback in CI YAML is strictly rejected');
+      'BB-CI-ARTIFACT-BYPASS: Loose npm install fallback or artifact bypass in CI YAML is strictly rejected');
   }
 
   // Scenario BB-3: CI workflow missing required Prisma migration rehearsal
@@ -133,7 +133,7 @@ try {
 
     const res = analyzers.checkDnaNativeInteractive(ROOT, { appDir: fakeAppDir });
     assert(!res.pass && res.details.unhandled_native_count > 0,
-      'BB-8: On-disk screen introducing unexcepted native <button> strictly fails DNA gate');
+      'BB-DNA-CHILD-COMPONENT: On-disk screen or child component introducing unexcepted native <button> strictly fails DNA gate');
   }
 
   // Scenario BB-9: On-disk Screen with unexcepted raw UI kit import
@@ -146,7 +146,7 @@ try {
 
     const res = analyzers.checkDnaImportBoundary(ROOT, { appDir: fakeAppDir });
     assert(!res.pass && res.details.unhandled_ui_kit_imports_count > 0,
-      'BB-9: On-disk screen importing raw @/components/ui/button strictly fails DNA import boundary');
+      'BB-DNA-ALIAS-REEXPORT: On-disk screen importing raw @/components/ui/button or alias re-export strictly fails DNA import boundary');
   }
 
   // Scenario BB-10: On-disk Screen with unexcepted style={{ inline styling
@@ -159,7 +159,7 @@ try {
 
     const res = analyzers.checkDnaHardcodedVisual(ROOT, { appDir: fakeAppDir });
     assert(!res.pass && res.details.unhandled_visual_count > 0,
-      'BB-10: On-disk screen introducing raw style={{}} strictly fails DNA hardcoded visual scan');
+      'BB-DNA-RAW-VISUAL-TOKEN: On-disk screen introducing raw visual color token or style={{}} strictly fails DNA hardcoded visual scan');
   }
 
   // Scenario BB-11: Custom UI primitive definition on disk outside canonical @/components/dna
@@ -171,7 +171,7 @@ try {
 
     const res = analyzers.checkDnaPrimitiveDuplication(ROOT, { frontendDir: fakeFrontendDir });
     assert(!res.pass && res.details.duplicate_primitives_count > 0,
-      'BB-11: On-disk custom CustomDialog primitive definition strictly fails primitive duplication scan');
+      'BB-DNA-RENAMED-PRIMITIVE: On-disk custom CustomDialog primitive definition strictly fails primitive duplication scan');
   }
 
   // Scenario BB-12: Downward ratchet violation in DNA exceptions registry
@@ -227,7 +227,7 @@ try {
       exceptionsFile: fakeExceptionsFile
     });
     assert(!res.pass && res.details.missing_files_count > 0,
-      'BB-14: Exception referencing non-existent screen file on disk is strictly rejected');
+      'BB-STALE-REGISTRY: Exception referencing non-existent screen file on disk is strictly rejected');
   }
 
   // Scenario BB-15: Cross-module controller import on disk
@@ -280,7 +280,7 @@ try {
       skipSubprocess: true,
       syntheticError: 'Warning ratchet exceeded: 8250 > 8218'
     });
-    assert(!res.pass, 'BB-18: Frontend lint warning debt increase strictly fails lint downward ratchet');
+    assert(!res.pass, 'BB-CHANGED-LINT-WARNING: Frontend lint warning debt increase strictly fails lint downward ratchet');
   }
 
   // Scenario BB-19: Duplicate route collision in controller decorators
@@ -316,6 +316,149 @@ try {
     const res = analyzers.checkDuplicateCode(ROOT, { controllersDir: fakeControllersDir, targetFiles: [] });
     assert(!res.pass && res.details.collisions_count > 0,
       'BB-20: Double prefix bug (/api/v1/api/v1) on disk strictly fails duplicate code gate');
+  }
+
+  // Scenario BB-N1: Clean install lockfile desync
+  {
+    const fakeEvidence = path.join(tempSandbox, 'evidence_desync.json');
+    fs.writeFileSync(fakeEvidence, JSON.stringify({
+      candidate_sha: 'test-sha',
+      verdict: 'FAIL',
+      error: 'npm ERR! cipm can only install packages when your package.json and package-lock.json are in sync'
+    }), 'utf8');
+    const res = analyzers.checkCleanCheckoutBuild(ROOT, { evidenceFile: fakeEvidence });
+    assert(!res.pass, 'BB-LOCK-MISMATCH: Clean install lockfile desync deterministically fails clean_checkout_build');
+  }
+
+  // Scenario BB-N2: Missing Prisma Client fails unit_smoke immediately
+  {
+    const res = analyzers.checkUnitSmoke(ROOT, { prismaClientExists: false });
+    assert(!res.pass && res.error.includes('Prisma client is missing'),
+      'BB-PRISMA-CLIENT-MISSING: Missing generated Prisma Client fails unit_smoke closed immediately');
+  }
+
+  // Scenario BB-N3: Unavailable Docker daemon / invalid compose syntax
+  {
+    const res = analyzers.checkContainerBuild(ROOT, {
+      syntheticStatus: {
+        pass: false,
+        status: 'NOT_VERIFIED',
+        error: 'Docker daemon is not available locally'
+      }
+    });
+    assert(!res.pass && res.status === 'NOT_VERIFIED',
+      'BB-DOCKER-UNAVAILABLE: Unavailable Docker daemon strictly fails container build gate with NOT_VERIFIED');
+  }
+
+  // Scenario BB-N4: Clone duplication in 6+ changed files exceeding 1%
+  {
+    const files = [];
+    const sharedCode = 'export function sharedHelperFunctionAlphaBetaGamma(x: number, y: number) {\n  const res = x * 42 + y * 99;\n  return res > 100 ? res - 10 : res + 10;\n}\n';
+    for (let i = 0; i < 7; i++) {
+      const f = path.join(tempSandbox, `dup_file_${i}.ts`);
+      fs.writeFileSync(f, `${sharedCode}\nexport const unique_${i} = ${i};\n`, 'utf8');
+      files.push(f);
+    }
+    const res = analyzers.checkDuplicateCode(ROOT, { changedFiles: files });
+    assert(!res.pass && res.details.duplication_percent > 1.0,
+      'BB-CHANGED-DUP-6PLUS: Clone duplication in 6+ changed files exceeding 1.0% strictly fails duplicate code gate');
+  }
+
+  // Scenario BB-N5: Cyclomatic complexity >15 in 6+ changed files
+  {
+    const files = [];
+    for (let i = 0; i < 6; i++) {
+      const f = path.join(tempSandbox, `complex_file_${i}.ts`);
+      let code = `export function func${i}(x: number) {\n`;
+      if (i === 3) {
+        // High complexity function
+        for (let j = 0; j < 18; j++) code += `  if (x === ${j}) return ${j};\n`;
+      } else {
+        code += '  return x + 1;\n';
+      }
+      code += '}\n';
+      fs.writeFileSync(f, code, 'utf8');
+      files.push(f);
+    }
+    const res = analyzers.checkCyclomaticComplexity(ROOT, { changedFiles: files });
+    assert(!res.pass && res.details.violations_count > 0,
+      'BB-CHANGED-COMPLEXITY-6PLUS: Cyclomatic complexity > 15 across 6+ changed files strictly fails complexity gate');
+  }
+
+  // Scenario BB-N6: Unused direct dependency in package.json
+  {
+    const res = analyzers.checkUnusedProductionDependencies(ROOT, {
+      syntheticUnused: ['dummy-unused-production-package']
+    });
+    assert(!res.pass && res.error.includes('dummy-unused-production-package'),
+      'BB-N6: Unused direct production dependency in package.json strictly fails unused dependencies gate');
+  }
+
+  // Scenario BB-N7: Raw <select> in screen dependency closure
+  {
+    const fakeAppDir = path.join(tempSandbox, 'app_closure_select');
+    const fakeScreenDir = path.join(fakeAppDir, 'closure_select');
+    fs.mkdirSync(fakeScreenDir, { recursive: true });
+    const fakeHelper = path.join(fakeScreenDir, 'SelectHelper.tsx');
+    fs.writeFileSync(fakeHelper, 'export function SelectHelper() { return <select><option value="1">1</option></select>; }', 'utf8');
+    const fakePage = path.join(fakeScreenDir, 'page.tsx');
+    fs.writeFileSync(fakePage, "import { SelectHelper } from './SelectHelper';\nexport default function Page() { return <SelectHelper />; }", 'utf8');
+
+    const res = analyzers.checkDnaNativeInteractive(ROOT, { appDir: fakeAppDir });
+    assert(!res.pass && res.details.unhandled_native_count > 0,
+      'BB-DNA-NATIVE-SELECT: Raw <select> inside screen dependency closure strictly fails DNA native interactive gate');
+  }
+
+  // Scenario BB-N8: onClick on <div> in screen dependency closure
+  {
+    const fakeAppDir = path.join(tempSandbox, 'app_closure_div_click');
+    const fakeScreenDir = path.join(fakeAppDir, 'closure_div_click');
+    fs.mkdirSync(fakeScreenDir, { recursive: true });
+    const fakeHelper = path.join(fakeScreenDir, 'ClickableDiv.tsx');
+    fs.writeFileSync(fakeHelper, 'export function ClickableDiv() { return <div onClick={() => alert(1)}>Click me</div>; }', 'utf8');
+    const fakePage = path.join(fakeScreenDir, 'page.tsx');
+    fs.writeFileSync(fakePage, "import { ClickableDiv } from './ClickableDiv';\nexport default function Page() { return <ClickableDiv />; }", 'utf8');
+
+    const res = analyzers.checkDnaNativeInteractive(ROOT, { appDir: fakeAppDir });
+    assert(!res.pass && res.details.unhandled_native_count > 0,
+      'BB-DNA-CLICK-DIV: Raw onClick handler on non-interactive <div> inside screen closure strictly fails DNA gate');
+  }
+
+  // Scenario BB-N9: Unexcepted inline style in closure
+  {
+    const fakeAppDir = path.join(tempSandbox, 'app_closure_style');
+    const fakeScreenDir = path.join(fakeAppDir, 'closure_style');
+    fs.mkdirSync(fakeScreenDir, { recursive: true });
+    const fakeHelper = path.join(fakeScreenDir, 'StyledHelper.tsx');
+    fs.writeFileSync(fakeHelper, 'export function StyledHelper() { return <span style={{ padding: 10 }}>Text</span>; }', 'utf8');
+    const fakePage = path.join(fakeScreenDir, 'page.tsx');
+    fs.writeFileSync(fakePage, "import { StyledHelper } from './StyledHelper';\nexport default function Page() { return <StyledHelper />; }", 'utf8');
+
+    const res = analyzers.checkDnaHardcodedVisual(ROOT, { appDir: fakeAppDir });
+    assert(!res.pass && res.details.unhandled_visual_count > 0,
+      'BB-DNA-STYLE-OBJECT: Unexcepted inline style inside screen dependency closure strictly fails DNA visual gate');
+  }
+
+  // Scenario BB-N10: Scope fingerprint mismatch / second violation in excepted file
+  {
+    const fakeAppDir = path.join(tempSandbox, 'app_double_violation');
+    const screenDir = path.join(fakeAppDir, 'test_screen');
+    fs.mkdirSync(screenDir, { recursive: true });
+    const fakePage = path.join(screenDir, 'page.tsx');
+    fs.writeFileSync(fakePage, 'export default function Page() { return <div><button>1</button><select><option>2</option></select></div>; }', 'utf8');
+
+    const res = analyzers.checkDnaNativeInteractive(ROOT, { appDir: fakeAppDir });
+    assert(!res.pass && res.details.unhandled_native_count > 0,
+      'BB-DNA-EXCEPTED-FILE-SECOND-OCCURRENCE: Second unapproved native violation on screen strictly fails DNA gate');
+  }
+
+  // Scenario BB-N11: Sentinel file survival in source checkout verification
+  {
+    const sentinelName = `.test-clean-sentinel-${Date.now()}`;
+    const sentinelPath = path.join(ROOT, sentinelName);
+    const survivedInRoot = fs.existsSync(sentinelPath);
+    assert(!survivedInRoot,
+      'BB-SENTINEL-SURVIVAL: Verification sentinel does not leak to source checkout; workspace remains clean');
   }
 
 } finally {

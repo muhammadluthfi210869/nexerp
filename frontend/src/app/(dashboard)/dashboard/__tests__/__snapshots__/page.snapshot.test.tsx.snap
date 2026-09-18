@@ -9,7 +9,6 @@ exports[`Direksi DashboardPage (snapshot) > renders marketing audit with seeded 
   >
     <header
       class="flex justify-between items-center border-b border-slate-100 pb-3 mb-[var(--section-gap)]"
-      style="margin-bottom: var(--section-gap);"
     >
       <div>
         <h1
@@ -24,8 +23,7 @@ exports[`Direksi DashboardPage (snapshot) > renders marketing audit with seeded 
           </span>
         </h1>
         <p
-          class="font-bold text-slate-400 tracking-tight mt-1.5"
-          style="font-size: var(--module-subtitle-size);"
+          class="font-bold text-slate-400 tracking-tight mt-1.5 text-[var(--module-subtitle-size)]"
         >
           Command Center • Precision Analytics Engine
         </p>
@@ -48,8 +46,7 @@ exports[`Direksi DashboardPage (snapshot) > renders marketing audit with seeded 
       </div>
     </header>
     <div
-      class="flex flex-col"
-      style="gap: var(--section-gap);"
+      class="flex flex-col gap-[var(--section-gap)]"
     >
       <div
         class="grid grid-cols-1 lg:grid-cols-3 gap-[var(--card-gap)]"

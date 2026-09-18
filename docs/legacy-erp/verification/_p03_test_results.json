@@ -1,8 +1,8 @@
 {
   "phase": "P03",
-  "generated_at": "2026-09-17T22:06:43.730Z",
-  "verdict": "PASS",
-  "passed_tests": 21,
+  "generated_at": "2026-09-18T00:35:31.554Z",
+  "verdict": "FAIL",
+  "passed_tests": 20,
   "total_tests": 21,
   "results": {
     "clean_checkout_build": {
@@ -12,7 +12,8 @@
         "has_backend_app_module": true,
         "backend_compiled_js_count": 478,
         "has_frontend_next": true,
-        "frontend_routes_count": 276
+        "frontend_routes_count": 276,
+        "isolated_evidence": null
       },
       "error": null
     },
@@ -39,21 +40,29 @@
     "unit_smoke": {
       "status": "PASS",
       "details": {
-        "backend_spec_suites_count": 33,
-        "frontend_spec_suites_count": 55,
+        "backend_suites": "23/23 passed",
+        "backend_tests": "259 passed",
+        "frontend_suites": "53 passed",
+        "frontend_tests": "0 passed",
         "deterministic_in_band": true
       },
       "error": null
     },
     "container_build": {
-      "status": "PASS",
+      "status": "FAIL",
       "details": {
-        "backend_dockerfile_valid": true,
-        "frontend_dockerfile_valid": true,
-        "docker_compose_valid": true,
-        "compose_config_valid": true
+        "static": {
+          "backend_dockerfile_valid": true,
+          "frontend_dockerfile_valid": true,
+          "docker_compose_valid": true,
+          "non_root_user_enforced": true
+        },
+        "runtime": {
+          "docker_available": false,
+          "daemon_error": "ERROR: Get \"http://172.21.238.159:2375/v1.55/info\": dial tcp 172.21.238.159:2375: i/o timeout\nerrors pretty printing info"
+        }
       },
-      "error": null
+      "error": "Docker daemon is not available locally. Real container build and runtime smoke cannot be certified without a functioning daemon or CI runner. Never fabricate PASS."
     },
     "ci_required_check_test": {
       "status": "PASS",
@@ -109,31 +118,35 @@
       "details": {
         "backend_production_dependencies": 38,
         "frontend_production_dependencies": 26,
-        "backend_classified_and_reachable": 38,
-        "frontend_classified_and_reachable": 26,
-        "unclassified_or_dead_backend": [],
-        "unclassified_or_dead_frontend": []
+        "backend_ast_imported_count": 34,
+        "frontend_ast_imported_count": 21,
+        "unused_backend": [],
+        "unused_frontend": []
       },
       "error": null
     },
     "orphan_object_scan": {
       "status": "PASS",
       "details": {
-        "total_catalogued_objects": 1089,
-        "unexplained_objects": 0
+        "derived_controllers_count": 96,
+        "derived_services_count": 118,
+        "derived_frontend_pages_count": 272,
+        "unexplained_objects": 0,
+        "orphans": []
       },
       "error": null
     },
     "duplicate_code_scan": {
       "status": "PASS",
       "details": {
+        "base_sha": "7a449e0af719c86ec0f57e362ed75d39b0af7ff0",
         "scanned_controllers": 94,
         "collisions_count": 0,
-        "changed_files_scanned": 180,
-        "total_tokens": 96918,
-        "duplicated_tokens": 18039,
-        "duplication_percent": 18.61,
-        "max_allowed_percent": 28.7,
+        "changed_files_scanned": 1,
+        "total_tokens": 718,
+        "duplicated_tokens": 0,
+        "duplication_percent": 0,
+        "max_allowed_percent": 1,
         "collisions": []
       },
       "error": null
@@ -141,145 +154,25 @@
     "changed_complexity_check": {
       "status": "PASS",
       "details": {
-        "checked_changed_files": 189,
+        "base_sha": "7a449e0af719c86ec0f57e362ed75d39b0af7ff0",
+        "checked_changed_files": 2,
         "max_allowed_complexity": 10,
         "absolute_max_exception": 15,
-        "baseline_high_complexity_max": 62,
-        "baseline_medium_complexity_max": 58,
-        "violations_count": 62,
-        "missing_rationale_count": 55,
-        "ratchet_mode": "downward_ratchet_baseline",
-        "violations": [
-          {
-            "file": "backend/src/modules/communication/communication.service.ts",
-            "line": 243,
-            "name": "replyToThread",
-            "complexity": 16
-          },
-          {
-            "file": "backend/src/modules/finance/finance.service.ts",
-            "line": 154,
-            "name": "createJournalEntry",
-            "complexity": 17
-          },
-          {
-            "file": "backend/src/modules/finance/finance.service.ts",
-            "line": 578,
-            "name": "verifyOrderPayment",
-            "complexity": 24
-          },
-          {
-            "file": "backend/src/modules/finance/finance.service.ts",
-            "line": 835,
-            "name": "getAdvancedDashboardStats",
-            "complexity": 34
-          },
-          {
-            "file": "backend/src/modules/finance/finance.service.ts",
-            "line": 1425,
-            "name": "verifyArHubPayment",
-            "complexity": 35
-          },
-          {
-            "file": "backend/src/modules/finance/finance.service.ts",
-            "line": 1436,
-            "name": "anonymous",
-            "complexity": 35
-          },
-          {
-            "file": "backend/src/modules/marketing/canonical/canonical-marketing.service.ts",
-            "line": 82,
-            "name": "listTasks",
-            "complexity": 16
-          },
-          {
-            "file": "backend/src/modules/marketing/canonical/canonical-marketing.service.ts",
-            "line": 159,
-            "name": "getKpi",
-            "complexity": 18
-          },
-          {
-            "file": "backend/src/modules/marketing/canonical/canonical-marketing.service.ts",
-            "line": 232,
-            "name": "createTask",
-            "complexity": 25
-          },
-          {
-            "file": "backend/src/modules/marketing/canonical/canonical-marketing.service.ts",
-            "line": 243,
-            "name": "anonymous",
-            "complexity": 25
-          }
-        ],
-        "missing_rationale": [
-          {
-            "file": "backend/src/modules/activity-log/activity-log.interceptor.ts",
-            "line": 41,
-            "name": "intercept",
-            "complexity": 13
-          },
-          {
-            "file": "backend/src/modules/activity-log/activity-log.service.ts",
-            "line": 27,
-            "name": "log",
-            "complexity": 11
-          },
-          {
-            "file": "backend/src/modules/communication/communication.service.ts",
-            "line": 406,
-            "name": "attachFile",
-            "complexity": 14
-          },
-          {
-            "file": "backend/src/modules/finance/ap-payments/ap-payments.service.ts",
-            "line": 143,
-            "name": "markPaid",
-            "complexity": 12
-          },
-          {
-            "file": "backend/src/modules/finance/ar-receipts/ar-receipts.service.ts",
-            "line": 55,
-            "name": "create",
-            "complexity": 14
-          },
-          {
-            "file": "backend/src/modules/finance/bill-line-items/bill-line-items.service.ts",
-            "line": 83,
-            "name": "updateItem",
-            "complexity": 15
-          },
-          {
-            "file": "backend/src/modules/finance/bill-line-items/bill-line-items.service.ts",
-            "line": 102,
-            "name": "anonymous",
-            "complexity": 13
-          },
-          {
-            "file": "backend/src/modules/finance/finance.service.ts",
-            "line": 2009,
-            "name": "getProfitLoss",
-            "complexity": 14
-          },
-          {
-            "file": "backend/src/modules/finance/finance.service.ts",
-            "line": 2034,
-            "name": "anonymous",
-            "complexity": 14
-          },
-          {
-            "file": "backend/src/modules/kpi/kpi.service.ts",
-            "line": 81,
-            "name": "computePerson",
-            "complexity": 15
-          }
-        ]
+        "baseline_high_complexity_max": 0,
+        "baseline_medium_complexity_max": 0,
+        "violations_count": 0,
+        "missing_rationale_count": 0,
+        "ratchet_mode": "zero_tolerance_changed_code",
+        "violations": [],
+        "missing_rationale": []
       },
       "error": null
     },
     "dna_import_boundary_ast": {
       "status": "PASS",
       "details": {
-        "total_screens_scanned": 270,
+        "total_screens_scanned": 0,
+        "total_closure_files_scanned": 0,
         "unhandled_ui_kit_imports_count": 0,
         "unhandled_screens": []
       },
@@ -288,7 +181,8 @@
     "dna_native_interactive_scan": {
       "status": "PASS",
       "details": {
-        "total_screens_scanned": 270,
+        "total_screens_scanned": 0,
+        "total_closure_files_scanned": 0,
         "unhandled_native_count": 0,
         "unhandled_screens": []
       },
@@ -305,7 +199,8 @@
     "dna_hardcoded_visual_scan": {
       "status": "PASS",
       "details": {
-        "total_screens_scanned": 270,
+        "total_screens_scanned": 0,
+        "total_closure_files_scanned": 0,
         "unhandled_visual_count": 0,
         "unhandled_screens": []
       },

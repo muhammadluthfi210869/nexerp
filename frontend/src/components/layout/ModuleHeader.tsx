@@ -13,7 +13,7 @@ interface ModuleHeaderProps {
  */
 export function ModuleHeader({ title, titleAccent, subtitle, actions }: ModuleHeaderProps) {
   return (
-    <header className="flex justify-between items-center border-b border-slate-100 pb-3 mb-[var(--section-gap)]" style={{ marginBottom: 'var(--section-gap)' }}>
+    <header className="flex justify-between items-center border-b border-slate-100 pb-3 mb-[var(--section-gap)]">
       <div>
         <h1 className="text-dashboard-title uppercase">
           {title}{' '}
@@ -21,8 +21,7 @@ export function ModuleHeader({ title, titleAccent, subtitle, actions }: ModuleHe
         </h1>
         {subtitle && (
           <p 
-            className="font-bold text-slate-400 tracking-tight mt-1.5"
-            style={{ fontSize: 'var(--module-subtitle-size)' }}
+            className="font-bold text-slate-400 tracking-tight mt-1.5 text-[var(--module-subtitle-size)]"
           >
             {subtitle}
           </p>

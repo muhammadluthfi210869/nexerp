@@ -38,6 +38,8 @@ For every batch, read:
 
 Never accept an implementor summary, claimed PASS, screenshot, test count, or evidence pack without checking it against repository state and rerunning the relevant commands.
 
+For one-phase execution/remediation, also apply `verification/_ONE_PASS_PHASE_EXECUTION_STANDARD.md`. Before implementation begins, the auditor must provide the phase prompt, frozen acceptance contract, complete remediation map, adversarial IDs, pre-certification checklist, and one authoritative certification command. A SHA-bound independent reproduction of that unchanged contract eliminates ordinary post-hoc acceptance criteria.
+
 ## 3. Pre-flight
 
 Before tests:
@@ -216,3 +218,9 @@ Next command:
 ```
 
 Lead with the verdict. Do not bury a failed gate beneath implementation detail.
+
+## 12. One-phase one-prompt efficiency rule
+
+For each phase, prefer exactly one complete executor prompt derived from `verification/prompts/_PHASE_ONE_PASS_PROMPT_TEMPLATE.md`. The prompt must cover the entire known failure surface and instruct the executor to continue through diagnosis, repair, and rerun until the phase command passes. Do not split known blockers into serial prompts merely to reduce prompt length.
+
+The auditor still performs an independent rerun. If the frozen runner passes on the same SHA and no newly discovered P0/P1 issue exists, the auditor records PASS rather than introducing an undisclosed non-critical requirement.
