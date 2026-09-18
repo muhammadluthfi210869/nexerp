@@ -211,20 +211,20 @@ async function certifyP05({ root, contract, candidateSha }) {
       errorContract: async () => ({ pass: true, mutation_count: 18 })
     };
 
-    checks.push(await gates.gateAuthSessionMfa(dbCtx));
+    checks.push(await gates.gateAuthSessionMfa({ root, candidateSha, contract, ctx: dbCtx }));
     metrics.auth_bypasses = 0;
-    checks.push(await gates.gateRolePermissionMatrix(dbCtx));
-    checks.push(await gates.gateTenantIsolation(dbCtx));
+    checks.push(await gates.gateRolePermissionMatrix({ root, candidateSha, contract, ctx: dbCtx }));
+    checks.push(await gates.gateTenantIsolation({ root, candidateSha, contract, ctx: dbCtx }));
     metrics.tenant_leaks = 0;
-    checks.push(await gates.gateImmutableAudit(dbCtx));
+    checks.push(await gates.gateImmutableAudit({ root, candidateSha, contract, ctx: dbCtx }));
     metrics.audit_mutations = 0;
-    checks.push(await gates.gateMakerChecker(dbCtx));
+    checks.push(await gates.gateMakerChecker({ root, candidateSha, contract, ctx: dbCtx }));
     metrics.self_approvals = 0;
-    checks.push(await gates.gateOutboxRetryDedup(dbCtx));
+    checks.push(await gates.gateOutboxRetryDedup({ root, candidateSha, contract, ctx: dbCtx }));
     metrics.outbox_loss_or_duplicates = 0;
-    checks.push(await gates.gateCommunicationAcl(dbCtx));
+    checks.push(await gates.gateCommunicationAcl({ root, candidateSha, contract, ctx: dbCtx }));
     metrics.communication_acl_bypasses = 0;
-    const cec = await gates.gateCanonicalErrorContract(dbCtx);
+    const cec = await gates.gateCanonicalErrorContract({ root, candidateSha, contract, ctx: dbCtx });
     checks.push(cec);
     metrics.error_contract_violations = 0;
 
