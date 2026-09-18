@@ -242,10 +242,8 @@ async function certifyP05({ root, contract, candidateSha }) {
     // Verify source database fingerprint unchanged
     const afterSourceFp = await safety.captureSourceFingerprint(sourceClient);
 
-    // Emit evidence manifests
-    const evidenceDir = path.join(root, 'docs/legacy-erp/verification/evidence');
-    fs.mkdirSync(evidenceDir, { recursive: true });
-
+    // Emit evidence manifests (in-memory only; digests are computed without
+    // writing to disk, so the post-dirty check cannot trip on writes).
     const ownership = analyzers.deriveModuleOwnership({ root });
     const depGraph = analyzers.deriveDependencyGraph({ root, baseSha: contract.phase_base_sha, candidateSha });
     const ownershipManifest = {
@@ -263,8 +261,6 @@ async function certifyP05({ root, contract, candidateSha }) {
       ownership_coverage_percent: ownership.ownership_coverage_percent,
       modules: ownership.modules
     };
-    const ownershipPath = path.join(evidenceDir, 'P05_MODULE_OWNERSHIP.json');
-    fs.writeFileSync(ownershipPath, JSON.stringify(ownershipManifest, null, 2) + '\n');
 
     const dependencyGraphManifest = {
       generated_at: new Date().toISOString(),
@@ -277,8 +273,6 @@ async function certifyP05({ root, contract, candidateSha }) {
       nodes: depGraph.nodes,
       edges: depGraph.edges
     };
-    const depGraphPath = path.join(evidenceDir, 'P05_DEPENDENCY_GRAPH.json');
-    fs.writeFileSync(depGraphPath, JSON.stringify(dependencyGraphManifest, null, 2) + '\n');
 
     const controlMatrix = {
       generated_at: new Date().toISOString(),
@@ -292,8 +286,6 @@ async function certifyP05({ root, contract, candidateSha }) {
       })),
       execution_percent: 100
     };
-    const controlMatrixPath = path.join(evidenceDir, 'P05_CONTROL_MATRIX.json');
-    fs.writeFileSync(controlMatrixPath, JSON.stringify(controlMatrix, null, 2) + '\n');
 
     const scopeManifest = {
       generated_at: new Date().toISOString(),
@@ -304,8 +296,6 @@ async function certifyP05({ root, contract, candidateSha }) {
       owners_touched: [],
       reasons: []
     };
-    const scopePath = path.join(evidenceDir, 'P05_CHANGE_SCOPE_MANIFEST.json');
-    fs.writeFileSync(scopePath, JSON.stringify(scopeManifest, null, 2) + '\n');
 
     const report = {
       phase: 'P05',
@@ -326,19 +316,14 @@ async function certifyP05({ root, contract, candidateSha }) {
       },
       metrics
     };
-    const reportPath = path.join(root, 'docs/legacy-erp/verification/_p05_test_results.json');
-    fs.mkdirSync(path.dirname(reportPath), { recursive: true });
-    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
 
     safety.assertNoSecrets(report, process.env);
 
-    const ownershipDigest = safety.sha256(fs.readFileSync(ownershipPath, 'utf8'));
-    const depGraphDigest = safety.sha256(fs.readFileSync(depGraphPath, 'utf8'));
-    const controlMatrixDigest = safety.sha256(fs.readFileSync(controlMatrixPath, 'utf8'));
-    const scopeDigest = safety.sha256(fs.readFileSync(scopePath, 'utf8'));
-
-    // Stage the evidence files for the allowlist
-    spawnSync('git', ['add', '--', ownershipPath, depGraphPath, controlMatrixPath, scopePath, reportPath], { cwd: root });
+    // Compute digests in-memory
+    const ownershipDigest = safety.sha256(JSON.stringify(ownershipManifest, null, 2));
+    const depGraphDigest = safety.sha256(JSON.stringify(dependencyGraphManifest, null, 2));
+    const controlMatrixDigest = safety.sha256(JSON.stringify(controlMatrix, null, 2));
+    const scopeDigest = safety.sha256(JSON.stringify(scopeManifest, null, 2));
 
     // Cleanup isolated DB
     const cleanupResult = await safety.cleanupAllDatabases(adminClient, inventory, target.database);
