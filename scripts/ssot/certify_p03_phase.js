@@ -301,11 +301,13 @@ async function main() {
   ]);
 
   // R5-B4: machine-readable result parsing — captures truthful counts before any truncation.
+  // Jest/Vitest/ESLint write summaries to stderr under npm; concatenate so the
+  // parser doesn't depend on stream routing.
   const metrics = {
-    backend_jest: parseBackendTestResult(unitOutputs[0].stdout, unitOutputs[0].exit_code),
-    frontend_vitest: parseFrontendTestResult(unitOutputs[1].stdout, unitOutputs[1].exit_code),
-    backend_eslint: parseEslintResult(lintOutputs[0].stdout, lintOutputs[0].exit_code),
-    frontend_eslint: parseEslintResult(lintOutputs[1].stdout, lintOutputs[1].exit_code)
+    backend_jest: parseBackendTestResult(unitOutputs[0].stdout, unitOutputs[0].exit_code, unitOutputs[0].stderr),
+    frontend_vitest: parseFrontendTestResult(unitOutputs[1].stdout, unitOutputs[1].exit_code, unitOutputs[1].stderr),
+    backend_eslint: parseEslintResult(lintOutputs[0].stdout, lintOutputs[0].exit_code, lintOutputs[0].stderr),
+    frontend_eslint: parseEslintResult(lintOutputs[1].stdout, lintOutputs[1].exit_code, lintOutputs[1].stderr)
   };
   result.metrics = metrics;
   assertCheck('metrics_present', Boolean(metrics.backend_jest && metrics.frontend_vitest && metrics.frontend_eslint && metrics.backend_eslint),

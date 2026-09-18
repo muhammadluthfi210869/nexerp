@@ -22,9 +22,12 @@ const stripAnsi = (s) => String(s || '').replace(/\[[0-9;]*m/g, '');
 /**
  * Parse Jest summary lines: `Test Suites: ... passed, ... total`
  * and `Tests: ... passed, ... total` / `Tests: ... skipped, ... passed, ... total`.
+ *
+ * Note: Jest emits the summary to STDERR (its structured reporter writes there),
+ * not STDOUT. Pass both stdout and stderr so call sites don't have to know.
  */
-function parseBackendTestResult(stdout, exitCode) {
-  const text = stripAnsi(stdout);
+function parseBackendTestResult(stdout, exitCode, stderr) {
+  const text = stripAnsi(`${stdout || ''}\n${stderr || ''}`);
   const suiteMatch = text.match(/Test Suites:.*?(?:(\d+)\s+failed,\s*)?(\d+)\s+passed,\s*(\d+)\s+total/i);
   const testMatch = text.match(/Tests:\s*(?:(\d+)\s+failed,\s*)?(?:(\d+)\s+skipped,\s*)?(?:(\d+)\s+passed,\s*|\s*)(\d+)\s+total/i);
 
@@ -64,9 +67,11 @@ function parseBackendTestResult(stdout, exitCode) {
 
 /**
  * Parse Vitest summary `Test Files N passed (M)` and `Tests N passed (M)`.
+ *
+ * Like Jest, Vitest emits its summary across both stdout and stderr.
  */
-function parseFrontendTestResult(stdout, exitCode) {
-  const text = stripAnsi(stdout);
+function parseFrontendTestResult(stdout, exitCode, stderr) {
+  const text = stripAnsi(`${stdout || ''}\n${stderr || ''}`);
   const fileMatch = text.match(/Test Files\s+(\d+)\s+passed(?:[^\d]+(\d+)\s+skipped)?[^\d]*\((\d+)\)/i);
   const testMatch = text.match(/Tests\s+(\d+)\s+passed(?:[^\d]+(\d+)\s+skipped)?[^\d]*\((\d+)\)/i);
 
@@ -94,12 +99,17 @@ function parseFrontendTestResult(stdout, exitCode) {
 /**
  * Parse ESLint "N problems (E errors, W warnings)".
  *
+ * ESLint reports problems on stderr when running through npm, and on stdout
+ * when invoked directly. Pass both so the parser does not depend on caller
+ * specifics.
+ *
  * @param {string} stdout
  * @param {number} exitCode
+ * @param {string} stderr
  * @returns {object}
  */
-function parseEslintResult(stdout, exitCode) {
-  const text = stripAnsi(stdout);
+function parseEslintResult(stdout, exitCode, stderr) {
+  const text = stripAnsi(`${stdout || ''}\n${stderr || ''}`);
   const match = text.match(/(\d+)\s+problems?\s*\((\d+)\s+errors?,\s*(\d+)\s+warnings?\)/i);
 
   // Some ESLint versions emit "0 problems" with no parens; capture that case.
