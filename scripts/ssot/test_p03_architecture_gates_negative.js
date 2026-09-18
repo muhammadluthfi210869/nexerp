@@ -489,7 +489,10 @@ try {
 
   // Scenario BB-ZERO-APPLICABLE-SCOPE: Applicable scope resulting in zero resolved targets strictly fails closed
   {
-    const res = analyzers.checkDnaImportBoundary(ROOT, { forceZeroTargets: true });
+    const res = analyzers.checkDnaImportBoundary(ROOT, {
+      forceZeroTargets: true,
+      hasChangedFrontendSource: true
+    });
     assert(!res.pass && res.error && res.error.includes('Zero applicable targets resolved'),
       'BB-ZERO-APPLICABLE-SCOPE: Applicable scope resulting in zero resolved targets strictly fails closed');
   }
