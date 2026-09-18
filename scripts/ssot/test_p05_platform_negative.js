@@ -93,7 +93,7 @@ async function mutationDomainCycle(ctx) {
 }
 
 async function mutationUnownedModule(ctx) {
-  const dirName = path.join(ctx.root, 'backend/src/modules/orphan-test-' + Date.now());
+  const dirName = path.join(ctx.root, 'backend/src/modules/orphan-test-mut');
   fs.mkdirSync(dirName, { recursive: true });
   try {
     fs.writeFileSync(path.join(dirName, 'orphan-test.module.ts'), '// unowned module\n');
