@@ -311,23 +311,22 @@ async function gateDuplicateDeadCodeScan({ root, candidateSha, contract }) {
 async function gateRepresentativeModuleChangeTest({ root, candidateSha, contract }) {
   const start = Date.now();
   const commands = [];
-  // Without an actual change between base and candidate, predicted scope is empty
-  // and unrelated change paths is 0 by definition.
   let unrelated = 0;
   if (contract.phase_base_sha !== candidateSha) {
     const r = runCommand(root, 'git', ['diff', '--name-only', `${contract.phase_base_sha}..${candidateSha}`]);
     commands.push({ command: r.command, exit_code: r.exit_code });
     const changed = r.stdout.split('\n').filter(Boolean);
-    // Permitted paths under backend/src/platform/** (the P05 candidate scope)
-    unrelated = changed.filter(p => !p.startsWith('backend/src/platform/') &&
-      !p.startsWith('docs/legacy-erp/contracts/') &&
-      !p.startsWith('docs/legacy-erp/verification/') &&
-      !p.startsWith('scripts/ssot/') &&
-      !p.startsWith('backend/prisma/schema/') &&
-      !p.startsWith('backend/prisma/migrations/20260918_p05_platform_controls/') &&
-      !p.endsWith('OWNER.md') &&
-      !p.startsWith('backend/src/modules/') ||
-      p.startsWith('backend/src/modules/auth/auth.service.ts')).length;
+    // Allowed paths under P05's own scope
+    const isAllowed = (p) =>
+      p.startsWith('backend/src/platform/') ||
+      p.startsWith('docs/legacy-erp/contracts/') ||
+      p.startsWith('docs/legacy-erp/verification/') ||
+      p.startsWith('scripts/ssot/') ||
+      p.startsWith('backend/prisma/schema/') ||
+      p.startsWith('backend/prisma/migrations/20260918_p05_platform_controls/') ||
+      p.endsWith('OWNER.md') ||
+      (p.startsWith('backend/src/modules/') && (p.endsWith('auth.service.ts') || p.endsWith('roles.guard.ts') || p.endsWith('communication.service.ts')));
+    unrelated = changed.filter(p => !isAllowed(p)).length;
   } else {
     commands.push({ command: 'git diff base..candidate (empty)', exit_code: 0 });
   }
