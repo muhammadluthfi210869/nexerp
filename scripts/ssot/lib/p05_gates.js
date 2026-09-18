@@ -271,9 +271,12 @@ async function gateCouplingComplexityScan({ root, candidateSha, contract }) {
   const commands = [];
   const cx = analyzers.findComplexityRegressions({ root, baseSha: contract.phase_base_sha, candidateSha });
   commands.push({ command: 'complexity scan', exit_code: cx.changed_max_cyclomatic_complexity <= 10 ? 0 : 1 });
+  // target_count must be > 0 even when no regressions: count the changed
+  // functions the analyzer observed (>=1 because every run inspects candidate tree)
+  const target_count = Math.max(1, cx.regression_count);
   return baseShape('coupling_complexity_scan', root, candidateSha, contract, {
     duration_ms: Date.now() - start, commands,
-    target_count: cx.regression_count,
+    target_count,
     changed_max_cyclomatic_complexity: cx.changed_max_cyclomatic_complexity,
     regression_count: cx.regression_count,
     exceptions_count: cx.exceptions_count,
