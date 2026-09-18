@@ -343,7 +343,7 @@ async function main() {
   assertCheck('p03_21_of_21', audit.verdict === 'PASS' && audit.passed_tests === 21, audit);
 
   const negative = run('p03_adversarial', 'node', ['scripts/ssot/test_p03_architecture_gates_negative.js']);
-  const output = `${negative.stdout}\n${negative.stderr}`;
+  const output = `${negative.full_stdout || negative.stdout}\n${negative.full_stderr || negative.stderr}`;
   const missing = REQUIRED_MUTATIONS.filter(id => !output.includes(id));
   assertCheck('required_mutations_present', missing.length === 0, { missing });
 
