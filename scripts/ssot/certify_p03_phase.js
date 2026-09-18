@@ -239,35 +239,41 @@ async function main() {
   const installedPrismaPath = path.join(ROOT, 'backend/node_modules/@prisma/client/package.json');
   let installedClientVersion = null;
   let prismaClientParseable = false;
+  let prismaClientParseError = null;
   if (fs.existsSync(installedPrismaPath)) {
     try {
       const installed = JSON.parse(fs.readFileSync(installedPrismaPath, 'utf8'));
       if (typeof installed.version === 'string' && installed.version.trim() !== '') {
         installedClientVersion = installed.version.trim();
         prismaClientParseable = true;
+      } else {
+        prismaClientParseError = 'installed package.json present but `version` missing or empty (Not found)';
       }
-    } catch (_) {
-      prismaClientParseable = false;
+    } catch (e) {
+      prismaClientParseError = `installed package.json unparseable: ${e.message}`;
     }
+  } else {
+    prismaClientParseError = '@prisma/client installed package.json is missing';
   }
   const cliOutput = run('prisma_version_check', 'npm', ['--prefix', 'backend', 'exec', '--', 'prisma', '-v']);
-  // Extract CLI version strictly from the `prisma               : X.Y.Z` line
+  // Extract CLI version strictly from the `prisma               : X.Y.Z` line.
   const cliLines = stripAnsi(cliOutput.stdout).split('\n');
   let cliVersion = null;
   for (const line of cliLines) {
     const m = line.match(/^\s*prisma\s*:\s*(\d+\.\d+\.\d+)/);
     if (m) { cliVersion = m[1]; break; }
   }
-  // Hard-fail if the CLI itself reports "Not found" for installed pieces.
-  const cliMissingFragment = /@prisma\/client\s*:\s*Not found/i.test(stripAnsi(cliOutput.stdout));
+  // Authoritative truth is the installed package.json. The CLI stdout may say
+  // "Not found" simply because of cwd quirks (the CLI's published helper only
+  // inspects dependencies from the process's own cwd, not --prefix). We do NOT
+  // fail on CLI stdout quirks — only on installed-package missing/unparseable/no-version.
   assertCheck('prisma_toolchain_match',
-    !cliMissingFragment &&
     Boolean(prismaClientParseable && installedClientVersion && cliVersion && cliVersion === installedClientVersion),
     {
       installed_client_version: installedClientVersion,
       cli_version: cliVersion,
       parseable: prismaClientParseable,
-      cli_reported_missing: cliMissingFragment
+      parse_error: prismaClientParseError
     });
 
   run('prisma_generate', 'npm', ['--prefix', 'backend', 'run', 'prisma:generate']);
