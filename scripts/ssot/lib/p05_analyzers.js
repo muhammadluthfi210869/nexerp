@@ -402,6 +402,7 @@ module.exports = {
   TEST_PATH_REGEX,
   isTestPath,
   isProductionPath,
+  normalize,
   discoverBackendModules,
   classifyLayer,
   deriveModuleOwnership,
