@@ -688,6 +688,7 @@ async function certifyP04({ root, contract, candidateSha }) {
       const manifestOut = path.join(root, 'docs/legacy-erp/verification/evidence/P04_MIGRATION_SCOPE_MANIFEST.json');
       fs.mkdirSync(path.dirname(manifestOut), { recursive: true });
       fs.writeFileSync(manifestOut, JSON.stringify(probeManifest, null, 2) + '\n', 'utf8');
+      spawnSync('git', ['add', 'docs/legacy-erp/verification/evidence/P04_MIGRATION_SCOPE_MANIFEST.json'], { cwd: root });
 
       checks.push({
         id: 'old_new_version_coexistence',
@@ -751,7 +752,7 @@ async function certifyP04({ root, contract, candidateSha }) {
     const reportOut = path.join(root, 'docs/legacy-erp/verification/_p04_test_results.json');
     fs.mkdirSync(path.dirname(reportOut), { recursive: true });
     fs.writeFileSync(reportOut, JSON.stringify(report, null, 2) + '\n', 'utf8');
-    spawnSync('git', ['add', reportOut], { cwd: root, shell: process.platform === 'win32' });
+    spawnSync('git', ['add', 'docs/legacy-erp/verification/_p04_test_results.json'], { cwd: root });
 
     return {
       phase: 'P04',

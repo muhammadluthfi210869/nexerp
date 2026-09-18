@@ -1,9 +1,9 @@
 {
   "phase": "P04",
   "name": "Canonical database and migration chain",
-  "timestamp": "2026-09-18T07:38:00.266Z",
+  "timestamp": "2026-09-18T07:50:14.455Z",
   "verdict": "PASS",
-  "candidate_sha": "ebc959d2e4a9a2009229ecbe1c4ebaf8651635eb",
+  "candidate_sha": "f58e9cad9589e45b4e6b8ee3bf8ed3bfd49d5984",
   "tests_summary": {
     "total": 11,
     "passed": 11,
@@ -16,7 +16,7 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 168,
+      "duration_ms": 229,
       "node_version": "v22.21.0",
       "prisma_version": "7.10.0",
       "postgres_version": 16,
@@ -28,7 +28,7 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 3,
+      "duration_ms": 4,
       "schema_authority": "backend/prisma/migrations/",
       "policy": "prisma migrate deploy only"
     },
@@ -38,7 +38,7 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 26321,
+      "duration_ms": 25540,
       "canonical_models_reconciled": 92
     },
     "migration_chain_integrity": {
@@ -47,7 +47,7 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 7836,
+      "duration_ms": 6823,
       "total_migrations": 42,
       "edited_prebase_migrations": 0
     },
@@ -57,8 +57,8 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 42005,
-      "database": "nex_p04_ebc959d2_16620_empty",
+      "duration_ms": 34940,
+      "database": "nex_p04_f58e9cad_27184_empty",
       "runtime_truth": {
         "tables": 195,
         "primary_keys": 195,
@@ -73,8 +73,8 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 42282,
-      "database": "nex_p04_ebc959d2_16620_baseline",
+      "duration_ms": 33334,
+      "database": "nex_p04_f58e9cad_27184_baseline",
       "reconciled_tables": 1,
       "data_loss_rows": 0
     },
@@ -84,7 +84,7 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 8316,
+      "duration_ms": 8430,
       "rerun_pending_migrations": 0,
       "idempotency_confirmed": true
     },
@@ -94,8 +94,8 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 30352,
-      "rehearsal_database": "nex_p04_ebc959d2_16620_rollback",
+      "duration_ms": 28550,
+      "rehearsal_database": "nex_p04_f58e9cad_27184_rollback",
       "rollback_and_rollforward_verified": true
     },
     "constraint_index_audit": {
@@ -104,7 +104,7 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 160,
+      "duration_ms": 151,
       "unvalidated_constraints": 0,
       "invalid_indexes": 0,
       "orphan_foreign_keys": 0,
@@ -116,7 +116,7 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 141,
+      "duration_ms": 159,
       "candidate_migrations_scanned": 0,
       "unsafe_contract_ddl": 0,
       "expand_contract_verified": true
@@ -127,7 +127,7 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 707,
+      "duration_ms": 464,
       "coverage_percent": 100,
       "probed_tables": 9
     }
