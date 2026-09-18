@@ -20,17 +20,25 @@ function runAudit(options = {}) {
   const baseSha = options.baseSha;
   const requireValidLedger = options.requireValidLedger;
   const changedFiles = options.changedFiles;
+  const codeFiles = options.codeFiles;
   const ledgerPath = options.ledgerPath;
   const root = options.root || ROOT;
 
   // Wire the strict scope fields through to every gate that accepts them.
-  const strict = (gateOpts = {}) => ({
-    ...gateOpts,
-    ...(baseSha !== undefined ? { baseSha } : {}),
-    ...(changedFiles !== undefined ? { changedFiles } : {}),
-    ...(ledgerPath !== undefined ? { ledgerPath } : {}),
-    ...(requireValidLedger !== undefined ? { requireValidLedger } : {})
-  });
+  // Code-scanning gates (duplicate, complexity) prefer `codeFiles` (filtered to
+  // .ts/.tsx) so .js seed files and scripts/ssot/ infrastructure do not get
+  // pulled into source-code analysis.
+  const strict = (gateOpts = {}, kind = 'code') => {
+    const base = {
+      ...gateOpts,
+      ...(baseSha !== undefined ? { baseSha } : {}),
+      ...(ledgerPath !== undefined ? { ledgerPath } : {}),
+      ...(requireValidLedger !== undefined ? { requireValidLedger } : {})
+    };
+    if (kind === 'code' && codeFiles !== undefined) base.changedFiles = codeFiles;
+    else if (changedFiles !== undefined) base.changedFiles = changedFiles;
+    return base;
+  };
 
   const results = {};
 
@@ -46,12 +54,12 @@ function runAudit(options = {}) {
     { id: 'circular_dependency_scan', fn: () => analyzers.detectCircularDependencies(root, options.circular_dependency_scan) },
     { id: 'unused_export_dependency_scan', fn: () => analyzers.checkUnusedProductionDependencies(root, options.unused_export_dependency_scan) },
     { id: 'orphan_object_scan', fn: () => analyzers.checkOrphanObjects(root, options.orphan_object_scan) },
-    { id: 'duplicate_code_scan', fn: () => analyzers.checkDuplicateCode(root, strict(options.duplicate_code_scan)) },
-    { id: 'changed_complexity_check', fn: () => analyzers.checkCyclomaticComplexity(root, strict(options.changed_complexity_check)) },
-    { id: 'dna_import_boundary_ast', fn: () => analyzers.checkDnaImportBoundary(root, strict(options.dna_import_boundary_ast)) },
-    { id: 'dna_native_interactive_scan', fn: () => analyzers.checkDnaNativeInteractive(root, strict(options.dna_native_interactive_scan)) },
-    { id: 'dna_primitive_duplication_scan', fn: () => analyzers.checkDnaPrimitiveDuplication(root, strict(options.dna_primitive_duplication_scan)) },
-    { id: 'dna_hardcoded_visual_scan', fn: () => analyzers.checkDnaHardcodedVisual(root, strict(options.dna_hardcoded_visual_scan)) },
+    { id: 'duplicate_code_scan', fn: () => analyzers.checkDuplicateCode(root, strict(options.duplicate_code_scan, 'code')) },
+    { id: 'changed_complexity_check', fn: () => analyzers.checkCyclomaticComplexity(root, strict(options.changed_complexity_check, 'code')) },
+    { id: 'dna_import_boundary_ast', fn: () => analyzers.checkDnaImportBoundary(root, strict(options.dna_import_boundary_ast, 'scope')) },
+    { id: 'dna_native_interactive_scan', fn: () => analyzers.checkDnaNativeInteractive(root, strict(options.dna_native_interactive_scan, 'scope')) },
+    { id: 'dna_primitive_duplication_scan', fn: () => analyzers.checkDnaPrimitiveDuplication(root, strict(options.dna_primitive_duplication_scan, 'scope')) },
+    { id: 'dna_hardcoded_visual_scan', fn: () => analyzers.checkDnaHardcodedVisual(root, strict(options.dna_hardcoded_visual_scan, 'scope')) },
     { id: 'dna_barrel_integrity', fn: () => analyzers.checkDnaBarrelIntegrity(root, options.dna_barrel_integrity) },
     { id: 'dna_reference_route_and_composition', fn: () => analyzers.checkDnaReferenceRoutes(root, options.dna_reference_route_and_composition) },
     { id: 'dna_screen_coverage_manifest', fn: () => analyzers.checkDnaScreenCoverageManifest(root, options.dna_screen_coverage_manifest) },

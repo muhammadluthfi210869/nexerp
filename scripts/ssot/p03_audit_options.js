@@ -53,6 +53,17 @@ function readGitDiffFiles() {
   return out.split('\n').map(s => s.trim()).filter(Boolean);
 }
 
+function isCodeFile(path) {
+  if (!path) return false;
+  if (path.endsWith('.d.ts')) return false;
+  if (path.includes('.test.') || path.includes('.spec.')) return false;
+  return path.endsWith('.ts') || path.endsWith('.tsx');
+}
+
+function readChangedCodeFiles() {
+  return readGitDiffFiles().filter(isCodeFile);
+}
+
 /**
  * Build the production audit option bundle. Every option consumer of `runAudit`
  * that runs outside the test sandbox MUST go through this function so that the
@@ -65,12 +76,18 @@ function readGitDiffFiles() {
  */
 function buildP03AuditOptions(overrides = {}) {
   const diffFiles = overrides.changedFiles || readGitDiffFiles();
+  // filtered: only .ts/.tsx (excluding test/spec/d.ts) so audit gates that
+  // scan changed source code (`checkDuplicateCode`, `checkCyclomaticComplexity`,
+  // and any gate that defaults to changedFiles) operate on real source code
+  // rather than dragged in .js seed files or scripts/ssot/ infrastructure.
+  const codeFiles = (overrides.codeFiles || readChangedCodeFiles());
 
   const options = {
     root: ROOT,
     baseSha: PHASE_BASE_SHA,
     requireValidLedger: true,
     changedFiles: diffFiles,
+    codeFiles: codeFiles,
     ledgerPath: LEDGER_PATH,
     manifestPath: MANIFEST_PATH
   };
