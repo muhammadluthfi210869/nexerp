@@ -19,10 +19,12 @@ const { URL } = require('url');
 
 class P04GateError extends Error {
   constructor(gateId, reasonCode, message) {
-    super(`[${gateId}] ${reasonCode}: ${message}`);
+    const cleanMessage = redactSecrets(message);
+    super(`[${gateId}] ${reasonCode}: ${cleanMessage}`);
     this.name = 'P04GateError';
     this.gate_id = gateId;
     this.reason_code = reasonCode;
+    this.message = `[${gateId}] ${reasonCode}: ${cleanMessage}`;
   }
 }
 
@@ -31,15 +33,165 @@ const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
 const FORBIDDEN_DROP_NAMES = new Set(['postgres', 'template0', 'template1', 'erp_db', 'erp_database', 'erp_production', 'dreamlab']);
 const PRODUCTION_LIKE_NAME_PATTERN = /(^|_)(prod|production|live|real|main)($|_)/i;
 
-function redactUrl(rawUrl) {
-  if (!rawUrl) return '(empty)';
+function getKnownSecrets(env = process.env) {
+  const secrets = new Set();
+
+  function addSecret(val) {
+    if (typeof val === 'string') {
+      const trimmed = val.trim();
+      if (trimmed.length >= 3) {
+        secrets.add(trimmed);
+      }
+    }
+  }
+
+  if (env.DATABASE_URL) {
+    addSecret(env.DATABASE_URL);
+    try {
+      const p = new URL(env.DATABASE_URL);
+      if (p.password) addSecret(p.password);
+    } catch {}
+  }
+  if (env.P04_TEST_ADMIN_URL) {
+    addSecret(env.P04_TEST_ADMIN_URL);
+    try {
+      const p = new URL(env.P04_TEST_ADMIN_URL);
+      if (p.password) addSecret(p.password);
+    } catch {}
+  }
+  if (env.DREAMLAB_DATABASE_URL) {
+    addSecret(env.DREAMLAB_DATABASE_URL);
+    try {
+      const p = new URL(env.DREAMLAB_DATABASE_URL);
+      if (p.password) addSecret(p.password);
+    } catch {}
+  }
+
+  addSecret(env.POSTGRES_PASSWORD);
+  addSecret(env.PGPASSWORD);
+  addSecret(env.DB_PASSWORD);
+
+  for (const [k, v] of Object.entries(env)) {
+    if (/(password|secret|credential|token|api_key)/i.test(k)) {
+      addSecret(v);
+    }
+  }
+
+  return Array.from(secrets).sort((a, b) => b.length - a.length);
+}
+
+function redactSecrets(input, env = process.env) {
+  if (input === null || input === undefined) return input;
+  if (typeof input === 'number' || typeof input === 'boolean') return input;
+
+  if (typeof input === 'string') {
+    let result = input;
+
+    // 1. Replace postgres connection URLs
+    result = result.replace(/postgres(?:ql)?:\/\/[^\s"'`<>]+/gi, '[REDACTED_DATABASE_URL]');
+
+    // 2. Replace URL user-info patterns
+    result = result.replace(/([a-zA-Z0-9+.-]+:\/\/)[^@\/\s]+@/g, '$1[REDACTED_USERINFO]@');
+
+    // 3. Replace known secrets from environment
+    const knownSecrets = getKnownSecrets(env);
+    for (const secret of knownSecrets) {
+      if (result.includes(secret)) {
+        result = result.split(secret).join('[REDACTED_SECRET]');
+      }
+    }
+
+    // 4. Any remaining postgres:// or postgresql:// scheme
+    result = result.replace(/postgres(?:ql)?:\/\//gi, '[REDACTED_DATABASE_SCHEME]://');
+
+    return result;
+  }
+
+  if (Array.isArray(input)) {
+    return input.map(item => redactSecrets(item, env));
+  }
+
+  if (typeof input === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(input)) {
+      const cleanKey = typeof k === 'string' ? redactSecrets(k, env) : k;
+      out[cleanKey] = redactSecrets(v, env);
+    }
+    return out;
+  }
+
+  return input;
+}
+
+function extractDbName(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return 'source-read-only';
   try {
     const parsed = new URL(rawUrl);
-    const user = parsed.username ? '***' : '';
-    const pass = parsed.password ? ':***@' : (parsed.username ? '@' : '');
-    return `${parsed.protocol}//${user}${pass}${parsed.host}${parsed.pathname}${parsed.search}`;
+    const name = parsed.pathname.replace(/^\//, '');
+    return name || 'source-read-only';
   } catch {
-    return String(rawUrl).replace(/:[^@/]+@/, ':***@');
+    const match = rawUrl.match(/\/([^/?#]+)(?:[?#]|$)/);
+    return match ? match[1] : 'source-read-only';
+  }
+}
+
+function redactUrl(rawUrl) {
+  if (!rawUrl) return '(empty)';
+  return redactSecrets(String(rawUrl));
+}
+
+function assertNoSecrets(value, env = process.env, path = 'root') {
+  if (value === null || value === undefined) return;
+  if (typeof value === 'number' || typeof value === 'boolean') return;
+
+  const knownSecrets = getKnownSecrets(env);
+
+  function checkString(str, currentPath) {
+    if (/postgres(?:ql)?:\/\//i.test(str)) {
+      throw new P04GateError(
+        'contract_consistency',
+        'EVIDENCE_SECRET_DETECTED',
+        `Postgres connection URL scheme detected at ${currentPath}`
+      );
+    }
+
+    if (/:\/\/[^@\/\s]+@/.test(str)) {
+      throw new P04GateError(
+        'contract_consistency',
+        'EVIDENCE_SECRET_DETECTED',
+        `URL user-info pattern detected at ${currentPath}`
+      );
+    }
+
+    for (const secret of knownSecrets) {
+      if (str.includes(secret)) {
+        throw new P04GateError(
+          'contract_consistency',
+          'EVIDENCE_SECRET_DETECTED',
+          `Configured secret or credential detected at ${currentPath}`
+        );
+      }
+    }
+  }
+
+  if (typeof value === 'string') {
+    checkString(value, path);
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      assertNoSecrets(value[i], env, `${path}[${i}]`);
+    }
+    return;
+  }
+
+  if (typeof value === 'object') {
+    for (const [k, v] of Object.entries(value)) {
+      checkString(k, `${path}.key(${k})`);
+      assertNoSecrets(v, env, `${path}.${k}`);
+    }
+    return;
   }
 }
 
@@ -292,6 +444,10 @@ module.exports = {
   DB_NAME_PATTERN,
   LOOPBACK_HOSTS,
   redactUrl,
+  redactSecrets,
+  getKnownSecrets,
+  extractDbName,
+  assertNoSecrets,
   parseAndValidateTargetUrl,
   validateDatabaseName,
   createInventory,

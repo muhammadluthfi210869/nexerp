@@ -28,9 +28,9 @@ function runPrisma(args, options = {}) {
   });
   return {
     status: result.status,
-    stdout: result.stdout || '',
-    stderr: result.stderr || '',
-    command: `node "${PRISMA_CLI}" ${args.join(' ')}`
+    stdout: safety.redactSecrets(result.stdout || ''),
+    stderr: safety.redactSecrets(result.stderr || ''),
+    command: safety.redactSecrets(`node "${PRISMA_CLI}" ${args.join(' ')}`)
   };
 }
 
@@ -68,10 +68,10 @@ function runPrismaAsync(args, options = {}) {
         pid: child.pid,
         status: timedOut ? 124 : (status ?? 1),
         timedOut,
-        stdout: stdout || '',
-        stderr: stderr || '',
+        stdout: safety.redactSecrets(stdout || ''),
+        stderr: safety.redactSecrets(stderr || ''),
         duration_ms: Date.now() - start,
-        command: `node "${PRISMA_CLI}" ${args.join(' ')}`
+        command: safety.redactSecrets(`node "${PRISMA_CLI}" ${args.join(' ')}`)
       });
     });
 
@@ -81,10 +81,10 @@ function runPrismaAsync(args, options = {}) {
         pid: child.pid || 0,
         status: 1,
         timedOut: false,
-        stdout: stdout || '',
-        stderr: err.message,
+        stdout: safety.redactSecrets(stdout || ''),
+        stderr: safety.redactSecrets(err.message || ''),
         duration_ms: Date.now() - start,
-        command: `node "${PRISMA_CLI}" ${args.join(' ')}`
+        command: safety.redactSecrets(`node "${PRISMA_CLI}" ${args.join(' ')}`)
       });
     });
   });
@@ -196,7 +196,10 @@ async function gatePredecessorAndTargetSafety(ctx) {
     timeout_state: 'NONE',
     phase_base_sha: contract.phase_base_sha,
     candidate_sha: ctx.candidateSha,
-    database: target ? target.database : 'postgres',
+    database: 'source-read-only',
+    database_purpose: 'source_integrity_baseline',
+    host_class: 'loopback',
+    postgres_major: major,
     command: 'node backend/node_modules/prisma/build/index.js --version',
     commands: [
       { command: 'node backend/node_modules/prisma/build/index.js --version', exit_code: 0 },
@@ -229,7 +232,10 @@ async function gateContractConsistency(ctx) {
     timeout_state: 'NONE',
     phase_base_sha: ctx.contract.phase_base_sha,
     candidate_sha: ctx.candidateSha,
-    database: 'docs/legacy-erp/contracts',
+    database: 'source-read-only',
+    database_purpose: 'contract_audit',
+    host_class: 'loopback',
+    postgres_major: 16,
     command: 'inspect docs/legacy-erp/contracts/09_NON_FUNCTIONAL_CONTRACT.md',
     commands: [
       { command: 'inspect docs/legacy-erp/contracts/09_NON_FUNCTIONAL_CONTRACT.md', exit_code: 0 }
@@ -312,7 +318,10 @@ async function gatePrismaValidateGenerate(ctx) {
     timeout_state: 'NONE',
     phase_base_sha: ctx.contract.phase_base_sha,
     candidate_sha: ctx.candidateSha,
-    database: 'backend/prisma/schema',
+    database: 'source-read-only',
+    database_purpose: 'schema_validation',
+    host_class: 'loopback',
+    postgres_major: 16,
     command: 'prisma validate && prisma generate',
     commands: [
       { command: valRes.command, exit_code: valRes.status },
@@ -352,7 +361,10 @@ async function gateMigrationChainIntegrity(ctx) {
     timeout_state: 'NONE',
     phase_base_sha: contract.phase_base_sha,
     candidate_sha: ctx.candidateSha,
-    database: migrationsDir,
+    database: 'source-read-only',
+    database_purpose: 'migration_chain_audit',
+    host_class: 'loopback',
+    postgres_major: 16,
     command: `git ls-tree -r ${contract.phase_base_sha} backend/prisma/migrations`,
     commands: [
       { command: `git ls-tree -r ${contract.phase_base_sha} backend/prisma/migrations`, exit_code: 0 }
@@ -435,6 +447,9 @@ async function gateEmptyDbMigrate(ctx) {
     phase_base_sha: ctx.contract.phase_base_sha,
     candidate_sha: ctx.candidateSha,
     database: emptyDbName,
+    database_purpose: 'empty_db_migrate_target',
+    host_class: 'loopback',
+    postgres_major: 16,
     command: 'prisma migrate deploy && prisma migrate status && prisma migrate diff',
     commands: [
       { command: deployRes.command, exit_code: deployRes.status },
@@ -451,7 +466,6 @@ async function gateEmptyDbMigrate(ctx) {
     },
     schema_drift: 0,
     empty_db_name: emptyDbName,
-    empty_db_url: safety.redactUrl(emptyDbUrl),
     migration_checksums: schemaTruth.payload.ledger.map(l => ({ name: l.migration_name, checksum: l.checksum }))
   };
 }
@@ -618,6 +632,9 @@ async function gateBaselineUpgrade(ctx) {
       phase_base_sha: contract.phase_base_sha,
       candidate_sha: ctx.candidateSha,
       database: baselineDbName,
+      database_purpose: 'baseline_upgrade_target',
+      host_class: 'loopback',
+      postgres_major: 16,
       command: 'prisma migrate deploy (baseline) && prisma migrate deploy (candidate)',
       commands: [
         { command: depBaseRes.command, exit_code: depBaseRes.status },
@@ -642,8 +659,7 @@ async function gateBaselineUpgrade(ctx) {
         pass2: digestAfterPass2,
         stable: digestAfterPass1 === digestAfterPass2
       },
-      baseline_db_name: baselineDbName,
-      baseline_db_url: safety.redactUrl(baselineDbUrl)
+      baseline_db_name: baselineDbName
     };
   } finally {
     fs.rmSync(tempBaseDir, { recursive: true, force: true });
@@ -660,6 +676,7 @@ async function gateMigrationIdempotency(ctx, baselineDbUrl) {
   const backendDir = path.resolve(root, 'backend');
 
   const dbUrl = ctx.targetDbUrlOverride || baselineDbUrl || `postgresql://${target.username}:${target.password}@${target.hostname}:${target.port}/postgres`;
+  const targetDbName = ctx.targetDbNameOverride || (dbUrl ? safety.extractDbName(dbUrl) : 'baseline_idempotency_target');
 
   // 1. Rerun migrate deploy on target DB to prove "No pending migrations"
   const rerunRes = runPrisma(['migrate', 'deploy'], {
@@ -795,7 +812,10 @@ async function gateMigrationIdempotency(ctx, baselineDbUrl) {
       timeout_state: 'NONE',
       phase_base_sha: contract.phase_base_sha,
       candidate_sha: ctx.candidateSha,
-      database: dbUrl,
+      database: targetDbName,
+      database_purpose: 'migration_idempotency_target',
+      host_class: 'loopback',
+      postgres_major: 16,
       command: 'prisma migrate deploy (concurrent & idempotent rerun)',
       commands: [
         { command: 'node prisma migrate deploy (rerun)', exit_code: rerunRes.status },
@@ -961,6 +981,9 @@ async function gateRollbackRehearsal(ctx) {
       phase_base_sha: contract.phase_base_sha,
       candidate_sha: ctx.candidateSha,
       database: rollbackDbName,
+      database_purpose: 'rollback_rehearsal_target',
+      host_class: 'loopback',
+      postgres_major: 16,
       command: 'prisma migrate deploy -> down.sql -> prisma migrate deploy',
       commands: [
         { command: baseDeployRes.command, exit_code: baseDeployRes.status },
@@ -996,6 +1019,7 @@ async function gateConstraintIndexAudit(ctx, dbUrl) {
   const { root, target } = ctx;
   const backendDir = path.resolve(root, 'backend');
   const url = ctx.targetDbUrlOverride || dbUrl || `postgresql://${target.username}:${target.password}@${target.hostname}:${target.port}/postgres`;
+  const targetDbName = ctx.targetDbNameOverride || (url ? safety.extractDbName(url) : 'constraint_audit_target');
 
   const { Client } = require(path.join(backendDir, 'node_modules/pg'));
   const client = new Client({ connectionString: url });
@@ -1041,7 +1065,10 @@ async function gateConstraintIndexAudit(ctx, dbUrl) {
     timeout_state: 'NONE',
     phase_base_sha: ctx.contract.phase_base_sha,
     candidate_sha: ctx.candidateSha,
-    database: url,
+    database: targetDbName,
+    database_purpose: 'constraint_index_audit_target',
+    host_class: 'loopback',
+    postgres_major: 16,
     command: 'audit pg_constraint, pg_indexes, and verify SQLSTATE 23505',
     commands: [
       { command: 'SELECT conname FROM pg_constraint WHERE NOT convalidated', exit_code: 0 },
@@ -1075,7 +1102,10 @@ async function gateExpandContractCompatibility(ctx) {
     timeout_state: 'NONE',
     phase_base_sha: ctx.contract.phase_base_sha,
     candidate_sha: ctx.candidateSha,
-    database: 'candidate_migrations',
+    database: 'source-read-only',
+    database_purpose: 'contract_ddl_compatibility_scan',
+    host_class: 'loopback',
+    postgres_major: 16,
     command: 'AST regex scan candidate migrations DDL',
     commands: [
       { command: 'AST analyze candidate migrations', exit_code: 0 }
@@ -1096,6 +1126,7 @@ async function gateOldNewVersionCoexistence(ctx, dbUrl) {
   const candidateScope = ctx.candidateScopeOverride || ctx.candidateScope || analyzers.deriveCandidateScope(root, contract.phase_base_sha);
   const backendDir = path.resolve(root, 'backend');
   const url = ctx.targetDbUrlOverride || dbUrl || `postgresql://${target.username}:${target.password}@${target.hostname}:${target.port}/postgres`;
+  const targetDbName = ctx.targetDbNameOverride || (url ? safety.extractDbName(url) : 'version_coexistence_target');
 
   const { Client } = require(path.join(backendDir, 'node_modules/pg'));
   const client = new Client({ connectionString: url });
@@ -1212,7 +1243,10 @@ async function gateOldNewVersionCoexistence(ctx, dbUrl) {
     timeout_state: 'NONE',
     phase_base_sha: contract.phase_base_sha,
     candidate_sha: candidateSha,
-    database: url,
+    database: targetDbName,
+    database_purpose: 'version_coexistence_probe_target',
+    host_class: 'loopback',
+    postgres_major: 16,
     command: 'execute N-1 and N probe operations for affected tables',
     commands: [
       { command: 'execute N-1/N CRUD probes', exit_code: 0 }

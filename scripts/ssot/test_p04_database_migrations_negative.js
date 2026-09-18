@@ -77,10 +77,10 @@ async function runAllMutations(context) {
         status: 'PASS',
         production_path: true,
         gate_function: gateFunctionName,
-        mutated_target: mutatedTarget,
+        mutated_target: safety.redactSecrets(mutatedTarget),
         gate_id: err.gate_id,
         reason_code: err.reason_code,
-        rejection_reason: err.message
+        rejection_reason: safety.redactSecrets(err.message)
       });
     } finally {
       gates[gateFunctionName] = origGate;
@@ -489,9 +489,164 @@ async function runAllMutations(context) {
   return results;
 }
 
+module.exports = {
+  runAllMutations,
+  runSecretValidationNegativeTests
+};
+
+function createMockValidEvidence(contract, candidateSha) {
+  const checks = contract.required_checks.map(id => ({
+    id,
+    status: 'PASS',
+    executed: true,
+    synthetic: false,
+    skipped: false,
+    duration_ms: 100,
+    timeout_state: 'NONE',
+    phase_base_sha: contract.phase_base_sha,
+    candidate_sha: candidateSha,
+    command: 'node test.js',
+    commands: [{ command: 'node test.js', exit_code: 0 }],
+    exit_code: 0,
+    database: 'source-read-only',
+    database_purpose: 'test_purpose',
+    host_class: 'loopback',
+    postgres_major: 16,
+    ...(id === 'predecessor_and_target_safety' ? { source_database_fingerprint: 'a'.repeat(64), source_database_tables: 5 } : {}),
+    ...(id === 'migration_chain_integrity' ? { candidate_migrations_scanned: 1, affected_tables: ['articles'] } : {}),
+    ...(id === 'baseline_upgrade' ? { baseline_schema_digest: 'd1', candidate_schema_digest: 'd2', ledger_before: [], ledger_after: [], backfill_digests: { stable: true } } : {}),
+    ...(id === 'migration_idempotency' ? { concurrency_verified: true, competing_deploy_processes: 2, candidate_applied_once: true } : {}),
+    ...(id === 'rollback_rehearsal' ? { baseline_schema_digest: 'd1', rolled_back_schema_digest: 'd1', baseline_fixture_digest: 'f1', rolled_back_fixture_digest: 'f1', rollback_and_rollforward_verified: true } : {}),
+    ...(id === 'old_new_version_coexistence' ? { coverage_percent: 100, table_probe_results: { articles: { status: 'PASS' } } } : {})
+  }));
+
+  const mutations = contract.required_mutations.map(id => ({
+    id,
+    status: 'PASS',
+    production_path: true,
+    gate_function: 'gatePredecessorAndTargetSafety',
+    mutated_target: 'sample_target',
+    gate_id: 'predecessor_and_target_safety',
+    reason_code: 'SAMPLE_REASON',
+    rejection_reason: 'Sample rejection reason'
+  }));
+
+  return {
+    phase: 'P04',
+    level: 'PHASE_GATE',
+    candidate_sha: candidateSha,
+    phase_base_sha: contract.phase_base_sha,
+    synthetic: false,
+    skipped_count: 0,
+    checks,
+    mutations,
+    metrics: { ...contract.thresholds },
+    safety: {
+      source_database_untouched: true,
+      created_databases: ['nex_p04_test_db'],
+      dropped_databases: ['nex_p04_test_db']
+    },
+    verdict: 'PASS',
+    duration_ms: 5000
+  };
+}
+
+function runSecretValidationNegativeTests(contract, candidateSha) {
+  const { validateP04Evidence } = require('./lib/p04_certification');
+  const testResults = [];
+
+  // Baseline validation: mock evidence without secrets passes
+  const baseEv = createMockValidEvidence(contract, candidateSha);
+  validateP04Evidence(baseEv, contract);
+
+  // Test 1: Inject credentialed URL into nested evidence
+  {
+    const ev = createMockValidEvidence(contract, candidateSha);
+    ev.checks[0].nested_diagnostic = {
+      connection_info: 'postgresql://postgres:secret_pass_123@localhost:5432/nex_p04_test'
+    };
+    let caught = false;
+    try {
+      validateP04Evidence(ev, contract);
+    } catch (err) {
+      if (err.reason_code === 'EVIDENCE_SECRET_DETECTED') {
+        caught = true;
+      }
+    }
+    if (!caught) {
+      throw new Error('Targeted negative test failed: credentialed URL in nested evidence was NOT rejected with EVIDENCE_SECRET_DETECTED');
+    }
+    testResults.push({ target: 'nested evidence', status: 'PASS', reason_code: 'EVIDENCE_SECRET_DETECTED' });
+  }
+
+  // Test 2: Inject credentialed URL into command metadata
+  {
+    const ev = createMockValidEvidence(contract, candidateSha);
+    ev.checks[1].commands = [
+      { command: 'node prisma.js --url=postgresql://admin:supersecret@127.0.0.1/db', exit_code: 0 }
+    ];
+    let caught = false;
+    try {
+      validateP04Evidence(ev, contract);
+    } catch (err) {
+      if (err.reason_code === 'EVIDENCE_SECRET_DETECTED') {
+        caught = true;
+      }
+    }
+    if (!caught) {
+      throw new Error('Targeted negative test failed: credentialed URL in command metadata was NOT rejected with EVIDENCE_SECRET_DETECTED');
+    }
+    testResults.push({ target: 'command metadata', status: 'PASS', reason_code: 'EVIDENCE_SECRET_DETECTED' });
+  }
+
+  // Test 3: Inject credentialed URL into error string
+  {
+    const ev = createMockValidEvidence(contract, candidateSha);
+    ev.mutations[0].rejection_reason = 'Failed to authenticate: postgresql://admin:leaked_pass@127.0.0.1:5432/erp_db';
+    let caught = false;
+    try {
+      validateP04Evidence(ev, contract);
+    } catch (err) {
+      if (err.reason_code === 'EVIDENCE_SECRET_DETECTED') {
+        caught = true;
+      }
+    }
+    if (!caught) {
+      throw new Error('Targeted negative test failed: credentialed URL in error string was NOT rejected with EVIDENCE_SECRET_DETECTED');
+    }
+    testResults.push({ target: 'error string', status: 'PASS', reason_code: 'EVIDENCE_SECRET_DETECTED' });
+  }
+
+  // Test 4: Direct assertNoSecrets on unredacted user-info pattern
+  {
+    let caughtUserInfo = false;
+    try {
+      safety.assertNoSecrets({ meta: 'redis://default:my_auth_token@127.0.0.1:6379' });
+    } catch (err) {
+      if (err.reason_code === 'EVIDENCE_SECRET_DETECTED') {
+        caughtUserInfo = true;
+      }
+    }
+    if (!caughtUserInfo) {
+      throw new Error('Targeted negative test failed: URL user-info was NOT rejected with EVIDENCE_SECRET_DETECTED');
+    }
+    testResults.push({ target: 'user-info pattern', status: 'PASS', reason_code: 'EVIDENCE_SECRET_DETECTED' });
+  }
+
+  return testResults;
+}
+
 async function main() {
   const contract = JSON.parse(fs.readFileSync(CONTRACT_PATH, 'utf8'));
   const candidateSha = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).stdout.trim();
+
+  // Run targeted secret validation negative tests first
+  console.log('\n--- Running Targeted Secret Validation Negative Tests ---');
+  const secretTests = runSecretValidationNegativeTests(contract, candidateSha);
+  for (const st of secretTests) {
+    console.log(`  [PASS] Target: ${st.target} -> Rejection: ${st.reason_code}`);
+  }
+  console.log(`Targeted Secret Tests: ${secretTests.length}/${secretTests.length} PASS\n`);
 
   // Load backend environment
   const backendDir = path.resolve(ROOT, 'backend');
@@ -540,5 +695,6 @@ if (require.main === module) {
 }
 
 module.exports = {
-  runAllMutations
+  runAllMutations,
+  runSecretValidationNegativeTests
 };

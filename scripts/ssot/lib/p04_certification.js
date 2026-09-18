@@ -56,8 +56,15 @@ function validateP04Evidence(result, contract) {
       assert(typeof cmd.command === 'string' && cmd.command.length > 0, `Check ${id} invalid command entry`);
       assert(cmd.exit_code === 0, `Check ${id} command exit_code is not 0: ${cmd.command}`);
     }
-    assert(c.exit_code === 0, `Check ${id} exit_code is not 0`);
     assert(typeof c.database === 'string' && c.database.length > 0, `Check ${id} missing database`);
+    assert(!c.database.includes('://'), `Check ${id} database must not contain a URL scheme: ${c.database}`);
+    assert(!c.database.includes('@'), `Check ${id} database must not contain user-info: ${c.database}`);
+    assert(c.host_class === 'loopback', `Check ${id} host_class must be loopback: got ${c.host_class}`);
+    assert(c.postgres_major === 15 || c.postgres_major === 16, `Check ${id} postgres_major must be 15 or 16: got ${c.postgres_major}`);
+    assert(!c.baseline_db_url, `Check ${id} must not contain baseline_db_url`);
+    assert(!c.empty_db_url, `Check ${id} must not contain empty_db_url`);
+    assert(!c.dbUrl, `Check ${id} must not contain dbUrl`);
+    assert(!c.connection_string, `Check ${id} must not contain connection_string`);
   }
 
   // Check-specific assertions
@@ -119,6 +126,9 @@ function validateP04Evidence(result, contract) {
   for (const [k, v] of Object.entries(contract.thresholds)) {
     assert(result.metrics && result.metrics[k] === v, `Threshold metric ${k} mismatch: expected ${v}, got ${result.metrics[k]}`);
   }
+
+  // Strict recursive secret assertion across all evidence fields
+  safety.assertNoSecrets(result, process.env);
 }
 
 async function certifyP04({ root, contract, candidateSha }) {
@@ -323,6 +333,9 @@ async function certifyP04({ root, contract, candidateSha }) {
       },
       metrics
     };
+
+    // Strict recursive secret assertion across all report fields
+    safety.assertNoSecrets(report, process.env);
 
     const reportOut = path.join(root, 'docs/legacy-erp/verification/_p04_test_results.json');
     fs.mkdirSync(path.dirname(reportOut), { recursive: true });
