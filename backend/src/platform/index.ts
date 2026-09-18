@@ -15,4 +15,6 @@ export * from './approval/approval.service';
 export * from './outbox/outbox.service';
 export * from './communication/acl.adapter';
 export * from './errors/error.factory';
+export * from './errors/error.filter';
 export * from './config/config.module';
+export * from './platform.module';

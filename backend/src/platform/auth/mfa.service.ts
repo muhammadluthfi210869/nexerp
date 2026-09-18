@@ -8,13 +8,48 @@
 
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { createCipheriv, createDecipheriv, randomBytes, createHash, timingSafeEqual } from 'crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  randomBytes,
+  createHash,
+  createHmac,
+  timingSafeEqual
+} from 'crypto';
 
 export interface MfaEnrollment {
   secret: string;
   encryptedSecret: string;
   recoveryCodes: string[];
   recoveryCodesHash: string[];
+}
+
+export function generateRFC6238Totp(secretHex: string, timeStepSeconds = 30, t = Date.now()): string {
+  const counter = Math.floor(t / 1000 / timeStepSeconds);
+  const buf = Buffer.alloc(8);
+  buf.writeBigInt64BE(BigInt(counter), 0);
+  const secretBuf = Buffer.from(secretHex, 'hex');
+  const hmac = createHmac('sha1', secretBuf).update(buf).digest();
+  const offset = hmac[hmac.length - 1] & 0x0f;
+  const code =
+    ((hmac[offset] & 0x7f) << 24) |
+    ((hmac[offset + 1] & 0xff) << 16) |
+    ((hmac[offset + 2] & 0xff) << 8) |
+    (hmac[offset + 3] & 0xff);
+  const otp = code % 1000000;
+  return otp.toString().padStart(6, '0');
+}
+
+export function verifyRFC6238Totp(secretHex: string, code: string, windowSteps = 1, t = Date.now()): boolean {
+  if (!/^\d{6}$/.test(code)) return false;
+  const stepMs = 30 * 1000;
+  for (let offset = -windowSteps; offset <= windowSteps; offset++) {
+    const expected = generateRFC6238Totp(secretHex, 30, t + offset * stepMs);
+    if (code.length === expected.length && timingSafeEqual(Buffer.from(code), Buffer.from(expected))) {
+      return true;
+    }
+  }
+  return false;
 }
 
 @Injectable()
@@ -24,10 +59,9 @@ export class MfaService {
   private getEncryptionKey(): Buffer {
     const raw = process.env.MFA_ENCRYPTION_KEY || process.env.AES_SECRET_KEY || '';
     if (raw.length < 32) {
-      // Derive deterministic 32-byte key from whatever is present.
-      return createHash('sha256').update(raw || 'p05-default-key').digest();
+      throw new Error('WEAK_CONFIGURATION: MFA encryption key must be at least 32 characters');
     }
-    return Buffer.from(raw.slice(0, 64), 'utf8');
+    return createHash('sha256').update(raw).digest();
   }
 
   encryptSecret(plain: string): string {
@@ -42,6 +76,9 @@ export class MfaService {
   decryptSecret(blob: string): string {
     const key = this.getEncryptionKey();
     const [ivB64, tagB64, encB64] = blob.split('.');
+    if (!ivB64 || !tagB64 || !encB64) {
+      throw new Error('INVALID_MFA_SECRET_BLOB');
+    }
     const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(ivB64, 'base64'));
     decipher.setAuthTag(Buffer.from(tagB64, 'base64'));
     const dec = Buffer.concat([decipher.update(Buffer.from(encB64, 'base64')), decipher.final()]);
@@ -63,17 +100,29 @@ export class MfaService {
 
   async confirmTOTP(userId: string, code: string): Promise<boolean> {
     const rec = await this.prisma.mfaSecret.findUnique({ where: { userId } });
-    if (!rec) return false;
-    // Production: TOTP verify using otpauth; here we accept any 6-digit code for unit tests
-    if (!/^\d{6}$/.test(code)) return false;
+    if (!rec || !rec.encryptedSecret) return false;
+    let plainSecret: string;
+    try {
+      plainSecret = this.decryptSecret(rec.encryptedSecret);
+    } catch {
+      return false;
+    }
+    const valid = verifyRFC6238Totp(plainSecret, code);
+    if (!valid) return false;
     await this.prisma.mfaSecret.update({ where: { userId }, data: { confirmedAt: new Date() } });
     return true;
   }
 
   async verifyTOTPChallenge(userId: string, code: string): Promise<boolean> {
     const rec = await this.prisma.mfaSecret.findUnique({ where: { userId } });
-    if (!rec || !rec.confirmedAt) return false;
-    return /^\d{6}$/.test(code);
+    if (!rec || !rec.confirmedAt || !rec.encryptedSecret) return false;
+    let plainSecret: string;
+    try {
+      plainSecret = this.decryptSecret(rec.encryptedSecret);
+    } catch {
+      return false;
+    }
+    return verifyRFC6238Totp(plainSecret, code);
   }
 
   async adminEnforceMFA(userId: string, required: boolean) {

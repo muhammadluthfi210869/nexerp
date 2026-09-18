@@ -160,6 +160,7 @@ function classifyImport(source) {
 }
 
 function deriveDependencyGraph({ root, baseSha, candidateSha }) {
+  const { spawnSync } = require('child_process');
   const mods = discoverBackendModules(root);
   const edges = [];
   for (const m of mods) {
@@ -182,15 +183,72 @@ function deriveDependencyGraph({ root, baseSha, candidateSha }) {
       }
     }
   }
-  const baselineDigest = computeDigest(edges);
+
+  // Derive baseline edges if baseSha is provided and distinct
+  let baselineEdges = [];
+  if (baseSha && candidateSha && baseSha !== candidateSha) {
+    const r = spawnSync('git', ['ls-tree', '-r', '--name-only', baseSha, 'backend/src'], { cwd: root, encoding: 'utf8' });
+    if (r.status === 0) {
+      const baseFiles = r.stdout.split('\n').map(s => s.trim()).filter(f => f.endsWith('.ts') && !isTestPath(f));
+      for (const bf of baseFiles) {
+        let modName = null;
+        if (bf.startsWith('backend/src/modules/')) {
+          modName = bf.replace('backend/src/modules/', '').split('/')[0];
+        } else if (bf.startsWith('backend/src/platform/')) {
+          modName = bf.replace('backend/src/platform/', '').split('/')[0];
+        }
+        if (!modName) continue;
+        const fileContentRaw = spawnSync('git', ['show', `${baseSha}:${bf}`], { cwd: root, encoding: 'utf8' });
+        if (fileContentRaw.status === 0) {
+          const text = fileContentRaw.stdout || '';
+          const re = /import\s+(?:type\s+)?(?:\{([^}]+)\}\s+from\s+|\*\s+as\s+([A-Za-z0-9_]+)\s+from\s+|([A-Za-z0-9_]+)\s+from\s+)?['"]([^'"]+)['"]/g;
+          let m;
+          while ((m = re.exec(text)) !== null) {
+            const source = m[4] || '';
+            const cls = classifyImport(source);
+            if (cls) {
+              baselineEdges.push({
+                from: modName,
+                to: cls.to,
+                kind: 'import',
+                file: normalize(bf),
+                classification: cls.classification
+              });
+            }
+          }
+        }
+      }
+    }
+  } else {
+    baselineEdges = edges;
+  }
+
+  const baselineDigest = computeDigest(baselineEdges);
   const candidateDigest = computeDigest(edges);
+
+  const baseEdgeKeys = new Set(baselineEdges.map(e => `${e.from}|${e.to}|${e.kind}`));
+  const candEdgeKeys = new Set(edges.map(e => `${e.from}|${e.to}|${e.kind}`));
+  const edgeDeltas = [];
+  for (const e of edges) {
+    const key = `${e.from}|${e.to}|${e.kind}`;
+    if (!baseEdgeKeys.has(key)) {
+      edgeDeltas.push({ delta: 'added', edge: e });
+    }
+  }
+  for (const be of baselineEdges) {
+    const key = `${be.from}|${be.to}|${be.kind}`;
+    if (!candEdgeKeys.has(key)) {
+      edgeDeltas.push({ delta: 'removed', edge: be });
+    }
+  }
+
   return {
     nodes: mods.map(m => ({ name: m.name, parent: m.parent, layer: classifyLayer(m) })),
     edges,
     baseline_digest: baselineDigest,
     candidate_digest: candidateDigest,
-    edge_delta_count: 0,
-    classified_edge_deltas: []
+    edge_delta_count: edgeDeltas.length,
+    classified_edge_deltas: edgeDeltas
   };
 }
 
@@ -224,9 +282,46 @@ function findDirectCrossDomainPersistence(graph) {
   return { count: 0, samples: [] };
 }
 
-function findDuplicateRules({ root }) {
-  // Lightweight: scan *.ts under backend/src, return 0 by default
-  return { count: 0, samples: [] };
+function findDuplicateRules({ root, baseSha, candidateSha }) {
+  const { spawnSync } = require('child_process');
+  let changedFiles = [];
+  if (baseSha && candidateSha && baseSha !== candidateSha) {
+    const r = spawnSync('git', ['diff', '--name-only', `${baseSha}..${candidateSha}`], { cwd: root, encoding: 'utf8' });
+    if (r.status === 0) changedFiles = String(r.stdout || '').split('\n').map(s => s.trim()).filter(Boolean);
+  }
+  const changedTs = changedFiles.filter(f => f.startsWith('backend/src/') && f.endsWith('.ts') && !isTestPath(f));
+  const filesToScan = changedTs.length > 0 ? changedTs : listAllFiles(root, 'backend/src/platform').filter(f => f.endsWith('.ts') && !isTestPath(normalize(path.relative(root, f))));
+
+  const blockMap = new Map();
+  const duplicates = [];
+  let totalBlocks = 0;
+
+  for (const rel of filesToScan) {
+    const fullPath = path.isAbsolute(rel) ? rel : path.join(root, rel);
+    const content = readFileSafe(fullPath);
+    const lines = content.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('//') && !l.startsWith('*'));
+    for (let i = 0; i <= lines.length - 5; i += 5) {
+      totalBlocks++;
+      const block = lines.slice(i, i + 5).join(' ');
+      if (block.length > 80) {
+        if (blockMap.has(block) && blockMap.get(block) !== rel) {
+          duplicates.push({ block: block.slice(0, 80), file1: blockMap.get(block), file2: rel });
+        } else {
+          blockMap.set(block, rel);
+        }
+      }
+    }
+  }
+
+  const dupPercent = totalBlocks > 0 ? Number(((duplicates.length / totalBlocks) * 100).toFixed(2)) : 0;
+
+  return {
+    count: duplicates.length,
+    samples: duplicates.slice(0, 5),
+    scanned_files_count: filesToScan.length,
+    total_blocks: totalBlocks,
+    changed_duplication_percent: dupPercent
+  };
 }
 
 function findUnusedProductionDependencies({ root, baseSha, candidateSha }) {
@@ -296,6 +391,7 @@ function findComplexityRegressions({ root, baseSha, candidateSha }) {
   const files = changedTs.map(f => path.join(root, f));
   const regressions = [];
   let maxCc = 0;
+  let functionsInspected = 0;
   for (const f of files) {
     const text = readFileSafe(f);
     // Find function bodies by scanning braces
@@ -322,6 +418,7 @@ function findComplexityRegressions({ root, baseSha, candidateSha }) {
           else if (ch === '}') depth--;
         }
         if (depth <= 0 && fnBuf.length > 0) {
+          functionsInspected++;
           const body = fnBuf.join('\n');
           // Cyclomatic complexity
           let cc = 1;
@@ -350,6 +447,8 @@ function findComplexityRegressions({ root, baseSha, candidateSha }) {
   return {
     changed_max_cyclomatic_complexity: maxCc,
     regression_count: regressions.length,
+    functions_inspected: functionsInspected,
+    scanned_files_count: files.length,
     exceptions_count: 0,
     whole_code_debt_delta: 0,
     regressions: regressions.slice(0, 20)
@@ -395,7 +494,7 @@ function findDirectProcessEnvAccess({ root, baseSha, candidateSha }) {
       findings.push({ file: f, key: m[1] });
     }
   }
-  return { count: findings.length, samples: findings.slice(0, 5) };
+  return { count: findings.length, samples: findings.slice(0, 5), scanned_files_count: files.length };
 }
 
 module.exports = {

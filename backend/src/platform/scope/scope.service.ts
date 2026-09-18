@@ -55,11 +55,29 @@ export class ScopeService {
     return q;
   }
 
-  maskField<T extends Record<string, unknown>>(entity: T, fields: string[], actor: ActorContext): T {
+  maskField<T extends Record<string, any>>(
+    entity: T,
+    fields: string[] | string,
+    actorOrAllowed: ActorContext | boolean
+  ): T {
     if (!entity || typeof entity !== 'object') return entity;
-    const out: Record<string, unknown> = { ...entity };
-    for (const f of fields) {
-      if (f in out && entity.ownerUserId !== actor.userId && entity.divisionId !== actor.divisionId) {
+    const out: Record<string, any> = { ...entity };
+    const fieldList = Array.isArray(fields) ? fields : [fields];
+
+    if (typeof actorOrAllowed === 'boolean') {
+      if (!actorOrAllowed) {
+        for (const f of fieldList) {
+          if (f in out) {
+            out[f] = '[REDACTED]';
+          }
+        }
+      }
+      return out as T;
+    }
+
+    const actor = actorOrAllowed;
+    for (const f of fieldList) {
+      if (f in out && entity.ownerUserId !== actor?.userId && entity.divisionId !== actor?.divisionId) {
         out[f] = '[REDACTED_FIELD_SCOPE_LEAK]';
       }
     }

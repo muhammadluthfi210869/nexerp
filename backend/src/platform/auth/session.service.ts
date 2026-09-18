@@ -18,7 +18,7 @@ import { randomUUID } from 'crypto';
 
 const REFRESH_TTL_DAYS = 30;
 const ACCESS_TTL_MIN = 15;
-const REFRESH_HASH_COST = 10;
+const REFRESH_HASH_COST = 12;
 
 export interface SessionInput {
   userId: string;
@@ -90,10 +90,23 @@ export class SessionService {
         throw Object.assign(new Error('Session not found'), { code: 'SESSION_REVOKED' });
       }
       if (s.revokedAt) {
-        throw Object.assign(new Error('Session revoked'), { code: 'SESSION_REVOKED' });
+        // Replay of an already revoked/rotated token: durably revoke the family
+        await this.prisma.authSession.updateMany({
+          where: { familyId: s.familyId, revokedAt: null },
+          data: { revokedAt: new Date(), revokedReason: 'replay_detected' }
+        });
+        throw Object.assign(new Error('Session revoked / replay detected'), {
+          code: 'REFRESH_REPLAY',
+          familyId: s.familyId
+        });
       }
       const matches = await bcrypt.compare(presentedRefresh, s.refreshTokenHash);
       if (!matches) {
+        // Refresh token mismatch -> durably revoke token family
+        await this.prisma.authSession.updateMany({
+          where: { familyId: s.familyId, revokedAt: null },
+          data: { revokedAt: new Date(), revokedReason: 'replay_detected' }
+        });
         throw Object.assign(new Error('Refresh token mismatch — possible replay'), {
           code: 'REFRESH_REPLAY',
           familyId: s.familyId
@@ -167,6 +180,13 @@ export class SessionService {
   async markMfaCompleted(sessionId: string) {
     return await this.prisma.authSession.update({
       where: { id: sessionId },
+      data: { mfaPending: false, mfaMethod: null, lastUsedAt: new Date() }
+    });
+  }
+
+  async markMfaCompletedForUser(userId: string) {
+    return await this.prisma.authSession.updateMany({
+      where: { userId, mfaPending: true },
       data: { mfaPending: false, mfaMethod: null, lastUsedAt: new Date() }
     });
   }

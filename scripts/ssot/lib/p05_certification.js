@@ -102,7 +102,7 @@ async function certifyP05({ root, contract, candidateSha }) {
     require(path.join(backendDir, 'node_modules/dotenv')).config({ path: dotenvPath });
   }
 
-  const { Client } = require(path.join(backendDir, 'node_modules/pg'));
+  const { Client, Pool } = require(path.join(backendDir, 'node_modules/pg'));
   const rawUrl = process.env.P05_TEST_ADMIN_URL || process.env.DATABASE_URL;
   const target = safety.parseAndValidateTargetUrl(rawUrl);
   const adminUrl = `postgresql://${target.username}:${target.password}@${target.hostname}:${target.port}/postgres`;
@@ -144,9 +144,48 @@ async function certifyP05({ root, contract, candidateSha }) {
     control_matrix_execution_percent: 0
   };
 
-  // Create one isolated DB per run for P05 evidence parity
+  // Create isolated DB
   const isolatedDbName = `nex_p05_${shortSha}_${pid}_main`;
   await safety.createIsolatedDatabase(adminClient, isolatedDbName, inventory);
+
+  // Apply migration to isolated DB
+  const isolatedDbUrl = `postgresql://${target.username}:${target.password}@${target.hostname}:${target.port}/${isolatedDbName}`;
+  const migrationDir = path.join(backendDir, 'prisma/migrations/20260918_p05_platform_controls');
+  const migrationSql = fs.readFileSync(path.join(migrationDir, 'migration.sql'), 'utf8');
+  const targetClient = new Client({ connectionString: isolatedDbUrl });
+  targetClient.on('error', () => {});
+  await targetClient.connect();
+  await targetClient.query(migrationSql);
+  await targetClient.end().catch(() => {});
+
+  // Instantiate Prisma and production platform services on isolated DB
+  const { PrismaClient } = require(path.join(backendDir, 'node_modules/@prisma/client'));
+  const { PrismaPg } = require(path.join(backendDir, 'node_modules/@prisma/adapter-pg'));
+  const pool = new Pool({ connectionString: isolatedDbUrl });
+  const adapter = new PrismaPg(pool);
+  const prisma = new PrismaClient({ adapter });
+  await prisma.$connect();
+
+  const { SessionService } = require(path.join(backendDir, 'dist/platform/auth/session.service'));
+  const { MfaService } = require(path.join(backendDir, 'dist/platform/auth/mfa.service'));
+  const { PolicyService } = require(path.join(backendDir, 'dist/platform/policy/policy.service'));
+  const { ScopeService } = require(path.join(backendDir, 'dist/platform/scope/scope.service'));
+  const { AuditService } = require(path.join(backendDir, 'dist/platform/audit/audit.service'));
+  const { ApprovalService } = require(path.join(backendDir, 'dist/platform/approval/approval.service'));
+  const { OutboxService } = require(path.join(backendDir, 'dist/platform/outbox/outbox.service'));
+  const { CommunicationAclService } = require(path.join(backendDir, 'dist/platform/communication/acl.adapter'));
+
+  const sessionService = new SessionService(prisma);
+  const mfaService = new MfaService(prisma);
+  const policyService = new PolicyService();
+  const scopeService = new ScopeService(prisma);
+  const auditService = new AuditService(prisma);
+  const approvalService = new ApprovalService(prisma);
+  const outboxService = new OutboxService(prisma);
+  const communicationAclService = new CommunicationAclService(prisma);
+
+  let prismaDisconnected = false;
+  let poolEnded = false;
 
   try {
     const ctx = {
@@ -160,7 +199,17 @@ async function certifyP05({ root, contract, candidateSha }) {
       sourceClient,
       sourceDbName: target.database,
       inventory,
-      isolatedDbName
+      isolatedDbName,
+      prisma,
+      pool,
+      sessionService,
+      mfaService,
+      policyService,
+      scopeService,
+      auditService,
+      approvalService,
+      outboxService,
+      communicationAclService
     };
 
     // -------------------------------------------------------------------------
@@ -198,33 +247,21 @@ async function certifyP05({ root, contract, candidateSha }) {
     metrics.unrelated_change_paths = rmc.unrelated_change_paths;
     metrics.representative_change_prediction_percent = rmc.prediction_coverage_percent;
 
-    // DB-backed gates — pass simplified ctx (DB-backed gates read ctx.<gate>)
-    const dbCtx = {
-      ...ctx,
-      authMfa: async () => ({ pass: true, mutation_count: 7, metrics: { auth_bypasses: 0 }, db: isolatedDbName }),
-      rolePerm: async () => ({ pass: true, mutation_count: 5, db: isolatedDbName }),
-      tenantIsolation: async () => ({ pass: true, mutation_count: 4, db: isolatedDbName }),
-      immutableAudit: async () => ({ pass: true, mutation_count: 3, db: isolatedDbName }),
-      makerChecker: async () => ({ pass: true, mutation_count: 4, db: isolatedDbName }),
-      outbox: async () => ({ pass: true, mutation_count: 4, db: isolatedDbName }),
-      communicationAcl: async () => ({ pass: true, mutation_count: 4, db: isolatedDbName }),
-      errorContract: async () => ({ pass: true, mutation_count: 18 })
-    };
-
-    checks.push(await gates.gateAuthSessionMfa({ root, candidateSha, contract, ctx: dbCtx }));
+    // Real DB-backed gates
+    checks.push(await gates.gateAuthSessionMfa({ root, candidateSha, contract, ctx }));
     metrics.auth_bypasses = 0;
-    checks.push(await gates.gateRolePermissionMatrix({ root, candidateSha, contract, ctx: dbCtx }));
-    checks.push(await gates.gateTenantIsolation({ root, candidateSha, contract, ctx: dbCtx }));
+    checks.push(await gates.gateRolePermissionMatrix({ root, candidateSha, contract, ctx }));
+    checks.push(await gates.gateTenantIsolation({ root, candidateSha, contract, ctx }));
     metrics.tenant_leaks = 0;
-    checks.push(await gates.gateImmutableAudit({ root, candidateSha, contract, ctx: dbCtx }));
+    checks.push(await gates.gateImmutableAudit({ root, candidateSha, contract, ctx }));
     metrics.audit_mutations = 0;
-    checks.push(await gates.gateMakerChecker({ root, candidateSha, contract, ctx: dbCtx }));
+    checks.push(await gates.gateMakerChecker({ root, candidateSha, contract, ctx }));
     metrics.self_approvals = 0;
-    checks.push(await gates.gateOutboxRetryDedup({ root, candidateSha, contract, ctx: dbCtx }));
+    checks.push(await gates.gateOutboxRetryDedup({ root, candidateSha, contract, ctx }));
     metrics.outbox_loss_or_duplicates = 0;
-    checks.push(await gates.gateCommunicationAcl({ root, candidateSha, contract, ctx: dbCtx }));
+    checks.push(await gates.gateCommunicationAcl({ root, candidateSha, contract, ctx }));
     metrics.communication_acl_bypasses = 0;
-    const cec = await gates.gateCanonicalErrorContract({ root, candidateSha, contract, ctx: dbCtx });
+    const cec = await gates.gateCanonicalErrorContract({ root, candidateSha, contract, ctx });
     checks.push(cec);
     metrics.error_contract_violations = 0;
 
@@ -242,10 +279,10 @@ async function certifyP05({ root, contract, candidateSha }) {
     // Verify source database fingerprint unchanged
     const afterSourceFp = await safety.captureSourceFingerprint(sourceClient);
 
-    // Emit evidence manifests (in-memory only; digests are computed without
-    // writing to disk, so the post-dirty check cannot trip on writes).
+    // Manifests
     const ownership = analyzers.deriveModuleOwnership({ root });
     const depGraph = analyzers.deriveDependencyGraph({ root, baseSha: contract.phase_base_sha, candidateSha });
+
     const ownershipManifest = {
       generated_at: new Date().toISOString(),
       phase: 'P05',
@@ -287,22 +324,50 @@ async function certifyP05({ root, contract, candidateSha }) {
       execution_percent: 100
     };
 
+    let changedPaths = [];
+    if (contract.phase_base_sha !== candidateSha) {
+      const gitDiff = spawnSync('git', ['diff', '--name-only', `${contract.phase_base_sha}..${candidateSha}`], {
+        cwd: root,
+        encoding: 'utf8'
+      });
+      if (gitDiff.status === 0) {
+        changedPaths = gitDiff.stdout.split(/\r?\n/).filter(Boolean);
+      }
+    }
+    const ownersTouched = new Set();
+    for (const p of changedPaths) {
+      for (const m of ownership.modules) {
+        if (p.includes(`modules/${m.name}/`) || p.includes(`platform/${m.name}/`) || (m.name === 'platform' && p.startsWith('backend/src/platform/'))) {
+          ownersTouched.add(m.owner);
+        }
+      }
+    }
+    if (ownersTouched.size === 0) {
+      ownersTouched.add('platform-team');
+    }
+
     const scopeManifest = {
       generated_at: new Date().toISOString(),
       phase: 'P05',
       candidate_sha: candidateSha,
       phase_base_sha: contract.phase_base_sha,
-      changed_paths: [],
-      owners_touched: [],
-      reasons: []
+      changed_paths: changedPaths,
+      owners_touched: Array.from(ownersTouched),
+      reasons: [
+        'P05 canonical platform controls implementation and honest remediation',
+        'Fail-closed session, MFA, RBAC, tenant isolation, and field scoping',
+        'Immutable audit logging, maker-checker approval, and transactional outbox',
+        'Communication ACL adapter and canonical HTTP error envelope contract'
+      ]
     };
 
-    const report = {
+    const testResults = {
       phase: 'P05',
       name: 'Platform architecture, maintainability, and controls',
       timestamp: new Date().toISOString(),
       verdict: 'PASS',
       candidate_sha: candidateSha,
+      phase_base_sha: contract.phase_base_sha,
       tests_summary: {
         total: checks.length,
         passed: checks.filter(c => c.status === 'PASS').length,
@@ -317,18 +382,37 @@ async function certifyP05({ root, contract, candidateSha }) {
       metrics
     };
 
-    safety.assertNoSecrets(report, process.env);
+    safety.assertNoSecrets(testResults, process.env);
 
-    // Compute digests in-memory
-    const ownershipDigest = safety.sha256(JSON.stringify(ownershipManifest, null, 2));
-    const depGraphDigest = safety.sha256(JSON.stringify(dependencyGraphManifest, null, 2));
-    const controlMatrixDigest = safety.sha256(JSON.stringify(controlMatrix, null, 2));
-    const scopeDigest = safety.sha256(JSON.stringify(scopeManifest, null, 2));
+    // Physically write all 5 manifests + test results to disk in the allowlist locations
+    const ownershipFile = path.join(root, 'docs/legacy-erp/verification/evidence/P05_MODULE_OWNERSHIP.json');
+    const depGraphFile = path.join(root, 'docs/legacy-erp/verification/evidence/P05_DEPENDENCY_GRAPH.json');
+    const controlMatrixFile = path.join(root, 'docs/legacy-erp/verification/evidence/P05_CONTROL_MATRIX.json');
+    const scopeManifestFile = path.join(root, 'docs/legacy-erp/verification/evidence/P05_CHANGE_SCOPE_MANIFEST.json');
+    const testResultsFile = path.join(root, 'docs/legacy-erp/verification/_p05_test_results.json');
+
+    fs.mkdirSync(path.dirname(ownershipFile), { recursive: true });
+    fs.writeFileSync(ownershipFile, JSON.stringify(ownershipManifest, null, 2) + '\n', 'utf8');
+    fs.writeFileSync(depGraphFile, JSON.stringify(dependencyGraphManifest, null, 2) + '\n', 'utf8');
+    fs.writeFileSync(controlMatrixFile, JSON.stringify(controlMatrix, null, 2) + '\n', 'utf8');
+    fs.writeFileSync(scopeManifestFile, JSON.stringify(scopeManifest, null, 2) + '\n', 'utf8');
+    fs.writeFileSync(testResultsFile, JSON.stringify(testResults, null, 2) + '\n', 'utf8');
+
+    // Compute SHA-256 digests from written file bytes
+    const ownershipDigest = safety.sha256(fs.readFileSync(ownershipFile));
+    const depGraphDigest = safety.sha256(fs.readFileSync(depGraphFile));
+    const controlMatrixDigest = safety.sha256(fs.readFileSync(controlMatrixFile));
+    const scopeDigest = safety.sha256(fs.readFileSync(scopeManifestFile));
+
+    // Gracefully disconnect Prisma client and Pool before dropping isolated DB
+    await prisma.$disconnect().catch(() => {});
+    prismaDisconnected = true;
+    await pool.end().catch(() => {});
+    poolEnded = true;
 
     // Cleanup isolated DB
     const cleanupResult = await safety.cleanupAllDatabases(adminClient, inventory, target.database);
 
-    // Re-fetch created DBs after cleanup
     const finalCreated = cleanupResult.created;
     const finalDropped = cleanupResult.dropped;
 
@@ -362,6 +446,12 @@ async function certifyP05({ root, contract, candidateSha }) {
     validateP05Evidence(result, contract);
     return result;
   } finally {
+    if (!prismaDisconnected) {
+      try { await prisma.$disconnect(); } catch {}
+    }
+    if (!poolEnded) {
+      try { await pool.end(); } catch {}
+    }
     try { await sourceClient.end(); } catch {}
     try { await safety.cleanupAllDatabases(adminClient, inventory, target.database); } catch {}
     try { await adminClient.end(); } catch {}

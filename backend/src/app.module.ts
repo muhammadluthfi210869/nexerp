@@ -1,12 +1,14 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { validateEnv } from './common/config/env.validation';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { PlatformModule } from './platform/platform.module';
+import { CanonicalErrorFilter } from './platform/errors/error.filter';
 import { CommonModule } from './common/common.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -73,6 +75,7 @@ import { join } from 'path';
       serveRoot: '/uploads',
     }),
     PrismaModule,
+    PlatformModule,
     CommonModule,
     UsersModule,
     AuthModule,
@@ -118,6 +121,11 @@ import { join } from 'path';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    // Canonical error filter for standard envelope and PII scrubbing
+    {
+      provide: APP_FILTER,
+      useClass: CanonicalErrorFilter,
     },
   ],
 })

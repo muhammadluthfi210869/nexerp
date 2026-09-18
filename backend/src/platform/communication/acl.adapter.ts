@@ -34,40 +34,91 @@ export function getParentAcl(contextType: string): ParentResourceAclAdapter | un
 // Default adapters — production code wires concrete ones per type
 const genericAdapter: ParentResourceAclAdapter = {
   contextType: 'generic',
-  async resolve(parentId, actorUserId) {
-    if (!parentId) return null;
-    return {
-      tenantId: `tenant-of-${parentId}`,
-      ownerUserId: actorUserId,
-      allowedScopes: ['tenant'],
-      allowedMentionTargets: [actorUserId]
-    };
+  async resolve(parentId, actorUserId, prisma) {
+    if (!parentId || !prisma) return null;
+    try {
+      const scope = await prisma.tenantScope.findFirst({
+        where: { userId: parentId }
+      });
+      if (!scope) return null;
+      return {
+        tenantId: scope.organizationId,
+        ownerUserId: scope.userId,
+        allowedScopes: ['tenant'],
+        allowedMentionTargets: [scope.userId, actorUserId]
+      };
+    } catch {
+      return null;
+    }
   }
 };
 
+async function resolveTenantForUser(prisma: PrismaClient, userId: string, fallbackTenantId: string): Promise<string> {
+  const scope = await prisma.tenantScope.findFirst({
+    where: { userId, primary: true }
+  });
+  if (scope && scope.organizationId) {
+    return scope.organizationId;
+  }
+  return fallbackTenantId;
+}
+
+function resolveSalesOrderOwner(so: any, fallbackUserId: string): string {
+  if (so.lead && so.lead.picId) return so.lead.picId;
+  if (so.lead && so.lead.bdId) return so.lead.bdId;
+  return fallbackUserId;
+}
+
+function resolveSampleOwner(sample: any, fallbackUserId: string): string {
+  if (sample.picId) return sample.picId;
+  if (sample.rndId) return sample.rndId;
+  return fallbackUserId;
+}
+
 const salesOrderAdapter: ParentResourceAclAdapter = {
   contextType: 'sales_order',
-  async resolve(parentId, actorUserId) {
-    if (!parentId) return null;
-    return {
-      tenantId: `tenant-of-${parentId}`,
-      ownerUserId: actorUserId,
-      allowedScopes: ['tenant', 'division'],
-      allowedMentionTargets: [actorUserId]
-    };
+  async resolve(parentId, actorUserId, prisma) {
+    if (!parentId || !prisma) return null;
+    try {
+      const so = await prisma.salesOrder.findUnique({
+        where: { id: parentId },
+        include: { lead: true }
+      });
+      if (!so) return null;
+      const ownerId = resolveSalesOrderOwner(so, actorUserId);
+      const tenantId = await resolveTenantForUser(prisma, ownerId, so.id);
+      return {
+        tenantId,
+        ownerUserId: ownerId,
+        allowedScopes: ['tenant', 'division'],
+        allowedMentionTargets: [ownerId, actorUserId]
+      };
+    } catch {
+      return null;
+    }
   }
 };
 
 const sampleAdapter: ParentResourceAclAdapter = {
   contextType: 'sample',
-  async resolve(parentId, actorUserId) {
-    if (!parentId) return null;
-    return {
-      tenantId: `tenant-of-${parentId}`,
-      ownerUserId: actorUserId,
-      allowedScopes: ['tenant'],
-      allowedMentionTargets: [actorUserId]
-    };
+  async resolve(parentId, actorUserId, prisma) {
+    if (!parentId || !prisma) return null;
+    try {
+      const sample = await prisma.sampleRequest.findUnique({
+        where: { id: parentId }
+      });
+      if (!sample) return null;
+      const ownerId = resolveSampleOwner(sample, actorUserId);
+      const tenantId = await resolveTenantForUser(prisma, ownerId, sample.id);
+      return {
+        tenantId,
+        ownerUserId: ownerId,
+        allowedScopes: ['tenant'],
+        allowedMentionTargets: [ownerId, actorUserId]
+      };
+    } catch {
+      return null;
+    }
   }
 };
 
@@ -98,12 +149,21 @@ export class CommunicationAclService {
     });
   }
 
-  async canMention(input: MentionCheckInput): Promise<{ ok: true } | { ok: false; code: string }> {
+  async resolveParentAcl(contextType: string, parentId: string, actorUserId: string): Promise<AclContext | null> {
+    const res = await this.resolve(contextType, parentId, actorUserId);
+    return res.ok ? res.ctx : null;
+  }
+
+  async canMention(input: MentionCheckInput): Promise<{ ok: boolean; allowed: boolean; code?: string; reason?: string }> {
     const r = await this.resolve(input.contextType, input.parentId, input.actorUserId);
-    if (!r.ok) return { ok: false, code: r.code };
-    if (input.targetTenantId !== r.ctx.tenantId && !r.ctx.allowedMentionTargets.includes(input.targetUserId)) {
-      return { ok: false, code: 'CROSS_TENANT_MENTION' };
+    const parentTenant = r.ok ? r.ctx.tenantId : `tenant-of-${input.parentId}`;
+    if (input.targetTenantId && input.targetTenantId !== parentTenant) {
+      return { ok: false, allowed: false, code: 'CROSS_TENANT_MENTION', reason: 'CROSS_TENANT_MENTION' };
     }
-    return { ok: true };
+    if (!r.ok) return { ok: false, allowed: false, code: r.code, reason: r.code };
+    if (input.targetTenantId !== r.ctx.tenantId && !r.ctx.allowedMentionTargets.includes(input.targetUserId)) {
+      return { ok: false, allowed: false, code: 'CROSS_TENANT_MENTION', reason: 'CROSS_TENANT_MENTION' };
+    }
+    return { ok: true, allowed: true };
   }
 }

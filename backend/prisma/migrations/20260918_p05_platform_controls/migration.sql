@@ -98,7 +98,8 @@ CREATE TABLE IF NOT EXISTS "approvals" (
   "decidedAt" TIMESTAMP,
   "version" INTEGER NOT NULL,
   "thresholdRequired" INTEGER NOT NULL,
-  "thresholdCount" INTEGER NOT NULL DEFAULT 0
+  "thresholdCount" INTEGER NOT NULL DEFAULT 0,
+  "decidedByIds" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[]
 );
 CREATE INDEX IF NOT EXISTS "approvals_governedEntityType_governedEntityId_version_idx"
   ON "approvals" ("governedEntityType", "governedEntityId", "version");

@@ -3,17 +3,17 @@
 /**
  * P05 Platform Module Integration Roundtrip Test
  *
- * Tests the production code paths against a real Postgres database:
- *   - SessionService.issueSession + rotateRefresh + revoke
- *   - MfaService.enrollTOTP + decryptSecret
- *   - PolicyService.decide deny-by-default + tenant reject
- *   - OutboxService.enqueue + claim + ack (idempotency)
- *   - AuditService.writeDirectAudit (immutable via DB trigger)
- *   - ApprovalService.requestApproval + decide (maker≠checker)
- *   - ScopeService.maskField (field-scope leak)
- *   - CommunicationAclService.canMention (cross-tenant reject)
+ * Tests the production platform code paths against a real PostgreSQL database:
+ *   - SessionService.issueSession + rotateRefresh + replay detection & family revocation + revokeSession + revokeAllForUser
+ *   - MfaService.enrollTOTP + RFC 6238 TOTP verification + challenge + recovery codes
+ *   - PolicyService.decide deny-by-default + tenant isolation + division/owner scope + client injection reject
+ *   - ScopeService.maskField + resolveActorScopes
+ *   - AuditService.withAudit transactional write + DB trigger immutability enforcement
+ *   - ApprovalService.requestApproval + maker self-approval rejection + distinct checker + threshold count
+ *   - OutboxService.enqueue + idempotency key uniqueness + claim + ack + fail/retry/DLQ
+ *   - CommunicationAclService.resolve parent ACL + canMention cross-tenant rejection
  *
- * Uses a real local Postgres DB and clean state. Creates/drops a temp DB.
+ * Uses an isolated database, closes every client cleanly, and exits 0.
  */
 
 const path = require('path');
@@ -24,12 +24,23 @@ const ROOT = path.resolve(__dirname, '../..');
 const backendDir = path.join(ROOT, 'backend');
 
 // Load backend .env
-const dotenv = fs.readFileSync(path.join(backendDir, '.env'), 'utf8');
-const urlMatch = dotenv.match(/DATABASE_URL=(.+)/);
-if (!urlMatch) { console.error('No DATABASE_URL'); process.exit(1); }
-const DATABASE_URL = urlMatch[1].trim();
+require(path.join(backendDir, 'node_modules/dotenv')).config({ path: path.join(backendDir, '.env') });
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) { console.error('No DATABASE_URL in backend/.env'); process.exit(1); }
 
-const { Client } = require(path.join(backendDir, 'node_modules/pg'));
+const { Client, Pool } = require(path.join(backendDir, 'node_modules/pg'));
+const { PrismaClient } = require(path.join(backendDir, 'node_modules/@prisma/client'));
+const { PrismaPg } = require(path.join(backendDir, 'node_modules/@prisma/adapter-pg'));
+
+// Import production platform services
+const { SessionService } = require(path.join(backendDir, 'dist/platform/auth/session.service'));
+const { MfaService, generateRFC6238Totp } = require(path.join(backendDir, 'dist/platform/auth/mfa.service'));
+const { PolicyService } = require(path.join(backendDir, 'dist/platform/policy/policy.service'));
+const { ScopeService } = require(path.join(backendDir, 'dist/platform/scope/scope.service'));
+const { AuditService } = require(path.join(backendDir, 'dist/platform/audit/audit.service'));
+const { ApprovalService } = require(path.join(backendDir, 'dist/platform/approval/approval.service'));
+const { OutboxService } = require(path.join(backendDir, 'dist/platform/outbox/outbox.service'));
+const { CommunicationAclService } = require(path.join(backendDir, 'dist/platform/communication/acl.adapter'));
 
 // Parse DATABASE_URL
 const u = new URL(DATABASE_URL);
@@ -54,142 +65,370 @@ const safety = require('./lib/p05_safety');
 
 async function main() {
   const adminClient = new Client({ connectionString: adminUrl });
+  adminClient.on('error', () => {});
   await adminClient.connect();
 
   // Create isolated DB
   safety.validateDatabaseName(dbName);
   await adminClient.query(`CREATE DATABASE "${dbName}"`);
-  console.log('Created test DB:', dbName);
+  console.log('Created isolated test DB:', dbName);
 
   // Apply migration
   const migrationDir = path.join(backendDir, 'prisma/migrations/20260918_p05_platform_controls');
   const migrationSql = fs.readFileSync(path.join(migrationDir, 'migration.sql'), 'utf8');
   const targetClient = new Client({ connectionString: dbUrl });
+  targetClient.on('error', () => {});
   await targetClient.connect();
   await targetClient.query(migrationSql);
-  console.log('Applied migration');
+  console.log('Applied P05 migration');
 
-  // Use raw pg client (Prisma 7 needs driver adapter; raw pg is simpler here)
-  const db = new Client({ connectionString: dbUrl });
-  await db.connect();
+  // Initialize Prisma Client with Pg adapter on the test database
+  const pool = new Pool({ connectionString: dbUrl });
+  const adapter = new PrismaPg(pool);
+  const prisma = new PrismaClient({ adapter });
+  await prisma.$connect();
 
-  async function query(sql, params) { return await db.query(sql, params); }
+  // Instantiate production services
+  const sessionService = new SessionService(prisma);
+  const mfaService = new MfaService(prisma);
+  const policyService = new PolicyService();
+  const scopeService = new ScopeService(prisma);
+  const auditService = new AuditService(prisma);
+  const approvalService = new ApprovalService(prisma);
+  const outboxService = new OutboxService(prisma);
+  const communicationAclService = new CommunicationAclService(prisma);
 
   try {
-    section('SessionService.issueSession + rotateRefresh + revokeFamily');
+    // -------------------------------------------------------------------------
+    // 1. SessionService lifecycle & durable replay detection
+    // -------------------------------------------------------------------------
+    section('1. SessionService: issueSession, rotateRefresh, replay family revocation');
     const userId = crypto.randomUUID();
-    const familyId = crypto.randomUUID();
-    const bcrypt = require(path.join(backendDir, 'node_modules/bcrypt'));
-    const refreshHash = await bcrypt.hash('test-refresh-token', 10);
-    const sessRes = await query(
-      `INSERT INTO auth_sessions (id, "userId", "refreshTokenHash", "accessExpiresAt", "refreshExpiresAt", "familyId", "mfaPending", "createdAt")
-       VALUES (gen_random_uuid(), $1, $2, NOW() + interval '10 minutes', NOW() + interval '30 days', $3, false, NOW())
-       RETURNING id, "familyId"`,
-      [userId, refreshHash, familyId]
-    );
-    const sess = sessRes.rows[0];
-    assert(!!sess.id, 'session created');
-    assert(sess.familyId === familyId, 'session familyId preserved');
+    const session = await sessionService.issueSession({ userId });
+    assert(!!session.id, 'session issued with UUID id');
+    assert(session.familyId && session.refreshToken.length > 20, 'session has familyId and refresh token');
 
-    await query(`UPDATE auth_sessions SET "revokedAt" = NOW(), "revokedReason" = 'rotated' WHERE id = $1`, [sess.id]);
-    const s3 = await query(`SELECT "revokedAt" FROM auth_sessions WHERE id = $1`, [sess.id]);
-    assert(s3.rows[0].revokedAt !== null, 'session revoked');
+    const verifyActive = await sessionService.verifyAccessToken(session.id);
+    assert(verifyActive.ok === true, 'newly issued session verified active');
 
-    section('MfaSecret creation');
-    const mfaRes = await query(
-      `INSERT INTO mfa_secrets (id, "userId", "encryptedSecret") VALUES (gen_random_uuid(), gen_random_uuid(), 'aabbccdd') RETURNING id`
-    );
-    assert(!!mfaRes.rows[0].id, 'mfa secret created');
+    // Rotate refresh token
+    const rotated = await sessionService.rotateRefresh(session.id, session.refreshToken);
+    assert(rotated.id !== session.id, 'rotation issues new session in same family');
+    assert(rotated.familyId === session.familyId, 'familyId preserved across rotation');
 
-    section('OutboxEvent idempotency key uniqueness');
-    const idemKey = 'test-' + crypto.randomUUID();
-    await query(
-      `INSERT INTO outbox_events (id, "eventType", "aggregateType", "aggregateId", "idempotencyKey", payload, "correlationId", status, "createdAt")
-       VALUES (gen_random_uuid(), 'test.event', 'Test', gen_random_uuid(), $1, '{"x":1}'::jsonb, gen_random_uuid(), 'PENDING', NOW())`,
-      [idemKey]
-    );
-    let dupThrew = false;
+    // Replay attack: present the OLD refresh token again
+    let replayThrew = false;
+    let replayCode = '';
     try {
-      await query(
-        `INSERT INTO outbox_events (id, "eventType", "aggregateType", "aggregateId", "idempotencyKey", payload, "correlationId", status, "createdAt")
-         VALUES (gen_random_uuid(), 'test.event', 'Test', gen_random_uuid(), $1, '{"x":2}'::jsonb, gen_random_uuid(), 'PENDING', NOW())`,
-        [idemKey]
+      await sessionService.rotateRefresh(session.id, session.refreshToken);
+    } catch (e) {
+      replayThrew = true;
+      replayCode = e.code;
+    }
+    assert(replayThrew && replayCode === 'REFRESH_REPLAY', 'replaying rotated refresh token rejected with REFRESH_REPLAY');
+
+    // Verify entire family is durably revoked in the DB
+    const oldCheck = await sessionService.verifyAccessToken(session.id);
+    const newCheck = await sessionService.verifyAccessToken(rotated.id);
+    assert(oldCheck.ok === false && oldCheck.code === 'SESSION_REVOKED', 'old session marked revoked');
+    assert(newCheck.ok === false && newCheck.code === 'SESSION_REVOKED', 'entire family revoked following replay');
+
+    // -------------------------------------------------------------------------
+    // 2. MfaService: RFC 6238 TOTP, recovery codes
+    // -------------------------------------------------------------------------
+    section('2. MfaService: enrollment, RFC 6238 TOTP verification, challenge, recovery');
+    const mfaUserId = crypto.randomUUID();
+    const enrollment = await mfaService.enrollTOTP(mfaUserId);
+    assert(enrollment.secret && enrollment.encryptedSecret, 'TOTP secret generated and encrypted');
+    assert(enrollment.recoveryCodes.length === 10, '10 recovery codes generated');
+
+    // Confirm with invalid code fails
+    const badConfirm = await mfaService.confirmTOTP(mfaUserId, '000000');
+    assert(badConfirm === false, 'confirm with invalid TOTP code returns false');
+
+    // Confirm with valid RFC 6238 code succeeds
+    const validTotp = generateRFC6238Totp(enrollment.secret);
+    const goodConfirm = await mfaService.confirmTOTP(mfaUserId, validTotp);
+    assert(goodConfirm === true, 'confirm with valid RFC 6238 TOTP code returns true');
+
+    // Verify challenge
+    const challengeOk = await mfaService.verifyTOTPChallenge(mfaUserId, validTotp);
+    assert(challengeOk === true, 'challenge verification succeeds with valid TOTP');
+
+    // Recovery code consumption
+    const recoveryCode = enrollment.recoveryCodes[0];
+    const recover1 = await mfaService.recoverWithCode(mfaUserId, recoveryCode);
+    assert(recover1 === true, 'valid recovery code accepted');
+    const recover2 = await mfaService.recoverWithCode(mfaUserId, recoveryCode);
+    assert(recover2 === false, 'reused recovery code rejected (single-use)');
+
+    // -------------------------------------------------------------------------
+    // 3. PolicyService & ScopeService: tenant, division, client injection
+    // -------------------------------------------------------------------------
+    section('3. PolicyService: fail-closed RBAC, tenant isolation, scope enforcement');
+    const orgA = crypto.randomUUID();
+    const orgB = crypto.randomUUID();
+    const actorA = { id: crypto.randomUUID(), roles: ['COMMERCIAL'], organizationId: orgA, divisionId: 'div-1' };
+
+    // Tenant isolation: actor in orgA accessing orgB resource
+    const crossTenantDecision = policyService.decide({
+      actor: actorA,
+      action: 'read',
+      resource: { type: 'sales_order', id: crypto.randomUUID(), organizationId: orgB },
+      dataScope: 'tenant',
+      requiredPermission: 'sales_order.read'
+    }, ROOT);
+    assert(crossTenantDecision.allow === false && crossTenantDecision.reason_code === 'TENANT_ISOLATION_VIOLATION', 'cross-tenant access rejected with TENANT_ISOLATION_VIOLATION');
+
+    // Client-injected tenant ID rejection
+    const injectedDecision = policyService.decide({
+      actor: actorA,
+      action: 'read',
+      resource: { type: 'sales_order', id: crypto.randomUUID(), organizationId: orgA },
+      clientInjectedTenantId: orgB,
+      requiredPermission: 'sales_order.read'
+    }, ROOT);
+    assert(injectedDecision.allow === false && injectedDecision.reason_code === 'TENANT_FROM_CLIENT_REJECTED', 'client-injected tenant rejected with TENANT_FROM_CLIENT_REJECTED');
+
+    // Division scope mismatch
+    const divMismatch = policyService.decide({
+      actor: actorA,
+      action: 'read',
+      resource: { type: 'sales_order', id: crypto.randomUUID(), organizationId: orgA, divisionId: 'div-2' },
+      dataScope: 'division',
+      requiredPermission: 'sales_order.read'
+    }, ROOT);
+    assert(divMismatch.allow === false && divMismatch.reason_code === 'DATA_SCOPE_DENIED', 'division scope mismatch rejected with DATA_SCOPE_DENIED');
+
+    // Field masking
+    const rawEntity = { id: 'so-1', totalAmount: 1000, margin: '25%', ownerUserId: 'other-user', divisionId: 'div-2' };
+    const masked = scopeService.maskField(rawEntity, ['margin'], { userId: actorA.id, organizationId: orgA, divisionId: actorA.divisionId });
+    assert(masked.margin === '[REDACTED_FIELD_SCOPE_LEAK]', 'sensitive field redacted for non-owner/different division');
+
+    // -------------------------------------------------------------------------
+    // 4. AuditService & DB Trigger Immutability
+    // -------------------------------------------------------------------------
+    section('4. AuditService: atomic withAudit and PostgreSQL trigger immutability');
+    const corrId = crypto.randomUUID();
+    const entityId = crypto.randomUUID();
+
+    // Transactional write withAudit
+    await prisma.$transaction(async tx => {
+      await auditService.withAudit(
+        tx,
+        {
+          actorUserId: actorA.id,
+          actorRoleSlug: 'COMMERCIAL',
+          actorPermissionSnapshot: { roles: actorA.roles },
+          tenantId: orgA,
+          correlationId: corrId,
+          source: 'integration-test',
+          entityType: 'SalesOrder',
+          entityId,
+          action: 'sales_order.create',
+          beforeSnapshot: null,
+          afterSnapshot: { status: 'DRAFT' }
+        },
+        async () => {
+          // Inner business logic executed atomically
+          return true;
+        }
       );
-    } catch (e) {
-      dupThrew = /unique/i.test(String(e.message));
-    }
-    assert(dupThrew, 'duplicate idempotency key rejected by unique constraint');
+    });
 
-    section('AuditLog immutable via DB trigger');
-    const audRes = await query(
-      `INSERT INTO audit_logs (id, "actorPermissionSnapshot", "correlationId", source, "entityType", "entityId", action, "txId", "occurredAt")
-       VALUES (gen_random_uuid(), '{}'::jsonb, gen_random_uuid(), 'test', 'test.entity', gen_random_uuid(), 'test.create', 'test-tx', NOW())
-       RETURNING id`
-    );
-    const audId = audRes.rows[0].id;
-    assert(!!audId, 'audit row created');
+    const auditRow = await prisma.auditLog.findFirst({ where: { entityId } });
+    assert(!!auditRow && auditRow.action === 'sales_order.create', 'audit row persisted in same transaction');
 
-    let updateThrew = false;
+    // Test DB trigger forbids UPDATE on audit_logs
+    let updateBlocked = false;
     try {
-      await query(`UPDATE audit_logs SET action = 'tampered' WHERE id = $1`, [audId]);
+      await targetClient.query(`UPDATE audit_logs SET action = 'tampered' WHERE id = $1`, [auditRow.id]);
     } catch (e) {
-      updateThrew = /AUDIT_IMMUTABLE/i.test(String(e.message));
+      updateBlocked = /AUDIT_IMMUTABLE/i.test(String(e.message));
     }
-    assert(updateThrew, 'UPDATE on audit_logs blocked by trigger');
+    assert(updateBlocked, 'PostgreSQL trigger blocks UPDATE on audit_logs with AUDIT_IMMUTABLE');
 
-    let deleteThrew = false;
+    // Test DB trigger forbids DELETE on audit_logs
+    let deleteBlocked = false;
     try {
-      await query(`DELETE FROM audit_logs WHERE id = $1`, [audId]);
+      await targetClient.query(`DELETE FROM audit_logs WHERE id = $1`, [auditRow.id]);
     } catch (e) {
-      deleteThrew = /AUDIT_IMMUTABLE/i.test(String(e.message));
+      deleteBlocked = /AUDIT_IMMUTABLE/i.test(String(e.message));
     }
-    assert(deleteThrew, 'DELETE on audit_logs blocked by trigger');
+    assert(deleteBlocked, 'PostgreSQL trigger blocks DELETE on audit_logs with AUDIT_IMMUTABLE');
 
-    section('ApprovalService.requestApproval + decide (maker≠checker)');
-    const maker = crypto.randomUUID();
-    const checker = crypto.randomUUID();
-    const approvalRes = await query(
-      `INSERT INTO approvals (id, "governedEntityType", "governedEntityId", action, "requestedById", "requestedAt", version, "thresholdRequired", "thresholdCount")
-       VALUES (gen_random_uuid(), 'test.entity', gen_random_uuid(), 'test.approve', $1, NOW(), 1, 1, 0)
-       RETURNING id, "requestedById"`,
-      [maker]
-    );
-    const approval = approvalRes.rows[0];
-    // Maker trying to approve own: simulator
-    const selfApproveBlocked = approval.requestedById === maker;
-    assert(selfApproveBlocked, 'maker cannot approve own record');
+    // -------------------------------------------------------------------------
+    // 5. ApprovalService: Maker-Checker separation, distinct checkers
+    // -------------------------------------------------------------------------
+    section('5. ApprovalService: maker-checker separation & distinct threshold checkers');
+    const makerId = crypto.randomUUID();
+    const checker1Id = crypto.randomUUID();
+    const checker2Id = crypto.randomUUID();
+    const governedId = crypto.randomUUID();
 
-    await query(
-      `UPDATE approvals SET decision = 'APPROVED', "decidedById" = $1, "decidedAt" = NOW(), "thresholdCount" = 1 WHERE id = $2`,
-      [checker, approval.id]
-    );
-    const a2 = await query(`SELECT decision FROM approvals WHERE id = $1`, [approval.id]);
-    assert(a2.rows[0].decision === 'APPROVED', 'approval decided by different actor');
+    const approval = await approvalService.requestApproval({
+      governedEntityType: 'PurchaseOrder',
+      governedEntityId: governedId,
+      action: 'purchase_order.approve',
+      requestedById: makerId,
+      version: 1,
+      thresholdRequired: 2
+    });
+    assert(!!approval.id && approval.thresholdRequired === 2, 'approval requested with threshold 2');
 
-    section('TenantScope resolution');
-    const scopeRes = await query(
-      `INSERT INTO tenant_scopes (id, "userId", "organizationId", "effectiveFrom", "primary")
-       VALUES (gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), NOW(), true) RETURNING id`
-    );
-    assert(!!scopeRes.rows[0].id, 'tenant scope created');
+    // Maker tries to approve own request
+    let selfApproveThrew = false;
+    let selfApproveCode = '';
+    try {
+      await approvalService.decide(approval.id, makerId, 'APPROVED');
+    } catch (e) {
+      selfApproveThrew = true;
+      selfApproveCode = e.code;
+    }
+    assert(selfApproveThrew && selfApproveCode === 'SELF_APPROVAL_FORBIDDEN', 'maker self-approval rejected with SELF_APPROVAL_FORBIDDEN');
 
-    section('CommunicationPolicy creation');
-    const polRes = await query(
-      `INSERT INTO communication_policies (id, "contextType", "parentEntityType", "requiredPermission", "dataScope", "allowMentionsAcrossTenant", "allowedTargetRoles")
-       VALUES (gen_random_uuid(), 'sales_order', 'SalesOrder', 'sales_order.read', 'tenant', false, ARRAY['COMMERCIAL']::text[]) RETURNING id`
-    );
-    assert(!!polRes.rows[0].id, 'communication policy created');
+    // Checker 1 approves (threshold 1/2)
+    const check1 = await approvalService.decide(approval.id, checker1Id, 'APPROVED');
+    assert(check1.state === 'PENDING' && check1.reason_code === 'MISSING_THRESHOLD', 'first checker approval sets PENDING (threshold 1/2)');
 
-    console.log('\n=== ' + passed + ' passed, ' + failed + ' failed ===');
+    // Checker 1 tries to approve AGAIN (duplicate checker prevention)
+    let dupCheckerThrew = false;
+    let dupCheckerCode = '';
+    try {
+      await approvalService.decide(approval.id, checker1Id, 'APPROVED');
+    } catch (e) {
+      dupCheckerThrew = true;
+      dupCheckerCode = e.code;
+    }
+    assert(dupCheckerThrew && dupCheckerCode === 'DUPLICATE_CHECKER', 'duplicate approval by same checker rejected with DUPLICATE_CHECKER');
+
+    // Checker 2 approves (threshold 2/2 -> approved)
+    const check2 = await approvalService.decide(approval.id, checker2Id, 'APPROVED');
+    assert(check2.state === 'APPROVED' && check2.reason_code === 'PASS', 'second distinct checker approval sets APPROVED');
+
+    // -------------------------------------------------------------------------
+    // 6. OutboxService: Transactional enqueue, idempotency key, claim, retry, DLQ
+    // -------------------------------------------------------------------------
+    section('6. OutboxService: enqueue, idempotency uniqueness, claim, retry, DLQ');
+    const outboxAggId = crypto.randomUUID();
+    let eventId = '';
+
+    await prisma.$transaction(async tx => {
+      const ev = await outboxService.enqueue(tx, {
+        eventType: 'sales_order.created',
+        aggregateType: 'SalesOrder',
+        aggregateId: outboxAggId,
+        payload: { orderNumber: 'SO-001', amount: 500 },
+        correlationId: crypto.randomUUID(),
+        tenantId: orgA
+      });
+      eventId = ev.id;
+    });
+    assert(!!eventId, 'outbox event enqueued in transaction');
+
+    // Attempt duplicate enqueue with identical payload/aggregate in new transaction
+    let dupOutboxThrew = false;
+    try {
+      await prisma.$transaction(async tx => {
+        await outboxService.enqueue(tx, {
+          eventType: 'sales_order.created',
+          aggregateType: 'SalesOrder',
+          aggregateId: outboxAggId,
+          payload: { orderNumber: 'SO-001', amount: 500 },
+          correlationId: crypto.randomUUID(),
+          tenantId: orgA
+        });
+      });
+    } catch (e) {
+      dupOutboxThrew = /unique|duplicate/i.test(String(e.message));
+    }
+    assert(dupOutboxThrew, 'duplicate outbox idempotency key rejected by unique constraint');
+
+    // Claim
+    const workerId = 'worker-' + crypto.randomUUID().slice(0, 8);
+    const claimed = await outboxService.claim(workerId, 10);
+    assert(claimed.some(e => e.id === eventId), 'worker claimed enqueued event with lease');
+
+    // Ack
+    await outboxService.ack(eventId);
+    const acked = await prisma.outboxEvent.findUnique({ where: { id: eventId } });
+    assert(acked.status === 'PUBLISHED', 'claimed event acked to PUBLISHED');
+
+    // Retry to DLQ
+    let failEvId = '';
+    await prisma.$transaction(async tx => {
+      const ev = await outboxService.enqueue(tx, {
+        eventType: 'invoice.failed',
+        aggregateType: 'Invoice',
+        aggregateId: crypto.randomUUID(),
+        payload: { attempt: 1 },
+        correlationId: crypto.randomUUID(),
+        tenantId: orgA
+      });
+      failEvId = ev.id;
+    });
+
+    // Fail 4 times (retry backoff)
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      const retryResult = await outboxService.fail(failEvId, `failure-${attempt}`);
+      assert(retryResult.deadLettered === false, `failure ${attempt} scheduled for retry`);
+    }
+    // 5th failure moves to DLQ
+    const dlqResult = await outboxService.fail(failEvId, 'terminal-failure');
+    assert(dlqResult && dlqResult.deadLettered === true, '5th failure moves event to DEAD_LETTER status');
+
+    const dlqRow = await prisma.outboxDlq.findFirst({ where: { outboxEventId: failEvId } });
+    assert(!!dlqRow && dlqRow.reason === 'terminal-failure', 'dead-letter record written to outbox_dlq table');
+
+    // -------------------------------------------------------------------------
+    // 7. CommunicationAclService
+    // -------------------------------------------------------------------------
+    section('7. CommunicationAclService: parent ACL resolution & cross-tenant mention check');
+    // Seed a tenant scope for a known user
+    const tenantUser = crypto.randomUUID();
+    await prisma.tenantScope.create({
+      data: {
+        userId: tenantUser,
+        organizationId: orgA,
+        effectiveFrom: new Date(),
+        primary: true
+      }
+    });
+
+    const mentionCheckSameOrg = await communicationAclService.canMention({
+      contextType: 'generic',
+      parentId: tenantUser,
+      actorUserId: tenantUser,
+      targetUserId: tenantUser,
+      targetTenantId: orgA
+    });
+    assert(mentionCheckSameOrg.ok === true, 'same-tenant mention check returns ok: true');
+
+    const mentionCheckCrossOrg = await communicationAclService.canMention({
+      contextType: 'generic',
+      parentId: tenantUser,
+      actorUserId: tenantUser,
+      targetUserId: crypto.randomUUID(),
+      targetTenantId: orgB
+    });
+    assert(mentionCheckCrossOrg.ok === false && mentionCheckCrossOrg.code === 'CROSS_TENANT_MENTION', 'cross-tenant mention rejected with CROSS_TENANT_MENTION');
+
+    console.log(`\n=== All Integration Tests Completed: ${passed} passed, ${failed} failed ===`);
   } finally {
-    await db.end().catch(() => {});
-    // Drop test DB
+    // Gracefully disconnect and close every client before DB drop
+    await prisma.$disconnect().catch(() => {});
+    await pool.end().catch(() => {});
+    await targetClient.end().catch(() => {});
+
     try {
-      await adminClient.query(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${dbName}' AND pid != pg_backend_pid()`);
+      await adminClient.query(
+        `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid != pg_backend_pid()`,
+        [dbName]
+      );
       await adminClient.query(`DROP DATABASE IF EXISTS "${dbName}"`);
-      console.log('Dropped test DB:', dbName);
+      console.log('Successfully dropped isolated test DB:', dbName);
     } catch (e) {
-      console.error('Cleanup failed:', e.message);
+      console.error('DB cleanup error:', e.message);
     }
     await adminClient.end().catch(() => {});
   }
@@ -197,4 +436,7 @@ async function main() {
   process.exit(failed > 0 ? 1 : 0);
 }
 
-main().catch(e => { console.error('FATAL:', e); process.exit(1); });
+main().catch(e => {
+  console.error('FATAL INTEGRATION TEST ERROR:', e);
+  process.exit(1);
+});

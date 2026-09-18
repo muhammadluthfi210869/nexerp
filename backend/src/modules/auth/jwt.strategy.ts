@@ -1,34 +1,31 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
-
-const DEFAULT_JWT_SECRET = 'ERP_SECRET_DEV_ONLY';
-const jwtSecret = process.env.JWT_SECRET || DEFAULT_JWT_SECRET;
-
-if (jwtSecret === DEFAULT_JWT_SECRET && process.env.NODE_ENV === 'production') {
-  Logger.warn(
-    '⚠️  JWT_SECRET is using DEFAULT value! Set JWT_SECRET environment variable for production security.',
-    'JwtStrategy',
-  );
-}
+import { SessionService } from '../../platform/auth/session.service';
 
 interface JwtPayload {
   sub: string;
   email: string;
   roles: string[];
+  sessionId?: string;
   iat?: number;
   exp?: number;
 }
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private usersService: UsersService) {
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
+    private readonly sessionService: SessionService
+  ) {
+    const secret = configService.get<string>('JWT_SECRET');
+    if (!secret || secret.length < 32) {
+      throw new Error('WEAK_CONFIGURATION: JWT_SECRET must be at least 32 characters');
+    }
     super({
-      // Header Authorization (Bearer) tetap prioritas; fallback cookie `token`
-      // agar permintaan non-XHR (mis. `<img src="/api/.../content">`) bisa
-      // terautentikasi — login sudah men-set cookie token di klien
-      // (frontend LoginForm). Backward compatible (header tetap didukung).
       jwtFromRequest: (req) => {
         const fromHeader = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
         if (fromHeader) return fromHeader;
@@ -40,7 +37,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         return pair ? pair.slice('token='.length) : null;
       },
       ignoreExpiration: false,
-      secretOrKey: jwtSecret,
+      secretOrKey: secret,
     });
   }
 
@@ -49,6 +46,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!user || user.status === 'INACTIVE') {
       throw new UnauthorizedException('User is inactive or does not exist');
     }
+    if (payload.sessionId) {
+      const verification = await this.sessionService.verifyAccessToken(payload.sessionId);
+      if (!verification.ok) {
+        throw new UnauthorizedException(`Session invalid: ${verification.code}`);
+      }
+    }
     return user;
   }
 }
+

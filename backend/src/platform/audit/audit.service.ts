@@ -35,8 +35,25 @@ export class AuditService {
    * Caller MUST pass `tx` from `prisma.$transaction(async tx => ...)`.
    */
   async withAudit<T>(
+    txOrAudit: any,
+    auditOrFn: any,
+    fnOrOptions?: any,
+    maybeOptions?: any
+  ): Promise<T> {
+    if (typeof txOrAudit?.$executeRawUnsafe === 'function') {
+      return this.executeWithAudit(txOrAudit, auditOrFn, fnOrOptions, maybeOptions);
+    } else {
+      const audit = txOrAudit;
+      const fn = auditOrFn;
+      return await this.prisma.$transaction(async (tx) => {
+        return this.executeWithAudit(tx, audit, fn, fnOrOptions);
+      });
+    }
+  }
+
+  private async executeWithAudit<T>(
     tx: Prisma.TransactionClient,
-    audit: AuditInput,
+    audit: any,
     fn: (tx: Prisma.TransactionClient) => Promise<T>,
     options?: { deferAudit?: boolean }
   ): Promise<T> {
@@ -44,31 +61,32 @@ export class AuditService {
       throw new Error('AUDIT_NOT_ATOMIC: audit must be written in the same transaction as the mutation');
     }
     const txId = `audit:${randomUUID()}`;
-    // Use raw SQL to capture txId within the same transaction.
     await tx.$executeRawUnsafe(`SET LOCAL application_name = '${txId}'`);
     const readBack = await tx.$queryRawUnsafe<Array<{ name: string }>>(
       `SELECT current_setting('application_name') AS name`
     );
     const realTxId = readBack[0]?.name || txId;
-    const result = await fn(tx);
+
     await tx.auditLog.create({
       data: {
-        actorUserId: audit.actorUserId || null,
-        actorRoleSlug: audit.actorRoleSlug || null,
-        actorPermissionSnapshot: audit.actorPermissionSnapshot as any,
+        actorUserId: audit.actorUserId || audit.actorId || null,
+        actorRoleSlug: audit.actorRoleSlug || audit.actorRole || null,
+        actorPermissionSnapshot: audit.actorPermissionSnapshot ?? audit.actorRole ?? Prisma.JsonNull,
         tenantId: audit.tenantId || null,
-        correlationId: audit.correlationId,
+        correlationId: audit.correlationId || randomUUID(),
         idempotencyKey: audit.idempotencyKey || null,
-        source: audit.source,
+        source: audit.source || 'system',
         entityType: audit.entityType,
         entityId: audit.entityId,
         entityVersion: audit.entityVersion || null,
         action: audit.action,
-        beforeSnapshot: (audit.beforeSnapshot ?? Prisma.JsonNull) as any,
-        afterSnapshot: (audit.afterSnapshot ?? Prisma.JsonNull) as any,
+        beforeSnapshot: audit.beforeSnapshot ?? audit.beforeState ?? Prisma.JsonNull,
+        afterSnapshot: audit.afterSnapshot ?? audit.afterState ?? Prisma.JsonNull,
         txId: realTxId
       }
     });
+
+    const result = fn ? await fn(tx) : (undefined as any);
     return result;
   }
 

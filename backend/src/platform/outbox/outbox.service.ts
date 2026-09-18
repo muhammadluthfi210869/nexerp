@@ -33,21 +33,49 @@ export class OutboxService {
       .digest('hex');
   }
 
-  async enqueue(tx: Prisma.TransactionClient, input: OutboxEventInput) {
-    const idempotencyKey = this.computeIdempotencyKey(input);
+  async enqueue(txOrInput: any, maybeInput?: any) {
+    if (typeof txOrInput?.outboxEvent?.create === 'function') {
+      return this.executeEnqueue(txOrInput, maybeInput);
+    } else {
+      return await this.prisma.$transaction(async tx => {
+        return this.executeEnqueue(tx, txOrInput);
+      });
+    }
+  }
+
+  private async executeEnqueue(tx: Prisma.TransactionClient, input: any) {
+    const isUuid = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+    const aggId = isUuid(input?.aggregateId)
+      ? input.aggregateId
+      : (isUuid(input?.payload?.id) ? input.payload.id : randomUUID());
+    const corrId = isUuid(input?.correlationId) ? input.correlationId : randomUUID();
+    const eventType = input?.eventType || input?.topic || 'event';
+    const aggregateType = input?.aggregateType || 'Generic';
+    const idempotencyKey = input?.idempotencyKey || this.computeIdempotencyKey({
+      eventType,
+      aggregateType,
+      aggregateId: aggId,
+      payload: input?.payload,
+      correlationId: corrId
+    });
+
     return await tx.outboxEvent.create({
       data: {
-        eventType: input.eventType,
-        aggregateType: input.aggregateType,
-        aggregateId: input.aggregateId,
+        eventType,
+        aggregateType,
+        aggregateId: aggId,
         idempotencyKey,
-        payload: input.payload as any,
-        correlationId: input.correlationId,
-        tenantId: input.tenantId || null,
+        payload: input?.payload ?? {},
+        correlationId: corrId,
+        tenantId: isUuid(input?.tenantId) ? input.tenantId : null,
         status: OutboxStatus.PENDING,
         nextAttemptAt: new Date()
       }
     });
+  }
+
+  async claimBatch(workerId: string, batchSize = 10) {
+    return this.claim(workerId, batchSize);
   }
 
   async claim(workerId: string, batchSize = 10) {
