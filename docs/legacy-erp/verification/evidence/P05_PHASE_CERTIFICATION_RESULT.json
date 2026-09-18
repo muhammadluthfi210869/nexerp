@@ -3,11 +3,11 @@
   "level": "PHASE_GATE",
   "contract_version": "1.0.0",
   "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-  "candidate_sha": "8bb83ada79851fa683fc83e8850dd1efef46fc9c",
-  "started_at": "2026-09-18T14:41:27.743Z",
-  "completed_at": "2026-09-18T14:41:31.885Z",
+  "candidate_sha": "e95a7a58c7a43414a875a685220838254486c76d",
+  "started_at": "2026-09-18T14:44:08.196Z",
+  "completed_at": "2026-09-18T14:44:10.683Z",
   "verdict": "FAIL",
   "token": null,
   "result": null,
-  "failure": "P05GateError: [contract_consistency] EVIDENCE_VALIDATION_FAILED: Check auth_session_mfa status is not PASS\n    at assert (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:20:20)\n    at validateP05Evidence (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:38:5)\n    at Object.certifyP05 (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:362:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:97:20)"
+  "failure": "P05GateError: [predecessor_scope_and_safety] PII_IN_EVIDENCE: Phone-shaped value detected at root.tests.predecessor_scope_and_safety.commands[0].command\n    at checkString (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:145:13)\n    at assertNoSecrets (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:169:5)\n    at assertNoSecrets (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:179:7)\n    at assertNoSecrets (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:173:44)\n    at assertNoSecrets (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:179:7)\n    at assertNoSecrets (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:179:7)\n    at Object.assertNoSecrets (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:179:7)\n    at Object.certifyP05 (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:320:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:97:20)"
 }
