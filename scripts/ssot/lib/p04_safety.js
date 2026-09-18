@@ -245,8 +245,13 @@ async function captureSourceFingerprint(client) {
       try {
         const countRes = await client.query(`SELECT count(*)::int AS cnt FROM "${t}"`);
         tableCounts.push({ table: t, count: countRes.rows[0].cnt });
-      } catch {
-        // In case of access restrictions, continue
+      } catch (err) {
+        await client.query('ROLLBACK').catch(() => {});
+        throw new P04GateError(
+          'predecessor_and_target_safety',
+          'SOURCE_FINGERPRINT_FAILED',
+          `Failed to aggregate row count for source table "${t}": ${err.message}`
+        );
       }
     }
 
@@ -265,17 +270,14 @@ async function captureSourceFingerprint(client) {
       .digest('hex');
 
     return {
+      digest,
       table_count: tables.length,
-      tables,
-      digest
+      payload
     };
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
-    throw new P04GateError(
-      'predecessor_and_target_safety',
-      'SOURCE_FINGERPRINT_FAILED',
-      `Failed to capture source fingerprint: ${err.message}`
-    );
+    if (err instanceof P04GateError) throw err;
+    throw new P04GateError('predecessor_and_target_safety', 'SOURCE_FINGERPRINT_FAILED', `Source fingerprint failed: ${err.message}`);
   }
 }
 

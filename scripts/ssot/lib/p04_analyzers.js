@@ -26,7 +26,57 @@ function sha256(content) {
 }
 
 /**
- * Derive candidate migrations from Git diff against phase_base_sha.
+ * Dynamically resolve the owner table and column for a dropped index
+ * by inspecting the migration chain and Prisma schema authority.
+ */
+function resolveIndexOwnerTable(root, indexName) {
+  const migrationsDir = path.join(root, 'backend/prisma/migrations');
+  if (fs.existsSync(migrationsDir)) {
+    const entries = fs.readdirSync(migrationsDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const migSql = path.join(migrationsDir, entry.name, 'migration.sql');
+      const downSql = path.join(migrationsDir, entry.name, 'down.sql');
+
+      for (const file of [migSql, downSql]) {
+        if (!fs.existsSync(file)) continue;
+        const content = fs.readFileSync(file, 'utf8');
+        const re = new RegExp(`CREATE\\s+(?:UNIQUE\\s+)?INDEX\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?"?${indexName}"?\\s+ON\\s+"?([a-zA-Z0-9_]+)"?\\s*\\(\\s*"?([a-zA-Z0-9_]+)"?\\s*\\)`, 'i');
+        const match = content.match(re);
+        if (match) {
+          return { table: match[1], column: match[2] };
+        }
+      }
+    }
+  }
+
+  // Also inspect Prisma schema files at backend/prisma/schema
+  const schemaDir = path.join(root, 'backend/prisma/schema');
+  if (fs.existsSync(schemaDir)) {
+    const schemaFiles = fs.readdirSync(schemaDir).filter(f => f.endsWith('.prisma'));
+    for (const sf of schemaFiles) {
+      const content = fs.readFileSync(path.join(schemaDir, sf), 'utf8');
+      if (content.includes(indexName)) {
+        const modelBlocks = content.split(/\bmodel\s+/);
+        for (const block of modelBlocks) {
+          if (block.includes(indexName)) {
+            const tableMatch = block.match(/@@map\("([a-zA-Z0-9_]+)"\)/);
+            const modelNameMatch = block.match(/^([a-zA-Z0-9_]+)\s*\{/);
+            const tableName = tableMatch ? tableMatch[1] : (modelNameMatch ? modelNameMatch[1].toLowerCase() : null);
+            if (tableName) {
+              return { table: tableName, column: null };
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Dynamically derive candidate migrations and affected table scope between baseSha and HEAD.
  * Parses SQL to extract affected tables and columns.
  */
 function deriveCandidateScope(root, baseSha) {
@@ -106,7 +156,7 @@ function deriveCandidateScope(root, baseSha) {
       if (!affectedColumnsMap[tbl]) affectedColumnsMap[tbl] = new Set();
     }
 
-    // 3. DROP INDEX / CREATE INDEX on table
+    // 3. DROP INDEX / CREATE INDEX with ON "table"
     const indexOnMatches = [...sql.matchAll(/ON\s+"?([a-zA-Z0-9_]+)"?\s*\(/gi)];
     for (const m of indexOnMatches) {
       const tbl = m[1];
@@ -114,15 +164,22 @@ function deriveCandidateScope(root, baseSha) {
       if (!affectedColumnsMap[tbl]) affectedColumnsMap[tbl] = new Set();
     }
 
-    // 4. In case of index drop without ON clause (e.g. DROP INDEX "articles_slug_idx"), map to known table prefix
+    // 4. In case of index drop without ON clause, resolve owner dynamically from migration chain / schema authority
     const dropIndexMatches = [...sql.matchAll(/DROP\s+INDEX\s+(?:IF\s+EXISTS\s+)?"?([a-zA-Z0-9_]+)"?/gi)];
     for (const m of dropIndexMatches) {
       const idx = m[1];
-      for (const d of allDiskDirs) {
-        // match table name from index name pattern like <table_name>_<col>_idx
-        const guessTable = idx.split('_')[0];
-        if (guessTable === 'articles') affectedTablesSet.add('articles');
-        if (guessTable === 'website') affectedTablesSet.add('website_products');
+      const resolved = resolveIndexOwnerTable(root, idx);
+      if (!resolved || !resolved.table) {
+        throw new P04GateError(
+          'migration_chain_integrity',
+          'UNKNOWN_INDEX_OWNER',
+          `Could not resolve owner table for dropped index "${idx}" from migration chain or schema authority`
+        );
+      }
+      affectedTablesSet.add(resolved.table);
+      if (!affectedColumnsMap[resolved.table]) affectedColumnsMap[resolved.table] = new Set();
+      if (resolved.column) {
+        affectedColumnsMap[resolved.table].add(resolved.column);
       }
     }
 
@@ -371,17 +428,26 @@ async function captureSchemaDigest(client) {
   };
 }
 
-/**
- * Capture stable fixture data digest across affected tables.
- */
 async function captureFixtureDigest(client, affectedTables) {
+  if (!Array.isArray(affectedTables) || affectedTables.length === 0) {
+    throw new P04GateError(
+      'baseline_upgrade',
+      'EMPTY_AFFECTED_TABLES',
+      'Affected tables list cannot be empty for fixture capture'
+    );
+  }
+
   const tableData = {};
   for (const table of affectedTables) {
     try {
       const rowsRes = await client.query(`SELECT * FROM "${table}" ORDER BY id ASC`);
       tableData[table] = rowsRes.rows;
-    } catch {
-      tableData[table] = [];
+    } catch (err) {
+      throw new P04GateError(
+        'baseline_upgrade',
+        'FIXTURE_QUERY_FAILED',
+        `Failed to capture fixture data for affected table "${table}": ${err.message}`
+      );
     }
   }
 
