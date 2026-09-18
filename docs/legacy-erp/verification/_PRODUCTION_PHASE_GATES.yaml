@@ -222,8 +222,10 @@ phases:
 
   - id: P03
     name: Reproducible build architecture gates and CI
-    status: FAIL
+    status: PASS
     depends_on: [P02]
+    candidate_sha: cf8b725d9fec4c808937c50217a3bc45050d271a
+    certification_token: P03:cf8b725d9fec4c808937c50217a3bc45050d271a:PHASE_PASS
     certification_command: node scripts/ssot/certify_p03_phase.js
     certification_success: exit code 0 plus PHASE_PASS and a token bound to the committed candidate SHA
     required_gates:
@@ -241,13 +243,16 @@ phases:
     name: Canonical database and migration chain
     status: NOT_STARTED
     depends_on: [P03]
+    acceptance_contract: P04_FROZEN_ACCEPTANCE_CONTRACT.md
+    certification_command: node scripts/ssot/certify_p04_phase.js
+    certification_success: exit code 0 plus PHASE_PASS and P04 candidate SHA-bound token
     required_gates:
       - one canonical physical schema
       - no unapproved schema drift
       - empty and upgrade migrations pass
       - rollback and backfill are rehearsed
       - expand migrate contract compatibility supports the declared rolling deployment window
-    required_tests: [prisma_validate_generate, empty_db_migrate, baseline_upgrade, migration_idempotency, rollback_rehearsal, constraint_index_audit, expand_contract_compatibility, old_new_version_coexistence]
+    required_tests: [predecessor_and_target_safety, contract_consistency, prisma_validate_generate, migration_chain_integrity, empty_db_migrate, baseline_upgrade, migration_idempotency, rollback_rehearsal, constraint_index_audit, expand_contract_compatibility, old_new_version_coexistence]
 
   - id: P05
     name: Platform architecture maintainability and controls

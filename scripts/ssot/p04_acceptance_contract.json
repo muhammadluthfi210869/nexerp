@@ -1,0 +1,67 @@
+{
+  "contract_version": "1.0.0",
+  "phase": "P04",
+  "level": "PHASE_GATE",
+  "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+  "authoritative_command": "node scripts/ssot/certify_p04_phase.js",
+  "success_token_suffix": "PHASE_PASS",
+  "postgres_supported_major_versions": [15, 16],
+  "expected_runtime_minutes": { "min": 5, "max": 25 },
+  "required_checks": [
+    "predecessor_and_target_safety",
+    "contract_consistency",
+    "prisma_validate_generate",
+    "migration_chain_integrity",
+    "empty_db_migrate",
+    "baseline_upgrade",
+    "migration_idempotency",
+    "rollback_rehearsal",
+    "constraint_index_audit",
+    "expand_contract_compatibility",
+    "old_new_version_coexistence"
+  ],
+  "required_mutations": [
+    "P04-REMOTE-TARGET-REFUSED",
+    "P04-UNSAFE-DB-NAME-REFUSED",
+    "P04-SOURCE-DB-DROP-REFUSED",
+    "P04-PREBASE-MIGRATION-EDIT",
+    "P04-MISSING-MIGRATION-SQL",
+    "P04-MIGRATION-DRIFT",
+    "P04-SECOND-DEPLOY-NOT-NOOP",
+    "P04-BASELINE-UPGRADE-DATA-LOSS",
+    "P04-BACKFILL-NONDETERMINISTIC",
+    "P04-ROLLBACK-SCHEMA-MISMATCH",
+    "P04-ROLLBACK-DATA-LOSS",
+    "P04-UNSAFE-CONTRACT-DDL",
+    "P04-INVALID-CONSTRAINT-OR-INDEX",
+    "P04-MISSING-N1-N-COMPATIBILITY-PROBE",
+    "P04-STALE-SHA-EVIDENCE",
+    "P04-UNEXPECTED-SKIP"
+  ],
+  "thresholds": {
+    "schema_drift_count": 0,
+    "failed_or_pending_migrations": 0,
+    "edited_prebase_migrations": 0,
+    "unvalidated_constraints": 0,
+    "invalid_indexes": 0,
+    "orphan_foreign_keys": 0,
+    "unexpected_skips": 0,
+    "data_loss_rows": 0,
+    "duplicate_or_missing_migration_ids": 0,
+    "unsafe_contract_ddl": 0,
+    "compatibility_probe_coverage_percent": 100
+  },
+  "generated_output_allowlist": [
+    "docs/legacy-erp/verification/_p04_test_results.json",
+    "docs/legacy-erp/verification/evidence/P04_PHASE_CERTIFICATION_RESULT.json",
+    "docs/legacy-erp/verification/evidence/P04_MIGRATION_SCOPE_MANIFEST.json"
+  ],
+  "deferred_checks": [
+    "production_database_execution",
+    "remote_deployment",
+    "docker_runtime",
+    "full_legacy_etl",
+    "backup_restore_dr",
+    "load_and_browser_matrix"
+  ]
+}

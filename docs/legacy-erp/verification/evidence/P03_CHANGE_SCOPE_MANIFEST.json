@@ -1,9 +1,9 @@
 {
   "manifest_version": "1.0.0",
-  "generated_at": "2026-09-18T05:11:28.895Z",
+  "generated_at": "2026-09-18T06:15:29.019Z",
   "base_commit_sha": "9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb",
-  "candidate_commit_sha": "d94a7a23f6e12fe40e6e479f8af54dfab81b8ade",
-  "total_changed_paths": 92,
+  "candidate_commit_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+  "total_changed_paths": 93,
   "paths": [
     {
       "path": ".github/PULL_REQUEST_TEMPLATE/ssot-change.md",
@@ -111,6 +111,10 @@
     },
     {
       "path": "docs/legacy-erp/verification/evidence/batches/P03-P03_BATCH_REVERIFICATION_R5_2026-09-18.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P03-P03_R5_INTEGRITY_HANDOFF_2026-09-18.md",
       "applicable_analyzers": []
     },
     {
