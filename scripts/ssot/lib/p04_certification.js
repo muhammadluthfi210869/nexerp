@@ -343,6 +343,7 @@ async function certifyP04({ root, contract, candidateSha }) {
 
     spawnSync('git', ['add', 'docs/legacy-erp/verification/_p04_test_results.json'], { cwd: root });
     spawnSync('git', ['add', 'docs/legacy-erp/verification/evidence/P04_MIGRATION_SCOPE_MANIFEST.json'], { cwd: root });
+    spawnSync('git', ['add', 'docs/legacy-erp/verification/evidence/P04_PHASE_CERTIFICATION_RESULT.json'], { cwd: root });
 
     return result;
   } finally {
