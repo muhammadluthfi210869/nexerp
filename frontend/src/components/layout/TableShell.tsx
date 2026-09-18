@@ -1,4 +1,4 @@
-import { BaseShell, type BaseShellProps, type ReactNode } from "./BaseShell";
+import { BaseShell, ShellContent, type BaseShellProps, type ReactNode } from "./BaseShell";
 
 export interface TableShellProps extends Omit<BaseShellProps, "children"> {
   filters?: ReactNode;
@@ -18,9 +18,9 @@ export function TableShell({ filters, pagination, children, ...tableProps }: Tab
           {filters}
         </div>
       )}
-      <div className="flex flex-col gap-6">
+      <ShellContent>
         {children}
-      </div>
+      </ShellContent>
       {pagination && (
         <div className="mt-4 flex justify-between items-center">
           {pagination}

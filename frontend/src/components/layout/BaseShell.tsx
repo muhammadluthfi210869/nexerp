@@ -6,6 +6,10 @@ export interface BaseShellProps extends ModuleHeaderProps {
   className?: string;
 }
 
+export function ShellContent({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`flex flex-col gap-6 ${className}`.trim()}>{children}</div>;
+}
+
 export function BaseShell({
   title,
   titleAccent,

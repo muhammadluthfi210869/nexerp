@@ -508,6 +508,24 @@ try {
       'BB-CHANGED-LINT-WARNING: ESLint warning in changed production scope strictly fails certification');
   }
 
+  // Scenario BB-ZERO-SCANNED-LINT: Applicable changed frontend production files > 0 but scanned files = 0 strictly fails checkLint via production path
+  {
+    const { runProductionAudit } = require('./audit_p03_architecture_gates');
+    const prodAuditRes = runProductionAudit({
+      clean_checkout_build: { skipSubprocess: true },
+      typecheck: { skipSubprocess: true, backend: { exit_code: 0 }, frontend: { exit_code: 0 } },
+      unit_smoke: { skipSubprocess: true, backend: { exit_code: 0, stdout: 'Test Suites: 23 passed, 23 total\nTests: 260 passed, 260 total' }, frontend: { exit_code: 0, stdout: 'Tests 355 passed (355)' } },
+      lint: {
+        backend: { exit_code: 0, duration_ms: 10, stdout: '0 problems' },
+        frontend: { exit_code: 0, duration_ms: 10, stdout: '0 problems' },
+        forceZeroScanned: true
+      }
+    });
+    const lintResult = prodAuditRes.results.lint;
+    assert(!lintResult.pass && lintResult.error && lintResult.error.includes('applicable changed frontend production files > 0') && lintResult.details.changed_frontend_files_scanned === 0,
+      'BB-ZERO-SCANNED-LINT: Applicable changed frontend production files > 0 but scanned files = 0 strictly fails checkLint via production path');
+  }
+
   // Scenario BB-BROAD-DNA-EXCEPTION: Broad or wildcard scope in DNA exception registry is strictly rejected
   {
     const fakeExceptionsFile = path.join(tempSandbox, 'dna-exceptions-broad.yaml');

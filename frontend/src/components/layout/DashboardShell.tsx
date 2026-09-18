@@ -1,4 +1,4 @@
-import { BaseShell, type BaseShellProps } from "./BaseShell";
+import { BaseShell, ShellContent, type BaseShellProps } from "./BaseShell";
 import { PageTransition } from "./PageTransition";
 
 export interface DashboardShellProps extends BaseShellProps {
@@ -15,9 +15,9 @@ export function DashboardShell({ children, ...shellProps }: DashboardShellProps)
   return (
     <PageTransition>
       <BaseShell {...shellProps}>
-        <div className="flex flex-col gap-6">
+        <ShellContent>
           {children}
-        </div>
+        </ShellContent>
       </BaseShell>
     </PageTransition>
   );

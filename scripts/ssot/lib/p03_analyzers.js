@@ -380,9 +380,34 @@ function checkLint(root, overrides = {}) {
     } catch (_) {}
   }
 
-  const changedFrontendFiles = changedFiles
-    .filter(f => f.startsWith('frontend/src/') && (f.endsWith('.ts') || f.endsWith('.tsx')) && !f.includes('.test.') && !f.includes('.spec.'))
-    .map(f => f.replace(/^frontend\//, ''));
+  const applicableFrontendFiles = changedFiles
+    .map(f => f.replace(/\\/g, '/').trim())
+    .filter(f => {
+      const p = f.startsWith('frontend/') ? f.slice('frontend/'.length) : f;
+      return p.startsWith('src/') && (p.endsWith('.ts') || p.endsWith('.tsx')) && !p.endsWith('.d.ts') && !p.includes('.test.') && !p.includes('.spec.');
+    })
+    .map(f => f.startsWith('frontend/') ? f.slice('frontend/'.length) : f);
+
+  let changedFrontendFiles = overrides.scannedFiles !== undefined
+    ? overrides.scannedFiles
+    : (overrides.forceZeroScanned ? [] : applicableFrontendFiles);
+
+  if (applicableFrontendFiles.length > 0 && changedFrontendFiles.length === 0) {
+    return {
+      pass: false,
+      details: {
+        backend_errors: backendErrors,
+        backend_warnings: backendWarnings,
+        frontend_errors: frontendErrors,
+        frontend_warnings: frontendWarnings,
+        applicable_frontend_files_count: applicableFrontendFiles.length,
+        changed_frontend_files_scanned: 0,
+        changed_errors: 0,
+        changed_warnings: 0
+      },
+      error: `Changed production scope lint failed: applicable changed frontend production files > 0 (${applicableFrontendFiles.length}) but scanned files = 0. Applicable files must be scanned.`
+    };
+  }
 
   let changedErrors = 0;
   let changedWarnings = 0;
@@ -432,6 +457,7 @@ function checkLint(root, overrides = {}) {
         backend_warnings: backendWarnings,
         frontend_errors: frontendErrors,
         frontend_warnings: frontendWarnings,
+        applicable_frontend_files_count: applicableFrontendFiles.length,
         changed_frontend_files_scanned: changedFrontendFiles.length,
         changed_errors: changedErrors,
         changed_warnings: changedWarnings,
@@ -452,6 +478,7 @@ function checkLint(root, overrides = {}) {
       frontend_duration_ms: frontendDuration,
       frontend_warnings_baseline_max: maxFrontendWarnings,
       ratchet_complies: frontendWarnings <= maxFrontendWarnings,
+      applicable_frontend_files_count: applicableFrontendFiles.length,
       changed_frontend_files_scanned: changedFrontendFiles.length,
       changed_errors: changedErrors,
       changed_warnings: changedWarnings
@@ -1327,7 +1354,7 @@ function checkDuplicateCode(root, overrides = {}) {
     try {
       const diffOut = execSync(`git diff --name-only ${baseSha} HEAD`, { cwd: root, stdio: 'pipe' }).toString();
       targetFiles = diffOut.split('\n').map(s => s.trim()).filter(Boolean)
-        .filter(f => (f.endsWith('.ts') || f.endsWith('.tsx')) && !f.endsWith('.d.ts') && !f.includes('test'));
+        .filter(f => (f.endsWith('.ts') || f.endsWith('.tsx')) && !f.endsWith('.d.ts') && !f.includes('test') && !f.includes('spec'));
     } catch (_) {}
   }
 
@@ -1335,28 +1362,59 @@ function checkDuplicateCode(root, overrides = {}) {
   let duplicatedTokens = 0;
   const ngramMap = new Map();
   const NGRAM_SIZE = 8;
+  const clones = [];
+  const seenCloneKeys = new Set();
 
   for (const relFile of targetFiles) {
     const fullPath = path.isAbsolute(relFile) ? relFile : path.join(root, relFile);
     if (!fs.existsSync(fullPath)) continue;
     const content = fs.readFileSync(fullPath, 'utf8');
 
-    const tokens = content.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '')
-      .split(/\s+|[;,{}()]/)
-      .filter(t => t.length > 1);
+    const rawLines = content.split(/\r?\n/);
+    const fileTokens = [];
 
-    totalTokens += tokens.length;
+    for (let lineIdx = 0; lineIdx < rawLines.length; lineIdx++) {
+      let line = rawLines[lineIdx].replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '').trim();
+      // Skip import statements - external module import bindings are boilerplate declarations, not algorithmic code clones
+      if (/^import\s+/.test(line) || /^\}\s*from\s+['"]/.test(line)) {
+        continue;
+      }
+      const parts = line.split(/\s+|[;,{}()]/).filter(t => t.length > 1);
+      for (const t of parts) {
+        fileTokens.push({ token: t, line: lineIdx + 1 });
+      }
+    }
+
+    totalTokens += fileTokens.length;
     const duplicateTokenIndices = new Set();
-    for (let i = 0; i <= tokens.length - NGRAM_SIZE; i++) {
-      const gram = tokens.slice(i, i + NGRAM_SIZE).join(' ');
+
+    for (let i = 0; i <= fileTokens.length - NGRAM_SIZE; i++) {
+      const slice = fileTokens.slice(i, i + NGRAM_SIZE);
+      const gram = slice.map(x => x.token).join(' ');
+
       if (ngramMap.has(gram)) {
+        const prev = ngramMap.get(gram);
         for (let j = i; j < i + NGRAM_SIZE; j++) {
           duplicateTokenIndices.add(j);
         }
+
+        const cloneKey = `${prev.file}:${prev.line}<=>${relFile}:${slice[0].line}:${gram}`;
+        if (!seenCloneKeys.has(cloneKey)) {
+          seenCloneKeys.add(cloneKey);
+          clones.push({
+            file1: prev.file,
+            location1: `line ${prev.line}`,
+            file2: relFile,
+            location2: `line ${slice[0].line}`,
+            block: gram,
+            token_count: NGRAM_SIZE
+          });
+        }
       } else {
-        ngramMap.set(gram, relFile);
+        ngramMap.set(gram, { file: relFile, line: slice[0].line, index: i });
       }
     }
+
     duplicatedTokens += duplicateTokenIndices.size;
   }
 
@@ -1378,9 +1436,11 @@ function checkDuplicateCode(root, overrides = {}) {
       duplicated_tokens: duplicatedTokens,
       duplication_percent: parseFloat(duplicationPercent.toFixed(2)),
       max_allowed_percent: maxDuplicationPercent,
+      clones_count: clones.length,
+      clones,
       collisions
     },
-    error: pass ? null : `Duplicate code / collision detected: collisions=${collisions.length}, duplication=${duplicationPercent.toFixed(2)}% (max ${maxDuplicationPercent}%)`
+    error: pass ? null : `Duplicate code / collision detected: collisions=${collisions.length}, duplication=${duplicationPercent.toFixed(2)}% (max ${maxDuplicationPercent}%). Found ${clones.length} duplicate clone(s).`
   };
 }
 

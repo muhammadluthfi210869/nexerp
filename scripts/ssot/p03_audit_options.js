@@ -53,11 +53,12 @@ function readGitDiffFiles() {
   return out.split('\n').map(s => s.trim()).filter(Boolean);
 }
 
-function isCodeFile(path) {
-  if (!path) return false;
-  if (path.endsWith('.d.ts')) return false;
-  if (path.includes('.test.') || path.includes('.spec.')) return false;
-  return path.endsWith('.ts') || path.endsWith('.tsx');
+function isCodeFile(filePath) {
+  if (!filePath) return false;
+  const p = filePath.replace(/\\/g, '/');
+  if (p.endsWith('.d.ts')) return false;
+  if (p.includes('/test/') || p.includes('/__tests__/') || p.includes('.test.') || p.includes('.spec.') || p.includes('-spec.') || p.includes('-test.')) return false;
+  return p.endsWith('.ts') || p.endsWith('.tsx');
 }
 
 function readChangedCodeFiles() {

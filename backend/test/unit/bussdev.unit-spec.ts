@@ -69,19 +69,22 @@ describe('BussdevService — Unit', () => {
       city: 'Jakarta Selatan',
     };
 
+    beforeEach(() => {
+      prisma.$transaction = jest.fn((fn: any) => fn(prisma));
+      prisma.leadTimelineLog = { create: jest.fn() };
+      prisma.activityStream = { create: jest.fn() };
+    });
+
     it('creates lead with status NEW_LEAD', async () => {
       prisma.bussdevStaff.findUnique.mockResolvedValue({
         id: staffId,
         userId: 'USER-001',
         name: 'Test Staff',
       });
-      prisma.$transaction = jest.fn((fn: any) => fn(prisma));
       prisma.salesLead.create.mockResolvedValue({
         id: leadId,
         status: WorkflowStatus.NEW_LEAD,
       });
-      prisma.leadTimelineLog = { create: jest.fn() };
-      prisma.activityStream = { create: jest.fn() };
 
       const result = await service.createLead(baseDto);
       expect(result.status).toBe(WorkflowStatus.NEW_LEAD);
@@ -95,12 +98,9 @@ describe('BussdevService — Unit', () => {
       prisma.bussdevStaff.findUnique = jest
         .fn()
         .mockResolvedValue({ id: 'STAFF-B', userId: 'U-B', name: 'Low Load' });
-      prisma.$transaction = jest.fn((fn: any) => fn(prisma));
       prisma.salesLead.create = jest
         .fn()
         .mockResolvedValue({ id: leadId, picId: 'STAFF-B' });
-      prisma.leadTimelineLog = { create: jest.fn() };
-      prisma.activityStream = { create: jest.fn() };
 
       const result = await service.createLead({ ...baseDto, picId: 'AUTO' });
       expect(prisma.salesLead.create).toHaveBeenCalledWith(
@@ -113,7 +113,6 @@ describe('BussdevService — Unit', () => {
     it('throws when no staff exists for AUTO', async () => {
       prisma.bussdevStaff.findMany = jest.fn().mockResolvedValue([]);
       prisma.bussdevStaff.findFirst = jest.fn().mockResolvedValue(null);
-      prisma.$transaction = jest.fn((fn: any) => fn(prisma));
 
       await expect(
         service.createLead({ ...baseDto, picId: 'AUTO' }),
@@ -126,11 +125,8 @@ describe('BussdevService — Unit', () => {
         userId: 'USER-001',
         name: 'Staff',
       });
-      prisma.$transaction = jest.fn((fn: any) => fn(prisma));
       prisma.salesLead.create = jest.fn().mockResolvedValue({ id: leadId });
       prisma.sampleRequest = { create: jest.fn() };
-      prisma.activityStream = { create: jest.fn() };
-      prisma.leadTimelineLog = { create: jest.fn() };
 
       await service.createLead({
         ...baseDto,
@@ -159,12 +155,12 @@ describe('BussdevService — Unit', () => {
       prisma.salesLead.update = jest
         .fn()
         .mockResolvedValue({ ...lead, status: WorkflowStatus.CONTACTED });
+      prisma.leadTimelineLog = { create: jest.fn() };
+      prisma.activityStream = { create: jest.fn() };
+      prisma.leadActivity = { create: jest.fn() };
     });
 
     it('advances from NEW_LEAD to CONTACTED', async () => {
-      prisma.leadTimelineLog = { create: jest.fn() };
-      prisma.activityStream = { create: jest.fn() };
-
       await service.advanceLeadStage(leadId, makeAdvanceDto());
       expect(prisma.salesLead.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -200,9 +196,6 @@ describe('BussdevService — Unit', () => {
         ...lead,
         status: WorkflowStatus.SAMPLE_REQUESTED,
       });
-      prisma.leadActivity = { create: jest.fn() };
-      prisma.leadTimelineLog = { create: jest.fn() };
-      prisma.activityStream = { create: jest.fn() };
 
       await service.advanceLeadStage(
         leadId,
@@ -243,8 +236,6 @@ describe('BussdevService — Unit', () => {
         findFirst: jest.fn().mockResolvedValue(null),
         create: jest.fn(),
       };
-      prisma.leadTimelineLog = { create: jest.fn() };
-      prisma.activityStream = { create: jest.fn() };
 
       await service.advanceLeadStage(
         leadId,
@@ -268,8 +259,6 @@ describe('BussdevService — Unit', () => {
           .mockResolvedValue({ id: 'SR-1', stage: SampleStage.APPROVED }),
       };
       prisma.salesOrder = { create: jest.fn() };
-      prisma.leadTimelineLog = { create: jest.fn() };
-      prisma.activityStream = { create: jest.fn() };
 
       await service.advanceLeadStage(
         leadId,

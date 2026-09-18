@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { BaseShell, type ModuleHeaderProps } from "./BaseShell";
+import { BaseShell, ShellContent, type ModuleHeaderProps } from "./BaseShell";
 
 export interface FormShellProps extends ModuleHeaderProps {
   sidebar?: ReactNode;
@@ -22,9 +22,9 @@ export function FormShell({
     <BaseShell {...formProps}>
       {sidebar ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 flex flex-col gap-6">
+          <ShellContent className="lg:col-span-2">
             {children}
-          </div>
+          </ShellContent>
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-6 flex flex-col gap-4">
               {sidebar}
@@ -32,11 +32,9 @@ export function FormShell({
           </div>
         </div>
       ) : (
-        <div
-          className={fullWidth ? "w-full flex flex-col gap-6" : "max-w-4xl flex flex-col gap-6"}
-        >
+        <ShellContent className={fullWidth ? "w-full" : "max-w-4xl"}>
           {children}
-        </div>
+        </ShellContent>
       )}
     </BaseShell>
   );
