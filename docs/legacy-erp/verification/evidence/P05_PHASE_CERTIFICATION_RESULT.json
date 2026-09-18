@@ -3,11 +3,11 @@
   "level": "PHASE_GATE",
   "contract_version": "1.0.0",
   "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-  "candidate_sha": "0000000000000000000000000000000000000000",
-  "started_at": "1970-01-01T00:00:00.000Z",
-  "completed_at": "1970-01-01T00:00:00.000Z",
+  "candidate_sha": "54f8790ffbbda3368539d5545bd1e06b3c614ab9",
+  "started_at": "2026-09-18T14:36:27.094Z",
+  "completed_at": "2026-09-18T14:36:27.315Z",
   "verdict": "FAIL",
   "token": null,
   "result": null,
-  "failure": "Placeholder committed before certification run; the wrapper will overwrite this file in finally."
+  "failure": "Error: Dirty files outside P05 generated allowlist: [{\"status\":\"M \",\"file\":\"ocs/legacy-erp/verification/evidence/P05_PHASE_CERTIFICATION_RESULT.json\"},{\"status\":\"??\",\"file\":\"scripts/ssot/_p05_run_and_commit.js\"}]\n    at assert (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:20:47)\n    at main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:92:5)\n    at Object.<anonymous> (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:116:1)\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)"
 }
