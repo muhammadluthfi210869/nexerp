@@ -8,7 +8,6 @@ model Article {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  @@index([slug])
   @@map("articles")
 }
 
@@ -23,7 +22,6 @@ model WebsiteProduct {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  @@index([slug])
   @@index([category])
   @@map("website_products")
 }

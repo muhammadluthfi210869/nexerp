@@ -1,9 +1,16 @@
 {
   "phase": "P04",
   "name": "Canonical database and migration chain",
-  "timestamp": "2026-09-18T07:50:14.455Z",
+  "timestamp": "2026-09-18T10:57:16.669Z",
   "verdict": "PASS",
-  "candidate_sha": "f58e9cad9589e45b4e6b8ee3bf8ed3bfd49d5984",
+  "candidate_sha": "1c626009259291eec08162d3232f5dce3bd87e95",
+  "candidate_migrations": [
+    "20260918120000_p04_deduplicate_slug_indexes"
+  ],
+  "affected_tables": [
+    "articles",
+    "website_products"
+  ],
   "tests_summary": {
     "total": 11,
     "passed": 11,
@@ -16,11 +23,12 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 229,
+      "duration_ms": 2206,
       "node_version": "v22.21.0",
       "prisma_version": "7.10.0",
       "postgres_version": 16,
-      "source_database_fingerprint": "40a7bba7a21ee3806fb26264c3577ec8f7d4d10282895f25bb55d8398fbff03a"
+      "source_database_fingerprint": "fb0a5da9e048eb82a7011b23a588cdeed095d1641b003d8d3145a51a263a9a62",
+      "source_database_tables": 194
     },
     "contract_consistency": {
       "id": "contract_consistency",
@@ -28,9 +36,10 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 4,
+      "duration_ms": 8,
       "schema_authority": "backend/prisma/migrations/",
-      "policy": "prisma migrate deploy only"
+      "policy": "prisma migrate deploy only",
+      "expand_contract_window": "N-1 / N rolling window verified"
     },
     "prisma_validate_generate": {
       "id": "prisma_validate_generate",
@@ -38,8 +47,10 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 25540,
-      "canonical_models_reconciled": 92
+      "duration_ms": 20096,
+      "canonical_models_total": 92,
+      "canonical_models_reconciled": 92,
+      "implementation_models_total": 194
     },
     "migration_chain_integrity": {
       "id": "migration_chain_integrity",
@@ -47,9 +58,17 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 6823,
-      "total_migrations": 42,
-      "edited_prebase_migrations": 0
+      "duration_ms": 6700,
+      "total_migrations": 43,
+      "edited_prebase_migrations": 0,
+      "candidate_migrations": [
+        "20260918120000_p04_deduplicate_slug_indexes"
+      ],
+      "candidate_migrations_scanned": 1,
+      "affected_tables": [
+        "articles",
+        "website_products"
+      ]
     },
     "empty_db_migrate": {
       "id": "empty_db_migrate",
@@ -57,15 +76,18 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 34940,
-      "database": "nex_p04_f58e9cad_27184_empty",
+      "duration_ms": 27188,
+      "database": "nex_p04_1c626009_9732_empty",
       "runtime_truth": {
         "tables": 195,
-        "primary_keys": 195,
-        "foreign_keys": 282,
-        "indexes": 424
+        "columns": 2214,
+        "constraints": 488,
+        "indexes": 422,
+        "ledger": 43
       },
-      "schema_drift": 0
+      "schema_drift": 0,
+      "empty_db_name": "nex_p04_1c626009_9732_empty",
+      "empty_db_url": "postgresql://postgres:66luthfi29@localhost:5432/nex_p04_1c626009_9732_empty?schema=public"
     },
     "baseline_upgrade": {
       "id": "baseline_upgrade",
@@ -73,10 +95,19 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 33334,
-      "database": "nex_p04_f58e9cad_27184_baseline",
-      "reconciled_tables": 1,
-      "data_loss_rows": 0
+      "duration_ms": 41965,
+      "database": "nex_p04_1c626009_9732_baseline",
+      "materialized_base_path": "C:\\Users\\Luthfi\\AppData\\Local\\Temp\\nex_p04_base_mig_1789728844464",
+      "reconciled_tables": 2,
+      "data_loss_rows": 0,
+      "backfill_stats": {
+        "affected": 1,
+        "updated": 1,
+        "skipped": 0,
+        "rejected": 0
+      },
+      "baseline_db_name": "nex_p04_1c626009_9732_baseline",
+      "baseline_db_url": "postgresql://postgres:66luthfi29@localhost:5432/nex_p04_1c626009_9732_baseline?schema=public"
     },
     "migration_idempotency": {
       "id": "migration_idempotency",
@@ -84,9 +115,10 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 8430,
+      "duration_ms": 5425,
       "rerun_pending_migrations": 0,
-      "idempotency_confirmed": true
+      "idempotency_confirmed": true,
+      "concurrent_lock_verified": true
     },
     "rollback_rehearsal": {
       "id": "rollback_rehearsal",
@@ -94,8 +126,12 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 28550,
-      "rehearsal_database": "nex_p04_f58e9cad_27184_rollback",
+      "duration_ms": 47179,
+      "rehearsal_database": "nex_p04_1c626009_9732_rollback",
+      "baseline_schema_digest": "7813fe9d011e8ecc1064357d7de854fddfa2e9a2e9d0924f93bda5d809956d23",
+      "candidate_schema_digest": "5c5b0575ceff68dbe1a3b0f5d2f69cf58a4d6567778ec047d7de757f1b65f47e",
+      "rolled_back_schema_digest": "7813fe9d011e8ecc1064357d7de854fddfa2e9a2e9d0924f93bda5d809956d23",
+      "restored_schema_digest": "5c5b0575ceff68dbe1a3b0f5d2f69cf58a4d6567778ec047d7de757f1b65f47e",
       "rollback_and_rollforward_verified": true
     },
     "constraint_index_audit": {
@@ -104,10 +140,11 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 151,
+      "duration_ms": 140,
       "unvalidated_constraints": 0,
       "invalid_indexes": 0,
       "orphan_foreign_keys": 0,
+      "duplicate_indexes": 0,
       "sqlstate_23505_verified": true
     },
     "expand_contract_compatibility": {
@@ -116,8 +153,8 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 159,
-      "candidate_migrations_scanned": 0,
+      "duration_ms": 2,
+      "candidate_migrations_scanned": 1,
       "unsafe_contract_ddl": 0,
       "expand_contract_verified": true
     },
@@ -127,14 +164,31 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 464,
+      "duration_ms": 208,
       "coverage_percent": 100,
-      "probed_tables": 9
+      "probed_tables": 2,
+      "manifest_tables": [
+        "articles",
+        "website_products"
+      ]
     }
   },
   "mutations_summary": {
     "total": 16,
     "passed": 16,
     "failed": 0
+  },
+  "metrics": {
+    "schema_drift_count": 0,
+    "failed_or_pending_migrations": 0,
+    "edited_prebase_migrations": 0,
+    "unvalidated_constraints": 0,
+    "invalid_indexes": 0,
+    "orphan_foreign_keys": 0,
+    "unexpected_skips": 0,
+    "data_loss_rows": 0,
+    "duplicate_or_missing_migration_ids": 0,
+    "unsafe_contract_ddl": 0,
+    "compatibility_probe_coverage_percent": 100
   }
 }

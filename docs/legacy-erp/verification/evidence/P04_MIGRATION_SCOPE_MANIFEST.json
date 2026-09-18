@@ -1,0 +1,32 @@
+{
+  "manifest_version": "1.0.0",
+  "candidate_sha": "1c626009259291eec08162d3232f5dce3bd87e95",
+  "phase_base_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
+  "generated_at": "2026-09-18T10:55:38.504Z",
+  "probes": [
+    {
+      "table": "articles",
+      "status": "PASS",
+      "n_minus_1_read": true,
+      "n_minus_1_write": true,
+      "n_read": true,
+      "n_write": true,
+      "operations": {
+        "n_minus_1_create_id": "00000000-0000-4000-a000-000000000701",
+        "n_update_meta": "N Meta Description"
+      }
+    },
+    {
+      "table": "website_products",
+      "status": "PASS",
+      "n_minus_1_read": true,
+      "n_minus_1_write": true,
+      "n_read": true,
+      "n_write": true,
+      "operations": {
+        "n_minus_1_create_id": "00000000-0000-4000-a000-000000000702",
+        "n_update_meta": "N Product Meta"
+      }
+    }
+  ]
+}
