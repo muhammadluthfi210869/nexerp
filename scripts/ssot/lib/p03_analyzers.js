@@ -1603,8 +1603,9 @@ function resolveP03AuditScope(root, options = {}) {
   let ledgerError = null;
   if (fs.existsSync(ledgerPath)) {
     const ledgerContent = fs.readFileSync(ledgerPath, 'utf8');
-    const baseMatch = ledgerContent.match(/Base Commit SHA:\s*`?([0-9a-fA-F]+)`?/);
-    const candidateMatch = ledgerContent.match(/Candidate Commit SHA:\s*`?([0-9a-fA-F]+)`?/);
+    // Tolerate Markdown emphasis markers (`**`) and inline backticks around SHAs.
+    const baseMatch = ledgerContent.match(/Base Commit SHA:\*{0,2}\s*`?([0-9a-fA-F]+)`?/);
+    const candidateMatch = ledgerContent.match(/Candidate Commit SHA:\*{0,2}\s*`?([0-9a-fA-F]+)`?/);
     if (options.requireValidLedger) {
       let currentHead = '';
       try { currentHead = execSync('git rev-parse HEAD', { cwd: root, stdio: 'pipe' }).toString().trim(); } catch (_) {}
