@@ -751,6 +751,7 @@ async function certifyP04({ root, contract, candidateSha }) {
     const reportOut = path.join(root, 'docs/legacy-erp/verification/_p04_test_results.json');
     fs.mkdirSync(path.dirname(reportOut), { recursive: true });
     fs.writeFileSync(reportOut, JSON.stringify(report, null, 2) + '\n', 'utf8');
+    spawnSync('git', ['add', reportOut], { cwd: root, shell: process.platform === 'win32' });
 
     return {
       phase: 'P04',

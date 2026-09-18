@@ -1,71 +1,140 @@
 {
   "phase": "P04",
   "name": "Canonical database and migration chain",
-  "timestamp": "2026-09-17T09:07:36.633Z",
+  "timestamp": "2026-09-18T07:38:00.266Z",
   "verdict": "PASS",
+  "candidate_sha": "ebc959d2e4a9a2009229ecbe1c4ebaf8651635eb",
   "tests_summary": {
-    "total": 8,
-    "passed": 8,
+    "total": 11,
+    "passed": 11,
     "failed": 0
   },
   "tests": {
-    "prisma_validate_generate": {
+    "predecessor_and_target_safety": {
+      "id": "predecessor_and_target_safety",
       "status": "PASS",
-      "canonical_models_count": 92,
-      "implementation_schema_valid": true,
-      "client_generated": true,
-      "engine": "library",
-      "prisma_version": "7.10.0"
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 168,
+      "node_version": "v22.21.0",
+      "prisma_version": "7.10.0",
+      "postgres_version": 16,
+      "source_database_fingerprint": "40a7bba7a21ee3806fb26264c3577ec8f7d4d10282895f25bb55d8398fbff03a"
+    },
+    "contract_consistency": {
+      "id": "contract_consistency",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 3,
+      "schema_authority": "backend/prisma/migrations/",
+      "policy": "prisma migrate deploy only"
+    },
+    "prisma_validate_generate": {
+      "id": "prisma_validate_generate",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 26321,
+      "canonical_models_reconciled": 92
+    },
+    "migration_chain_integrity": {
+      "id": "migration_chain_integrity",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 7836,
+      "total_migrations": 42,
+      "edited_prebase_migrations": 0
     },
     "empty_db_migrate": {
+      "id": "empty_db_migrate",
       "status": "PASS",
-      "empty_db_created": "erp_p04_test",
-      "all_migrations_applied": true,
-      "schema_drift_detected": false,
-      "tables_created": 195
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 42005,
+      "database": "nex_p04_ebc959d2_16620_empty",
+      "runtime_truth": {
+        "tables": 195,
+        "primary_keys": 195,
+        "foreign_keys": 282,
+        "indexes": 424
+      },
+      "schema_drift": 0
     },
     "baseline_upgrade": {
+      "id": "baseline_upgrade",
       "status": "PASS",
-      "migrations_count": 42,
-      "baseline_migration": "20260430122705_phase1",
-      "latest_migration": "add_assigned_phone",
-      "all_finished": true,
-      "zero_failed": true
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 42282,
+      "database": "nex_p04_ebc959d2_16620_baseline",
+      "reconciled_tables": 1,
+      "data_loss_rows": 0
     },
     "migration_idempotency": {
+      "id": "migration_idempotency",
       "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 8316,
       "rerun_pending_migrations": 0,
-      "rerun_exit_code": 0,
-      "init_db_idempotency_guard_passed": true
+      "idempotency_confirmed": true
     },
     "rollback_rehearsal": {
+      "id": "rollback_rehearsal",
       "status": "PASS",
-      "rollback_executed": true,
-      "tables_dropped_cleanly": true,
-      "ledger_updated": true,
-      "re_deployed_successfully": true
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 30352,
+      "rehearsal_database": "nex_p04_ebc959d2_16620_rollback",
+      "rollback_and_rollforward_verified": true
     },
     "constraint_index_audit": {
+      "id": "constraint_index_audit",
       "status": "PASS",
-      "total_primary_keys": 195,
-      "total_foreign_keys": 282,
-      "total_unique_constraints": 5,
-      "total_indexes": 424,
-      "orphaned_fks": 0,
-      "valid_referential_integrity": true
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 160,
+      "unvalidated_constraints": 0,
+      "invalid_indexes": 0,
+      "orphan_foreign_keys": 0,
+      "sqlstate_23505_verified": true
     },
     "expand_contract_compatibility": {
+      "id": "expand_contract_compatibility",
       "status": "PASS",
-      "audited_columns_count": 1,
-      "expand_contract_compliant": true,
-      "safe_for_rolling_deploy": true
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 141,
+      "candidate_migrations_scanned": 0,
+      "unsafe_contract_ddl": 0,
+      "expand_contract_verified": true
     },
     "old_new_version_coexistence": {
+      "id": "old_new_version_coexistence",
       "status": "PASS",
-      "legacy_n_minus_1_query_supported": true,
-      "modern_n_query_supported": true,
-      "coexistence_verified": true,
-      "zero_downtime_compatible": true
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 707,
+      "coverage_percent": 100,
+      "probed_tables": 9
     }
+  },
+  "mutations_summary": {
+    "total": 16,
+    "passed": 16,
+    "failed": 0
   }
 }
