@@ -9,8 +9,7 @@ interface DataTableProps {
 export function DataTable({ children, className }: DataTableProps) {
   return (
     <div 
-      className={cn("bg-white border border-border shadow-sm overflow-hidden", className)}
-      style={{ borderRadius: 'var(--card-radius)' }}
+      className={cn("bg-white border border-border rounded-xl shadow-xs overflow-hidden", className)}
     >
       <table className="w-full border-collapse text-sm">
         {children}
@@ -28,6 +27,12 @@ export function DataTableHead({ children, className }: DataTableHeadProps) {
   return <thead className={cn("bg-slate-50/50", className)}>{children}</thead>;
 }
 
+const resolveAlignClass = (align?: "left" | "center" | "right") => {
+  if (align === "center") return "text-center";
+  if (align === "right") return "text-right";
+  return "";
+};
+
 interface DataTableThProps {
   children: React.ReactNode;
   className?: string;
@@ -38,12 +43,10 @@ export function DataTableTh({ children, className, align = "left" }: DataTableTh
   return (
     <th
       className={cn(
-        "text-[10px] font-bold text-slate-400 uppercase tracking-wider",
-        align === "center" && "text-center",
-        align === "right" && "text-right",
+        "text-xs font-bold text-slate-400 uppercase tracking-wider px-4 h-12",
+        resolveAlignClass(align),
         className
       )}
-      style={{ padding: `0 var(--table-cell-px)`, height: 'var(--table-row-h)' }}
     >
       {children}
     </th>
@@ -76,18 +79,13 @@ interface DataTableCellProps {
 
 export function DataTableCell({ children, align = "left", className, colSpan }: DataTableCellProps) {
   return (
-    <td
+    <td 
       colSpan={colSpan}
       className={cn(
-        "align-middle",
-        align === "center" && "text-center",
-        align === "right" && "text-right",
+        "py-3.5 px-4 font-mono text-xs text-slate-900 border-b border-slate-50/80",
+        resolveAlignClass(align),
         className
       )}
-      style={{
-        padding: `0 var(--table-cell-px)`,
-        height: 'var(--table-row-h)',
-      }}
     >
       {children}
     </td>

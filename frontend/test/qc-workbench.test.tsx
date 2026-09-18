@@ -50,7 +50,7 @@ describe("DefectDetailModal", () => {
     expect(submitBtn).toBeDisabled();
   });
 
-  it.skip("remains disabled until all required fields filled", async () => {
+  it("remains disabled until all required fields filled", async () => {
     const user = userEvent.setup();
     render(<DefectDetailModal {...defaultProps} />);
 

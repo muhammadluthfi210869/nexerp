@@ -173,11 +173,14 @@ describe('BussdevService — Unit', () => {
       );
     });
 
-    it.skip('allows DP_PAID and PRODUCTION_PLAN stage advancement', async () => {
+    it('allows DP_PAID and PRODUCTION_PLAN stage advancement', async () => {
       prisma.salesLead.findUnique = jest.fn().mockResolvedValue({
         ...lead,
         status: WorkflowStatus.SPK_SIGNED,
       });
+      prisma.salesLead.update = jest.fn().mockImplementation((args: any) =>
+        Promise.resolve({ ...lead, ...args.data }),
+      );
 
       const resultDp = await service.advanceLeadStage(
         leadId,

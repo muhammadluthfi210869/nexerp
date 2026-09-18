@@ -1,65 +1,61 @@
-# Prompt — P03 One-Pass Remediation
+# Prompt — P03 Final One-Pass Remediation
 
-You are the implementation owner for NEX ERP Phase P03. Remediate every P03 blocker in one coordinated pass. Do not merely make the existing audit print PASS.
+Anda adalah implementation owner NEX ERP Phase P03. Selesaikan seluruh blocker P03 dalam **satu putaran terkoordinasi**. Jangan berhenti pada analisis, jangan sekadar membuat output PASS, dan jangan handoff selama acceptance contract belum benar-benar hijau.
 
-## Mandatory reading order
+## Baca berurutan
 
 1. `docs/legacy-erp/AGENTS.md`
-2. `docs/legacy-erp/verification/evidence/batches/P03-P03_BATCH_REVERIFICATION_R3_2026-09-18.md`
-3. `docs/legacy-erp/verification/_PRODUCTION_PHASE_GATES.yaml` — P03 only
-4. `docs/legacy-erp/process/_FULL_ERP_PRODUCTION_READINESS_ROADMAP.md` — P03 and test architecture
+2. `docs/legacy-erp/verification/evidence/batches/P03-P03_BATCH_REVERIFICATION_R4_2026-09-18.md`
+3. `docs/legacy-erp/verification/_PRODUCTION_PHASE_GATES.yaml` — hanya policy global dan P03
+4. `docs/legacy-erp/verification/_ONE_PASS_PHASE_EXECUTION_STANDARD.md`
 5. `docs/legacy-erp/verification/_ARCHITECTURE_MAINTAINABILITY_STANDARD.md`
 6. `docs/legacy-erp/verification/_UI_DNA_COMPLIANCE_STANDARD.md`
-7. Existing P03 scripts, CI workflow, debt baseline, exception registry, and implementor evidence.
+7. P03 runner/analyzers/negative suite, CI workflow, package manifests/locks, DNA barrel, exception registry, dan file yang tercantum dalam R4
 
-Treat the R3 report as the complete defect ledger. Resolve every P03 phase-gate portion of **R3-B1 through R3-B9**; explicitly schedule the heavy Docker/runtime/clean-room/deployed-E2E portions at their integration or release checkpoint rather than executing them now.
+R4 adalah defect ledger dan frozen acceptance contract yang lengkap. Tutup **R4-B1 sampai R4-B10**. Jangan menambah Docker runtime, deployment, deployed E2E, load test, browser matrix, DR, atau clean-room install ke bounded P03; semua itu tetap dijadwalkan pada integration/release phase.
 
-## Non-negotiable implementation constraints
+## Aturan wajib
 
-- Preserve all existing user work. Do not reset, delete, discard, or overwrite unrelated dirty/untracked files.
-- Capture `HEAD`, merge base, and `git status --short` before editing. Produce a path-level scope/impact ledger.
-- Do not use `npm install` fallback, `--force`, `--legacy-peer-deps`, shared `node_modules`, junctions, symlinks, cached build artifacts, synthetic PASS overrides, or `CI`-dependent shortcuts in certifying paths.
-- Do not weaken thresholds or expand baselines/exceptions to pass.
-- Do not trust `_LIFECYCLE_REGISTRY.json` as reachability/coverage truth; derive truth from source and compare/regenerate the registry.
-- P03 phase certification does not require Docker image build/runtime or deployment. Validate container definitions statically; real images and runtime smoke are deferred to the integration/release checkpoints.
-- Do not mark P03 PASS or P04 certifiable until every final acceptance check has genuinely passed against one immutable commit.
+- Pertahankan seluruh pekerjaan user yang sudah ada. Jangan reset, checkout, menghapus, atau menimpa perubahan unrelated.
+- Jangan melemahkan threshold, memperluas baseline/exception, menghapus test agar hijau, memakai `--force`/`--legacy-peer-deps`, memakai global Prisma, atau memalsukan hasil.
+- Scope testing berasal dari pasangan base/candidate SHA dan diff Git yang immutable, bukan label manual pada ledger atau `origin/main` yang stale.
+- Setiap gate kritis dengan file applicable tetapi target terselesaikan nol harus FAIL.
+- Semua UI consumer hanya mengimpor primitive melalui `@/components/dna`. Tidak boleh subpath import, raw interactive primitive, atau hardcoded visual value yang tidak terdaftar.
+- Semua unit test wajib berjalan: skipped/pending/todo/quarantined/flaky = 0.
+- Gunakan output machine-readable untuk lint dan unit test; exit code 0 saja tidak cukup.
+- Evidence harus berisi hasil command yang benar-benar dijalankan; `skipSubprocess` atau angka nol placeholder tidak boleh mengesahkan gate.
+- CI dan lokal harus memanggil production certification path yang sama tanpa CI menciptakan dirty tree sebelum clean-state assertion.
+- Jangan menandai registry PASS sendiri. Auditor akan mempromosikan setelah reproduksi independen pada SHA yang sama.
 
-## Required implementation sequence
+## Urutan eksekusi satu putaran
 
-1. Repair root dependency compatibility and synchronize all lockfiles so plain root/backend/frontend `npm ci --ignore-scripts=false --no-audit` succeeds.
-2. Remove the unsafe shared-dependency/junction behavior and CI artifacts-only bypass from the old clean-checkout verifier. The bounded P03 phase runner uses parallel lockfile dry-runs plus real type/lint/unit/build commands; full clean-room installation is deferred to an integration checkpoint.
-3. Make `unit_smoke` execute real Jest/Vitest commands with machine-readable counts and fail closed. Prove removal of generated Prisma client causes failure.
-4. Keep P03 container scope to deterministic static Dockerfile/Compose validation. Do not wait for a Docker daemon, build images, start containers, deploy, or run deployed E2E in this phase.
-5. Correct architecture ratchets: changed-code duplication <=1% regardless of changed-file count; changed functions <=10 or governed 11–15; no ungoverned >15; zero new lint warning on changed lines; whole-codebase debt cannot increase. Resolve the diff base explicitly rather than hard-coding it.
-6. Build a source-derived dependency/reachability graph covering imports/exports, Nest registrations, Next routes, jobs, events, Prisma access, and package usage. Use it for boundary, unused, orphan, and coverage gates; regenerate and compare the lifecycle registry.
-7. Expand DNA scanning to each screen's complete production dependency closure. Resolve aliases/re-exports; detect all interactive elements, hardcoded visual forms, and semantic primitive duplication. Make exceptions occurrence-scoped with stable fingerprints.
-8. Add the bounded mutation IDs required by `certify_p03_phase.js`. Invoke the same production paths used by CI and assert non-zero exit plus the correct failed gate; record release-depth Docker/runtime mutations for the later checkpoint.
-9. Repair evidence generation so it is produced from raw machine results bound to one SHA. Correct all commit-SHA, warning/exception, duplication, and zero-waiver contradictions.
-10. Run the bounded P03 phase command below. Heavy clean-room, Docker runtime, deployed E2E, load, browser matrix, and DR remain explicit later-checkpoint obligations and are not P03 blockers.
+1. Catat `HEAD`, `HEAD~1`/base eksplisit, dan `git status --short`; buat manifest scope machine-readable base/candidate/path/analyzer/closure. Tolak ledger dengan SHA stale dan jangan gunakan klasifikasi ledger untuk mengecualikan source.
+2. Perbaiki `resolveP03AuditScope()` serta setiap analyzer sehingga seluruh file produksi pada diff masuk pemeriksaan yang applicable dan zero-target fail closed.
+3. Perbaiki `frontend/src/app/(dashboard)/finance/audit-ledger/page.tsx`: barrel-only DNA imports, hapus/gunakan import yang unused, ganti input serta seluruh button mentah dengan primitive DNA. Perbaiki pelanggaran visual pada closure termasuk `TableShell.tsx` dan `ModuleHeader.tsx`; tambah primitive ke DNA lebih dahulu bila belum tersedia.
+4. Jalankan ESLint JSON pada changed production scope; parser runner wajib menggagalkan error **atau warning**. Target final 0/0.
+5. Aktifkan dan perbaiki tujuh test Vitest yang saat ini di-skip. Parse report Jest/Vitest dan gagalkan skipped/pending/todo/quarantined/flaky.
+6. Hubungkan hasil riil typecheck/lint/unit/build ke audit P03. Hapus substitusi certifying `skipSubprocess`; evidence wajib merekam command, exit, durasi, target, pass/fail/skip, error, dan warning.
+7. Rapikan CI fast gate agar authoritative runner dipanggil sekali dari checkout bersih. Lakukan clean assertion sebelum generator menulis evidence dan izinkan setelahnya hanya output evidence yang dideklarasikan secara exact, atau tulis output ke temp/untracked path. Tambahkan post-run source-integrity check.
+8. Samakan toolchain: pilih Node yang memenuhi seluruh engine (Node 22 untuk dependency graph saat ini, kecuali dependency Node-22-only dihapus), pin `prisma` dan `@prisma/client` pada versi exact yang sama, gunakan local CLI saja, dan fail pada `EBADENGINE`/version mismatch.
+9. Tambahkan sepuluh mutation IDs dari bagian R4 “Add missing adversarial acceptance tests”. Setiap test memutasi input nyata, menjalankan production analyzer path, lalu membuktikan non-zero dan gate failure yang tepat.
+10. Audit scope 78-file candidate. Pisahkan P04/future implementation ke owning phase/commit jika aman; jika tidak, klasifikasikan semua path dan buktikan tidak ada yang dikeluarkan dari pemeriksaan.
+11. Jalankan pre-certification checklist R4 dari atas ke bawah. Jika satu baris gagal, perbaiki root cause dan ulangi subset relevan; jangan berhenti atau mengklaim selesai.
+12. Commit seluruh remediasi, pastikan working tree sesuai kebijakan runner, lalu jalankan finish command tunggal.
 
-## Required handoff
-
-Return:
-
-1. candidate SHA and base SHA;
-2. changed-file scope ledger and explanation for every non-P03 path;
-3. R3-B1..B9 remediation table with exact files changed;
-4. raw command, exit code, duration, and numeric result for every acceptance check;
-5. parallel root/backend/frontend lockfile dry-run proof;
-6. proof that unsafe junction/shared-dependency behavior and CI artifact bypass were removed;
-7. before/after debt metrics for lint, duplication, complexity, architecture exceptions, and DNA exceptions;
-8. negative-test list and result for every new bypass scenario;
-9. static Dockerfile/Compose validation result and the recorded later checkpoint owner;
-10. remaining failures, without changing P03 to PASS if any item is incomplete.
-
-Definition of done is the updated bounded P03 phase acceptance sequence in R3 passing independently. A green result from the old 21/21 or 36/36 suite alone is explicitly insufficient.
-
-## Single authoritative finish command
-
-After implementing and committing every remediation, run exactly:
+## Finish command tunggal
 
 ```text
 node scripts/ssot/certify_p03_phase.js
 ```
 
-Do not stop, hand off, or claim completion unless this command exits `0`, prints `PHASE_PASS`, and produces `P03:<candidate-sha>:PHASE_PASS`. This bounded runner performs parallel phase-level checks and deliberately excludes Docker runtime/deployment and release-depth suites.
+Selesai hanya jika command tersebut:
+
+1. exit code `0`;
+2. mencetak `PHASE_PASS`;
+3. mencetak `P03:<current-full-candidate-sha>:PHASE_PASS`;
+4. seluruh checklist R4 terbukti dari raw evidence;
+5. tidak ada remaining failure atau waiver baru.
+
+## Handoff wajib
+
+Berikan candidate SHA dan base SHA; manifest scope; tabel R4-B1..B10 beserta file perbaikannya; hasil numerik semua check; hasil sepuluh mutation baru; lint error/warning; unit pass/fail/skip; target count tiap architecture/DNA analyzer; bukti Node/Prisma match; bukti CI ordering; token akhir; dan daftar pekerjaan release-depth yang memang deferred. Bila satu saja belum lengkap, lanjutkan perbaikan dan jangan handoff.

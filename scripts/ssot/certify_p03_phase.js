@@ -21,7 +21,17 @@ const REQUIRED_MUTATIONS = [
   'BB-STALE-REGISTRY',
   'BB-DNA-CHILD-COMPONENT',
   'BB-DNA-ALIAS-REEXPORT',
-  'BB-DNA-EXCEPTED-FILE-SECOND-OCCURRENCE'
+  'BB-DNA-EXCEPTED-FILE-SECOND-OCCURRENCE',
+  'BB-DIFF-BASE-STALE',
+  'BB-STALE-SCOPE-LEDGER',
+  'BB-ZERO-APPLICABLE-SCOPE',
+  'BB-CHANGED-LINT-WARNING',
+  'BB-BROAD-DNA-EXCEPTION',
+  'BB-UNEXPECTED-TEST-SKIP',
+  'BB-CI-GENERATED-DIRTY',
+  'BB-SUBPROCESS-RESULT-SUBSTITUTION',
+  'BB-NODE-ENGINE-MISMATCH',
+  'BB-PRISMA-VERSION-MISMATCH'
 ];
 
 if (process.argv.length > 2) {
@@ -107,7 +117,16 @@ function git(args) {
 
 async function main() {
   const major = Number(process.versions.node.split('.')[0]);
-  assertCheck('supported_node', major >= 20 && major < 23, { observed: process.version, accepted: '20-22' });
+  assertCheck('supported_node', major >= 22, { observed: process.version, accepted: '>=22' });
+
+  const backendPkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'backend/package.json'), 'utf8'));
+  const prismaDep = backendPkg.devDependencies?.prisma || backendPkg.dependencies?.prisma;
+  const clientDep = backendPkg.dependencies?.['@prisma/client'];
+  assertCheck('prisma_toolchain_pinned', Boolean(prismaDep && clientDep && prismaDep === clientDep && !prismaDep.startsWith('^') && !prismaDep.startsWith('~')), {
+    prisma: prismaDep,
+    client: clientDep
+  });
+
   result.candidate_sha = git(['rev-parse', 'HEAD']);
   assertCheck('committed_candidate', git(['status', '--porcelain']) === '',
     'Run from a clean dedicated branch/worktree; certification never includes unstaged or untracked implementation');
@@ -128,6 +147,12 @@ async function main() {
     runAsync('backend_lock_dry_run', 'npm', ['--prefix', 'backend', 'ci', '--dry-run', '--ignore-scripts', '--no-audit']),
     runAsync('frontend_lock_dry_run', 'npm', ['--prefix', 'frontend', 'ci', '--dry-run', '--ignore-scripts', '--no-audit'])
   ]);
+
+  const prismaV = run('prisma_version_check', 'npm', ['--prefix', 'backend', 'exec', '--', 'prisma', '-v']);
+  assertCheck('prisma_version_match', !prismaV.stdout.includes('mismatch') && !prismaV.stderr.includes('mismatch'), {
+    output: prismaV.stdout
+  });
+
   run('prisma_generate', 'npm', ['--prefix', 'backend', 'run', 'prisma:generate']);
 
   await Promise.all([
@@ -154,9 +179,18 @@ async function main() {
 
   const auditStarted = Date.now();
   const audit = runAudit({
-    typecheck: { skipSubprocess: true },
-    lint: { skipSubprocess: true },
-    unit_smoke: { skipSubprocess: true }
+    typecheck: {
+      backend: result.checks.find(c => c.id === 'backend_typecheck'),
+      frontend: result.checks.find(c => c.id === 'frontend_typecheck')
+    },
+    lint: {
+      backend: result.checks.find(c => c.id === 'backend_lint'),
+      frontend: result.checks.find(c => c.id === 'frontend_lint')
+    },
+    unit_smoke: {
+      backend: result.checks.find(c => c.id === 'backend_unit'),
+      frontend: result.checks.find(c => c.id === 'frontend_unit')
+    }
   });
   record('p03_static_architecture_dna', 'runAudit after real type/lint/unit/build', audit.verdict === 'PASS' ? 0 : 1,
     auditStarted, JSON.stringify({ passed: audit.passed_tests, total: audit.total_tests }), JSON.stringify(audit.results));

@@ -1,14 +1,10 @@
-import React from "react";
-import { ModuleHeader } from "./ModuleHeader";
+import type { ReactNode } from "react";
+import { BaseShell, type ModuleHeaderProps } from "./BaseShell";
 
-interface FormShellProps {
-  title: string;
-  titleAccent?: string;
-  subtitle?: string;
-  actions?: React.ReactNode;
-  sidebar?: React.ReactNode;
+export interface FormShellProps extends ModuleHeaderProps {
+  sidebar?: ReactNode;
   fullWidth?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 /**
@@ -17,42 +13,31 @@ interface FormShellProps {
  * Right sidebar is sticky for action panels.
  */
 export function FormShell({
-  title,
-  titleAccent,
-  subtitle,
-  actions,
   sidebar,
   fullWidth = false,
   children,
+  ...formProps
 }: FormShellProps) {
   return (
-    <div className="min-h-[calc(100vh-var(--page-py)-var(--page-pb))]">
-      <ModuleHeader
-        title={title}
-        titleAccent={titleAccent}
-        subtitle={subtitle}
-        actions={actions}
-      />
+    <BaseShell {...formProps}>
       {sidebar ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3" style={{ gap: 'var(--section-gap)' }}>
-          <div className="lg:col-span-2 flex flex-col" style={{ gap: 'var(--section-gap)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-6">
             {children}
           </div>
           <div className="lg:col-span-1">
-            <div className="lg:sticky lg:top-[var(--page-py)] flex flex-col" style={{ gap: 'var(--subsection-gap)' }}>
+            <div className="lg:sticky lg:top-6 flex flex-col gap-4">
               {sidebar}
             </div>
           </div>
         </div>
       ) : (
         <div
-          className={fullWidth ? "w-full flex flex-col" : "max-w-4xl flex flex-col"}
-          style={{ gap: 'var(--section-gap)' }}
+          className={fullWidth ? "w-full flex flex-col gap-6" : "max-w-4xl flex flex-col gap-6"}
         >
           {children}
         </div>
       )}
-    </div>
+    </BaseShell>
   );
 }
-

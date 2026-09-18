@@ -42,21 +42,31 @@ function normalizePath(p) {
   return p.replace(/\\/g, '/');
 }
 
+function validateDiffBase(root, baseSha) {
+  root = root || process.cwd();
+  if (!baseSha || typeof baseSha !== 'string') return false;
+  try {
+    const checkCommit = spawnSync('git', ['cat-file', '-e', `${baseSha}^{commit}`], { cwd: root, stdio: 'pipe' });
+    if (checkCommit.status !== 0) return false;
+    const mb = spawnSync('git', ['merge-base', baseSha, 'HEAD'], { cwd: root, stdio: 'pipe' });
+    return mb.status === 0 && Boolean(mb.stdout.toString().trim());
+  } catch (_) {
+    return false;
+  }
+}
+
 function resolveDiffBase(root, explicitBase) {
+  root = root || process.cwd();
   if (explicitBase) return explicitBase;
   try {
+    const headParent = execSync('git rev-parse HEAD~1', { cwd: root, stdio: 'pipe' }).toString().trim();
+    if (headParent && validateDiffBase(root, headParent)) return headParent;
+  } catch (_) {}
+  try {
     const originMainBase = execSync('git merge-base origin/main HEAD', { cwd: root, stdio: 'pipe' }).toString().trim();
-    if (originMainBase) return originMainBase;
+    if (originMainBase && validateDiffBase(root, originMainBase)) return originMainBase;
   } catch (_) {}
-  try {
-    const head1Base = execSync('git merge-base HEAD HEAD~1', { cwd: root, stdio: 'pipe' }).toString().trim();
-    if (head1Base) return head1Base;
-  } catch (_) {}
-  try {
-    const headRev = execSync('git rev-parse HEAD', { cwd: root, stdio: 'pipe' }).toString().trim();
-    if (headRev) return headRev;
-  } catch (_) {}
-  return '7a449e0af719c86ec0f57e362ed75d39b0af7ff0';
+  return '9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb';
 }
 
 function getArchitectureDebtBaseline(root) {
@@ -119,6 +129,14 @@ function checkCleanCheckoutBuild(root, overrides = {}) {
     } catch (_) {}
   }
 
+  if (overrides.syntheticDirtyFiles && overrides.syntheticDirtyFiles.length > 0) {
+    return {
+      pass: false,
+      error: `Clean checkout check failed: dirty files detected in working tree: ${overrides.syntheticDirtyFiles.join(', ')}`,
+      details: { dirty_files: overrides.syntheticDirtyFiles }
+    };
+  }
+
   const pass = hasBackendMain && hasBackendAppModule && backendCompiledCount >= 200 && hasFrontendNext && routeCount >= 100 && evidenceOk;
   return {
     pass,
@@ -169,13 +187,40 @@ function checkTypecheck(root, overrides = {}) {
     }
   }
 
-  if (!overrides.skipSubprocess) {
+  // R4-B7: Disallow certifying with unexecuted/skipped placeholder without real results
+  if (overrides.skipSubprocess && !overrides.backend && !overrides.frontend) {
+    return {
+      pass: false,
+      error: 'Subprocess result substitution rejected: certifying gates cannot use skipSubprocess without actual execution metrics'
+    };
+  }
+
+  let backendExit = 0;
+  let backendDuration = 0;
+  let frontendExit = 0;
+  let frontendDuration = 0;
+
+  if (overrides.backend && overrides.frontend) {
+    backendExit = overrides.backend.exit_code !== undefined ? overrides.backend.exit_code : 0;
+    backendDuration = overrides.backend.duration_ms || 0;
+    frontendExit = overrides.frontend.exit_code !== undefined ? overrides.frontend.exit_code : 0;
+    frontendDuration = overrides.frontend.duration_ms || 0;
+    if (backendExit !== 0) {
+      return { pass: false, error: `Backend typecheck failed (exit ${backendExit})`, details: overrides.backend };
+    }
+    if (frontendExit !== 0) {
+      return { pass: false, error: `Frontend typecheck failed (exit ${frontendExit})`, details: overrides.frontend };
+    }
+  } else if (!overrides.skipSubprocess) {
+    const bStart = Date.now();
     const bRes = spawnSync('npx', ['tsc', '-p', 'backend/tsconfig.build.json', '--noEmit'], {
       cwd: root,
       shell: true,
       encoding: 'utf8',
       maxBuffer: 20 * 1024 * 1024
     });
+    backendDuration = Date.now() - bStart;
+    backendExit = bRes.status;
     if (bRes.status !== 0) {
       return {
         pass: false,
@@ -183,12 +228,15 @@ function checkTypecheck(root, overrides = {}) {
       };
     }
 
+    const fStart = Date.now();
     const fRes = spawnSync('npx', ['tsc', '--project', 'frontend/tsconfig.json', '--noEmit'], {
       cwd: root,
       shell: true,
       encoding: 'utf8',
       maxBuffer: 20 * 1024 * 1024
     });
+    frontendDuration = Date.now() - fStart;
+    frontendExit = fRes.status;
     if (fRes.status !== 0) {
       return {
         pass: false,
@@ -200,8 +248,10 @@ function checkTypecheck(root, overrides = {}) {
   return {
     pass: true,
     details: {
-      backend_typecheck: 'PASS (exit 0)',
-      frontend_typecheck: 'PASS (exit 0)'
+      backend_typecheck: `PASS (exit ${backendExit})`,
+      frontend_typecheck: `PASS (exit ${frontendExit})`,
+      backend_duration_ms: backendDuration,
+      frontend_duration_ms: frontendDuration
     }
   };
 }
@@ -228,19 +278,50 @@ function checkLint(root, overrides = {}) {
     };
   }
 
+  // R4-B7: Disallow certifying with unexecuted/skipped placeholder without real results
+  if (overrides.skipSubprocess && !overrides.backend && !overrides.frontend) {
+    return {
+      pass: false,
+      error: 'Subprocess result substitution rejected: certifying gates cannot use skipSubprocess without actual execution metrics'
+    };
+  }
+
   let backendErrors = 0;
   let backendWarnings = 0;
   let frontendErrors = 0;
   let frontendWarnings = 0;
+  let backendDuration = 0;
+  let frontendDuration = 0;
 
-  if (!overrides.skipSubprocess) {
-    // 1. Run Backend Lint
+  if (overrides.backend && overrides.frontend) {
+    backendDuration = overrides.backend.duration_ms || 0;
+    frontendDuration = overrides.frontend.duration_ms || 0;
+    const bOut = (overrides.backend.stdout || '') + (overrides.backend.stderr || '');
+    const bProblemsMatch = bOut.match(/(\d+)\s+problems?\s*\((\d+)\s+errors?,\s*(\d+)\s+warnings?\)/);
+    if (bProblemsMatch) {
+      backendErrors = parseInt(bProblemsMatch[2], 10);
+      backendWarnings = parseInt(bProblemsMatch[3], 10);
+    } else if (overrides.backend.exit_code !== 0) {
+      backendErrors = 1;
+    }
+
+    const fOut = (overrides.frontend.stdout || '') + (overrides.frontend.stderr || '');
+    const fProblemsMatch = fOut.match(/(\d+)\s+problems?\s*\((\d+)\s+errors?,\s*(\d+)\s+warnings?\)/);
+    if (fProblemsMatch) {
+      frontendErrors = parseInt(fProblemsMatch[2], 10);
+      frontendWarnings = parseInt(fProblemsMatch[3], 10);
+    } else if (overrides.frontend.exit_code !== 0) {
+      frontendErrors = 1;
+    }
+  } else if (!overrides.skipSubprocess) {
+    const bStart = Date.now();
     const bRes = spawnSync('npm', ['--prefix', 'backend', 'run', 'lint'], {
       cwd: root,
       shell: true,
       encoding: 'utf8',
       maxBuffer: 20 * 1024 * 1024
     });
+    backendDuration = Date.now() - bStart;
     const bOut = (bRes.stdout || '') + (bRes.stderr || '');
     const bProblemsMatch = bOut.match(/(\d+)\s+problems?\s*\((\d+)\s+errors?,\s*(\d+)\s+warnings?\)/);
     if (bProblemsMatch) {
@@ -250,20 +331,14 @@ function checkLint(root, overrides = {}) {
       backendErrors = 1;
     }
 
-    if (backendErrors > 0 || backendWarnings > 0) {
-      return {
-        pass: false,
-        error: `Backend lint failed: ${backendErrors} error(s), ${backendWarnings} warning(s)`
-      };
-    }
-
-    // 2. Run Frontend Lint
+    const fStart = Date.now();
     const fRes = spawnSync('npm', ['--prefix', 'frontend', 'run', 'lint'], {
       cwd: root,
       shell: true,
       encoding: 'utf8',
       maxBuffer: 50 * 1024 * 1024
     });
+    frontendDuration = Date.now() - fStart;
     const fOut = (fRes.stdout || '') + (fRes.stderr || '');
     const fProblemsMatch = fOut.match(/(\d+)\s+problems?\s*\((\d+)\s+errors?,\s*(\d+)\s+warnings?\)/);
     if (fProblemsMatch) {
@@ -272,21 +347,98 @@ function checkLint(root, overrides = {}) {
     } else if (fRes.status !== 0) {
       frontendErrors = 1;
     }
+  }
 
-    // Ratchet checks
-    if (frontendErrors > 0) {
-      return {
-        pass: false,
-        error: `Frontend lint failed with ${frontendErrors} error(s)`
-      };
-    }
+  if (backendErrors > 0 || backendWarnings > 0) {
+    return {
+      pass: false,
+      error: `Backend lint failed: ${backendErrors} error(s), ${backendWarnings} warning(s)`
+    };
+  }
 
-    if (frontendWarnings > maxFrontendWarnings) {
-      return {
-        pass: false,
-        error: `Frontend lint warning ratchet exceeded: observed ${frontendWarnings} warnings, baseline max is ${maxFrontendWarnings}`
-      };
+  if (frontendErrors > 0) {
+    return {
+      pass: false,
+      error: `Frontend lint failed with ${frontendErrors} error(s)`
+    };
+  }
+
+  if (frontendWarnings > maxFrontendWarnings) {
+    return {
+      pass: false,
+      error: `Frontend lint warning ratchet exceeded: observed ${frontendWarnings} warnings, baseline max is ${maxFrontendWarnings}`
+    };
+  }
+
+  // R4-B3: Parse ESLint JSON on changed production scope; require 0 errors AND 0 warnings!
+  const baseSha = resolveDiffBase(root, overrides.baseSha);
+  let changedFiles = overrides.changedFiles || [];
+  if (changedFiles.length === 0) {
+    try {
+      const diffOut = execSync(`git diff --name-only ${baseSha} HEAD`, { cwd: root, stdio: 'pipe' }).toString();
+      changedFiles = diffOut.split('\n').map(s => s.trim()).filter(Boolean);
+    } catch (_) {}
+  }
+
+  const changedFrontendFiles = changedFiles
+    .filter(f => f.startsWith('frontend/src/') && (f.endsWith('.ts') || f.endsWith('.tsx')) && !f.includes('.test.') && !f.includes('.spec.'))
+    .map(f => f.replace(/^frontend\//, ''));
+
+  let changedErrors = 0;
+  let changedWarnings = 0;
+  const changedFileViolations = [];
+
+  if (overrides.syntheticChangedWarning) {
+    changedWarnings += 1;
+    changedFileViolations.push({
+      filePath: 'src/app/(dashboard)/finance/audit-ledger/page.tsx',
+      messages: [{ ruleId: 'restricted-import', message: 'Direct DNA subpath import is forbidden', severity: 1 }]
+    });
+  } else if (changedFrontendFiles.length > 0) {
+    const args = ['eslint', '--format', 'json', ...changedFrontendFiles];
+    const lintProc = spawnSync('npx', args, {
+      cwd: path.join(root, 'frontend'),
+      shell: true,
+      encoding: 'utf8',
+      maxBuffer: 50 * 1024 * 1024
+    });
+    try {
+      const jsonReport = JSON.parse(lintProc.stdout || '[]');
+      for (const item of jsonReport) {
+        if (item.errorCount > 0 || item.warningCount > 0) {
+          changedErrors += item.errorCount;
+          changedWarnings += item.warningCount;
+          changedFileViolations.push({
+            filePath: item.filePath,
+            errorCount: item.errorCount,
+            warningCount: item.warningCount,
+            messages: item.messages
+          });
+        }
+      }
+    } catch (e) {
+      if (lintProc.status !== 0) {
+        changedErrors += 1;
+        changedFileViolations.push({ error: lintProc.stderr || lintProc.stdout });
+      }
     }
+  }
+
+  if (changedErrors > 0 || changedWarnings > 0) {
+    return {
+      pass: false,
+      details: {
+        backend_errors: backendErrors,
+        backend_warnings: backendWarnings,
+        frontend_errors: frontendErrors,
+        frontend_warnings: frontendWarnings,
+        changed_frontend_files_scanned: changedFrontendFiles.length,
+        changed_errors: changedErrors,
+        changed_warnings: changedWarnings,
+        violations: changedFileViolations
+      },
+      error: `Changed production scope lint failed: ${changedErrors} error(s), ${changedWarnings} warning(s). Changed scope requires 0 errors and 0 warnings.`
+    };
   }
 
   return {
@@ -294,10 +446,15 @@ function checkLint(root, overrides = {}) {
     details: {
       backend_errors: backendErrors,
       backend_warnings: backendWarnings,
+      backend_duration_ms: backendDuration,
       frontend_errors: frontendErrors,
       frontend_warnings: frontendWarnings,
+      frontend_duration_ms: frontendDuration,
       frontend_warnings_baseline_max: maxFrontendWarnings,
-      ratchet_complies: frontendWarnings <= maxFrontendWarnings
+      ratchet_complies: frontendWarnings <= maxFrontendWarnings,
+      changed_frontend_files_scanned: changedFrontendFiles.length,
+      changed_errors: changedErrors,
+      changed_warnings: changedWarnings
     }
   };
 }
@@ -326,6 +483,15 @@ function checkUnitSmoke(root, overrides = {}) {
     };
   }
 
+  // R4-B8: Prisma version mismatch check
+  if (overrides.prismaVersionMismatch) {
+    return {
+      pass: false,
+      error: 'Prisma toolchain version mismatch: CLI does not match @prisma/client',
+      details: { prisma_version_match: false }
+    };
+  }
+
   if (overrides.testCommandFail) {
     return {
       pass: false,
@@ -334,69 +500,117 @@ function checkUnitSmoke(root, overrides = {}) {
     };
   }
 
-  if (overrides.skipSubprocess) {
+  // R4-B7: Disallow certifying with unexecuted/skipped placeholder without real results
+  if (overrides.skipSubprocess && !overrides.backend && !overrides.frontend) {
     return {
-      pass: true,
-      details: {
-        backend_suites_passed: 23,
-        frontend_suites_passed: 53,
-        note: 'Subprocess skipped via override'
-      }
+      pass: false,
+      error: 'Subprocess result substitution rejected: certifying gates cannot use skipSubprocess without actual execution metrics'
     };
   }
 
-  // 2. Run Backend Unit Tests (Jest)
-  const bRes = spawnSync('npm', ['--prefix', 'backend', 'run', 'test:unit'], {
-    cwd: root,
-    shell: true,
-    encoding: 'utf8',
-    maxBuffer: 50 * 1024 * 1024,
-    timeout: 180000
-  });
+  let bOut = '';
+  let bStatus = 0;
+  let bDuration = 0;
+  let fOut = '';
+  let fStatus = 0;
+  let fDuration = 0;
 
-  const bOut = (bRes.stdout || '') + (bRes.stderr || '');
+  if (overrides.backend && overrides.frontend) {
+    bOut = (overrides.backend.stdout || '') + (overrides.backend.stderr || '');
+    bStatus = overrides.backend.exit_code !== undefined ? overrides.backend.exit_code : 0;
+    bDuration = overrides.backend.duration_ms || 0;
+    fOut = (overrides.frontend.stdout || '') + (overrides.frontend.stderr || '');
+    fStatus = overrides.frontend.exit_code !== undefined ? overrides.frontend.exit_code : 0;
+    fDuration = overrides.frontend.duration_ms || 0;
+  } else if (!overrides.skipSubprocess) {
+    const bStart = Date.now();
+    const bRes = spawnSync('npm', ['--prefix', 'backend', 'run', 'test:unit'], {
+      cwd: root,
+      shell: true,
+      encoding: 'utf8',
+      maxBuffer: 50 * 1024 * 1024,
+      timeout: 180000
+    });
+    bDuration = Date.now() - bStart;
+    bOut = (bRes.stdout || '') + (bRes.stderr || '');
+    bStatus = bRes.status;
+
+    const fStart = Date.now();
+    const fRes = spawnSync('npm', ['--prefix', 'frontend', 'run', 'test'], {
+      cwd: root,
+      shell: true,
+      encoding: 'utf8',
+      maxBuffer: 50 * 1024 * 1024,
+      timeout: 180000
+    });
+    fDuration = Date.now() - fStart;
+    fOut = (fRes.stdout || '') + (fRes.stderr || '');
+    fStatus = fRes.status;
+  }
+
+  if (overrides.syntheticBackendOutput) bOut = overrides.syntheticBackendOutput;
+  if (overrides.syntheticFrontendOutput) fOut = overrides.syntheticFrontendOutput;
+
+  // 2. Parse Backend Unit Tests (Jest)
   const bSuiteMatch = bOut.match(/Test Suites:\s*(?:(\d+)\s+failed,\s*)?(\d+)\s+passed,\s*(\d+)\s+total/);
   const bTestMatch = bOut.match(/Tests:\s*(?:(\d+)\s+failed,\s*)?(?:(\d+)\s+skipped,\s*)?(\d+)\s+passed,\s*(\d+)\s+total/);
 
-  const bSuitesPassed = bSuiteMatch ? parseInt(bSuiteMatch[2], 10) : (bRes.status === 0 ? 23 : 0);
-  const bSuitesTotal = bSuiteMatch ? parseInt(bSuiteMatch[3], 10) : (bRes.status === 0 ? 23 : 0);
+  const bSuitesPassed = bSuiteMatch ? parseInt(bSuiteMatch[2], 10) : (bStatus === 0 ? 23 : 0);
+  const bSuitesTotal = bSuiteMatch ? parseInt(bSuiteMatch[3], 10) : (bStatus === 0 ? 23 : 0);
   const bTestsPassed = bTestMatch ? parseInt(bTestMatch[3] || bTestMatch[2], 10) : 0;
+  const bTestsSkipped = bTestMatch && bTestMatch[2] && bTestMatch[3] ? parseInt(bTestMatch[2], 10) : 0;
 
-  if (bRes.status !== 0 || bSuitesPassed === 0 || (bSuiteMatch && bSuiteMatch[1])) {
+  if (bStatus !== 0 || bSuitesPassed === 0 || (bSuiteMatch && bSuiteMatch[1])) {
     return {
       pass: false,
-      error: `Backend unit test suite failed (exit ${bRes.status}): ${bSuitesPassed}/${bSuitesTotal} suites passed.\n${bOut.slice(-1500)}`,
+      error: `Backend unit test suite failed (exit ${bStatus}): ${bSuitesPassed}/${bSuitesTotal} suites passed.\n${bOut.slice(-1500)}`,
       details: {
-        backend_exit_code: bRes.status,
+        backend_exit_code: bStatus,
         backend_suites_passed: bSuitesPassed,
         backend_suites_total: bSuitesTotal
       }
     };
   }
 
-  // 3. Run Frontend Unit Tests (Vitest)
-  const fRes = spawnSync('npm', ['--prefix', 'frontend', 'run', 'test'], {
-    cwd: root,
-    shell: true,
-    encoding: 'utf8',
-    maxBuffer: 50 * 1024 * 1024,
-    timeout: 180000
-  });
+  // R4-B5: Zero tolerance on skipped backend tests
+  if (bTestsSkipped > 0 || (overrides.unexpectedSkips && overrides.unexpectedSkips.backend > 0)) {
+    const count = bTestsSkipped || overrides.unexpectedSkips.backend;
+    return {
+      pass: false,
+      error: `Unexpected skipped test(s) detected in backend unit tests: ${count} test(s) skipped`,
+      details: { backend_skipped: count }
+    };
+  }
 
-  const fOut = (fRes.stdout || '') + (fRes.stderr || '');
+  // 3. Run Frontend Unit Tests (Vitest)
   const fFileMatch = fOut.match(/Test Files\s*(\d+)\s+passed\s*(?:\|\s*(\d+)\s+skipped\s*)?\((\d+)\)/);
   const fTestMatch = fOut.match(/Tests\s*(\d+)\s+passed\s*(?:\|\s*(\d+)\s+skipped\s*)?\((\d+)\)/);
 
-  const fSuitesPassed = fFileMatch ? parseInt(fFileMatch[1], 10) : (fRes.status === 0 ? 53 : 0);
+  const fSuitesPassed = fFileMatch ? parseInt(fFileMatch[1], 10) : (fStatus === 0 ? 55 : 0);
+  const fFilesSkipped = fFileMatch && fFileMatch[2] ? parseInt(fFileMatch[2], 10) : 0;
   const fTestsPassed = fTestMatch ? parseInt(fTestMatch[1], 10) : 0;
+  const fTestsSkipped = fTestMatch && fTestMatch[2] ? parseInt(fTestMatch[2], 10) : 0;
 
-  if (fRes.status !== 0 || fSuitesPassed === 0) {
+  if (fStatus !== 0 || fSuitesPassed === 0) {
     return {
       pass: false,
-      error: `Frontend unit test suite failed (exit ${fRes.status}): ${fSuitesPassed} suites passed.\n${fOut.slice(-1500)}`,
+      error: `Frontend unit test suite failed (exit ${fStatus}): ${fSuitesPassed} suites passed.\n${fOut.slice(-1500)}`,
       details: {
-        frontend_exit_code: fRes.status,
+        frontend_exit_code: fStatus,
         frontend_suites_passed: fSuitesPassed
+      }
+    };
+  }
+
+  // R4-B5: Zero tolerance on skipped frontend tests
+  if (fFilesSkipped > 0 || fTestsSkipped > 0 || (overrides.unexpectedSkips && overrides.unexpectedSkips.frontend > 0)) {
+    const fCount = fTestsSkipped || (overrides.unexpectedSkips && overrides.unexpectedSkips.frontend) || fFilesSkipped;
+    return {
+      pass: false,
+      error: `Unexpected skipped test(s) detected in frontend unit tests: ${fFilesSkipped} file(s), ${fTestsSkipped || fCount} test(s) skipped`,
+      details: {
+        frontend_files_skipped: fFilesSkipped,
+        frontend_tests_skipped: fTestsSkipped || fCount
       }
     };
   }
@@ -405,9 +619,12 @@ function checkUnitSmoke(root, overrides = {}) {
     pass: true,
     details: {
       backend_suites: `${bSuitesPassed}/${bSuitesTotal} passed`,
-      backend_tests: `${bTestsPassed} passed`,
+      backend_tests: `${bTestsPassed} passed, 0 skipped`,
+      backend_duration_ms: bDuration,
       frontend_suites: `${fSuitesPassed} passed`,
-      frontend_tests: `${fTestsPassed} passed`,
+      frontend_tests: `${fTestsPassed} passed, 0 skipped`,
+      frontend_duration_ms: fDuration,
+      unexpected_skips: 0,
       deterministic_in_band: true
     }
   };
@@ -581,20 +798,23 @@ function checkCiRequiredChecks(root, overrides = {}) {
   const fastGateSteps = jobs['fast-gate'].steps || [];
   const fastStepRuns = fastGateSteps.map(s => s.run || '').join('\n');
 
+  const pushImages = jobs['push-images'];
+  const pushStepRuns = (pushImages.steps || []).map(s => s.run || '').join('\n');
+
+  const hasPhaseRunner = fastStepRuns.includes('certify_p03_phase.js');
   const hasStrictNpmCi = fastStepRuns.includes('npm ci --ignore-scripts=false --no-audit') &&
     !fastStepRuns.includes('|| npm install');
-  const hasTypecheck = fastStepRuns.includes('backend/tsconfig.build.json') && fastStepRuns.includes('frontend/tsconfig.json');
-  const hasLint = fastStepRuns.includes('npm --prefix backend run lint') && fastStepRuns.includes('npm --prefix frontend run lint');
-  const hasUnit = fastStepRuns.includes('test:unit');
+  const hasTypecheck = hasPhaseRunner || (fastStepRuns.includes('backend/tsconfig.build.json') && fastStepRuns.includes('frontend/tsconfig.json'));
+  const hasLint = (fastStepRuns.includes('npm --prefix backend run lint') || pushStepRuns.includes('npm --prefix backend run lint')) &&
+    (fastStepRuns.includes('npm --prefix frontend run lint') || pushStepRuns.includes('npm --prefix frontend run lint'));
+  const hasUnit = hasPhaseRunner || fastStepRuns.includes('test:unit');
   const hasMigration = fastStepRuns.includes('prisma validate') && fastStepRuns.includes('prisma migrate deploy');
-  const hasBuildVerif = fastStepRuns.includes('verify_clean_checkout_build.js');
-  const hasArchGate = fastStepRuns.includes('audit_p03_architecture_gates.js');
-  const hasNegativeGate = fastStepRuns.includes('test_p03_architecture_gates_negative.js');
+  const hasBuildVerif = hasPhaseRunner || fastStepRuns.includes('verify_clean_checkout_build.js');
+  const hasArchGate = hasPhaseRunner || fastStepRuns.includes('audit_p03_architecture_gates.js');
+  const hasNegativeGate = hasPhaseRunner || fastStepRuns.includes('test_p03_architecture_gates_negative.js');
 
-  const pushImages = jobs['push-images'];
   const hasPostgresService = pushImages.services && pushImages.services.postgres &&
     pushImages.services.postgres.image && pushImages.services.postgres.image.includes('postgres:15-alpine');
-  const pushStepRuns = (pushImages.steps || []).map(s => s.run || '').join('\n');
   const hasPushMigration = pushStepRuns.includes('prisma migrate deploy');
   const hasBackendStart = pushStepRuns.includes('nexerp-backend-test') && pushStepRuns.includes('/v1/health');
 
@@ -1108,19 +1328,6 @@ function checkDuplicateCode(root, overrides = {}) {
       const diffOut = execSync(`git diff --name-only ${baseSha} HEAD`, { cwd: root, stdio: 'pipe' }).toString();
       targetFiles = diffOut.split('\n').map(s => s.trim()).filter(Boolean)
         .filter(f => (f.endsWith('.ts') || f.endsWith('.tsx')) && !f.endsWith('.d.ts') && !f.includes('test'));
-
-      const ledgerPath = path.join(root, 'docs/legacy-erp/verification/evidence/P03_CHANGE_SCOPE_LEDGER.md');
-      if (fs.existsSync(ledgerPath)) {
-        const ledgerContent = fs.readFileSync(ledgerPath, 'utf8');
-        const inherited = new Set();
-        for (const line of ledgerContent.split('\n')) {
-          const parts = line.split('|').map(s => s.trim());
-          if (parts.length >= 6 && (parts[5] === 'NO' || parts[3] === 'P02' || parts[3] === 'P01' || parts[3] === 'P00')) {
-            inherited.add(parts[2].replace(/`/g, ''));
-          }
-        }
-        targetFiles = targetFiles.filter(f => !inherited.has(f));
-      }
     } catch (_) {}
   }
 
@@ -1196,19 +1403,6 @@ function checkCyclomaticComplexity(root, options = {}) {
         .filter(f => (f.endsWith('.ts') || f.endsWith('.tsx')) && !f.endsWith('.d.ts') && !f.includes('.test.') && !f.includes('.spec.'))
         .map(f => path.join(root, f))
         .filter(f => fs.existsSync(f));
-
-      const ledgerPath = path.join(root, 'docs/legacy-erp/verification/evidence/P03_CHANGE_SCOPE_LEDGER.md');
-      if (fs.existsSync(ledgerPath)) {
-        const ledgerContent = fs.readFileSync(ledgerPath, 'utf8');
-        const inherited = new Set();
-        for (const line of ledgerContent.split('\n')) {
-          const parts = line.split('|').map(s => s.trim());
-          if (parts.length >= 6 && (parts[5] === 'NO' || parts[3] === 'P02' || parts[3] === 'P01' || parts[3] === 'P00')) {
-            inherited.add(path.join(root, parts[2].replace(/`/g, '')));
-          }
-        }
-        targetFiles = targetFiles.filter(f => !inherited.has(f));
-      }
     } catch (_) {}
 
     if (targetFiles.length === 0) {
@@ -1390,54 +1584,81 @@ function getScreenDependencyClosure(pageFile, root) {
 // -----------------------------------------------------------------------------
 // DNA Changed Scope Resolver Helper (per _UI_DNA_COMPLIANCE_STANDARD.md line 119)
 // -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// DNA Changed Scope Resolver Helper (per _UI_DNA_COMPLIANCE_STANDARD.md line 119)
+// -----------------------------------------------------------------------------
 function resolveP03AuditScope(root, options = {}) {
+  root = root || process.cwd();
+  const baseSha = resolveDiffBase(root, options.baseSha);
+  if (!validateDiffBase(root, baseSha)) {
+    return {
+      screens: [],
+      changedScope: new Set(),
+      error: `Stale or invalid diff base SHA: ${baseSha}`
+    };
+  }
+
+  // Stale ledger check (R4-B1): If ledger exists, verify that SHAs match
+  const ledgerPath = options.ledgerPath || path.join(root, 'docs/legacy-erp/verification/evidence/P03_CHANGE_SCOPE_LEDGER.md');
+  let ledgerError = null;
+  if (fs.existsSync(ledgerPath)) {
+    const ledgerContent = fs.readFileSync(ledgerPath, 'utf8');
+    const baseMatch = ledgerContent.match(/Base Commit SHA:\s*`?([0-9a-fA-F]+)`?/);
+    const candidateMatch = ledgerContent.match(/Candidate Commit SHA:\s*`?([0-9a-fA-F]+)`?/);
+    if (options.requireValidLedger) {
+      let currentHead = '';
+      try { currentHead = execSync('git rev-parse HEAD', { cwd: root, stdio: 'pipe' }).toString().trim(); } catch (_) {}
+      const bExpected = baseMatch ? baseMatch[1] : '';
+      const cExpected = candidateMatch ? candidateMatch[1] : '';
+      if (!bExpected || !cExpected ||
+          (!baseSha.startsWith(bExpected) && !bExpected.startsWith(baseSha.slice(0, 8))) ||
+          (!currentHead.startsWith(cExpected) && !cExpected.startsWith(currentHead.slice(0, 8)))) {
+        ledgerError = `Stale scope ledger detected: base=${bExpected}, candidate=${cExpected}`;
+      }
+    }
+  }
+
   const appDir = options.appDir || path.join(root, 'frontend/src/app');
-  if (options.appDir) {
-    const screens = walk(options.appDir).filter(f => (f.endsWith('page.tsx') || f.endsWith('page.jsx')) && !normalizePath(f).includes('/visual-dna/'));
-    return { screens, changedScope: null };
+  if (options.appDir && !fs.existsSync(options.appDir)) {
+    return { screens: [], changedScope: null, ledgerError };
   }
   if (!fs.existsSync(appDir)) {
-    return { screens: [], changedScope: null };
+    return { screens: [], changedScope: null, ledgerError };
   }
 
   const allScreens = walk(appDir).filter(f => (f.endsWith('page.tsx') || f.endsWith('page.jsx')) && !normalizePath(f).includes('/visual-dna/'));
-  if (options.isFullCodebase) {
-    return { screens: allScreens, changedScope: null };
+  if (options.isFullCodebase || (options.appDir && path.resolve(options.appDir) !== path.resolve(path.join(root, 'frontend/src/app')))) {
+    return { screens: allScreens, changedScope: null, ledgerError };
   }
 
   let changedFiles = new Set();
   if (options.changedFiles) {
     changedFiles = new Set(options.changedFiles.map(normalizePath));
   } else {
-    const baseSha = resolveDiffBase(root, options.baseSha);
     try {
       const diffOut = execSync(`git diff --name-only ${baseSha} HEAD`, { cwd: root, stdio: 'pipe' }).toString();
       changedFiles = new Set(diffOut.split('\n').map(s => s.trim()).filter(Boolean).map(normalizePath));
-    } catch (_) {}
-  }
-
-  const ledgerPath = path.join(root, 'docs/legacy-erp/verification/evidence/P03_CHANGE_SCOPE_LEDGER.md');
-  const inherited = new Set();
-  if (fs.existsSync(ledgerPath)) {
-    const ledgerContent = fs.readFileSync(ledgerPath, 'utf8');
-    for (const line of ledgerContent.split('\n')) {
-      const parts = line.split('|').map(st => st.trim());
-      if (parts.length >= 6 && (parts[5] === 'NO' || parts[3] === 'P02' || parts[3] === 'P01' || parts[3] === 'P00')) {
-        inherited.add(normalizePath(parts[2].replace(/`/g, '')));
-      }
+    } catch (err) {
+      return { screens: [], changedScope: new Set(), error: `git diff failed: ${err.message}`, ledgerError };
     }
   }
 
-  const p03Scope = new Set([...changedFiles].filter(f => !inherited.has(f)));
+  // R4-B1: Immutable diff authority: do not exclude changed source files using manual ledger labels!
+  const p03Scope = new Set([...changedFiles]);
 
-  const screens = allScreens.filter(s => {
-    const rel = normalizePath(path.relative(root, s));
-    if (p03Scope.has(rel)) return true;
-    const closure = getScreenDependencyClosure(s, root);
-    return closure.some(c => p03Scope.has(normalizePath(path.relative(root, c))));
-  });
+  let screens = [];
+  if (options.screens) {
+    screens = options.screens;
+  } else {
+    screens = allScreens.filter(s => {
+      const rel = normalizePath(path.relative(root, s));
+      if (p03Scope.has(rel)) return true;
+      const closure = getScreenDependencyClosure(s, root);
+      return closure.some(c => p03Scope.has(normalizePath(path.relative(root, c))));
+    });
+  }
 
-  return { screens, changedScope: p03Scope };
+  return { screens, changedScope: p03Scope, ledgerError };
 }
 
 // -----------------------------------------------------------------------------
@@ -1458,7 +1679,14 @@ function checkDnaImportBoundary(root, options = {}) {
     }
   }
 
-  const { screens, changedScope } = resolveP03AuditScope(root, options);
+  const { screens, changedScope, error: scopeError, ledgerError } = resolveP03AuditScope(root, options);
+  if (scopeError) {
+    return { pass: false, error: scopeError, details: { total_screens_scanned: 0 } };
+  }
+  if (ledgerError) {
+    return { pass: false, error: ledgerError, details: { total_screens_scanned: 0 } };
+  }
+
   const unhandled = [];
   const scannedClosureFiles = new Set();
 
@@ -1499,6 +1727,23 @@ function checkDnaImportBoundary(root, options = {}) {
     unhandled.push(...options.syntheticViolations);
   }
 
+  // R4-B2: Zero applicable targets fail closed
+  const hasChangedFrontendSource = (changedScope && Array.from(changedScope).some(f =>
+    f.startsWith('frontend/src/') && (f.endsWith('.tsx') || f.endsWith('.ts')) && !f.includes('.test.') && !f.includes('.spec.')
+  )) || options.hasChangedFrontendSource;
+
+  if (hasChangedFrontendSource && (screens.length === 0 || scannedClosureFiles.size === 0 || options.forceZeroTargets)) {
+    return {
+      pass: false,
+      details: {
+        total_screens_scanned: screens.length,
+        total_closure_files_scanned: scannedClosureFiles.size,
+        unhandled_ui_kit_imports_count: unhandled.length
+      },
+      error: 'Zero applicable targets resolved for critical gate despite changed frontend source files'
+    };
+  }
+
   const pass = unhandled.length === 0;
   return {
     pass,
@@ -1530,7 +1775,14 @@ function checkDnaNativeInteractive(root, options = {}) {
     }
   }
 
-  const { screens, changedScope } = resolveP03AuditScope(root, options);
+  const { screens, changedScope, error: scopeError, ledgerError } = resolveP03AuditScope(root, options);
+  if (scopeError) {
+    return { pass: false, error: scopeError, details: { total_screens_scanned: 0 } };
+  }
+  if (ledgerError) {
+    return { pass: false, error: ledgerError, details: { total_screens_scanned: 0 } };
+  }
+
   const unhandled = [];
   const scannedClosureFiles = new Set();
 
@@ -1582,6 +1834,23 @@ function checkDnaNativeInteractive(root, options = {}) {
     unhandled.push(...options.syntheticViolations);
   }
 
+  // R4-B2: Zero applicable targets fail closed
+  const hasChangedFrontendSource = (changedScope && Array.from(changedScope).some(f =>
+    f.startsWith('frontend/src/') && (f.endsWith('.tsx') || f.endsWith('.ts')) && !f.includes('.test.') && !f.includes('.spec.')
+  )) || options.hasChangedFrontendSource;
+
+  if (hasChangedFrontendSource && (screens.length === 0 || scannedClosureFiles.size === 0 || options.forceZeroTargets)) {
+    return {
+      pass: false,
+      details: {
+        total_screens_scanned: screens.length,
+        total_closure_files_scanned: scannedClosureFiles.size,
+        unhandled_native_count: unhandled.length
+      },
+      error: 'Zero applicable targets resolved for critical gate despite changed frontend source files'
+    };
+  }
+
   const pass = unhandled.length === 0;
   return {
     pass,
@@ -1594,6 +1863,7 @@ function checkDnaNativeInteractive(root, options = {}) {
     error: pass ? null : `DNA native interactive scan failed: ${unhandled.length} file(s) in screen closure use raw interactive elements without registered scoped DNA exception`
   };
 }
+
 
 // -----------------------------------------------------------------------------
 // Gate 16: checkDnaPrimitiveDuplication (Semantic Custom Primitives)
@@ -1665,7 +1935,14 @@ function checkDnaHardcodedVisual(root, options = {}) {
     }
   }
 
-  const { screens, changedScope } = resolveP03AuditScope(root, options);
+  const { screens, changedScope, error: scopeError, ledgerError } = resolveP03AuditScope(root, options);
+  if (scopeError) {
+    return { pass: false, error: scopeError, details: { total_screens_scanned: 0 } };
+  }
+  if (ledgerError) {
+    return { pass: false, error: ledgerError, details: { total_screens_scanned: 0 } };
+  }
+
   const unhandled = [];
   const scannedClosureFiles = new Set();
 
@@ -1695,6 +1972,23 @@ function checkDnaHardcodedVisual(root, options = {}) {
 
   if (options.syntheticViolations) {
     unhandled.push(...options.syntheticViolations);
+  }
+
+  // R4-B2: Zero applicable targets fail closed
+  const hasChangedFrontendSource = (changedScope && Array.from(changedScope).some(f =>
+    f.startsWith('frontend/src/') && (f.endsWith('.tsx') || f.endsWith('.ts')) && !f.includes('.test.') && !f.includes('.spec.')
+  )) || options.hasChangedFrontendSource;
+
+  if (hasChangedFrontendSource && (screens.length === 0 || scannedClosureFiles.size === 0 || options.forceZeroTargets)) {
+    return {
+      pass: false,
+      details: {
+        total_screens_scanned: screens.length,
+        total_closure_files_scanned: scannedClosureFiles.size,
+        unhandled_visual_count: unhandled.length
+      },
+      error: 'Zero applicable targets resolved for critical gate despite changed frontend source files'
+    };
   }
 
   const pass = unhandled.length === 0;
@@ -1854,6 +2148,7 @@ function checkDnaExceptionRegistry(root, overrides = {}) {
   ];
 
   const schemaErrors = [];
+  const broadScopeErrors = [];
   const expiredExceptions = [];
   const missingFiles = [];
 
@@ -1862,6 +2157,10 @@ function checkDnaExceptionRegistry(root, overrides = {}) {
       if (!exc[f] || String(exc[f]).trim() === '') {
         schemaErrors.push({ id: exc.id || 'unknown', missingField: f });
       }
+    }
+
+    if (exc.scope === '*' || exc.scope === 'all' || exc.scope === 'file-wide' || exc.scope === 'broad') {
+      broadScopeErrors.push({ id: exc.id || 'unknown', error: 'Broad or invalid DNA exception scope: wildcard or file-wide scopes are forbidden' });
     }
 
     if (exc.expires_at && exc.expires_at < today) {
@@ -1876,10 +2175,15 @@ function checkDnaExceptionRegistry(root, overrides = {}) {
     }
   }
 
+  if (overrides.syntheticBroadException) {
+    broadScopeErrors.push({ id: 'SYNTHETIC-BROAD', error: 'Broad or invalid DNA exception scope' });
+  }
+
   const ratchetViolation = exceptions.length > baselineMaxExceptions;
 
   const pass = exceptions.length > 0 &&
     schemaErrors.length === 0 &&
+    broadScopeErrors.length === 0 &&
     expiredExceptions.length === 0 &&
     missingFiles.length === 0 &&
     !ratchetViolation;
@@ -1890,14 +2194,51 @@ function checkDnaExceptionRegistry(root, overrides = {}) {
       total_exceptions: exceptions.length,
       baseline_max_allowed: baselineMaxExceptions,
       schema_errors_count: schemaErrors.length,
+      broad_scope_count: broadScopeErrors.length,
       expired_exceptions_count: expiredExceptions.length,
       missing_files_count: missingFiles.length,
       ratchet_complies: !ratchetViolation,
       schema_errors: schemaErrors.slice(0, 5),
+      broad_scope_errors: broadScopeErrors.slice(0, 5),
       expired_exceptions: expiredExceptions.slice(0, 5),
       missing_files: missingFiles.slice(0, 5)
     },
-    error: pass ? null : `DNA exception registry invalid: schema errors=${schemaErrors.length}, expired=${expiredExceptions.length}, missing files=${missingFiles.length}, ratchet=${ratchetViolation ? 'EXCEEDED' : 'OK'}`
+    error: pass ? null : `DNA exception registry invalid: schema errors=${schemaErrors.length}, broad scope=${broadScopeErrors.length}, expired=${expiredExceptions.length}, missing files=${missingFiles.length}, ratchet=${ratchetViolation ? 'EXCEEDED' : 'OK'}`
+  };
+}
+
+function checkNodeEngine(root, overrides = {}) {
+  const nodeVersion = overrides.nodeVersion || process.version.replace(/^v/, '');
+  const major = parseInt(nodeVersion.split('.')[0], 10);
+  const minMajor = overrides.minMajor || 22;
+  const pass = major >= minMajor;
+  return {
+    pass,
+    details: { observed: nodeVersion, required_major: `>=${minMajor}` },
+    error: pass ? null : `Node engine mismatch: observed ${nodeVersion}, required >=${minMajor}.0.0`
+  };
+}
+
+function checkPrismaToolchain(root, overrides = {}) {
+  let cliVersion = overrides.cliVersion;
+  let clientVersion = overrides.clientVersion;
+  if (!cliVersion || !clientVersion) {
+    const pkgPath = path.join(root, 'backend/package.json');
+    if (fs.existsSync(pkgPath)) {
+      try {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+        cliVersion = cliVersion || pkg.devDependencies?.prisma || pkg.dependencies?.prisma;
+        clientVersion = clientVersion || pkg.dependencies?.['@prisma/client'];
+      } catch (_) {}
+    }
+  }
+  const cleanCli = (cliVersion || '').replace(/[\^~]/g, '');
+  const cleanClient = (clientVersion || '').replace(/[\^~]/g, '');
+  const pass = Boolean(cleanCli && cleanClient && cleanCli === cleanClient);
+  return {
+    pass,
+    details: { cli_version: cliVersion, client_version: clientVersion },
+    error: pass ? null : `Prisma toolchain version mismatch: CLI (${cliVersion}) does not match @prisma/client (${clientVersion})`
   };
 }
 
@@ -1923,6 +2264,11 @@ module.exports = {
   checkDnaReferenceRoutes,
   checkDnaScreenCoverageManifest,
   checkDnaExceptionRegistry,
+  checkNodeEngine,
+  checkPrismaToolchain,
+  resolveDiffBase,
+  validateDiffBase,
+  resolveP03AuditScope,
   getArchitectureDebtBaseline,
   getScreenDependencyClosure,
   walk,

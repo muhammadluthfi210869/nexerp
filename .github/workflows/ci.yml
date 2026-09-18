@@ -51,10 +51,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: "Setup Node.js 20"
+      - name: "Setup Node.js 22"
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: "Deterministic Dependency Installation (npm ci)"
         run: |
@@ -67,30 +67,6 @@ jobs:
           node scripts/security/secret_scan_with_history.js
           node scripts/security/validate_env.js
 
-      - name: "SSOT & Contract Gate (P01)"
-        run: |
-          node scripts/ssot/validate_ssot.js
-
-      - name: "Lifecycle Reconciliation Gate (P02)"
-        run: |
-          node scripts/ssot/audit_lifecycle_reconciliation.js
-          node scripts/ssot/test_lifecycle_reconciliation_negative.js
-
-      - name: "Typecheck (Backend & Frontend)"
-        run: |
-          npx tsc -p backend/tsconfig.build.json --noEmit
-          npx tsc --project frontend/tsconfig.json --noEmit
-
-      - name: "Lint (Backend & Frontend)"
-        run: |
-          npm --prefix backend run lint
-          npm --prefix frontend run lint
-
-      - name: "Unit Smoke Suites (Backend & Frontend)"
-        run: |
-          npm --prefix backend run test:unit
-          npm --prefix frontend run test
-
       - name: "Database Migration Gate (Schema Validate, Generate & Empty DB Rehearsal)"
         env:
           DATABASE_URL: "postgresql://test_user:test_pass@localhost:5432/test_db?schema=public"
@@ -99,17 +75,13 @@ jobs:
           npm --prefix backend run prisma:generate
           npx --prefix backend prisma migrate deploy
 
-      - name: "Production Build Verification"
+      - name: "P03 Phase Certification & Architecture Gates"
         run: |
-          npm --prefix backend run build
-          npm --prefix frontend run build
-          node scripts/ssot/verify_clean_checkout_build.js
-
-      - name: "Architecture & DNA Gates (P03)"
-        run: |
-          node scripts/ssot/audit_p03_architecture_gates.js
-          node scripts/ssot/test_p03_architecture_gates_negative.js
           node scripts/ssot/certify_p03_phase.js
+
+      - name: "Post-Run Source Integrity Check"
+        run: |
+          git diff --exit-code -- . ':(exclude)docs/legacy-erp/verification/evidence/P03_PHASE_CERTIFICATION_RESULT.json'
 
       - name: "Run All Regression & Contract Tests"
         run: |
@@ -149,10 +121,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: "Setup Node.js 20"
+      - name: "Setup Node.js 22"
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: "Deterministic Dependency Installation (npm ci)"
         run: |

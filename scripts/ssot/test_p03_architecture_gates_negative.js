@@ -469,6 +469,107 @@ try {
       'BB-SENTINEL-SURVIVAL: Verification sentinel does not leak to source checkout; workspace remains clean');
   }
 
+  // Scenario BB-DIFF-BASE-STALE: Non-existent/stale diff base commit SHA fails validation
+  {
+    const staleSha = 'deadbeef00001111222233334444555566667777';
+    const isValid = analyzers.validateDiffBase(ROOT, staleSha);
+    const scope = analyzers.resolveP03AuditScope(ROOT, { baseSha: staleSha });
+    assert(!isValid && scope.error && scope.error.includes('Stale or invalid diff base SHA'),
+      'BB-DIFF-BASE-STALE: Non-existent or stale diff base commit SHA fails diff base validation');
+  }
+
+  // Scenario BB-STALE-SCOPE-LEDGER: Stale base or candidate SHA in scope ledger is rejected
+  {
+    const fakeLedger = path.join(tempSandbox, 'P03_STALE_LEDGER.md');
+    fs.writeFileSync(fakeLedger, '# Scope Ledger\nBase Commit SHA: `0000000000000000000000000000000000000000`\nCandidate Commit SHA: `1111111111111111111111111111111111111111`\n', 'utf8');
+    const scope = analyzers.resolveP03AuditScope(ROOT, { ledgerPath: fakeLedger, requireValidLedger: true });
+    assert(Boolean(scope.ledgerError && scope.ledgerError.includes('Stale scope ledger detected')),
+      'BB-STALE-SCOPE-LEDGER: Scope ledger containing mismatched base or candidate SHA is strictly rejected');
+  }
+
+  // Scenario BB-ZERO-APPLICABLE-SCOPE: Applicable scope resulting in zero resolved targets strictly fails closed
+  {
+    const res = analyzers.checkDnaImportBoundary(ROOT, { forceZeroTargets: true });
+    assert(!res.pass && res.error && res.error.includes('Zero applicable targets resolved'),
+      'BB-ZERO-APPLICABLE-SCOPE: Applicable scope resulting in zero resolved targets strictly fails closed');
+  }
+
+  // Scenario BB-CHANGED-LINT-WARNING: ESLint warning in changed production scope strictly fails certification
+  {
+    const res = analyzers.checkLint(ROOT, {
+      backend: { exit_code: 0, duration_ms: 100, stdout: '0 problems' },
+      frontend: { exit_code: 0, duration_ms: 100, stdout: '0 problems' },
+      syntheticChangedWarning: true
+    });
+    assert(!res.pass && res.error && res.error.includes('Changed production scope lint failed') && res.details.changed_warnings > 0,
+      'BB-CHANGED-LINT-WARNING: ESLint warning in changed production scope strictly fails certification');
+  }
+
+  // Scenario BB-BROAD-DNA-EXCEPTION: Broad or wildcard scope in DNA exception registry is strictly rejected
+  {
+    const fakeExceptionsFile = path.join(tempSandbox, 'dna-exceptions-broad.yaml');
+    const broadEntry = `
+- id: DNA-EXC-BROAD-TEST
+  file: frontend/src/app/(dashboard)/finance/audit-ledger/page.tsx
+  rule: DNA_HARDCODED_VISUAL
+  owner: frontend_team
+  rationale: Broad exception rejection test
+  scope: all
+  test: test.js
+  created_at: '2026-09-01'
+  expires_at: '2026-12-31'
+  dna_extension_issue: ISSUE-123
+  approved_by: arb
+`;
+    fs.writeFileSync(fakeExceptionsFile, broadEntry, 'utf8');
+    const res = analyzers.checkDnaExceptionRegistry(ROOT, { exceptionsFile: fakeExceptionsFile });
+    assert(!res.pass && res.details.broad_scope_errors && res.details.broad_scope_errors.length > 0,
+      'BB-BROAD-DNA-EXCEPTION: Broad wildcard or all-encompassing scope in DNA exception is strictly rejected');
+  }
+
+  // Scenario BB-UNEXPECTED-TEST-SKIP: Skipped, pending, or todo test in unit suites strictly fails unit_smoke gate
+  {
+    const res = analyzers.checkUnitSmoke(ROOT, {
+      backend: { exit_code: 0, duration_ms: 100, stdout: 'Test Suites: 23 passed, 23 total\nTests: 1 skipped, 259 passed, 260 total' },
+      frontend: { exit_code: 0, duration_ms: 100, stdout: 'Tests 355 passed (355)' }
+    });
+    assert(!res.pass && res.error && res.error.includes('skipped test(s) detected'),
+      'BB-UNEXPECTED-TEST-SKIP: Skipped, pending, or quarantined test strictly fails unit_smoke gate');
+  }
+
+  // Scenario BB-CI-GENERATED-DIRTY: Working tree dirtiness or generated untracked files fail clean checkout build
+  {
+    const res = analyzers.checkCleanCheckoutBuild(ROOT, {
+      syntheticDirtyFiles: ['tracked_evidence.json']
+    });
+    assert(!res.pass && res.error && res.error.includes('dirty files detected'),
+      'BB-CI-GENERATED-DIRTY: Working tree dirtiness or generated untracked files fail clean checkout build');
+  }
+
+  // Scenario BB-SUBPROCESS-RESULT-SUBSTITUTION: Using skipSubprocess placeholder without real metrics is strictly rejected
+  {
+    const resType = analyzers.checkTypecheck(ROOT, { skipSubprocess: true });
+    const resLint = analyzers.checkLint(ROOT, { skipSubprocess: true });
+    const resUnit = analyzers.checkUnitSmoke(ROOT, { skipSubprocess: true });
+    assert(!resType.pass && !resLint.pass && !resUnit.pass &&
+      resType.error.includes('Subprocess result substitution rejected'),
+      'BB-SUBPROCESS-RESULT-SUBSTITUTION: Using skipSubprocess placeholder without real subprocess execution metrics is strictly rejected');
+  }
+
+  // Scenario BB-NODE-ENGINE-MISMATCH: Node engine version mismatch against pinned >=22 requirement fails engine gate
+  {
+    const res = analyzers.checkNodeEngine(ROOT, { nodeVersion: '20.18.0' });
+    assert(!res.pass && res.error && res.error.includes('Node engine mismatch'),
+      'BB-NODE-ENGINE-MISMATCH: Node engine version mismatch against pinned >=22 requirement fails engine gate');
+  }
+
+  // Scenario BB-PRISMA-VERSION-MISMATCH: Version divergence between Prisma CLI and @prisma/client fails toolchain check
+  {
+    const res = analyzers.checkPrismaToolchain(ROOT, { cliVersion: '7.10.0', clientVersion: '7.9.0' });
+    assert(!res.pass && res.error && res.error.includes('mismatch'),
+      'BB-PRISMA-VERSION-MISMATCH: Version divergence between Prisma CLI and @prisma/client fails toolchain check');
+  }
+
 } finally {
   // Clean up temporary sandbox fixtures
   try {

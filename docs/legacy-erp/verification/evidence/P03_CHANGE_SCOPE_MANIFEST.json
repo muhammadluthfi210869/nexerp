@@ -1,0 +1,494 @@
+{
+  "manifest_version": "1.0.0",
+  "generated_at": "2026-09-18T03:08:04.934Z",
+  "base_commit_sha": "9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb",
+  "candidate_commit_sha": "11ec69d2bcb4c7b62d164e5bfea6ed77a9c4443b",
+  "total_changed_paths": 88,
+  "paths": [
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE/ssot-change.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "applicable_analyzers": [
+        "ci_required_check_test"
+      ]
+    },
+    {
+      "path": "backend/package-lock.json",
+      "applicable_analyzers": [
+        "clean_checkout_build",
+        "unused_export_dependency_scan"
+      ]
+    },
+    {
+      "path": "backend/package.json",
+      "applicable_analyzers": [
+        "clean_checkout_build",
+        "unused_export_dependency_scan"
+      ]
+    },
+    {
+      "path": "backend/prisma/diff_p04.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/seed-fase10-dashboards.js",
+      "applicable_analyzers": [
+        "lint"
+      ]
+    },
+    {
+      "path": "backend/prisma/seed-fase5-warehouse.js",
+      "applicable_analyzers": [
+        "lint"
+      ]
+    },
+    {
+      "path": "backend/prisma/seed-fase6-production.js",
+      "applicable_analyzers": [
+        "lint"
+      ]
+    },
+    {
+      "path": "backend/prisma/seed-fase7-finance.js",
+      "applicable_analyzers": [
+        "lint"
+      ]
+    },
+    {
+      "path": "backend/prisma/seed-fase8-quality.js",
+      "applicable_analyzers": [
+        "lint"
+      ]
+    },
+    {
+      "path": "backend/prisma/seed-fase9-approvals.js",
+      "applicable_analyzers": [
+        "lint"
+      ]
+    },
+    {
+      "path": "backend/scripts/prepare-p04-migration.js",
+      "applicable_analyzers": [
+        "lint"
+      ]
+    },
+    {
+      "path": "backend/test/unit/bussdev.unit-spec.ts",
+      "applicable_analyzers": [
+        "lint",
+        "typecheck",
+        "duplicate_code_scan",
+        "changed_complexity_check",
+        "unit_smoke"
+      ]
+    },
+    {
+      "path": "docs/legacy-erp/process/_FULL_ERP_PRODUCTION_READINESS_ROADMAP.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_ONE_PASS_PHASE_EXECUTION_STANDARD.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_PRODUCTION_PHASE_GATES.yaml",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_SSOT_VALIDATION_REPORT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_p02_test_results.json",
+      "applicable_analyzers": [
+        "unit_smoke"
+      ]
+    },
+    {
+      "path": "docs/legacy-erp/verification/_p03_test_results.json",
+      "applicable_analyzers": [
+        "unit_smoke"
+      ]
+    },
+    {
+      "path": "docs/legacy-erp/verification/_ssot_validation.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P03_CERTIFICATION_RESULT.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P03_CHANGE_SCOPE_LEDGER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P03_PHASE_CERTIFICATION_RESULT.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P03-P03_BATCH_REVERIFICATION_R3_2026-09-18.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P03-P03_BATCH_REVERIFICATION_R4_2026-09-18.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P03_ONE_PASS_REMEDIATION_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/_PHASE_ONE_PASS_PROMPT_TEMPLATE.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/05_master_business_process_blueprint.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/06_implementation_log_financial_gates.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/07_full_stack_integrity_plan.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/2026-09-08-agent-orchestration-design.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/AMI - ACTIVITY WORK - JULI (1).csv",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/Client_Sample_Busdev.csv",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/DATA_DASHBOARD.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/Daily_tracking_RND.csv",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/ERP_BUSINESS_FLOW_GAP.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/ERP_ENTERPRISE_AUDIT_LEDGER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/ERP_FUNCTIONAL_PARITY_MATRIX.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/ERP_INPUT_OUTPUT_LINEAGE.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/ERP_NEW_ADVANCEMENT_MAP.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/ERP_NEW_SYSTEM_INVENTORY.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/ERP_OLD_BUSINESS_FLOW.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/HR.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/KPI_REFERENCE.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/LEGACY_ERP_AUDIT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/LEGACY_ERP_SPEC.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/NEX-Finance-Module-Full-Spec (1).md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/NEX_FINANCE_FINAL_SPEC.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/Project_Monitoring_RND.csv",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/REQUIREMENT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/VPS_DEPLOYMENT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/_RND Tracking AGUSTUS 2026 - Daily Tracking.csv",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/_RND Tracking AGUSTUS 2026 - Project Monitoring.csv",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/database.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/databasev2.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/design-packing.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/input-ouput.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/kil_erp_full_inventory.csv",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/kil_erp_full_inventory_v1.csv",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/kil_erp_full_inventory_v2.csv",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/legalitas.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/production.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/quality_control.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/r&d.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/reference/warehouse.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/verification/_REMEDIATION_LEDGER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/eslint.config.mjs",
+      "applicable_analyzers": [
+        "lint"
+      ]
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/dashboard/__tests__/__snapshots__/commercial.snapshot.test.tsx.snap",
+      "applicable_analyzers": [
+        "unit_smoke"
+      ]
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/dashboard/__tests__/__snapshots__/finance.snapshot.test.tsx.snap",
+      "applicable_analyzers": [
+        "unit_smoke"
+      ]
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/dashboard/__tests__/__snapshots__/fulfillment.snapshot.test.tsx.snap",
+      "applicable_analyzers": [
+        "unit_smoke"
+      ]
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/dashboard/__tests__/__snapshots__/page.snapshot.test.tsx.snap",
+      "applicable_analyzers": [
+        "unit_smoke"
+      ]
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/dashboard/__tests__/__snapshots__/qc.snapshot.test.tsx.snap",
+      "applicable_analyzers": [
+        "unit_smoke"
+      ]
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/dashboard/__tests__/__snapshots__/super-admin.snapshot.test.tsx.snap",
+      "applicable_analyzers": [
+        "unit_smoke"
+      ]
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/audit-ledger/page.tsx",
+      "applicable_analyzers": [
+        "lint",
+        "typecheck",
+        "duplicate_code_scan",
+        "changed_complexity_check",
+        "dna_import_boundary_ast",
+        "dna_native_interactive_scan",
+        "dna_hardcoded_visual_scan",
+        "dna_screen_coverage_manifest"
+      ]
+    },
+    {
+      "path": "frontend/src/components/layout/BaseShell.tsx",
+      "applicable_analyzers": [
+        "lint",
+        "typecheck",
+        "duplicate_code_scan",
+        "changed_complexity_check"
+      ]
+    },
+    {
+      "path": "frontend/src/components/layout/DashboardShell.tsx",
+      "applicable_analyzers": [
+        "lint",
+        "typecheck",
+        "duplicate_code_scan",
+        "changed_complexity_check"
+      ]
+    },
+    {
+      "path": "frontend/src/components/layout/DataTable.tsx",
+      "applicable_analyzers": [
+        "lint",
+        "typecheck",
+        "duplicate_code_scan",
+        "changed_complexity_check"
+      ]
+    },
+    {
+      "path": "frontend/src/components/layout/FormShell.tsx",
+      "applicable_analyzers": [
+        "lint",
+        "typecheck",
+        "duplicate_code_scan",
+        "changed_complexity_check"
+      ]
+    },
+    {
+      "path": "frontend/src/components/layout/ModuleHeader.tsx",
+      "applicable_analyzers": [
+        "lint",
+        "typecheck",
+        "duplicate_code_scan",
+        "changed_complexity_check"
+      ]
+    },
+    {
+      "path": "frontend/src/components/layout/SectionDivider.tsx",
+      "applicable_analyzers": [
+        "lint",
+        "typecheck",
+        "duplicate_code_scan",
+        "changed_complexity_check"
+      ]
+    },
+    {
+      "path": "frontend/src/components/layout/TableShell.tsx",
+      "applicable_analyzers": [
+        "lint",
+        "typecheck",
+        "duplicate_code_scan",
+        "changed_complexity_check"
+      ]
+    },
+    {
+      "path": "frontend/test/production-operations.test.tsx",
+      "applicable_analyzers": [
+        "lint",
+        "typecheck",
+        "unit_smoke"
+      ]
+    },
+    {
+      "path": "frontend/test/production-workorders.test.tsx",
+      "applicable_analyzers": [
+        "lint",
+        "typecheck",
+        "unit_smoke"
+      ]
+    },
+    {
+      "path": "frontend/test/qc-workbench.test.tsx",
+      "applicable_analyzers": [
+        "lint",
+        "typecheck",
+        "unit_smoke"
+      ]
+    },
+    {
+      "path": "scripts/ssot/audit_p03_architecture_gates.js",
+      "applicable_analyzers": [
+        "lint"
+      ]
+    },
+    {
+      "path": "scripts/ssot/certify_p03_phase.js",
+      "applicable_analyzers": [
+        "lint"
+      ]
+    },
+    {
+      "path": "scripts/ssot/lib/p03_analyzers.js",
+      "applicable_analyzers": [
+        "lint"
+      ]
+    },
+    {
+      "path": "scripts/ssot/test_p03_architecture_gates_negative.js",
+      "applicable_analyzers": [
+        "lint",
+        "unit_smoke"
+      ]
+    }
+  ],
+  "screen_closures": {
+    "frontend/src/app/(dashboard)/finance/audit-ledger/page.tsx": [
+      "frontend\\src\\app\\(dashboard)\\finance\\audit-ledger\\page.tsx",
+      "frontend\\src\\components\\layout\\TableShell.tsx",
+      "frontend\\src\\components\\layout\\BaseShell.tsx",
+      "frontend\\src\\components\\layout\\ModuleHeader.tsx"
+    ]
+  },
+  "applicable_analyzers_summary": {
+    "ci_required_check_test": 1,
+    "clean_checkout_build": 2,
+    "unused_export_dependency_scan": 2,
+    "lint": 24,
+    "typecheck": 12,
+    "duplicate_code_scan": 9,
+    "changed_complexity_check": 9,
+    "unit_smoke": 13,
+    "dna_import_boundary_ast": 1,
+    "dna_native_interactive_scan": 1,
+    "dna_hardcoded_visual_scan": 1,
+    "dna_screen_coverage_manifest": 1
+  }
+}

@@ -1,19 +1,9 @@
-import React from "react";
-import { ModuleHeader } from "./ModuleHeader";
+import { BaseShell, type BaseShellProps } from "./BaseShell";
 import { PageTransition } from "./PageTransition";
 
-interface DashboardShellProps {
-  title: string;
-  titleAccent?: string;
-  subtitle?: string;
-  actions?: React.ReactNode;
-  children: React.ReactNode;
-  // Phase-3 per-path checkout: these props were used by phase-3 components.
-  // Kept optional + ignored to preserve their API surface without changing
-  // the visual contract.
+export interface DashboardShellProps extends BaseShellProps {
   variant?: string;
   padding?: string;
-  className?: string;
 }
 
 /**
@@ -21,21 +11,14 @@ interface DashboardShellProps {
  * Enforces consistent vertical rhythm via section-gap.
  * Pages fill content slots — they NEVER control their own spacing.
  */
-export function DashboardShell({ title, titleAccent, subtitle, actions, children }: DashboardShellProps) {
+export function DashboardShell({ children, ...shellProps }: DashboardShellProps) {
   return (
     <PageTransition>
-      <div className="min-h-[calc(100vh-var(--page-py)-var(--page-pb))]">
-        <ModuleHeader
-          title={title}
-          titleAccent={titleAccent}
-          subtitle={subtitle}
-          actions={actions}
-        />
-        <div className="flex flex-col" style={{ gap: 'var(--section-gap)' }}>
+      <BaseShell {...shellProps}>
+        <div className="flex flex-col gap-6">
           {children}
         </div>
-      </div>
+      </BaseShell>
     </PageTransition>
   );
 }
-

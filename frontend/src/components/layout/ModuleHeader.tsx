@@ -1,6 +1,6 @@
 import React from "react";
 
-interface ModuleHeaderProps {
+export interface ModuleHeaderProps {
   title: string;
   titleAccent?: string;
   subtitle?: string;
@@ -13,17 +13,14 @@ interface ModuleHeaderProps {
  */
 export function ModuleHeader({ title, titleAccent, subtitle, actions }: ModuleHeaderProps) {
   return (
-    <header className="flex justify-between items-center border-b border-slate-100 pb-3 mb-[var(--section-gap)]" style={{ marginBottom: 'var(--section-gap)' }}>
+    <header className="flex justify-between items-center border-b border-slate-100 pb-3 mb-6">
       <div>
         <h1 className="text-dashboard-title uppercase">
           {title}{' '}
           {titleAccent && <span className="text-status-action">{titleAccent}</span>}
         </h1>
         {subtitle && (
-          <p 
-            className="font-bold text-slate-400 tracking-tight mt-1.5"
-            style={{ fontSize: 'var(--module-subtitle-size)' }}
-          >
+          <p className="font-bold text-slate-400 text-xs tracking-tight mt-1.5">
             {subtitle}
           </p>
         )}

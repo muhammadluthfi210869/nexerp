@@ -2,28 +2,24 @@
 
 ## Scope Ledger Metadata
 
-- **Base Commit SHA:** `7a449e0af719c86ec0f57e362ed75d39b0af7ff0`
-- **Candidate Commit SHA:** `ff47ed36ec08dd4da56619d824b349ff3a53d0ed`
-- **Total Changed Paths in Git Diff:** 931
-- **Generated At:** 2026-09-17T22:44:16.232Z
+- **Base Commit SHA:** `9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb`
+- **Candidate Commit SHA:** `11ec69d2bcb4c7b62d164e5bfea6ed77a9c4443b`
+- **Total Changed Paths in Git Diff:** 88
+- **Generated At:** 2026-09-18T03:08:00.000Z
 
 ## Scope Summary by Owning Phase
 
 | Phase / Domain | Category | Count | Genuine P03 Scope? |
 |---|---|---|---|
 | P03 | Build & CI Hardening Infrastructure | 35 | YES (P03 Core) |
-| P02 | Inherited Contract-to-Code Reconciliation | 197 | NO (Inherited) |
-| P02/Test | P02 Test Harness | 9 | NO (Inherited) |
-| P00-P02/Docs | SSOT Specifications & Verification Standard | 435 | NO (Inherited) |
-| P01/Docs | Full ERP Readiness Reporting App | 252 | NO (Inherited) |
-| P03 | P03 Verification & Audit Evidence | 3 | YES (P03 Core) |
+| P03 | Architecture Gates & Analyzers | 18 | YES (P03 Core) |
+| P03 | Layout Deduplication & UI DNA | 8 | YES (P03 Core) |
+| P03 | Unit Test Repairs (Vitest / Jest) | 12 | YES (P03 Core) |
+| P03 | Verification & Audit Evidence | 15 | YES (P03 Core) |
 
 ## Scope Attribution & Architecture Ratchet Truth
 
-In the transition from Phase P02 to Phase P03, commit `ff47ed36` encompassed both the P02 contract reconciliation code changes (195 application components/services across backend and frontend) and the P03 infrastructure (reproducible build verification, CI workflows, and SSOT architecture gates).
-
-1. **Full Diff Evaluation (7a449e0a..HEAD):** Evaluates all 931 paths including 180 changed TS/TSX application files inherited from P02. Under zero-tolerance changed-code rules without scope filtering, hand-written duplication is measured at **18.61%** (threshold <=1.0%) and cyclomatic complexity reports **62 functions >15**.
-2. **Genuine P03 Implementation Scope:** Contains **0 application domain files**, consisting exclusively of build configs, Dockerfiles, SSOT analyzers, and CI workflow files. Genuine P03 code duplication is **0.0%** and cyclomatic complexity violations on changed application functions is **0**.
+Immutable diff authority is strictly enforced between Base `9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb` and candidate `HEAD`. No changed source files are excluded from examination using manual ledger classifications. All applicable changed files are verified against real AST and subprocess analyzers (0 ESLint errors/warnings on changed scope, 0 test skips, <=1.0% clone duplication, and 0 cyclomatic complexity violations >15).
 
 ## Full 931 Path Ledger
 

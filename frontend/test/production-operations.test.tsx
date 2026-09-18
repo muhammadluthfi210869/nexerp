@@ -31,6 +31,15 @@ vi.mock('@/components/dna', async (importOriginal) => {
   const Dummy = (props: any) => <>{props?.children}</>;
   const stub: any = {
     useDnaToast: () => ({ toast: () => {}, success: () => {}, error: () => {} }),
+    DnaStatCard: (props: any) => <div data-testid="stat-card">{props?.label || props?.title}</div>,
+    StatCard: (props: any) => <div data-testid="stat-card">{props?.label || props?.title}</div>,
+    DnaTabNav: (props: any) => (
+      <nav>
+        {props?.tabs?.map((t: any) => (
+          <button key={t.id} onClick={() => props?.onChange?.(t.id)}>{t.label}</button>
+        ))}
+      </nav>
+    ),
   };
   for (const key of Object.keys(mod)) {
     if (!stub[key]) stub[key] = Dummy;
@@ -42,6 +51,7 @@ vi.mock('@/components/layout/DashboardShell', async () => {
   const mod = await import('@/components/layout/DashboardShell');
   return {
     ...mod,
+    DashboardShell: ({ children }: any) => <div data-testid="shell">{children}</div>,
     default: ({ children }: any) => <div data-testid="shell">{children}</div>,
   };
 });
@@ -53,12 +63,12 @@ describe('Operations Page', () => {
     vi.clearAllMocks();
   });
 
-  it.skip('renders the page without crashing', () => {
+  it('renders the page without crashing', () => {
     render(<OperationsPage />);
     expect(screen.getByTestId('shell')).toBeDefined();
   });
 
-  it.skip('renders tab navigation', () => {
+  it('renders tab navigation', () => {
     render(<OperationsPage />);
     expect(screen.getByText('Work Orders')).toBeDefined();
     expect(screen.getByText('Mixing')).toBeDefined();
@@ -66,7 +76,7 @@ describe('Operations Page', () => {
     expect(screen.getByText('Packing')).toBeDefined();
   });
 
-  it.skip('renders stat cards', () => {
+  it('renders stat cards', () => {
     render(<OperationsPage />);
     const statCards = screen.getAllByTestId('stat-card');
     expect(statCards.length).toBeGreaterThanOrEqual(3);
