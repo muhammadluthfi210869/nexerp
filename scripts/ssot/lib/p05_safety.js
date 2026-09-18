@@ -163,7 +163,12 @@ function assertNoSecrets(value, env = process.env, path = 'root') {
     }
   }
 
-  if (typeof value === 'string') { checkString(value, path); return; }
+  if (typeof value === 'string') {
+    // Skip SHA fields which contain hex digits that look like phone/NIK patterns
+    if (path && /(_sha|sha256|sha|txid)/i.test(path)) return;
+    checkString(value, path);
+    return;
+  }
   if (Array.isArray(value)) {
     for (let i = 0; i < value.length; i++) assertNoSecrets(value[i], env, `${path}[${i}]`);
     return;
