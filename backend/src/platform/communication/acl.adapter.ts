@@ -41,11 +41,19 @@ const genericAdapter: ParentResourceAclAdapter = {
         where: { userId: parentId }
       });
       if (!scope) return null;
+      const tenantUsers = await prisma.tenantScope.findMany({
+        where: { organizationId: scope.organizationId },
+        select: { userId: true }
+      });
+      const allowedMentionTargets = tenantUsers.map(u => u.userId);
+      if (!allowedMentionTargets.includes(actorUserId)) {
+        allowedMentionTargets.push(actorUserId);
+      }
       return {
         tenantId: scope.organizationId,
         ownerUserId: scope.userId,
         allowedScopes: ['tenant'],
-        allowedMentionTargets: [scope.userId, actorUserId]
+        allowedMentionTargets
       };
     } catch {
       return null;

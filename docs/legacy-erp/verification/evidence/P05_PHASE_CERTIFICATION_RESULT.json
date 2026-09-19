@@ -3,11 +3,11 @@
   "level": "PHASE_GATE",
   "contract_version": "1.0.0",
   "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-  "candidate_sha": "8f5a794dfe211fe14bd0850929f151d1da2b786e",
-  "started_at": "2026-09-19T03:22:51.841Z",
-  "completed_at": "2026-09-19T03:25:53.592Z",
+  "candidate_sha": "31119acd6126a31bf32e3bfd96c2e9ecb095bb31",
+  "started_at": "2026-09-19T03:27:00.968Z",
+  "completed_at": "2026-09-19T03:29:59.883Z",
   "verdict": "FAIL",
   "token": null,
   "result": null,
-  "failure": "PrismaClientKnownRequestError: \nInvalid `prisma.user.createMany()` invocation in\nC:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_gates.js:1023:21\n\n  1020 const foreignUser = crypto.randomUUID();\n  1021 \n  1022 // Seed real parent and users in isolated database\n→ 1023 await prisma.user.createMany(\nThe table `public.users` does not exist in the current database.\n    at vn.handleRequestError (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\@prisma\\client\\runtime\\client.js:65:8643)\n    at vn.handleAndLogRequestError (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\@prisma\\client\\runtime\\client.js:65:7932)\n    at vn.request (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\@prisma\\client\\runtime\\client.js:65:7639)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async a (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\node_modules\\@prisma\\client\\runtime\\client.js:99:6935)\n    at async Object.gateCommunicationAcl (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_gates.js:1023:3)\n    at async Object.certifyP05 (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:287:17)\n    at async main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:105:20)"
+  "failure": "Error: Mention target 4f44873f-49be-4def-9b2e-0462543dc3a4 is unauthorized in this context\n    at CommunicationAclService.createNoteWithMentions (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\dist\\platform\\communication\\acl.adapter.js:233:33)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Object.gateCommunicationAcl (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_gates.js:1040:26)\n    at async Object.certifyP05 (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:287:17)\n    at async main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:105:20)"
 }
