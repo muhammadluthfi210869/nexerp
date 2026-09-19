@@ -606,6 +606,16 @@ Plus `AGENTS.md` at root as **AI CLI entry point** with:
 
 ---
 
+### DEC-2026-09-19-050 — Layered Diagnostic and Certification Execution
+
+**Topik**: Mempercepat loop implementasi tanpa melemahkan sertifikasi fase  
+**Keputusan**: Setiap fase menyediakan diagnostic runner non-certifying yang memakai fungsi gate, mutation, oracle, dan threshold produksi yang sama dengan authoritative certifier. Eksekusi wajib mengikuti urutan inventory seluruh failure, clustering root cause, targeted group tests, cumulative preflight, satu authoritative certification, dan satu independent reproduction. Full certifier tidak menjadi inner development loop. Target normal adalah 10–120 detik per targeted group dan 5–8 menit untuk preflight; keterlambatan harus diatasi melalui shared setup, impact selection, fixture reuse, atau parallelism yang aman, bukan melalui pengurangan assertion.  
+**Rationale**: Runner monolitik P03–P05 menyebabkan satu defect lokal berulang kali memicu build, database lifecycle, seluruh gate, dan mutation suite selama 20–30 menit. Pemisahan feedback runner dari decision runner mempertahankan satu sumber kebenaran dan hasil fail-closed, tetapi menurunkan waktu diagnosis dan remediasi secara signifikan.  
+**Spec doc affected**: `verification/_LAYERED_CERTIFICATION_ACCELERATION_STANDARD.md`, `verification/_ONE_PASS_PHASE_EXECUTION_STANDARD.md`, `verification/prompts/_PHASE_ONE_PASS_PROMPT_TEMPLATE.md`, `process/_FULL_ERP_PRODUCTION_READINESS_ROADMAP.md`  
+**Status**: ✅ LOCKED
+
+---
+
 ## Pending Decisions (Open)
 
 *Semua keputusan bisnis terbuka telah diselesaikan pada 2026-09-17 (DEC-2026-09-17-045). Saat ini ada 0 keputusan terbuka (zero open decisions).*
