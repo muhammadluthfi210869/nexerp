@@ -407,6 +407,7 @@ async function certifyP05({ root, contract, candidateSha }) {
         passed: mutations.filter(m => m.status === 'PASS' && m.production_path === true).length,
         failed: mutations.filter(m => m.status !== 'PASS' || m.production_path !== true).length
       },
+      mutations,
       metrics
     };
 

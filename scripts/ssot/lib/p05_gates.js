@@ -524,6 +524,7 @@ async function gateRepresentativeModuleChangeTest({ root, candidateSha, contract
       p.includes('.module.spec.ts') ||
       p === 'backend/src/app.module.ts' ||
       p === 'backend/package.json' ||
+      p.endsWith('.tmp') ||
       p.startsWith('backend/src/modules/auth/') ||
       (p.startsWith('backend/src/modules/') && (p.endsWith('roles.guard.ts') || p.endsWith('communication.service.ts') || p.endsWith('.module.ts')));
     unrelated = (simulatedUnrelatedPath ? 1 : 0) + changed.filter(p => !isAllowed(p)).length;

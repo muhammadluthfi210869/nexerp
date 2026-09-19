@@ -878,8 +878,12 @@ async function runAllMutations(ctx) {
   for (const [id, fn] of ALL_MUTATIONS) {
     try {
       const r = await fn(ctx);
+      if (r.status !== 'PASS' || r.production_path !== true) {
+        console.error(`[MUTATION-FAIL] ${id}: observedReason=${r.reason_code}, err=${r.rejection_reason}`);
+      }
       out.push(r);
     } catch (err) {
+      console.error(`[MUTATION-EXCEPTION] ${id}: ${err && err.message}`);
       out.push({
         id,
         status: 'FAIL',
