@@ -3,15 +3,15 @@
   "level": "PHASE_GATE",
   "contract_version": "1.0.0",
   "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-  "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
-  "started_at": "2026-09-19T08:18:43.110Z",
-  "completed_at": "2026-09-19T08:18:56.515Z",
+  "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
+  "started_at": "2026-09-19T13:12:00.501Z",
+  "completed_at": "2026-09-19T13:12:23.526Z",
   "verdict": "PHASE_PASS",
-  "token": "P06:59bf62820280d86b1b2830e7892632551e3fe091:PHASE_PASS",
+  "token": "P06:fbd92e2b491817f020e2cdc42582acfbf1b4cf2b:PHASE_PASS",
   "result": {
     "phase": "P06",
     "level": "PHASE_GATE",
-    "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+    "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
     "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
     "synthetic": false,
     "skipped_count": 0,
@@ -22,12 +22,12 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 181,
+        "duration_ms": 359,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
-            "command": "git merge-base f93132c5ee77ca5698fa952e52d3ed88f3bb744b 59bf62820280d86b1b2830e7892632551e3fe091",
+            "command": "git merge-base f93132c5ee77ca5698fa952e52d3ed88f3bb744b fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "exit_code": 0
           },
           {
@@ -39,7 +39,8 @@
             "exit_code": 0
           }
         ],
-        "target_count": 3
+        "target_count": 3,
+        "unexpected_skips": 0
       },
       {
         "id": "canonical_master_inventory",
@@ -47,9 +48,9 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 7,
+        "duration_ms": 26,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
             "command": "analyzeCanonicalMasterInventory",
@@ -57,13 +58,14 @@
           }
         ],
         "target_count": 16,
-        "entities_total": 16,
-        "entities_mapped": 16,
         "unmapped_canonical_masters": 0,
-        "unmapped_details": [],
+        "unowned_requirements_or_seams": 0,
         "canonical_master_inventory_coverage_percent": 100,
         "required_operation_coverage_percent": 100,
         "required_screen_live_data_coverage_percent": 100,
+        "entities_total": 16,
+        "entities_mapped": 16,
+        "unmapped_details": [],
         "screens_covered": [
           "SCR-006",
           "SCR-007",
@@ -96,17 +98,22 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 1,
+        "duration_ms": 13,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
             "command": "analyzeSchemaAliases",
             "exit_code": 0
+          },
+          {
+            "command": "verify database foreign key enforcement",
+            "exit_code": 0
           }
         ],
-        "target_count": 4,
+        "target_count": 5,
         "duplicate_master_sources": 0,
+        "referential_integrity_violations": 0,
         "duplicate_details": [],
         "alias_pairs": [
           {
@@ -129,8 +136,7 @@
             "physical": "Formula",
             "writerModule": "rnd"
           }
-        ],
-        "referential_integrity_violations": 0
+        ]
       },
       {
         "id": "organization_division_user_role_config",
@@ -138,12 +144,32 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 0,
+        "duration_ms": 8,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
-            "command": "verify organization_division_user_role_config",
+            "command": "verify system_configs table rows",
+            "exit_code": 0
+          },
+          {
+            "command": "verify master_kodes table rows",
+            "exit_code": 0
+          },
+          {
+            "command": "verify users table rows",
+            "exit_code": 0
+          },
+          {
+            "command": "verify warehouse_access table rows",
+            "exit_code": 0
+          },
+          {
+            "command": "verify organization configuration boundary in DB",
+            "exit_code": 0
+          },
+          {
+            "command": "verify division administration boundary in DB",
             "exit_code": 0
           }
         ],
@@ -155,12 +181,32 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 0,
+        "duration_ms": 5,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
-            "command": "verify catalog_reference_masters",
+            "command": "verify active master_units rows in DB",
+            "exit_code": 0
+          },
+          {
+            "command": "verify active master_categories rows in DB",
+            "exit_code": 0
+          },
+          {
+            "command": "verify active master_tax_rates rows in DB",
+            "exit_code": 0
+          },
+          {
+            "command": "verify active warehouses rows in DB",
+            "exit_code": 0
+          },
+          {
+            "command": "verify CoA account master adapter",
+            "exit_code": 0
+          },
+          {
+            "command": "verify formulation master adapter",
             "exit_code": 0
           }
         ],
@@ -172,12 +218,20 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 0,
+        "duration_ms": 2,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
-            "command": "verify customer_supplier_masters",
+            "command": "verify supplier controller strongly typed DTOs",
+            "exit_code": 0
+          },
+          {
+            "command": "verify suppliers table in DB",
+            "exit_code": 0
+          },
+          {
+            "command": "verify customer sales lead single-writer delegation",
             "exit_code": 0
           }
         ],
@@ -189,9 +243,9 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 1,
+        "duration_ms": 2,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
             "command": "verify warehouse_coa_formulation_ownership",
@@ -206,9 +260,9 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 1,
+        "duration_ms": 8,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
             "command": "analyzeDirectPrismaInControllers",
@@ -224,12 +278,16 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 1,
+        "duration_ms": 9,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
             "command": "analyzeCodeGeneration",
+            "exit_code": 0
+          },
+          {
+            "command": "verify unique code constraint in database",
             "exit_code": 0
           }
         ],
@@ -243,12 +301,16 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 0,
+        "duration_ms": 2,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
-            "command": "verify soft_delete_and_reference_policy",
+            "command": "verify active master units count in DB",
+            "exit_code": 0
+          },
+          {
+            "command": "verify inactive master units count in DB",
             "exit_code": 0
           }
         ],
@@ -262,12 +324,24 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 0,
+        "duration_ms": 39,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
-            "command": "verify import_export",
+            "command": "verify ImportExportService file present",
+            "exit_code": 0
+          },
+          {
+            "command": "execute ImportExportService.sanitizeCellValue",
+            "exit_code": 0
+          },
+          {
+            "command": "execute ImportExportService.importData atomic batch",
+            "exit_code": 0
+          },
+          {
+            "command": "execute ImportExportService.importData idempotency replay",
             "exit_code": 0
           }
         ],
@@ -281,9 +355,9 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 1,
+        "duration_ms": 9,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
             "command": "analyzePaginationAndFilters",
@@ -300,12 +374,28 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 0,
+        "duration_ms": 1,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
-            "command": "verify role_tenant_field_scope",
+            "command": "execute PolicyService.decide for SuperAdmin",
+            "exit_code": 0
+          },
+          {
+            "command": "execute ScopeService.applyTenantFilter",
+            "exit_code": 0
+          },
+          {
+            "command": "execute ScopeService.maskField sensitive property redaction",
+            "exit_code": 0
+          },
+          {
+            "command": "execute PolicyService.decide deny-by-default for unauthorized actor",
+            "exit_code": 0
+          },
+          {
+            "command": "execute PolicyService.decide cross-tenant isolation",
             "exit_code": 0
           }
         ],
@@ -320,12 +410,24 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 0,
+        "duration_ms": 24,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
-            "command": "verify audit_outbox_atomicity",
+            "command": "verify audit_logs table presence and queryability",
+            "exit_code": 0
+          },
+          {
+            "command": "verify outbox_events table presence and queryability",
+            "exit_code": 0
+          },
+          {
+            "command": "execute transactional withAudit rollback on injected error",
+            "exit_code": 0
+          },
+          {
+            "command": "execute transactional outbox enqueue on master mutation",
             "exit_code": 0
           }
         ],
@@ -338,9 +440,9 @@
         "executed": true,
         "synthetic": false,
         "skipped": false,
-        "duration_ms": 12,
+        "duration_ms": 29,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
             "command": "analyzeProductionMockFallbacks",
@@ -364,7 +466,7 @@
         "skipped": false,
         "duration_ms": 0,
         "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-        "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+        "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
         "commands": [
           {
             "command": "verify subphase_seam_and_regression",
@@ -375,7 +477,9 @@
         "subphase_test_coverage_percent": 100,
         "seam_test_coverage_percent": 100,
         "unexpected_skips": 0,
-        "unowned_requirements_or_seams": 0
+        "unowned_requirements_or_seams": 0,
+        "changed_max_cyclomatic_complexity": 6,
+        "changed_duplication_percent": 0
       }
     ],
     "mutations": [
@@ -391,57 +495,57 @@
         "reason_code": "UNMAPPED_MASTER",
         "expected_reason_code": "UNMAPPED_MASTER",
         "observed_reason_code": "UNMAPPED_MASTER",
-        "rejection_reason": "[canonical_master_inventory] UNMAPPED_MASTER: Unmapped canonical master entity detected in inventory",
-        "duration_ms": 11,
-        "occurred_at": "2026-09-19T08:18:54.095Z"
+        "rejection_reason": "[canonical_master_inventory] UNMAPPED_MASTER: Found 1 unmapped canonical master entities: [{\"entity\":\"UnmappedMasterDummy\",\"physicalModel\":\"NonExistentTable99\"}]",
+        "duration_ms": 20,
+        "occurred_at": "2026-09-19T13:12:19.420Z"
       },
       {
         "id": "P06-DUPLICATE-SOURCE-OF-TRUTH",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateSchemaAliasAndReferentialIntegrity",
-        "mutated_target": "backend/src/modules/master/controllers/customers.controller.ts",
+        "mutated_target": "backend/src/modules/master/controllers/__duplicate_customer.controller.ts",
         "gate_id": "schema_alias_and_referential_integrity",
         "expected_gate_id": "schema_alias_and_referential_integrity",
         "observed_gate_id": "schema_alias_and_referential_integrity",
         "reason_code": "DUPLICATE_SOURCE_OF_TRUTH",
         "expected_reason_code": "DUPLICATE_SOURCE_OF_TRUTH",
         "observed_reason_code": "DUPLICATE_SOURCE_OF_TRUTH",
-        "rejection_reason": "[schema_alias_and_referential_integrity] DUPLICATE_SOURCE_OF_TRUTH: Duplicate physical writer detected for semantic master Customer without declared adapter",
-        "duration_ms": 3,
-        "occurred_at": "2026-09-19T08:18:54.098Z"
+        "rejection_reason": "[schema_alias_and_referential_integrity] DUPLICATE_SOURCE_OF_TRUTH: Duplicate physical writers detected for semantic masters: [{\"file\":\"__duplicate_customer.controller.ts\",\"reason\":\"Duplicate physical writer for semantic master without adapter\"}]",
+        "duration_ms": 9,
+        "occurred_at": "2026-09-19T13:12:19.429Z"
       },
       {
         "id": "P06-DIRECT-PRISMA-CONTROLLER",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateMasterCrud",
-        "mutated_target": "backend/src/modules/master/controllers/warehouses.controller.ts",
+        "mutated_target": "backend/src/modules/master/controllers/__temp_prisma_leak.controller.ts",
         "gate_id": "master_crud",
         "expected_gate_id": "master_crud",
         "observed_gate_id": "master_crud",
         "reason_code": "DIRECT_PRISMA_ACCESS",
         "expected_reason_code": "DIRECT_PRISMA_ACCESS",
         "observed_reason_code": "DIRECT_PRISMA_ACCESS",
-        "rejection_reason": "[master_crud] DIRECT_PRISMA_ACCESS: Direct Prisma access detected in controller: backend/src/modules/master/controllers/warehouses.controller.ts",
-        "duration_ms": 1,
-        "occurred_at": "2026-09-19T08:18:54.099Z"
+        "rejection_reason": "[master_crud] DIRECT_PRISMA_ACCESS: Direct Prisma access in controllers prohibited: [{\"file\":\"backend/src/modules/master/controllers/__temp_prisma_leak.controller.ts\",\"importsPrisma\":true,\"injectsPrisma\":true,\"callsPrisma\":true}]",
+        "duration_ms": 10,
+        "occurred_at": "2026-09-19T13:12:19.439Z"
       },
       {
         "id": "P06-PRODUCTION-MOCK-FALLBACK",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateFrontendLiveDataAndDna",
-        "mutated_target": "frontend/src/app/(dashboard)/master/materials/page.tsx",
+        "mutated_target": "frontend/src/app/(dashboard)/master/personnel/__temp_mock_leak.tsx",
         "gate_id": "frontend_live_data_and_dna",
         "expected_gate_id": "frontend_live_data_and_dna",
         "observed_gate_id": "frontend_live_data_and_dna",
         "reason_code": "PRODUCTION_MOCK_FALLBACK",
         "expected_reason_code": "PRODUCTION_MOCK_FALLBACK",
         "observed_reason_code": "PRODUCTION_MOCK_FALLBACK",
-        "rejection_reason": "[frontend_live_data_and_dna] PRODUCTION_MOCK_FALLBACK: Production mock fallback array detected in: frontend/src/app/(dashboard)/master/materials/page.tsx",
-        "duration_ms": 1,
-        "occurred_at": "2026-09-19T08:18:54.100Z"
+        "rejection_reason": "[frontend_live_data_and_dna] PRODUCTION_MOCK_FALLBACK: Production mock fallbacks detected: [{\"file\":\"frontend/src/app/(dashboard)/master/personnel/__temp_mock_leak.tsx\",\"hasFallbackConst\":true,\"hasInitialArray\":false,\"usesFallbackOnCatch\":false,\"stateInitializedWithMock\":false}]",
+        "duration_ms": 43,
+        "occurred_at": "2026-09-19T13:12:19.482Z"
       },
       {
         "id": "P06-DUPLICATE-CODE",
@@ -455,48 +559,48 @@
         "reason_code": "DUPLICATE_CODE",
         "expected_reason_code": "DUPLICATE_CODE",
         "observed_reason_code": "DUPLICATE_CODE",
-        "rejection_reason": "[uniqueness_and_code_generation] DUPLICATE_CODE: Duplicate unique code rejected: DUP-4101",
-        "duration_ms": 319,
-        "occurred_at": "2026-09-19T08:18:54.419Z"
+        "rejection_reason": "[uniqueness_and_code_generation] DUPLICATE_CODE: Unique constraint violated on duplicate code: DUP-9491",
+        "duration_ms": 89,
+        "occurred_at": "2026-09-19T13:12:19.572Z"
       },
       {
         "id": "P06-NONDETERMINISTIC-CODE",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateUniquenessAndCodeGeneration",
-        "mutated_target": "backend/src/modules/master/services/categories.service.ts",
+        "mutated_target": "backend/src/modules/master/services/__temp_random.service.ts",
         "gate_id": "uniqueness_and_code_generation",
         "expected_gate_id": "uniqueness_and_code_generation",
         "observed_gate_id": "uniqueness_and_code_generation",
         "reason_code": "NONDETERMINISTIC_CODE",
         "expected_reason_code": "NONDETERMINISTIC_CODE",
         "observed_reason_code": "NONDETERMINISTIC_CODE",
-        "rejection_reason": "[uniqueness_and_code_generation] NONDETERMINISTIC_CODE: Nondeterministic Math.random() detected in code generator: backend/src/modules/master/services/categories.service.ts",
-        "duration_ms": 1,
-        "occurred_at": "2026-09-19T08:18:54.420Z"
+        "rejection_reason": "[uniqueness_and_code_generation] NONDETERMINISTIC_CODE: Nondeterministic code generation found: [{\"file\":\"backend/src/modules/master/services/__temp_random.service.ts\",\"type\":\"MATH_RANDOM\",\"description\":\"Math.random() used in code generation\"}]",
+        "duration_ms": 28,
+        "occurred_at": "2026-09-19T13:12:19.600Z"
       },
       {
         "id": "P06-HARD-DELETE-REFERENCED",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateSoftDeleteAndReferencePolicy",
-        "mutated_target": "backend/src/modules/master/services/materials.service.ts",
+        "mutated_target": "master_categories.id",
         "gate_id": "soft_delete_and_reference_policy",
         "expected_gate_id": "soft_delete_and_reference_policy",
         "observed_gate_id": "soft_delete_and_reference_policy",
         "reason_code": "HARD_DELETE_PROHIBITED",
         "expected_reason_code": "HARD_DELETE_PROHIBITED",
         "observed_reason_code": "HARD_DELETE_PROHIBITED",
-        "rejection_reason": "[soft_delete_and_reference_policy] HARD_DELETE_PROHIBITED: Hard deletion of referenced master data is prohibited; use soft delete/inactivation",
-        "duration_ms": 1,
-        "occurred_at": "2026-09-19T08:18:54.421Z"
+        "rejection_reason": "[soft_delete_and_reference_policy] HARD_DELETE_PROHIBITED: Hard deletion of referenced master data is prohibited; foreign key constraint enforced",
+        "duration_ms": 99,
+        "occurred_at": "2026-09-19T13:12:19.700Z"
       },
       {
         "id": "P06-SOFT-DELETED-VISIBLE",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateSoftDeleteAndReferencePolicy",
-        "mutated_target": "backend/src/modules/master/services/materials.service.ts",
+        "mutated_target": "master_units.isActive",
         "gate_id": "soft_delete_and_reference_policy",
         "expected_gate_id": "soft_delete_and_reference_policy",
         "observed_gate_id": "soft_delete_and_reference_policy",
@@ -504,8 +608,8 @@
         "expected_reason_code": "SOFT_DELETED_LEAK",
         "observed_reason_code": "SOFT_DELETED_LEAK",
         "rejection_reason": "[soft_delete_and_reference_policy] SOFT_DELETED_LEAK: Default master query leaks soft-deleted/inactive rows without explicit filter",
-        "duration_ms": 0,
-        "occurred_at": "2026-09-19T08:18:54.421Z"
+        "duration_ms": 6,
+        "occurred_at": "2026-09-19T13:12:19.706Z"
       },
       {
         "id": "P06-ORPHAN-REFERENCE",
@@ -519,25 +623,25 @@
         "reason_code": "ORPHAN_REFERENCE",
         "expected_reason_code": "ORPHAN_REFERENCE",
         "observed_reason_code": "ORPHAN_REFERENCE",
-        "rejection_reason": "[schema_alias_and_referential_integrity] ORPHAN_REFERENCE: Reference to non-existent foreign key rejected: 00000000-0000-0000-0000-000000000000",
-        "duration_ms": 52,
-        "occurred_at": "2026-09-19T08:18:54.474Z"
+        "rejection_reason": "[schema_alias_and_referential_integrity] ORPHAN_REFERENCE: Foreign key constraint rejected orphan reference: 00000000-0000-0000-0000-000000000099",
+        "duration_ms": 123,
+        "occurred_at": "2026-09-19T13:12:19.830Z"
       },
       {
         "id": "P06-UNBOUNDED-PAGINATION",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gatePaginationFilterAndSearch",
-        "mutated_target": "backend/src/modules/master/controllers/materials.controller.ts",
+        "mutated_target": "backend/src/modules/master/services/__temp_unbounded.service.ts",
         "gate_id": "pagination_filter_and_search",
         "expected_gate_id": "pagination_filter_and_search",
         "observed_gate_id": "pagination_filter_and_search",
         "reason_code": "PAGINATION_UNBOUNDED",
         "expected_reason_code": "PAGINATION_UNBOUNDED",
         "observed_reason_code": "PAGINATION_UNBOUNDED",
-        "rejection_reason": "[pagination_filter_and_search] PAGINATION_UNBOUNDED: Requested page size 500 exceeds maximum allowed threshold of 200",
-        "duration_ms": 0,
-        "occurred_at": "2026-09-19T08:18:54.475Z"
+        "rejection_reason": "[pagination_filter_and_search] PAGINATION_UNBOUNDED: Default page size 999 exceeds threshold",
+        "duration_ms": 10,
+        "occurred_at": "2026-09-19T13:12:19.840Z"
       },
       {
         "id": "P06-FILTER-COUNT-MISMATCH",
@@ -551,16 +655,16 @@
         "reason_code": "FILTER_COUNT_MISMATCH",
         "expected_reason_code": "FILTER_COUNT_MISMATCH",
         "observed_reason_code": "FILTER_COUNT_MISMATCH",
-        "rejection_reason": "[pagination_filter_and_search] FILTER_COUNT_MISMATCH: Reported total count (100) does not match applied filter criteria",
-        "duration_ms": 1,
-        "occurred_at": "2026-09-19T08:18:54.476Z"
+        "rejection_reason": "[pagination_filter_and_search] FILTER_COUNT_MISMATCH: Reported total count does not match applied filter criteria",
+        "duration_ms": 7,
+        "occurred_at": "2026-09-19T13:12:19.847Z"
       },
       {
         "id": "P06-IMPORT-PARTIAL-COMMIT",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateImportExport",
-        "mutated_target": "backend/src/modules/master/services/suppliers-import.service.ts",
+        "mutated_target": "backend/src/modules/master/services/import-export.service.ts",
         "gate_id": "import_export",
         "expected_gate_id": "import_export",
         "observed_gate_id": "import_export",
@@ -568,15 +672,15 @@
         "expected_reason_code": "IMPORT_PARTIAL_COMMIT",
         "observed_reason_code": "IMPORT_PARTIAL_COMMIT",
         "rejection_reason": "[import_export] IMPORT_PARTIAL_COMMIT: Batch import with row errors partially committed; transaction must rollback all rows",
-        "duration_ms": 0,
-        "occurred_at": "2026-09-19T08:18:54.476Z"
+        "duration_ms": 182,
+        "occurred_at": "2026-09-19T13:12:20.029Z"
       },
       {
         "id": "P06-IMPORT-NONIDEMPOTENT",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateImportExport",
-        "mutated_target": "backend/src/modules/master/services/suppliers-import.service.ts",
+        "mutated_target": "backend/src/modules/master/services/import-export.service.ts",
         "gate_id": "import_export",
         "expected_gate_id": "import_export",
         "observed_gate_id": "import_export",
@@ -584,15 +688,15 @@
         "expected_reason_code": "IMPORT_NONIDEMPOTENT",
         "observed_reason_code": "IMPORT_NONIDEMPOTENT",
         "rejection_reason": "[import_export] IMPORT_NONIDEMPOTENT: Replaying import with same idempotency key created duplicate records instead of returning original result",
-        "duration_ms": 1,
-        "occurred_at": "2026-09-19T08:18:54.477Z"
+        "duration_ms": 28,
+        "occurred_at": "2026-09-19T13:12:20.057Z"
       },
       {
         "id": "P06-IMPORT-FORMULA-INJECTION",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateImportExport",
-        "mutated_target": "backend/src/modules/master/services/export.service.ts",
+        "mutated_target": "backend/src/modules/master/services/import-export.service.ts",
         "gate_id": "import_export",
         "expected_gate_id": "import_export",
         "observed_gate_id": "import_export",
@@ -600,15 +704,15 @@
         "expected_reason_code": "FORMULA_INJECTION_DETECTED",
         "observed_reason_code": "FORMULA_INJECTION_DETECTED",
         "rejection_reason": "[import_export] FORMULA_INJECTION_DETECTED: Export cell formula injection detected: raw formula starting with \"=\" not neutralized",
-        "duration_ms": 0,
-        "occurred_at": "2026-09-19T08:18:54.477Z"
+        "duration_ms": 30,
+        "occurred_at": "2026-09-19T13:12:20.088Z"
       },
       {
         "id": "P06-EXPORT-SCOPE-BYPASS",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateRoleTenantFieldScope",
-        "mutated_target": "backend/src/modules/master/services/export.service.ts",
+        "mutated_target": "backend/src/modules/master/services/import-export.service.ts",
         "gate_id": "role_tenant_field_scope",
         "expected_gate_id": "role_tenant_field_scope",
         "observed_gate_id": "role_tenant_field_scope",
@@ -616,15 +720,15 @@
         "expected_reason_code": "EXPORT_SCOPE_BYPASS",
         "observed_reason_code": "EXPORT_SCOPE_BYPASS",
         "rejection_reason": "[role_tenant_field_scope] EXPORT_SCOPE_BYPASS: Export returned records outside actor data scope",
-        "duration_ms": 1,
-        "occurred_at": "2026-09-19T08:18:54.479Z"
+        "duration_ms": 3,
+        "occurred_at": "2026-09-19T13:12:20.091Z"
       },
       {
         "id": "P06-CROSS-TENANT-ACCESS",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateRoleTenantFieldScope",
-        "mutated_target": "backend/src/modules/master/services/customers.service.ts",
+        "mutated_target": "backend/src/platform/policy/policy.service.ts",
         "gate_id": "role_tenant_field_scope",
         "expected_gate_id": "role_tenant_field_scope",
         "observed_gate_id": "role_tenant_field_scope",
@@ -632,15 +736,15 @@
         "expected_reason_code": "CROSS_TENANT_FORBIDDEN",
         "observed_reason_code": "CROSS_TENANT_FORBIDDEN",
         "rejection_reason": "[role_tenant_field_scope] CROSS_TENANT_FORBIDDEN: Access to cross-tenant master entity is strictly forbidden",
-        "duration_ms": 1,
-        "occurred_at": "2026-09-19T08:18:54.480Z"
+        "duration_ms": 3,
+        "occurred_at": "2026-09-19T13:12:20.094Z"
       },
       {
         "id": "P06-UNAUTHORIZED-MUTATION",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateRoleTenantFieldScope",
-        "mutated_target": "backend/src/modules/master/controllers/suppliers.controller.ts",
+        "mutated_target": "backend/src/platform/policy/policy.service.ts",
         "gate_id": "role_tenant_field_scope",
         "expected_gate_id": "role_tenant_field_scope",
         "observed_gate_id": "role_tenant_field_scope",
@@ -648,31 +752,31 @@
         "expected_reason_code": "FORBIDDEN_ACTION",
         "observed_reason_code": "FORBIDDEN_ACTION",
         "rejection_reason": "[role_tenant_field_scope] FORBIDDEN_ACTION: Actor lacks required permission for master mutation",
-        "duration_ms": 0,
-        "occurred_at": "2026-09-19T08:18:54.480Z"
+        "duration_ms": 2,
+        "occurred_at": "2026-09-19T13:12:20.096Z"
       },
       {
         "id": "P06-FIELD-SCOPE-LEAK",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateRoleTenantFieldScope",
-        "mutated_target": "backend/src/modules/master/services/customers.service.ts",
+        "mutated_target": "backend/src/platform/scope/scope.service.ts",
         "gate_id": "role_tenant_field_scope",
         "expected_gate_id": "role_tenant_field_scope",
         "observed_gate_id": "role_tenant_field_scope",
         "reason_code": "FIELD_SCOPE_LEAK",
         "expected_reason_code": "FIELD_SCOPE_LEAK",
         "observed_reason_code": "FIELD_SCOPE_LEAK",
-        "rejection_reason": "[role_tenant_field_scope] FIELD_SCOPE_LEAK: Restricted fields leaked to unauthorized role BusDevStaff: creditLimit, marginPercentage",
-        "duration_ms": 1,
-        "occurred_at": "2026-09-19T08:18:54.481Z"
+        "rejection_reason": "[role_tenant_field_scope] FIELD_SCOPE_LEAK: Restricted fields leaked to unauthorized role: creditLimit",
+        "duration_ms": 2,
+        "occurred_at": "2026-09-19T13:12:20.098Z"
       },
       {
         "id": "P06-AUDIT-NONATOMIC",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateAuditOutboxAtomicity",
-        "mutated_target": "backend/src/modules/master/services/materials.service.ts",
+        "mutated_target": "backend/src/platform/audit/audit.service.ts",
         "gate_id": "audit_outbox_atomicity",
         "expected_gate_id": "audit_outbox_atomicity",
         "observed_gate_id": "audit_outbox_atomicity",
@@ -680,24 +784,24 @@
         "expected_reason_code": "AUDIT_NONATOMIC",
         "observed_reason_code": "AUDIT_NONATOMIC",
         "rejection_reason": "[audit_outbox_atomicity] AUDIT_NONATOMIC: Master entity mutation committed without corresponding audit log in the same transaction",
-        "duration_ms": 0,
-        "occurred_at": "2026-09-19T08:18:54.481Z"
+        "duration_ms": 27,
+        "occurred_at": "2026-09-19T13:12:20.125Z"
       },
       {
         "id": "P06-UI-DNA-BYPASS",
         "status": "PASS",
         "production_path": true,
         "gate_function": "gateFrontendLiveDataAndDna",
-        "mutated_target": "frontend/src/app/(dashboard)/master/materials/page.tsx",
+        "mutated_target": "frontend/src/app/(dashboard)/master/personnel/__temp_dna_leak.tsx",
         "gate_id": "frontend_live_data_and_dna",
         "expected_gate_id": "frontend_live_data_and_dna",
         "observed_gate_id": "frontend_live_data_and_dna",
         "reason_code": "UI_DNA_BYPASS",
         "expected_reason_code": "UI_DNA_BYPASS",
         "observed_reason_code": "UI_DNA_BYPASS",
-        "rejection_reason": "[frontend_live_data_and_dna] UI_DNA_BYPASS: Direct UI-kit import detected outside @/components/dna boundary",
-        "duration_ms": 0,
-        "occurred_at": "2026-09-19T08:18:54.481Z"
+        "rejection_reason": "[frontend_live_data_and_dna] UI_DNA_BYPASS: UI DNA compliance violations detected: [{\"file\":\"frontend/src/app/(dashboard)/master/personnel/__temp_dna_leak.tsx\",\"reason\":\"DIRECT_RADIX_IMPORT\",\"message\":\"Direct Radix UI import is forbidden outside DNA\"}]",
+        "duration_ms": 37,
+        "occurred_at": "2026-09-19T13:12:20.162Z"
       }
     ],
     "subphases": [
@@ -717,9 +821,9 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 8,
+            "duration_ms": 35,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
                 "command": "analyzeCanonicalMasterInventory",
@@ -727,13 +831,14 @@
               }
             ],
             "target_count": 16,
-            "entities_total": 16,
-            "entities_mapped": 16,
             "unmapped_canonical_masters": 0,
-            "unmapped_details": [],
+            "unowned_requirements_or_seams": 0,
             "canonical_master_inventory_coverage_percent": 100,
             "required_operation_coverage_percent": 100,
             "required_screen_live_data_coverage_percent": 100,
+            "entities_total": 16,
+            "entities_mapped": 16,
+            "unmapped_details": [],
             "screens_covered": [
               "SCR-006",
               "SCR-007",
@@ -766,17 +871,22 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 1,
+            "duration_ms": 121,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
                 "command": "analyzeSchemaAliases",
                 "exit_code": 0
+              },
+              {
+                "command": "verify database foreign key enforcement",
+                "exit_code": 0
               }
             ],
-            "target_count": 4,
+            "target_count": 5,
             "duplicate_master_sources": 0,
+            "referential_integrity_violations": 0,
             "duplicate_details": [],
             "alias_pairs": [
               {
@@ -799,8 +909,7 @@
                 "physical": "Formula",
                 "writerModule": "rnd"
               }
-            ],
-            "referential_integrity_violations": 0
+            ]
           },
           {
             "id": "warehouse_coa_formulation_ownership",
@@ -808,9 +917,9 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 1,
+            "duration_ms": 2,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
                 "command": "verify warehouse_coa_formulation_ownership",
@@ -820,8 +929,8 @@
             "target_count": 3
           }
         ],
-        "target_count": 23,
-        "duration_ms": 10
+        "target_count": 24,
+        "duration_ms": 159
       },
       {
         "id": "P06-SF2-identity-config",
@@ -839,12 +948,32 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 0,
+            "duration_ms": 83,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
-                "command": "verify organization_division_user_role_config",
+                "command": "verify system_configs table rows",
+                "exit_code": 0
+              },
+              {
+                "command": "verify master_kodes table rows",
+                "exit_code": 0
+              },
+              {
+                "command": "verify users table rows",
+                "exit_code": 0
+              },
+              {
+                "command": "verify warehouse_access table rows",
+                "exit_code": 0
+              },
+              {
+                "command": "verify organization configuration boundary in DB",
+                "exit_code": 0
+              },
+              {
+                "command": "verify division administration boundary in DB",
                 "exit_code": 0
               }
             ],
@@ -856,12 +985,28 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 0,
+            "duration_ms": 1433,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
-                "command": "verify role_tenant_field_scope",
+                "command": "execute PolicyService.decide for SuperAdmin",
+                "exit_code": 0
+              },
+              {
+                "command": "execute ScopeService.applyTenantFilter",
+                "exit_code": 0
+              },
+              {
+                "command": "execute ScopeService.maskField sensitive property redaction",
+                "exit_code": 0
+              },
+              {
+                "command": "execute PolicyService.decide deny-by-default for unauthorized actor",
+                "exit_code": 0
+              },
+              {
+                "command": "execute PolicyService.decide cross-tenant isolation",
                 "exit_code": 0
               }
             ],
@@ -876,12 +1021,24 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 0,
+            "duration_ms": 601,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
-                "command": "verify audit_outbox_atomicity",
+                "command": "verify audit_logs table presence and queryability",
+                "exit_code": 0
+              },
+              {
+                "command": "verify outbox_events table presence and queryability",
+                "exit_code": 0
+              },
+              {
+                "command": "execute transactional withAudit rollback on injected error",
+                "exit_code": 0
+              },
+              {
+                "command": "execute transactional outbox enqueue on master mutation",
                 "exit_code": 0
               }
             ],
@@ -890,7 +1047,7 @@
           }
         ],
         "target_count": 15,
-        "duration_ms": 0
+        "duration_ms": 2119
       },
       {
         "id": "P06-SF3-catalog-masters",
@@ -910,12 +1067,32 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 0,
+            "duration_ms": 16,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
-                "command": "verify catalog_reference_masters",
+                "command": "verify active master_units rows in DB",
+                "exit_code": 0
+              },
+              {
+                "command": "verify active master_categories rows in DB",
+                "exit_code": 0
+              },
+              {
+                "command": "verify active master_tax_rates rows in DB",
+                "exit_code": 0
+              },
+              {
+                "command": "verify active warehouses rows in DB",
+                "exit_code": 0
+              },
+              {
+                "command": "verify CoA account master adapter",
+                "exit_code": 0
+              },
+              {
+                "command": "verify formulation master adapter",
                 "exit_code": 0
               }
             ],
@@ -927,12 +1104,20 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 0,
+            "duration_ms": 5,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
-                "command": "verify customer_supplier_masters",
+                "command": "verify supplier controller strongly typed DTOs",
+                "exit_code": 0
+              },
+              {
+                "command": "verify suppliers table in DB",
+                "exit_code": 0
+              },
+              {
+                "command": "verify customer sales lead single-writer delegation",
                 "exit_code": 0
               }
             ],
@@ -944,9 +1129,9 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 1,
+            "duration_ms": 6,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
                 "command": "analyzeDirectPrismaInControllers",
@@ -962,12 +1147,16 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 2,
+            "duration_ms": 6,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
                 "command": "analyzeCodeGeneration",
+                "exit_code": 0
+              },
+              {
+                "command": "verify unique code constraint in database",
                 "exit_code": 0
               }
             ],
@@ -981,12 +1170,16 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 0,
+            "duration_ms": 2,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
-                "command": "verify soft_delete_and_reference_policy",
+                "command": "verify active master units count in DB",
+                "exit_code": 0
+              },
+              {
+                "command": "verify inactive master units count in DB",
                 "exit_code": 0
               }
             ],
@@ -996,7 +1189,7 @@
           }
         ],
         "target_count": 26,
-        "duration_ms": 4
+        "duration_ms": 37
       },
       {
         "id": "P06-SF4-bulk-io",
@@ -1013,12 +1206,24 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 0,
+            "duration_ms": 238,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
-                "command": "verify import_export",
+                "command": "verify ImportExportService file present",
+                "exit_code": 0
+              },
+              {
+                "command": "execute ImportExportService.sanitizeCellValue",
+                "exit_code": 0
+              },
+              {
+                "command": "execute ImportExportService.importData atomic batch",
+                "exit_code": 0
+              },
+              {
+                "command": "execute ImportExportService.importData idempotency replay",
                 "exit_code": 0
               }
             ],
@@ -1032,9 +1237,9 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 1,
+            "duration_ms": 9,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
                 "command": "analyzePaginationAndFilters",
@@ -1047,7 +1252,7 @@
           }
         ],
         "target_count": 10,
-        "duration_ms": 1
+        "duration_ms": 249
       },
       {
         "id": "P06-SF5-frontend-ui",
@@ -1063,9 +1268,9 @@
             "executed": true,
             "synthetic": false,
             "skipped": false,
-            "duration_ms": 10,
+            "duration_ms": 50,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
                 "command": "analyzeProductionMockFallbacks",
@@ -1083,7 +1288,7 @@
           }
         ],
         "target_count": 15,
-        "duration_ms": 10
+        "duration_ms": 50
       },
       {
         "id": "P06-SF6-integration",
@@ -1101,7 +1306,7 @@
             "skipped": false,
             "duration_ms": 0,
             "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-            "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+            "candidate_sha": "fbd92e2b491817f020e2cdc42582acfbf1b4cf2b",
             "commands": [
               {
                 "command": "verify subphase_seam_and_regression",
@@ -1112,7 +1317,9 @@
             "subphase_test_coverage_percent": 100,
             "seam_test_coverage_percent": 100,
             "unexpected_skips": 0,
-            "unowned_requirements_or_seams": 0
+            "unowned_requirements_or_seams": 0,
+            "changed_max_cyclomatic_complexity": 6,
+            "changed_duplication_percent": 0
           }
         ],
         "target_count": 12,
@@ -1124,7 +1331,7 @@
         "id": "P06-SEAM-P05-POLICY",
         "status": "PASS",
         "executed": true,
-        "target_count": 17,
+        "target_count": 9,
         "positive_test_ids": [
           "p05_policy_allow_valid_role",
           "p05_scope_enforce_tenant_boundary"
@@ -1137,14 +1344,14 @@
           {
             "id": "p05_policy_allow_valid_role",
             "status": "PASS",
-            "target_count": 7,
-            "duration_ms": 1
+            "target_count": 2,
+            "duration_ms": 0
           },
           {
             "id": "p05_scope_enforce_tenant_boundary",
             "status": "PASS",
-            "target_count": 8,
-            "duration_ms": 2
+            "target_count": 4,
+            "duration_ms": 23
           }
         ],
         "failure_results": [
@@ -1152,22 +1359,22 @@
             "id": "p05_policy_deny_unauthorized_action",
             "status": "PASS",
             "target_count": 1,
-            "duration_ms": 0
+            "duration_ms": 1
           },
           {
             "id": "p05_scope_block_cross_tenant",
             "status": "PASS",
-            "target_count": 1,
+            "target_count": 2,
             "duration_ms": 0
           }
         ],
-        "duration_ms": 3
+        "duration_ms": 24
       },
       {
         "id": "P06-SEAM-IDENTITY-MASTER",
         "status": "PASS",
         "executed": true,
-        "target_count": 4,
+        "target_count": 7,
         "positive_test_ids": [
           "identity_scoped_master_list",
           "identity_scoped_master_export"
@@ -1181,13 +1388,13 @@
             "id": "identity_scoped_master_list",
             "status": "PASS",
             "target_count": 1,
-            "duration_ms": 0
+            "duration_ms": 17
           },
           {
             "id": "identity_scoped_master_export",
             "status": "PASS",
-            "target_count": 1,
-            "duration_ms": 0
+            "target_count": 4,
+            "duration_ms": 12
           }
         ],
         "failure_results": [
@@ -1204,13 +1411,13 @@
             "duration_ms": 0
           }
         ],
-        "duration_ms": 0
+        "duration_ms": 30
       },
       {
         "id": "P06-SEAM-CATALOG-REFERENCES",
         "status": "PASS",
         "executed": true,
-        "target_count": 5,
+        "target_count": 6,
         "positive_test_ids": [
           "valid_category_unit_warehouse_reference"
         ],
@@ -1222,8 +1429,8 @@
           {
             "id": "valid_category_unit_warehouse_reference",
             "status": "PASS",
-            "target_count": 3,
-            "duration_ms": 58
+            "target_count": 4,
+            "duration_ms": 168
           }
         ],
         "failure_results": [
@@ -1231,22 +1438,22 @@
             "id": "orphan_category_reference_rejected",
             "status": "PASS",
             "target_count": 1,
-            "duration_ms": 10
+            "duration_ms": 30
           },
           {
             "id": "inactive_unit_reference_rejected",
             "status": "PASS",
             "target_count": 1,
-            "duration_ms": 0
+            "duration_ms": 6
           }
         ],
-        "duration_ms": 68
+        "duration_ms": 206
       },
       {
         "id": "P06-SEAM-IMPORT-CRUD",
         "status": "PASS",
         "executed": true,
-        "target_count": 4,
+        "target_count": 15,
         "positive_test_ids": [
           "import_valid_batch_commits_via_crud_service",
           "export_matches_filtered_dataset"
@@ -1259,14 +1466,14 @@
           {
             "id": "import_valid_batch_commits_via_crud_service",
             "status": "PASS",
-            "target_count": 1,
-            "duration_ms": 0
+            "target_count": 2,
+            "duration_ms": 31
           },
           {
             "id": "export_matches_filtered_dataset",
             "status": "PASS",
-            "target_count": 1,
-            "duration_ms": 0
+            "target_count": 6,
+            "duration_ms": 3
           }
         ],
         "failure_results": [
@@ -1274,22 +1481,22 @@
             "id": "import_invalid_batch_rolls_back",
             "status": "PASS",
             "target_count": 1,
-            "duration_ms": 0
+            "duration_ms": 2
           },
           {
             "id": "export_neutralizes_formula_injection",
             "status": "PASS",
-            "target_count": 1,
+            "target_count": 6,
             "duration_ms": 0
           }
         ],
-        "duration_ms": 0
+        "duration_ms": 38
       },
       {
         "id": "P06-SEAM-API-UI",
         "status": "PASS",
         "executed": true,
-        "target_count": 4,
+        "target_count": 5,
         "positive_test_ids": [
           "ui_renders_live_master_data",
           "ui_crud_actions_call_live_api"
@@ -1302,13 +1509,14 @@
           {
             "id": "ui_renders_live_master_data",
             "status": "PASS",
-            "duration_ms": 7
+            "target_count": 1,
+            "duration_ms": 16
           },
           {
             "id": "ui_crud_actions_call_live_api",
             "status": "PASS",
-            "target_count": 1,
-            "duration_ms": 0
+            "target_count": 2,
+            "duration_ms": 1
           }
         ],
         "failure_results": [
@@ -1316,21 +1524,22 @@
             "id": "ui_api_error_renders_retry_state_not_mock",
             "status": "PASS",
             "target_count": 1,
-            "duration_ms": 5
+            "duration_ms": 1
           },
           {
             "id": "ui_dna_primitive_boundary_intact",
             "status": "PASS",
-            "duration_ms": 8
+            "target_count": 1,
+            "duration_ms": 13
           }
         ],
-        "duration_ms": 20
+        "duration_ms": 31
       },
       {
         "id": "P06-SEAM-MUTATION-AUDIT",
         "status": "PASS",
         "executed": true,
-        "target_count": 2,
+        "target_count": 3,
         "positive_test_ids": [
           "master_mutation_and_audit_commit_together"
         ],
@@ -1341,8 +1550,8 @@
           {
             "id": "master_mutation_and_audit_commit_together",
             "status": "PASS",
-            "target_count": 1,
-            "duration_ms": 0
+            "target_count": 2,
+            "duration_ms": 29
           }
         ],
         "failure_results": [
@@ -1350,10 +1559,10 @@
             "id": "audit_failure_aborts_master_mutation",
             "status": "PASS",
             "target_count": 1,
-            "duration_ms": 0
+            "duration_ms": 6
           }
         ],
-        "duration_ms": 0
+        "duration_ms": 37
       }
     ],
     "metrics": {
@@ -1390,20 +1599,20 @@
       "source_database_fingerprint": "fb0a5da9e048eb82a7011b23a588cdeed095d1641b003d8d3145a51a263a9a62",
       "source_database_tables": 194,
       "created_databases": [
-        "nex_p06_59bf6282_7208_main"
+        "nex_p06_fbd92e2b_23752_main"
       ],
       "dropped_databases": [
-        "nex_p06_59bf6282_7208_main"
+        "nex_p06_fbd92e2b_23752_main"
       ]
     },
     "evidence": {
       "master_inventory_sha256": "fd468b1755b4040e4d978f1d31bba0ec3ad7725e73fc29f884ee1051149a362a",
-      "subphase_result_sha256": "bf7a2a9e419eba318c9dedd31c7d8bf79602da41ff95721db56c3a6724a5fe08",
-      "seam_matrix_sha256": "b057bb93c43ec520002d57e480b9c94c0af223e4a89507536c5bae43cfe9663b",
-      "scope_manifest_sha256": "9e59a7c54c9ab10a261a65e23b9d6e8e32b82c343f1a2dfc133205b1e7391c52"
+      "subphase_result_sha256": "97e0dc36e573a77c345d12714b95c490f812625fa9e49fd7025048ac36ac7d42",
+      "seam_matrix_sha256": "ba5137bfb17cab4b142ea7d66c4fc89ddd967cc6c8e513d781a9a449fab978c2",
+      "scope_manifest_sha256": "4836bcf2f3b1cb418f973be6acfe67eff2b1f93d1a1a09bde210706e2f452174"
     },
     "verdict": "PASS",
-    "duration_ms": 12979
+    "duration_ms": 22379
   },
   "failure": null
 }
