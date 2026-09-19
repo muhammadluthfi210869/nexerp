@@ -537,9 +537,9 @@ async function gateRepresentativeModuleChangeTest({ root, candidateSha, contract
   const authTarget = path.join(root, 'backend/src/platform/policy/policy.service.ts');
   const authRadius = analyzers.predictBlastRadius({ root, file: 'backend/src/platform/policy/policy.service.ts' });
   const authPredictedPaths = ['backend/src/platform/policy/policy.service.ts'];
-  const originalAuthContent = fs.readFileSync(authTarget, 'utf8');
+  const originalAuthContent = fs.readFileSync(authTarget, 'utf8').replace(/\r?\n\/\/ \[p05-rehearsal-auth-policy\]\r?\n?/g, '');
   try {
-    fs.appendFileSync(authTarget, '\n// [p05-rehearsal-auth-policy]\n');
+    fs.writeFileSync(authTarget, originalAuthContent + '\n// [p05-rehearsal-auth-policy]\n');
     // Run targeted unit tests
     const rAuth = runCommand(root, 'node', ['scripts/ssot/_p05_unit_tests.js']);
     commands.push({ command: 'rehearsal-1 auth-policy test', exit_code: rAuth.exit_code });
@@ -553,9 +553,9 @@ async function gateRepresentativeModuleChangeTest({ root, candidateSha, contract
   // Rehearsal 2: communication ACL change
   const commTarget = path.join(root, 'backend/src/platform/communication/acl.adapter.ts');
   const commRadius = analyzers.predictBlastRadius({ root, file: 'backend/src/platform/communication/acl.adapter.ts' });
-  const originalCommContent = fs.readFileSync(commTarget, 'utf8');
+  const originalCommContent = fs.readFileSync(commTarget, 'utf8').replace(/\r?\n\/\/ \[p05-rehearsal-comm-acl\]\r?\n?/g, '');
   try {
-    fs.appendFileSync(commTarget, '\n// [p05-rehearsal-comm-acl]\n');
+    fs.writeFileSync(commTarget, originalCommContent + '\n// [p05-rehearsal-comm-acl]\n');
     const rComm = runCommand(root, 'node', ['scripts/ssot/_p05_unit_tests.js']);
     commands.push({ command: 'rehearsal-2 comm-acl test', exit_code: rComm.exit_code });
     if (rComm.exit_code === 0 && commRadius.count >= 0) {
@@ -568,9 +568,9 @@ async function gateRepresentativeModuleChangeTest({ root, candidateSha, contract
   // Rehearsal 3: outbox handler change
   const outboxTarget = path.join(root, 'backend/src/platform/outbox/outbox.service.ts');
   const outboxRadius = analyzers.predictBlastRadius({ root, file: 'backend/src/platform/outbox/outbox.service.ts' });
-  const originalOutboxContent = fs.readFileSync(outboxTarget, 'utf8');
+  const originalOutboxContent = fs.readFileSync(outboxTarget, 'utf8').replace(/\r?\n\/\/ \[p05-rehearsal-outbox\]\r?\n?/g, '');
   try {
-    fs.appendFileSync(outboxTarget, '\n// [p05-rehearsal-outbox]\n');
+    fs.writeFileSync(outboxTarget, originalOutboxContent + '\n// [p05-rehearsal-outbox]\n');
     const rOutbox = runCommand(root, 'node', ['scripts/ssot/_p05_unit_tests.js']);
     commands.push({ command: 'rehearsal-3 outbox test', exit_code: rOutbox.exit_code });
     if (rOutbox.exit_code === 0 && outboxRadius.count >= 0) {

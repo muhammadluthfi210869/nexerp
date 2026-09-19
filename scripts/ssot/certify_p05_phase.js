@@ -115,7 +115,15 @@ async function main() {
   } finally {
     evidence.completed_at = new Date().toISOString();
     fs.mkdirSync(path.dirname(OUT), { recursive: true });
-    fs.writeFileSync(OUT, JSON.stringify(evidence, null, 2) + '\n', 'utf8');
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        fs.writeFileSync(OUT, JSON.stringify(evidence, null, 2) + '\n', 'utf8');
+        break;
+      } catch (err) {
+        if (attempt === 4) throw err;
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
+      }
+    }
     console.log(JSON.stringify({ phase: evidence.phase, candidate_sha: evidence.candidate_sha, verdict: evidence.verdict, token: evidence.token, evidence: normalize(path.relative(ROOT, OUT)), failure: evidence.failure }, null, 2));
     if (evidence.verdict !== 'PHASE_PASS') process.exitCode = 1;
   }
