@@ -13,20 +13,6 @@ import { Prisma } from '@prisma/client';
 import { randomUUID, createHash } from 'crypto';
 import { parse } from 'csv-parse/sync';
 
-/**
- * Note on @Optional(): the FROZEN oracle gate at scripts/ssot/lib/p06_gates.js:549
- * instantiates this service as `new ImportExportService(prisma)` from compiled dist/.
- * Keeping @Optional() preserves that legacy probe path. In the production Nest DI
- * flow (MasterModule imports PlatformModule), all four P05 services are MANDATORY
- * because PlatformModule registers them globally. Production paths prove governance
- * via:
- *   - policyService.decide() called in enforcePolicy() (import + export)
- *   - scopeService.maskField() called in exportData (field redaction)
- *   - auditService.withAudit() called in importData transaction
- *   - outboxService.enqueue() called inside withAudit callback
- */
-
-
 export interface ImportOptions {
   dryRun?: boolean;
   tenantId?: string;
@@ -53,51 +39,25 @@ export interface ImportResult {
   errors: Array<{ row: number; field?: string; message: string }>;
 }
 
+/**
+ * P06-R4-B2: AuditService, OutboxService, PolicyService, ScopeService are MANDATORY
+ * constructor dependencies. There is no @Optional marker, no null-returning
+ * require* helper, and no noopWithAudit fallback. Production Nest DI
+ * (MasterModule imports PlatformModule) resolves all four globally. Anyone
+ * instantiating this service directly with fewer than four P05 dependencies
+ * causes a TypeScript compile error.
+ */
 @Injectable()
 export class ImportExportService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly auditService?: AuditService,
-    private readonly outboxService?: OutboxService,
-    private readonly policyService?: PolicyService,
-    private readonly scopeService?: ScopeService
+    private readonly auditService: AuditService,
+    private readonly outboxService: OutboxService,
+    private readonly policyService: PolicyService,
+    private readonly scopeService: ScopeService
   ) {}
 
-  private requirePolicy(): PolicyService | null {
-    return this.policyService || null;
-  }
-
-  private requireScope(): ScopeService | null {
-    return this.scopeService || null;
-  }
-
-  private requireAudit(): AuditService | null {
-    return this.auditService || null;
-  }
-
-  private requireOutbox(): OutboxService | null {
-    return this.outboxService || null;
-  }
-
-  /**
-   * No-op audit transaction wrapper used ONLY when AuditService is not injected
-   * (the legacy direct-construction path instantiated by the FROZEN oracle gate
-   * at scripts/ssot/lib/p06_gates.js:549 with `new ImportExportService(prisma)`).
-   * In the production Nest DI path, AuditService is mandatory (PlatformModule
-   * global provider) and this fallback is unreachable.
-   */
-  private async noopWithAudit<T>(
-    _tx: Prisma.TransactionClient,
-    _audit: unknown,
-    fn: (tx: Prisma.TransactionClient) => Promise<T>
-  ): Promise<T> {
-    return fn(_tx);
-  }
-
-  /**
-   * Neutralizes formula injection vulnerabilities (CSV/Excel)
-   * Cells starting with =, +, -, @, \t, \r are prepended with a single quote '
-   */
+  /** Neutralizes formula injection vulnerabilities (CSV/Excel). */
   sanitizeCellValue(val: unknown): unknown {
     if (typeof val === 'string') {
       if (['=', '+', '-', '@', '\t', '\r'].some((char) => val.startsWith(char))) {
@@ -124,20 +84,24 @@ export class ImportExportService {
     return createHash('sha256').update(serialized).digest('hex');
   }
 
+  /**
+   * P06-R4-B3: enforcePolicy fails closed when actor is missing, actor.id is
+   * missing, or required tenant/organization scope is unresolved. Never returns
+   * success when actor is absent.
+   */
   private enforcePolicy(
     entity: string,
     action: 'import' | 'export',
     options: { actor?: PolicyActor; tenantId?: string; clientInjectedTenantId?: string; clientInjectedRoles?: string[] }
   ): void {
-    if (!options.actor) {
-      return;
+    if (!options.actor || !options.actor.id) {
+      throw new ForbiddenException('MISSING_ACTOR_CONTEXT: authenticated actor required');
     }
-    if (!options.actor.id) {
-      throw new ForbiddenException('PERMISSION_DENY_DEFAULT: Missing actor context');
+    if (!options.actor.organizationId) {
+      throw new ForbiddenException('MISSING_TENANT_SCOPE: actor has no organizationId');
     }
 
-    const policy = this.requirePolicy();
-    const decision = policy!.decide({
+    const decision = this.policyService.decide({
       actor: options.actor,
       action: `${entity}:${action}`,
       requiredPermission: `${entity}:${action === 'import' ? 'write' : 'read'}`,
@@ -159,14 +123,19 @@ export class ImportExportService {
     const entLower = entity.toLowerCase().replace(/[-_]/g, '');
     this.enforcePolicy(entLower, 'export', options);
 
-    const scope = this.requireScope();
-
     const limit = Number(filter?.limit) || 50;
     const safeLimit = Math.min(Math.max(1, limit), 200);
     const page = Math.max(1, Number(filter?.page) || 1);
     const skip = (page - 1) * safeLimit;
 
     const where: Record<string, any> = { ...(filter?.where || {}) };
+    // P06-R4-D: Master entities (Unit, Category, TaxRate, MaterialItem,
+    // Warehouse, Supplier, Customer) are global canonical masters. They
+    // do not carry an `organizationId` column in the physical schema. Tenant
+    // scope for these is therefore access-control driven (PolicyService.decide
+    // role/permission checks) rather than row-level filter. Cross-tenant
+    // isolation is enforced upstream in enforcePolicy(); audit logs capture
+    // the actor+tenant combination per request.
     if (filter?.search && typeof filter.search === 'string') {
       const s = filter.search.trim();
       if (s) {
@@ -268,13 +237,12 @@ export class ImportExportService {
 
     const sanitizedRecords = records.map((r) => this.sanitizeExportRow(r));
 
-    // Apply field-scope masking for sensitive columns via ScopeService
-    const masked = scope ? sanitizedRecords.map((r) =>
-      scope!.maskField<Record<string, any>>(r, ['taxId', 'bankAccount', 'npwp'], {
-        userId: options.actor?.id || 'system',
-        organizationId: options.tenantId || options.actor?.organizationId || '',
+    const masked = sanitizedRecords.map((r) =>
+      this.scopeService.maskField<Record<string, any>>(r, ['taxId', 'bankAccount', 'npwp'], {
+        userId: options.actor!.id,
+        organizationId: options.tenantId || options.actor!.organizationId || '',
       })
-    ) : sanitizedRecords;
+    );
 
     if (options.format === 'csv') {
       return this.serializeToCsv(masked);
@@ -305,7 +273,9 @@ export class ImportExportService {
   }
 
   parseCsv(csvString: string): Record<string, any>[] {
-    if (!csvString || !csvString.trim()) return [];
+    if (!csvString || !csvString.trim()) {
+      throw new BadRequestException('CSV_EMPTY: CSV content cannot be empty');
+    }
     try {
       const records = parse(csvString, {
         columns: true,
@@ -316,7 +286,7 @@ export class ImportExportService {
       });
       return records as Record<string, any>[];
     } catch (err: any) {
-      throw new BadRequestException(`CSV parsing failed: ${err.message}`);
+      throw new BadRequestException(`CSV_PARSE_FAILED: ${err.message}`);
     }
   }
 
@@ -334,47 +304,15 @@ export class ImportExportService {
     } else if (Array.isArray(rowsOrCsv)) {
       rows = rowsOrCsv;
     } else {
-      throw new BadRequestException('Invalid import payload: expected rows array or CSV string');
-    }
-
-    const payloadDigest = this.computePayloadDigest(rowsOrCsv);
-    const resolvedTenant = options.tenantId || options.actor?.organizationId || null;
-
-    // ── Persistent Idempotency Check (tenant-scoped; ImportExecution.tenantId column) ──
-    if (options.idempotencyKey) {
-      const existing = await this.prisma.importExecution.findFirst({
-        where: {
-          tenantId: resolvedTenant,
-          entityType: entLower,
-          idempotencyKey: options.idempotencyKey,
-        },
-      });
-
-      if (existing) {
-        if (existing.payloadDigest === payloadDigest) {
-          if (existing.status === 'SUCCEEDED' && existing.resultSummary) {
-            return existing.resultSummary as unknown as ImportResult;
-          }
-          if (existing.status === 'IN_PROGRESS') {
-            throw new ConflictException('Import operation already in progress');
-          }
-        } else {
-          throw new ConflictException(
-            'IDEMPOTENCY_CONFLICT: Key "' + options.idempotencyKey + '" previously executed with different payload'
-          );
-        }
-      }
+      throw new BadRequestException('INVALID_IMPORT_PAYLOAD: expected rows array or CSV string');
     }
 
     if (!Array.isArray(rows) || rows.length === 0) {
-      return {
-        success: true,
-        totalRows: 0,
-        importedRows: 0,
-        dryRun: !!options.dryRun,
-        errors: [],
-      };
+      throw new BadRequestException('IMPORT_BATCH_EMPTY: at least one row is required');
     }
+
+    const payloadDigest = this.computePayloadDigest(rowsOrCsv);
+    const resolvedTenant = options.tenantId || options.actor!.organizationId;
 
     // ── Row-Level Validation ──
     const errors: Array<{ row: number; field?: string; message: string }> = [];
@@ -413,17 +351,17 @@ export class ImportExportService {
       }
     });
 
+    // P06-R4-B4: any validation failure throws canonical 400 — never returns
+    // a "success: false" transport success. Row-level diagnostics are preserved
+    // in the exception payload for the caller.
     if (errors.length > 0) {
-      // Validation failed. Whether dry-run or commit, batch is rejected atomically
-      // (no rows, no audit, no outbox, no SUCCEEDED idempotency row).
-      return {
-        success: false,
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'IMPORT_VALIDATION_FAILED',
+        message: 'VALIDATION_FAILED: Import batch contains validation errors',
         totalRows: rows.length,
-        importedRows: 0,
-        dryRun: !!options.dryRun,
-        idempotencyKey: options.idempotencyKey,
         errors,
-      };
+      });
     }
 
     if (options.dryRun) {
@@ -437,8 +375,40 @@ export class ImportExportService {
       };
     }
 
-    // ── All-or-Nothing Atomic Transaction ──
+    // ── All-or-Nothing Atomic Transaction with intra-transaction idempotency acquisition
+    // P06-R4-B5: the entire idempotency check + lock + master mutation + audit +
+    // outbox run inside one tx. Two concurrent identical requests serialize at
+    // the advisory lock, and the second transaction observes the first's
+    // committed SUCCEEDED row before attempting the master mutation.
     return await this.prisma.$transaction(async (tx) => {
+      if (options.idempotencyKey) {
+        const lockHash = createHash('sha256')
+          .update(`${resolvedTenant}|${entLower}|${options.idempotencyKey}`)
+          .digest();
+        const lockInt = lockHash.readUInt32BE(0) % 0x7FFFFFFE;
+        await tx.$queryRawUnsafe(`SELECT (pg_advisory_xact_lock(${lockInt}::bigint))::text AS acquired`);
+
+        // Re-check inside the transaction so we observe any committed winner.
+        const existing = await tx.importExecution.findFirst({
+          where: {
+            tenantId: resolvedTenant,
+            entityType: entLower,
+            idempotencyKey: options.idempotencyKey,
+          },
+        });
+        if (existing) {
+          if (existing.payloadDigest === payloadDigest && existing.status === 'SUCCEEDED' && existing.resultSummary) {
+            return existing.resultSummary as unknown as ImportResult;
+          }
+          if (existing.payloadDigest !== payloadDigest) {
+            throw new ConflictException(
+              `IDEMPOTENCY_CONFLICT: Key "${options.idempotencyKey}" previously executed with different payload`
+            );
+          }
+          throw new ConflictException('IMPORT_IN_PROGRESS: another import with this key is currently running');
+        }
+      }
+
       let importedCount = 0;
       for (const row of rows) {
         const code = row.code ? String(row.code).trim().toUpperCase() : undefined;
@@ -634,15 +604,13 @@ export class ImportExportService {
       // ── Atomic Audit and Outbox (fails transaction if either fails) ──
       const batchId = randomUUID();
       const correlationId = randomUUID();
-      const audit = this.requireAudit();
-      const outbox = this.requireOutbox();
 
-      const auditExecutor = audit ? audit!.withAudit : this.noopWithAudit;
-      await auditExecutor.call(audit, tx,
+      await this.auditService.withAudit(
+        tx,
         {
-          actorUserId: options.actor?.id || null,
-          actorRoleSlug: options.actor?.roles?.[0] || 'ADMIN',
-          actorPermissionSnapshot: { roles: options.actor?.roles, action: `${entLower}:import` },
+          actorUserId: options.actor!.id,
+          actorRoleSlug: options.actor!.roles?.[0] || 'ADMIN',
+          actorPermissionSnapshot: { roles: options.actor!.roles, action: `${entLower}:import` },
           tenantId: resolvedTenant,
           correlationId,
           idempotencyKey: options.idempotencyKey || null,
@@ -653,17 +621,15 @@ export class ImportExportService {
           afterSnapshot: { totalRows: rows.length, importedRows: importedCount },
         },
         async (txInner: Prisma.TransactionClient) => {
-          if (outbox) {
-            await outbox!.enqueue(txInner, {
-              eventType: 'MASTER_DATA_IMPORTED',
-              aggregateType: entity,
-              aggregateId: batchId,
-              idempotencyKey: options.idempotencyKey ? `${options.idempotencyKey}:outbox` : randomUUID(),
-              payload: { entity, count: importedCount, tenantId: resolvedTenant, batchId },
-              correlationId,
-              tenantId: resolvedTenant,
-            });
-          }
+          await this.outboxService.enqueue(txInner, {
+            eventType: 'MASTER_DATA_IMPORTED',
+            aggregateType: entity,
+            aggregateId: batchId,
+            idempotencyKey: options.idempotencyKey ? `${options.idempotencyKey}:outbox` : randomUUID(),
+            payload: { entity, count: importedCount, tenantId: resolvedTenant, batchId },
+            correlationId,
+            tenantId: resolvedTenant,
+          });
           return successResult;
         }
       );

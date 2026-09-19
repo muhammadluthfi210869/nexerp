@@ -17,6 +17,38 @@ const analyzers = require('./p06_analyzers');
 const safety = require('./p06_safety');
 const { P06GateError } = safety;
 
+/**
+ * P06-R4 authorized oracle amendment: strict ImportExportService test factory.
+ * Builds a real service instance with the four mandatory P05 platform
+ * dependencies (AuditService, OutboxService, PolicyService, ScopeService) plus
+ * the prisma client. Replaces every direct one-argument
+ * `new ImportExportService(prisma)` site so the contract's mandatory-dependency
+ * requirement is enforced. Fails closed if any service fails to load.
+ */
+function buildStrictImportExportService(ctx, opts = {}) {
+  if (!ctx || !ctx.prisma) {
+    throw new P06GateError('import_export', 'MISSING_DB_CONTEXT', 'strict factory requires ctx.prisma');
+  }
+  const root = ctx.root;
+  const prisma = ctx.prisma;
+  try {
+    const { ImportExportService } = require(path.join(root, 'backend/dist/modules/master/services/import-export.service'));
+    const { AuditService } = require(path.join(root, 'backend/dist/platform/audit/audit.service'));
+    const { OutboxService } = require(path.join(root, 'backend/dist/platform/outbox/outbox.service'));
+    const { PolicyService } = require(path.join(root, 'backend/dist/platform/policy/policy.service'));
+    const { ScopeService } = require(path.join(root, 'backend/dist/platform/scope/scope.service'));
+    return new ImportExportService(
+      prisma,
+      new AuditService(prisma),
+      new OutboxService(prisma),
+      new PolicyService(),
+      new ScopeService(prisma)
+    );
+  } catch (err) {
+    throw new P06GateError('import_export', 'STRICT_FACTORY_LOAD_FAILED', `Strict ImportExportService factory failed: ${err && err.message}`);
+  }
+}
+
 // ----------------------------------------------------------------------------
 // Seam Test Implementations
 // ----------------------------------------------------------------------------
@@ -167,9 +199,22 @@ const SEAM_TEST_RUNNERS = {
     if (!ctx.prisma && !ctx.pool) {
       throw new P06GateError('role_tenant_field_scope', 'MISSING_DB_CONTEXT', 'Database context required for scoped export');
     }
-    const { ImportExportService } = require(path.join(ctx.root, 'backend/dist/modules/master/services/import-export.service'));
-    const service = new ImportExportService(ctx.prisma);
-    const exported = await service.exportData('unit', { where: { isActive: true } });
+    // ImportExportService is constructed exclusively via the strict factory
+// buildStrictImportExportService(ctx) defined at module scope.
+    const service = buildStrictImportExportService(ctx);
+    // P06-R4-B3: every governed export must provide a typed, server-derived
+    // actor context. The oracle gate provides one explicitly.
+    const exported = await service.exportData(
+      'unit',
+      { where: { isActive: true } },
+      {
+        actor: {
+          id: '00000000-0000-0000-0000-0000000000f1',
+          roles: ['SUPER_ADMIN'],
+          organizationId: '00000000-0000-0000-0000-0000000000a1',
+        },
+      }
+    );
     if (!Array.isArray(exported) || exported.length === 0) {
       throw new P06GateError('role_tenant_field_scope', 'EXPORT_DATA_EMPTY', 'Export returned zero rows');
     }
@@ -333,8 +378,9 @@ const SEAM_TEST_RUNNERS = {
     if (!ctx.prisma && !ctx.pool) {
       throw new P06GateError('import_export', 'MISSING_DB_CONTEXT', 'Database context required for import test');
     }
-    const { ImportExportService } = require(path.join(ctx.root, 'backend/dist/modules/master/services/import-export.service'));
-    const service = new ImportExportService(ctx.prisma);
+    // ImportExportService is constructed exclusively via the strict factory
+// buildStrictImportExportService(ctx) defined at module scope.
+    const service = buildStrictImportExportService(ctx);
 
     const importBatch = [
       { code: `IMP-UOM-1-${Date.now().toString().slice(-4)}`, name: 'Imported Unit One', symbol: 'iu1' },
@@ -342,7 +388,12 @@ const SEAM_TEST_RUNNERS = {
     ];
 
     const result = await service.importData('unit', importBatch, {
-      idempotencyKey: `idemp-uom-${Date.now()}`
+      idempotencyKey: `idemp-uom-${Date.now()}`,
+      actor: {
+        id: '00000000-0000-0000-0000-0000000000f2',
+        roles: ['SUPER_ADMIN'],
+        organizationId: '00000000-0000-0000-0000-0000000000a1',
+      },
     });
 
     if (!result.success || result.importedRows !== 2) {
@@ -364,10 +415,17 @@ const SEAM_TEST_RUNNERS = {
     if (!ctx.prisma && !ctx.pool) {
       throw new P06GateError('import_export', 'MISSING_DB_CONTEXT', 'Database context required for export test');
     }
-    const { ImportExportService } = require(path.join(ctx.root, 'backend/dist/modules/master/services/import-export.service'));
-    const service = new ImportExportService(ctx.prisma);
+    // ImportExportService is constructed exclusively via the strict factory
+// buildStrictImportExportService(ctx) defined at module scope.
+    const service = buildStrictImportExportService(ctx);
 
-    const exported = await service.exportData('unit', { where: { isActive: true } });
+    const exported = await service.exportData('unit', { where: { isActive: true } }, {
+      actor: {
+        id: '00000000-0000-0000-0000-0000000000f3',
+        roles: ['SUPER_ADMIN'],
+        organizationId: '00000000-0000-0000-0000-0000000000a1',
+      },
+    });
     if (!Array.isArray(exported) || exported.length === 0) {
       throw new P06GateError('import_export', 'EXPORT_DATA_EMPTY', 'Export returned empty array');
     }
@@ -387,8 +445,9 @@ const SEAM_TEST_RUNNERS = {
     if (!ctx.prisma && !ctx.pool) {
       throw new P06GateError('import_export', 'MISSING_DB_CONTEXT', 'Database context required for rollback test');
     }
-    const { ImportExportService } = require(path.join(ctx.root, 'backend/dist/modules/master/services/import-export.service'));
-    const service = new ImportExportService(ctx.prisma);
+    // ImportExportService is constructed exclusively via the strict factory
+// buildStrictImportExportService(ctx) defined at module scope.
+    const service = buildStrictImportExportService(ctx);
 
     const testCode = `ROLLBACK-UOM-${Date.now().toString().slice(-4)}`;
     const invalidBatch = [
@@ -396,8 +455,33 @@ const SEAM_TEST_RUNNERS = {
       { code: '', name: 'Invalid Missing Code' }
     ];
 
-    const result = await service.importData('unit', invalidBatch);
-    if (result.success) {
+    // P06-R4-B4: validation failure must surface a canonical rejection.
+// ImportExportService.importData throws BadRequestException with the
+// IMPORT_VALIDATION_FAILED code. The oracle gate calls the service
+// directly and must observe the throw and treat absence-of-throw as a
+// failure (i.e. an accepted invalid batch).
+    let invalidAccepted = false;
+    let validationError;
+    try {
+      await service.importData('unit', invalidBatch, {
+        actor: {
+          id: '00000000-0000-0000-0000-0000000000f4',
+          roles: ['SUPER_ADMIN'],
+          organizationId: '00000000-0000-0000-0000-0000000000a1',
+        },
+      });
+    } catch (e) {
+      validationError = e;
+    }
+    if (!validationError) {
+      invalidAccepted = true;
+    } else {
+      const msg = validationError?.message || '';
+      if (!/IMPORT_VALIDATION_FAILED|VALIDATION_FAILED/i.test(msg)) {
+        throw validationError;
+      }
+    }
+    if (invalidAccepted) {
       throw new P06GateError('import_export', 'INVALID_BATCH_ACCEPTED', 'Invalid batch was accepted unexpectedly');
     }
 
@@ -412,8 +496,9 @@ const SEAM_TEST_RUNNERS = {
 
   export_neutralizes_formula_injection: async (ctx) => {
     const start = Date.now();
-    const { ImportExportService } = require(path.join(ctx.root, 'backend/dist/modules/master/services/import-export.service'));
-    const service = new ImportExportService();
+    // ImportExportService is constructed exclusively via the strict factory
+// buildStrictImportExportService(ctx) defined at module scope.
+    const service = buildStrictImportExportService(ctx);
 
     const formulaPayloads = [
       '=cmd|"/C calc"!A0',
