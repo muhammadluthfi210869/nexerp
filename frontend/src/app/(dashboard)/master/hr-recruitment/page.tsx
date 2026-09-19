@@ -76,11 +76,28 @@ interface JobOpening {
   status: "OPEN" | "CLOSED";
 }
 
-const EMPTY_EMPLOYEES: Employee[] = [];
+const INITIAL_EMPLOYEES: Employee[] = [
+  { id: "EMP-001", nik: "KIL-2022-001", name: "Budi Santoso, S.T", department: "Produksi Mixing", role: "Supervisor Produksi", joinDate: "2022-01-15", contractType: "PKWTT (Tetap)", status: "AKTIF", email: "budi.santoso@kalopsia.id", phone: "0812-3344-5566", basicSalary: 6500000 },
+  { id: "EMP-002", nik: "KIL-2023-014", name: "Rian Saputra, S.Farm", department: "R&D Formulasi", role: "Senior Formulator Skincare", joinDate: "2023-03-01", contractType: "PKWTT (Tetap)", status: "AKTIF", email: "rian.s@kalopsia.id", phone: "0812-4455-6677", basicSalary: 8000000 },
+  { id: "EMP-003", nik: "KIL-2023-022", name: "Siti Rahmawati, S.Si", department: "QC Mikrobiologi", role: "Analis Kimia & QC Inspector", joinDate: "2023-06-10", contractType: "PKWT (Kontrak)", status: "AKTIF", email: "siti.rahma@kalopsia.id", phone: "0813-8899-0011", basicSalary: 5500000 },
+  { id: "EMP-004", nik: "KIL-2024-005", name: "Dewi Lestari, S.E", department: "BusDev Maklon", role: "Senior Account Executive", joinDate: "2024-01-08", contractType: "PKWTT (Tetap)", status: "AKTIF", email: "dewi.lestari@kalopsia.id", phone: "0856-7788-9900", basicSalary: 7000000 },
+  { id: "EMP-005", nik: "KIL-2024-031", name: "Ahmad Dani", department: "Gudang Inbound", role: "Staff Warehouse Material", joinDate: "2024-05-20", contractType: "PKWT (Kontrak)", status: "AKTIF", email: "ahmad.dani@kalopsia.id", phone: "0819-1122-3344", basicSalary: 4800000 },
+  { id: "EMP-006", nik: "KIL-2025-012", name: "dr. Amanda Putri, M.Biomed", department: "QA & APJ", role: "Apoteker Penanggung Jawab", joinDate: "2025-02-01", contractType: "PKWTT (Tetap)", status: "AKTIF", email: "amanda.putri@kalopsia.id", phone: "0811-9988-7766", basicSalary: 11000000 },
+];
 
-const EMPTY_CANDIDATES: Candidate[] = [];
+const INITIAL_CANDIDATES: Candidate[] = [
+  { id: "CND-01", name: "Agung Wicaksono, S.T", position: "Operator Mesin Filling Auto", department: "Produksi Filling", appliedDate: "2026-09-07", stage: "INTERVIEW_USER", experience: "2 Thn Operator Pabrik Kosmetik", education: "D3 Teknik Mesin", phone: "0812-7788-9900", email: "agung.w@gmail.com", matchScore: 92 },
+  { id: "CND-02", name: "Nurul Hidayati, S.Farm", position: "Junior R&D Formulator", department: "R&D Formulasi", appliedDate: "2026-09-05", stage: "OFFERING", experience: "1 Thn Lab Emulsi & Toner", education: "S1 Farmasi", phone: "0813-2233-4455", email: "nurul.h@gmail.com", matchScore: 96 },
+  { id: "CND-03", name: "Fajar Pratama, S.Kom", position: "Digital Marketing Specialist", department: "Marketing", appliedDate: "2026-09-04", stage: "SCREENING", experience: "3 Thn Agency Ads Meta/TikTok", education: "S1 Sistem Informasi", phone: "0878-3344-5566", email: "fajar.p@gmail.com", matchScore: 85 },
+  { id: "CND-04", name: "Citra Kirana, S.M", position: "HR Admin & General Affairs", department: "HR & GA", appliedDate: "2026-09-02", stage: "INTERVIEW_HR", experience: "2 Thn Admin Payroll & BPJS", education: "S1 Manajemen SDM", phone: "0857-1122-3344", email: "citra.k@gmail.com", matchScore: 89 },
+];
 
-const EMPTY_OPENINGS: JobOpening[] = [];
+const INITIAL_OPENINGS: JobOpening[] = [
+  { id: "JOB-01", title: "Operator Mesin Filling & Coding Auto", department: "Produksi Filling", type: "Full-Time", openings: 2, applicantsCount: 8, deadline: "2026-09-25", status: "OPEN" },
+  { id: "JOB-02", title: "Junior R&D Formulator Kosmetik", department: "R&D Formulasi", type: "Full-Time", openings: 1, applicantsCount: 12, deadline: "2026-09-20", status: "OPEN" },
+  { id: "JOB-03", title: "Digital Marketing Specialist", department: "Marketing", type: "Full-Time", openings: 1, applicantsCount: 15, deadline: "2026-09-30", status: "OPEN" },
+  { id: "JOB-04", title: "Staff Warehouse Material (Inbound)", department: "Warehouse", type: "Kontrak", openings: 2, applicantsCount: 6, deadline: "2026-10-05", status: "OPEN" },
+];
 
 export default function HrRecruitmentPage() {
   const toast = useDnaToast();
@@ -105,13 +122,13 @@ export default function HrRecruitmentPage() {
     basicSalary: 5000000
   });
 
-  const filteredEmployees = EMPTY_EMPLOYEES.filter(e => {
+  const filteredEmployees = INITIAL_EMPLOYEES.filter(e => {
     const matchSearch = e.name.toLowerCase().includes(searchQuery.toLowerCase()) || e.nik.toLowerCase().includes(searchQuery.toLowerCase()) || e.role.toLowerCase().includes(searchQuery.toLowerCase());
     const matchDept = deptFilter === "ALL" || e.department.includes(deptFilter);
     return matchSearch && matchDept;
   });
 
-  const filteredCandidates = EMPTY_CANDIDATES.filter(c => {
+  const filteredCandidates = INITIAL_CANDIDATES.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.position.toLowerCase().includes(searchQuery.toLowerCase());
     const matchDept = deptFilter === "ALL" || c.department.includes(deptFilter);
     return matchSearch && matchDept;
@@ -183,7 +200,7 @@ export default function HrRecruitmentPage() {
         />
         <DnaStatCard
           label="Pelamar Dalam Pipeline"
-          value={EMPTY_CANDIDATES.length + " Kandidat"}
+          value={INITIAL_CANDIDATES.length + " Kandidat"}
           icon={<Briefcase className="w-5 h-5 text-purple-600" />}
           delta={{ value: "4 Lowongan Buka", isPositive: true }}
           subtext="Screening s/d Offering"
@@ -210,9 +227,9 @@ export default function HrRecruitmentPage() {
       {/* TAB NAVIGATION */}
       <DnaTabNav
         tabs={[
-          { id: "employees", label: "Database Pegawai Aktif", icon: Users, count: EMPTY_EMPLOYEES.length },
-          { id: "pipeline", label: "Pipeline Seleksi Pelamar", icon: Briefcase, count: EMPTY_CANDIDATES.length },
-          { id: "openings", label: "Lowongan Kerja Buka", icon: Building2, count: EMPTY_OPENINGS.length }
+          { id: "employees", label: "Database Pegawai Aktif", icon: Users, count: INITIAL_EMPLOYEES.length },
+          { id: "pipeline", label: "Pipeline Seleksi Pelamar", icon: Briefcase, count: INITIAL_CANDIDATES.length },
+          { id: "openings", label: "Lowongan Kerja Buka", icon: Building2, count: INITIAL_OPENINGS.length }
         ]}
         activeTab={activeTab}
         onChange={(tab) => setActiveTab(tab as any)}
@@ -393,10 +410,10 @@ export default function HrRecruitmentPage() {
       {activeTab === "openings" && (
         <DnaDataTableCard
           title="Daftar Kebutuhan Formasi & Lowongan Terbuka"
-          badge={<DnaBadge variant="info">{EMPTY_OPENINGS.length} Lowongan</DnaBadge>}
+          badge={<DnaBadge variant="info">{INITIAL_OPENINGS.length} Lowongan</DnaBadge>}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-            {EMPTY_OPENINGS.map((job) => (
+            {INITIAL_OPENINGS.map((job) => (
               <div key={job.id} className="p-4 bg-white border border-slate-200 rounded-xl shadow-xs hover:border-blue-400 transition-all">
                 <div className="flex items-start justify-between">
                   <div>

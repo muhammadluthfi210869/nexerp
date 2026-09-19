@@ -17,10 +17,29 @@ import {
 } from '../dto/supplier.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 
-@Controller('master/suppliers')
+import { ImportExportService } from '../services/import-export.service';
+
+@Controller(['master/suppliers', 'suppliers'])
 @UseGuards(JwtAuthGuard)
 export class SuppliersController {
-  constructor(private readonly suppliersService: SuppliersService) {}
+  constructor(
+    private readonly suppliersService: SuppliersService,
+    private readonly importExportService: ImportExportService
+  ) {}
+
+  @Get('export')
+  async exportSuppliers(@Query() query?: any) {
+    return this.importExportService.exportData('supplier', query);
+  }
+
+  @Post('import')
+  async importSuppliers(@Body() body: any) {
+    const rows = Array.isArray(body) ? body : body?.rows || body?.data || [];
+    return this.importExportService.importData('supplier', rows, {
+      idempotencyKey: body?.idempotencyKey,
+      dryRun: !!body?.dryRun,
+    });
+  }
 
   @Get()
   findAll(@Query() query?: QuerySupplierDto) {

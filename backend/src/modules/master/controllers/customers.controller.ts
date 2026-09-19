@@ -19,12 +19,33 @@ import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { CustomersService } from '../services/customers.service';
 import { CreateCustomerDto, UpdateCustomerDto } from '../dto/customer.dto';
 
+import { ImportExportService } from '../services/import-export.service';
+
 @ApiTags('Master Data')
 @ApiBearerAuth()
-@Controller('master/customers')
+@Controller(['master/customers', 'customers'])
 @UseGuards(JwtAuthGuard)
 export class CustomersController {
-  constructor(private readonly customersService: CustomersService) {}
+  constructor(
+    private readonly customersService: CustomersService,
+    private readonly importExportService: ImportExportService
+  ) {}
+
+  @Get('export')
+  @ApiOperation({ summary: 'Export customers' })
+  async exportCustomers(@Query() query?: any) {
+    return this.importExportService.exportData('customer', query);
+  }
+
+  @Post('import')
+  @ApiOperation({ summary: 'Import customers' })
+  async importCustomers(@Body() body: any) {
+    const rows = Array.isArray(body) ? body : body?.rows || body?.data || [];
+    return this.importExportService.importData('customer', rows, {
+      idempotencyKey: body?.idempotencyKey,
+      dryRun: !!body?.dryRun,
+    });
+  }
 
   @Get()
   @ApiOperation({ summary: 'List all customers (for dropdown)' })

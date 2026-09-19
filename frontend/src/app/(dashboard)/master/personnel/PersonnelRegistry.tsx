@@ -95,6 +95,57 @@ export function PersonnelRegistry() {
   // ── States ──
   const [usersList, setUsersList] = useState<MasterUserItem[]>([]);
   const [rolesList, setRolesList] = useState<MasterRoleItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorState, setErrorState] = useState<string | null>(null);
+
+  const loadPersonnelData = async () => {
+    setIsLoading(true);
+    setErrorState(null);
+    try {
+      const [uRes, rRes] = await Promise.all([
+        fetch("/api/v1/users").then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+          return r.json();
+        }),
+        fetch("/api/v1/roles").then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+          return r.json();
+        }),
+      ]);
+
+      const rawUsers = Array.isArray(uRes) ? uRes : uRes?.items || [];
+      const items: MasterUserItem[] = rawUsers.map((u: any, idx: number) => ({
+        id: u.id,
+        kodeNip: u.kodeNip || String(idx + 1).padStart(3, "0"),
+        nama: u.fullName || u.nama || u.email,
+        email: u.email,
+        phone: u.phone || "-",
+        hakAkses: Array.isArray(u.roles) && u.roles.length > 0 ? u.roles[0] : (u.hakAkses || "SCM"),
+        divisi: u.division || u.divisi || "Commercial / Sales",
+        status: u.status === "INACTIVE" ? "INACTIVE" : "ACTIVE",
+      }));
+      setUsersList(items);
+
+      const rawRoles = Array.isArray(rRes) ? rRes : [];
+      const roles: MasterRoleItem[] = rawRoles.map((r: any, idx: number) => ({
+        id: r.id || `r-${idx}`,
+        kodeRole: r.slug || r.kodeRole || r.name,
+        namaRole: r.name || r.namaRole,
+        levelOtoritas: r.permissions?.includes("*") ? "Executive / Super" : "Operational Staff",
+        deskripsi: r.description || r.deskripsi || "Hak akses operasional modul",
+        totalPengguna: items.filter((u) => u.hakAkses === (r.slug || r.name)).length,
+      }));
+      setRolesList(roles);
+    } catch (err: any) {
+      setErrorState(err.message || "Gagal memuat data personil dari server");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPersonnelData();
+  }, []);
 
   // Filter & Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -515,7 +566,24 @@ export function PersonnelRegistry() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {paginatedUsers.length === 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={9} className="p-12 text-center text-slate-400 font-medium">
+                      Memuat data personil...
+                    </td>
+                  </tr>
+                ) : errorState ? (
+                  <tr>
+                    <td colSpan={9} className="p-12 text-center text-rose-500 font-medium">
+                      <div className="flex flex-col items-center gap-2">
+                        <span>{errorState}</span>
+                        <DnaButton size="sm" variant="secondary" onClick={loadPersonnelData}>
+                          Coba Lagi
+                        </DnaButton>
+                      </div>
+                    </td>
+                  </tr>
+                ) : paginatedUsers.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="p-12 text-center text-slate-400 font-medium">
                       Tidak ada personel yang sesuai filter pencarian.

@@ -16,6 +16,9 @@ policy:
     flaky_or_quarantined: 0
   evidence_pack_required: true
   one_pass_execution_standard: _ONE_PASS_PHASE_EXECUTION_STANDARD.md
+  cumulative_regression_standard: _CUMULATIVE_REGRESSION_AND_CERTIFICATE_VALIDITY_STANDARD.md
+  current_sha_integration_health_required: true
+  historical_certificate_is_not_current_health: true
   one_prompt_per_phase_required: true
   frozen_acceptance_contract_required_before_execution: true
   authoritative_certification_command_required_per_phase: true
@@ -37,6 +40,9 @@ verification_cadence:
   allow_downstream_diagnostic_inspection_after_failure: true
   full_global_suite_each_phase: false
   full_global_suite_required_for: [P20, P21, P22]
+  integration_checkpoints: [P05, P10, P15, P19, P22]
+  permanent_foundation_sentinels_from_phase: P03
+  rerun_historical_full_certifier_only_on_invalidation: true
   dedicated_depth_phases: [P15, P19, P20, P21, P22]
   preferred_batches:
     - [P00, P03]

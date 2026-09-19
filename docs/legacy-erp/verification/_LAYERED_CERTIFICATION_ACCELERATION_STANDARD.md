@@ -8,6 +8,8 @@ The required operating loop is:
 
 `inventory all failures once → cluster by root cause → repair one cluster → targeted production-path test → cumulative preflight → one authoritative certification → one independent reproduction`
 
+Current-HEAD regression selection and historical certificate reuse follow `_CUMULATIVE_REGRESSION_AND_CERTIFICATE_VALIDITY_STANDARD.md`. Cumulative preflight means impact-selected permanent sentinels, not serial execution of every earlier full certifier.
+
 ## Two runners, two different authorities
 
 Each phase must provide both interfaces before implementation begins:
@@ -98,6 +100,7 @@ The executor may invoke the authoritative certifier only when a fresh preflight 
 - candidate scope has not changed since preflight began;
 - no unresolved failure inventory item remains;
 - required services and resource budgets are ready.
+- the current-SHA integration health ledger is `INTEGRATED_GREEN`, including every impact-selected predecessor sentinel.
 
 If the authoritative certifier fails, classify the failure first. Repair and rerun the smallest owning group, then rerun preflight. Do not immediately repeat the full certifier with unchanged code/environment.
 

@@ -52,4 +52,44 @@ export class WarehousesService {
       data: { status: 'INACTIVE' },
     });
   }
+
+  async findAccess(userId?: string) {
+    const where: any = {};
+    if (userId) where.userId = userId;
+    return this.prisma.warehouseAccess.findMany({
+      where,
+      include: {
+        warehouse: true,
+        user: { select: { id: true, fullName: true, email: true } },
+      },
+    });
+  }
+
+  async grantAccess(
+    data: { userId: string; warehouseId: string; canRead?: boolean; canWrite?: boolean; canApprove?: boolean },
+    granterId?: string
+  ) {
+    return this.prisma.warehouseAccess.upsert({
+      where: {
+        userId_warehouseId: {
+          userId: data.userId,
+          warehouseId: data.warehouseId,
+        },
+      },
+      update: {
+        canRead: data.canRead !== false,
+        canWrite: !!data.canWrite,
+        canApprove: !!data.canApprove,
+      },
+      create: {
+        userId: data.userId,
+        warehouseId: data.warehouseId,
+        canRead: data.canRead !== false,
+        canWrite: !!data.canWrite,
+        canApprove: !!data.canApprove,
+        grantedBy: granterId || null,
+      },
+    });
+  }
 }
+

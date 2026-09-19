@@ -22,6 +22,16 @@ export class WarehousesController {
     return this.warehousesService.findActive();
   }
 
+  @Get('access')
+  async findAccess() {
+    return this.warehousesService.findAccess();
+  }
+
+  @Post('access')
+  async grantAccess(@Body() body: { userId: string; warehouseId: string; canRead?: boolean; canWrite?: boolean; canApprove?: boolean }) {
+    return this.warehousesService.grantAccess(body);
+  }
+
   @Get()
   findAll() {
     return this.warehousesService.findAll();

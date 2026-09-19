@@ -1,0 +1,421 @@
+{
+  "subphases": [
+    {
+      "id": "P06-SF1-contract-inventory",
+      "status": "PASS",
+      "executed": true,
+      "test_ids": [
+        "canonical_master_inventory",
+        "schema_alias_and_referential_integrity",
+        "warehouse_coa_formulation_ownership"
+      ],
+      "results": [
+        {
+          "id": "canonical_master_inventory",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 8,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "analyzeCanonicalMasterInventory",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 16,
+          "entities_total": 16,
+          "entities_mapped": 16,
+          "unmapped_canonical_masters": 0,
+          "unmapped_details": [],
+          "canonical_master_inventory_coverage_percent": 100,
+          "required_operation_coverage_percent": 100,
+          "required_screen_live_data_coverage_percent": 100,
+          "screens_covered": [
+            "SCR-006",
+            "SCR-007",
+            "SCR-008",
+            "SCR-009",
+            "SCR-010",
+            "SCR-011",
+            "SCR-012",
+            "SCR-013",
+            "SCR-014",
+            "SCR-015",
+            "SCR-016",
+            "SCR-017",
+            "SCR-018",
+            "SCR-019",
+            "SCR-020",
+            "SCR-021",
+            "SCR-022",
+            "SCR-023",
+            "SCR-024",
+            "SCR-087",
+            "SCR-088",
+            "SCR-SYS-001"
+          ],
+          "screens_missing": []
+        },
+        {
+          "id": "schema_alias_and_referential_integrity",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 1,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "analyzeSchemaAliases",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 4,
+          "duplicate_master_sources": 0,
+          "duplicate_details": [],
+          "alias_pairs": [
+            {
+              "canonical": "Customer",
+              "physical": "SalesLead",
+              "writerModule": "busdev"
+            },
+            {
+              "canonical": "Goods",
+              "physical": "MaterialItem",
+              "writerModule": "scm"
+            },
+            {
+              "canonical": "ChartOfAccount",
+              "physical": "Account",
+              "writerModule": "finance"
+            },
+            {
+              "canonical": "Formulation",
+              "physical": "Formula",
+              "writerModule": "rnd"
+            }
+          ],
+          "referential_integrity_violations": 0
+        },
+        {
+          "id": "warehouse_coa_formulation_ownership",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 1,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "verify warehouse_coa_formulation_ownership",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 3
+        }
+      ],
+      "target_count": 23,
+      "duration_ms": 10
+    },
+    {
+      "id": "P06-SF2-identity-config",
+      "status": "PASS",
+      "executed": true,
+      "test_ids": [
+        "organization_division_user_role_config",
+        "role_tenant_field_scope",
+        "audit_outbox_atomicity"
+      ],
+      "results": [
+        {
+          "id": "organization_division_user_role_config",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 0,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "verify organization_division_user_role_config",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 6
+        },
+        {
+          "id": "role_tenant_field_scope",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 0,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "verify role_tenant_field_scope",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 5,
+          "authorization_bypasses": 0,
+          "tenant_or_field_leaks": 0,
+          "export_scope_bypasses": 0
+        },
+        {
+          "id": "audit_outbox_atomicity",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 0,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "verify audit_outbox_atomicity",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 4,
+          "missing_or_nonatomic_audits": 0
+        }
+      ],
+      "target_count": 15,
+      "duration_ms": 0
+    },
+    {
+      "id": "P06-SF3-catalog-masters",
+      "status": "PASS",
+      "executed": true,
+      "test_ids": [
+        "catalog_reference_masters",
+        "customer_supplier_masters",
+        "master_crud",
+        "uniqueness_and_code_generation",
+        "soft_delete_and_reference_policy"
+      ],
+      "results": [
+        {
+          "id": "catalog_reference_masters",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 0,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "verify catalog_reference_masters",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 6
+        },
+        {
+          "id": "customer_supplier_masters",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 0,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "verify customer_supplier_masters",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 2
+        },
+        {
+          "id": "master_crud",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 1,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "analyzeDirectPrismaInControllers",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 7,
+          "direct_prisma_controller_access": 0
+        },
+        {
+          "id": "uniqueness_and_code_generation",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 2,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "analyzeCodeGeneration",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 5,
+          "nondeterministic_codes": 0,
+          "uniqueness_violations": 0
+        },
+        {
+          "id": "soft_delete_and_reference_policy",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 0,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "verify soft_delete_and_reference_policy",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 6,
+          "hard_deleted_referenced_rows": 0,
+          "soft_deleted_visibility_leaks": 0
+        }
+      ],
+      "target_count": 26,
+      "duration_ms": 4
+    },
+    {
+      "id": "P06-SF4-bulk-io",
+      "status": "PASS",
+      "executed": true,
+      "test_ids": [
+        "import_export",
+        "pagination_filter_and_search"
+      ],
+      "results": [
+        {
+          "id": "import_export",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 0,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "verify import_export",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 4,
+          "import_partial_commits": 0,
+          "import_duplicate_side_effects": 0
+        },
+        {
+          "id": "pagination_filter_and_search",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 1,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "analyzePaginationAndFilters",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 6,
+          "default_page_size": 50,
+          "maximum_page_size": 200
+        }
+      ],
+      "target_count": 10,
+      "duration_ms": 1
+    },
+    {
+      "id": "P06-SF5-frontend-ui",
+      "status": "PASS",
+      "executed": true,
+      "test_ids": [
+        "frontend_live_data_and_dna"
+      ],
+      "results": [
+        {
+          "id": "frontend_live_data_and_dna",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 10,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "analyzeProductionMockFallbacks",
+              "exit_code": 0
+            },
+            {
+              "command": "analyzeUiDnaCompliance",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 15,
+          "production_mock_fallbacks": 0,
+          "ui_dna_violations": 0,
+          "required_screen_live_data_coverage_percent": 100
+        }
+      ],
+      "target_count": 15,
+      "duration_ms": 10
+    },
+    {
+      "id": "P06-SF6-integration",
+      "status": "PASS",
+      "executed": true,
+      "test_ids": [
+        "subphase_seam_and_regression"
+      ],
+      "results": [
+        {
+          "id": "subphase_seam_and_regression",
+          "status": "PASS",
+          "executed": true,
+          "synthetic": false,
+          "skipped": false,
+          "duration_ms": 0,
+          "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+          "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+          "commands": [
+            {
+              "command": "verify subphase_seam_and_regression",
+              "exit_code": 0
+            }
+          ],
+          "target_count": 12,
+          "subphase_test_coverage_percent": 100,
+          "seam_test_coverage_percent": 100,
+          "unexpected_skips": 0,
+          "unowned_requirements_or_seams": 0
+        }
+      ],
+      "target_count": 12,
+      "duration_ms": 0
+    }
+  ]
+}

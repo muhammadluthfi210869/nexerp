@@ -25,6 +25,7 @@ Rules:
 9. Every phase uses the one-pass package in `verification/_ONE_PASS_PHASE_EXECUTION_STANDARD.md`: one complete prompt, one frozen acceptance contract, one authoritative command, adversarial proof, pre-certification checklist, and independent rerun.
 10. A phase executor continues through remediation and retest until the authoritative command passes, except for an explicit decision/authority/external-system/destructive-action blocker; partial green results are not a handoff condition.
 11. Inner-loop remediation follows `verification/_LAYERED_CERTIFICATION_ACCELERATION_STANDARD.md`: inventory once, repair by root-cause group, targeted production-path tests, cumulative preflight, then one authoritative certification and one independent reproduction.
+12. Cumulative regression follows `verification/_CUMULATIVE_REGRESSION_AND_CERTIFICATE_VALIDITY_STANDARD.md`: every later phase runs source-impact-selected permanent predecessor sentinels, records current-SHA integration health, and reruns an earlier full certifier only when its owned invariant is invalidated or at a declared checkpoint.
 
 ### Verification cadence
 

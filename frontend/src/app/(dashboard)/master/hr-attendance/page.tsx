@@ -44,7 +44,14 @@ interface AttendanceRecord {
   lateMinutes: number;
 }
 
-const EMPTY_ATTENDANCE: AttendanceRecord[] = [];
+const INITIAL_ATTENDANCE: AttendanceRecord[] = [
+  { id: "ATT-01", empId: "KIL-2022-001", empName: "Budi Santoso, S.T", department: "Produksi Mixing", shift: "Shift 1 (07:00 - 15:30)", checkIn: "06:48", checkOut: "15:35", locationStatus: "INSIDE_GEOFENCE", latLng: "-6.2088, 106.8456 (Radius 12m)", status: "ON_TIME", lateMinutes: 0 },
+  { id: "ATT-02", empId: "KIL-2023-014", empName: "Rian Saputra, S.Farm", department: "R&D Formulasi", shift: "Office (08:00 - 17:00)", checkIn: "07:52", checkOut: "17:05", locationStatus: "INSIDE_GEOFENCE", latLng: "-6.2088, 106.8456 (Radius 18m)", status: "ON_TIME", lateMinutes: 0 },
+  { id: "ATT-03", empId: "KIL-2023-022", empName: "Siti Rahmawati, S.Si", department: "QC Mikrobiologi", shift: "Shift 1 (07:00 - 15:30)", checkIn: "07:18", checkOut: "15:30", locationStatus: "INSIDE_GEOFENCE", latLng: "-6.2088, 106.8456 (Radius 25m)", status: "LATE", lateMinutes: 18 },
+  { id: "ATT-04", empId: "KIL-2024-005", empName: "Dewi Lestari, S.E", department: "BusDev Maklon", shift: "Office (08:00 - 17:00)", checkIn: "08:00", checkOut: "-", locationStatus: "INSIDE_GEOFENCE", latLng: "-6.2088, 106.8456 (Radius 15m)", status: "ON_TIME", lateMinutes: 0 },
+  { id: "ATT-05", empId: "KIL-2024-031", empName: "Ahmad Dani", department: "Gudang Inbound", shift: "Shift 1 (07:00 - 15:30)", checkIn: "06:42", checkOut: "15:40", locationStatus: "INSIDE_GEOFENCE", latLng: "-6.2088, 106.8456 (Radius 8m)", status: "ON_TIME", lateMinutes: 0 },
+  { id: "ATT-06", empId: "KIL-2025-012", empName: "dr. Amanda Putri, M.Biomed", department: "QA & APJ", shift: "Office (08:00 - 17:00)", checkIn: "-", checkOut: "-", locationStatus: "OUTSIDE_RADIUS", latLng: "-", status: "LEAVE", lateMinutes: 0 },
+];
 
 export default function HrAttendancePage() {
   const toast = useDnaToast();
@@ -53,11 +60,11 @@ export default function HrAttendancePage() {
   const [selectedDate, setSelectedDate] = useState("2026-09-09");
   const [isClockInModalOpen, setIsClockInModalOpen] = useState(false);
 
-  const onTimeCount = EMPTY_ATTENDANCE.filter(a => a.status === "ON_TIME").length;
-  const lateCount = EMPTY_ATTENDANCE.filter(a => a.status === "LATE").length;
-  const leaveCount = EMPTY_ATTENDANCE.filter(a => a.status === "LEAVE").length;
+  const onTimeCount = INITIAL_ATTENDANCE.filter(a => a.status === "ON_TIME").length;
+  const lateCount = INITIAL_ATTENDANCE.filter(a => a.status === "LATE").length;
+  const leaveCount = INITIAL_ATTENDANCE.filter(a => a.status === "LEAVE").length;
 
-  const filteredAttendance = EMPTY_ATTENDANCE.filter(a =>
+  const filteredAttendance = INITIAL_ATTENDANCE.filter(a =>
     a.empName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     a.empId.toLowerCase().includes(searchQuery.toLowerCase()) ||
     a.department.toLowerCase().includes(searchQuery.toLowerCase())

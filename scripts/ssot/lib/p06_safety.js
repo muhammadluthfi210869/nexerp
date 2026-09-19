@@ -264,40 +264,78 @@ function assertNoSourceSessionTermination(query, sourceDbName) {
 async function seedP06DeterministicFixtures(client) {
   await client.query(`
     INSERT INTO users (id, "fullName", email, roles, status)
-    VALUES ('00000000-0000-0000-0000-000000000001', 'Admin P06', 'admin@example.com', ARRAY['SUPER_ADMIN']::"UserRole"[], 'ACTIVE')
+    VALUES
+      ('00000000-0000-0000-0000-000000000001', 'Admin P06', 'admin@example.com', ARRAY['SUPER_ADMIN']::"UserRole"[], 'ACTIVE'),
+      ('00000000-0000-0000-0000-000000000002', 'Admin Tenant A', 'admin-a@example.com', ARRAY['ADMIN']::"UserRole"[], 'ACTIVE'),
+      ('00000000-0000-0000-0000-000000000003', 'Staff Tenant A', 'staff-a@example.com', ARRAY['SCM']::"UserRole"[], 'ACTIVE'),
+      ('00000000-0000-0000-0000-000000000004', 'Warehouse Officer A', 'wh-a@example.com', ARRAY['WAREHOUSE']::"UserRole"[], 'ACTIVE'),
+      ('00000000-0000-0000-0000-000000000005', 'Staff Tenant B', 'staff-b@example.com', ARRAY['SCM']::"UserRole"[], 'ACTIVE'),
+      ('00000000-0000-0000-0000-000000000006', 'Viewer Tenant A', 'viewer-a@example.com', ARRAY['HR']::"UserRole"[], 'ACTIVE')
     ON CONFLICT (id) DO NOTHING;
 
     INSERT INTO master_units (id, code, name, symbol, "isActive", "createdAt", "updatedAt")
     VALUES
       ('00000000-0000-0000-0000-000000000101', 'PCS', 'Pieces', 'pcs', true, NOW(), NOW()),
       ('00000000-0000-0000-0000-000000000102', 'KG', 'Kilogram', 'kg', true, NOW(), NOW()),
-      ('00000000-0000-0000-0000-000000000103', 'MTR', 'Meter', 'm', true, NOW(), NOW())
+      ('00000000-0000-0000-0000-000000000103', 'MTR', 'Meter', 'm', true, NOW(), NOW()),
+      ('00000000-0000-0000-0000-000000000104', 'INACTIVE-UOM', 'Inactive Unit', 'iu', false, NOW(), NOW())
     ON CONFLICT (id) DO NOTHING;
 
     INSERT INTO warehouses (id, name, address, status, "createdAt", "updatedAt")
     VALUES
-      ('00000000-0000-0000-0000-000000000201', 'Gudang Utama', 'Jakarta', 'ACTIVE', NOW(), NOW())
+      ('00000000-0000-0000-0000-000000000201', 'Gudang Utama', 'Jakarta', 'ACTIVE', NOW(), NOW()),
+      ('00000000-0000-0000-0000-000000000202', 'Gudang Cabang', 'Surabaya', 'ACTIVE', NOW(), NOW())
     ON CONFLICT (id) DO NOTHING;
 
     INSERT INTO master_categories (id, code, name, type, "isActive", "createdAt", "updatedAt")
     VALUES
-      ('00000000-0000-0000-0000-000000000301', 'CAT-RAW-001', 'Bahan Baku', 'RAW_MATERIAL', true, NOW(), NOW())
+      ('00000000-0000-0000-0000-000000000301', 'CAT-RAW-001', 'Bahan Baku', 'RAW_MATERIAL', true, NOW(), NOW()),
+      ('00000000-0000-0000-0000-000000000302', 'CAT-PKG-001', 'Packaging', 'PACKAGING', true, NOW(), NOW()),
+      ('00000000-0000-0000-0000-000000000303', 'CAT-INACTIVE', 'Old Category', 'RAW_MATERIAL', false, NOW(), NOW())
     ON CONFLICT (id) DO NOTHING;
 
     INSERT INTO suppliers (id, name, email, phone, "isBlacklisted", "createdAt")
     VALUES
-      ('00000000-0000-0000-0000-000000000401', 'PT Supplier Utama', 'supplier@example.com', '081234567890', false, NOW())
+      ('00000000-0000-0000-0000-000000000401', 'PT Supplier Utama', 'supplier@example.com', '081234567890', false, NOW()),
+      ('00000000-0000-0000-0000-000000000402', 'PT Supplier Dua', 'supplier2@example.com', '081234567891', false, NOW())
     ON CONFLICT (id) DO NOTHING;
 
     INSERT INTO master_tax_rates (id, name, rate, "isActive")
     VALUES
-      ('00000000-0000-0000-0000-000000000501', 'PPN 11%', 11.00, true)
+      ('00000000-0000-0000-0000-000000000501', 'PPN 11%', 11.00, true),
+      ('00000000-0000-0000-0000-000000000502', 'PPH 23', 2.00, true),
+      ('00000000-0000-0000-0000-000000000503', 'PPN 10% (Expired)', 10.00, false)
     ON CONFLICT (name) DO NOTHING;
 
     INSERT INTO system_configs (id, key, value, "group", "updatedAt")
     VALUES
-      ('00000000-0000-0000-0000-000000000601', 'company.name', 'PT Aureon System', 'GENERAL', NOW())
+      ('00000000-0000-0000-0000-000000000601', 'company.name', 'PT Aureon System', 'GENERAL', NOW()),
+      ('00000000-0000-0000-0000-000000000602', 'organization.legal_name', 'PT Aureon Multi Usaha', 'GENERAL', NOW()),
+      ('00000000-0000-0000-0000-000000000603', 'organization.tax_id', '01.234.567.8-901.000', 'GENERAL', NOW()),
+      ('00000000-0000-0000-0000-000000000604', 'organization.address', 'Jl. Industri No. 42, Jakarta', 'GENERAL', NOW())
     ON CONFLICT (key) DO NOTHING;
+
+    INSERT INTO master_kodes (id, "documentType", "format", "currentSequence", "resetCycle", "isActive", "createdAt", "updatedAt")
+    VALUES
+      ('00000000-0000-0000-0000-000000000701', 'PRD', 'PRD-DDMMYYYY-XXXX', 0, 'YEARLY', true, NOW(), NOW()),
+      ('00000000-0000-0000-0000-000000000702', 'MAT', 'MAT-DDMMYYYY-XXXX', 0, 'YEARLY', true, NOW(), NOW()),
+      ('00000000-0000-0000-0000-000000000703', 'SUP', 'SUP-DDMMYYYY-XXXX', 0, 'YEARLY', true, NOW(), NOW()),
+      ('00000000-0000-0000-0000-000000000704', 'CUS', 'CUS-DDMMYYYY-XXXX', 0, 'YEARLY', true, NOW(), NOW())
+    ON CONFLICT ("documentType") DO NOTHING;
+
+    INSERT INTO tenant_scopes (id, "userId", "organizationId", "divisionId", "effectiveFrom", "primary")
+    VALUES
+      ('00000000-0000-0000-0000-000000000011', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', NULL, NOW(), true),
+      ('00000000-0000-0000-0000-000000000012', '00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000011', NOW(), true),
+      ('00000000-0000-0000-0000-000000000013', '00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000011', NOW(), true),
+      ('00000000-0000-0000-0000-000000000014', '00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000021', NOW(), true),
+      ('00000000-0000-0000-0000-000000000015', '00000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000001', NULL, NOW(), true)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO warehouse_access (id, "userId", "warehouseId", "canRead", "canWrite", "canApprove", "grantedAt")
+    VALUES
+      ('00000000-0000-0000-0000-000000000211', '00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000201', true, true, false, NOW())
+    ON CONFLICT (id) DO NOTHING;
   `);
 }
 
@@ -490,38 +528,134 @@ function validateMetricProvenance(metrics, checks = [], subphases = [], seams = 
   }
 
   const provenanceMap = {
-    unmapped_canonical_masters: () => checksById['canonical_master_inventory']?.unmapped_canonical_masters ?? 0,
-    duplicate_master_sources: () => checksById['schema_alias_and_referential_integrity']?.duplicate_master_sources ?? 0,
-    production_mock_fallbacks: () => checksById['frontend_live_data_and_dna']?.production_mock_fallbacks ?? 0,
-    direct_prisma_controller_access: () => checksById['master_crud']?.direct_prisma_controller_access ?? 0,
-    referential_integrity_violations: () => checksById['schema_alias_and_referential_integrity']?.referential_integrity_violations ?? 0,
-    uniqueness_violations: () => checksById['uniqueness_and_code_generation']?.uniqueness_violations ?? 0,
-    nondeterministic_codes: () => checksById['uniqueness_and_code_generation']?.nondeterministic_codes ?? 0,
-    hard_deleted_referenced_rows: () => checksById['soft_delete_and_reference_policy']?.hard_deleted_referenced_rows ?? 0,
-    soft_deleted_visibility_leaks: () => checksById['soft_delete_and_reference_policy']?.soft_deleted_visibility_leaks ?? 0,
-    import_partial_commits: () => checksById['import_export']?.import_partial_commits ?? 0,
-    import_duplicate_side_effects: () => checksById['import_export']?.import_duplicate_side_effects ?? 0,
-    export_scope_bypasses: () => checksById['role_tenant_field_scope']?.export_scope_bypasses ?? 0,
-    authorization_bypasses: () => checksById['role_tenant_field_scope']?.authorization_bypasses ?? 0,
-    tenant_or_field_leaks: () => checksById['role_tenant_field_scope']?.tenant_or_field_leaks ?? 0,
-    missing_or_nonatomic_audits: () => checksById['audit_outbox_atomicity']?.missing_or_nonatomic_audits ?? 0,
-    ui_dna_violations: () => checksById['frontend_live_data_and_dna']?.ui_dna_violations ?? 0,
+    unmapped_canonical_masters: () => {
+      const g = checksById['canonical_master_inventory'];
+      if (!g || typeof g.unmapped_canonical_masters !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'unmapped_canonical_masters provenance missing from canonical_master_inventory');
+      return g.unmapped_canonical_masters;
+    },
+    duplicate_master_sources: () => {
+      const g = checksById['schema_alias_and_referential_integrity'];
+      if (!g || typeof g.duplicate_master_sources !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'duplicate_master_sources provenance missing from schema_alias_and_referential_integrity');
+      return g.duplicate_master_sources;
+    },
+    production_mock_fallbacks: () => {
+      const g = checksById['frontend_live_data_and_dna'];
+      if (!g || typeof g.production_mock_fallbacks !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'production_mock_fallbacks provenance missing from frontend_live_data_and_dna');
+      return g.production_mock_fallbacks;
+    },
+    direct_prisma_controller_access: () => {
+      const g = checksById['master_crud'];
+      if (!g || typeof g.direct_prisma_controller_access !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'direct_prisma_controller_access provenance missing from master_crud');
+      return g.direct_prisma_controller_access;
+    },
+    referential_integrity_violations: () => {
+      const g = checksById['schema_alias_and_referential_integrity'];
+      if (!g || typeof g.referential_integrity_violations !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'referential_integrity_violations provenance missing from schema_alias_and_referential_integrity');
+      return g.referential_integrity_violations;
+    },
+    uniqueness_violations: () => {
+      const g = checksById['uniqueness_and_code_generation'];
+      if (!g || typeof g.uniqueness_violations !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'uniqueness_violations provenance missing from uniqueness_and_code_generation');
+      return g.uniqueness_violations;
+    },
+    nondeterministic_codes: () => {
+      const g = checksById['uniqueness_and_code_generation'];
+      if (!g || typeof g.nondeterministic_codes !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'nondeterministic_codes provenance missing from uniqueness_and_code_generation');
+      return g.nondeterministic_codes;
+    },
+    hard_deleted_referenced_rows: () => {
+      const g = checksById['soft_delete_and_reference_policy'];
+      if (!g || typeof g.hard_deleted_referenced_rows !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'hard_deleted_referenced_rows provenance missing from soft_delete_and_reference_policy');
+      return g.hard_deleted_referenced_rows;
+    },
+    soft_deleted_visibility_leaks: () => {
+      const g = checksById['soft_delete_and_reference_policy'];
+      if (!g || typeof g.soft_deleted_visibility_leaks !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'soft_deleted_visibility_leaks provenance missing from soft_delete_and_reference_policy');
+      return g.soft_deleted_visibility_leaks;
+    },
+    import_partial_commits: () => {
+      const g = checksById['import_export'];
+      if (!g || typeof g.import_partial_commits !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'import_partial_commits provenance missing from import_export');
+      return g.import_partial_commits;
+    },
+    import_duplicate_side_effects: () => {
+      const g = checksById['import_export'];
+      if (!g || typeof g.import_duplicate_side_effects !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'import_duplicate_side_effects provenance missing from import_export');
+      return g.import_duplicate_side_effects;
+    },
+    export_scope_bypasses: () => {
+      const g = checksById['role_tenant_field_scope'];
+      if (!g || typeof g.export_scope_bypasses !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'export_scope_bypasses provenance missing from role_tenant_field_scope');
+      return g.export_scope_bypasses;
+    },
+    authorization_bypasses: () => {
+      const g = checksById['role_tenant_field_scope'];
+      if (!g || typeof g.authorization_bypasses !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'authorization_bypasses provenance missing from role_tenant_field_scope');
+      return g.authorization_bypasses;
+    },
+    tenant_or_field_leaks: () => {
+      const g = checksById['role_tenant_field_scope'];
+      if (!g || typeof g.tenant_or_field_leaks !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'tenant_or_field_leaks provenance missing from role_tenant_field_scope');
+      return g.tenant_or_field_leaks;
+    },
+    missing_or_nonatomic_audits: () => {
+      const g = checksById['audit_outbox_atomicity'];
+      if (!g || typeof g.missing_or_nonatomic_audits !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'missing_or_nonatomic_audits provenance missing from audit_outbox_atomicity');
+      return g.missing_or_nonatomic_audits;
+    },
+    ui_dna_violations: () => {
+      const g = checksById['frontend_live_data_and_dna'];
+      if (!g || typeof g.ui_dna_violations !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'ui_dna_violations provenance missing from frontend_live_data_and_dna');
+      return g.ui_dna_violations;
+    },
     unexpected_skips: () => checks.filter(c => c && c.skipped).length,
-    unowned_requirements_or_seams: () => checksById['canonical_master_inventory']?.unowned_requirements_or_seams ?? 0,
-    default_page_size: () => checksById['pagination_filter_and_search']?.default_page_size ?? 50,
-    maximum_page_size: () => checksById['pagination_filter_and_search']?.maximum_page_size ?? 200,
-    changed_max_cyclomatic_complexity: () => checksById['subphase_seam_and_regression']?.changed_max_cyclomatic_complexity ?? 6,
-    changed_duplication_percent: () => checksById['subphase_seam_and_regression']?.changed_duplication_percent ?? 0.0,
-    canonical_master_inventory_coverage_percent: () => checksById['canonical_master_inventory']?.canonical_master_inventory_coverage_percent ?? 0,
-    required_operation_coverage_percent: () => checksById['canonical_master_inventory']?.required_operation_coverage_percent ?? 0,
-    required_screen_live_data_coverage_percent: () => checksById['frontend_live_data_and_dna']?.required_screen_live_data_coverage_percent ?? 0,
+    unowned_requirements_or_seams: () => {
+      const g = checksById['canonical_master_inventory'];
+      if (!g || typeof g.unowned_requirements_or_seams !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'unowned_requirements_or_seams provenance missing from canonical_master_inventory');
+      return g.unowned_requirements_or_seams;
+    },
+    default_page_size: () => {
+      const g = checksById['pagination_filter_and_search'];
+      if (!g || typeof g.default_page_size !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'default_page_size provenance missing from pagination_filter_and_search');
+      return g.default_page_size;
+    },
+    maximum_page_size: () => {
+      const g = checksById['pagination_filter_and_search'];
+      if (!g || typeof g.maximum_page_size !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'maximum_page_size provenance missing from pagination_filter_and_search');
+      return g.maximum_page_size;
+    },
+    changed_max_cyclomatic_complexity: () => {
+      const g = checksById['subphase_seam_and_regression'];
+      if (!g || typeof g.changed_max_cyclomatic_complexity !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'changed_max_cyclomatic_complexity provenance missing from subphase_seam_and_regression');
+      return g.changed_max_cyclomatic_complexity;
+    },
+    changed_duplication_percent: () => {
+      const g = checksById['subphase_seam_and_regression'];
+      if (!g || typeof g.changed_duplication_percent !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'changed_duplication_percent provenance missing from subphase_seam_and_regression');
+      return g.changed_duplication_percent;
+    },
+    canonical_master_inventory_coverage_percent: () => {
+      const g = checksById['canonical_master_inventory'];
+      if (!g || typeof g.canonical_master_inventory_coverage_percent !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'canonical_master_inventory_coverage_percent provenance missing from canonical_master_inventory');
+      return g.canonical_master_inventory_coverage_percent;
+    },
+    required_operation_coverage_percent: () => {
+      const g = checksById['canonical_master_inventory'];
+      if (!g || typeof g.required_operation_coverage_percent !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'required_operation_coverage_percent provenance missing from canonical_master_inventory');
+      return g.required_operation_coverage_percent;
+    },
+    required_screen_live_data_coverage_percent: () => {
+      const g = checksById['frontend_live_data_and_dna'];
+      if (!g || typeof g.required_screen_live_data_coverage_percent !== 'number') throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'required_screen_live_data_coverage_percent provenance missing from frontend_live_data_and_dna');
+      return g.required_screen_live_data_coverage_percent;
+    },
     subphase_test_coverage_percent: () => {
-      if (subphases.length === 0) return 0;
+      if (!Array.isArray(subphases) || subphases.length === 0) throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'subphases array empty');
       const passed = subphases.filter(s => s && s.status === 'PASS').length;
       return Math.round((passed / subphases.length) * 100);
     },
     seam_test_coverage_percent: () => {
-      if (seams.length === 0) return 0;
+      if (!Array.isArray(seams) || seams.length === 0) throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISSING', 'seams array empty');
       const passed = seams.filter(s => s && s.status === 'PASS').length;
       return Math.round((passed / seams.length) * 100);
     }

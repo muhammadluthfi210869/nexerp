@@ -16,11 +16,30 @@ import { ApiTags } from '@nestjs/swagger';
 import { UnitsService } from '../services/units.service';
 import { CreateUnitDto, UpdateUnitDto } from '../dto/unit.dto';
 
+import { ImportExportService } from '../services/import-export.service';
+
 @ApiTags('Master Data')
 @Controller('master/units')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UnitsController {
-  constructor(private readonly service: UnitsService) {}
+  constructor(
+    private readonly service: UnitsService,
+    private readonly importExportService: ImportExportService
+  ) {}
+
+  @Get('export')
+  async exportUnits() {
+    return this.importExportService.exportData('unit');
+  }
+
+  @Post('import')
+  async importUnits(@Body() body: any) {
+    const rows = Array.isArray(body) ? body : body?.rows || body?.data || [];
+    return this.importExportService.importData('unit', rows, {
+      idempotencyKey: body?.idempotencyKey,
+      dryRun: !!body?.dryRun,
+    });
+  }
 
   @Get()
   findAll() {

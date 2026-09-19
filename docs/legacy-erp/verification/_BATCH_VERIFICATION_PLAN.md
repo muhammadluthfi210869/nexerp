@@ -35,6 +35,7 @@ For every batch, read:
 7. The evidence pack, changed files, canonical owners, tests, and implementation for every requested phase.
 8. `verification/_ARCHITECTURE_MAINTAINABILITY_STANDARD.md` for changed scope.
 9. `verification/_UI_DNA_COMPLIANCE_STANDARD.md` for any affected UI.
+10. `verification/_CUMULATIVE_REGRESSION_AND_CERTIFICATE_VALIDITY_STANDARD.md` for historical-certificate reuse, impact-selected predecessor sentinels, and current-HEAD integration health.
 
 Never accept an implementor summary, claimed PASS, screenshot, test count, or evidence pack without checking it against repository state and rerunning the relevant commands.
 
@@ -82,6 +83,7 @@ After individual phase checks, verify interaction across the entire requested ra
 - data reconciliation and finance/inventory invariants where applicable;
 - security and regression impact;
 - no earlier certified fast gate regressed.
+- current-HEAD integration ledger includes every impact-selected predecessor sentinel and distinguishes historical certificate validity from integrated health.
 
 ### Layer C — Boundary verification
 

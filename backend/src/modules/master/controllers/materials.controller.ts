@@ -20,12 +20,33 @@ import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { MaterialsService } from '../services/materials.service';
 import { CreateMaterialDto, UpdateMaterialDto } from '../dto/material.dto';
 
+import { ImportExportService } from '../services/import-export.service';
+
 @ApiTags('Master Data - Materials / Barang')
 @ApiBearerAuth()
 @Controller('master/materials')
 @UseGuards(JwtAuthGuard)
 export class MaterialsController {
-  constructor(private readonly materialsService: MaterialsService) {}
+  constructor(
+    private readonly materialsService: MaterialsService,
+    private readonly importExportService: ImportExportService
+  ) {}
+
+  @Get('export')
+  @ApiOperation({ summary: 'Export materials' })
+  async exportMaterials(@Query() query?: any) {
+    return this.importExportService.exportData('material', query);
+  }
+
+  @Post('import')
+  @ApiOperation({ summary: 'Import materials' })
+  async importMaterials(@Body() body: any) {
+    const rows = Array.isArray(body) ? body : body?.rows || body?.data || [];
+    return this.importExportService.importData('material', rows, {
+      idempotencyKey: body?.idempotencyKey,
+      dryRun: !!body?.dryRun,
+    });
+  }
 
   @Get()
   @ApiOperation({

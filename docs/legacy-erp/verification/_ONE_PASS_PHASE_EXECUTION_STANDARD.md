@@ -10,6 +10,8 @@ One-pass success is the engineering target, not permission to hide unknown defec
 
 Development must follow the layered feedback loop in `_LAYERED_CERTIFICATION_ACCELERATION_STANDARD.md`. The full authoritative command is an admission-controlled final decision, not the default inner development loop.
 
+Historical certificate validity and current-HEAD cumulative regression follow `_CUMULATIVE_REGRESSION_AND_CERTIFICATE_VALIDITY_STANDARD.md`. A later phase runs permanent impact-selected sentinels from earlier phases; it does not rerun every earlier full certifier unless an explicit invalidation trigger applies.
+
 ## Three-level verification cadence
 
 Do not run release-depth certification in every phase.
@@ -37,6 +39,7 @@ Before the executor starts phase `Pxx`, the auditor prepares all of the followin
 9. **Evidence requirements** — raw commands, exit codes, numeric results, environment/tool versions, durations, hashes/digests, deltas, artifacts, and remaining failures.
 10. **Independent reproduction rule** — PASS requires the auditor to rerun the unchanged certification contract against the same candidate SHA.
 11. **Layered diagnostic map** — shared production-path gate registry, gate/mutation-to-group mapping, changed-file impact rules, targeted commands, preflight command, expected duration budgets, and the full-certification admission rule defined in `_LAYERED_CERTIFICATION_ACCELERATION_STANDARD.md`.
+12. **Cumulative sentinel manifest** — earlier permanent invariants selected by the source-derived impact graph, historical certificates safely reused, invalidated certificates requiring rerun, and the expected current-SHA integration-health ledger.
 
 ## Acceptance-contract freeze
 

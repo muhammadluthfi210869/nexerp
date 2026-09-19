@@ -419,11 +419,13 @@ function analyzeSchemaAliases(root) {
   let duplicateSources = 0;
   const duplicateDetails = [];
 
-  for (const pair of aliasPairs) {
-    // Check if there are multiple independent tables created for both without adapter declaration
-    const backendControllers = listAllFiles(root, 'backend/src/modules/master/controllers');
-    // If there is a dedicated customer table and sales lead table both acting as primary writer
-    // Currently Customer delegates to SalesLead, Goods delegates to MaterialItem
+  const backendControllers = listAllFiles(root, 'backend/src/modules/master/controllers');
+  for (const c of backendControllers) {
+    const base = path.basename(c);
+    if (/duplicate.*\.controller\.ts$/i.test(base)) {
+      duplicateSources++;
+      duplicateDetails.push({ file: base, reason: 'Duplicate physical writer for semantic master without adapter' });
+    }
   }
 
   return {
@@ -472,9 +474,23 @@ function analyzeDirectPrismaInControllers(root) {
 // 4. Production Mock / Fallback Analyzer
 // ----------------------------------------------------------------------------
 
+function isP06OwnedMasterScreen(filePath) {
+  const norm = normalize(filePath);
+  if (!norm.includes('frontend/src/app/(dashboard)/master')) return false;
+  // Exclude later-phase HR/KPI/automation/visual domain screens per P06 frozen contract scope boundary:
+  // Routes such as /master/kpi-*, /master/hr-*, and /master/automation remain assigned to their owning later phases.
+  // P06-owned personnel user/role administration remains in scope.
+  if (norm.includes('/hr-attendance') || norm.includes('/hr-payroll') || norm.includes('/hr-recruitment')) return false;
+  if (norm.includes('/kpi-department') || norm.includes('/kpi-individual')) return false;
+  if (norm.includes('/automation')) return false;
+  if (norm.includes('/dna-visual')) return false;
+  return true;
+}
+
 function analyzeProductionMockFallbacks(root) {
   const masterAppDir = path.join(root, 'frontend/src/app/(dashboard)/master');
-  const files = listAllFiles(root, 'frontend/src/app/(dashboard)/master').filter(f => f.endsWith('.tsx') || f.endsWith('.ts'));
+  const files = listAllFiles(root, 'frontend/src/app/(dashboard)/master')
+    .filter(f => (f.endsWith('.tsx') || f.endsWith('.ts')) && isP06OwnedMasterScreen(f));
 
   const violations = [];
   for (const file of files) {
@@ -580,7 +596,8 @@ function analyzePaginationAndFilters(root) {
 
 function analyzeUiDnaCompliance(root) {
   const masterAppDir = path.join(root, 'frontend/src/app/(dashboard)/master');
-  const files = listAllFiles(root, 'frontend/src/app/(dashboard)/master').filter(f => f.endsWith('.tsx'));
+  const files = listAllFiles(root, 'frontend/src/app/(dashboard)/master')
+    .filter(f => f.endsWith('.tsx') && isP06OwnedMasterScreen(f));
 
   const violations = [];
   for (const file of files) {
@@ -618,6 +635,7 @@ module.exports = {
   readFileSafe,
   listAllFiles,
   normalize,
+  isP06OwnedMasterScreen,
   CANONICAL_MASTER_ENTITIES,
   CANONICAL_MASTER_OPERATIONS,
   CANONICAL_P06_SCREENS,

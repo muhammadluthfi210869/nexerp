@@ -1,0 +1,721 @@
+{
+  "phase": "P06",
+  "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+  "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+  "timestamp": "2026-09-19T08:18:55.002Z",
+  "verdict": "PASS",
+  "checks": [
+    {
+      "id": "predecessor_scope_and_safety",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 181,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "git merge-base f93132c5ee77ca5698fa952e52d3ed88f3bb744b 59bf62820280d86b1b2830e7892632551e3fe091",
+          "exit_code": 0
+        },
+        {
+          "command": "verify P05 exact predecessor PASS in _PRODUCTION_PHASE_GATES.yaml",
+          "exit_code": 0
+        },
+        {
+          "command": "git status --porcelain",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 3
+    },
+    {
+      "id": "canonical_master_inventory",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 7,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "analyzeCanonicalMasterInventory",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 16,
+      "entities_total": 16,
+      "entities_mapped": 16,
+      "unmapped_canonical_masters": 0,
+      "unmapped_details": [],
+      "canonical_master_inventory_coverage_percent": 100,
+      "required_operation_coverage_percent": 100,
+      "required_screen_live_data_coverage_percent": 100,
+      "screens_covered": [
+        "SCR-006",
+        "SCR-007",
+        "SCR-008",
+        "SCR-009",
+        "SCR-010",
+        "SCR-011",
+        "SCR-012",
+        "SCR-013",
+        "SCR-014",
+        "SCR-015",
+        "SCR-016",
+        "SCR-017",
+        "SCR-018",
+        "SCR-019",
+        "SCR-020",
+        "SCR-021",
+        "SCR-022",
+        "SCR-023",
+        "SCR-024",
+        "SCR-087",
+        "SCR-088",
+        "SCR-SYS-001"
+      ],
+      "screens_missing": []
+    },
+    {
+      "id": "schema_alias_and_referential_integrity",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 1,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "analyzeSchemaAliases",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 4,
+      "duplicate_master_sources": 0,
+      "duplicate_details": [],
+      "alias_pairs": [
+        {
+          "canonical": "Customer",
+          "physical": "SalesLead",
+          "writerModule": "busdev"
+        },
+        {
+          "canonical": "Goods",
+          "physical": "MaterialItem",
+          "writerModule": "scm"
+        },
+        {
+          "canonical": "ChartOfAccount",
+          "physical": "Account",
+          "writerModule": "finance"
+        },
+        {
+          "canonical": "Formulation",
+          "physical": "Formula",
+          "writerModule": "rnd"
+        }
+      ],
+      "referential_integrity_violations": 0
+    },
+    {
+      "id": "organization_division_user_role_config",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 0,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "verify organization_division_user_role_config",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 6
+    },
+    {
+      "id": "catalog_reference_masters",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 0,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "verify catalog_reference_masters",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 6
+    },
+    {
+      "id": "customer_supplier_masters",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 0,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "verify customer_supplier_masters",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 2
+    },
+    {
+      "id": "warehouse_coa_formulation_ownership",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 1,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "verify warehouse_coa_formulation_ownership",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 3
+    },
+    {
+      "id": "master_crud",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 1,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "analyzeDirectPrismaInControllers",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 7,
+      "direct_prisma_controller_access": 0
+    },
+    {
+      "id": "uniqueness_and_code_generation",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 1,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "analyzeCodeGeneration",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 5,
+      "nondeterministic_codes": 0,
+      "uniqueness_violations": 0
+    },
+    {
+      "id": "soft_delete_and_reference_policy",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 0,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "verify soft_delete_and_reference_policy",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 6,
+      "hard_deleted_referenced_rows": 0,
+      "soft_deleted_visibility_leaks": 0
+    },
+    {
+      "id": "import_export",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 0,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "verify import_export",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 4,
+      "import_partial_commits": 0,
+      "import_duplicate_side_effects": 0
+    },
+    {
+      "id": "pagination_filter_and_search",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 1,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "analyzePaginationAndFilters",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 6,
+      "default_page_size": 50,
+      "maximum_page_size": 200
+    },
+    {
+      "id": "role_tenant_field_scope",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 0,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "verify role_tenant_field_scope",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 5,
+      "authorization_bypasses": 0,
+      "tenant_or_field_leaks": 0,
+      "export_scope_bypasses": 0
+    },
+    {
+      "id": "audit_outbox_atomicity",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 0,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "verify audit_outbox_atomicity",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 4,
+      "missing_or_nonatomic_audits": 0
+    },
+    {
+      "id": "frontend_live_data_and_dna",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 12,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "analyzeProductionMockFallbacks",
+          "exit_code": 0
+        },
+        {
+          "command": "analyzeUiDnaCompliance",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 15,
+      "production_mock_fallbacks": 0,
+      "ui_dna_violations": 0,
+      "required_screen_live_data_coverage_percent": 100
+    },
+    {
+      "id": "subphase_seam_and_regression",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 0,
+      "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+      "candidate_sha": "59bf62820280d86b1b2830e7892632551e3fe091",
+      "commands": [
+        {
+          "command": "verify subphase_seam_and_regression",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 12,
+      "subphase_test_coverage_percent": 100,
+      "seam_test_coverage_percent": 100,
+      "unexpected_skips": 0,
+      "unowned_requirements_or_seams": 0
+    }
+  ],
+  "mutations": [
+    {
+      "id": "P06-UNMAPPED-MASTER",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateCanonicalMasterInventory",
+      "mutated_target": "scripts/ssot/lib/p06_analyzers.js#CANONICAL_MASTER_ENTITIES",
+      "gate_id": "canonical_master_inventory",
+      "expected_gate_id": "canonical_master_inventory",
+      "observed_gate_id": "canonical_master_inventory",
+      "reason_code": "UNMAPPED_MASTER",
+      "expected_reason_code": "UNMAPPED_MASTER",
+      "observed_reason_code": "UNMAPPED_MASTER",
+      "rejection_reason": "[canonical_master_inventory] UNMAPPED_MASTER: Unmapped canonical master entity detected in inventory",
+      "duration_ms": 11,
+      "occurred_at": "2026-09-19T08:18:54.095Z"
+    },
+    {
+      "id": "P06-DUPLICATE-SOURCE-OF-TRUTH",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateSchemaAliasAndReferentialIntegrity",
+      "mutated_target": "backend/src/modules/master/controllers/customers.controller.ts",
+      "gate_id": "schema_alias_and_referential_integrity",
+      "expected_gate_id": "schema_alias_and_referential_integrity",
+      "observed_gate_id": "schema_alias_and_referential_integrity",
+      "reason_code": "DUPLICATE_SOURCE_OF_TRUTH",
+      "expected_reason_code": "DUPLICATE_SOURCE_OF_TRUTH",
+      "observed_reason_code": "DUPLICATE_SOURCE_OF_TRUTH",
+      "rejection_reason": "[schema_alias_and_referential_integrity] DUPLICATE_SOURCE_OF_TRUTH: Duplicate physical writer detected for semantic master Customer without declared adapter",
+      "duration_ms": 3,
+      "occurred_at": "2026-09-19T08:18:54.098Z"
+    },
+    {
+      "id": "P06-DIRECT-PRISMA-CONTROLLER",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateMasterCrud",
+      "mutated_target": "backend/src/modules/master/controllers/warehouses.controller.ts",
+      "gate_id": "master_crud",
+      "expected_gate_id": "master_crud",
+      "observed_gate_id": "master_crud",
+      "reason_code": "DIRECT_PRISMA_ACCESS",
+      "expected_reason_code": "DIRECT_PRISMA_ACCESS",
+      "observed_reason_code": "DIRECT_PRISMA_ACCESS",
+      "rejection_reason": "[master_crud] DIRECT_PRISMA_ACCESS: Direct Prisma access detected in controller: backend/src/modules/master/controllers/warehouses.controller.ts",
+      "duration_ms": 1,
+      "occurred_at": "2026-09-19T08:18:54.099Z"
+    },
+    {
+      "id": "P06-PRODUCTION-MOCK-FALLBACK",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateFrontendLiveDataAndDna",
+      "mutated_target": "frontend/src/app/(dashboard)/master/materials/page.tsx",
+      "gate_id": "frontend_live_data_and_dna",
+      "expected_gate_id": "frontend_live_data_and_dna",
+      "observed_gate_id": "frontend_live_data_and_dna",
+      "reason_code": "PRODUCTION_MOCK_FALLBACK",
+      "expected_reason_code": "PRODUCTION_MOCK_FALLBACK",
+      "observed_reason_code": "PRODUCTION_MOCK_FALLBACK",
+      "rejection_reason": "[frontend_live_data_and_dna] PRODUCTION_MOCK_FALLBACK: Production mock fallback array detected in: frontend/src/app/(dashboard)/master/materials/page.tsx",
+      "duration_ms": 1,
+      "occurred_at": "2026-09-19T08:18:54.100Z"
+    },
+    {
+      "id": "P06-DUPLICATE-CODE",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateUniquenessAndCodeGeneration",
+      "mutated_target": "master_categories.code",
+      "gate_id": "uniqueness_and_code_generation",
+      "expected_gate_id": "uniqueness_and_code_generation",
+      "observed_gate_id": "uniqueness_and_code_generation",
+      "reason_code": "DUPLICATE_CODE",
+      "expected_reason_code": "DUPLICATE_CODE",
+      "observed_reason_code": "DUPLICATE_CODE",
+      "rejection_reason": "[uniqueness_and_code_generation] DUPLICATE_CODE: Duplicate unique code rejected: DUP-4101",
+      "duration_ms": 319,
+      "occurred_at": "2026-09-19T08:18:54.419Z"
+    },
+    {
+      "id": "P06-NONDETERMINISTIC-CODE",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateUniquenessAndCodeGeneration",
+      "mutated_target": "backend/src/modules/master/services/categories.service.ts",
+      "gate_id": "uniqueness_and_code_generation",
+      "expected_gate_id": "uniqueness_and_code_generation",
+      "observed_gate_id": "uniqueness_and_code_generation",
+      "reason_code": "NONDETERMINISTIC_CODE",
+      "expected_reason_code": "NONDETERMINISTIC_CODE",
+      "observed_reason_code": "NONDETERMINISTIC_CODE",
+      "rejection_reason": "[uniqueness_and_code_generation] NONDETERMINISTIC_CODE: Nondeterministic Math.random() detected in code generator: backend/src/modules/master/services/categories.service.ts",
+      "duration_ms": 1,
+      "occurred_at": "2026-09-19T08:18:54.420Z"
+    },
+    {
+      "id": "P06-HARD-DELETE-REFERENCED",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateSoftDeleteAndReferencePolicy",
+      "mutated_target": "backend/src/modules/master/services/materials.service.ts",
+      "gate_id": "soft_delete_and_reference_policy",
+      "expected_gate_id": "soft_delete_and_reference_policy",
+      "observed_gate_id": "soft_delete_and_reference_policy",
+      "reason_code": "HARD_DELETE_PROHIBITED",
+      "expected_reason_code": "HARD_DELETE_PROHIBITED",
+      "observed_reason_code": "HARD_DELETE_PROHIBITED",
+      "rejection_reason": "[soft_delete_and_reference_policy] HARD_DELETE_PROHIBITED: Hard deletion of referenced master data is prohibited; use soft delete/inactivation",
+      "duration_ms": 1,
+      "occurred_at": "2026-09-19T08:18:54.421Z"
+    },
+    {
+      "id": "P06-SOFT-DELETED-VISIBLE",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateSoftDeleteAndReferencePolicy",
+      "mutated_target": "backend/src/modules/master/services/materials.service.ts",
+      "gate_id": "soft_delete_and_reference_policy",
+      "expected_gate_id": "soft_delete_and_reference_policy",
+      "observed_gate_id": "soft_delete_and_reference_policy",
+      "reason_code": "SOFT_DELETED_LEAK",
+      "expected_reason_code": "SOFT_DELETED_LEAK",
+      "observed_reason_code": "SOFT_DELETED_LEAK",
+      "rejection_reason": "[soft_delete_and_reference_policy] SOFT_DELETED_LEAK: Default master query leaks soft-deleted/inactive rows without explicit filter",
+      "duration_ms": 0,
+      "occurred_at": "2026-09-19T08:18:54.421Z"
+    },
+    {
+      "id": "P06-ORPHAN-REFERENCE",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateSchemaAliasAndReferentialIntegrity",
+      "mutated_target": "warehouse_access.warehouseId",
+      "gate_id": "schema_alias_and_referential_integrity",
+      "expected_gate_id": "schema_alias_and_referential_integrity",
+      "observed_gate_id": "schema_alias_and_referential_integrity",
+      "reason_code": "ORPHAN_REFERENCE",
+      "expected_reason_code": "ORPHAN_REFERENCE",
+      "observed_reason_code": "ORPHAN_REFERENCE",
+      "rejection_reason": "[schema_alias_and_referential_integrity] ORPHAN_REFERENCE: Reference to non-existent foreign key rejected: 00000000-0000-0000-0000-000000000000",
+      "duration_ms": 52,
+      "occurred_at": "2026-09-19T08:18:54.474Z"
+    },
+    {
+      "id": "P06-UNBOUNDED-PAGINATION",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gatePaginationFilterAndSearch",
+      "mutated_target": "backend/src/modules/master/controllers/materials.controller.ts",
+      "gate_id": "pagination_filter_and_search",
+      "expected_gate_id": "pagination_filter_and_search",
+      "observed_gate_id": "pagination_filter_and_search",
+      "reason_code": "PAGINATION_UNBOUNDED",
+      "expected_reason_code": "PAGINATION_UNBOUNDED",
+      "observed_reason_code": "PAGINATION_UNBOUNDED",
+      "rejection_reason": "[pagination_filter_and_search] PAGINATION_UNBOUNDED: Requested page size 500 exceeds maximum allowed threshold of 200",
+      "duration_ms": 0,
+      "occurred_at": "2026-09-19T08:18:54.475Z"
+    },
+    {
+      "id": "P06-FILTER-COUNT-MISMATCH",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gatePaginationFilterAndSearch",
+      "mutated_target": "backend/src/modules/master/services/materials.service.ts",
+      "gate_id": "pagination_filter_and_search",
+      "expected_gate_id": "pagination_filter_and_search",
+      "observed_gate_id": "pagination_filter_and_search",
+      "reason_code": "FILTER_COUNT_MISMATCH",
+      "expected_reason_code": "FILTER_COUNT_MISMATCH",
+      "observed_reason_code": "FILTER_COUNT_MISMATCH",
+      "rejection_reason": "[pagination_filter_and_search] FILTER_COUNT_MISMATCH: Reported total count (100) does not match applied filter criteria",
+      "duration_ms": 1,
+      "occurred_at": "2026-09-19T08:18:54.476Z"
+    },
+    {
+      "id": "P06-IMPORT-PARTIAL-COMMIT",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateImportExport",
+      "mutated_target": "backend/src/modules/master/services/suppliers-import.service.ts",
+      "gate_id": "import_export",
+      "expected_gate_id": "import_export",
+      "observed_gate_id": "import_export",
+      "reason_code": "IMPORT_PARTIAL_COMMIT",
+      "expected_reason_code": "IMPORT_PARTIAL_COMMIT",
+      "observed_reason_code": "IMPORT_PARTIAL_COMMIT",
+      "rejection_reason": "[import_export] IMPORT_PARTIAL_COMMIT: Batch import with row errors partially committed; transaction must rollback all rows",
+      "duration_ms": 0,
+      "occurred_at": "2026-09-19T08:18:54.476Z"
+    },
+    {
+      "id": "P06-IMPORT-NONIDEMPOTENT",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateImportExport",
+      "mutated_target": "backend/src/modules/master/services/suppliers-import.service.ts",
+      "gate_id": "import_export",
+      "expected_gate_id": "import_export",
+      "observed_gate_id": "import_export",
+      "reason_code": "IMPORT_NONIDEMPOTENT",
+      "expected_reason_code": "IMPORT_NONIDEMPOTENT",
+      "observed_reason_code": "IMPORT_NONIDEMPOTENT",
+      "rejection_reason": "[import_export] IMPORT_NONIDEMPOTENT: Replaying import with same idempotency key created duplicate records instead of returning original result",
+      "duration_ms": 1,
+      "occurred_at": "2026-09-19T08:18:54.477Z"
+    },
+    {
+      "id": "P06-IMPORT-FORMULA-INJECTION",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateImportExport",
+      "mutated_target": "backend/src/modules/master/services/export.service.ts",
+      "gate_id": "import_export",
+      "expected_gate_id": "import_export",
+      "observed_gate_id": "import_export",
+      "reason_code": "FORMULA_INJECTION_DETECTED",
+      "expected_reason_code": "FORMULA_INJECTION_DETECTED",
+      "observed_reason_code": "FORMULA_INJECTION_DETECTED",
+      "rejection_reason": "[import_export] FORMULA_INJECTION_DETECTED: Export cell formula injection detected: raw formula starting with \"=\" not neutralized",
+      "duration_ms": 0,
+      "occurred_at": "2026-09-19T08:18:54.477Z"
+    },
+    {
+      "id": "P06-EXPORT-SCOPE-BYPASS",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateRoleTenantFieldScope",
+      "mutated_target": "backend/src/modules/master/services/export.service.ts",
+      "gate_id": "role_tenant_field_scope",
+      "expected_gate_id": "role_tenant_field_scope",
+      "observed_gate_id": "role_tenant_field_scope",
+      "reason_code": "EXPORT_SCOPE_BYPASS",
+      "expected_reason_code": "EXPORT_SCOPE_BYPASS",
+      "observed_reason_code": "EXPORT_SCOPE_BYPASS",
+      "rejection_reason": "[role_tenant_field_scope] EXPORT_SCOPE_BYPASS: Export returned records outside actor data scope",
+      "duration_ms": 1,
+      "occurred_at": "2026-09-19T08:18:54.479Z"
+    },
+    {
+      "id": "P06-CROSS-TENANT-ACCESS",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateRoleTenantFieldScope",
+      "mutated_target": "backend/src/modules/master/services/customers.service.ts",
+      "gate_id": "role_tenant_field_scope",
+      "expected_gate_id": "role_tenant_field_scope",
+      "observed_gate_id": "role_tenant_field_scope",
+      "reason_code": "CROSS_TENANT_FORBIDDEN",
+      "expected_reason_code": "CROSS_TENANT_FORBIDDEN",
+      "observed_reason_code": "CROSS_TENANT_FORBIDDEN",
+      "rejection_reason": "[role_tenant_field_scope] CROSS_TENANT_FORBIDDEN: Access to cross-tenant master entity is strictly forbidden",
+      "duration_ms": 1,
+      "occurred_at": "2026-09-19T08:18:54.480Z"
+    },
+    {
+      "id": "P06-UNAUTHORIZED-MUTATION",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateRoleTenantFieldScope",
+      "mutated_target": "backend/src/modules/master/controllers/suppliers.controller.ts",
+      "gate_id": "role_tenant_field_scope",
+      "expected_gate_id": "role_tenant_field_scope",
+      "observed_gate_id": "role_tenant_field_scope",
+      "reason_code": "FORBIDDEN_ACTION",
+      "expected_reason_code": "FORBIDDEN_ACTION",
+      "observed_reason_code": "FORBIDDEN_ACTION",
+      "rejection_reason": "[role_tenant_field_scope] FORBIDDEN_ACTION: Actor lacks required permission for master mutation",
+      "duration_ms": 0,
+      "occurred_at": "2026-09-19T08:18:54.480Z"
+    },
+    {
+      "id": "P06-FIELD-SCOPE-LEAK",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateRoleTenantFieldScope",
+      "mutated_target": "backend/src/modules/master/services/customers.service.ts",
+      "gate_id": "role_tenant_field_scope",
+      "expected_gate_id": "role_tenant_field_scope",
+      "observed_gate_id": "role_tenant_field_scope",
+      "reason_code": "FIELD_SCOPE_LEAK",
+      "expected_reason_code": "FIELD_SCOPE_LEAK",
+      "observed_reason_code": "FIELD_SCOPE_LEAK",
+      "rejection_reason": "[role_tenant_field_scope] FIELD_SCOPE_LEAK: Restricted fields leaked to unauthorized role BusDevStaff: creditLimit, marginPercentage",
+      "duration_ms": 1,
+      "occurred_at": "2026-09-19T08:18:54.481Z"
+    },
+    {
+      "id": "P06-AUDIT-NONATOMIC",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateAuditOutboxAtomicity",
+      "mutated_target": "backend/src/modules/master/services/materials.service.ts",
+      "gate_id": "audit_outbox_atomicity",
+      "expected_gate_id": "audit_outbox_atomicity",
+      "observed_gate_id": "audit_outbox_atomicity",
+      "reason_code": "AUDIT_NONATOMIC",
+      "expected_reason_code": "AUDIT_NONATOMIC",
+      "observed_reason_code": "AUDIT_NONATOMIC",
+      "rejection_reason": "[audit_outbox_atomicity] AUDIT_NONATOMIC: Master entity mutation committed without corresponding audit log in the same transaction",
+      "duration_ms": 0,
+      "occurred_at": "2026-09-19T08:18:54.481Z"
+    },
+    {
+      "id": "P06-UI-DNA-BYPASS",
+      "status": "PASS",
+      "production_path": true,
+      "gate_function": "gateFrontendLiveDataAndDna",
+      "mutated_target": "frontend/src/app/(dashboard)/master/materials/page.tsx",
+      "gate_id": "frontend_live_data_and_dna",
+      "expected_gate_id": "frontend_live_data_and_dna",
+      "observed_gate_id": "frontend_live_data_and_dna",
+      "reason_code": "UI_DNA_BYPASS",
+      "expected_reason_code": "UI_DNA_BYPASS",
+      "observed_reason_code": "UI_DNA_BYPASS",
+      "rejection_reason": "[frontend_live_data_and_dna] UI_DNA_BYPASS: Direct UI-kit import detected outside @/components/dna boundary",
+      "duration_ms": 0,
+      "occurred_at": "2026-09-19T08:18:54.481Z"
+    }
+  ],
+  "metrics": {
+    "unmapped_canonical_masters": 0,
+    "duplicate_master_sources": 0,
+    "production_mock_fallbacks": 0,
+    "direct_prisma_controller_access": 0,
+    "referential_integrity_violations": 0,
+    "uniqueness_violations": 0,
+    "nondeterministic_codes": 0,
+    "hard_deleted_referenced_rows": 0,
+    "soft_deleted_visibility_leaks": 0,
+    "import_partial_commits": 0,
+    "import_duplicate_side_effects": 0,
+    "export_scope_bypasses": 0,
+    "authorization_bypasses": 0,
+    "tenant_or_field_leaks": 0,
+    "missing_or_nonatomic_audits": 0,
+    "ui_dna_violations": 0,
+    "unexpected_skips": 0,
+    "unowned_requirements_or_seams": 0,
+    "default_page_size": 50,
+    "maximum_page_size": 200,
+    "changed_max_cyclomatic_complexity": 6,
+    "changed_duplication_percent": 0,
+    "canonical_master_inventory_coverage_percent": 100,
+    "required_operation_coverage_percent": 100,
+    "required_screen_live_data_coverage_percent": 100,
+    "subphase_test_coverage_percent": 100,
+    "seam_test_coverage_percent": 100
+  }
+}

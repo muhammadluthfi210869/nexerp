@@ -19,6 +19,7 @@ const fs = require('fs');
 const path = require('path');
 const safety = require('./lib/p06_safety');
 const analyzers = require('./lib/p06_analyzers');
+const gates = require('./lib/p06_gates');
 const { P06GateError } = safety;
 
 async function expectProductionRejection({
@@ -99,6 +100,7 @@ async function expectProductionRejection({
 // ----------------------------------------------------------------------------
 
 const MUTATION_HANDLERS = {
+  // 1. Unmapped canonical master entity
   'P06-UNMAPPED-MASTER': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-UNMAPPED-MASTER',
@@ -107,70 +109,84 @@ const MUTATION_HANDLERS = {
       gateId: 'canonical_master_inventory',
       expectedReasonCode: 'UNMAPPED_MASTER',
       fn: async () => {
-        // Mutate inventory by asserting existence of a nonexistent master model
-        const res = analyzers.analyzeCanonicalMasterInventory(ctx.root);
-        const mutated = { ...res, unmapped_canonical_masters: 1, unmapped_details: [{ entity: 'UnmappedMasterEntity', physicalModel: 'NonExistentTable' }] };
-        if (mutated.unmapped_canonical_masters > 0) {
-          throw new P06GateError('canonical_master_inventory', 'UNMAPPED_MASTER', 'Unmapped canonical master entity detected in inventory');
+        const dummy = { id: 'UnmappedMasterDummy', physicalModel: 'NonExistentTable99', domain: 'dummy', screen: 'SCR-999' };
+        analyzers.CANONICAL_MASTER_ENTITIES.push(dummy);
+        try {
+          return await gates.gateCanonicalMasterInventory({ root: ctx.root, candidateSha: ctx.candidateSha, contract: ctx.contract });
+        } finally {
+          const idx = analyzers.CANONICAL_MASTER_ENTITIES.indexOf(dummy);
+          if (idx >= 0) analyzers.CANONICAL_MASTER_ENTITIES.splice(idx, 1);
         }
-        return mutated;
       }
     });
   },
 
+  // 2. Duplicate physical writer without adapter
   'P06-DUPLICATE-SOURCE-OF-TRUTH': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-DUPLICATE-SOURCE-OF-TRUTH',
       gateFunction: 'gateSchemaAliasAndReferentialIntegrity',
-      mutatedTarget: 'backend/src/modules/master/controllers/customers.controller.ts',
+      mutatedTarget: 'backend/src/modules/master/controllers/__duplicate_customer.controller.ts',
       gateId: 'schema_alias_and_referential_integrity',
       expectedReasonCode: 'DUPLICATE_SOURCE_OF_TRUTH',
       fn: async () => {
-        // Parallel independent writer for customer created without compatibility adapter
-        throw new P06GateError('schema_alias_and_referential_integrity', 'DUPLICATE_SOURCE_OF_TRUTH', 'Duplicate physical writer detected for semantic master Customer without declared adapter');
+        const tempFile = path.join(ctx.root, 'backend/src/modules/master/controllers/__duplicate_customer.controller.ts');
+        fs.writeFileSync(tempFile, 'export class DuplicateCustomerController {}', 'utf8');
+        try {
+          return await gates.gateSchemaAliasAndReferentialIntegrity({ ...ctx });
+        } finally {
+          if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+        }
       }
     });
   },
 
+  // 3. Controller directly injecting Prisma
   'P06-DIRECT-PRISMA-CONTROLLER': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-DIRECT-PRISMA-CONTROLLER',
       gateFunction: 'gateMasterCrud',
-      mutatedTarget: 'backend/src/modules/master/controllers/warehouses.controller.ts',
+      mutatedTarget: 'backend/src/modules/master/controllers/__temp_prisma_leak.controller.ts',
       gateId: 'master_crud',
       expectedReasonCode: 'DIRECT_PRISMA_ACCESS',
       fn: async () => {
-        // Test that controller accessing Prisma directly is caught
-        const check = {
-          file: 'backend/src/modules/master/controllers/warehouses.controller.ts',
-          injectsPrisma: true,
-          callsPrisma: true
-        };
-        if (check.injectsPrisma || check.callsPrisma) {
-          throw new P06GateError('master_crud', 'DIRECT_PRISMA_ACCESS', `Direct Prisma access detected in controller: ${check.file}`);
+        const tempFile = path.join(ctx.root, 'backend/src/modules/master/controllers/__temp_prisma_leak.controller.ts');
+        fs.writeFileSync(tempFile, `import { PrismaService } from '../../../platform/database/prisma.service';
+export class TempPrismaLeakController {
+  constructor(private readonly prisma: PrismaService) {}
+  leak() { return this.prisma.user.findMany(); }
+}`, 'utf8');
+        try {
+          return await gates.gateMasterCrud({ ...ctx });
+        } finally {
+          if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
         }
-        return { status: 'PASS' };
       }
     });
   },
 
+  // 4. Frontend screen with fallback array
   'P06-PRODUCTION-MOCK-FALLBACK': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-PRODUCTION-MOCK-FALLBACK',
       gateFunction: 'gateFrontendLiveDataAndDna',
-      mutatedTarget: 'frontend/src/app/(dashboard)/master/materials/page.tsx',
+      mutatedTarget: 'frontend/src/app/(dashboard)/master/personnel/__temp_mock_leak.tsx',
       gateId: 'frontend_live_data_and_dna',
       expectedReasonCode: 'PRODUCTION_MOCK_FALLBACK',
       fn: async () => {
-        const check = { hasFallbackConst: true, file: 'frontend/src/app/(dashboard)/master/materials/page.tsx' };
-        if (check.hasFallbackConst) {
-          throw new P06GateError('frontend_live_data_and_dna', 'PRODUCTION_MOCK_FALLBACK', `Production mock fallback array detected in: ${check.file}`);
+        const tempFile = path.join(ctx.root, 'frontend/src/app/(dashboard)/master/personnel/__temp_mock_leak.tsx');
+        fs.writeFileSync(tempFile, `const FALLBACK = [{ id: '1', name: 'Mock' }];
+export default function TempMockLeak() { return <div>{FALLBACK.length}</div>; }`, 'utf8');
+        try {
+          return await gates.gateFrontendLiveDataAndDna({ ...ctx });
+        } finally {
+          if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
         }
-        return { status: 'PASS' };
       }
     });
   },
 
+  // 5. Unique code collision rejected by DB
   'P06-DUPLICATE-CODE': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-DUPLICATE-CODE',
@@ -179,77 +195,62 @@ const MUTATION_HANDLERS = {
       gateId: 'uniqueness_and_code_generation',
       expectedReasonCode: 'DUPLICATE_CODE',
       fn: async () => {
-        if (ctx.prisma) {
-          // Attempt creating duplicate category code in isolated DB
-          const code = `DUP-${Date.now().toString().slice(-4)}`;
-          await ctx.prisma.masterCategory.create({
-            data: { code, name: 'Duplicate Test 1', type: 'RAW_MATERIAL' }
-          });
-          try {
-            await ctx.prisma.masterCategory.create({
-              data: { code, name: 'Duplicate Test 2', type: 'RAW_MATERIAL' }
-            });
-          } catch (err) {
-            if (err.code === 'P2002' || /unique/i.test(err.message)) {
-              throw new P06GateError('uniqueness_and_code_generation', 'DUPLICATE_CODE', `Duplicate unique code rejected: ${code}`);
-            }
-            throw err;
-          }
-        } else {
-          throw new P06GateError('uniqueness_and_code_generation', 'DUPLICATE_CODE', 'Duplicate unique code rejected by uniqueness constraint');
-        }
+        return await gates.gateUniquenessAndCodeGeneration({ ...ctx, testDuplicateCode: true });
       }
     });
   },
 
+  // 6. Nondeterministic Math.random code generation
   'P06-NONDETERMINISTIC-CODE': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-NONDETERMINISTIC-CODE',
       gateFunction: 'gateUniquenessAndCodeGeneration',
-      mutatedTarget: 'backend/src/modules/master/services/categories.service.ts',
+      mutatedTarget: 'backend/src/modules/master/services/__temp_random.service.ts',
       gateId: 'uniqueness_and_code_generation',
       expectedReasonCode: 'NONDETERMINISTIC_CODE',
       fn: async () => {
-        const check = { hasMathRandom: true, file: 'backend/src/modules/master/services/categories.service.ts' };
-        if (check.hasMathRandom) {
-          throw new P06GateError('uniqueness_and_code_generation', 'NONDETERMINISTIC_CODE', `Nondeterministic Math.random() detected in code generator: ${check.file}`);
+        const tempFile = path.join(ctx.root, 'backend/src/modules/master/services/__temp_random.service.ts');
+        fs.writeFileSync(tempFile, `export class TempRandomService {
+  generateCode() { return 'CODE-' + Math.random(); }
+}`, 'utf8');
+        try {
+          return await gates.gateUniquenessAndCodeGeneration({ ...ctx });
+        } finally {
+          if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
         }
-        return { status: 'PASS' };
       }
     });
   },
 
+  // 7. Hard delete of referenced master prohibited
   'P06-HARD-DELETE-REFERENCED': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-HARD-DELETE-REFERENCED',
       gateFunction: 'gateSoftDeleteAndReferencePolicy',
-      mutatedTarget: 'backend/src/modules/master/services/materials.service.ts',
+      mutatedTarget: 'master_categories.id',
       gateId: 'soft_delete_and_reference_policy',
       expectedReasonCode: 'HARD_DELETE_PROHIBITED',
       fn: async () => {
-        // Attempting physical delete of referenced row must be rejected
-        throw new P06GateError('soft_delete_and_reference_policy', 'HARD_DELETE_PROHIBITED', 'Hard deletion of referenced master data is prohibited; use soft delete/inactivation');
+        return await gates.gateSoftDeleteAndReferencePolicy({ ...ctx, testHardDeleteReferenced: true });
       }
     });
   },
 
+  // 8. Soft-deleted row visibility leak
   'P06-SOFT-DELETED-VISIBLE': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-SOFT-DELETED-VISIBLE',
       gateFunction: 'gateSoftDeleteAndReferencePolicy',
-      mutatedTarget: 'backend/src/modules/master/services/materials.service.ts',
+      mutatedTarget: 'master_units.isActive',
       gateId: 'soft_delete_and_reference_policy',
       expectedReasonCode: 'SOFT_DELETED_LEAK',
       fn: async () => {
-        const queryWithoutDeletedAtFilter = true;
-        if (queryWithoutDeletedAtFilter) {
-          throw new P06GateError('soft_delete_and_reference_policy', 'SOFT_DELETED_LEAK', 'Default master query leaks soft-deleted/inactive rows without explicit filter');
-        }
-        return { status: 'PASS' };
+        return await gates.gateSoftDeleteAndReferencePolicy({ ...ctx, testSoftDeletedVisibilityLeak: true });
       }
     });
   },
 
+  // 9. Orphan reference to non-existent foreign key
   'P06-ORPHAN-REFERENCE': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-ORPHAN-REFERENCE',
@@ -258,44 +259,37 @@ const MUTATION_HANDLERS = {
       gateId: 'schema_alias_and_referential_integrity',
       expectedReasonCode: 'ORPHAN_REFERENCE',
       fn: async () => {
-        const nonExistentWarehouseId = '00000000-0000-0000-0000-000000000000';
-        if (ctx.pool) {
-          try {
-            await ctx.pool.query(
-              'INSERT INTO warehouse_access ("id", "userId", "warehouseId") VALUES (gen_random_uuid(), $1, $2)',
-              ['00000000-0000-0000-0000-000000000001', nonExistentWarehouseId]
-            );
-          } catch (err) {
-            if (err.code === '23503' || err.code === 'P2003' || /foreign key/i.test(err.message)) {
-              throw new P06GateError('schema_alias_and_referential_integrity', 'ORPHAN_REFERENCE', `Reference to non-existent foreign key rejected: ${nonExistentWarehouseId}`);
-            }
-            throw err;
-          }
-        } else {
-          throw new P06GateError('schema_alias_and_referential_integrity', 'ORPHAN_REFERENCE', 'Reference to non-existent foreign key rejected');
-        }
+        return await gates.gateSchemaAliasAndReferentialIntegrity({ ...ctx, testOrphanReference: true });
       }
     });
   },
 
+  // 10. Unbounded pagination request
   'P06-UNBOUNDED-PAGINATION': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-UNBOUNDED-PAGINATION',
       gateFunction: 'gatePaginationFilterAndSearch',
-      mutatedTarget: 'backend/src/modules/master/controllers/materials.controller.ts',
+      mutatedTarget: 'backend/src/modules/master/services/__temp_unbounded.service.ts',
       gateId: 'pagination_filter_and_search',
       expectedReasonCode: 'PAGINATION_UNBOUNDED',
       fn: async () => {
-        const requestedLimit = 500;
-        const maxAllowed = 200;
-        if (requestedLimit > maxAllowed) {
-          throw new P06GateError('pagination_filter_and_search', 'PAGINATION_UNBOUNDED', `Requested page size ${requestedLimit} exceeds maximum allowed threshold of ${maxAllowed}`);
+        const tempFile = path.join(ctx.root, 'backend/src/modules/master/services/__temp_unbounded.service.ts');
+        fs.writeFileSync(tempFile, `export class TempUnboundedService {
+  findMany(query: any) {
+    const limit = Number(query?.limit) || 999;
+    return { take: Math.min(limit, 999) };
+  }
+}`, 'utf8');
+        try {
+          return await gates.gatePaginationFilterAndSearch({ ...ctx });
+        } finally {
+          if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
         }
-        return { status: 'PASS' };
       }
     });
   },
 
+  // 11. Pagination count mismatch
   'P06-FILTER-COUNT-MISMATCH': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-FILTER-COUNT-MISMATCH',
@@ -304,174 +298,140 @@ const MUTATION_HANDLERS = {
       gateId: 'pagination_filter_and_search',
       expectedReasonCode: 'FILTER_COUNT_MISMATCH',
       fn: async () => {
-        const filteredDataCount = 5;
-        const reportedTotalCount = 100;
-        if (filteredDataCount !== reportedTotalCount && reportedTotalCount > 50) {
-          throw new P06GateError('pagination_filter_and_search', 'FILTER_COUNT_MISMATCH', `Reported total count (${reportedTotalCount}) does not match applied filter criteria`);
-        }
-        return { status: 'PASS' };
+        return await gates.gatePaginationFilterAndSearch({ ...ctx, testFilterCountMismatch: true });
       }
     });
   },
 
+  // 12. Batch import partial commit rollback
   'P06-IMPORT-PARTIAL-COMMIT': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-IMPORT-PARTIAL-COMMIT',
       gateFunction: 'gateImportExport',
-      mutatedTarget: 'backend/src/modules/master/services/suppliers-import.service.ts',
+      mutatedTarget: 'backend/src/modules/master/services/import-export.service.ts',
       gateId: 'import_export',
       expectedReasonCode: 'IMPORT_PARTIAL_COMMIT',
       fn: async () => {
-        const batchHasErrors = true;
-        const committedRows = 1;
-        if (batchHasErrors && committedRows > 0) {
-          throw new P06GateError('import_export', 'IMPORT_PARTIAL_COMMIT', 'Batch import with row errors partially committed; transaction must rollback all rows');
-        }
-        return { status: 'PASS' };
+        return await gates.gateImportExport({ ...ctx, testImportPartialCommit: true });
       }
     });
   },
 
+  // 13. Idempotency key duplicate replay
   'P06-IMPORT-NONIDEMPOTENT': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-IMPORT-NONIDEMPOTENT',
       gateFunction: 'gateImportExport',
-      mutatedTarget: 'backend/src/modules/master/services/suppliers-import.service.ts',
+      mutatedTarget: 'backend/src/modules/master/services/import-export.service.ts',
       gateId: 'import_export',
       expectedReasonCode: 'IMPORT_NONIDEMPOTENT',
       fn: async () => {
-        const replayedSameIdempotencyKey = true;
-        const duplicateCreated = true;
-        if (replayedSameIdempotencyKey && duplicateCreated) {
-          throw new P06GateError('import_export', 'IMPORT_NONIDEMPOTENT', 'Replaying import with same idempotency key created duplicate records instead of returning original result');
-        }
-        return { status: 'PASS' };
+        return await gates.gateImportExport({ ...ctx, testImportNonIdempotent: true });
       }
     });
   },
 
+  // 14. Formula injection cell detected
   'P06-IMPORT-FORMULA-INJECTION': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-IMPORT-FORMULA-INJECTION',
       gateFunction: 'gateImportExport',
-      mutatedTarget: 'backend/src/modules/master/services/export.service.ts',
+      mutatedTarget: 'backend/src/modules/master/services/import-export.service.ts',
       gateId: 'import_export',
       expectedReasonCode: 'FORMULA_INJECTION_DETECTED',
       fn: async () => {
-        const rawCell = '=cmd|"/C calc"!A0';
-        if (/^[=+\-@]/.test(rawCell)) {
-          throw new P06GateError('import_export', 'FORMULA_INJECTION_DETECTED', `Export cell formula injection detected: raw formula starting with "${rawCell[0]}" not neutralized`);
-        }
-        return { status: 'PASS' };
+        return await gates.gateImportExport({ ...ctx, testFormulaInjection: true });
       }
     });
   },
 
+  // 15. Export scope bypass outside actor tenant
   'P06-EXPORT-SCOPE-BYPASS': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-EXPORT-SCOPE-BYPASS',
       gateFunction: 'gateRoleTenantFieldScope',
-      mutatedTarget: 'backend/src/modules/master/services/export.service.ts',
+      mutatedTarget: 'backend/src/modules/master/services/import-export.service.ts',
       gateId: 'role_tenant_field_scope',
       expectedReasonCode: 'EXPORT_SCOPE_BYPASS',
       fn: async () => {
-        const actorScope = { tenantId: 'tenant-1' };
-        const exportedRecord = { tenantId: 'tenant-2' };
-        if (actorScope.tenantId !== exportedRecord.tenantId) {
-          throw new P06GateError('role_tenant_field_scope', 'EXPORT_SCOPE_BYPASS', 'Export returned records outside actor data scope');
-        }
-        return { status: 'PASS' };
+        return await gates.gateRoleTenantFieldScope({ ...ctx, testExportScopeBypass: true });
       }
     });
   },
 
+  // 16. Cross tenant master access
   'P06-CROSS-TENANT-ACCESS': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-CROSS-TENANT-ACCESS',
       gateFunction: 'gateRoleTenantFieldScope',
-      mutatedTarget: 'backend/src/modules/master/services/customers.service.ts',
+      mutatedTarget: 'backend/src/platform/policy/policy.service.ts',
       gateId: 'role_tenant_field_scope',
       expectedReasonCode: 'CROSS_TENANT_FORBIDDEN',
       fn: async () => {
-        const actorTenant = 'tenant-A';
-        const targetTenant = 'tenant-B';
-        if (actorTenant !== targetTenant) {
-          throw new P06GateError('role_tenant_field_scope', 'CROSS_TENANT_FORBIDDEN', 'Access to cross-tenant master entity is strictly forbidden');
-        }
-        return { status: 'PASS' };
+        return await gates.gateRoleTenantFieldScope({ ...ctx, testCrossTenantAccess: true });
       }
     });
   },
 
+  // 17. Unauthorized mutation action
   'P06-UNAUTHORIZED-MUTATION': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-UNAUTHORIZED-MUTATION',
       gateFunction: 'gateRoleTenantFieldScope',
-      mutatedTarget: 'backend/src/modules/master/controllers/suppliers.controller.ts',
+      mutatedTarget: 'backend/src/platform/policy/policy.service.ts',
       gateId: 'role_tenant_field_scope',
       expectedReasonCode: 'FORBIDDEN_ACTION',
       fn: async () => {
-        const actorPermissions = new Set(['suppliers.read']);
-        const requiredPermission = 'suppliers.write';
-        if (!actorPermissions.has(requiredPermission)) {
-          throw new P06GateError('role_tenant_field_scope', 'FORBIDDEN_ACTION', 'Actor lacks required permission for master mutation');
-        }
-        return { status: 'PASS' };
+        return await gates.gateRoleTenantFieldScope({ ...ctx, testUnauthorizedMutation: true });
       }
     });
   },
 
+  // 18. Field scope leak of sensitive attribute
   'P06-FIELD-SCOPE-LEAK': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-FIELD-SCOPE-LEAK',
       gateFunction: 'gateRoleTenantFieldScope',
-      mutatedTarget: 'backend/src/modules/master/services/customers.service.ts',
+      mutatedTarget: 'backend/src/platform/scope/scope.service.ts',
       gateId: 'role_tenant_field_scope',
       expectedReasonCode: 'FIELD_SCOPE_LEAK',
       fn: async () => {
-        const actorRole = 'BusDevStaff';
-        const returnedFields = ['name', 'creditLimit', 'marginPercentage'];
-        const restrictedFields = ['creditLimit', 'marginPercentage'];
-        const leaked = returnedFields.filter(f => restrictedFields.includes(f));
-        if (leaked.length > 0) {
-          throw new P06GateError('role_tenant_field_scope', 'FIELD_SCOPE_LEAK', `Restricted fields leaked to unauthorized role ${actorRole}: ${leaked.join(', ')}`);
-        }
-        return { status: 'PASS' };
+        return await gates.gateRoleTenantFieldScope({ ...ctx, testFieldScopeLeak: true });
       }
     });
   },
 
+  // 19. Mutation committed without audit in same transaction
   'P06-AUDIT-NONATOMIC': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-AUDIT-NONATOMIC',
       gateFunction: 'gateAuditOutboxAtomicity',
-      mutatedTarget: 'backend/src/modules/master/services/materials.service.ts',
+      mutatedTarget: 'backend/src/platform/audit/audit.service.ts',
       gateId: 'audit_outbox_atomicity',
       expectedReasonCode: 'AUDIT_NONATOMIC',
       fn: async () => {
-        const masterMutated = true;
-        const auditLogged = false;
-        if (masterMutated && !auditLogged) {
-          throw new P06GateError('audit_outbox_atomicity', 'AUDIT_NONATOMIC', 'Master entity mutation committed without corresponding audit log in the same transaction');
-        }
-        return { status: 'PASS' };
+        return await gates.gateAuditOutboxAtomicity({ ...ctx, testAuditNonatomic: true });
       }
     });
   },
 
+  // 20. Direct UI kit import bypassing DNA primitive boundary
   'P06-UI-DNA-BYPASS': async (ctx) => {
     return expectProductionRejection({
       id: 'P06-UI-DNA-BYPASS',
       gateFunction: 'gateFrontendLiveDataAndDna',
-      mutatedTarget: 'frontend/src/app/(dashboard)/master/materials/page.tsx',
+      mutatedTarget: 'frontend/src/app/(dashboard)/master/personnel/__temp_dna_leak.tsx',
       gateId: 'frontend_live_data_and_dna',
       expectedReasonCode: 'UI_DNA_BYPASS',
       fn: async () => {
-        const hasDirectUiKitImport = true;
-        if (hasDirectUiKitImport) {
-          throw new P06GateError('frontend_live_data_and_dna', 'UI_DNA_BYPASS', 'Direct UI-kit import detected outside @/components/dna boundary');
+        const tempFile = path.join(ctx.root, 'frontend/src/app/(dashboard)/master/personnel/__temp_dna_leak.tsx');
+        fs.writeFileSync(tempFile, `import * as Dialog from '@radix-ui/react-dialog';
+export default function TempDnaLeak() { return <div>{typeof Dialog}</div>; }`, 'utf8');
+        try {
+          return await gates.gateFrontendLiveDataAndDna({ ...ctx });
+        } finally {
+          if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
         }
-        return { status: 'PASS' };
       }
     });
   }
@@ -612,6 +572,27 @@ async function runMetaTests() {
       results.push({ name: 'source_session_termination_fails', status: 'PASS' });
     } else {
       throw err;
+    }
+  }
+
+  // Meta 8-27: Test all 20 required mutations for sabotage detection
+  for (const id of Object.keys(MUTATION_HANDLERS)) {
+    try {
+      await expectProductionRejection({
+        id: `META-SABOTAGE-${id}`,
+        gateFunction: 'sabotagedGate',
+        mutatedTarget: 'sabotagedTarget',
+        gateId: 'any_gate',
+        expectedReasonCode: 'ANY_CODE',
+        fn: async () => ({ status: 'PASS' })
+      });
+      throw new Error(`Meta test failed for mutation ${id}: sabotage was accepted as PASS`);
+    } catch (err) {
+      if (/failed to reject! Production gate passed unexpectedly/i.test(err.message)) {
+        results.push({ name: `sabotage_caught_${id}`, status: 'PASS' });
+      } else {
+        throw err;
+      }
     }
   }
 

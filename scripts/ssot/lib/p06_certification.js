@@ -35,9 +35,71 @@ const { executeSeam, executeSubphase } = testRegistry;
 // diagnoseP06 Implementation
 // ----------------------------------------------------------------------------
 
+async function withIsolatedDbContext(root, contract, fn) {
+  const candidateSha = git(['rev-parse', 'HEAD'], root);
+  const shortSha = candidateSha.slice(0, 8);
+  const pid = process.pid;
+
+  const backendDir = path.resolve(root, 'backend');
+  const dotenvPath = path.join(backendDir, '.env');
+  if (fs.existsSync(dotenvPath)) {
+    require(path.join(backendDir, 'node_modules/dotenv')).config({ path: dotenvPath });
+  }
+
+  const { Client, Pool } = require(path.join(backendDir, 'node_modules/pg'));
+  const rawUrl = process.env.P06_TEST_ADMIN_URL || process.env.DATABASE_URL;
+  const target = safety.parseAndValidateTargetUrl(rawUrl);
+  const adminUrl = `postgresql://${target.username}:${target.password}@${target.hostname}:${target.port}/postgres`;
+  const adminClient = new Client({ connectionString: adminUrl });
+  adminClient.on('error', () => {});
+  await adminClient.connect();
+
+  const inventory = safety.createInventory();
+  const isolatedDbName = `nex_p06_diag_${shortSha}_${pid}_${Date.now().toString().slice(-6)}`;
+  await safety.createIsolatedDatabase(adminClient, isolatedDbName, inventory, target);
+
+  const isolatedDbUrl = `postgresql://${target.username}:${target.password}@${target.hostname}:${target.port}/${isolatedDbName}`;
+  const pool = new Pool({ connectionString: isolatedDbUrl });
+  const { PrismaClient } = require(path.join(backendDir, 'node_modules/@prisma/client'));
+  const { PrismaPg } = require(path.join(backendDir, 'node_modules/@prisma/adapter-pg'));
+  const adapter = new PrismaPg(pool);
+  const prisma = new PrismaClient({ adapter });
+
+  let prismaDisconnected = false;
+  let poolEnded = false;
+
+  try {
+    const ctx = {
+      root,
+      contract,
+      candidateSha,
+      shortSha,
+      pid,
+      target,
+      adminClient,
+      inventory,
+      isolatedDbName,
+      prisma,
+      pool
+    };
+    return await fn(ctx);
+  } finally {
+    if (!prismaDisconnected) {
+      try { await prisma.$disconnect(); } catch {}
+      prismaDisconnected = true;
+    }
+    if (!poolEnded) {
+      try { await pool.end(); } catch {}
+      poolEnded = true;
+    }
+    try { await safety.cleanupAllDatabases(adminClient, inventory, target.database); } catch {}
+    try { await adminClient.end(); } catch {}
+  }
+}
+
 async function diagnoseP06({ root, contract, selector }) {
   const candidateSha = git(['rev-parse', 'HEAD'], root);
-  const ctx = {
+  const staticCtx = {
     root,
     contract,
     candidateSha
@@ -86,7 +148,7 @@ async function diagnoseP06({ root, contract, selector }) {
   }
 
   if (selector.type === 'subphase') {
-    try {
+    const runSubphase = async (ctx) => {
       const res = await executeSubphase(selector.id, ctx);
       const subphaseOrder = contract.required_subphases;
       const idx = subphaseOrder.indexOf(selector.id);
@@ -103,6 +165,14 @@ async function diagnoseP06({ root, contract, selector }) {
         next_command: nextCmd,
         details: res
       };
+    };
+
+    try {
+      if (selector.id === 'P06-SF1-contract-inventory') {
+        return await runSubphase(staticCtx);
+      } else {
+        return await withIsolatedDbContext(root, contract, runSubphase);
+      }
     } catch (err) {
       return {
         status: 'FAIL',
@@ -117,15 +187,17 @@ async function diagnoseP06({ root, contract, selector }) {
 
   if (selector.type === 'seam') {
     try {
-      const res = await executeSeam(selector.id, ctx);
-      return {
-        status: 'PASS',
-        target_count: res.target_count,
-        executed_ids: [...res.positive_test_ids, ...res.failure_test_ids],
-        reason_code: 'PASS',
-        next_command: 'node scripts/ssot/diagnose_p06_phase.js --preflight',
-        details: res
-      };
+      return await withIsolatedDbContext(root, contract, async (ctx) => {
+        const res = await executeSeam(selector.id, ctx);
+        return {
+          status: 'PASS',
+          target_count: res.target_count,
+          executed_ids: [...res.positive_test_ids, ...res.failure_test_ids],
+          reason_code: 'PASS',
+          next_command: 'node scripts/ssot/diagnose_p06_phase.js --preflight',
+          details: res
+        };
+      });
     } catch (err) {
       return {
         status: 'FAIL',
@@ -145,15 +217,17 @@ async function diagnoseP06({ root, contract, selector }) {
       throw new Error(`Gate function not found: ${gateFnName} for gate ID ${selector.id}`);
     }
     try {
-      const res = await gateFn(ctx);
-      return {
-        status: res.status,
-        target_count: res.target_count,
-        executed_ids: [selector.id],
-        reason_code: 'PASS',
-        next_command: 'node scripts/ssot/diagnose_p06_phase.js --preflight',
-        details: res
-      };
+      return await withIsolatedDbContext(root, contract, async (ctx) => {
+        const res = await gateFn(ctx);
+        return {
+          status: res.status,
+          target_count: res.target_count,
+          executed_ids: [selector.id],
+          reason_code: 'PASS',
+          next_command: 'node scripts/ssot/diagnose_p06_phase.js --preflight',
+          details: res
+        };
+      });
     } catch (err) {
       return {
         status: 'FAIL',
@@ -168,15 +242,17 @@ async function diagnoseP06({ root, contract, selector }) {
 
   if (selector.type === 'mutation') {
     try {
-      const res = await mutationsRunner.runSingleMutation(selector.id, ctx);
-      return {
-        status: res.status,
-        target_count: 1,
-        executed_ids: [selector.id],
-        reason_code: res.reason_code,
-        next_command: 'node scripts/ssot/diagnose_p06_phase.js --preflight',
-        details: res
-      };
+      return await withIsolatedDbContext(root, contract, async (ctx) => {
+        const res = await mutationsRunner.runSingleMutation(selector.id, ctx);
+        return {
+          status: res.status,
+          target_count: 1,
+          executed_ids: [selector.id],
+          reason_code: res.reason_code,
+          next_command: 'node scripts/ssot/diagnose_p06_phase.js --preflight',
+          details: res
+        };
+      });
     } catch (err) {
       return {
         status: 'FAIL',
@@ -190,49 +266,51 @@ async function diagnoseP06({ root, contract, selector }) {
   }
 
   if (selector.type === 'preflight') {
-    // Run all 6 subphases, 6 seams, 16 gates, 20 mutations
-    const executedSubphases = [];
-    for (const subId of contract.required_subphases) {
-      const sp = await executeSubphase(subId, ctx);
-      executedSubphases.push(sp);
-    }
-
-    const executedSeams = [];
-    for (const seamId of contract.required_seams) {
-      const sm = await executeSeam(seamId, ctx);
-      executedSeams.push(sm);
-    }
-
-    const executedGates = [];
-    for (const gateId of contract.required_checks) {
-      const gateFnName = `gate${gateId.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')}`;
-      const gateFn = gates[gateFnName];
-      const g = await gateFn(ctx);
-      executedGates.push(g);
-    }
-
-    const executedMutations = await mutationsRunner.runAllMutations(ctx);
-
-    const totalTargets = executedSubphases.length + executedSeams.length + executedGates.length + executedMutations.length;
-
-    return {
-      status: 'PASS',
-      target_count: totalTargets,
-      executed_ids: [
-        ...contract.required_subphases,
-        ...contract.required_seams,
-        ...contract.required_checks,
-        ...contract.required_mutations
-      ],
-      reason_code: 'PREFLIGHT_PASS',
-      next_command: 'git commit -m "feat(p06): complete master data and system configuration" && node scripts/ssot/certify_p06_phase.js',
-      details: {
-        subphases: executedSubphases.length,
-        seams: executedSeams.length,
-        gates: executedGates.length,
-        mutations: executedMutations.length
+    return await withIsolatedDbContext(root, contract, async (ctx) => {
+      // Run all 6 subphases, 6 seams, 16 gates, 20 mutations
+      const executedSubphases = [];
+      for (const subId of contract.required_subphases) {
+        const sp = await executeSubphase(subId, ctx);
+        executedSubphases.push(sp);
       }
-    };
+
+      const executedSeams = [];
+      for (const seamId of contract.required_seams) {
+        const sm = await executeSeam(seamId, ctx);
+        executedSeams.push(sm);
+      }
+
+      const executedGates = [];
+      for (const gateId of contract.required_checks) {
+        const gateFnName = `gate${gateId.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')}`;
+        const gateFn = gates[gateFnName];
+        const g = await gateFn(ctx);
+        executedGates.push(g);
+      }
+
+      const executedMutations = await mutationsRunner.runAllMutations(ctx);
+
+      const totalTargets = executedSubphases.length + executedSeams.length + executedGates.length + executedMutations.length;
+
+      return {
+        status: 'PASS',
+        target_count: totalTargets,
+        executed_ids: [
+          ...contract.required_subphases,
+          ...contract.required_seams,
+          ...contract.required_checks,
+          ...contract.required_mutations
+        ],
+        reason_code: 'PREFLIGHT_PASS',
+        next_command: 'git commit -m "feat(p06): complete master data and system configuration" && node scripts/ssot/certify_p06_phase.js',
+        details: {
+          subphases: executedSubphases.length,
+          seams: executedSeams.length,
+          gates: executedGates.length,
+          mutations: executedMutations.length
+        }
+      };
+    });
   }
 
   throw new Error(`Unknown selector type: ${selector.type}`);
@@ -343,32 +421,38 @@ async function certifyP06({ root, contract, candidateSha }) {
     const checksById = {};
     for (const c of checks) checksById[c.id] = c;
 
+    const getGate = (id) => {
+      const g = checksById[id];
+      if (!g) throw new P06GateError('predecessor_scope_and_safety', 'GATE_CHECK_MISSING', `Gate ${id} check missing from executed checks`);
+      return g;
+    };
+
     const metrics = {
-      unmapped_canonical_masters: checksById['canonical_master_inventory']?.unmapped_canonical_masters ?? 0,
-      duplicate_master_sources: checksById['schema_alias_and_referential_integrity']?.duplicate_master_sources ?? 0,
-      production_mock_fallbacks: checksById['frontend_live_data_and_dna']?.production_mock_fallbacks ?? 0,
-      direct_prisma_controller_access: checksById['master_crud']?.direct_prisma_controller_access ?? 0,
-      referential_integrity_violations: checksById['schema_alias_and_referential_integrity']?.referential_integrity_violations ?? 0,
-      uniqueness_violations: checksById['uniqueness_and_code_generation']?.uniqueness_violations ?? 0,
-      nondeterministic_codes: checksById['uniqueness_and_code_generation']?.nondeterministic_codes ?? 0,
-      hard_deleted_referenced_rows: checksById['soft_delete_and_reference_policy']?.hard_deleted_referenced_rows ?? 0,
-      soft_deleted_visibility_leaks: checksById['soft_delete_and_reference_policy']?.soft_deleted_visibility_leaks ?? 0,
-      import_partial_commits: checksById['import_export']?.import_partial_commits ?? 0,
-      import_duplicate_side_effects: checksById['import_export']?.import_duplicate_side_effects ?? 0,
-      export_scope_bypasses: checksById['role_tenant_field_scope']?.export_scope_bypasses ?? 0,
-      authorization_bypasses: checksById['role_tenant_field_scope']?.authorization_bypasses ?? 0,
-      tenant_or_field_leaks: checksById['role_tenant_field_scope']?.tenant_or_field_leaks ?? 0,
-      missing_or_nonatomic_audits: checksById['audit_outbox_atomicity']?.missing_or_nonatomic_audits ?? 0,
-      ui_dna_violations: checksById['frontend_live_data_and_dna']?.ui_dna_violations ?? 0,
+      unmapped_canonical_masters: getGate('canonical_master_inventory').unmapped_canonical_masters,
+      duplicate_master_sources: getGate('schema_alias_and_referential_integrity').duplicate_master_sources,
+      production_mock_fallbacks: getGate('frontend_live_data_and_dna').production_mock_fallbacks,
+      direct_prisma_controller_access: getGate('master_crud').direct_prisma_controller_access,
+      referential_integrity_violations: getGate('schema_alias_and_referential_integrity').referential_integrity_violations,
+      uniqueness_violations: getGate('uniqueness_and_code_generation').uniqueness_violations,
+      nondeterministic_codes: getGate('uniqueness_and_code_generation').nondeterministic_codes,
+      hard_deleted_referenced_rows: getGate('soft_delete_and_reference_policy').hard_deleted_referenced_rows,
+      soft_deleted_visibility_leaks: getGate('soft_delete_and_reference_policy').soft_deleted_visibility_leaks,
+      import_partial_commits: getGate('import_export').import_partial_commits,
+      import_duplicate_side_effects: getGate('import_export').import_duplicate_side_effects,
+      export_scope_bypasses: getGate('role_tenant_field_scope').export_scope_bypasses,
+      authorization_bypasses: getGate('role_tenant_field_scope').authorization_bypasses,
+      tenant_or_field_leaks: getGate('role_tenant_field_scope').tenant_or_field_leaks,
+      missing_or_nonatomic_audits: getGate('audit_outbox_atomicity').missing_or_nonatomic_audits,
+      ui_dna_violations: getGate('frontend_live_data_and_dna').ui_dna_violations,
       unexpected_skips: checks.filter(c => c && c.skipped).length,
-      unowned_requirements_or_seams: checksById['canonical_master_inventory']?.unowned_requirements_or_seams ?? 0,
-      default_page_size: checksById['pagination_filter_and_search']?.default_page_size ?? 50,
-      maximum_page_size: checksById['pagination_filter_and_search']?.maximum_page_size ?? 200,
-      changed_max_cyclomatic_complexity: checksById['subphase_seam_and_regression']?.changed_max_cyclomatic_complexity ?? 6,
-      changed_duplication_percent: checksById['subphase_seam_and_regression']?.changed_duplication_percent ?? 0.0,
-      canonical_master_inventory_coverage_percent: checksById['canonical_master_inventory']?.canonical_master_inventory_coverage_percent ?? 0,
-      required_operation_coverage_percent: checksById['canonical_master_inventory']?.required_operation_coverage_percent ?? 0,
-      required_screen_live_data_coverage_percent: checksById['frontend_live_data_and_dna']?.required_screen_live_data_coverage_percent ?? 0,
+      unowned_requirements_or_seams: getGate('canonical_master_inventory').unowned_requirements_or_seams,
+      default_page_size: getGate('pagination_filter_and_search').default_page_size,
+      maximum_page_size: getGate('pagination_filter_and_search').maximum_page_size,
+      changed_max_cyclomatic_complexity: getGate('subphase_seam_and_regression').changed_max_cyclomatic_complexity,
+      changed_duplication_percent: getGate('subphase_seam_and_regression').changed_duplication_percent,
+      canonical_master_inventory_coverage_percent: getGate('canonical_master_inventory').canonical_master_inventory_coverage_percent,
+      required_operation_coverage_percent: getGate('canonical_master_inventory').required_operation_coverage_percent,
+      required_screen_live_data_coverage_percent: getGate('frontend_live_data_and_dna').required_screen_live_data_coverage_percent,
       subphase_test_coverage_percent: subphases.length > 0 ? Math.round((subphases.filter(s => s.status === 'PASS').length / subphases.length) * 100) : 0,
       seam_test_coverage_percent: seams.length > 0 ? Math.round((seams.filter(s => s.status === 'PASS').length / seams.length) * 100) : 0
     };
