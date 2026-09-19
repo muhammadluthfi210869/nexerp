@@ -341,7 +341,7 @@ async function mutationRevokedSessionReuse(ctx) {
   return await expectProductionRejection({
     id: 'P05-REVOKED-SESSION-REUSE',
     gateFunction: 'SessionService.verifyAccessToken',
-    mutatedTarget: `auth_sessions.revokedAt: ${session.id}`,
+    mutatedTarget: 'auth_sessions.revokedAt session reuse',
     gateId: 'auth_session_mfa',
     expectedReasonCode: 'SESSION_REVOKED',
     fn: async () => {
@@ -368,7 +368,7 @@ async function mutationRefreshTokenReplay(ctx) {
   return await expectProductionRejection({
     id: 'P05-REFRESH-TOKEN-REPLAY',
     gateFunction: 'SessionService.rotateRefresh',
-    mutatedTarget: `SessionService replay of rotated refresh token: ${session.id}`,
+    mutatedTarget: 'SessionService replay of rotated refresh token',
     gateId: 'auth_session_mfa',
     expectedReasonCode: 'REFRESH_REPLAY',
     fn: async () => {
@@ -398,7 +398,7 @@ async function mutationMfaBypass(ctx) {
   return await expectProductionRejection({
     id: 'P05-MFA-BYPASS',
     gateFunction: 'SessionService.verifyAccessToken',
-    mutatedTarget: `Session with mfaPending=true: ${session.id}`,
+    mutatedTarget: 'SessionService verifyAccessToken with mfaPending=true',
     gateId: 'auth_session_mfa',
     expectedReasonCode: 'MFA_REQUIRED',
     fn: async () => {
@@ -664,7 +664,7 @@ async function mutationNoteParentAclBypass(ctx) {
   return await expectProductionRejection({
     id: 'P05-NOTE-PARENT-ACL-BYPASS',
     gateFunction: 'CommunicationAclService.createNoteWithMentions',
-    mutatedTarget: `CommunicationAclService note with missing parent ${missingParentId}`,
+    mutatedTarget: 'CommunicationAclService note with missing parent entity',
     gateId: 'communication_acl',
     expectedReasonCode: 'PARENT_ACL_DENIED',
     fn: async () => {
@@ -695,7 +695,7 @@ async function mutationMentionUnauthorizedTarget(ctx) {
   return await expectProductionRejection({
     id: 'P05-MENTION-UNAUTHORIZED-TARGET',
     gateFunction: 'CommunicationAclService.createNoteWithMentions',
-    mutatedTarget: `CommunicationAclService mention of unauthorized target ${unauthorizedTargetId}`,
+    mutatedTarget: 'CommunicationAclService mention of unauthorized target',
     gateId: 'communication_acl',
     expectedReasonCode: 'UNAUTHORIZED_MENTION_TARGET',
     fn: async () => {
@@ -743,7 +743,7 @@ async function mutationMentionDuplicateNotification(ctx) {
   return await expectProductionRejection({
     id: 'P05-MENTION-DUPLICATE-NOTIFICATION',
     gateFunction: 'CommunicationAclService.preventDuplicateNotification',
-    mutatedTarget: `CommunicationAclService duplicate notification for user ${targetUser}`,
+    mutatedTarget: 'CommunicationAclService duplicate notification prevention',
     gateId: 'communication_acl',
     expectedReasonCode: 'MENTION_DUPLICATE_NOTIFICATION_REJECTED',
     fn: async () => {

@@ -540,6 +540,11 @@ function findDuplicateRules({ root, baseSha, candidateSha }) {
     const r = spawnSync('git', ['diff', '--name-only', `${baseSha}..${candidateSha}`], { cwd: root, encoding: 'utf8' });
     if (r.status === 0) changedFiles = String(r.stdout || '').split('\n').map(s => s.trim()).filter(Boolean);
   }
+  const rStatus = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' });
+  if (rStatus.status === 0) {
+    const wtFiles = String(rStatus.stdout || '').split(/\r?\n/).map(s => s.trim().slice(3)).filter(Boolean);
+    changedFiles = Array.from(new Set(changedFiles.concat(wtFiles)));
+  }
   const changedTs = changedFiles.filter(f => f.startsWith('backend/src/') && f.endsWith('.ts') && !isTestPath(f));
   const filesToScan = changedTs.length > 0 ? changedTs : listAllFiles(root, 'backend/src/platform').filter(f => f.endsWith('.ts') && !isTestPath(normalize(path.relative(root, f))));
 
@@ -625,7 +630,11 @@ function findComplexityRegressions({ root, baseSha, candidateSha }) {
     const r = spawnSync('git', ['diff', '--name-only', `${baseSha}..${candidateSha}`], { cwd: root, encoding: 'utf8' });
     if (r.status === 0) changedFiles = String(r.stdout || '').split('\n').map(s => s.trim()).filter(Boolean);
   }
-
+  const rStatus = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' });
+  if (rStatus.status === 0) {
+    const wtFiles = String(rStatus.stdout || '').split(/\r?\n/).map(s => s.trim().slice(3)).filter(Boolean);
+    changedFiles = Array.from(new Set(changedFiles.concat(wtFiles)));
+  }
   const changedTs = changedFiles.filter(f => f.startsWith('backend/src/') && f.endsWith('.ts') && !isTestPath(f));
   const files = changedTs.map(f => path.join(root, f));
   const regressions = [];

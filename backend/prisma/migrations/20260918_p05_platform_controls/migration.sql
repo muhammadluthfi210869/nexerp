@@ -189,6 +189,12 @@ EXCEPTION
 END $$;
 
 DO $$ BEGIN
+  CREATE TYPE "LaborGrade" AS ENUM ('GRADE_A', 'GRADE_B', 'GRADE_C');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
   CREATE TYPE "UserRole" AS ENUM (
     'SUPER_ADMIN', 'HEAD_OPS', 'COMMERCIAL', 'DIGIMAR', 'RND', 'COMPLIANCE',
     'FINANCE', 'PURCHASING', 'PPIC', 'WAREHOUSE', 'PRODUCTION_OP', 'QC_LAB',
@@ -207,9 +213,11 @@ CREATE TABLE IF NOT EXISTS "users" (
   "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
   "managerPin" TEXT,
   "approvalPin" TEXT,
+  "laborGrade" "LaborGrade",
   "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
   "deletedAt" TIMESTAMP
 );
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "laborGrade" "LaborGrade";
 
 CREATE TABLE IF NOT EXISTS "notifications" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
