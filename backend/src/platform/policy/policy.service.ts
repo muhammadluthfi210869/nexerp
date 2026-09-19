@@ -38,6 +38,60 @@ export interface DecisionResult {
   scope?: string;
 }
 
+interface MatrixParseState {
+  currentRoleNames: string[];
+  currentModule: string;
+}
+
+function processActions(
+  actionsRaw: string,
+  state: MatrixParseState,
+  slugSet: Set<string>,
+  roleMap: Map<string, Set<string>>
+) {
+  const actions = actionsRaw.split(',').map(a => a.trim().toLowerCase());
+  for (const act of actions) {
+    const s1 = `${state.currentModule}.${act}`;
+    const s2 = `${state.currentModule}:${act}`;
+    slugSet.add(s1);
+    slugSet.add(s2);
+    for (const rn of state.currentRoleNames) {
+      let s = roleMap.get(rn);
+      if (!s) { s = new Set(); roleMap.set(rn, s); }
+      if (state.currentModule === '*') s.add('*');
+      else { s.add(s1); s.add(s2); }
+    }
+  }
+}
+
+function parseMatrixLines(text: string, slugSet: Set<string>, roleMap: Map<string, Set<string>>) {
+  const state: MatrixParseState = { currentRoleNames: [], currentModule: '' };
+  const lines = text.split('\n');
+  for (const line of lines) {
+    const roleMatch = line.match(/^\s*-\s*id:\s*([a-zA-Z0-9_.-]+)/);
+    if (roleMatch) {
+      state.currentRoleNames = [roleMatch[1].toLowerCase()];
+      continue;
+    }
+    const nameMatch = line.match(/^\s*name:\s*([a-zA-Z0-9_.-]+)/);
+    if (nameMatch && state.currentRoleNames.length > 0) {
+      const nm = nameMatch[1].toLowerCase();
+      state.currentRoleNames.push(nm);
+      if (!roleMap.has(nm)) roleMap.set(nm, new Set());
+      continue;
+    }
+    const modMatch = line.match(/^\s*-\s*module:\s*['"]?([*a-zA-Z0-9_.-]+)['"]?/);
+    if (modMatch) {
+      state.currentModule = modMatch[1].trim().toLowerCase().replace(/-/g, '_');
+      continue;
+    }
+    const actMatch = line.match(/^\s*actions:\s*\[([^\]]+)\]/);
+    if (actMatch && state.currentRoleNames.length > 0) {
+      processActions(actMatch[1], state, slugSet, roleMap);
+    }
+  }
+}
+
 @Injectable()
 export class PolicyService {
   private matrix: { slugs: string[]; raw: string } | null = null;
@@ -60,54 +114,7 @@ export class PolicyService {
 
     // Parse role blocks from 07_RBAC_MATRIX.yaml
     this.rolePermissionsMap.clear();
-
-    const lines = text.split('\n');
-    let currentRoleNames: string[] = [];
-    let currentModule = '';
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const roleMatch = line.match(/^\s*-\s*id:\s*([a-zA-Z0-9_.-]+)/);
-      if (roleMatch) {
-        currentRoleNames = [roleMatch[1].toLowerCase()];
-        continue;
-      }
-      const nameMatch = line.match(/^\s*name:\s*([a-zA-Z0-9_.-]+)/);
-      if (nameMatch && currentRoleNames.length > 0) {
-        currentRoleNames.push(nameMatch[1].toLowerCase());
-        for (const rn of currentRoleNames) {
-          if (!this.rolePermissionsMap.has(rn)) {
-            this.rolePermissionsMap.set(rn, new Set());
-          }
-        }
-        continue;
-      }
-      const modMatch = line.match(/^\s*-\s*module:\s*['"]?([*a-zA-Z0-9_.-]+)['"]?/);
-      if (modMatch) {
-        currentModule = modMatch[1].trim().toLowerCase().replace(/-/g, '_');
-        continue;
-      }
-      const actMatch = line.match(/^\s*actions:\s*\[([^\]]+)\]/);
-      if (actMatch && currentRoleNames.length > 0) {
-        const actions = actMatch[1].split(',').map(a => a.trim().toLowerCase());
-        for (const act of actions) {
-          const s1 = `${currentModule}.${act}`;
-          const s2 = `${currentModule}:${act}`;
-          slugSet.add(s1);
-          slugSet.add(s2);
-          for (const rn of currentRoleNames) {
-            let s = this.rolePermissionsMap.get(rn);
-            if (!s) { s = new Set(); this.rolePermissionsMap.set(rn, s); }
-            if (currentModule === '*') {
-              s.add('*');
-            } else {
-              s.add(s1);
-              s.add(s2);
-            }
-          }
-        }
-      }
-    }
+    parseMatrixLines(text, slugSet, this.rolePermissionsMap);
 
     // Default canonical mappings if yaml sparse
     const superAdminPerms = new Set(['*']);

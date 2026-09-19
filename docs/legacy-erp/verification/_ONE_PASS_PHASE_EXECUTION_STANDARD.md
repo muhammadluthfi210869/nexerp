@@ -8,6 +8,8 @@ This standard minimizes auditor–executor loops. Every phase receives one compl
 
 One-pass success is the engineering target, not permission to hide unknown defects. Correctness, security, authorization, data integrity, and destructive-operation safety always take precedence over speed.
 
+Development must follow the layered feedback loop in `_LAYERED_CERTIFICATION_ACCELERATION_STANDARD.md`. The full authoritative command is an admission-controlled final decision, not the default inner development loop.
+
 ## Three-level verification cadence
 
 Do not run release-depth certification in every phase.
@@ -34,6 +36,7 @@ Before the executor starts phase `Pxx`, the auditor prepares all of the followin
 8. **Pre-certification checklist** — all prerequisites, environments, services, migrations/data, tests, UI evidence, operations, and documentation checked before handoff.
 9. **Evidence requirements** — raw commands, exit codes, numeric results, environment/tool versions, durations, hashes/digests, deltas, artifacts, and remaining failures.
 10. **Independent reproduction rule** — PASS requires the auditor to rerun the unchanged certification contract against the same candidate SHA.
+11. **Layered diagnostic map** — shared production-path gate registry, gate/mutation-to-group mapping, changed-file impact rules, targeted commands, preflight command, expected duration budgets, and the full-certification admission rule defined in `_LAYERED_CERTIFICATION_ACCELERATION_STANDARD.md`.
 
 ## Acceptance-contract freeze
 
@@ -103,6 +106,8 @@ Every phase prompt explicitly evaluates each lens as `REQUIRED` or `NOT_APPLICAB
 ## Executor persistence and stop conditions
 
 The executor is instructed to continue autonomously through implementation, test, diagnosis, repair, and rerun until the certification command passes. It must not stop after writing a plan, after a partial suite passes, or after producing an evidence narrative.
+
+Persistence does not mean repeatedly running the full certifier. Inventory all reproducible failures, repair them by root-cause cluster, rerun the smallest owning production-path group, pass cumulative preflight, and invoke the authoritative certifier only under the layered admission rule.
 
 The executor may stop without PASS only for:
 

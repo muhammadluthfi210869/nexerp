@@ -50,32 +50,47 @@ export class OutboxService {
     }
   }
 
-  private async executeEnqueue(tx: Prisma.TransactionClient, input: any) {
+  private resolveAggregateId(input: any): string {
     const isUuid = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
-    const aggId = isUuid(input?.aggregateId)
-      ? input.aggregateId
-      : (isUuid(input?.payload?.id) ? input.payload.id : randomUUID());
-    const corrId = isUuid(input?.correlationId) ? input.correlationId : randomUUID();
-    const eventType = input?.eventType || input?.topic || 'event';
-    const aggregateType = input?.aggregateType || 'Generic';
-    const idempotencyKey = input?.idempotencyKey || this.computeIdempotencyKey({
+    const rawAgg = input ? input.aggregateId : null;
+    if (isUuid(rawAgg)) return rawAgg;
+    const payloadId = input && input.payload ? input.payload.id : null;
+    if (isUuid(payloadId)) return payloadId;
+    return randomUUID();
+  }
+
+  private resolveEnqueueData(input: any) {
+    const isUuid = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+    const inp = input || {};
+    const aggId = this.resolveAggregateId(inp);
+    const rawCorr = inp.correlationId;
+    const corrId = isUuid(rawCorr) ? rawCorr : randomUUID();
+    const eventType = inp.eventType || inp.topic || 'event';
+    const aggregateType = inp.aggregateType || 'Generic';
+    const payload = inp.payload || {};
+    const idempotencyKey = inp.idempotencyKey || this.computeIdempotencyKey({
       eventType,
       aggregateType,
       aggregateId: aggId,
-      payload: input?.payload,
+      payload,
       correlationId: corrId
     });
+    const tenantId = isUuid(inp.tenantId) ? inp.tenantId : null;
+    return { eventType, aggregateType, aggregateId: aggId, idempotencyKey, payload, correlationId: corrId, tenantId };
+  }
 
+  private async executeEnqueue(tx: Prisma.TransactionClient, input: any) {
+    const data = this.resolveEnqueueData(input);
     try {
       return await tx.outboxEvent.create({
         data: {
-          eventType,
-          aggregateType,
-          aggregateId: aggId,
-          idempotencyKey,
-          payload: input?.payload ?? {},
-          correlationId: corrId,
-          tenantId: isUuid(input?.tenantId) ? input.tenantId : null,
+          eventType: data.eventType,
+          aggregateType: data.aggregateType,
+          aggregateId: data.aggregateId,
+          idempotencyKey: data.idempotencyKey,
+          payload: data.payload,
+          correlationId: data.correlationId,
+          tenantId: data.tenantId,
           status: OutboxStatus.PENDING,
           nextAttemptAt: new Date()
         }

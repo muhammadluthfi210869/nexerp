@@ -1,14 +1,14 @@
 {
   "phase": "P05",
   "name": "Platform architecture, maintainability, and controls",
-  "timestamp": "2026-09-19T03:42:48.519Z",
+  "timestamp": "2026-09-19T03:53:31.247Z",
   "verdict": "PASS",
-  "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+  "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
   "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
   "tests_summary": {
     "total": 19,
-    "passed": 14,
-    "failed": 5
+    "passed": 15,
+    "failed": 4
   },
   "tests": {
     "predecessor_scope_and_safety": {
@@ -17,12 +17,12 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 268,
+      "duration_ms": 294,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
-          "command": "git merge-base 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a 145a7b497374b7ae78fa1853146f07039983ccee",
+          "command": "git merge-base 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a fe086bc932b3c642f2d1891cd5542c011838ee0e",
           "exit_code": 0
         },
         {
@@ -48,7 +48,7 @@
       "skipped": false,
       "duration_ms": 2,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "grep 10_TRACEABILITY_MATRIX.yaml",
@@ -72,13 +72,13 @@
     },
     "architecture_fitness_suite": {
       "id": "architecture_fitness_suite",
-      "status": "FAIL",
+      "status": "PASS",
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 66470,
+      "duration_ms": 154838,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "npx tsc -p backend/tsconfig.build.json --noEmit",
@@ -86,12 +86,28 @@
         },
         {
           "command": "npm --prefix backend run lint",
-          "exit_code": 1
+          "exit_code": 0
+        },
+        {
+          "command": "npm --prefix backend run test:unit",
+          "exit_code": 0
+        },
+        {
+          "command": "node scripts/ssot/_p05_unit_tests.js",
+          "exit_code": 0
+        },
+        {
+          "command": "node scripts/ssot/_p05_integration_tests.js",
+          "exit_code": 0
+        },
+        {
+          "command": "npm --prefix backend run build",
+          "exit_code": 0
         }
       ],
-      "target_count": 2,
-      "reason_code": "LINT_FAILED",
-      "error": "Backend lint failed: "
+      "target_count": 6,
+      "analyzers_count": 6,
+      "analyzers_ok": true
     },
     "module_owner_registry": {
       "id": "module_owner_registry",
@@ -99,9 +115,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 99,
+      "duration_ms": 107,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "node p05_analyzers.deriveModuleOwnership",
@@ -129,9 +145,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 30815,
+      "duration_ms": 33768,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "node p05_analyzers.deriveDependencyGraph",
@@ -307,9 +323,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 30451,
+      "duration_ms": 32339,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "forbidden-domain-import scan",
@@ -338,9 +354,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 30593,
+      "duration_ms": 31833,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "circular-dependency scan",
@@ -359,9 +375,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 104,
+      "duration_ms": 109,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "complexity scan",
@@ -383,9 +399,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 681,
+      "duration_ms": 417,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "duplicate scan",
@@ -415,12 +431,12 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 1401,
+      "duration_ms": 1232,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
-          "command": "git diff --name-only 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a..145a7b497374b7ae78fa1853146f07039983ccee",
+          "command": "git diff --name-only 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a..fe086bc932b3c642f2d1891cd5542c011838ee0e",
           "exit_code": 0
         },
         {
@@ -450,9 +466,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 3145,
+      "duration_ms": 3611,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "SessionService.issueSession",
@@ -510,7 +526,7 @@
       "metrics": {
         "auth_bypasses": 0
       },
-      "db": "nex_p05_145a7b49_14560_main"
+      "db": "nex_p05_fe086bc9_27244_main"
     },
     "role_permission_matrix": {
       "id": "role_permission_matrix",
@@ -518,9 +534,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 5,
+      "duration_ms": 4,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "PolicyService deny by default",
@@ -546,7 +562,7 @@
       "metrics": {
         "auth_bypasses": 0
       },
-      "db": "nex_p05_145a7b49_14560_main"
+      "db": "nex_p05_fe086bc9_27244_main"
     },
     "tenant_isolation": {
       "id": "tenant_isolation",
@@ -556,7 +572,7 @@
       "skipped": false,
       "duration_ms": 0,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "PolicyService cross-tenant access rejection",
@@ -582,7 +598,7 @@
       "metrics": {
         "tenant_leaks": 0
       },
-      "db": "nex_p05_145a7b49_14560_main"
+      "db": "nex_p05_fe086bc9_27244_main"
     },
     "immutable_audit": {
       "id": "immutable_audit",
@@ -590,9 +606,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 29,
+      "duration_ms": 33,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "AuditService.withAudit atomic write",
@@ -614,7 +630,7 @@
       "metrics": {
         "audit_mutations": 0
       },
-      "db": "nex_p05_145a7b49_14560_main"
+      "db": "nex_p05_fe086bc9_27244_main"
     },
     "maker_checker": {
       "id": "maker_checker",
@@ -622,9 +638,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 107,
+      "duration_ms": 133,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "ApprovalService.requestApproval",
@@ -654,7 +670,7 @@
       "metrics": {
         "self_approvals": 0
       },
-      "db": "nex_p05_145a7b49_14560_main"
+      "db": "nex_p05_fe086bc9_27244_main"
     },
     "outbox_retry_dedup": {
       "id": "outbox_retry_dedup",
@@ -662,9 +678,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 63,
+      "duration_ms": 57,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "OutboxService.enqueue",
@@ -690,7 +706,7 @@
       "metrics": {
         "outbox_loss_or_duplicates": 0
       },
-      "db": "nex_p05_145a7b49_14560_main"
+      "db": "nex_p05_fe086bc9_27244_main"
     },
     "communication_acl": {
       "id": "communication_acl",
@@ -698,9 +714,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 147,
+      "duration_ms": 144,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "CommunicationAclService authorized same-tenant note and deduplication",
@@ -730,7 +746,7 @@
       "metrics": {
         "communication_acl_bypasses": 0
       },
-      "db": "nex_p05_145a7b49_14560_main"
+      "db": "nex_p05_fe086bc9_27244_main"
     },
     "canonical_error_contract": {
       "id": "canonical_error_contract",
@@ -738,9 +754,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 10,
+      "duration_ms": 8,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "CanonicalErrorFilter canonical envelope structure",
@@ -765,9 +781,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 118,
+      "duration_ms": 99,
       "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-      "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+      "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
       "commands": [
         {
           "command": "direct process.env scan",
@@ -818,6 +834,6 @@
     "changed_max_cyclomatic_complexity": 18,
     "module_ownership_coverage_percent": 100,
     "representative_change_prediction_percent": 100,
-    "control_matrix_execution_percent": 74
+    "control_matrix_execution_percent": 79
   }
 }

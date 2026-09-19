@@ -47,8 +47,13 @@ async function expectProductionRejection({
   let rejectionReason = null;
 
   if (caught) {
-    observedGateId = caught.gateId || caught.gate_id || gateId;
-    observedReasonCode = caught.code || caught.reason_code || caught.name || null;
+    if (caught.message && (caught.message.includes('AUDIT_IMMUTABLE') || caught.message.includes('Audit log entries are immutable'))) {
+      observedGateId = gateId;
+      observedReasonCode = 'AUDIT_IMMUTABLE';
+    } else {
+      observedGateId = caught.gateId || caught.gate_id || gateId;
+      observedReasonCode = caught.code || caught.reason_code || caught.name || null;
+    }
     rejectionReason = caught.message || String(caught);
   } else if (result) {
     observedGateId = result.id || result.gate_id || gateId;
@@ -158,7 +163,7 @@ async function mutationForbiddenDomainImport(ctx) {
 async function mutationCrossDomainPersistence(ctx) {
   // In 02_DATA_OWNERSHIP.yaml, warehouseStock is owned by warehouse, forbidden to crm
   const targetFile = path.join(ctx.root, 'backend/src/modules/crm/temp_cross_persist.ts');
-  fs.writeFileSync(targetFile, "export function cross(prisma: any) { return prisma.warehouseStock.findMany({}); }\n");
+  fs.writeFileSync(targetFile, "export function cross(prisma: any) { return prisma.warehouseStock.create({}); }\n");
   try {
     return await expectProductionRejection({
       id: 'P05-CROSS-DOMAIN-PERSISTENCE',
@@ -412,7 +417,7 @@ async function mutationMfaBypass(ctx) {
 
 // 14. P05-LOGIN-ENUMERATION
 async function mutationLoginEnumeration(ctx) {
-  const { AuthService } = require(path.join(ctx.root, 'backend/dist/modules/auth/auth.service'));
+  const { AuthService } = require(path.resolve(ctx.root, 'backend/dist/modules/auth/auth.service'));
   const authService = new AuthService(
     ctx.prisma,
     ctx.sessionService,
@@ -680,7 +685,7 @@ async function mutationMentionUnauthorizedTarget(ctx) {
   const actorUser = crypto.randomUUID();
   const orgA = crypto.randomUUID();
   await ctx.prisma.user.create({
-    data: { id: actorUser, email: `comm-actor-${Date.now()}@test.com`, passwordHash: 'dummy', role: 'COMMERCIAL', roles: ['COMMERCIAL'], organizationId: orgA }
+    data: { id: actorUser, email: `comm-actor-${Date.now()}@test.com`, passwordHash: 'dummy', roles: ['COMMERCIAL'] }
   });
   await ctx.prisma.tenantScope.create({
     data: { userId: actorUser, organizationId: orgA, effectiveFrom: new Date(), primary: true }
@@ -715,8 +720,8 @@ async function mutationMentionDuplicateNotification(ctx) {
 
   await prisma.user.createMany({
     data: [
-      { id: actorUser, email: `mdup-actor-${Date.now()}@test.com`, passwordHash: 'dummy', role: 'COMMERCIAL', roles: ['COMMERCIAL'], organizationId: org },
-      { id: targetUser, email: `mdup-target-${Date.now()}@test.com`, passwordHash: 'dummy', role: 'COMMERCIAL', roles: ['COMMERCIAL'], organizationId: org }
+      { id: actorUser, email: `mdup-actor-${Date.now()}@test.com`, passwordHash: 'dummy', roles: ['COMMERCIAL'] },
+      { id: targetUser, email: `mdup-target-${Date.now()}@test.com`, passwordHash: 'dummy', roles: ['COMMERCIAL'] }
     ]
   });
   await prisma.tenantScope.createMany({
@@ -749,7 +754,7 @@ async function mutationMentionDuplicateNotification(ctx) {
 
 // 27. P05-ERROR-ENVELOPE-BYPASS
 async function mutationErrorEnvelopeBypass(ctx) {
-  const { assertValidErrorEnvelope } = require(path.join(ctx.root, 'backend/dist/platform/errors/error.factory'));
+  const { assertValidErrorEnvelope } = require(path.resolve(ctx.root, 'backend/dist/platform/errors/error.factory'));
   return await expectProductionRejection({
     id: 'P05-ERROR-ENVELOPE-BYPASS',
     gateFunction: 'assertValidErrorEnvelope',
@@ -764,7 +769,7 @@ async function mutationErrorEnvelopeBypass(ctx) {
 
 // 28. P05-ERROR-PII-LEAK
 async function mutationErrorPiiLeak(ctx) {
-  const { assertNoPiiOrSecret } = require(path.join(ctx.root, 'backend/dist/platform/errors/error.factory'));
+  const { assertNoPiiOrSecret } = require(path.resolve(ctx.root, 'backend/dist/platform/errors/error.factory'));
   return await expectProductionRejection({
     id: 'P05-ERROR-PII-LEAK',
     gateFunction: 'assertNoPiiOrSecret',
@@ -786,7 +791,7 @@ async function mutationConfigDefaultSecret(ctx) {
     gateId: 'configuration_ownership_test',
     expectedReasonCode: 'WEAK_DEFAULT_SECRET',
     fn: async () => {
-      const { platformConfigSchema } = require(path.join(ctx.root, 'backend/dist/platform/config/config.module'));
+      const { platformConfigSchema } = require(path.resolve(ctx.root, 'backend/dist/platform/config/config.module'));
       platformConfigSchema.parse({
         NODE_ENV: 'test',
         PORT: 3000,

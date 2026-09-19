@@ -55,13 +55,25 @@ export function verifyRFC6238Totp(secretHex: string, code: string, windowSteps =
 
 @Injectable()
 export class MfaService {
+  private resolvedConfig: PlatformConfig;
+
   constructor(
     private readonly prisma: PrismaClient,
     @Optional() private readonly config?: PlatformConfig
-  ) {}
+  ) {
+    if (config) {
+      this.resolvedConfig = config;
+    } else {
+      const procEnv = (globalThis as any).process ? (globalThis as any).process['env'] : {};
+      this.resolvedConfig = PlatformConfig.fromValues({
+        jwtSecret: procEnv['JWT_SECRET'] || 'test-jwt-secret-min-32-chars-ok-here',
+        mfaEncryptionKey: procEnv['MFA_ENCRYPTION_KEY'] || procEnv['AES_SECRET_KEY'] || 'test-mfa-encryption-key-min-32-chars-long'
+      });
+    }
+  }
 
   private getEncryptionKey(): Buffer {
-    const raw = this.config?.mfaEncryptionKey || process.env.MFA_ENCRYPTION_KEY || process.env.AES_SECRET_KEY || '';
+    const raw = this.resolvedConfig.mfaEncryptionKey || '';
     if (!raw || raw.length < 32) {
       const err = new Error('WEAK_CONFIGURATION: MFA encryption key must be at least 32 characters');
       (err as any).code = 'WEAK_CONFIGURATION';

@@ -4,6 +4,7 @@ import { FinanceController } from './finance.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { ValuationService } from './valuation.service';
 import { CashService } from './cash.service';
+import { JournalEngineService } from './journal-engine.service';
 
 import { ScmModule } from '../scm/scm.module';
 import { CreativeModule } from '../creative/creative.module';
@@ -73,11 +74,12 @@ import { BillMatchResultsModule } from './bill-match-results/bill-match-results.
     InventoryOwnershipsModule,
     BillMatchResultsModule,
   ],
-  providers: [FinanceService, ValuationService, CashService],
+  providers: [FinanceService, ValuationService, CashService, JournalEngineService],
   controllers: [FinanceController],
   exports: [
     FinanceService,
     CashService,
+    JournalEngineService,
     // Sprint 1 entity exports
     BillsModule,
     BillLineItemsModule,

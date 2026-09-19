@@ -13,22 +13,36 @@ const FORBIDDEN_SECRETS = new Set([
   '12345678', 'password', 'admin', 'test-secret'
 ]);
 
+function assertSecretStrength(name: string, val: string, required: boolean) {
+  if (!val) {
+    if (required) {
+      const err = new Error(`WEAK_DEFAULT_SECRET: ${name} is required`);
+      (err as any).code = 'WEAK_DEFAULT_SECRET';
+      (err as any).reason_code = 'WEAK_DEFAULT_SECRET';
+      throw err;
+    }
+    return;
+  }
+  const isWeak = FORBIDDEN_SECRETS.has(val);
+  const isShort = val.length < 32;
+  if (isWeak || isShort) {
+    const err = new Error(`WEAK_DEFAULT_SECRET: ${name} is invalid or weak`);
+    (err as any).code = 'WEAK_DEFAULT_SECRET';
+    (err as any).reason_code = 'WEAK_DEFAULT_SECRET';
+    throw err;
+  }
+}
+
 export const platformConfigSchema = {
   parse(raw: any) {
-    const jwt = raw?.JWT_SECRET || '';
-    const mfa = raw?.MFA_ENCRYPTION_KEY || raw?.AES_SECRET_KEY || '';
-    if (!jwt || FORBIDDEN_SECRETS.has(jwt) || jwt.length < 32) {
-      const err = new Error(`WEAK_DEFAULT_SECRET: JWT_SECRET is invalid, insecure, or too short (length: ${jwt.length})`);
-      (err as any).code = 'WEAK_DEFAULT_SECRET';
-      (err as any).reason_code = 'WEAK_DEFAULT_SECRET';
-      throw err;
+    const data = raw ? raw : {};
+    const jwt = typeof data.JWT_SECRET === 'string' ? data.JWT_SECRET : '';
+    let mfa = typeof data.MFA_ENCRYPTION_KEY === 'string' ? data.MFA_ENCRYPTION_KEY : '';
+    if (!mfa && typeof data.AES_SECRET_KEY === 'string') {
+      mfa = data.AES_SECRET_KEY;
     }
-    if (mfa && (FORBIDDEN_SECRETS.has(mfa) || mfa.length < 32)) {
-      const err = new Error(`WEAK_DEFAULT_SECRET: MFA_ENCRYPTION_KEY is invalid, insecure, or too short`);
-      (err as any).code = 'WEAK_DEFAULT_SECRET';
-      (err as any).reason_code = 'WEAK_DEFAULT_SECRET';
-      throw err;
-    }
+    assertSecretStrength('JWT_SECRET', jwt, true);
+    assertSecretStrength('MFA_ENCRYPTION_KEY', mfa, false);
     return raw;
   }
 };
