@@ -1022,9 +1022,9 @@ async function gateCommunicationAcl({ root, candidateSha, contract, ctx }) {
   // Seed real parent and users in isolated database
   await prisma.user.createMany({
     data: [
-      { id: actorUser, email: `actor-${Date.now()}@test.com`, passwordHash: 'dummy', role: 'COMMERCIAL', roles: ['COMMERCIAL'], organizationId: orgA },
-      { id: targetUser, email: `target-${Date.now()}@test.com`, passwordHash: 'dummy', role: 'COMMERCIAL', roles: ['COMMERCIAL'], organizationId: orgA },
-      { id: foreignUser, email: `foreign-${Date.now()}@test.com`, passwordHash: 'dummy', role: 'COMMERCIAL', roles: ['COMMERCIAL'], organizationId: orgB }
+      { id: actorUser, email: `actor-${Date.now()}-${crypto.randomBytes(4).toString('hex')}@test.com`, passwordHash: 'dummy', roles: ['COMMERCIAL'] },
+      { id: targetUser, email: `target-${Date.now()}-${crypto.randomBytes(4).toString('hex')}@test.com`, passwordHash: 'dummy', roles: ['COMMERCIAL'] },
+      { id: foreignUser, email: `foreign-${Date.now()}-${crypto.randomBytes(4).toString('hex')}@test.com`, passwordHash: 'dummy', roles: ['COMMERCIAL'] }
     ]
   });
 
