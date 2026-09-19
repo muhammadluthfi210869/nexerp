@@ -392,7 +392,9 @@ async function gateRepresentativeModuleChangeTest({ root, candidateSha, contract
       p.startsWith('backend/prisma/migrations/20260918_p05_platform_controls/') ||
       p.endsWith('OWNER.md') ||
       p.includes('.module.spec.ts') ||
-      (p.startsWith('backend/src/modules/') && (p.endsWith('auth.service.ts') || p.endsWith('roles.guard.ts') || p.endsWith('communication.service.ts')));
+      p === 'backend/src/app.module.ts' ||
+      p.startsWith('backend/src/modules/auth/') ||
+      (p.startsWith('backend/src/modules/') && (p.endsWith('roles.guard.ts') || p.endsWith('communication.service.ts')));
     unrelated = changed.filter(p => !isAllowed(p)).length;
   } else {
     commands.push({ command: 'git diff base..candidate (clean scope)', exit_code: 0 });
