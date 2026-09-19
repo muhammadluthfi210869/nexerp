@@ -910,6 +910,10 @@ async function gateSubphaseSeamAndRegression({ root, candidateSha, contract }) {
   }
   const anyFailure = measured.some((m) => m.exit_code !== 0);
 
+  // P06-R4-B8 §5: emit measured changed-scope complexity and duplication
+  // values via the existing production analyzer (no fixed 0/100 literals).
+  const complexity = analyzers.analyzeChangedComplexityAndDuplication(root, contract, candidateSha);
+
   return baseShape('subphase_seam_and_regression', root, candidateSha, contract, {
     status: anyFailure ? 'FAIL' : 'PASS',
     duration_ms: Date.now() - start,
@@ -922,7 +926,9 @@ async function gateSubphaseSeamAndRegression({ root, candidateSha, contract }) {
       passed: m.parsed ? m.parsed.found === m.parsed.total : null
     })),
     measured_exit_codes: measured.every((m) => m.exit_code === 0) ? 'ALL_ZERO' : 'NONZERO_PRESENT',
-    any_nonzero_exit: anyFailure
+    any_nonzero_exit: anyFailure,
+    changed_max_cyclomatic_complexity: complexity.changed_max_cyclomatic_complexity,
+    changed_duplication_percent: complexity.changed_duplication_percent
   });
 }
 

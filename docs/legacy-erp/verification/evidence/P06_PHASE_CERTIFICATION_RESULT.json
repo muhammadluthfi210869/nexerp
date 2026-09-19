@@ -3,11 +3,11 @@
   "level": "PHASE_GATE",
   "contract_version": "1.0.0",
   "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-  "candidate_sha": "e05fc59d3403652f8e82aa099f2bc8ebd2c3637e",
-  "started_at": "2026-09-19T23:54:56.878Z",
-  "completed_at": "2026-09-19T23:54:57.072Z",
+  "candidate_sha": "a38bf0cee23c127539e299ca719c50af536796f0",
+  "started_at": "2026-09-19T23:58:03.152Z",
+  "completed_at": "2026-09-19T23:58:03.373Z",
   "verdict": "FAIL",
   "token": null,
   "result": null,
-  "failure": "Error: Dirty files outside P06 generated allowlist: [{\"status\":\" M\",\"file\":\"docs/legacy-erp/verification/_SSOT_VALIDATION_REPORT.md\"},{\"status\":\" M\",\"file\":\"docs/legacy-erp/verification/_p02_test_results.json\"},{\"status\":\" M\",\"file\":\"docs/legacy-erp/verification/_ssot_validation.json\"},{\"status\":\"??\",\"file\":\"docs/legacy-erp/verification/evidence/batches/P06-P06_AUDIT_R4_2026-09-20.md\"},{\"status\":\"??\",\"file\":\"docs/legacy-erp/verification/prompts/P06_R4_FINAL_CORRECTIVE_PROMPT.md\"}]\n    at assert (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p06_phase.js:20:61)\n    at main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p06_phase.js:129:5)\n    at Object.<anonymous> (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p06_phase.js:152:1)\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)"
+  "failure": "Error: Dirty files outside P06 generated allowlist: [{\"status\":\" M\",\"file\":\"docs/legacy-erp/verification/_SSOT_VALIDATION_REPORT.md\"},{\"status\":\" M\",\"file\":\"docs/legacy-erp/verification/_p02_test_results.json\"},{\"status\":\" M\",\"file\":\"docs/legacy-erp/verification/_ssot_validation.json\"},{\"status\":\" M\",\"file\":\"scripts/ssot/lib/p06_gates.js\"}]\n    at assert (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p06_phase.js:20:61)\n    at main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p06_phase.js:129:5)\n    at Object.<anonymous> (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p06_phase.js:152:1)\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)"
 }
