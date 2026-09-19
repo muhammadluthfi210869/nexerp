@@ -317,7 +317,15 @@ async function mutationChangedComplexityRegression(ctx) {
 async function mutationDuplicateRule(ctx) {
   const targetFile1 = path.join(ctx.root, 'backend/src/platform/auth/temp_dup1.ts');
   const targetFile2 = path.join(ctx.root, 'backend/src/platform/auth/temp_dup2.ts');
-  const duplicateBlock = `export function canonicalPasswordValidationRuleDuplicate(p: string) {\n  const ok = p && p.length >= 8 && /[A-Z]/.test(p) && /[0-9]/.test(p);\n  return ok;\n}\n`;
+  const duplicateBlock = [
+    'export function canonicalPasswordValidationRuleDuplicate(p: string) {',
+    '  const minLength = 8;',
+    '  const hasUpperCase = /[A-Z]/.test(p);',
+    '  const hasNumbers = /[0-9]/.test(p);',
+    '  const hasSpecial = /[!@#$%^&*]/.test(p);',
+    '  return Boolean(p && p.length >= minLength && hasUpperCase && hasNumbers && hasSpecial);',
+    '}'
+  ].join('\n') + '\n';
   fs.writeFileSync(targetFile1, duplicateBlock);
   fs.writeFileSync(targetFile2, duplicateBlock);
   try {
