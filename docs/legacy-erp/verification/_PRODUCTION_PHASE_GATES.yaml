@@ -257,8 +257,9 @@ phases:
 
   - id: P05
     name: Platform architecture maintainability and controls
-    status: NOT_STARTED
+    status: PASS
     depends_on: [P04]
+    candidate_sha: c7cb59ebed247cce3d947ecb6454a45d92c32ca8
     acceptance_contract: P05_FROZEN_ACCEPTANCE_CONTRACT.md
     certification_command: node scripts/ssot/certify_p05_phase.js
     certification_success: exit 0 and token P05:<candidate-full-sha>:PHASE_PASS

@@ -3,11 +3,1367 @@
   "level": "PHASE_GATE",
   "contract_version": "1.0.0",
   "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-  "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
-  "started_at": "2026-09-19T03:46:24.734Z",
-  "completed_at": "2026-09-19T03:53:31.648Z",
-  "verdict": "FAIL",
-  "token": null,
-  "result": null,
-  "failure": "P05GateError: [contract_consistency] EVIDENCE_VALIDATION_FAILED: Check coupling_complexity_scan status is not PASS\n    at assert (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:20:20)\n    at validateP05Evidence (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:38:5)\n    at Object.certifyP05 (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:474:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:105:20)"
+  "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+  "started_at": "2026-09-19T05:48:47.996Z",
+  "completed_at": "2026-09-19T06:00:38.158Z",
+  "verdict": "PHASE_PASS",
+  "token": "P05:c7cb59ebed247cce3d947ecb6454a45d92c32ca8:PHASE_PASS",
+  "result": {
+    "phase": "P05",
+    "level": "PHASE_GATE",
+    "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+    "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+    "synthetic": false,
+    "skipped_count": 0,
+    "checks": [
+      {
+        "id": "predecessor_scope_and_safety",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 232,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "git merge-base 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+            "exit_code": 0
+          },
+          {
+            "command": "grep _PRODUCTION_PHASE_GATES.yaml",
+            "exit_code": 0
+          },
+          {
+            "command": "git status --porcelain",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 1,
+        "dirty_files_total": 6,
+        "dirty_outside_allowlist": [],
+        "registry_verified": true,
+        "unexpected_skips": 0
+      },
+      {
+        "id": "canonical_traceability",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 2,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "grep 10_TRACEABILITY_MATRIX.yaml",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 9,
+        "controls_present": 9,
+        "controls_missing": [],
+        "controls_present_list": [
+          "auth.session",
+          "auth.mfa",
+          "policy.tenant",
+          "audit.immutable",
+          "approval.maker_checker",
+          "outbox.atomic",
+          "communication.acl",
+          "errors.canonical",
+          "config.typed"
+        ]
+      },
+      {
+        "id": "architecture_fitness_suite",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 303603,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "npx tsc -p backend/tsconfig.build.json --noEmit",
+            "exit_code": 0
+          },
+          {
+            "command": "npm --prefix backend run lint",
+            "exit_code": 0
+          },
+          {
+            "command": "npm --prefix backend run test:unit",
+            "exit_code": 0
+          },
+          {
+            "command": "node scripts/ssot/_p05_unit_tests.js",
+            "exit_code": 0
+          },
+          {
+            "command": "node scripts/ssot/_p05_integration_tests.js",
+            "exit_code": 0
+          },
+          {
+            "command": "npm --prefix backend run build",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 6,
+        "analyzers_count": 6,
+        "analyzers_ok": true
+      },
+      {
+        "id": "module_owner_registry",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 84,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "node p05_analyzers.deriveModuleOwnership",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 37,
+        "reason_code": "PASS",
+        "error": null,
+        "modules_total": 37,
+        "modules_with_owner": 37,
+        "modules_with_purpose": 37,
+        "modules_with_layer": 37,
+        "modules_with_allowed_deps": 37,
+        "modules_with_data_owner": 37,
+        "modules_with_public_interface": 37,
+        "modules_with_tests": 37,
+        "modules_with_meaningful_tests": 8,
+        "ownership_coverage_percent": 100,
+        "meaningful_test_coverage_percent": 22
+      },
+      {
+        "id": "dependency_graph_snapshot",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 47409,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "node p05_analyzers.deriveDependencyGraph",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 1662,
+        "node_count": 37,
+        "edge_count": 1625,
+        "baseline_digest": "1f7e80820e72cce01459b369342006fe81c073f9927e47fcdda0fcff2f4353e8",
+        "candidate_digest": "5b86ab6872ab2bf77113480b5038d5b22bff0bdfe28cc0a1c1f555f8dcbd234d",
+        "edge_delta_count": 15,
+        "classified_edge_deltas": [
+          {
+            "delta": "added",
+            "edge": {
+              "from": "auth",
+              "to": "@nestjs/config",
+              "kind": "import",
+              "file": "backend/src/modules/auth/auth.module.ts",
+              "classification": "allowed",
+              "targetFile": null
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "auth",
+              "to": "platform/auth",
+              "kind": "import",
+              "file": "backend/src/modules/auth/auth.service.ts",
+              "classification": "allowed",
+              "targetFile": "backend/src/platform/auth/session.service.ts"
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "auth",
+              "to": "platform/auth",
+              "kind": "import",
+              "file": "backend/src/modules/auth/auth.service.ts",
+              "classification": "allowed",
+              "targetFile": "backend/src/platform/auth/mfa.service.ts"
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "auth",
+              "to": "platform/audit",
+              "kind": "import",
+              "file": "backend/src/modules/auth/auth.service.ts",
+              "classification": "allowed",
+              "targetFile": "backend/src/platform/audit/audit.service.ts"
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "auth",
+              "to": "crypto",
+              "kind": "import",
+              "file": "backend/src/modules/auth/auth.service.ts",
+              "classification": "allowed",
+              "targetFile": null
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "auth",
+              "to": "@nestjs/config",
+              "kind": "import",
+              "file": "backend/src/modules/auth/jwt.strategy.ts",
+              "classification": "allowed",
+              "targetFile": null
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "auth",
+              "to": "platform/auth",
+              "kind": "import",
+              "file": "backend/src/modules/auth/jwt.strategy.ts",
+              "classification": "allowed",
+              "targetFile": "backend/src/platform/auth/session.service.ts"
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "auth",
+              "to": "platform/policy",
+              "kind": "import",
+              "file": "backend/src/modules/auth/roles.guard.ts",
+              "classification": "allowed",
+              "targetFile": "backend/src/platform/policy/policy.service.ts"
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "auth",
+              "to": "platform/policy",
+              "kind": "import",
+              "file": "backend/src/modules/auth/roles.guard.ts",
+              "classification": "allowed",
+              "targetFile": "backend/src/platform/policy/policy.guard.ts"
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "auth",
+              "to": "crypto",
+              "kind": "import",
+              "file": "backend/src/modules/auth/roles.guard.ts",
+              "classification": "allowed",
+              "targetFile": null
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "system",
+              "to": "../../prisma/prisma.module",
+              "kind": "import",
+              "file": "backend/src/modules/system/system.module.ts",
+              "classification": "allowed",
+              "targetFile": null
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "config",
+              "to": "@nestjs/common",
+              "kind": "import",
+              "file": "backend/src/platform/config/config.module.ts",
+              "classification": "allowed",
+              "targetFile": null
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "config",
+              "to": "@nestjs/config",
+              "kind": "import",
+              "file": "backend/src/platform/config/config.module.ts",
+              "classification": "allowed",
+              "targetFile": null
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "config",
+              "to": "fs",
+              "kind": "import",
+              "file": "backend/src/platform/config/config.module.ts",
+              "classification": "allowed",
+              "targetFile": null
+            }
+          },
+          {
+            "delta": "added",
+            "edge": {
+              "from": "config",
+              "to": "path",
+              "kind": "import",
+              "file": "backend/src/platform/config/config.module.ts",
+              "classification": "allowed",
+              "targetFile": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "module_boundary_test",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 47275,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "forbidden-domain-import scan",
+            "exit_code": 0
+          },
+          {
+            "command": "cross-domain-persistence scan",
+            "exit_code": 0
+          },
+          {
+            "command": "shared-dumping-ground scan",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 1625,
+        "reason_code": "PASS",
+        "error": null,
+        "forbidden_domain_edges": 0,
+        "direct_cross_domain_persistence": 0,
+        "shared_dumping_ground_violations": 0,
+        "samples": []
+      },
+      {
+        "id": "circular_dependency_scan",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 47181,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "circular-dependency scan",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 37,
+        "reason_code": "PASS",
+        "error": null,
+        "domain_cycles": 0,
+        "cycles": []
+      },
+      {
+        "id": "coupling_complexity_scan",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 343,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "complexity scan",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 112,
+        "reason_code": "PASS",
+        "error": null,
+        "changed_max_cyclomatic_complexity": 8,
+        "regression_count": 0,
+        "exceptions_count": 0,
+        "architecture_debt_delta": 0,
+        "whole_code_debt_delta": 0
+      },
+      {
+        "id": "duplicate_dead_code_scan",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 1061,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "duplicate scan",
+            "exit_code": 0
+          },
+          {
+            "command": "unused-dep scan",
+            "exit_code": 0
+          },
+          {
+            "command": "orphan-provider scan",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 22,
+        "reason_code": "PASS",
+        "error": null,
+        "changed_duplication_percent": 0,
+        "whole_duplication_delta_percent": 0,
+        "unused_production_dependencies": 0,
+        "unexplained_orphans": 0,
+        "duplicate_rules": 0
+      },
+      {
+        "id": "representative_module_change_test",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 2575,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "git diff --name-only 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a..c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+            "exit_code": 0
+          },
+          {
+            "command": "rehearsal-1 auth-policy test",
+            "exit_code": 0
+          },
+          {
+            "command": "rehearsal-2 comm-acl test",
+            "exit_code": 0
+          },
+          {
+            "command": "rehearsal-3 outbox test",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 3,
+        "reason_code": "PASS",
+        "error": null,
+        "archetypes_total": 3,
+        "archetypes_passed": 3,
+        "prediction_coverage_percent": 100,
+        "unrelated_change_paths": 0
+      },
+      {
+        "id": "auth_session_mfa",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 4332,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "SessionService.issueSession",
+            "exit_code": 0
+          },
+          {
+            "command": "SessionService.verifyAccessToken",
+            "exit_code": 0
+          },
+          {
+            "command": "SessionService.rotateRefresh",
+            "exit_code": 0
+          },
+          {
+            "command": "SessionService replay family revocation",
+            "exit_code": 0
+          },
+          {
+            "command": "Family active sessions count equals 0",
+            "exit_code": 0
+          },
+          {
+            "command": "Replacement session revoked verification",
+            "exit_code": 0
+          },
+          {
+            "command": "Concurrent refresh single winner",
+            "exit_code": 0
+          },
+          {
+            "command": "Password reset invalidates active sessions",
+            "exit_code": 0
+          },
+          {
+            "command": "MfaService.enrollTOTP",
+            "exit_code": 0
+          },
+          {
+            "command": "MfaService.confirmTOTP RFC 6238",
+            "exit_code": 0
+          },
+          {
+            "command": "MfaService reject invalid code",
+            "exit_code": 0
+          },
+          {
+            "command": "MFA pending token rejected",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 12,
+        "reason_code": "PASS",
+        "error": null,
+        "auth_bypasses": 0,
+        "metrics": {
+          "auth_bypasses": 0
+        },
+        "db": "nex_p05_c7cb59eb_25476_main"
+      },
+      {
+        "id": "role_permission_matrix",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 15,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "PolicyService deny by default",
+            "exit_code": 0
+          },
+          {
+            "command": "PolicyService allow matching slug",
+            "exit_code": 0
+          },
+          {
+            "command": "PolicyService deny unassigned permission",
+            "exit_code": 0
+          },
+          {
+            "command": "PolicyService client injected tenant rejection",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 4,
+        "reason_code": "PASS",
+        "error": null,
+        "permission_bypasses": 0,
+        "metrics": {
+          "auth_bypasses": 0
+        },
+        "db": "nex_p05_c7cb59eb_25476_main"
+      },
+      {
+        "id": "tenant_isolation",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 0,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "PolicyService cross-tenant access rejection",
+            "exit_code": 0
+          },
+          {
+            "command": "PolicyService division scope check",
+            "exit_code": 0
+          },
+          {
+            "command": "PolicyService guessed ID rejection",
+            "exit_code": 0
+          },
+          {
+            "command": "ScopeService sensitive field masking",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 4,
+        "reason_code": "PASS",
+        "error": null,
+        "tenant_leaks": 0,
+        "metrics": {
+          "tenant_leaks": 0
+        },
+        "db": "nex_p05_c7cb59eb_25476_main"
+      },
+      {
+        "id": "immutable_audit",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 45,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "AuditService.withAudit atomic write",
+            "exit_code": 0
+          },
+          {
+            "command": "PostgreSQL trigger audit_immutable UPDATE rejection",
+            "exit_code": 0
+          },
+          {
+            "command": "PostgreSQL trigger audit_immutable DELETE rejection",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 3,
+        "reason_code": "PASS",
+        "error": null,
+        "audit_mutations": 0,
+        "metrics": {
+          "audit_mutations": 0
+        },
+        "db": "nex_p05_c7cb59eb_25476_main"
+      },
+      {
+        "id": "maker_checker",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 120,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "ApprovalService.requestApproval",
+            "exit_code": 0
+          },
+          {
+            "command": "ApprovalService self-approval forbidden",
+            "exit_code": 0
+          },
+          {
+            "command": "ApprovalService checker 1 threshold progression",
+            "exit_code": 0
+          },
+          {
+            "command": "ApprovalService duplicate checker rejection",
+            "exit_code": 0
+          },
+          {
+            "command": "ApprovalService checker 2 threshold completion",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 5,
+        "reason_code": "PASS",
+        "error": null,
+        "self_approvals": 0,
+        "metrics": {
+          "self_approvals": 0
+        },
+        "db": "nex_p05_c7cb59eb_25476_main"
+      },
+      {
+        "id": "outbox_retry_dedup",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 47,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "OutboxService.enqueue",
+            "exit_code": 0
+          },
+          {
+            "command": "OutboxService duplicate idempotencyKey rejection",
+            "exit_code": 0
+          },
+          {
+            "command": "OutboxService.claimBatch",
+            "exit_code": 0
+          },
+          {
+            "command": "OutboxService.ack PROCESSED",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 4,
+        "reason_code": "PASS",
+        "error": null,
+        "outbox_loss_or_duplicates": 0,
+        "metrics": {
+          "outbox_loss_or_duplicates": 0
+        },
+        "db": "nex_p05_c7cb59eb_25476_main"
+      },
+      {
+        "id": "communication_acl",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 255,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "CommunicationAclService authorized same-tenant note and deduplication",
+            "exit_code": 0
+          },
+          {
+            "command": "Inaccessible parent fails with PARENT_ACL_DENIED",
+            "exit_code": 0
+          },
+          {
+            "command": "Cross-tenant mention fails with CROSS_TENANT_MENTION",
+            "exit_code": 0
+          },
+          {
+            "command": "Unauthorized target fails with UNAUTHORIZED_MENTION_TARGET",
+            "exit_code": 0
+          },
+          {
+            "command": "Transaction rollback atomically cancels all side effects",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 5,
+        "reason_code": "PASS",
+        "error": null,
+        "communication_acl_bypasses": 0,
+        "metrics": {
+          "communication_acl_bypasses": 0
+        },
+        "db": "nex_p05_c7cb59eb_25476_main"
+      },
+      {
+        "id": "canonical_error_contract",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 7,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "CanonicalErrorFilter canonical envelope structure",
+            "exit_code": 0
+          },
+          {
+            "command": "CanonicalErrorFilter SQL/secret scrubbing",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 2,
+        "reason_code": "PASS",
+        "error": null,
+        "error_contract_violations": 0,
+        "metrics": {
+          "error_contract_violations": 0
+        }
+      },
+      {
+        "id": "configuration_ownership_test",
+        "status": "PASS",
+        "executed": true,
+        "synthetic": false,
+        "skipped": false,
+        "duration_ms": 140,
+        "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+        "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
+        "commands": [
+          {
+            "command": "direct process.env scan",
+            "exit_code": 0
+          },
+          {
+            "command": "platform/config/config.module.ts presence",
+            "exit_code": 0
+          },
+          {
+            "command": "platformConfigSchema rejects default secret",
+            "exit_code": 0
+          }
+        ],
+        "target_count": 22,
+        "reason_code": "PASS",
+        "error": null,
+        "configuration_violations": 0,
+        "config_module_present": true
+      }
+    ],
+    "mutations": [
+      {
+        "id": "P05-DOMAIN-CYCLE",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateCircularDependencyScan",
+        "mutated_target": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\src\\modules\\system\\temp_cycle_a.ts <-> C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\src\\modules\\lead-capture\\temp_cycle_b.ts",
+        "gate_id": "circular_dependency_scan",
+        "expected_gate_id": "circular_dependency_scan",
+        "observed_gate_id": "circular_dependency_scan",
+        "reason_code": "DOMAIN_CYCLE_DETECTED",
+        "expected_reason_code": "DOMAIN_CYCLE_DETECTED",
+        "observed_reason_code": "DOMAIN_CYCLE_DETECTED",
+        "rejection_reason": "Found 1 circular domain dependencies",
+        "duration_ms": 46810,
+        "occurred_at": "2026-09-19T05:57:11.607Z"
+      },
+      {
+        "id": "P05-FORBIDDEN-DOMAIN-IMPORT",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateModuleBoundaryTest",
+        "mutated_target": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\src\\modules\\lead-capture\\temp_forbidden_mut.ts",
+        "gate_id": "module_boundary_test",
+        "expected_gate_id": "module_boundary_test",
+        "observed_gate_id": "module_boundary_test",
+        "reason_code": "FORBIDDEN_DOMAIN_IMPORT",
+        "expected_reason_code": "FORBIDDEN_DOMAIN_IMPORT",
+        "observed_reason_code": "FORBIDDEN_DOMAIN_IMPORT",
+        "rejection_reason": "Found 1 forbidden cross-domain imports",
+        "duration_ms": 45701,
+        "occurred_at": "2026-09-19T05:57:57.311Z"
+      },
+      {
+        "id": "P05-CROSS-DOMAIN-PERSISTENCE",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateModuleBoundaryTest",
+        "mutated_target": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\src\\modules\\crm\\temp_cross_persist.ts",
+        "gate_id": "module_boundary_test",
+        "expected_gate_id": "module_boundary_test",
+        "observed_gate_id": "module_boundary_test",
+        "reason_code": "DIRECT_CROSS_DOMAIN_PERSISTENCE",
+        "expected_reason_code": "DIRECT_CROSS_DOMAIN_PERSISTENCE",
+        "observed_reason_code": "DIRECT_CROSS_DOMAIN_PERSISTENCE",
+        "rejection_reason": "Found 1 direct cross-domain Prisma persistence calls",
+        "duration_ms": 49800,
+        "occurred_at": "2026-09-19T05:58:47.113Z"
+      },
+      {
+        "id": "P05-UNOWNED-MODULE",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateModuleOwnerRegistry",
+        "mutated_target": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\src\\modules\\unowned_mut_test",
+        "gate_id": "module_owner_registry",
+        "expected_gate_id": "module_owner_registry",
+        "observed_gate_id": "module_owner_registry",
+        "reason_code": "MODULE_MISSING_OWNER",
+        "expected_reason_code": "MODULE_MISSING_OWNER",
+        "observed_reason_code": "MODULE_MISSING_OWNER",
+        "rejection_reason": "Found 1 modules without complete ownership metadata",
+        "duration_ms": 99,
+        "occurred_at": "2026-09-19T05:58:47.216Z"
+      },
+      {
+        "id": "P05-SHARED-DUMPING-GROUND",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateModuleBoundaryTest",
+        "mutated_target": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\src\\shared\\temp_dumping_ground.ts",
+        "gate_id": "module_boundary_test",
+        "expected_gate_id": "module_boundary_test",
+        "observed_gate_id": "module_boundary_test",
+        "reason_code": "SHARED_DUMPING_GROUND",
+        "expected_reason_code": "SHARED_DUMPING_GROUND",
+        "observed_reason_code": "SHARED_DUMPING_GROUND",
+        "rejection_reason": "Found 1 shared dumping ground violations",
+        "duration_ms": 49317,
+        "occurred_at": "2026-09-19T05:59:36.538Z"
+      },
+      {
+        "id": "P05-UNUSED-PRODUCTION-DEPENDENCY",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateDuplicateDeadCodeScan",
+        "mutated_target": "backend/package.json:p05-unused-adversarial-pkg",
+        "gate_id": "duplicate_dead_code_scan",
+        "expected_gate_id": "duplicate_dead_code_scan",
+        "observed_gate_id": "duplicate_dead_code_scan",
+        "reason_code": "UNUSED_PRODUCTION_DEPENDENCY",
+        "expected_reason_code": "UNUSED_PRODUCTION_DEPENDENCY",
+        "observed_reason_code": "UNUSED_PRODUCTION_DEPENDENCY",
+        "rejection_reason": "Found 1 unused production dependencies in package.json",
+        "duration_ms": 1672,
+        "occurred_at": "2026-09-19T05:59:38.212Z"
+      },
+      {
+        "id": "P05-ORPHAN-PROVIDER",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateDuplicateDeadCodeScan",
+        "mutated_target": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\src\\modules\\auth\\temp_orphan_provider.ts",
+        "gate_id": "duplicate_dead_code_scan",
+        "expected_gate_id": "duplicate_dead_code_scan",
+        "observed_gate_id": "duplicate_dead_code_scan",
+        "reason_code": "ORPHAN_PROVIDER",
+        "expected_reason_code": "ORPHAN_PROVIDER",
+        "observed_reason_code": "ORPHAN_PROVIDER",
+        "rejection_reason": "Found 1 orphan providers not registered in any module",
+        "duration_ms": 1287,
+        "occurred_at": "2026-09-19T05:59:39.501Z"
+      },
+      {
+        "id": "P05-CHANGED-COMPLEXITY-REGRESSION",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateCouplingComplexityScan",
+        "mutated_target": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\src\\platform\\auth\\temp_complex_mut.ts",
+        "gate_id": "coupling_complexity_scan",
+        "expected_gate_id": "coupling_complexity_scan",
+        "observed_gate_id": "coupling_complexity_scan",
+        "reason_code": "CHANGED_COMPLEXITY_OVER_THRESHOLD",
+        "expected_reason_code": "CHANGED_COMPLEXITY_OVER_THRESHOLD",
+        "observed_reason_code": "CHANGED_COMPLEXITY_OVER_THRESHOLD",
+        "rejection_reason": "Maximum cyclomatic complexity 16 exceeds limit of 10",
+        "duration_ms": 348,
+        "occurred_at": "2026-09-19T05:59:39.853Z"
+      },
+      {
+        "id": "P05-DUPLICATE-RULE",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateDuplicateDeadCodeScan",
+        "mutated_target": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\src\\platform\\auth\\temp_dup1.ts == C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\backend\\src\\platform\\auth\\temp_dup2.ts",
+        "gate_id": "duplicate_dead_code_scan",
+        "expected_gate_id": "duplicate_dead_code_scan",
+        "observed_gate_id": "duplicate_dead_code_scan",
+        "reason_code": "DUPLICATE_RULE",
+        "expected_reason_code": "DUPLICATE_RULE",
+        "observed_reason_code": "DUPLICATE_RULE",
+        "rejection_reason": "Found 1 duplicate code rules",
+        "duration_ms": 1195,
+        "occurred_at": "2026-09-19T05:59:41.055Z"
+      },
+      {
+        "id": "P05-REPRESENTATIVE-CHANGE-BLAST-RADIUS",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gateRepresentativeModuleChangeTest",
+        "mutated_target": "backend/src/modules/rogue/unrelated.ts",
+        "gate_id": "representative_module_change_test",
+        "expected_gate_id": "representative_module_change_test",
+        "observed_gate_id": "representative_module_change_test",
+        "reason_code": "UNRELATED_CHANGE_PATH",
+        "expected_reason_code": "UNRELATED_CHANGE_PATH",
+        "observed_reason_code": "UNRELATED_CHANGE_PATH",
+        "rejection_reason": "Representative change rehearsals failed (passed 3/3, unrelated paths: 1)",
+        "duration_ms": 3062,
+        "occurred_at": "2026-09-19T05:59:44.119Z"
+      },
+      {
+        "id": "P05-REVOKED-SESSION-REUSE",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "SessionService.verifyAccessToken",
+        "mutated_target": "auth_sessions.revokedAt session reuse",
+        "gate_id": "auth_session_mfa",
+        "expected_gate_id": "auth_session_mfa",
+        "observed_gate_id": "auth_session_mfa",
+        "reason_code": "SESSION_REVOKED",
+        "expected_reason_code": "SESSION_REVOKED",
+        "observed_reason_code": "SESSION_REVOKED",
+        "rejection_reason": "Session rejected: SESSION_REVOKED",
+        "duration_ms": 2,
+        "occurred_at": "2026-09-19T05:59:44.531Z"
+      },
+      {
+        "id": "P05-REFRESH-TOKEN-REPLAY",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "SessionService.rotateRefresh",
+        "mutated_target": "SessionService replay of rotated refresh token",
+        "gate_id": "auth_session_mfa",
+        "expected_gate_id": "auth_session_mfa",
+        "observed_gate_id": "auth_session_mfa",
+        "reason_code": "REFRESH_REPLAY",
+        "expected_reason_code": "REFRESH_REPLAY",
+        "observed_reason_code": "REFRESH_REPLAY",
+        "rejection_reason": "Session revoked / replay detected",
+        "duration_ms": 11,
+        "occurred_at": "2026-09-19T05:59:45.674Z"
+      },
+      {
+        "id": "P05-MFA-BYPASS",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "SessionService.verifyAccessToken",
+        "mutated_target": "SessionService verifyAccessToken with mfaPending=true",
+        "gate_id": "auth_session_mfa",
+        "expected_gate_id": "auth_session_mfa",
+        "observed_gate_id": "auth_session_mfa",
+        "reason_code": "MFA_REQUIRED",
+        "expected_reason_code": "MFA_REQUIRED",
+        "observed_reason_code": "MFA_REQUIRED",
+        "rejection_reason": "Session rejected: MFA_REQUIRED",
+        "duration_ms": 2,
+        "occurred_at": "2026-09-19T05:59:46.238Z"
+      },
+      {
+        "id": "P05-LOGIN-ENUMERATION",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "AuthService.login",
+        "mutated_target": "AuthService enumeration-safe login attempt for nonexistent user",
+        "gate_id": "auth_session_mfa",
+        "expected_gate_id": "auth_session_mfa",
+        "observed_gate_id": "auth_session_mfa",
+        "reason_code": "INVALID_CREDENTIALS",
+        "expected_reason_code": "INVALID_CREDENTIALS",
+        "observed_reason_code": "INVALID_CREDENTIALS",
+        "rejection_reason": "Invalid email or password",
+        "duration_ms": 573,
+        "occurred_at": "2026-09-19T05:59:47.025Z"
+      },
+      {
+        "id": "P05-PERMISSION-DENY-BYPASS",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "PolicyService.decide",
+        "mutated_target": "PolicyService: unassigned action for role hrd",
+        "gate_id": "role_permission_matrix",
+        "expected_gate_id": "role_permission_matrix",
+        "observed_gate_id": "role_permission_matrix",
+        "reason_code": "PERMISSION_DENY_DEFAULT",
+        "expected_reason_code": "PERMISSION_DENY_DEFAULT",
+        "observed_reason_code": "PERMISSION_DENY_DEFAULT",
+        "rejection_reason": "Permission denied: PERMISSION_DENY_DEFAULT",
+        "duration_ms": 10,
+        "occurred_at": "2026-09-19T05:59:47.035Z"
+      },
+      {
+        "id": "P05-TENANT-CROSS-READ",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "PolicyService.decide",
+        "mutated_target": "PolicyService: cross-tenant access from tenant-alpha to tenant-bravo",
+        "gate_id": "tenant_isolation",
+        "expected_gate_id": "tenant_isolation",
+        "observed_gate_id": "tenant_isolation",
+        "reason_code": "TENANT_ISOLATION_VIOLATION",
+        "expected_reason_code": "TENANT_ISOLATION_VIOLATION",
+        "observed_reason_code": "TENANT_ISOLATION_VIOLATION",
+        "rejection_reason": "Tenant access denied: TENANT_ISOLATION_VIOLATION",
+        "duration_ms": 0,
+        "occurred_at": "2026-09-19T05:59:47.035Z"
+      },
+      {
+        "id": "P05-FIELD-SCOPE-LEAK",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "ScopeService.assertFieldAccess",
+        "mutated_target": "ScopeService.assertFieldAccess: salary without authorization",
+        "gate_id": "tenant_isolation",
+        "expected_gate_id": "tenant_isolation",
+        "observed_gate_id": "tenant_isolation",
+        "reason_code": "FIELD_SCOPE_LEAK",
+        "expected_reason_code": "FIELD_SCOPE_LEAK",
+        "observed_reason_code": "FIELD_SCOPE_LEAK",
+        "rejection_reason": "FIELD_SCOPE_LEAK: unauthorized access to sensitive field salary",
+        "duration_ms": 1,
+        "occurred_at": "2026-09-19T05:59:47.036Z"
+      },
+      {
+        "id": "P05-AUDIT-AFTER-SUCCESS",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "AuditService.withAudit",
+        "mutated_target": "AuditService deferred/non-atomic audit write",
+        "gate_id": "immutable_audit",
+        "expected_gate_id": "immutable_audit",
+        "observed_gate_id": "immutable_audit",
+        "reason_code": "AUDIT_NOT_ATOMIC",
+        "expected_reason_code": "AUDIT_NOT_ATOMIC",
+        "observed_reason_code": "AUDIT_NOT_ATOMIC",
+        "rejection_reason": "AUDIT_NOT_ATOMIC: audit must be written in the same transaction as the mutation",
+        "duration_ms": 2,
+        "occurred_at": "2026-09-19T05:59:47.038Z"
+      },
+      {
+        "id": "P05-AUDIT-MUTATION",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "PostgreSQL trigger audit_immutable",
+        "mutated_target": "UPDATE audit_logs SET action = 'FORGED' WHERE id = '50fc84d9-e6dd-4c73-83ac-bf69c4483ab9'",
+        "gate_id": "immutable_audit",
+        "expected_gate_id": "immutable_audit",
+        "observed_gate_id": "immutable_audit",
+        "reason_code": "AUDIT_IMMUTABLE",
+        "expected_reason_code": "AUDIT_IMMUTABLE",
+        "observed_reason_code": "AUDIT_IMMUTABLE",
+        "rejection_reason": "\nInvalid `prisma.$executeRawUnsafe()` invocation:\n\n\nRaw query failed. Code: `P0001`. Message: `AUDIT_IMMUTABLE: audit_logs cannot be UPDATEd or DELETEd (txId=unknown)`",
+        "duration_ms": 12,
+        "occurred_at": "2026-09-19T05:59:47.057Z"
+      },
+      {
+        "id": "P05-MAKER-CHECKER-SELF-APPROVE",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "ApprovalService.decide",
+        "mutated_target": "Approval maker-checker self-approval on request ea401a84-4a3a-4df5-af3c-eecb69e6b984",
+        "gate_id": "maker_checker",
+        "expected_gate_id": "maker_checker",
+        "observed_gate_id": "maker_checker",
+        "reason_code": "SELF_APPROVAL_FORBIDDEN",
+        "expected_reason_code": "SELF_APPROVAL_FORBIDDEN",
+        "observed_reason_code": "SELF_APPROVAL_FORBIDDEN",
+        "rejection_reason": "Maker cannot approve own request",
+        "duration_ms": 5,
+        "occurred_at": "2026-09-19T05:59:47.207Z"
+      },
+      {
+        "id": "P05-OUTBOX-NONATOMIC",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "OutboxService.enqueue",
+        "mutated_target": "OutboxService write requiring external transaction",
+        "gate_id": "outbox_retry_dedup",
+        "expected_gate_id": "outbox_retry_dedup",
+        "observed_gate_id": "outbox_retry_dedup",
+        "reason_code": "OUTBOX_NOT_ATOMIC",
+        "expected_reason_code": "OUTBOX_NOT_ATOMIC",
+        "observed_reason_code": "OUTBOX_NOT_ATOMIC",
+        "rejection_reason": "OUTBOX_NOT_ATOMIC: outbox event must be enqueued within active transaction",
+        "duration_ms": 0,
+        "occurred_at": "2026-09-19T05:59:47.207Z"
+      },
+      {
+        "id": "P05-OUTBOX-DUPLICATE",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "OutboxService.enqueue",
+        "mutated_target": "OutboxService duplicate idempotencyKey: dup-1789797587207-6255bad7-536d-4d7b-a1fb-747ba3254f85",
+        "gate_id": "outbox_retry_dedup",
+        "expected_gate_id": "outbox_retry_dedup",
+        "observed_gate_id": "outbox_retry_dedup",
+        "reason_code": "OUTBOX_DUPLICATE_REJECTED",
+        "expected_reason_code": "OUTBOX_DUPLICATE_REJECTED",
+        "observed_reason_code": "OUTBOX_DUPLICATE_REJECTED",
+        "rejection_reason": "OUTBOX_DUPLICATE_REJECTED: duplicate idempotency key rejected",
+        "duration_ms": 4,
+        "occurred_at": "2026-09-19T05:59:47.215Z"
+      },
+      {
+        "id": "P05-OUTBOX-RETRY-LOSS",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "OutboxService.fail",
+        "mutated_target": "OutboxService failure exhaust on event d8ba7014-3432-42ba-bd48-463a401c3ee0",
+        "gate_id": "outbox_retry_dedup",
+        "expected_gate_id": "outbox_retry_dedup",
+        "observed_gate_id": "outbox_retry_dedup",
+        "reason_code": "OUTBOX_DEAD_LETTERED",
+        "expected_reason_code": "OUTBOX_DEAD_LETTERED",
+        "observed_reason_code": "OUTBOX_DEAD_LETTERED",
+        "rejection_reason": "Rejected with OUTBOX_DEAD_LETTERED",
+        "duration_ms": 27,
+        "occurred_at": "2026-09-19T05:59:47.244Z"
+      },
+      {
+        "id": "P05-NOTE-PARENT-ACL-BYPASS",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "CommunicationAclService.createNoteWithMentions",
+        "mutated_target": "CommunicationAclService note with missing parent entity",
+        "gate_id": "communication_acl",
+        "expected_gate_id": "communication_acl",
+        "observed_gate_id": "communication_acl",
+        "reason_code": "PARENT_ACL_DENIED",
+        "expected_reason_code": "PARENT_ACL_DENIED",
+        "observed_reason_code": "PARENT_ACL_DENIED",
+        "rejection_reason": "Parent ACL resolution failed: PARENT_ACL_DENIED",
+        "duration_ms": 3,
+        "occurred_at": "2026-09-19T05:59:47.248Z"
+      },
+      {
+        "id": "P05-MENTION-UNAUTHORIZED-TARGET",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "CommunicationAclService.createNoteWithMentions",
+        "mutated_target": "CommunicationAclService mention of unauthorized target",
+        "gate_id": "communication_acl",
+        "expected_gate_id": "communication_acl",
+        "observed_gate_id": "communication_acl",
+        "reason_code": "UNAUTHORIZED_MENTION_TARGET",
+        "expected_reason_code": "UNAUTHORIZED_MENTION_TARGET",
+        "observed_reason_code": "UNAUTHORIZED_MENTION_TARGET",
+        "rejection_reason": "Mention target target-user-unauthorized is unauthorized in this context",
+        "duration_ms": 11,
+        "occurred_at": "2026-09-19T05:59:47.425Z"
+      },
+      {
+        "id": "P05-MENTION-DUPLICATE-NOTIFICATION",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "CommunicationAclService.preventDuplicateNotification",
+        "mutated_target": "CommunicationAclService duplicate notification prevention",
+        "gate_id": "communication_acl",
+        "expected_gate_id": "communication_acl",
+        "observed_gate_id": "communication_acl",
+        "reason_code": "MENTION_DUPLICATE_NOTIFICATION_REJECTED",
+        "expected_reason_code": "MENTION_DUPLICATE_NOTIFICATION_REJECTED",
+        "observed_reason_code": "MENTION_DUPLICATE_NOTIFICATION_REJECTED",
+        "rejection_reason": "Duplicate mention notification prevented by deduplication control",
+        "duration_ms": 8,
+        "occurred_at": "2026-09-19T05:59:47.477Z"
+      },
+      {
+        "id": "P05-ERROR-ENVELOPE-BYPASS",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "assertValidErrorEnvelope",
+        "mutated_target": "Non-canonical raw error object { message: \"raw error\" }",
+        "gate_id": "canonical_error_contract",
+        "expected_gate_id": "canonical_error_contract",
+        "observed_gate_id": "canonical_error_contract",
+        "reason_code": "ERROR_ENVELOPE_MISSING",
+        "expected_reason_code": "ERROR_ENVELOPE_MISSING",
+        "observed_reason_code": "ERROR_ENVELOPE_MISSING",
+        "rejection_reason": "ERROR_ENVELOPE_MISSING: response does not conform to canonical error envelope",
+        "duration_ms": 1,
+        "occurred_at": "2026-09-19T05:59:47.480Z"
+      },
+      {
+        "id": "P05-ERROR-PII-LEAK",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "assertNoPiiOrSecret",
+        "mutated_target": "Unscrubbed error text with raw SQL and victim email",
+        "gate_id": "canonical_error_contract",
+        "expected_gate_id": "canonical_error_contract",
+        "observed_gate_id": "canonical_error_contract",
+        "reason_code": "PII_OR_SECRET_IN_ERROR",
+        "expected_reason_code": "PII_OR_SECRET_IN_ERROR",
+        "observed_reason_code": "PII_OR_SECRET_IN_ERROR",
+        "rejection_reason": "PII_OR_SECRET_IN_ERROR: unscrubbed PII or secret detected in error output",
+        "duration_ms": 0,
+        "occurred_at": "2026-09-19T05:59:47.481Z"
+      },
+      {
+        "id": "P05-CONFIG-DEFAULT-SECRET",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "platformConfigSchema.parse",
+        "mutated_target": "platformConfigSchema validation with JWT_SECRET=changeme",
+        "gate_id": "configuration_ownership_test",
+        "expected_gate_id": "configuration_ownership_test",
+        "observed_gate_id": "configuration_ownership_test",
+        "reason_code": "WEAK_DEFAULT_SECRET",
+        "expected_reason_code": "WEAK_DEFAULT_SECRET",
+        "observed_reason_code": "WEAK_DEFAULT_SECRET",
+        "rejection_reason": "WEAK_DEFAULT_SECRET: JWT_SECRET is invalid or weak",
+        "duration_ms": 0,
+        "occurred_at": "2026-09-19T05:59:47.482Z"
+      },
+      {
+        "id": "P05-STALE-SHA-EVIDENCE",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gatePredecessorScopeAndSafety",
+        "mutated_target": "Candidate SHA mismatch against predecessor merge-base",
+        "gate_id": "predecessor_scope_and_safety",
+        "expected_gate_id": "predecessor_scope_and_safety",
+        "observed_gate_id": "predecessor_scope_and_safety",
+        "reason_code": "STALE_SHA_EVIDENCE",
+        "expected_reason_code": "STALE_SHA_EVIDENCE",
+        "observed_reason_code": "STALE_SHA_EVIDENCE",
+        "rejection_reason": "Candidate SHA does not descend from frozen base SHA",
+        "duration_ms": 0,
+        "occurred_at": "2026-09-19T05:59:47.483Z"
+      },
+      {
+        "id": "P05-UNEXPECTED-SKIP",
+        "status": "PASS",
+        "production_path": true,
+        "gate_function": "gatePredecessorScopeAndSafety",
+        "mutated_target": "gatePredecessorScopeAndSafety with forceSkippedCount > 0",
+        "gate_id": "predecessor_scope_and_safety",
+        "expected_gate_id": "predecessor_scope_and_safety",
+        "observed_gate_id": "predecessor_scope_and_safety",
+        "reason_code": "UNEXPECTED_SKIP_DETECTED",
+        "expected_reason_code": "UNEXPECTED_SKIP_DETECTED",
+        "observed_reason_code": "UNEXPECTED_SKIP_DETECTED",
+        "rejection_reason": "Synthetic unexpected skip detected in scope manifest",
+        "duration_ms": 0,
+        "occurred_at": "2026-09-19T05:59:47.483Z"
+      }
+    ],
+    "metrics": {
+      "forbidden_domain_edges": 0,
+      "domain_cycles": 0,
+      "unowned_modules": 0,
+      "unexplained_shared_exports": 0,
+      "direct_cross_domain_persistence": 0,
+      "unused_production_dependencies": 0,
+      "unexplained_orphans": 0,
+      "architecture_debt_delta": 0,
+      "auth_bypasses": 0,
+      "tenant_leaks": 0,
+      "self_approvals": 0,
+      "audit_mutations": 0,
+      "outbox_loss_or_duplicates": 0,
+      "communication_acl_bypasses": 0,
+      "error_contract_violations": 0,
+      "configuration_violations": 0,
+      "unexpected_skips": 0,
+      "unrelated_change_paths": 0,
+      "changed_duplication_percent": 0,
+      "whole_duplication_delta_percent": 0,
+      "changed_max_cyclomatic_complexity": 8,
+      "module_ownership_coverage_percent": 100,
+      "representative_change_prediction_percent": 100,
+      "control_matrix_execution_percent": 100
+    },
+    "safety": {
+      "source_integrity_preserved": true,
+      "source_database_fingerprint": "fb0a5da9e048eb82a7011b23a588cdeed095d1641b003d8d3145a51a263a9a62",
+      "source_database_tables": 194,
+      "created_databases": [
+        "nex_p05_c7cb59eb_25476_main"
+      ],
+      "dropped_databases": [
+        "nex_p05_c7cb59eb_25476_main"
+      ]
+    },
+    "evidence": {
+      "ownership_manifest_sha256": "55e3b677e038a50446996fc615681b2bad25903baf54d88cf4c7cc38d5b96ecd",
+      "dependency_graph_sha256": "869b2a415e7b057da47650d3ab3c5b0da39260be14b0a3acce4488fe013d8263",
+      "control_matrix_sha256": "baecc9092376b3552b06b34f867013a9144d96258b40ac53ffa53576937ac1d0",
+      "scope_manifest_sha256": "e8aeb1bbf33d877eaa708935b3a37e450def18cbca247497fe243519a784c537"
+    },
+    "verdict": "PASS",
+    "duration_ms": 709312
+  },
+  "failure": null
 }

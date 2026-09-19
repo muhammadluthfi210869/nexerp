@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-09-19T03:53:31.176Z",
+  "generated_at": "2026-09-19T06:00:36.809Z",
   "phase": "P05",
-  "candidate_sha": "fe086bc932b3c642f2d1891cd5542c011838ee0e",
+  "candidate_sha": "c7cb59ebed247cce3d947ecb6454a45d92c32ca8",
   "baseline_digest": "1f7e80820e72cce01459b369342006fe81c073f9927e47fcdda0fcff2f4353e8",
-  "candidate_digest": "39628684751f918a478e2f90089e318f73a84cf9e1ef78790f33572404e54808",
-  "edge_delta_count": 14,
+  "candidate_digest": "5b86ab6872ab2bf77113480b5038d5b22bff0bdfe28cc0a1c1f555f8dcbd234d",
+  "edge_delta_count": 15,
   "classified_edge_deltas": [
     {
       "delta": "added",
@@ -112,6 +112,17 @@
         "to": "crypto",
         "kind": "import",
         "file": "backend/src/modules/auth/roles.guard.ts",
+        "classification": "allowed",
+        "targetFile": null
+      }
+    },
+    {
+      "delta": "added",
+      "edge": {
+        "from": "system",
+        "to": "../../prisma/prisma.module",
+        "kind": "import",
+        "file": "backend/src/modules/system/system.module.ts",
         "classification": "allowed",
         "targetFile": null
       }
@@ -943,6 +954,14 @@
     },
     {
       "from": "auth",
+      "to": "modules/auth",
+      "kind": "import",
+      "file": "backend/src/modules/auth/auth.module.ts",
+      "classification": "allowed",
+      "targetFile": "backend/src/modules/auth/roles.guard.ts"
+    },
+    {
+      "from": "auth",
       "to": "@nestjs/common",
       "kind": "import",
       "file": "backend/src/modules/auth/auth.service.ts",
@@ -1356,6 +1375,38 @@
       "file": "backend/src/modules/bussdev/bussdev.module.ts",
       "classification": "allowed",
       "targetFile": "backend/src/modules/scm/scm.module.ts"
+    },
+    {
+      "from": "bussdev",
+      "to": "modules/bussdev",
+      "kind": "import",
+      "file": "backend/src/modules/bussdev/bussdev.module.ts",
+      "classification": "allowed",
+      "targetFile": "backend/src/modules/bussdev/services/lead.service.ts"
+    },
+    {
+      "from": "bussdev",
+      "to": "modules/bussdev",
+      "kind": "import",
+      "file": "backend/src/modules/bussdev/bussdev.module.ts",
+      "classification": "allowed",
+      "targetFile": "backend/src/modules/bussdev/services/pipeline.service.ts"
+    },
+    {
+      "from": "bussdev",
+      "to": "modules/bussdev",
+      "kind": "import",
+      "file": "backend/src/modules/bussdev/bussdev.module.ts",
+      "classification": "allowed",
+      "targetFile": "backend/src/modules/bussdev/services/retention.service.ts"
+    },
+    {
+      "from": "bussdev",
+      "to": "modules/bussdev",
+      "kind": "import",
+      "file": "backend/src/modules/bussdev/bussdev.module.ts",
+      "classification": "allowed",
+      "targetFile": "backend/src/modules/bussdev/services/analytics.service.ts"
     },
     {
       "from": "bussdev",
@@ -3524,6 +3575,14 @@
       "file": "backend/src/modules/finance/finance.module.ts",
       "classification": "allowed",
       "targetFile": "backend/src/modules/finance/cash.service.ts"
+    },
+    {
+      "from": "finance",
+      "to": "modules/finance",
+      "kind": "import",
+      "file": "backend/src/modules/finance/finance.module.ts",
+      "classification": "allowed",
+      "targetFile": "backend/src/modules/finance/journal-engine.service.ts"
     },
     {
       "from": "finance",
@@ -12580,6 +12639,22 @@
       "file": "backend/src/modules/system/system.module.ts",
       "classification": "allowed",
       "targetFile": "backend/src/modules/warehouse/warehouse.module.ts"
+    },
+    {
+      "from": "system",
+      "to": "../../prisma/prisma.module",
+      "kind": "import",
+      "file": "backend/src/modules/system/system.module.ts",
+      "classification": "allowed",
+      "targetFile": null
+    },
+    {
+      "from": "system",
+      "to": "modules/system",
+      "kind": "import",
+      "file": "backend/src/modules/system/system.module.ts",
+      "classification": "allowed",
+      "targetFile": "backend/src/modules/system/services/error-aggregation.service.ts"
     },
     {
       "from": "system",
