@@ -46,25 +46,25 @@
       "screens_importing_ui_kit": 37
     },
     "implementation_inventory": {
-      "models_total": 194,
-      "models_classified": 194,
+      "models_total": 204,
+      "models_classified": 204,
       "api_operations_total": 940,
       "api_operations_classified": 940,
       "screens_total": 272,
       "screens_classified": 272,
-      "backend_controllers": 96,
-      "backend_controllers_reachable": 87,
+      "backend_controllers": 99,
+      "backend_controllers_reachable": 90,
       "backend_controllers_dead": 9,
-      "backend_services": 118,
-      "backend_services_reachable": 102,
-      "backend_services_dead": 16,
-      "backend_modules": 70,
-      "backend_modules_reachable": 64,
+      "backend_services": 129,
+      "backend_services_reachable": 119,
+      "backend_services_dead": 10,
+      "backend_modules": 72,
+      "backend_modules_reachable": 66,
       "backend_modules_dead": 6,
       "jobs_schedulers": 3,
       "published_subscribed_events": 217,
-      "migrations": 42,
-      "barrel_exports": 3,
+      "migrations": 45,
+      "barrel_exports": 4,
       "backend_dependencies": 38,
       "frontend_dependencies": 26,
       "compatibility_adapters": 10
@@ -2875,6 +2875,106 @@
       "implementation_state": "IMPLEMENTED_ADAPTER",
       "owner": "Master Data Team",
       "rationale": "Sequence number compatibility bridge during transition to universal code engine.",
+      "reachable": true
+    },
+    "ImportExecution": {
+      "model": "ImportExecution",
+      "file": "backend/prisma/schema/master-extension.prisma",
+      "domain": "master",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Platform Core Team",
+      "rationale": "Durable idempotency execution record for P06 master import/export operations.",
+      "reachable": true
+    },
+    "AuthSession": {
+      "model": "AuthSession",
+      "file": "backend/prisma/schema/platform-controls.prisma",
+      "domain": "general",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Engineering Team",
+      "rationale": "Implementation model AuthSession in backend/prisma/schema/platform-controls.prisma.",
+      "reachable": true
+    },
+    "MfaSecret": {
+      "model": "MfaSecret",
+      "file": "backend/prisma/schema/platform-controls.prisma",
+      "domain": "general",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Engineering Team",
+      "rationale": "Implementation model MfaSecret in backend/prisma/schema/platform-controls.prisma.",
+      "reachable": true
+    },
+    "MfaChallenge": {
+      "model": "MfaChallenge",
+      "file": "backend/prisma/schema/platform-controls.prisma",
+      "domain": "general",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Engineering Team",
+      "rationale": "Implementation model MfaChallenge in backend/prisma/schema/platform-controls.prisma.",
+      "reachable": true
+    },
+    "AuditLog": {
+      "model": "AuditLog",
+      "file": "backend/prisma/schema/platform-controls.prisma",
+      "domain": "general",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Engineering Team",
+      "rationale": "Implementation model AuditLog in backend/prisma/schema/platform-controls.prisma.",
+      "reachable": true
+    },
+    "Approval": {
+      "model": "Approval",
+      "file": "backend/prisma/schema/platform-controls.prisma",
+      "domain": "general",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Engineering Team",
+      "rationale": "Implementation model Approval in backend/prisma/schema/platform-controls.prisma.",
+      "reachable": true
+    },
+    "OutboxEvent": {
+      "model": "OutboxEvent",
+      "file": "backend/prisma/schema/platform-controls.prisma",
+      "domain": "general",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Engineering Team",
+      "rationale": "Implementation model OutboxEvent in backend/prisma/schema/platform-controls.prisma.",
+      "reachable": true
+    },
+    "OutboxDlq": {
+      "model": "OutboxDlq",
+      "file": "backend/prisma/schema/platform-controls.prisma",
+      "domain": "general",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Engineering Team",
+      "rationale": "Implementation model OutboxDlq in backend/prisma/schema/platform-controls.prisma.",
+      "reachable": true
+    },
+    "TenantScope": {
+      "model": "TenantScope",
+      "file": "backend/prisma/schema/platform-controls.prisma",
+      "domain": "general",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Engineering Team",
+      "rationale": "Implementation model TenantScope in backend/prisma/schema/platform-controls.prisma.",
+      "reachable": true
+    },
+    "CommunicationPolicy": {
+      "model": "CommunicationPolicy",
+      "file": "backend/prisma/schema/platform-controls.prisma",
+      "domain": "general",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Engineering Team",
+      "rationale": "Implementation model CommunicationPolicy in backend/prisma/schema/platform-controls.prisma.",
       "reachable": true
     },
     "ProductionPlan": {
@@ -29020,11 +29120,11 @@
       "file": "frontend/src/app/(dashboard)/finance/audit-ledger/page.tsx",
       "imports_dna": true,
       "imports_ui_kit": false,
-      "raw_buttons": 3,
-      "raw_inputs": 1,
+      "raw_buttons": 0,
+      "raw_inputs": 0,
       "hardcoded_hex_colors": [],
       "inline_styles_count": 0,
-      "disposition": "PARTIALLY_MIGRATED"
+      "disposition": "ALREADY_DNA"
     },
     {
       "file": "frontend/src/app/(dashboard)/finance/bank-accounts/page.tsx",
@@ -32289,6 +32389,15 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/master/controllers/divisions.controller.ts",
+      "controller_symbol": "DivisionsController",
+      "domain": "master",
+      "owner": "Master Data Team",
+      "rationale": "Backend controller handling master REST endpoints.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
       "file": "backend/src/modules/master/controllers/materials.controller.ts",
       "controller_symbol": "MaterialsController",
       "domain": "master",
@@ -32298,8 +32407,26 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/master/controllers/personnel.controller.ts",
+      "controller_symbol": "PersonnelController",
+      "domain": "master",
+      "owner": "Master Data Team",
+      "rationale": "Backend controller handling master REST endpoints.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
       "file": "backend/src/modules/master/controllers/suppliers.controller.ts",
       "controller_symbol": "SuppliersController",
+      "domain": "master",
+      "owner": "Master Data Team",
+      "rationale": "Backend controller handling master REST endpoints.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/master/controllers/system-config.controller.ts",
+      "controller_symbol": "SystemConfigController",
       "domain": "master",
       "owner": "Master Data Team",
       "rationale": "Backend controller handling master REST endpoints.",
@@ -32664,36 +32791,36 @@
       "provider_symbol": "AnalyticsService",
       "domain": "bussdev",
       "owner": "Commercial Team",
-      "rationale": "Unreferenced service not provided in any active module or imported by active controllers.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Business service encapsulated in bussdev module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/bussdev/services/lead.service.ts",
       "provider_symbol": "LeadService",
       "domain": "bussdev",
       "owner": "Commercial Team",
-      "rationale": "Unreferenced service not provided in any active module or imported by active controllers.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Business service encapsulated in bussdev module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/bussdev/services/pipeline.service.ts",
       "provider_symbol": "PipelineService",
       "domain": "bussdev",
       "owner": "Commercial Team",
-      "rationale": "Unreferenced service not provided in any active module or imported by active controllers.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Business service encapsulated in bussdev module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/bussdev/services/retention.service.ts",
       "provider_symbol": "RetentionService",
       "domain": "bussdev",
       "owner": "Commercial Team",
-      "rationale": "Unreferenced service not provided in any active module or imported by active controllers.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Business service encapsulated in bussdev module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/commercial/services/invoices.service.ts",
@@ -32997,9 +33124,9 @@
       "provider_symbol": "JournalEngineService",
       "domain": "finance",
       "owner": "Finance Team",
-      "rationale": "Unreferenced service not provided in any active module or imported by active controllers.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Business service encapsulated in finance module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/finance/period-locks/period-locks.service.ts",
@@ -33290,6 +33417,24 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/master/services/divisions.service.ts",
+      "provider_symbol": "DivisionsService",
+      "domain": "master",
+      "owner": "Master Data Team",
+      "rationale": "Business service encapsulated in master module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/master/services/import-export.service.ts",
+      "provider_symbol": "ImportExportService",
+      "domain": "master",
+      "owner": "Master Data Team",
+      "rationale": "Business service encapsulated in master module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
       "file": "backend/src/modules/master/services/materials.service.ts",
       "provider_symbol": "MaterialsService",
       "domain": "master",
@@ -33299,8 +33444,26 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/master/services/personnel.service.ts",
+      "provider_symbol": "PersonnelService",
+      "domain": "master",
+      "owner": "Master Data Team",
+      "rationale": "Business service encapsulated in master module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
       "file": "backend/src/modules/master/services/suppliers.service.ts",
       "provider_symbol": "SuppliersService",
+      "domain": "master",
+      "owner": "Master Data Team",
+      "rationale": "Business service encapsulated in master module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/master/services/system-config.service.ts",
+      "provider_symbol": "SystemConfigService",
       "domain": "master",
       "owner": "Master Data Team",
       "rationale": "Business service encapsulated in master module.",
@@ -33519,9 +33682,9 @@
       "provider_symbol": "ErrorAggregationService",
       "domain": "system",
       "owner": "Platform Core Team",
-      "rationale": "Unreferenced service not provided in any active module or imported by active controllers.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Business service encapsulated in system module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/system/state-transition.service.ts",
@@ -33592,6 +33755,69 @@
       "domain": "warehouse",
       "owner": "Warehouse Team",
       "rationale": "Business service encapsulated in warehouse module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/platform/approval/approval.service.ts",
+      "provider_symbol": "ApprovalService",
+      "domain": "approval",
+      "owner": "Platform Team",
+      "rationale": "Business service encapsulated in approval module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/platform/audit/audit.service.ts",
+      "provider_symbol": "AuditService",
+      "domain": "audit",
+      "owner": "Platform Core Team",
+      "rationale": "Business service encapsulated in audit module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/platform/auth/mfa.service.ts",
+      "provider_symbol": "MfaService",
+      "domain": "auth",
+      "owner": "Platform Security Team",
+      "rationale": "Business service encapsulated in auth module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/platform/auth/session.service.ts",
+      "provider_symbol": "SessionService",
+      "domain": "auth",
+      "owner": "Platform Security Team",
+      "rationale": "Business service encapsulated in auth module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/platform/outbox/outbox.service.ts",
+      "provider_symbol": "OutboxService",
+      "domain": "outbox",
+      "owner": "Platform Team",
+      "rationale": "Business service encapsulated in outbox module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/platform/policy/policy.service.ts",
+      "provider_symbol": "PolicyService",
+      "domain": "policy",
+      "owner": "Platform Team",
+      "rationale": "Business service encapsulated in policy module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/platform/scope/scope.service.ts",
+      "provider_symbol": "ScopeService",
+      "domain": "scope",
+      "owner": "Platform Team",
+      "rationale": "Business service encapsulated in scope module.",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "reachable": true
     },
@@ -34255,6 +34481,24 @@
       "reachable": true
     },
     {
+      "file": "backend/src/platform/config/config.module.ts",
+      "module_symbol": "PlatformConfigModule",
+      "domain": "config",
+      "owner": "Platform Team",
+      "rationale": "NestJS dependency injection module for config.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/platform/platform.module.ts",
+      "module_symbol": "PlatformModule",
+      "domain": "platform.module.ts",
+      "owner": "Platform Team",
+      "rationale": "NestJS dependency injection module for platform.module.ts.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
       "file": "backend/src/prisma/prisma.module.ts",
       "module_symbol": "PrismaModule",
       "domain": "prisma.module.ts",
@@ -34492,9 +34736,9 @@
       "role": "PUBLISHER",
       "event": "ACTIVITY_EVENT",
       "owner": "Commercial Team",
-      "rationale": "Event publisher in unregistered provider LeadService scheduled for retirement.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Event publisher for event ACTIVITY_EVENT",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/bussdev/services/lead.service.ts",
@@ -34502,9 +34746,9 @@
       "role": "PUBLISHER",
       "event": "ACTIVITY_EVENT",
       "owner": "Commercial Team",
-      "rationale": "Event publisher in unregistered provider LeadService scheduled for retirement.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Event publisher for event ACTIVITY_EVENT",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/bussdev/services/lead.service.ts",
@@ -34512,9 +34756,9 @@
       "role": "PUBLISHER",
       "event": "BUSSDEV_EVENTS.STAGE_UPDATED",
       "owner": "Commercial Team",
-      "rationale": "Event publisher in unregistered provider LeadService scheduled for retirement.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Event publisher for event BUSSDEV_EVENTS.STAGE_UPDATED",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/bussdev/services/lead.service.ts",
@@ -34522,9 +34766,9 @@
       "role": "PUBLISHER",
       "event": "lead.status.changed",
       "owner": "Commercial Team",
-      "rationale": "Event publisher in unregistered provider LeadService scheduled for retirement.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Event publisher for event lead.status.changed",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/bussdev/services/lead.service.ts",
@@ -34532,9 +34776,9 @@
       "role": "PUBLISHER",
       "event": "sample.requested",
       "owner": "Commercial Team",
-      "rationale": "Event publisher in unregistered provider LeadService scheduled for retirement.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Event publisher for event sample.requested",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/bussdev/services/pipeline.service.ts",
@@ -34542,9 +34786,9 @@
       "role": "PUBLISHER",
       "event": "ACTIVITY_EVENT",
       "owner": "Commercial Team",
-      "rationale": "Event publisher in unregistered provider PipelineService scheduled for retirement.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Event publisher for event ACTIVITY_EVENT",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/bussdev/services/pipeline.service.ts",
@@ -34552,9 +34796,9 @@
       "role": "PUBLISHER",
       "event": "sample.revision.overlimit",
       "owner": "Commercial Team",
-      "rationale": "Event publisher in unregistered provider PipelineService scheduled for retirement.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Event publisher for event sample.revision.overlimit",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/commercial/services/sales-orders.service.ts",
@@ -36479,6 +36723,87 @@
   ],
   "barrel_exports": [
     {
+      "file": "backend/src/platform/index.ts",
+      "owner": "Platform Architecture Team",
+      "rationale": "Public barrel export boundary for backend/src/platform/index.ts with 12 members.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true,
+      "members": [
+        {
+          "file": "backend/src/platform/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./approval/approval.service"
+        },
+        {
+          "file": "backend/src/platform/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./audit/audit.service"
+        },
+        {
+          "file": "backend/src/platform/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./auth/mfa.service"
+        },
+        {
+          "file": "backend/src/platform/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./auth/session.service"
+        },
+        {
+          "file": "backend/src/platform/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./communication/acl.adapter"
+        },
+        {
+          "file": "backend/src/platform/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./config/config.module"
+        },
+        {
+          "file": "backend/src/platform/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./errors/error.factory"
+        },
+        {
+          "file": "backend/src/platform/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./errors/error.filter"
+        },
+        {
+          "file": "backend/src/platform/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./outbox/outbox.service"
+        },
+        {
+          "file": "backend/src/platform/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./platform.module"
+        },
+        {
+          "file": "backend/src/platform/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./policy/policy.service"
+        },
+        {
+          "file": "backend/src/platform/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./scope/scope.service"
+        }
+      ]
+    },
+    {
       "file": "frontend/src/components/automation/index.ts",
       "owner": "Automation Team",
       "rationale": "Public barrel export boundary for frontend/src/components/automation/index.ts with 1 members.",
@@ -37874,6 +38199,30 @@
       "reachable": true
     },
     {
+      "dir": "backend/prisma/migrations/20260918_p05_platform_controls",
+      "file": "backend/prisma/migrations/20260918_p05_platform_controls/migration.sql",
+      "owner": "Database Architecture Team",
+      "rationale": "Idempotent database migration script 20260918_p05_platform_controls.",
+      "status": "EXECUTED_MIGRATION",
+      "reachable": true
+    },
+    {
+      "dir": "backend/prisma/migrations/20260918120000_p04_deduplicate_slug_indexes",
+      "file": "backend/prisma/migrations/20260918120000_p04_deduplicate_slug_indexes/migration.sql",
+      "owner": "Database Architecture Team",
+      "rationale": "Idempotent database migration script 20260918120000_p04_deduplicate_slug_indexes.",
+      "status": "EXECUTED_MIGRATION",
+      "reachable": true
+    },
+    {
+      "dir": "backend/prisma/migrations/20260919120000_p06_import_idempotency",
+      "file": "backend/prisma/migrations/20260919120000_p06_import_idempotency/migration.sql",
+      "owner": "Database Architecture Team",
+      "rationale": "Idempotent database migration script 20260919120000_p06_import_idempotency.",
+      "status": "EXECUTED_MIGRATION",
+      "reachable": true
+    },
+    {
       "dir": "backend/prisma/migrations/add_assigned_phone",
       "file": "backend/prisma/migrations/add_assigned_phone/migration.sql",
       "owner": "Database Architecture Team",
@@ -38029,7 +38378,7 @@
     },
     {
       "name": "@prisma/client",
-      "version": "^7.8.0",
+      "version": "7.10.0",
       "domain": "backend-runtime",
       "owner": "Backend Platform Team",
       "rationale": "Direct production dependency imported in NestJS backend.",
@@ -38146,7 +38495,7 @@
     },
     {
       "name": "prisma",
-      "version": "^7.8.0",
+      "version": "7.10.0",
       "domain": "backend-runtime",
       "owner": "Backend Platform Team",
       "rationale": "Runtime/CLI infrastructure dependency required by backend execution environment.",

@@ -50,7 +50,13 @@ export default function MasterTaxRatesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<TaxRateForm>(EMPTY_FORM);
 
-  const { data: taxRates, isLoading } = useQuery({
+  const {
+    data: taxRates,
+    isLoading,
+    isError,
+    error: taxRatesError,
+    refetch,
+  } = useQuery({
     queryKey: ["tax-rates"],
     queryFn: async () => {
       const res = await api.get("/master/tax-rates");
@@ -183,71 +189,89 @@ export default function MasterTaxRatesPage() {
             </tr>
           </DnaTableHead>
           <tbody className={DNA_TABLE_CLASSES.tbody}>
-            {isLoading && (
+            {isLoading ? (
               <tr>
                 <td colSpan={6} className="p-6 text-center text-xs text-slate-400">
-                  Memuat...
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <span>Memuat data tarif pajak...</span>
+                  </div>
                 </td>
               </tr>
-            )}
-            {!isLoading && (!taxRates || taxRates.length === 0) && (
+            ) : isError ? (
+              <tr>
+                <td colSpan={6} className="p-6 text-center text-xs text-rose-500">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <span>Gagal memuat data tarif pajak: {(taxRatesError as any)?.message || "Terjadi kesalahan"}</span>
+                    <button
+                      type="button"
+                      onClick={() => refetch()}
+                      className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors inline-block"
+                    >
+                      Coba Lagi
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ) : !taxRates || taxRates.length === 0 ? (
               <tr>
                 <td colSpan={6} className="p-6 text-center text-xs text-slate-400">
                   Belum ada tarif. Klik "Tambah Tarif" untuk membuat.
                 </td>
               </tr>
+            ) : (
+              taxRates.map((tr, idx) => (
+                <tr key={tr.id} className={DNA_TABLE_CLASSES.tr}>
+                  <td className={cn(DNA_TABLE_CLASSES.td, "text-center font-mono text-slate-400")}>
+                    {idx + 1}
+                  </td>
+                  <td className={DNA_TABLE_CLASSES.td}>
+                    <DnaCell.Text primary={tr.name} />
+                  </td>
+                  <td className={cn(DNA_TABLE_CLASSES.td, "text-right font-mono font-bold")}>
+                    {Number(tr.rate).toFixed(2)}%
+                  </td>
+                  <td className={cn(DNA_TABLE_CLASSES.td, "text-xs text-slate-600")}>
+                    {tr.description || <span className="text-slate-300">—</span>}
+                  </td>
+                  <td className={cn(DNA_TABLE_CLASSES.td, "text-center")}>
+                    <DnaBadge status={tr.isActive ? "success" : "neutral"}>
+                      {tr.isActive ? "AKTIF" : "NON-AKTIF"}
+                    </DnaBadge>
+                  </td>
+                  <td className={cn(DNA_TABLE_CLASSES.td, "text-center")}>
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(tr)}
+                        className="p-1 text-slate-500 hover:text-blue-600 rounded transition-colors"
+                        title="Sunting"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`Nonaktifkan tarif "${tr.name}"?`)) {
+                            toggleMutation.mutate(tr.id);
+                          }
+                        }}
+                        className={cn(
+                          "p-1 rounded transition-colors",
+                          tr.isActive
+                            ? "text-slate-400 hover:text-rose-600"
+                            : "text-emerald-500 hover:text-emerald-700"
+                        )}
+                        title={tr.isActive ? "Nonaktifkan" : "Aktifkan kembali (perlu edit)"}
+                        disabled={!tr.isActive}
+                      >
+                        <Power className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
             )}
-            {taxRates?.map((tr, idx) => (
-              <tr key={tr.id} className={DNA_TABLE_CLASSES.tr}>
-                <td className={cn(DNA_TABLE_CLASSES.td, "text-center font-mono text-slate-400")}>
-                  {idx + 1}
-                </td>
-                <td className={DNA_TABLE_CLASSES.td}>
-                  <DnaCell.Text primary={tr.name} />
-                </td>
-                <td className={cn(DNA_TABLE_CLASSES.td, "text-right font-mono font-bold")}>
-                  {Number(tr.rate).toFixed(2)}%
-                </td>
-                <td className={cn(DNA_TABLE_CLASSES.td, "text-xs text-slate-600")}>
-                  {tr.description || <span className="text-slate-300">—</span>}
-                </td>
-                <td className={cn(DNA_TABLE_CLASSES.td, "text-center")}>
-                  <DnaBadge status={tr.isActive ? "success" : "neutral"}>
-                    {tr.isActive ? "AKTIF" : "NON-AKTIF"}
-                  </DnaBadge>
-                </td>
-                <td className={cn(DNA_TABLE_CLASSES.td, "text-center")}>
-                  <div className="flex items-center justify-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(tr)}
-                      className="p-1 text-slate-500 hover:text-blue-600 rounded transition-colors"
-                      title="Sunting"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm(`Nonaktifkan tarif "${tr.name}"?`)) {
-                          toggleMutation.mutate(tr.id);
-                        }
-                      }}
-                      className={cn(
-                        "p-1 rounded transition-colors",
-                        tr.isActive
-                          ? "text-slate-400 hover:text-rose-600"
-                          : "text-emerald-500 hover:text-emerald-700"
-                      )}
-                      title={tr.isActive ? "Nonaktifkan" : "Aktifkan kembali (perlu edit)"}
-                      disabled={!tr.isActive}
-                    >
-                      <Power className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
           </tbody>
         </DnaTable>
       </DnaDataTableCard>

@@ -51,12 +51,18 @@ export default function MasterMaterialsPage() {
   const [minStock, setMinStock] = useState("");
   const [status, setStatus] = useState("ACTIVE");
 
-  const { data: materials = [], isLoading } = useQuery({
+  const {
+    data: materials = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["master-materials", search],
     queryFn: async () => {
       const res = await api.get(`/master/materials?search=${encodeURIComponent(search)}`);
       const body = unwrapResponse(res);
-      const list = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+      const list = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : (() => { throw new Error('Invalid response shape from /master/materials: not an array') })();
       return list as Material[];
     },
   });
@@ -212,7 +218,28 @@ export default function MasterMaterialsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
-                <tr><td colSpan={8} className="text-center py-8 text-slate-400">Memuat...</td></tr>
+                <tr>
+                  <td colSpan={8} className="text-center py-8 text-slate-500">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      <span>Memuat data material...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : isError ? (
+                <tr>
+                  <td colSpan={8} className="text-center py-8 text-rose-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <span>Gagal memuat data material: {(error as any)?.message || "Terjadi kesalahan"}</span>
+                      <button
+                        onClick={() => refetch()}
+                        className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors"
+                      >
+                        Coba Lagi
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               ) : materials.length === 0 ? (
                 <tr><td colSpan={8} className="text-center py-8 text-slate-400">Belum ada data material</td></tr>
               ) : materials.map((m: Material) => (

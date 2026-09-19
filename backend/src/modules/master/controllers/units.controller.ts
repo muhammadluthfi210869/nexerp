@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
@@ -15,8 +17,19 @@ import { UserRole } from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';
 import { UnitsService } from '../services/units.service';
 import { CreateUnitDto, UpdateUnitDto } from '../dto/unit.dto';
+import { ExportQueryDto, ImportDataDto } from '../dto/import-export.dto';
 
 import { ImportExportService } from '../services/import-export.service';
+
+function extractActor(req: any) {
+  const user = req?.user;
+  return {
+    id: user?.id || 'anonymous',
+    roles: Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []),
+    organizationId: user?.organizationId || user?.tenantId || undefined,
+    divisionId: user?.divisionId || undefined,
+  };
+}
 
 @ApiTags('Master Data')
 @Controller('master/units')
@@ -28,16 +41,24 @@ export class UnitsController {
   ) {}
 
   @Get('export')
-  async exportUnits() {
-    return this.importExportService.exportData('unit');
+  async exportUnits(@Query() query: ExportQueryDto, @Req() req: any) {
+    const actor = extractActor(req);
+    return this.importExportService.exportData('unit', query, {
+      actor,
+      tenantId: actor.organizationId,
+      format: query?.format,
+    });
   }
 
   @Post('import')
-  async importUnits(@Body() body: any) {
-    const rows = Array.isArray(body) ? body : body?.rows || body?.data || [];
-    return this.importExportService.importData('unit', rows, {
-      idempotencyKey: body?.idempotencyKey,
-      dryRun: !!body?.dryRun,
+  async importUnits(@Body() body: ImportDataDto, @Req() req: any) {
+    const actor = extractActor(req);
+    const rowsOrCsv = body.csvContent || body.rows || [];
+    return this.importExportService.importData('unit', rowsOrCsv, {
+      actor,
+      tenantId: actor.organizationId,
+      idempotencyKey: body.idempotencyKey,
+      dryRun: !!body.dryRun,
     });
   }
 

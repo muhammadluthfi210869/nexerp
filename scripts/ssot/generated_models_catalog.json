@@ -1938,5 +1938,15 @@
     "owner": "Digital Marketing Team",
     "rationale": "Domain model LandingPageConversion supporting website workflow in website.prisma.",
     "reachable": true
+  },
+  "ImportExecution": {
+    "model": "ImportExecution",
+    "file": "backend/prisma/schema/master-extension.prisma",
+    "domain": "master",
+    "lifecycle_classification": "APPROVED_EXTENSION",
+    "implementation_state": "IMPLEMENTED_EXACT",
+    "owner": "Platform Core Team",
+    "rationale": "Durable idempotency execution record for P06 master import/export operations.",
+    "reachable": true
   }
 }

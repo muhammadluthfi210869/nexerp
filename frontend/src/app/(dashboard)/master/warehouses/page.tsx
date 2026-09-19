@@ -101,22 +101,24 @@ function MasterWarehousesContent() {
   const [accessList, setAccessList] = useState<WarehouseAccessItem[]>([]);
 
   // ── Backend API Query ──
-  const { data: apiWarehouses, refetch: refetchWarehouses } = useQuery({
+  const {
+    data: apiWarehouses,
+    isLoading: isLoadingWarehouses,
+    isError: isErrorWarehouses,
+    error: warehousesError,
+    refetch: refetchWarehouses,
+  } = useQuery({
     queryKey: ["master-warehouses"],
     queryFn: async () => {
-      try {
-        const res = await api.get("/master/warehouses");
-        const body = unwrapResponse(res);
-        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
-      } catch (e) {
-        return [];
-      }
+      const res = await api.get("/master/warehouses");
+      const body = unwrapResponse(res);
+      return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : (() => { throw new Error('Invalid response shape from /master/warehouses: not an array') })();
     },
     staleTime: 30000,
   });
 
   useEffect(() => {
-    if (apiWarehouses && Array.isArray(apiWarehouses) && apiWarehouses.length > 0) {
+    if (apiWarehouses && Array.isArray(apiWarehouses)) {
       const mapped: MasterWarehouseItem[] = apiWarehouses.map((w: any) => ({
         id: w.id,
         kodeGudang: w.code || `GDG-${w.id.substring(0, 4)}`,
@@ -131,8 +133,10 @@ function MasterWarehousesContent() {
         alamatLengkap: w.location || "-",
       }));
       setWarehousesList(mapped);
+    } else if (!isLoadingWarehouses && !isErrorWarehouses) {
+      setWarehousesList([]);
     }
-  }, [apiWarehouses]);
+  }, [apiWarehouses, isLoadingWarehouses, isErrorWarehouses]);
 
   // Filter & Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -522,7 +526,30 @@ function MasterWarehousesContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {paginatedWarehouses.length === 0 ? (
+                {isLoadingWarehouses ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-slate-500">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <span>Memuat data gudang...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : isErrorWarehouses ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-rose-500">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <span>Gagal memuat data gudang: {(warehousesError as any)?.message || "Terjadi kesalahan"}</span>
+                        <button
+                          onClick={() => refetchWarehouses()}
+                          className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors"
+                        >
+                          Coba Lagi
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ) : paginatedWarehouses.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-slate-400">
                       Tidak ada data gudang yang sesuai filter.

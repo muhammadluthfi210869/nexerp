@@ -1,7 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { AuditService } from '../../../platform/audit/audit.service';
+import { OutboxService } from '../../../platform/outbox/outbox.service';
+import { PolicyService, PolicyActor } from '../../../platform/policy/policy.service';
 
 export interface OrganizationConfigDto {
   companyName?: string;
@@ -25,16 +28,35 @@ export interface MasterKodeDto {
 export class SystemConfigService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly auditService?: AuditService
+    private readonly auditService: AuditService,
+    private readonly outboxService: OutboxService,
+    private readonly policyService: PolicyService
   ) {}
 
-  async findAll() {
+  private enforce(actor: PolicyActor | undefined, action: string): void {
+    if (!actor) {
+      throw new ForbiddenException('PERMISSION_DENY_DEFAULT: Missing actor context');
+    }
+    const decision = this.policyService.decide({
+      actor,
+      action: `system_config:${action}`,
+      requiredPermission: `system_config:${action}`,
+      resource: { type: 'system_config', organizationId: actor.organizationId },
+    });
+    if (!decision.allow) {
+      throw new ForbiddenException(decision.reason_code || 'PERMISSION_DENY_DEFAULT');
+    }
+  }
+
+  async findAll(actor?: PolicyActor) {
+    this.enforce(actor, 'read');
     return this.prisma.systemConfig.findMany({
       orderBy: { key: 'asc' },
     });
   }
 
-  async findByKey(key: string) {
+  async findByKey(key: string, actor?: PolicyActor) {
+    this.enforce(actor, 'read');
     const config = await this.prisma.systemConfig.findUnique({
       where: { key },
     });
@@ -44,7 +66,8 @@ export class SystemConfigService {
     return config;
   }
 
-  async update(key: string, value: string, userId?: string) {
+  async update(actor: PolicyActor | undefined, key: string, value: string) {
+    this.enforce(actor, 'write');
     const existing = await this.prisma.systemConfig.findUnique({ where: { key } });
     const beforeState = existing ? { key: existing.key, value: existing.value } : null;
 
@@ -55,25 +78,33 @@ export class SystemConfigService {
         create: { key, value, group: 'GENERAL', updatedAt: new Date() },
       });
 
-      try {
-        await tx.auditLog.create({
-          data: {
-            actorUserId: userId || null,
-            actorRoleSlug: 'ADMIN',
-            actorPermissionSnapshot: { role: 'ADMIN', action: 'update_config' },
-            correlationId: `cfg-${randomUUID()}`,
-            source: 'system-config.service',
-            entityType: 'SystemConfig',
-            entityId: key,
-            action: 'CONFIG_UPDATED',
-            beforeSnapshot: beforeState,
-            afterSnapshot: { key: updated.key, value: updated.value },
-            txId: `cfg:${key}`
-          }
-        });
-      } catch {}
-
-      return updated;
+      return this.auditService.withAudit(
+        tx,
+        {
+          actorUserId: actor?.id || null,
+          actorRoleSlug: actor?.roles?.[0] || 'ADMIN',
+          actorPermissionSnapshot: { roles: actor?.roles, action: 'system_config:write' },
+          tenantId: actor?.organizationId || null,
+          correlationId: randomUUID(),
+          source: 'system-config.service',
+          entityType: 'SystemConfig',
+          entityId: randomUUID(),
+          action: 'CONFIG_UPDATED',
+          beforeSnapshot: beforeState ? { key: beforeState.key, value: beforeState.value } : Prisma.JsonNull,
+          afterSnapshot: { key: updated.key, value: updated.value },
+        },
+        async (txInner: Prisma.TransactionClient) => {
+          await this.outboxService.enqueue(txInner, {
+            eventType: 'SYSTEM_CONFIG_UPDATED',
+            aggregateType: 'SystemConfig',
+            aggregateId: key,
+            payload: { key, value, tenantId: actor?.organizationId },
+            correlationId: randomUUID(),
+            tenantId: actor?.organizationId,
+          });
+          return updated;
+        }
+      );
     });
   }
 
@@ -104,7 +135,8 @@ export class SystemConfigService {
     };
   }
 
-  async updateOrganizationConfig(dto: OrganizationConfigDto, userId?: string): Promise<OrganizationConfigDto> {
+  async updateOrganizationConfig(actor: PolicyActor | undefined, dto: OrganizationConfigDto): Promise<OrganizationConfigDto> {
+    this.enforce(actor, 'write');
     const entries: Array<{ key: string; value: string }> = [];
     if (dto.companyName !== undefined) entries.push({ key: 'company.name', value: dto.companyName });
     if (dto.legalName !== undefined) entries.push({ key: 'organization.legal_name', value: dto.legalName });
@@ -122,34 +154,45 @@ export class SystemConfigService {
         });
       }
 
-      try {
-        await tx.auditLog.create({
-          data: {
-            actorUserId: userId || null,
-            actorRoleSlug: 'ADMIN',
-            actorPermissionSnapshot: { role: 'ADMIN', action: 'update_org_config' },
-            correlationId: `org-${randomUUID()}`,
-            source: 'system-config.service',
-            entityType: 'OrganizationConfig',
-            entityId: 'organization',
-            action: 'ORGANIZATION_CONFIG_UPDATED',
-            afterSnapshot: dto,
-            txId: `org:${randomUUID()}`
-          }
-        });
-      } catch {}
+      return this.auditService.withAudit(
+        tx,
+        {
+          actorUserId: actor?.id || null,
+          actorRoleSlug: actor?.roles?.[0] || 'ADMIN',
+          actorPermissionSnapshot: { roles: actor?.roles, action: 'system_config:write' },
+          tenantId: actor?.organizationId || null,
+          correlationId: randomUUID(),
+          source: 'system-config.service',
+          entityType: 'OrganizationConfig',
+          entityId: randomUUID(),
+          action: 'ORGANIZATION_CONFIG_UPDATED',
+          afterSnapshot: JSON.parse(JSON.stringify(dto)),
+        },
+        async (txInner: Prisma.TransactionClient) => {
+          await this.outboxService.enqueue(txInner, {
+            eventType: 'ORGANIZATION_CONFIG_UPDATED',
+            aggregateType: 'OrganizationConfig',
+            aggregateId: actor?.organizationId || 'global',
+            payload: { changes: dto, tenantId: actor?.organizationId },
+            correlationId: randomUUID(),
+            tenantId: actor?.organizationId,
+          });
+        }
+      );
     });
 
     return this.getOrganizationConfig();
   }
 
-  async findAllKodes() {
+  async findAllKodes(actor?: PolicyActor) {
+    this.enforce(actor, 'read');
     return this.prisma.masterKode.findMany({
       orderBy: { documentType: 'asc' },
     });
   }
 
-  async findKodeByType(documentType: string) {
+  async findKodeByType(documentType: string, actor?: PolicyActor) {
+    this.enforce(actor, 'read');
     const kode = await this.prisma.masterKode.findUnique({
       where: { documentType },
     });
@@ -159,7 +202,8 @@ export class SystemConfigService {
     return kode;
   }
 
-  async createOrUpdateKode(dto: MasterKodeDto, userId?: string) {
+  async createOrUpdateKode(actor: PolicyActor | undefined, dto: MasterKodeDto) {
+    this.enforce(actor, 'write');
     if (!dto.documentType || !dto.format) {
       throw new BadRequestException('documentType and format are required');
     }
@@ -186,24 +230,32 @@ export class SystemConfigService {
         },
       });
 
-      try {
-        await tx.auditLog.create({
-          data: {
-            actorUserId: userId || null,
-            actorRoleSlug: 'ADMIN',
-            actorPermissionSnapshot: { role: 'ADMIN', action: 'update_master_kode' },
-            correlationId: `kode-${randomUUID()}`,
-            source: 'system-config.service',
-            entityType: 'MasterKode',
-            entityId: kode.id,
-            action: 'MASTER_KODE_UPDATED',
-            afterSnapshot: kode,
-            txId: `kode:${kode.id}`
-          }
-        });
-      } catch {}
-
-      return kode;
+      return this.auditService.withAudit(
+        tx,
+        {
+          actorUserId: actor?.id || null,
+          actorRoleSlug: actor?.roles?.[0] || 'ADMIN',
+          actorPermissionSnapshot: { roles: actor?.roles, action: 'system_config:write' },
+          tenantId: actor?.organizationId || null,
+          correlationId: randomUUID(),
+          source: 'system-config.service',
+          entityType: 'MasterKode',
+          entityId: kode.id,
+          action: 'MASTER_KODE_UPDATED',
+          afterSnapshot: kode as any,
+        },
+        async (txInner: Prisma.TransactionClient) => {
+          await this.outboxService.enqueue(txInner, {
+            eventType: 'MASTER_KODE_UPDATED',
+            aggregateType: 'MasterKode',
+            aggregateId: kode.id,
+            payload: { documentType: dto.documentType, format: dto.format },
+            correlationId: randomUUID(),
+            tenantId: actor?.organizationId,
+          });
+          return kode;
+        }
+      );
     });
   }
 }

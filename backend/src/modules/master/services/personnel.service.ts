@@ -1,6 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
-import { UserRole, UserStatus } from '@prisma/client';
+import { AuditService } from '../../../platform/audit/audit.service';
+import { OutboxService } from '../../../platform/outbox/outbox.service';
+import { PolicyService, PolicyActor } from '../../../platform/policy/policy.service';
+import { Prisma, UserRole, UserStatus } from '@prisma/client';
 import { randomUUID } from 'crypto';
 
 export interface CreateUserDto {
@@ -52,9 +55,30 @@ const CANONICAL_ROLES: RoleDefinition[] = [
 
 @Injectable()
 export class PersonnelService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+    private readonly outboxService: OutboxService,
+    private readonly policyService: PolicyService
+  ) {}
 
-  async findAllUsers(query: UserQueryOptions = {}) {
+  private enforce(actor: PolicyActor | undefined, action: string, resourceType: string): void {
+    if (!actor) {
+      throw new ForbiddenException('PERMISSION_DENY_DEFAULT: Missing actor context');
+    }
+    const decision = this.policyService.decide({
+      actor,
+      action: `${resourceType}:${action}`,
+      requiredPermission: `${resourceType}:${action}`,
+      resource: { type: resourceType, organizationId: actor.organizationId },
+    });
+    if (!decision.allow) {
+      throw new ForbiddenException(decision.reason_code || 'PERMISSION_DENY_DEFAULT');
+    }
+  }
+
+  async findAllUsers(actor: PolicyActor | undefined, query: UserQueryOptions = {}) {
+    this.enforce(actor, 'read', 'users');
     const limit = Math.min(Math.max(1, Number(query.limit) || 50), 200);
     const page = Math.max(1, Number(query.page) || 1);
     const skip = (page - 1) * limit;
@@ -97,7 +121,8 @@ export class PersonnelService {
     };
   }
 
-  async findUserById(id: string) {
+  async findUserById(actor: PolicyActor | undefined, id: string) {
+    this.enforce(actor, 'read', 'users');
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
@@ -120,7 +145,8 @@ export class PersonnelService {
     return user;
   }
 
-  async createUser(dto: CreateUserDto, creatorId?: string) {
+  async createUser(actor: PolicyActor | undefined, dto: CreateUserDto, creatorId?: string) {
+    this.enforce(actor, 'write', 'users');
     if (!dto.email || !dto.fullName) {
       throw new BadRequestException('email and fullName are required');
     }
@@ -140,7 +166,6 @@ export class PersonnelService {
         },
       });
 
-      // If organization provided, create primary tenant scope
       if (dto.organizationId) {
         await tx.tenantScope.create({
           data: {
@@ -153,43 +178,38 @@ export class PersonnelService {
         });
       }
 
-      // Record audit log & outbox event
-      const correlationId = randomUUID();
-      try {
-        await tx.auditLog.create({
-          data: {
-            actorUserId: creatorId || null,
-            actorRoleSlug: 'ADMIN',
-            actorPermissionSnapshot: { role: 'ADMIN', action: 'create_user' },
-            correlationId,
-            source: 'personnel.service',
-            entityType: 'User',
-            entityId: user.id,
-            action: 'USER_CREATED',
-            afterSnapshot: { id: user.id, email: user.email, roles: user.roles },
-            txId: `user:${user.id}`
-          }
-        });
-
-        await tx.outboxEvent.create({
-          data: {
+      // Atomic master mutation + audit + outbox via P05 public services
+      return this.auditService.withAudit(
+        tx,
+        {
+          actorUserId: creatorId || actor?.id || null,
+          actorRoleSlug: actor?.roles?.[0] || 'ADMIN',
+          actorPermissionSnapshot: { roles: actor?.roles, action: 'users:write' },
+          tenantId: actor?.organizationId || null,
+          correlationId: randomUUID(),
+          source: 'personnel.service',
+          entityType: 'User',
+          entityId: user.id,
+          action: 'USER_CREATED',
+          afterSnapshot: { id: user.id, email: user.email, roles: user.roles },
+        },
+        async (txInner: Prisma.TransactionClient) => {
+          await this.outboxService.enqueue(txInner, {
             eventType: 'USER_CREATED',
             aggregateType: 'User',
             aggregateId: user.id,
-            idempotencyKey: randomUUID(),
             payload: { userId: user.id, email: user.email, roles: user.roles },
-            correlationId,
-            status: 'PENDING',
-            nextAttemptAt: new Date()
-          }
-        });
-      } catch {}
-
-      return user;
+            correlationId: randomUUID(),
+            tenantId: actor?.organizationId,
+          });
+          return user;
+        }
+      );
     });
   }
 
-  async updateUser(id: string, dto: UpdateUserDto, updaterId?: string) {
+  async updateUser(actor: PolicyActor | undefined, id: string, dto: UpdateUserDto, updaterId?: string) {
+    this.enforce(actor, 'write', 'users');
     const existing = await this.prisma.user.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`User not found: ${id}`);
@@ -205,43 +225,38 @@ export class PersonnelService {
         },
       });
 
-      const correlationId = randomUUID();
-      try {
-        await tx.auditLog.create({
-          data: {
-            actorUserId: updaterId || null,
-            actorRoleSlug: 'ADMIN',
-            actorPermissionSnapshot: { role: 'ADMIN', action: 'update_user' },
-            correlationId,
-            source: 'personnel.service',
-            entityType: 'User',
-            entityId: id,
-            action: 'USER_UPDATED',
-            beforeSnapshot: { fullName: existing.fullName, roles: existing.roles, status: existing.status },
-            afterSnapshot: { fullName: updated.fullName, roles: updated.roles, status: updated.status },
-            txId: `user:${id}`
-          }
-        });
-
-        await tx.outboxEvent.create({
-          data: {
+      return this.auditService.withAudit(
+        tx,
+        {
+          actorUserId: updaterId || actor?.id || null,
+          actorRoleSlug: actor?.roles?.[0] || 'ADMIN',
+          actorPermissionSnapshot: { roles: actor?.roles, action: 'users:write' },
+          tenantId: actor?.organizationId || null,
+          correlationId: randomUUID(),
+          source: 'personnel.service',
+          entityType: 'User',
+          entityId: id,
+          action: 'USER_UPDATED',
+          beforeSnapshot: { fullName: existing.fullName, roles: existing.roles, status: existing.status },
+          afterSnapshot: { fullName: updated.fullName, roles: updated.roles, status: updated.status },
+        },
+        async (txInner: Prisma.TransactionClient) => {
+          await this.outboxService.enqueue(txInner, {
             eventType: 'USER_UPDATED',
             aggregateType: 'User',
             aggregateId: id,
-            idempotencyKey: randomUUID(),
             payload: { userId: id, status: updated.status },
-            correlationId,
-            status: 'PENDING',
-            nextAttemptAt: new Date()
-          }
-        });
-      } catch {}
-
-      return updated;
+            correlationId: randomUUID(),
+            tenantId: actor?.organizationId,
+          });
+          return updated;
+        }
+      );
     });
   }
 
-  async deactivateUser(id: string, deleterId?: string) {
+  async deactivateUser(actor: PolicyActor | undefined, id: string, deleterId?: string) {
+    this.enforce(actor, 'write', 'users');
     const existing = await this.prisma.user.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`User not found: ${id}`);
@@ -256,43 +271,38 @@ export class PersonnelService {
         },
       });
 
-      const correlationId = randomUUID();
-      try {
-        await tx.auditLog.create({
-          data: {
-            actorUserId: deleterId || null,
-            actorRoleSlug: 'ADMIN',
-            actorPermissionSnapshot: { role: 'ADMIN', action: 'deactivate_user' },
-            correlationId,
-            source: 'personnel.service',
-            entityType: 'User',
-            entityId: id,
-            action: 'USER_DEACTIVATED',
-            beforeSnapshot: { status: existing.status },
-            afterSnapshot: { status: deactivated.status, deletedAt: deactivated.deletedAt },
-            txId: `user:${id}`
-          }
-        });
-
-        await tx.outboxEvent.create({
-          data: {
+      return this.auditService.withAudit(
+        tx,
+        {
+          actorUserId: deleterId || actor?.id || null,
+          actorRoleSlug: actor?.roles?.[0] || 'ADMIN',
+          actorPermissionSnapshot: { roles: actor?.roles, action: 'users:write' },
+          tenantId: actor?.organizationId || null,
+          correlationId: randomUUID(),
+          source: 'personnel.service',
+          entityType: 'User',
+          entityId: id,
+          action: 'USER_DEACTIVATED',
+          beforeSnapshot: { status: existing.status },
+          afterSnapshot: { status: deactivated.status, deletedAt: deactivated.deletedAt },
+        },
+        async (txInner: Prisma.TransactionClient) => {
+          await this.outboxService.enqueue(txInner, {
             eventType: 'USER_DEACTIVATED',
             aggregateType: 'User',
             aggregateId: id,
-            idempotencyKey: randomUUID(),
             payload: { userId: id },
-            correlationId,
-            status: 'PENDING',
-            nextAttemptAt: new Date()
-          }
-        });
-      } catch {}
-
-      return deactivated;
+            correlationId: randomUUID(),
+            tenantId: actor?.organizationId,
+          });
+          return deactivated;
+        }
+      );
     });
   }
 
-  async findAllRoles(): Promise<RoleDefinition[]> {
+  async findAllRoles(actor?: PolicyActor): Promise<RoleDefinition[]> {
+    this.enforce(actor, 'read', 'users');
     return CANONICAL_ROLES;
   }
 }

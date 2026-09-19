@@ -119,40 +119,42 @@ function MasterCustomersContent() {
   const [filterColumnValue, setFilterColumnValue] = useState<string>("ALL");
 
   // ── Backend API Query ──
-  const { data: apiCustomers, refetch: refetchCustomers } = useQuery({
+  const {
+    data: apiCustomers,
+    isLoading: isLoadingCustomers,
+    isError: isErrorCustomers,
+    error: customersError,
+    refetch: refetchCustomers,
+  } = useQuery({
     queryKey: ["master-customers", searchQuery],
     queryFn: async () => {
-      try {
-        const res = await api.get(`/master/customers${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""}`);
-        const body = unwrapResponse(res);
-        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
-      } catch (e) {
-        return [];
-      }
+      const res = await api.get(`/master/customers${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""}`);
+      const body = unwrapResponse(res);
+      return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : (() => { throw new Error('Invalid response shape from /master/customers: not an array') })();
     },
     staleTime: 30000,
   });
 
   useEffect(() => {
-    if (apiCustomers && Array.isArray(apiCustomers) && apiCustomers.length > 0) {
+    if (apiCustomers && Array.isArray(apiCustomers)) {
       const mapped: MasterCustomerItem[] = apiCustomers.map((c: any) => ({
         id: c.id,
         customerCode: c.code || `CUST-${c.id.substring(0, 4)}`,
-        nama: c.name,
-        brandName: c.name,
-        pic: c.name,
-        phone: c.phone || "-",
+        nama: c.name || c.clientName || "-",
+        brandName: c.brandName || c.name || "-",
+        pic: c.pic?.name || c.name || "-",
+        phone: c.contactInfo || c.phone || "-",
         email: c.email || undefined,
         kategori: (c.notes?.match(/Kategori:\s*([^|]+)/)?.[1]?.trim() as any) || "Calon Pelanggan",
         penginput: c.notes?.match(/Penginput:\s*([^|]+)/)?.[1]?.trim() || "Admin",
-        kota: c.address || "-",
-        provinsi: "",
-        alamatLengkap: c.address || "-",
+        kota: c.city || c.address || "-",
+        provinsi: c.province || "",
+        alamatLengkap: c.addressDetail || c.address || "-",
         contractType: "Jasa Maklon",
         nominalSoProduk: 0,
         soSampleCount: 0,
         soProdukCount: 0,
-        status: c.isActive ? "ACTIVE" : "INACTIVE",
+        status: c.status === "ACTIVE" || c.isActive ? "ACTIVE" : "INACTIVE",
         sampleFeeTotal: 0,
         sampleStatus: "-",
         produksiBatchTotal: 0,
@@ -163,8 +165,10 @@ function MasterCustomersContent() {
         escrowDeposit: 0,
       }));
       setCustomersList(mapped);
+    } else if (!isLoadingCustomers && !isErrorCustomers) {
+      setCustomersList([]);
     }
-  }, [apiCustomers]);
+  }, [apiCustomers, isLoadingCustomers, isErrorCustomers]);
 
   // Sorting
   const [sortColumn, setSortColumn] = useState<string | null>(null);
@@ -663,7 +667,30 @@ function MasterCustomersContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {paginatedCustomers.length === 0 ? (
+                {isLoadingCustomers ? (
+                  <tr>
+                    <td colSpan={10} className="p-8 text-center text-slate-500">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <span>Memuat data pelanggan...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : isErrorCustomers ? (
+                  <tr>
+                    <td colSpan={10} className="p-8 text-center text-rose-500">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <span>Gagal memuat data pelanggan: {(customersError as any)?.message || "Terjadi kesalahan"}</span>
+                        <button
+                          onClick={() => refetchCustomers()}
+                          className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors"
+                        >
+                          Coba Lagi
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ) : paginatedCustomers.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="p-8 text-center text-slate-400">
                       Tidak ada data pelanggan yang sesuai filter.

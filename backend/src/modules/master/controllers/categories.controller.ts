@@ -7,16 +7,29 @@ import {
   Param,
   Delete,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { CategoriesService } from '../services/categories.service';
 import { CreateCategoryDto, UpdateCategoryDto } from '../dto/category.dto';
+import { ExportQueryDto, ImportDataDto } from '../dto/import-export.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 import { ImportExportService } from '../services/import-export.service';
 
+function extractActor(req: any) {
+  const user = req?.user;
+  return {
+    id: user?.id || 'anonymous',
+    roles: Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []),
+    organizationId: user?.organizationId || user?.tenantId || undefined,
+    divisionId: user?.divisionId || undefined,
+  };
+}
+
 @ApiTags('Master Data')
+@ApiBearerAuth()
 @Controller('master/categories')
 @UseGuards(JwtAuthGuard)
 export class CategoriesController {
@@ -26,16 +39,24 @@ export class CategoriesController {
   ) {}
 
   @Get('export')
-  async exportCategories(@Query() query?: any) {
-    return this.importExportService.exportData('category', query);
+  async exportCategories(@Query() query: ExportQueryDto, @Req() req: any) {
+    const actor = extractActor(req);
+    return this.importExportService.exportData('category', query, {
+      actor,
+      tenantId: actor.organizationId,
+      format: query?.format,
+    });
   }
 
   @Post('import')
-  async importCategories(@Body() body: any) {
-    const rows = Array.isArray(body) ? body : body?.rows || body?.data || [];
-    return this.importExportService.importData('category', rows, {
-      idempotencyKey: body?.idempotencyKey,
-      dryRun: !!body?.dryRun,
+  async importCategories(@Body() body: ImportDataDto, @Req() req: any) {
+    const actor = extractActor(req);
+    const rowsOrCsv = body.csvContent || body.rows || [];
+    return this.importExportService.importData('category', rowsOrCsv, {
+      actor,
+      tenantId: actor.organizationId,
+      idempotencyKey: body.idempotencyKey,
+      dryRun: !!body.dryRun,
     });
   }
 

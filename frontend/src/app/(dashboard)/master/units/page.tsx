@@ -53,7 +53,13 @@ export default function MasterUnitsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<UnitForm>(EMPTY_FORM);
 
-  const { data: units, isLoading } = useQuery({
+  const {
+    data: units,
+    isLoading,
+    isError,
+    error: unitsError,
+    refetch,
+  } = useQuery({
     queryKey: ["units"],
     queryFn: async () => {
       const res = await api.get("/master/units");
@@ -189,21 +195,38 @@ export default function MasterUnitsPage() {
             </tr>
           </DnaTableHead>
           <tbody className={DNA_TABLE_CLASSES.tbody}>
-            {isLoading && (
+            {isLoading ? (
               <tr>
                 <td colSpan={7} className="p-6 text-center text-xs text-slate-400">
-                  Memuat...
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <span>Memuat data satuan...</span>
+                  </div>
                 </td>
               </tr>
-            )}
-            {!isLoading && (!units || units.length === 0) && (
+            ) : isError ? (
+              <tr>
+                <td colSpan={7} className="p-6 text-center text-xs text-rose-500">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <span>Gagal memuat data satuan: {(unitsError as any)?.message || "Terjadi kesalahan"}</span>
+                    <button
+                      type="button"
+                      onClick={() => refetch()}
+                      className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors inline-block"
+                    >
+                      Coba Lagi
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ) : !units || units.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-6 text-center text-xs text-slate-400">
                   Belum ada satuan. Klik "Tambah Satuan" untuk membuat.
                 </td>
               </tr>
-            )}
-            {units?.map((u, idx) => (
+            ) : (
+              units?.map((u, idx) => (
               <tr key={u.id} className={DNA_TABLE_CLASSES.tr}>
                 <td className={cn(DNA_TABLE_CLASSES.td, "text-center font-mono text-slate-400")}>
                   {idx + 1}
@@ -257,7 +280,8 @@ export default function MasterUnitsPage() {
                   </div>
                 </td>
               </tr>
-            ))}
+            ))
+          )}
           </tbody>
         </DnaTable>
       </DnaDataTableCard>

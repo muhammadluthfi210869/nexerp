@@ -8,6 +8,7 @@ import {
   Body,
   Param,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -19,8 +20,19 @@ import {
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { MaterialsService } from '../services/materials.service';
 import { CreateMaterialDto, UpdateMaterialDto } from '../dto/material.dto';
+import { ExportQueryDto, ImportDataDto } from '../dto/import-export.dto';
 
 import { ImportExportService } from '../services/import-export.service';
+
+function extractActor(req: any) {
+  const user = req?.user;
+  return {
+    id: user?.id || 'anonymous',
+    roles: Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []),
+    organizationId: user?.organizationId || user?.tenantId || undefined,
+    divisionId: user?.divisionId || undefined,
+  };
+}
 
 @ApiTags('Master Data - Materials / Barang')
 @ApiBearerAuth()
@@ -34,17 +46,25 @@ export class MaterialsController {
 
   @Get('export')
   @ApiOperation({ summary: 'Export materials' })
-  async exportMaterials(@Query() query?: any) {
-    return this.importExportService.exportData('material', query);
+  async exportMaterials(@Query() query: ExportQueryDto, @Req() req: any) {
+    const actor = extractActor(req);
+    return this.importExportService.exportData('material', query, {
+      actor,
+      tenantId: actor.organizationId,
+      format: query?.format,
+    });
   }
 
   @Post('import')
   @ApiOperation({ summary: 'Import materials' })
-  async importMaterials(@Body() body: any) {
-    const rows = Array.isArray(body) ? body : body?.rows || body?.data || [];
-    return this.importExportService.importData('material', rows, {
-      idempotencyKey: body?.idempotencyKey,
-      dryRun: !!body?.dryRun,
+  async importMaterials(@Body() body: ImportDataDto, @Req() req: any) {
+    const actor = extractActor(req);
+    const rowsOrCsv = body.csvContent || body.rows || [];
+    return this.importExportService.importData('material', rowsOrCsv, {
+      actor,
+      tenantId: actor.organizationId,
+      idempotencyKey: body.idempotencyKey,
+      dryRun: !!body.dryRun,
     });
   }
 

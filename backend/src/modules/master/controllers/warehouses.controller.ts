@@ -7,9 +7,11 @@ import {
   Param,
   Delete,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { WarehousesService } from '../services/warehouses.service';
 import { CreateWarehouseDto, UpdateWarehouseDto } from '../dto/warehouse.dto';
+import { WarehouseAccessDto } from '../dto/warehouse-access.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 
 @Controller('master/warehouses')
@@ -23,13 +25,13 @@ export class WarehousesController {
   }
 
   @Get('access')
-  async findAccess() {
-    return this.warehousesService.findAccess();
+  async findAccess(@Req() req: any) {
+    return this.warehousesService.findAccess(req?.user?.id);
   }
 
   @Post('access')
-  async grantAccess(@Body() body: { userId: string; warehouseId: string; canRead?: boolean; canWrite?: boolean; canApprove?: boolean }) {
-    return this.warehousesService.grantAccess(body);
+  async grantAccess(@Body() body: WarehouseAccessDto, @Req() req: any) {
+    return this.warehousesService.grantAccess(body, req?.user?.id);
   }
 
   @Get()

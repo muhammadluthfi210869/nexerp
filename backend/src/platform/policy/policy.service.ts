@@ -131,6 +131,9 @@ export class PolicyService {
     this.rolePermissionsMap.set('superadmin', superAdminPerms);
     this.rolePermissionsMap.set('super_admin', superAdminPerms);
     this.rolePermissionsMap.set('role-nex-super-admin', superAdminPerms);
+    this.rolePermissionsMap.set('admin', superAdminPerms);
+    this.rolePermissionsMap.set('administrator', superAdminPerms);
+    this.rolePermissionsMap.set('role-nex-administrator', superAdminPerms);
 
     this.matrix = { slugs: Array.from(slugSet), raw: text };
     this.loadedAt = Date.now();
@@ -163,6 +166,11 @@ export class PolicyService {
         ]);
         this.rolePermissionsMap.set('commercial', commPerms);
         this.rolePermissionsMap.set('sales', commPerms);
+
+        const adminPerms = new Set(['*']);
+        this.rolePermissionsMap.set('admin', adminPerms);
+        this.rolePermissionsMap.set('administrator', adminPerms);
+        this.rolePermissionsMap.set('role-nex-administrator', adminPerms);
       }
     }
   }

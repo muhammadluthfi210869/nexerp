@@ -137,40 +137,44 @@ function MasterGoodsContent() {
   const [pageSize, setPageSize] = useState(10);
 
   // ── Backend API Queries ──
-  const { data: materialsApiResponse, isLoading: isLoadingMaterials, refetch: refetchMaterials } = useQuery({
+  const {
+    data: materialsApiResponse,
+    isLoading: isLoadingMaterials,
+    isError: isErrorMaterials,
+    error: materialsError,
+    refetch: refetchMaterials,
+  } = useQuery({
     queryKey: ["master-materials", currentPage, pageSize, searchQuery, filterColumnValue],
     queryFn: async () => {
-      try {
-        const params = new URLSearchParams();
-        params.set("page", String(currentPage));
-        params.set("limit", String(pageSize));
-        if (searchQuery.trim()) params.set("search", searchQuery.trim());
-        const res = await api.get(`/master/materials?${params.toString()}`);
-        return unwrapResponse(res);
-      } catch (err) {
-        return [];
-      }
+      const params = new URLSearchParams();
+      params.set("page", String(currentPage));
+      params.set("limit", String(pageSize));
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
+      const res = await api.get(`/master/materials?${params.toString()}`);
+      return unwrapResponse(res);
     },
     staleTime: 30000,
   });
 
-  const { data: categoriesApiResponse } = useQuery({
+  const {
+    data: categoriesApiResponse,
+    isLoading: isLoadingCategories,
+    isError: isErrorCategories,
+    error: categoriesError,
+    refetch: refetchCategories,
+  } = useQuery({
     queryKey: ["master-categories"],
     queryFn: async () => {
-      try {
-        const res = await api.get("/master/categories");
-        const body = unwrapResponse(res);
-        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : null;
-      } catch {
-        return null;
-      }
+      const res = await api.get("/master/categories");
+      const body = unwrapResponse(res);
+      return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
     },
     staleTime: 60000,
   });
 
   // Sync materials from backend
   useEffect(() => {
-    if (materialsApiResponse && Array.isArray(materialsApiResponse.data) && materialsApiResponse.data.length > 0) {
+    if (materialsApiResponse && Array.isArray(materialsApiResponse.data)) {
       const mapped: MasterBarangItem[] = materialsApiResponse.data.map((m: any) => ({
         id: m.id,
         kode: m.code || `BRG-${m.id.substring(0, 6)}`,
@@ -193,12 +197,14 @@ function MasterGoodsContent() {
       if (typeof materialsApiResponse.total === "number") {
         setServerTotal(materialsApiResponse.total);
       }
+    } else if (!isLoadingMaterials && !isErrorMaterials) {
+      setGoodsList([]);
     }
-  }, [materialsApiResponse]);
+  }, [materialsApiResponse, isLoadingMaterials, isErrorMaterials]);
 
   // Sync categories from backend
   useEffect(() => {
-    if (categoriesApiResponse && Array.isArray(categoriesApiResponse) && categoriesApiResponse.length > 0) {
+    if (categoriesApiResponse && Array.isArray(categoriesApiResponse)) {
       const mapped: KategoriBarangItem[] = categoriesApiResponse.map((c: any) => ({
         id: c.id,
         kode: c.code,
@@ -209,8 +215,10 @@ function MasterGoodsContent() {
         akunCogs: "51010 - Beban Pokok",
       }));
       setCategoriesList(mapped);
+    } else if (!isLoadingCategories && !isErrorCategories) {
+      setCategoriesList([]);
     }
-  }, [categoriesApiResponse]);
+  }, [categoriesApiResponse, isLoadingCategories, isErrorCategories]);
 
   // Unique lists
   const uniqueSuppliers = useMemo(() => Array.from(new Set(goodsList.map((g) => g.supplierAsal))), [goodsList]);
@@ -656,7 +664,30 @@ function MasterGoodsContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {paginatedGoods.length === 0 ? (
+                {isLoadingMaterials ? (
+                  <tr>
+                    <td colSpan={8} className="p-10 text-center text-slate-500">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <span>Memuat data barang...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : isErrorMaterials ? (
+                  <tr>
+                    <td colSpan={8} className="p-10 text-center text-rose-500">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <span>Gagal memuat data barang: {(materialsError as any)?.message || "Terjadi kesalahan"}</span>
+                        <button
+                          onClick={() => refetchMaterials()}
+                          className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors"
+                        >
+                          Coba Lagi
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ) : paginatedGoods.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="p-10 text-center text-slate-400">
                       Tidak ada barang yang sesuai dengan kriteria filter saat ini.
@@ -758,22 +789,53 @@ function MasterGoodsContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {categoriesList.map((cat, idx) => (
-                  <tr key={cat.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3.5 text-slate-400 tabular-nums">{idx + 1}</td>
-                    <td className="p-3.5 whitespace-nowrap">
-                      <DnaCell.Code value={cat.kode} />
-                    </td>
-                    <td className="p-3.5 font-bold text-slate-900 uppercase">{cat.kategori}</td>
-                    <td className="p-3.5 text-slate-600">{cat.deskripsi}</td>
-                    <td className="p-3.5 text-center whitespace-nowrap">
-                      <DnaCell.Actions
-                        onEdit={() => handleOpenEditCategory(cat)}
-                        editTitle="Sunting Kategori"
-                      />
+                {isLoadingCategories ? (
+                  <tr>
+                    <td colSpan={5} className="p-10 text-center text-slate-500">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <span>Memuat data kategori...</span>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : isErrorCategories ? (
+                  <tr>
+                    <td colSpan={5} className="p-10 text-center text-rose-500">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <span>Gagal memuat data kategori: {(categoriesError as any)?.message || "Terjadi kesalahan"}</span>
+                        <button
+                          onClick={() => refetchCategories()}
+                          className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors"
+                        >
+                          Coba Lagi
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ) : categoriesList.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-10 text-center text-slate-400">
+                      Tidak ada data kategori.
+                    </td>
+                  </tr>
+                ) : (
+                  categoriesList.map((cat, idx) => (
+                    <tr key={cat.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="p-3.5 text-slate-400 tabular-nums">{idx + 1}</td>
+                      <td className="p-3.5 whitespace-nowrap">
+                        <DnaCell.Code value={cat.kode} />
+                      </td>
+                      <td className="p-3.5 font-bold text-slate-900 uppercase">{cat.kategori}</td>
+                      <td className="p-3.5 text-slate-600">{cat.deskripsi}</td>
+                      <td className="p-3.5 text-center whitespace-nowrap">
+                        <DnaCell.Actions
+                          onEdit={() => handleOpenEditCategory(cat)}
+                          editTitle="Sunting Kategori"
+                        />
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </DnaDataTableCard>

@@ -1,15 +1,10 @@
 {
-  "generated_at": "2026-09-19T08:40:43.068Z",
+  "generated_at": "2026-09-19T21:21:44.248Z",
   "phase": "P02",
-  "passed_tests": 10,
+  "passed_tests": 14,
   "total_tests": 14,
-  "verdict": "FAIL",
-  "failures": [
-    "schema_diff: Missing implementation model in registry: AuthSession; Missing implementation model in registry: MfaSecret; Missing implementation model in registry: MfaChallenge; Missing implementation model in registry: AuditLog; Missing implementation model in registry: Approval; Missing implementation model in registry: OutboxEvent; Missing implementation model in registry: OutboxDlq; Missing implementation model in registry: TenantScope; Missing implementation model in registry: CommunicationPolicy; Missing migration in registry: \"backend/prisma/migrations/20260918_p05_platform_controls/migration.sql\" (count: 1); Missing migration in registry: \"backend/prisma/migrations/20260918120000_p04_deduplicate_slug_indexes/migration.sql\" (count: 1)",
-    "event_workflow_diff: Event reachability mismatch: \"backend/src/modules/bussdev/services/lead.service.ts\"|\"LeadService\"|\"PUBLISHER\"|\"ACTIVITY_EVENT\" is marked reachable=false, but graph derived reachable=true; Event reachability mismatch: \"backend/src/modules/bussdev/services/lead.service.ts\"|\"LeadService\"|\"PUBLISHER\"|\"ACTIVITY_EVENT\" is marked reachable=false, but graph derived reachable=true; Event reachability mismatch: \"backend/src/modules/bussdev/services/lead.service.ts\"|\"LeadService\"|\"PUBLISHER\"|\"BUSSDEV_EVENTS.STAGE_UPDATED\" is marked reachable=false, but graph derived reachable=true; Event reachability mismatch: \"backend/src/modules/bussdev/services/lead.service.ts\"|\"LeadService\"|\"PUBLISHER\"|\"lead.status.changed\" is marked reachable=false, but graph derived reachable=true; Event reachability mismatch: \"backend/src/modules/bussdev/services/lead.service.ts\"|\"LeadService\"|\"PUBLISHER\"|\"sample.requested\" is marked reachable=false, but graph derived reachable=true; Event reachability mismatch: \"backend/src/modules/bussdev/services/pipeline.service.ts\"|\"PipelineService\"|\"PUBLISHER\"|\"ACTIVITY_EVENT\" is marked reachable=false, but graph derived reachable=true; Event reachability mismatch: \"backend/src/modules/bussdev/services/pipeline.service.ts\"|\"PipelineService\"|\"PUBLISHER\"|\"sample.revision.overlimit\" is marked reachable=false, but graph derived reachable=true",
-    "caller_import_registration_scan: Missing service in registry: \"backend/src/modules/master/services/import-export.service.ts\"|\"ImportExportService\" (count: 1); Missing service in registry: \"backend/src/platform/approval/approval.service.ts\"|\"ApprovalService\" (count: 1); Missing service in registry: \"backend/src/platform/audit/audit.service.ts\"|\"AuditService\" (count: 1); Missing service in registry: \"backend/src/platform/auth/mfa.service.ts\"|\"MfaService\" (count: 1); Missing service in registry: \"backend/src/platform/auth/session.service.ts\"|\"SessionService\" (count: 1); Missing service in registry: \"backend/src/platform/outbox/outbox.service.ts\"|\"OutboxService\" (count: 1); Missing service in registry: \"backend/src/platform/policy/policy.service.ts\"|\"PolicyService\" (count: 1); Missing service in registry: \"backend/src/platform/scope/scope.service.ts\"|\"ScopeService\" (count: 1); Missing module in registry: \"backend/src/platform/config/config.module.ts\"|\"PlatformConfigModule\" (count: 1); Missing module in registry: \"backend/src/platform/platform.module.ts\"|\"PlatformModule\" (count: 1); Service reachability mismatch: backend/src/modules/bussdev/services/analytics.service.ts::AnalyticsService is marked reachable=false, but graph derived reachable=true; Service reachability mismatch: backend/src/modules/bussdev/services/lead.service.ts::LeadService is marked reachable=false, but graph derived reachable=true; Service reachability mismatch: backend/src/modules/bussdev/services/pipeline.service.ts::PipelineService is marked reachable=false, but graph derived reachable=true; Service reachability mismatch: backend/src/modules/bussdev/services/retention.service.ts::RetentionService is marked reachable=false, but graph derived reachable=true; Service reachability mismatch: backend/src/modules/finance/journal-engine.service.ts::JournalEngineService is marked reachable=false, but graph derived reachable=true; Service reachability mismatch: backend/src/modules/system/services/error-aggregation.service.ts::ErrorAggregationService is marked reachable=false, but graph derived reachable=true",
-    "unused_export_dependency_scan: Missing barrel file in registry: \"backend/src/platform/index.ts\" (count: 1); Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./approval/approval.service\" (count: 1); Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./audit/audit.service\" (count: 1); Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./auth/mfa.service\" (count: 1); Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./auth/session.service\" (count: 1); Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./communication/acl.adapter\" (count: 1); Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./config/config.module\" (count: 1); Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./errors/error.factory\" (count: 1); Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./errors/error.filter\" (count: 1); Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./outbox/outbox.service\" (count: 1); Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./platform.module\" (count: 1); Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./policy/policy.service\" (count: 1); Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./scope/scope.service\" (count: 1)"
-  ],
+  "verdict": "PASS",
+  "failures": [],
   "results": {
     "implementation_readiness_audit": {
       "status": "PASS",
@@ -26,25 +21,13 @@
       }
     },
     "schema_diff": {
-      "status": "FAIL",
+      "status": "PASS",
       "canonical_models": 92,
       "reconciled_canonical_models": 92,
-      "implementation_models": 203,
-      "classified_implementation_models": 194,
+      "implementation_models": 204,
+      "classified_implementation_models": 204,
       "typed_mappings_verified": true,
-      "invalid_targets": [
-        "Missing implementation model in registry: AuthSession",
-        "Missing implementation model in registry: MfaSecret",
-        "Missing implementation model in registry: MfaChallenge",
-        "Missing implementation model in registry: AuditLog",
-        "Missing implementation model in registry: Approval",
-        "Missing implementation model in registry: OutboxEvent",
-        "Missing implementation model in registry: OutboxDlq",
-        "Missing implementation model in registry: TenantScope",
-        "Missing implementation model in registry: CommunicationPolicy",
-        "Missing migration in registry: \"backend/prisma/migrations/20260918_p05_platform_controls/migration.sql\" (count: 1)",
-        "Missing migration in registry: \"backend/prisma/migrations/20260918120000_p04_deduplicate_slug_indexes/migration.sql\" (count: 1)"
-      ]
+      "invalid_targets": []
     },
     "openapi_diff": {
       "status": "PASS",
@@ -69,7 +52,7 @@
       "implementation_auth_type": "Enum UserRole + dynamic employee role mapping + RBAC guards"
     },
     "event_workflow_diff": {
-      "status": "FAIL",
+      "status": "PASS",
       "canonical_integration_events": 76,
       "canonical_workflow_state_machines": 37,
       "implementation_events_count": 217,
@@ -78,42 +61,17 @@
         "extraneous": [],
         "pass": true
       },
-      "event_errors": [
-        "Event reachability mismatch: \"backend/src/modules/bussdev/services/lead.service.ts\"|\"LeadService\"|\"PUBLISHER\"|\"ACTIVITY_EVENT\" is marked reachable=false, but graph derived reachable=true",
-        "Event reachability mismatch: \"backend/src/modules/bussdev/services/lead.service.ts\"|\"LeadService\"|\"PUBLISHER\"|\"ACTIVITY_EVENT\" is marked reachable=false, but graph derived reachable=true",
-        "Event reachability mismatch: \"backend/src/modules/bussdev/services/lead.service.ts\"|\"LeadService\"|\"PUBLISHER\"|\"BUSSDEV_EVENTS.STAGE_UPDATED\" is marked reachable=false, but graph derived reachable=true",
-        "Event reachability mismatch: \"backend/src/modules/bussdev/services/lead.service.ts\"|\"LeadService\"|\"PUBLISHER\"|\"lead.status.changed\" is marked reachable=false, but graph derived reachable=true",
-        "Event reachability mismatch: \"backend/src/modules/bussdev/services/lead.service.ts\"|\"LeadService\"|\"PUBLISHER\"|\"sample.requested\" is marked reachable=false, but graph derived reachable=true",
-        "Event reachability mismatch: \"backend/src/modules/bussdev/services/pipeline.service.ts\"|\"PipelineService\"|\"PUBLISHER\"|\"ACTIVITY_EVENT\" is marked reachable=false, but graph derived reachable=true",
-        "Event reachability mismatch: \"backend/src/modules/bussdev/services/pipeline.service.ts\"|\"PipelineService\"|\"PUBLISHER\"|\"sample.revision.overlimit\" is marked reachable=false, but graph derived reachable=true"
-      ],
+      "event_errors": [],
       "implementation_event_mechanism": "NestJS EventEmitter2 + StateTransitionLog + Audit outbox"
     },
     "caller_import_registration_scan": {
-      "status": "FAIL",
-      "backend_controllers_registered": 96,
-      "backend_services_registered": 118,
-      "backend_modules_registered": 70,
-      "reachable_count": 253,
-      "dead_count": 31,
-      "errors": [
-        "Missing service in registry: \"backend/src/modules/master/services/import-export.service.ts\"|\"ImportExportService\" (count: 1)",
-        "Missing service in registry: \"backend/src/platform/approval/approval.service.ts\"|\"ApprovalService\" (count: 1)",
-        "Missing service in registry: \"backend/src/platform/audit/audit.service.ts\"|\"AuditService\" (count: 1)",
-        "Missing service in registry: \"backend/src/platform/auth/mfa.service.ts\"|\"MfaService\" (count: 1)",
-        "Missing service in registry: \"backend/src/platform/auth/session.service.ts\"|\"SessionService\" (count: 1)",
-        "Missing service in registry: \"backend/src/platform/outbox/outbox.service.ts\"|\"OutboxService\" (count: 1)",
-        "Missing service in registry: \"backend/src/platform/policy/policy.service.ts\"|\"PolicyService\" (count: 1)",
-        "Missing service in registry: \"backend/src/platform/scope/scope.service.ts\"|\"ScopeService\" (count: 1)",
-        "Missing module in registry: \"backend/src/platform/config/config.module.ts\"|\"PlatformConfigModule\" (count: 1)",
-        "Missing module in registry: \"backend/src/platform/platform.module.ts\"|\"PlatformModule\" (count: 1)",
-        "Service reachability mismatch: backend/src/modules/bussdev/services/analytics.service.ts::AnalyticsService is marked reachable=false, but graph derived reachable=true",
-        "Service reachability mismatch: backend/src/modules/bussdev/services/lead.service.ts::LeadService is marked reachable=false, but graph derived reachable=true",
-        "Service reachability mismatch: backend/src/modules/bussdev/services/pipeline.service.ts::PipelineService is marked reachable=false, but graph derived reachable=true",
-        "Service reachability mismatch: backend/src/modules/bussdev/services/retention.service.ts::RetentionService is marked reachable=false, but graph derived reachable=true",
-        "Service reachability mismatch: backend/src/modules/finance/journal-engine.service.ts::JournalEngineService is marked reachable=false, but graph derived reachable=true",
-        "Service reachability mismatch: backend/src/modules/system/services/error-aggregation.service.ts::ErrorAggregationService is marked reachable=false, but graph derived reachable=true"
-      ]
+      "status": "PASS",
+      "backend_controllers_registered": 99,
+      "backend_services_registered": 129,
+      "backend_modules_registered": 72,
+      "reachable_count": 275,
+      "dead_count": 25,
+      "errors": []
     },
     "orphan_scan": {
       "status": "PASS",
@@ -123,24 +81,10 @@
       "orphan_details": []
     },
     "unused_export_dependency_scan": {
-      "status": "FAIL",
+      "status": "PASS",
       "backend_production_dependencies": 38,
       "frontend_production_dependencies": 26,
-      "dep_errors": [
-        "Missing barrel file in registry: \"backend/src/platform/index.ts\" (count: 1)",
-        "Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./approval/approval.service\" (count: 1)",
-        "Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./audit/audit.service\" (count: 1)",
-        "Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./auth/mfa.service\" (count: 1)",
-        "Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./auth/session.service\" (count: 1)",
-        "Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./communication/acl.adapter\" (count: 1)",
-        "Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./config/config.module\" (count: 1)",
-        "Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./errors/error.factory\" (count: 1)",
-        "Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./errors/error.filter\" (count: 1)",
-        "Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./outbox/outbox.service\" (count: 1)",
-        "Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./platform.module\" (count: 1)",
-        "Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./policy/policy.service\" (count: 1)",
-        "Missing barrel member in registry: \"backend/src/platform/index.ts\"|\"STAR\"|\"*\"|\"./scope/scope.service\" (count: 1)"
-      ]
+      "dep_errors": []
     },
     "duplicate_implementation_scan": {
       "status": "PASS",
@@ -166,15 +110,15 @@
       "total_screens_scanned": 272,
       "screens_with_hex_colors": 42,
       "screens_with_inline_styles": 29,
-      "screens_with_raw_buttons": 79,
+      "screens_with_raw_buttons": 78,
       "inventory_complete": true
     },
     "dna_migration_disposition": {
       "status": "PASS",
       "total_screens_dispositioned": 272,
       "disposition_breakdown": {
-        "PARTIALLY_MIGRATED": 103,
-        "ALREADY_DNA": 110,
+        "PARTIALLY_MIGRATED": 102,
+        "ALREADY_DNA": 111,
         "SCHEDULED_P19_MIGRATION": 57,
         "REDIRECT_ONLY": 2
       },

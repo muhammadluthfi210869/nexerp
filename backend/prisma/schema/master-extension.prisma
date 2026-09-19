@@ -65,3 +65,24 @@ model MasterKode {
 
   @@map("master_kodes")
 }
+
+/// ImportExecution — Persistent database-backed idempotency record for master bulk import/export
+/// Satisfies P06-R3-B2 durable idempotency standard
+model ImportExecution {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String?   @db.Uuid
+  entityType     String
+  idempotencyKey String
+  payloadDigest  String
+  status         String    @default("SUCCEEDED")
+  resultSummary  Json?
+  totalRows      Int       @default(0)
+  importedRows   Int       @default(0)
+  errorMessage   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([tenantId, entityType, idempotencyKey])
+  @@index([idempotencyKey])
+  @@map("import_executions")
+}

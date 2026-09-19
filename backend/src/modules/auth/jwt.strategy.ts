@@ -9,6 +9,9 @@ interface JwtPayload {
   sub: string;
   email: string;
   roles: string[];
+  organizationId?: string;
+  tenantId?: string;
+  divisionId?: string;
   sessionId?: string;
   iat?: number;
   exp?: number;
@@ -52,7 +55,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         throw new UnauthorizedException(`Session invalid: ${verification.code}`);
       }
     }
-    return user;
+    return {
+      ...user,
+      organizationId: payload.organizationId || payload.tenantId,
+      tenantId: payload.tenantId || payload.organizationId,
+      divisionId: payload.divisionId,
+    };
   }
 }
 

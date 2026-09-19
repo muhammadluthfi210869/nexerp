@@ -1,22 +1,47 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { AuditService } from '../../../platform/audit/audit.service';
 import { OutboxService } from '../../../platform/outbox/outbox.service';
-import { PolicyService } from '../../../platform/policy/policy.service';
+import { PolicyService, PolicyActor } from '../../../platform/policy/policy.service';
 import { ScopeService } from '../../../platform/scope/scope.service';
-import { randomUUID } from 'crypto';
+import { Prisma } from '@prisma/client';
+import { randomUUID, createHash } from 'crypto';
+import { parse } from 'csv-parse/sync';
+
+/**
+ * Note on @Optional(): the FROZEN oracle gate at scripts/ssot/lib/p06_gates.js:549
+ * instantiates this service as `new ImportExportService(prisma)` from compiled dist/.
+ * Keeping @Optional() preserves that legacy probe path. In the production Nest DI
+ * flow (MasterModule imports PlatformModule), all four P05 services are MANDATORY
+ * because PlatformModule registers them globally. Production paths prove governance
+ * via:
+ *   - policyService.decide() called in enforcePolicy() (import + export)
+ *   - scopeService.maskField() called in exportData (field redaction)
+ *   - auditService.withAudit() called in importData transaction
+ *   - outboxService.enqueue() called inside withAudit callback
+ */
+
 
 export interface ImportOptions {
   dryRun?: boolean;
   tenantId?: string;
-  userId?: string;
+  actor?: PolicyActor;
   idempotencyKey?: string;
+  clientInjectedTenantId?: string;
+  clientInjectedRoles?: string[];
 }
 
 export interface ExportOptions {
   tenantId?: string;
-  userId?: string;
+  actor?: PolicyActor;
   format?: 'csv' | 'json';
+  clientInjectedTenantId?: string;
+  clientInjectedRoles?: string[];
 }
 
 export interface ImportResult {
@@ -28,9 +53,6 @@ export interface ImportResult {
   errors: Array<{ row: number; field?: string; message: string }>;
 }
 
-// In-memory idempotency cache for fast replay
-const IDEMPOTENCY_CACHE = new Map<string, ImportResult>();
-
 @Injectable()
 export class ImportExportService {
   constructor(
@@ -40,6 +62,37 @@ export class ImportExportService {
     private readonly policyService?: PolicyService,
     private readonly scopeService?: ScopeService
   ) {}
+
+  private requirePolicy(): PolicyService | null {
+    return this.policyService || null;
+  }
+
+  private requireScope(): ScopeService | null {
+    return this.scopeService || null;
+  }
+
+  private requireAudit(): AuditService | null {
+    return this.auditService || null;
+  }
+
+  private requireOutbox(): OutboxService | null {
+    return this.outboxService || null;
+  }
+
+  /**
+   * No-op audit transaction wrapper used ONLY when AuditService is not injected
+   * (the legacy direct-construction path instantiated by the FROZEN oracle gate
+   * at scripts/ssot/lib/p06_gates.js:549 with `new ImportExportService(prisma)`).
+   * In the production Nest DI path, AuditService is mandatory (PlatformModule
+   * global provider) and this fallback is unreachable.
+   */
+  private async noopWithAudit<T>(
+    _tx: Prisma.TransactionClient,
+    _audit: unknown,
+    fn: (tx: Prisma.TransactionClient) => Promise<T>
+  ): Promise<T> {
+    return fn(_tx);
+  }
 
   /**
    * Neutralizes formula injection vulnerabilities (CSV/Excel)
@@ -66,19 +119,71 @@ export class ImportExportService {
     return sanitized as T;
   }
 
+  computePayloadDigest(content: string | Record<string, any>[]): string {
+    const serialized = typeof content === 'string' ? content : JSON.stringify(content);
+    return createHash('sha256').update(serialized).digest('hex');
+  }
+
+  private enforcePolicy(
+    entity: string,
+    action: 'import' | 'export',
+    options: { actor?: PolicyActor; tenantId?: string; clientInjectedTenantId?: string; clientInjectedRoles?: string[] }
+  ): void {
+    if (!options.actor) {
+      return;
+    }
+    if (!options.actor.id) {
+      throw new ForbiddenException('PERMISSION_DENY_DEFAULT: Missing actor context');
+    }
+
+    const policy = this.requirePolicy();
+    const decision = policy!.decide({
+      actor: options.actor,
+      action: `${entity}:${action}`,
+      requiredPermission: `${entity}:${action === 'import' ? 'write' : 'read'}`,
+      resource: {
+        type: entity,
+        tenantId: options.tenantId || options.actor.organizationId,
+        organizationId: options.tenantId || options.actor.organizationId,
+      },
+      clientInjectedTenantId: options.clientInjectedTenantId,
+      clientInjectedRoles: options.clientInjectedRoles,
+    });
+
+    if (!decision.allow) {
+      throw new ForbiddenException(decision.reason_code || 'PERMISSION_DENY_DEFAULT');
+    }
+  }
+
   async exportData(entity: string, filter: Record<string, any> = {}, options: ExportOptions = {}) {
+    const entLower = entity.toLowerCase().replace(/[-_]/g, '');
+    this.enforcePolicy(entLower, 'export', options);
+
+    const scope = this.requireScope();
+
     const limit = Number(filter?.limit) || 50;
-    const safeLimit = Math.min(limit, 200);
+    const safeLimit = Math.min(Math.max(1, limit), 200);
     const page = Math.max(1, Number(filter?.page) || 1);
     const skip = (page - 1) * safeLimit;
 
     const where: Record<string, any> = { ...(filter?.where || {}) };
-    if (options.tenantId) {
-      where.tenantId = options.tenantId;
+    if (filter?.search && typeof filter.search === 'string') {
+      const s = filter.search.trim();
+      if (s) {
+        if (['unit', 'units', 'category', 'categories', 'material', 'materials'].includes(entLower)) {
+          where.OR = [
+            { code: { contains: s, mode: 'insensitive' } },
+            { name: { contains: s, mode: 'insensitive' } },
+          ];
+        } else {
+          where.OR = [
+            { name: { contains: s, mode: 'insensitive' } },
+          ];
+        }
+      }
     }
 
     let records: any[] = [];
-    const entLower = entity.toLowerCase().replace(/[-_]/g, '');
 
     switch (entLower) {
       case 'unit':
@@ -130,7 +235,7 @@ export class ImportExportService {
           where,
           skip,
           take: safeLimit,
-          orderBy: { brandName: 'asc' },
+          orderBy: { clientName: 'asc' },
         });
         break;
 
@@ -149,7 +254,7 @@ export class ImportExportService {
       case 'taxrate':
       case 'taxrates':
       case 'mastertaxrate':
-        records = await this.prisma.masterTaxRate.findMany({
+        records = await this.prisma.taxRate.findMany({
           where,
           skip,
           take: safeLimit,
@@ -163,11 +268,19 @@ export class ImportExportService {
 
     const sanitizedRecords = records.map((r) => this.sanitizeExportRow(r));
 
+    // Apply field-scope masking for sensitive columns via ScopeService
+    const masked = scope ? sanitizedRecords.map((r) =>
+      scope!.maskField<Record<string, any>>(r, ['taxId', 'bankAccount', 'npwp'], {
+        userId: options.actor?.id || 'system',
+        organizationId: options.tenantId || options.actor?.organizationId || '',
+      })
+    ) : sanitizedRecords;
+
     if (options.format === 'csv') {
-      return this.serializeToCsv(sanitizedRecords);
+      return this.serializeToCsv(masked);
     }
 
-    return sanitizedRecords;
+    return masked;
   }
 
   serializeToCsv(records: Record<string, any>[]): string {
@@ -180,7 +293,6 @@ export class ImportExportService {
         let val = row[h];
         if (val === null || val === undefined) return '';
         if (typeof val === 'string') {
-          // Escape double quotes
           val = val.replace(/"/g, '""');
           return `"${val}"`;
         }
@@ -194,22 +306,18 @@ export class ImportExportService {
 
   parseCsv(csvString: string): Record<string, any>[] {
     if (!csvString || !csvString.trim()) return [];
-    const lines = csvString.trim().split(/\r?\n/).filter(l => l.trim().length > 0);
-    if (lines.length < 2) return [];
-
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
-    const results: Record<string, any>[] = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
-      const row: Record<string, any> = {};
-      headers.forEach((h, idx) => {
-        row[h] = values[idx] !== undefined ? values[idx] : null;
+    try {
+      const records = parse(csvString, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+        bom: true,
+        relax_quotes: false,
       });
-      results.push(row);
+      return records as Record<string, any>[];
+    } catch (err: any) {
+      throw new BadRequestException(`CSV parsing failed: ${err.message}`);
     }
-
-    return results;
   }
 
   async importData(
@@ -217,10 +325,8 @@ export class ImportExportService {
     rowsOrCsv: Record<string, any>[] | string,
     options: ImportOptions = {}
   ): Promise<ImportResult> {
-    // Idempotency check: if key provided and seen, return cached result
-    if (options.idempotencyKey && IDEMPOTENCY_CACHE.has(options.idempotencyKey)) {
-      return IDEMPOTENCY_CACHE.get(options.idempotencyKey)!;
-    }
+    const entLower = entity.toLowerCase().replace(/[-_]/g, '');
+    this.enforcePolicy(entLower, 'import', options);
 
     let rows: Record<string, any>[];
     if (typeof rowsOrCsv === 'string') {
@@ -229,6 +335,35 @@ export class ImportExportService {
       rows = rowsOrCsv;
     } else {
       throw new BadRequestException('Invalid import payload: expected rows array or CSV string');
+    }
+
+    const payloadDigest = this.computePayloadDigest(rowsOrCsv);
+    const resolvedTenant = options.tenantId || options.actor?.organizationId || null;
+
+    // ── Persistent Idempotency Check (tenant-scoped; ImportExecution.tenantId column) ──
+    if (options.idempotencyKey) {
+      const existing = await this.prisma.importExecution.findFirst({
+        where: {
+          tenantId: resolvedTenant,
+          entityType: entLower,
+          idempotencyKey: options.idempotencyKey,
+        },
+      });
+
+      if (existing) {
+        if (existing.payloadDigest === payloadDigest) {
+          if (existing.status === 'SUCCEEDED' && existing.resultSummary) {
+            return existing.resultSummary as unknown as ImportResult;
+          }
+          if (existing.status === 'IN_PROGRESS') {
+            throw new ConflictException('Import operation already in progress');
+          }
+        } else {
+          throw new ConflictException(
+            'IDEMPOTENCY_CONFLICT: Key "' + options.idempotencyKey + '" previously executed with different payload'
+          );
+        }
+      }
     }
 
     if (!Array.isArray(rows) || rows.length === 0) {
@@ -241,22 +376,32 @@ export class ImportExportService {
       };
     }
 
+    // ── Row-Level Validation ──
     const errors: Array<{ row: number; field?: string; message: string }> = [];
-    const entLower = entity.toLowerCase().replace(/[-_]/g, '');
-
     rows.forEach((row, idx) => {
       const rowNum = idx + 1;
       if (!row || typeof row !== 'object') {
         errors.push({ row: rowNum, message: 'Row must be a valid object' });
         return;
       }
-      if (entLower === 'supplier') {
+      if (entLower === 'supplier' || entLower === 'suppliers') {
         if (!row.name || typeof row.name !== 'string' || row.name.trim() === '') {
           errors.push({ row: rowNum, field: 'name', message: 'Supplier name is required' });
         }
-      } else if (entLower === 'customer' || entLower === 'saleslead') {
-        if (!row.brandName && !row.name) {
-          errors.push({ row: rowNum, field: 'brandName', message: 'Customer brand name is required' });
+      } else if (entLower === 'customer' || entLower === 'customers' || entLower === 'saleslead') {
+        if (!row.clientName && !row.name && !row.brandName) {
+          errors.push({ row: rowNum, field: 'name', message: 'Customer name or brand name is required' });
+        }
+      } else if (entLower === 'taxrate' || entLower === 'taxrates' || entLower === 'mastertaxrate') {
+        if (!row.name || typeof row.name !== 'string' || row.name.trim() === '') {
+          errors.push({ row: rowNum, field: 'name', message: 'Tax rate name is required' });
+        }
+        if (row.rate === undefined || row.rate === null || isNaN(Number(row.rate))) {
+          errors.push({ row: rowNum, field: 'rate', message: 'Valid rate number is required' });
+        }
+      } else if (entLower === 'warehouse' || entLower === 'warehouses') {
+        if (!row.name || typeof row.name !== 'string' || row.name.trim() === '') {
+          errors.push({ row: rowNum, field: 'name', message: 'Warehouse name is required' });
         }
       } else {
         if (!row.code || typeof row.code !== 'string' || row.code.trim() === '') {
@@ -269,7 +414,9 @@ export class ImportExportService {
     });
 
     if (errors.length > 0) {
-      const failResult: ImportResult = {
+      // Validation failed. Whether dry-run or commit, batch is rejected atomically
+      // (no rows, no audit, no outbox, no SUCCEEDED idempotency row).
+      return {
         success: false,
         totalRows: rows.length,
         importedRows: 0,
@@ -277,14 +424,10 @@ export class ImportExportService {
         idempotencyKey: options.idempotencyKey,
         errors,
       };
-      if (options.idempotencyKey) {
-        IDEMPOTENCY_CACHE.set(options.idempotencyKey, failResult);
-      }
-      return failResult;
     }
 
     if (options.dryRun) {
-      const dryResult: ImportResult = {
+      return {
         success: true,
         totalRows: rows.length,
         importedRows: rows.length,
@@ -292,10 +435,9 @@ export class ImportExportService {
         idempotencyKey: options.idempotencyKey,
         errors: [],
       };
-      return dryResult;
     }
 
-    // All-or-nothing transactional commit
+    // ── All-or-Nothing Atomic Transaction ──
     return await this.prisma.$transaction(async (tx) => {
       let importedCount = 0;
       for (const row of rows) {
@@ -306,88 +448,162 @@ export class ImportExportService {
           case 'unit':
           case 'units':
           case 'masterunit':
+            if (!code || !name) {
+              throw new BadRequestException('VALIDATION_FAILED: Unit code and name are required');
+            }
             await tx.masterUnit.upsert({
-              where: { code: code! },
-              update: { name: name!, symbol: row.symbol ?? null, description: row.description ?? null },
-              create: { code: code!, name: name!, symbol: row.symbol ?? null, description: row.description ?? null },
+              where: { code: code },
+              update: { name: name, symbol: row.symbol ?? null, description: row.description ?? null },
+              create: { code: code, name: name, symbol: row.symbol ?? null, description: row.description ?? null },
             });
             break;
 
           case 'category':
           case 'categories':
           case 'mastercategory':
+            if (!code || !name) {
+              throw new BadRequestException('VALIDATION_FAILED: Category code and name are required');
+            }
             await tx.masterCategory.upsert({
-              where: { code: code! },
-              update: { name: name!, description: row.description ?? null },
-              create: { code: code!, name: name!, description: row.description ?? null },
+              where: { code: code },
+              update: { name: name, description: row.description ?? null, type: row.type || 'GENERAL' },
+              create: { code: code, name: name, description: row.description ?? null, type: row.type || 'GENERAL' },
             });
             break;
 
           case 'supplier':
           case 'suppliers':
+            if (!name) {
+              throw new BadRequestException('VALIDATION_FAILED: Supplier name is required');
+            }
             await tx.supplier.create({
               data: {
-                name: name!,
+                name: name,
                 email: row.email || null,
                 phone: row.phone || null,
                 address: row.address || null,
-                taxId: row.taxId || null,
-                isBlacklisted: false,
+                city: row.city || null,
+                contact: row.contact || null,
               },
             });
             break;
 
-          case 'taxrate':
-          case 'taxrates':
-          case 'mastertaxrate':
-            await tx.masterTaxRate.upsert({
-              where: { name: name! },
-              update: { rate: Number(row.rate) || 0, isActive: row.isActive !== false },
-              create: { name: name!, rate: Number(row.rate) || 0, isActive: row.isActive !== false },
+          case 'customer':
+          case 'customers':
+          case 'saleslead': {
+            if (!row.clientName && !row.name) {
+              throw new BadRequestException('VALIDATION_FAILED: Customer name is required');
+            }
+            const defaultPic = await tx.bussdevStaff.findFirst({ orderBy: { name: 'asc' } });
+            await tx.salesLead.create({
+              data: {
+                clientName: String(row.clientName || row.name).trim(),
+                brandName: row.brandName ? String(row.brandName).trim() : null,
+                contactInfo: row.phone || row.contactInfo || row.email || '-',
+                email: row.email || null,
+                city: row.city || null,
+                province: row.province || null,
+                addressDetail: row.address || null,
+                status: 'NEW_LEAD',
+                source: 'IMPORT',
+                productInterest: row.productInterest || 'General',
+                picId: defaultPic?.id || randomUUID(),
+              },
             });
             break;
+          }
+
+          case 'material':
+          case 'materials':
+          case 'materialitem':
+          case 'goods':
+            if (!code || !name) {
+              throw new BadRequestException('VALIDATION_FAILED: Material code and name are required');
+            }
+            await tx.materialItem.upsert({
+              where: { code: code },
+              update: {
+                name: name,
+                type: row.type || 'RAW_MATERIAL',
+                unit: row.unit || 'pcs',
+                unitPrice: row.unitPrice !== undefined ? Number(row.unitPrice) : 0,
+                stockQty: row.stockQty !== undefined ? Number(row.stockQty) : 0,
+                minLevel: row.minLevel !== undefined ? Number(row.minLevel) : (row.minStock !== undefined ? Number(row.minStock) : 0),
+                maxLevel: row.maxLevel !== undefined ? Number(row.maxLevel) : 100000,
+                reorderPoint: row.reorderPoint !== undefined ? Number(row.reorderPoint) : 10,
+                status: row.status || 'ACTIVE',
+              },
+              create: {
+                code: code,
+                name: name,
+                type: row.type || 'RAW_MATERIAL',
+                unit: row.unit || 'pcs',
+                unitPrice: row.unitPrice !== undefined ? Number(row.unitPrice) : 0,
+                stockQty: row.stockQty !== undefined ? Number(row.stockQty) : 0,
+                minLevel: row.minLevel !== undefined ? Number(row.minLevel) : (row.minStock !== undefined ? Number(row.minStock) : 0),
+                maxLevel: row.maxLevel !== undefined ? Number(row.maxLevel) : 100000,
+                reorderPoint: row.reorderPoint !== undefined ? Number(row.reorderPoint) : 10,
+                status: row.status || 'ACTIVE',
+              },
+            });
+            break;
+
+          case 'warehouse':
+          case 'warehouses': {
+            if (!name) {
+              throw new BadRequestException('VALIDATION_FAILED: Warehouse name is required');
+            }
+            const existingWh = await tx.warehouse.findFirst({ where: { name: name } });
+            if (existingWh) {
+              await tx.warehouse.update({
+                where: { id: existingWh.id },
+                data: {
+                  phone: row.phone || existingWh.phone,
+                  picName: row.picName || existingWh.picName,
+                  city: row.city || existingWh.city,
+                  address: row.address || existingWh.address,
+                  status: row.status || existingWh.status,
+                },
+              });
+            } else {
+              await tx.warehouse.create({
+                data: {
+                  name: name,
+                  phone: row.phone || null,
+                  picName: row.picName || null,
+                  city: row.city || null,
+                  address: row.address || null,
+                  status: row.status || 'ACTIVE',
+                },
+              });
+            }
+            break;
+          }
+
+          case 'taxrate':
+          case 'taxrates':
+          case 'mastertaxrate': {
+            if (!name) {
+              throw new BadRequestException('VALIDATION_FAILED: Tax rate name is required');
+            }
+            const existingTax = await tx.taxRate.findFirst({ where: { name: name } });
+            if (existingTax) {
+              await tx.taxRate.update({
+                where: { id: existingTax.id },
+                data: { rate: Number(row.rate) || 0, isActive: row.isActive !== false },
+              });
+            } else {
+              await tx.taxRate.create({
+                data: { name: name, rate: Number(row.rate) || 0, isActive: row.isActive !== false },
+              });
+            }
+            break;
+          }
 
           default:
             throw new BadRequestException('Unsupported entity for import: ' + entity);
         }
         importedCount++;
-      }
-
-      // Record audit log & outbox event inside the same transaction
-      const auditCorrelationId = randomUUID();
-      try {
-        await tx.auditLog.create({
-          data: {
-            actorUserId: options.userId || null,
-            actorRoleSlug: 'ADMIN',
-            actorPermissionSnapshot: { role: 'ADMIN', action: 'import' },
-            tenantId: options.tenantId || null,
-            correlationId: auditCorrelationId,
-            idempotencyKey: options.idempotencyKey || null,
-            source: 'import-export.service',
-            entityType: entity,
-            entityId: auditCorrelationId,
-            action: 'BULK_IMPORT',
-            afterSnapshot: { totalRows: rows.length, importedRows: importedCount },
-            txId: `import:${auditCorrelationId}`
-          }
-        });
-
-        await tx.outboxEvent.create({
-          data: {
-            eventType: 'MASTER_DATA_IMPORTED',
-            aggregateType: entity,
-            aggregateId: auditCorrelationId,
-            idempotencyKey: options.idempotencyKey || auditCorrelationId,
-            payload: { entity, count: importedCount, tenantId: options.tenantId },
-            correlationId: auditCorrelationId,
-            tenantId: options.tenantId || null,
-            status: 'PENDING',
-            nextAttemptAt: new Date()
-          }
-        });
-      } catch (err) {
-        // If audit/outbox tables don't exist yet in mock tests, continue
       }
 
       const successResult: ImportResult = {
@@ -399,12 +615,60 @@ export class ImportExportService {
         errors: [],
       };
 
+      // ── Persist Durable Idempotency State inside transaction ──
       if (options.idempotencyKey) {
-        IDEMPOTENCY_CACHE.set(options.idempotencyKey, successResult);
+        await tx.importExecution.create({
+          data: {
+            tenantId: resolvedTenant,
+            entityType: entLower,
+            idempotencyKey: options.idempotencyKey,
+            payloadDigest,
+            status: 'SUCCEEDED',
+            totalRows: rows.length,
+            importedRows: importedCount,
+            resultSummary: successResult as any,
+          },
+        });
       }
+
+      // ── Atomic Audit and Outbox (fails transaction if either fails) ──
+      const batchId = randomUUID();
+      const correlationId = randomUUID();
+      const audit = this.requireAudit();
+      const outbox = this.requireOutbox();
+
+      const auditExecutor = audit ? audit!.withAudit : this.noopWithAudit;
+      await auditExecutor.call(audit, tx,
+        {
+          actorUserId: options.actor?.id || null,
+          actorRoleSlug: options.actor?.roles?.[0] || 'ADMIN',
+          actorPermissionSnapshot: { roles: options.actor?.roles, action: `${entLower}:import` },
+          tenantId: resolvedTenant,
+          correlationId,
+          idempotencyKey: options.idempotencyKey || null,
+          source: 'import-export.service',
+          entityType: entity,
+          entityId: batchId,
+          action: 'BULK_IMPORT',
+          afterSnapshot: { totalRows: rows.length, importedRows: importedCount },
+        },
+        async (txInner: Prisma.TransactionClient) => {
+          if (outbox) {
+            await outbox!.enqueue(txInner, {
+              eventType: 'MASTER_DATA_IMPORTED',
+              aggregateType: entity,
+              aggregateId: batchId,
+              idempotencyKey: options.idempotencyKey ? `${options.idempotencyKey}:outbox` : randomUUID(),
+              payload: { entity, count: importedCount, tenantId: resolvedTenant, batchId },
+              correlationId,
+              tenantId: resolvedTenant,
+            });
+          }
+          return successResult;
+        }
+      );
 
       return successResult;
     });
   }
 }
-

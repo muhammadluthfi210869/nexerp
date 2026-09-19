@@ -110,22 +110,24 @@ function MasterSuppliersContent() {
   const [filterColumnValue, setFilterColumnValue] = useState<string>("ALL");
 
   // ── Backend API Query ──
-  const { data: apiSuppliers, refetch: refetchSuppliers } = useQuery({
+  const {
+    data: apiSuppliers,
+    isLoading: isLoadingSuppliers,
+    isError: isErrorSuppliers,
+    error: suppliersError,
+    refetch: refetchSuppliers,
+  } = useQuery({
     queryKey: ["master-suppliers", searchQuery],
     queryFn: async () => {
-      try {
-        const res = await api.get(`/master/suppliers${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""}`);
-        const body = unwrapResponse(res);
-        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
-      } catch (e) {
-        return [];
-      }
+      const res = await api.get(`/master/suppliers${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""}`);
+      const body = unwrapResponse(res);
+      return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : (() => { throw new Error('Invalid response shape from /master/suppliers: not an array') })();
     },
     staleTime: 30000,
   });
 
   useEffect(() => {
-    if (apiSuppliers && Array.isArray(apiSuppliers) && apiSuppliers.length > 0) {
+    if (apiSuppliers && Array.isArray(apiSuppliers)) {
       const mapped: MasterSupplierItem[] = apiSuppliers.map((s: any) => ({
         id: s.id,
         vendorCode: s.code || `VND-${s.id.substring(0, 6)}`,
@@ -146,8 +148,10 @@ function MasterSuppliersContent() {
         status: s.status || "ACTIVE",
       }));
       setSuppliersList(mapped);
+    } else if (!isLoadingSuppliers && !isErrorSuppliers) {
+      setSuppliersList([]);
     }
-  }, [apiSuppliers]);
+  }, [apiSuppliers, isLoadingSuppliers, isErrorSuppliers]);
 
   // Sorting
   const [sortColumn, setSortColumn] = useState<string | null>(null);
@@ -657,7 +661,24 @@ function MasterSuppliersContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {paginatedSuppliers.length === 0 ? (
+                {isLoadingSuppliers ? (
+                  <tr>
+                    <td colSpan={8} className="p-12 text-center text-slate-400 font-medium">
+                      Memuat data supplier...
+                    </td>
+                  </tr>
+                ) : isErrorSuppliers ? (
+                  <tr>
+                    <td colSpan={8} className="p-12 text-center text-rose-500 font-medium">
+                      <div className="flex flex-col items-center gap-2">
+                        <span>{(suppliersError as any)?.message || "Gagal memuat data supplier dari server"}</span>
+                        <DnaButton size="sm" variant="secondary" onClick={() => refetchSuppliers()}>
+                          Coba Lagi
+                        </DnaButton>
+                      </div>
+                    </td>
+                  </tr>
+                ) : paginatedSuppliers.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="p-8 text-center text-slate-400">
                       Tidak ada data supplier yang sesuai filter.

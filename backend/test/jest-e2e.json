@@ -5,5 +5,8 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", { "diagnostics": false }]
-  }
+  },
+  "transformIgnorePatterns": [
+    "node_modules/(?!(@nestjs/config)/)"
+  ]
 }
