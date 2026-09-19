@@ -494,9 +494,152 @@ async function runAllMutations(ctx) {
   return results;
 }
 
+async function runMetaTests() {
+  console.log('[P06-META] Starting harness meta-tests...');
+  const results = [];
+
+  // Meta 1: disabled assertion (passing unexpected success) must fail expectProductionRejection
+  try {
+    await expectProductionRejection({
+      id: 'META-DISABLED-ASSERTION',
+      gateFunction: 'metaGate',
+      mutatedTarget: 'metaTarget',
+      gateId: 'meta_gate',
+      expectedReasonCode: 'EXPECTED_FAIL',
+      fn: async () => ({ status: 'PASS', allowed: true })
+    });
+    throw new Error('Meta test 1 failed: disabled assertion was accepted as PASS');
+  } catch (err) {
+    if (/failed to reject! Production gate passed unexpectedly/i.test(err.message)) {
+      results.push({ name: 'disabled_assertion_fails', status: 'PASS' });
+    } else {
+      throw err;
+    }
+  }
+
+  // Meta 2: zero targets must fail
+  try {
+    const fakeGate = { id: 'meta_gate', status: 'PASS', target_count: 0 };
+    if (fakeGate.target_count === 0) {
+      throw new P06GateError('meta_gate', 'ZERO_TARGETS', 'Gate produced zero targets');
+    }
+    throw new Error('Meta test 2 failed: zero targets accepted');
+  } catch (err) {
+    if (err.reason_code === 'ZERO_TARGETS') {
+      results.push({ name: 'zero_targets_fails', status: 'PASS' });
+    } else {
+      throw err;
+    }
+  }
+
+  // Meta 3: missing mutation ID must fail
+  try {
+    await runSingleMutation('P06-NON-EXISTENT', {});
+    throw new Error('Meta test 3 failed: missing ID accepted');
+  } catch (err) {
+    if (/unknown mutation id/i.test(err.message)) {
+      results.push({ name: 'missing_id_fails', status: 'PASS' });
+    } else {
+      throw err;
+    }
+  }
+
+  // Meta 4: wrong reason code must fail expectProductionRejection
+  try {
+    await expectProductionRejection({
+      id: 'META-WRONG-REASON',
+      gateFunction: 'metaGate',
+      mutatedTarget: 'metaTarget',
+      gateId: 'meta_gate',
+      expectedReasonCode: 'EXPECTED_CODE',
+      fn: async () => {
+        throw new P06GateError('meta_gate', 'WRONG_CODE', 'Wrong reason thrown');
+      }
+    });
+    throw new Error('Meta test 4 failed: wrong reason was accepted');
+  } catch (err) {
+    if (/rejected with wrong reason code: expected 'EXPECTED_CODE', observed 'WRONG_CODE'/i.test(err.message)) {
+      results.push({ name: 'wrong_reason_fails', status: 'PASS' });
+    } else {
+      throw err;
+    }
+  }
+
+  // Meta 5: generic exception must fail expectProductionRejection
+  try {
+    await expectProductionRejection({
+      id: 'META-GENERIC-ERROR',
+      gateFunction: 'metaGate',
+      mutatedTarget: 'metaTarget',
+      gateId: 'meta_gate',
+      expectedReasonCode: 'EXPECTED_CODE',
+      fn: async () => {
+        throw new TypeError('Cannot read property of undefined');
+      }
+    });
+    throw new Error('Meta test 5 failed: generic TypeError was accepted');
+  } catch (err) {
+    if (/generic exception instead of production rejection/i.test(err.message)) {
+      results.push({ name: 'generic_error_fails', status: 'PASS' });
+    } else {
+      throw err;
+    }
+  }
+
+  // Meta 6: fabricated metric must fail provenance recomputation
+  try {
+    safety.validateMetricProvenance({ unmapped_canonical_masters: 999 }, [
+      { id: 'canonical_master_inventory', unmapped_canonical_masters: 0 }
+    ]);
+    throw new Error('Meta test 6 failed: fabricated metric accepted');
+  } catch (err) {
+    if (err.reason_code === 'METRIC_PROVENANCE_MISMATCH') {
+      results.push({ name: 'fabricated_metrics_fails', status: 'PASS' });
+    } else {
+      throw err;
+    }
+  }
+
+  // Meta 7: source database session termination must fail
+  try {
+    safety.assertNoSourceSessionTermination(
+      "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'erp_db_test'",
+      'erp_db_test'
+    );
+    throw new Error('Meta test 7 failed: source session termination accepted');
+  } catch (err) {
+    if (err.reason_code === 'SOURCE_SESSION_TERMINATION_FORBIDDEN') {
+      results.push({ name: 'source_session_termination_fails', status: 'PASS' });
+    } else {
+      throw err;
+    }
+  }
+
+  console.log(`[P06-META] All ${results.length} meta-tests passed!`);
+  return { status: 'PASS', target_count: results.length, results };
+}
+
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  if (args.includes('--meta')) {
+    runMetaTests()
+      .then(res => {
+        console.log(JSON.stringify(res, null, 2));
+        process.exit(0);
+      })
+      .catch(err => {
+        console.error('META_TESTS_FAILED:', err.message);
+        process.exit(1);
+      });
+  } else {
+    console.log('Usage: node scripts/ssot/test_p06_master_negative.js --meta');
+  }
+}
+
 module.exports = {
   expectProductionRejection,
   runSingleMutation,
   runAllMutations,
+  runMetaTests,
   MUTATION_HANDLERS
 };

@@ -22,21 +22,41 @@ export class CategoriesService {
   }
 
   async create(dto: CreateCategoryDto) {
-    let code = dto.code;
-    if (!code) {
-      const prefix = dto.name.substring(0, 3).toUpperCase();
-      const count = await this.prisma.masterCategory.count({
-        where: { type: dto.type },
+    if (dto.code) {
+      return this.prisma.masterCategory.create({
+        data: {
+          code: dto.code,
+          name: dto.name,
+          description: dto.description || null,
+          type: dto.type,
+        },
       });
-      code = `${prefix}-${(count + 1).toString().padStart(3, '0')}`;
     }
-    return this.prisma.masterCategory.create({
-      data: {
-        code,
-        name: dto.name,
-        description: dto.description || null,
-        type: dto.type,
-      },
+
+    const prefix = dto.name.substring(0, 3).toUpperCase();
+    const docType = `CATEGORY_${dto.type || 'GENERAL'}`;
+
+    return this.prisma.$transaction(async (tx) => {
+      const seqRow = await tx.masterKode.upsert({
+        where: { documentType: docType },
+        create: {
+          documentType: docType,
+          format: `${prefix}-{SEQ:4}`,
+          currentSequence: 1,
+        },
+        update: {
+          currentSequence: { increment: 1 },
+        },
+      });
+      const generatedCode = `${prefix}-${seqRow.currentSequence.toString().padStart(4, '0')}`;
+      return tx.masterCategory.create({
+        data: {
+          code: generatedCode,
+          name: dto.name,
+          description: dto.description || null,
+          type: dto.type,
+        },
+      });
     });
   }
 

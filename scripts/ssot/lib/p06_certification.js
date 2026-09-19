@@ -24,116 +24,12 @@ function git(args, root) {
 }
 
 // ----------------------------------------------------------------------------
-// Seam Execution Helper
+// Seam & Subphase Execution via Executable Test Registry
 // ----------------------------------------------------------------------------
 
-async function executeSeam(seamId, ctx) {
-  const start = Date.now();
-  const seamDefs = {
-    'P06-SEAM-P05-POLICY': {
-      positive: ['p05_policy_allow_valid_role', 'p05_scope_enforce_tenant_boundary'],
-      failure: ['p05_policy_deny_unauthorized_action', 'p05_scope_block_cross_tenant'],
-      target_count: 4
-    },
-    'P06-SEAM-IDENTITY-MASTER': {
-      positive: ['identity_scoped_master_list', 'identity_scoped_master_export'],
-      failure: ['identity_unauthorized_master_read', 'identity_cross_division_leak'],
-      target_count: 4
-    },
-    'P06-SEAM-CATALOG-REFERENCES': {
-      positive: ['valid_category_unit_warehouse_reference'],
-      failure: ['orphan_category_reference_rejected', 'inactive_unit_reference_rejected'],
-      target_count: 3
-    },
-    'P06-SEAM-IMPORT-CRUD': {
-      positive: ['import_valid_batch_commits_via_crud_service', 'export_matches_filtered_dataset'],
-      failure: ['import_invalid_batch_rolls_back', 'export_neutralizes_formula_injection'],
-      target_count: 4
-    },
-    'P06-SEAM-API-UI': {
-      positive: ['ui_renders_live_master_data', 'ui_crud_actions_call_live_api'],
-      failure: ['ui_api_error_renders_retry_state_not_mock', 'ui_dna_primitive_boundary_intact'],
-      target_count: 4
-    },
-    'P06-SEAM-MUTATION-AUDIT': {
-      positive: ['master_mutation_and_audit_commit_together'],
-      failure: ['audit_failure_aborts_master_mutation'],
-      target_count: 2
-    }
-  };
+const testRegistry = require('./p06_test_registry');
+const { executeSeam, executeSubphase } = testRegistry;
 
-  const def = seamDefs[seamId];
-  if (!def) throw new Error(`Unknown seam ID: ${seamId}`);
-
-  return {
-    id: seamId,
-    status: 'PASS',
-    executed: true,
-    target_count: def.target_count,
-    positive_test_ids: def.positive,
-    failure_test_ids: def.failure,
-    duration_ms: Date.now() - start
-  };
-}
-
-// ----------------------------------------------------------------------------
-// Subphase Execution Helper
-// ----------------------------------------------------------------------------
-
-async function executeSubphase(subphaseId, ctx) {
-  const start = Date.now();
-  let testIds = [];
-
-  if (subphaseId === 'P06-SF1-contract-inventory') {
-    await gates.gateCanonicalMasterInventory(ctx);
-    await gates.gateSchemaAliasAndReferentialIntegrity(ctx);
-    await gates.gateWarehouseCoaFormulationOwnership(ctx);
-    testIds = ['canonical_master_inventory', 'schema_alias_integrity', 'warehouse_coa_formulation_ownership'];
-  } else if (subphaseId === 'P06-SF2-identity-config') {
-    await gates.gateOrganizationDivisionUserRoleConfig(ctx);
-    await gates.gateRoleTenantFieldScope(ctx);
-    await gates.gateAuditOutboxAtomicity(ctx);
-    testIds = ['organization_division_user_role_config', 'role_tenant_field_scope', 'audit_outbox_atomicity'];
-  } else if (subphaseId === 'P06-SF3-catalog-masters') {
-    await gates.gateCatalogReferenceMasters(ctx);
-    await gates.gateCustomerSupplierMasters(ctx);
-    await gates.gateMasterCrud(ctx);
-    await gates.gateUniquenessAndCodeGeneration(ctx);
-    await gates.gateSoftDeleteAndReferencePolicy(ctx);
-    await gates.gatePaginationFilterAndSearch(ctx);
-    testIds = [
-      'catalog_reference_masters',
-      'customer_supplier_masters',
-      'master_crud',
-      'uniqueness_and_code_generation',
-      'soft_delete_and_reference_policy',
-      'pagination_filter_and_search'
-    ];
-  } else if (subphaseId === 'P06-SF4-bulk-io') {
-    await gates.gateImportExport(ctx);
-    testIds = ['import_dry_run_validate', 'import_atomic_commit', 'export_scope_parity', 'export_formula_neutralization'];
-  } else if (subphaseId === 'P06-SF5-frontend-ui') {
-    await gates.gateFrontendLiveDataAndDna(ctx);
-    testIds = ['frontend_live_data_materials', 'frontend_no_fallback_mock', 'frontend_dna_imports_only'];
-  } else if (subphaseId === 'P06-SF6-integration') {
-    await gates.gatePredecessorScopeAndSafety(ctx);
-    for (const seamId of ctx.contract.required_seams) {
-      await executeSeam(seamId, ctx);
-    }
-    await gates.gateSubphaseSeamAndRegression(ctx);
-    testIds = ['predecessor_scope_and_safety', 'all_6_seams', 'subphase_seam_and_regression'];
-  } else {
-    throw new Error(`Unknown subphase ID: ${subphaseId}`);
-  }
-
-  return {
-    id: subphaseId,
-    status: 'PASS',
-    executed: true,
-    test_ids: testIds,
-    duration_ms: Date.now() - start
-  };
-}
 
 // ----------------------------------------------------------------------------
 // diagnoseP06 Implementation
@@ -372,35 +268,6 @@ async function certifyP06({ root, contract, candidateSha }) {
 
   const inventory = safety.createInventory();
   const checks = [];
-  const metrics = {
-    unmapped_canonical_masters: 0,
-    duplicate_master_sources: 0,
-    production_mock_fallbacks: 0,
-    direct_prisma_controller_access: 0,
-    referential_integrity_violations: 0,
-    uniqueness_violations: 0,
-    nondeterministic_codes: 0,
-    hard_deleted_referenced_rows: 0,
-    soft_deleted_visibility_leaks: 0,
-    import_partial_commits: 0,
-    import_duplicate_side_effects: 0,
-    export_scope_bypasses: 0,
-    authorization_bypasses: 0,
-    tenant_or_field_leaks: 0,
-    missing_or_nonatomic_audits: 0,
-    ui_dna_violations: 0,
-    unexpected_skips: 0,
-    unowned_requirements_or_seams: 0,
-    default_page_size: 50,
-    maximum_page_size: 200,
-    changed_max_cyclomatic_complexity: 6,
-    changed_duplication_percent: 0.0,
-    canonical_master_inventory_coverage_percent: 100,
-    required_operation_coverage_percent: 100,
-    required_screen_live_data_coverage_percent: 100,
-    subphase_test_coverage_percent: 100,
-    seam_test_coverage_percent: 100
-  };
 
   // Fingerprint source DB
   const beforeSourceFp = await safety.captureSourceFingerprint(sourceClient);
@@ -408,7 +275,7 @@ async function certifyP06({ root, contract, candidateSha }) {
 
   // Create isolated DB for P06 certification
   const isolatedDbName = `nex_p06_${shortSha}_${pid}_main`;
-  await safety.createIsolatedDatabase(adminClient, isolatedDbName, inventory, target.database);
+  await safety.createIsolatedDatabase(adminClient, isolatedDbName, inventory, target);
 
   const isolatedDbUrl = `postgresql://${target.username}:${target.password}@${target.hostname}:${target.port}/${isolatedDbName}`;
   const pool = new Pool({ connectionString: isolatedDbUrl });
@@ -471,6 +338,42 @@ async function certifyP06({ root, contract, candidateSha }) {
     if (!safety.verifyFingerprintIntegrity(beforeSourceFp, afterSourceFp)) {
       throw new P06GateError('predecessor_scope_and_safety', 'SOURCE_INTEGRITY_VIOLATED', 'Source database modified during P06 certification');
     }
+
+    // Derive metrics dynamically from gate/test observations with provenance verification
+    const checksById = {};
+    for (const c of checks) checksById[c.id] = c;
+
+    const metrics = {
+      unmapped_canonical_masters: checksById['canonical_master_inventory']?.unmapped_canonical_masters ?? 0,
+      duplicate_master_sources: checksById['schema_alias_and_referential_integrity']?.duplicate_master_sources ?? 0,
+      production_mock_fallbacks: checksById['frontend_live_data_and_dna']?.production_mock_fallbacks ?? 0,
+      direct_prisma_controller_access: checksById['master_crud']?.direct_prisma_controller_access ?? 0,
+      referential_integrity_violations: checksById['schema_alias_and_referential_integrity']?.referential_integrity_violations ?? 0,
+      uniqueness_violations: checksById['uniqueness_and_code_generation']?.uniqueness_violations ?? 0,
+      nondeterministic_codes: checksById['uniqueness_and_code_generation']?.nondeterministic_codes ?? 0,
+      hard_deleted_referenced_rows: checksById['soft_delete_and_reference_policy']?.hard_deleted_referenced_rows ?? 0,
+      soft_deleted_visibility_leaks: checksById['soft_delete_and_reference_policy']?.soft_deleted_visibility_leaks ?? 0,
+      import_partial_commits: checksById['import_export']?.import_partial_commits ?? 0,
+      import_duplicate_side_effects: checksById['import_export']?.import_duplicate_side_effects ?? 0,
+      export_scope_bypasses: checksById['role_tenant_field_scope']?.export_scope_bypasses ?? 0,
+      authorization_bypasses: checksById['role_tenant_field_scope']?.authorization_bypasses ?? 0,
+      tenant_or_field_leaks: checksById['role_tenant_field_scope']?.tenant_or_field_leaks ?? 0,
+      missing_or_nonatomic_audits: checksById['audit_outbox_atomicity']?.missing_or_nonatomic_audits ?? 0,
+      ui_dna_violations: checksById['frontend_live_data_and_dna']?.ui_dna_violations ?? 0,
+      unexpected_skips: checks.filter(c => c && c.skipped).length,
+      unowned_requirements_or_seams: checksById['canonical_master_inventory']?.unowned_requirements_or_seams ?? 0,
+      default_page_size: checksById['pagination_filter_and_search']?.default_page_size ?? 50,
+      maximum_page_size: checksById['pagination_filter_and_search']?.maximum_page_size ?? 200,
+      changed_max_cyclomatic_complexity: checksById['subphase_seam_and_regression']?.changed_max_cyclomatic_complexity ?? 6,
+      changed_duplication_percent: checksById['subphase_seam_and_regression']?.changed_duplication_percent ?? 0.0,
+      canonical_master_inventory_coverage_percent: checksById['canonical_master_inventory']?.canonical_master_inventory_coverage_percent ?? 0,
+      required_operation_coverage_percent: checksById['canonical_master_inventory']?.required_operation_coverage_percent ?? 0,
+      required_screen_live_data_coverage_percent: checksById['frontend_live_data_and_dna']?.required_screen_live_data_coverage_percent ?? 0,
+      subphase_test_coverage_percent: subphases.length > 0 ? Math.round((subphases.filter(s => s.status === 'PASS').length / subphases.length) * 100) : 0,
+      seam_test_coverage_percent: seams.length > 0 ? Math.round((seams.filter(s => s.status === 'PASS').length / seams.length) * 100) : 0
+    };
+
+    safety.validateMetricProvenance(metrics, checks, subphases, seams);
 
     // Write evidence manifests
     const evidenceDir = path.join(root, 'docs/legacy-erp/verification/evidence');

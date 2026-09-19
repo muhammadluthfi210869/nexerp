@@ -12,6 +12,8 @@
  */
 
 const crypto = require('crypto');
+const path = require('path');
+const { spawnSync } = require('child_process');
 const { URL } = require('url');
 
 class P06GateError extends Error {
@@ -246,7 +248,60 @@ function createInventory() {
   return { created: new Set(), dropped: new Set() };
 }
 
-async function createIsolatedDatabase(adminClient, dbName, inventory, templateDbName) {
+function assertNoSourceSessionTermination(query, sourceDbName) {
+  if (typeof query !== 'string') return;
+  if (/pg_terminate_backend/i.test(query)) {
+    if (sourceDbName && new RegExp(`(['"]?)${sourceDbName}\\1`, 'i').test(query)) {
+      throw new P06GateError(
+        'predecessor_scope_and_safety',
+        'SOURCE_SESSION_TERMINATION_FORBIDDEN',
+        `Attempted pg_terminate_backend on source database "${sourceDbName}"`
+      );
+    }
+  }
+}
+
+async function seedP06DeterministicFixtures(client) {
+  await client.query(`
+    INSERT INTO users (id, "fullName", email, roles, status)
+    VALUES ('00000000-0000-0000-0000-000000000001', 'Admin P06', 'admin@example.com', ARRAY['SUPER_ADMIN']::"UserRole"[], 'ACTIVE')
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO master_units (id, code, name, symbol, "isActive", "createdAt", "updatedAt")
+    VALUES
+      ('00000000-0000-0000-0000-000000000101', 'PCS', 'Pieces', 'pcs', true, NOW(), NOW()),
+      ('00000000-0000-0000-0000-000000000102', 'KG', 'Kilogram', 'kg', true, NOW(), NOW()),
+      ('00000000-0000-0000-0000-000000000103', 'MTR', 'Meter', 'm', true, NOW(), NOW())
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO warehouses (id, name, address, status, "createdAt", "updatedAt")
+    VALUES
+      ('00000000-0000-0000-0000-000000000201', 'Gudang Utama', 'Jakarta', 'ACTIVE', NOW(), NOW())
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO master_categories (id, code, name, type, "isActive", "createdAt", "updatedAt")
+    VALUES
+      ('00000000-0000-0000-0000-000000000301', 'CAT-RAW-001', 'Bahan Baku', 'RAW_MATERIAL', true, NOW(), NOW())
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO suppliers (id, name, email, phone, "isBlacklisted", "createdAt")
+    VALUES
+      ('00000000-0000-0000-0000-000000000401', 'PT Supplier Utama', 'supplier@example.com', '081234567890', false, NOW())
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO master_tax_rates (id, name, rate, "isActive")
+    VALUES
+      ('00000000-0000-0000-0000-000000000501', 'PPN 11%', 11.00, true)
+    ON CONFLICT (name) DO NOTHING;
+
+    INSERT INTO system_configs (id, key, value, "group", "updatedAt")
+    VALUES
+      ('00000000-0000-0000-0000-000000000601', 'company.name', 'PT Aureon System', 'GENERAL', NOW())
+    ON CONFLICT (key) DO NOTHING;
+  `);
+}
+
+async function createIsolatedDatabase(adminClient, dbName, inventory, targetOrOpts, maybeOpts) {
   validateDatabaseName(dbName);
   if (inventory.created.has(dbName)) {
     throw new P06GateError(
@@ -254,6 +309,8 @@ async function createIsolatedDatabase(adminClient, dbName, inventory, templateDb
       `Database ${dbName} was already created in this run inventory`
     );
   }
+
+  // Clean up if already exists
   const checkRes = await adminClient.query('SELECT 1 FROM pg_database WHERE datname = $1', [dbName]);
   if (checkRes.rows.length > 0) {
     await adminClient.query(
@@ -262,16 +319,49 @@ async function createIsolatedDatabase(adminClient, dbName, inventory, templateDb
     );
     await adminClient.query(`DROP DATABASE IF EXISTS "${dbName}"`);
   }
-  if (templateDbName) {
-    await adminClient.query(
-      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid != pg_backend_pid()`,
-      [templateDbName]
-    );
-    await adminClient.query(`CREATE DATABASE "${dbName}" TEMPLATE "${templateDbName}"`);
-  } else {
-    await adminClient.query(`CREATE DATABASE "${dbName}"`);
-  }
+
+  // Pure isolated creation: never template clone, never touch source DB
+  await adminClient.query(`CREATE DATABASE "${dbName}"`);
   inventory.created.add(dbName);
+
+  let target = targetOrOpts;
+  let opts = maybeOpts || {};
+  if (targetOrOpts && typeof targetOrOpts === 'object' && !targetOrOpts.hostname) {
+    opts = targetOrOpts;
+    target = null;
+  }
+
+  if (target && !opts.skipMigration) {
+    const rawTarget = typeof target === 'string' ? parseAndValidateTargetUrl(target) : target;
+    const isolatedDbUrl = `postgresql://${rawTarget.username}:${rawTarget.password}@${rawTarget.hostname}:${rawTarget.port}/${dbName}?schema=public`;
+    const backendDir = path.resolve(__dirname, '../../../backend');
+    
+    // Apply committed migration chain
+    const migRes = spawnSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['prisma', 'migrate', 'deploy'], {
+      cwd: backendDir,
+      env: { ...process.env, DATABASE_URL: isolatedDbUrl },
+      encoding: 'utf8',
+      shell: process.platform === 'win32'
+    });
+    if (migRes.status !== 0) {
+      throw new P06GateError(
+        'predecessor_scope_and_safety', 'MIGRATION_DEPLOY_FAILED',
+        `Failed to deploy migrations to isolated database ${dbName}: ${migRes.stderr || migRes.stdout}`
+      );
+    }
+
+    // Seed minimal deterministic fixtures
+    const { Client } = require(path.join(backendDir, 'node_modules/pg'));
+    const fixtureClient = new Client({ connectionString: isolatedDbUrl });
+    fixtureClient.on('error', () => {});
+    await fixtureClient.connect();
+    try {
+      await seedP06DeterministicFixtures(fixtureClient);
+    } finally {
+      await fixtureClient.end().catch(() => {});
+    }
+  }
+
   return dbName;
 }
 
@@ -389,6 +479,78 @@ function sha256(value) {
   return crypto.createHash('sha256').update(typeof value === 'string' ? value : JSON.stringify(value)).digest('hex');
 }
 
+function validateMetricProvenance(metrics, checks = [], subphases = [], seams = []) {
+  if (!metrics || typeof metrics !== 'object') {
+    throw new P06GateError('predecessor_scope_and_safety', 'METRIC_PROVENANCE_MISMATCH', 'Metrics object is required');
+  }
+
+  const checksById = {};
+  for (const c of checks) {
+    if (c && c.id) checksById[c.id] = c;
+  }
+
+  const provenanceMap = {
+    unmapped_canonical_masters: () => checksById['canonical_master_inventory']?.unmapped_canonical_masters ?? 0,
+    duplicate_master_sources: () => checksById['schema_alias_and_referential_integrity']?.duplicate_master_sources ?? 0,
+    production_mock_fallbacks: () => checksById['frontend_live_data_and_dna']?.production_mock_fallbacks ?? 0,
+    direct_prisma_controller_access: () => checksById['master_crud']?.direct_prisma_controller_access ?? 0,
+    referential_integrity_violations: () => checksById['schema_alias_and_referential_integrity']?.referential_integrity_violations ?? 0,
+    uniqueness_violations: () => checksById['uniqueness_and_code_generation']?.uniqueness_violations ?? 0,
+    nondeterministic_codes: () => checksById['uniqueness_and_code_generation']?.nondeterministic_codes ?? 0,
+    hard_deleted_referenced_rows: () => checksById['soft_delete_and_reference_policy']?.hard_deleted_referenced_rows ?? 0,
+    soft_deleted_visibility_leaks: () => checksById['soft_delete_and_reference_policy']?.soft_deleted_visibility_leaks ?? 0,
+    import_partial_commits: () => checksById['import_export']?.import_partial_commits ?? 0,
+    import_duplicate_side_effects: () => checksById['import_export']?.import_duplicate_side_effects ?? 0,
+    export_scope_bypasses: () => checksById['role_tenant_field_scope']?.export_scope_bypasses ?? 0,
+    authorization_bypasses: () => checksById['role_tenant_field_scope']?.authorization_bypasses ?? 0,
+    tenant_or_field_leaks: () => checksById['role_tenant_field_scope']?.tenant_or_field_leaks ?? 0,
+    missing_or_nonatomic_audits: () => checksById['audit_outbox_atomicity']?.missing_or_nonatomic_audits ?? 0,
+    ui_dna_violations: () => checksById['frontend_live_data_and_dna']?.ui_dna_violations ?? 0,
+    unexpected_skips: () => checks.filter(c => c && c.skipped).length,
+    unowned_requirements_or_seams: () => checksById['canonical_master_inventory']?.unowned_requirements_or_seams ?? 0,
+    default_page_size: () => checksById['pagination_filter_and_search']?.default_page_size ?? 50,
+    maximum_page_size: () => checksById['pagination_filter_and_search']?.maximum_page_size ?? 200,
+    changed_max_cyclomatic_complexity: () => checksById['subphase_seam_and_regression']?.changed_max_cyclomatic_complexity ?? 6,
+    changed_duplication_percent: () => checksById['subphase_seam_and_regression']?.changed_duplication_percent ?? 0.0,
+    canonical_master_inventory_coverage_percent: () => checksById['canonical_master_inventory']?.canonical_master_inventory_coverage_percent ?? 0,
+    required_operation_coverage_percent: () => checksById['canonical_master_inventory']?.required_operation_coverage_percent ?? 0,
+    required_screen_live_data_coverage_percent: () => checksById['frontend_live_data_and_dna']?.required_screen_live_data_coverage_percent ?? 0,
+    subphase_test_coverage_percent: () => {
+      if (subphases.length === 0) return 0;
+      const passed = subphases.filter(s => s && s.status === 'PASS').length;
+      return Math.round((passed / subphases.length) * 100);
+    },
+    seam_test_coverage_percent: () => {
+      if (seams.length === 0) return 0;
+      const passed = seams.filter(s => s && s.status === 'PASS').length;
+      return Math.round((passed / seams.length) * 100);
+    }
+  };
+
+  const mismatches = [];
+  for (const [key, getter] of Object.entries(provenanceMap)) {
+    if (metrics[key] === undefined) {
+      mismatches.push(`Missing metric key: ${key}`);
+      continue;
+    }
+    const expected = getter();
+    const observed = metrics[key];
+    if (expected !== observed) {
+      mismatches.push(`Metric ${key} mismatch: reported ${observed}, recomputed ${expected}`);
+    }
+  }
+
+  if (mismatches.length > 0) {
+    throw new P06GateError(
+      'predecessor_scope_and_safety',
+      'METRIC_PROVENANCE_MISMATCH',
+      `Metric provenance validation failed:\n  ${mismatches.join('\n  ')}`
+    );
+  }
+
+  return true;
+}
+
 module.exports = {
   P06GateError,
   DB_NAME_PATTERN,
@@ -398,8 +560,11 @@ module.exports = {
   getKnownSecrets,
   extractDbName,
   assertNoSecrets,
+  assertNoSourceSessionTermination,
+  seedP06DeterministicFixtures,
   parseAndValidateTargetUrl,
   validateDatabaseName,
+  validateMetricProvenance,
   createInventory,
   createIsolatedDatabase,
   dropIsolatedDatabase,

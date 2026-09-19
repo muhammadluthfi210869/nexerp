@@ -87,179 +87,6 @@ export interface CustomerCategoryItem {
   totalClient: number;
 }
 
-// ── Seed Data from PELANGGAN.csv ──
-const INITIAL_CUSTOMERS: MasterCustomerItem[] = [
-  {
-    id: "cust-1",
-    customerCode: "CUST-001",
-    nama: "Vivin Anggi Ardita",
-    brandName: "FYS (For Your Skin)",
-    pic: "Vivin Anggi Ardita",
-    phone: "082132027557",
-    email: "vivin.fys@gmail.com",
-    kategori: "Pelanggan Sample",
-    penginput: "Fadilah Syahab",
-    kota: "Kota Surabaya",
-    provinsi: "Jawa Timur",
-    alamatLengkap: "Jl. Darmo Permai Selatan No. 12",
-    contractType: "Jasa Maklon",
-    nominalSoProduk: 0,
-    soSampleCount: 1,
-    soProdukCount: 0,
-    status: "ACTIVE",
-    sampleFeeTotal: 750000,
-    sampleStatus: "Sample Serum Whitening Revisi 1 (Sedang Evaluasi)",
-    produksiBatchTotal: 0,
-    produksiStatus: "Menunggu Acc Formula Sample",
-    legalitasBpom: "Belum Diajukan",
-    legalitasHalal: "Belum",
-    legalitasHki: "Pemeriksaan Substantif",
-    escrowDeposit: 0,
-  },
-  {
-    id: "cust-2",
-    customerCode: "CUST-002",
-    nama: "Djafar Shodiq",
-    brandName: "Sigviolet Skincare",
-    pic: "Djafar Shodiq",
-    phone: "0895389553799",
-    email: "djafar@sigviolet.id",
-    kategori: "Pelanggan RO",
-    penginput: "Fadilah Syahab",
-    kota: "Kota Bandung",
-    provinsi: "Jawa Barat",
-    alamatLengkap: "Jl. Buah Batu No. 145, Lengkong",
-    contractType: "Jasa Maklon",
-    nominalSoProduk: 400299500,
-    soSampleCount: 4,
-    soProdukCount: 16,
-    status: "ACTIVE",
-    sampleFeeTotal: 3000000,
-    sampleStatus: "4 Varian Formula Selesai & Disetujui (Locked)",
-    produksiBatchTotal: 16,
-    produksiStatus: "Running Batch #16 (Packaging Line 2)",
-    legalitasBpom: "Terbit",
-    legalitasHalal: "Sertifikasi Aktif",
-    legalitasHki: "Terdaftar Resmi",
-    escrowDeposit: 50000000,
-  },
-  {
-    id: "cust-3",
-    customerCode: "CUST-003",
-    nama: "Lita Permata",
-    brandName: "VIP BIO Nature",
-    pic: "Ibu Lita",
-    phone: "081381597779",
-    email: "lita.vipbio@yahoo.com",
-    kategori: "Calon Pelanggan",
-    penginput: "Riyantita Tunjungsari",
-    kota: "Jakarta Selatan",
-    provinsi: "DKI Jakarta",
-    alamatLengkap: "Kebayoran Baru, Gandaria Tengah III",
-    contractType: "Jasa Maklon",
-    nominalSoProduk: 0,
-    soSampleCount: 0,
-    soProdukCount: 0,
-    status: "ACTIVE",
-    sampleFeeTotal: 0,
-    sampleStatus: "Konsultasi Konsep Produk Sunscreen Gel",
-    produksiBatchTotal: 0,
-    produksiStatus: "Belum Kontrak",
-    legalitasBpom: "Belum Diajukan",
-    legalitasHalal: "Belum",
-    legalitasHki: "Belum",
-    escrowDeposit: 0,
-  },
-  {
-    id: "cust-4",
-    customerCode: "CUST-004",
-    nama: "Adinia Rahma",
-    brandName: "RA LUXURY Cosmetics",
-    pic: "Adinia",
-    phone: "087777109995",
-    email: "adinia@raluxury.com",
-    kategori: "Pelanggan Sample",
-    penginput: "Fatimah Amira",
-    kota: "Kota Surabaya",
-    provinsi: "Jawa Timur",
-    alamatLengkap: "Pakuwon City Cluster San Antonio",
-    contractType: "Jasa Maklon",
-    nominalSoProduk: 0,
-    soSampleCount: 1,
-    soProdukCount: 0,
-    status: "ACTIVE",
-    sampleFeeTotal: 750000,
-    sampleStatus: "Sample Body Lotion Tone Up Shimmer",
-    produksiBatchTotal: 0,
-    produksiStatus: "Uji Stabilitas Suhu 40°C",
-    legalitasBpom: "Belum Diajukan",
-    legalitasHalal: "Belum",
-    legalitasHki: "Terdaftar Resmi",
-    escrowDeposit: 0,
-  },
-  {
-    id: "cust-5",
-    customerCode: "CUST-005",
-    nama: "Silvia Dewi",
-    brandName: "Dewi Glow",
-    pic: "Silvia Dewi",
-    phone: "08217932060",
-    email: "silvia.dewiglow@gmail.com",
-    kategori: "Pelanggan Sample",
-    penginput: "Fadilah Syahab",
-    kota: "Kota Surabaya",
-    provinsi: "Jawa Timur",
-    alamatLengkap: "Rungkut Asri Timur No. 34",
-    contractType: "Jasa Maklon",
-    nominalSoProduk: 0,
-    soSampleCount: 5,
-    soProdukCount: 0,
-    status: "ACTIVE",
-    sampleFeeTotal: 3750000,
-    sampleStatus: "Sample Cushion Foundation SPF 35",
-    produksiBatchTotal: 0,
-    produksiStatus: "Menunggu DP PO Awal",
-    legalitasBpom: "Proses Verifikasi",
-    legalitasHalal: "Audit LPPOM",
-    legalitasHki: "Terdaftar Resmi",
-    escrowDeposit: 10000000,
-  },
-  {
-    id: "cust-6",
-    customerCode: "CUST-006",
-    nama: "Nuke Putri Pertama",
-    brandName: "NPP Natural Derm",
-    pic: "Nuke Putri",
-    phone: "08225766663",
-    email: "nukeputri@nppbeauty.id",
-    kategori: "Pelanggan Produk",
-    penginput: "Fadilah Syahab",
-    kota: "Kab. Sidoarjo",
-    provinsi: "Jawa Timur",
-    alamatLengkap: "Puri Surya Jaya Blok B-12 Gedangan",
-    contractType: "Jasa Maklon",
-    nominalSoProduk: 31890500,
-    soSampleCount: 2,
-    soProdukCount: 1,
-    status: "ACTIVE",
-    sampleFeeTotal: 1500000,
-    sampleStatus: "Acne Toner Tea Tree Disetujui",
-    produksiBatchTotal: 1,
-    produksiStatus: "Finishing & Coding Kemasan",
-    legalitasBpom: "Terbit",
-    legalitasHalal: "Sertifikasi Aktif",
-    legalitasHki: "Terdaftar Resmi",
-    escrowDeposit: 15000000,
-  },
-];
-
-const INITIAL_CUSTOMER_CATEGORIES: CustomerCategoryItem[] = [
-  { id: "ccat-1", kategori: "Pelanggan RO", deskripsi: "Mitra brand aktif dengan rekam jejak Repeat Order produksi massal rutin", totalClient: 18 },
-  { id: "ccat-2", kategori: "Pelanggan Produk", deskripsi: "Mitra baru yang telah menerbitkan Purchase Order (PO) produk perdana", totalClient: 12 },
-  { id: "ccat-3", kategori: "Pelanggan Sample", deskripsi: "Klien aktif dalam fase riset R&D formula, stabilitas, dan evaluasi organoleptik", totalClient: 28 },
-  { id: "ccat-4", kategori: "Calon Pelanggan", deskripsi: "Leads prospek yang sedang dalam tahap negosiasi MOQ, konsep produk, dan penawaran", totalClient: 45 },
-];
-
 function MasterCustomersContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -282,8 +109,8 @@ function MasterCustomersContent() {
   };
 
   // ── States ──
-  const [customersList, setCustomersList] = useState<MasterCustomerItem[]>(INITIAL_CUSTOMERS);
-  const [categoriesList, setCategoriesList] = useState<CustomerCategoryItem[]>(INITIAL_CUSTOMER_CATEGORIES);
+  const [customersList, setCustomersList] = useState<MasterCustomerItem[]>([]);
+  const [categoriesList, setCategoriesList] = useState<CustomerCategoryItem[]>([]);
 
   // Filter & Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -298,10 +125,9 @@ function MasterCustomersContent() {
       try {
         const res = await api.get(`/master/customers${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""}`);
         const body = unwrapResponse(res);
-        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : null;
+        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
       } catch (e) {
-        console.warn("Using fallback customers:", e);
-        return null;
+        return [];
       }
     },
     staleTime: 30000,

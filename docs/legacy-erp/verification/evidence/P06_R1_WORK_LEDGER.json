@@ -1,0 +1,237 @@
+{
+  "phase": "P06",
+  "audit_version": "R1",
+  "baseline_candidate": "b0cfb3186ce1317a3b3c16c567df58ca9e02f954",
+  "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
+  "timestamp": "2026-09-19T08:00:00.000Z",
+  "blockers": [
+    {
+      "id": "P06-R1-B1",
+      "title": "Gate engine defaults to PASS",
+      "root_cause": "baseShape() initializes gates with status PASS and synthetic target counts without executing full behavioral assertions",
+      "owning_files": [
+        "scripts/ssot/lib/p06_gates.js",
+        "scripts/ssot/lib/p06_certification.js"
+      ],
+      "target_tests": [
+        "node scripts/ssot/diagnose_p06_phase.js --gate <gate-id>",
+        "node scripts/ssot/test_p06_master_negative.js --meta"
+      ],
+      "dependent_seams": [
+        "P06-SEAM-P05-POLICY",
+        "P06-SEAM-IDENTITY-MASTER",
+        "P06-SEAM-CATALOG-REFERENCES",
+        "P06-SEAM-IMPORT-CRUD",
+        "P06-SEAM-API-UI",
+        "P06-SEAM-MUTATION-AUDIT"
+      ],
+      "status": "OPEN"
+    },
+    {
+      "id": "P06-R1-B2",
+      "title": "Subphases and seams do not execute declared tests",
+      "root_cause": "executeSubphase and executeSeam return declared test names and PASS status without invoking real executable test functions",
+      "owning_files": [
+        "scripts/ssot/lib/p06_certification.js",
+        "scripts/ssot/lib/p06_gates.js"
+      ],
+      "target_tests": [
+        "node scripts/ssot/diagnose_p06_phase.js --subphase P06-SF1-contract-inventory",
+        "node scripts/ssot/diagnose_p06_phase.js --seam P06-SEAM-P05-POLICY"
+      ],
+      "dependent_seams": [
+        "P06-SEAM-P05-POLICY",
+        "P06-SEAM-IDENTITY-MASTER",
+        "P06-SEAM-CATALOG-REFERENCES",
+        "P06-SEAM-IMPORT-CRUD",
+        "P06-SEAM-API-UI",
+        "P06-SEAM-MUTATION-AUDIT"
+      ],
+      "status": "OPEN"
+    },
+    {
+      "id": "P06-R1-B3",
+      "title": "Required metrics are hardcoded literals",
+      "root_cause": "certifyP06 defines metrics object with static 0s and 100s rather than calculating them from gate/test observations with provenance",
+      "owning_files": [
+        "scripts/ssot/lib/p06_certification.js"
+      ],
+      "target_tests": [
+        "node scripts/ssot/diagnose_p06_phase.js --preflight"
+      ],
+      "dependent_seams": [
+        "P06-SEAM-MUTATION-AUDIT"
+      ],
+      "status": "OPEN"
+    },
+    {
+      "id": "P06-R1-B4",
+      "title": "Adversarial suite manufactures expected errors",
+      "root_cause": "Mutations throw P06GateError internally or mutate mock local objects instead of changing real code/DB/inputs and asserting production rejection",
+      "owning_files": [
+        "scripts/ssot/test_p06_master_negative.js",
+        "scripts/ssot/lib/p06_gates.js"
+      ],
+      "target_tests": [
+        "node scripts/ssot/test_p06_master_negative.js --meta",
+        "node scripts/ssot/diagnose_p06_phase.js --mutation <mutation-id>"
+      ],
+      "dependent_seams": [
+        "P06-SEAM-MUTATION-AUDIT"
+      ],
+      "status": "OPEN"
+    },
+    {
+      "id": "P06-R1-B5",
+      "title": "Canonical inventory and alias reconciliation are text-presence checks",
+      "root_cause": "Inventory parser checks YAML text occurrences rather than reconciling DMMF, Nest routes, frontend routes and contracts to one authoritative writer per entity",
+      "owning_files": [
+        "scripts/ssot/lib/p06_analyzers.js",
+        "scripts/ssot/lib/p06_gates.js"
+      ],
+      "target_tests": [
+        "node scripts/ssot/diagnose_p06_phase.js --subphase P06-SF1-contract-inventory",
+        "node scripts/ssot/diagnose_p06_phase.js --gate canonical_master_inventory",
+        "node scripts/ssot/diagnose_p06_phase.js --gate schema_alias_and_referential_integrity"
+      ],
+      "dependent_seams": [
+        "P06-SEAM-CATALOG-REFERENCES"
+      ],
+      "status": "OPEN"
+    },
+    {
+      "id": "P06-R1-B6",
+      "title": "Identity and configuration lifecycle not implemented",
+      "root_cause": "No backend administrative services or tests exist for organization, division, user-role, warehouse access, or typed non-secret system config",
+      "owning_files": [
+        "backend/src/modules/master",
+        "scripts/ssot/lib/p06_gates.js"
+      ],
+      "target_tests": [
+        "node scripts/ssot/diagnose_p06_phase.js --subphase P06-SF2-identity-config",
+        "node scripts/ssot/diagnose_p06_phase.js --seam P06-SEAM-IDENTITY-MASTER",
+        "node scripts/ssot/diagnose_p06_phase.js --gate organization_division_user_role_config"
+      ],
+      "dependent_seams": [
+        "P06-SEAM-IDENTITY-MASTER",
+        "P06-SEAM-P05-POLICY"
+      ],
+      "status": "OPEN"
+    },
+    {
+      "id": "P06-R1-B7",
+      "title": "Catalog lifecycle is not certified and code generation is race-prone",
+      "root_cause": "master_crud and soft delete gates do not exercise live DB CRUD; categories code generation uses count + 1 which races under concurrency",
+      "owning_files": [
+        "backend/src/modules/master/services/categories.service.ts",
+        "backend/src/modules/master",
+        "scripts/ssot/lib/p06_gates.js"
+      ],
+      "target_tests": [
+        "node scripts/ssot/diagnose_p06_phase.js --subphase P06-SF3-catalog-masters",
+        "node scripts/ssot/diagnose_p06_phase.js --seam P06-SEAM-CATALOG-REFERENCES",
+        "node scripts/ssot/diagnose_p06_phase.js --gate master_crud",
+        "node scripts/ssot/diagnose_p06_phase.js --gate uniqueness_and_code_generation",
+        "node scripts/ssot/diagnose_p06_phase.js --gate soft_delete_and_reference_policy"
+      ],
+      "dependent_seams": [
+        "P06-SEAM-CATALOG-REFERENCES",
+        "P06-SEAM-MUTATION-AUDIT"
+      ],
+      "status": "OPEN"
+    },
+    {
+      "id": "P06-R1-B8",
+      "title": "Bulk import/export is absent",
+      "root_cause": "No backend master import/export service exists; import_export gate returns static PASS without verifying atomicity, idempotency, or formula neutralization",
+      "owning_files": [
+        "backend/src/modules/master",
+        "scripts/ssot/lib/p06_gates.js"
+      ],
+      "target_tests": [
+        "node scripts/ssot/diagnose_p06_phase.js --subphase P06-SF4-bulk-io",
+        "node scripts/ssot/diagnose_p06_phase.js --seam P06-SEAM-IMPORT-CRUD",
+        "node scripts/ssot/diagnose_p06_phase.js --gate import_export"
+      ],
+      "dependent_seams": [
+        "P06-SEAM-IMPORT-CRUD"
+      ],
+      "status": "OPEN"
+    },
+    {
+      "id": "P06-R1-B9",
+      "title": "P05 platform controls are not wired into master operations",
+      "root_cause": "Master module does not integrate with PolicyService, ScopeService, AuditService, OutboxService; role_tenant_field_scope and audit_outbox_atomicity gates are unconditional PASS",
+      "owning_files": [
+        "backend/src/modules/master",
+        "scripts/ssot/lib/p06_gates.js"
+      ],
+      "target_tests": [
+        "node scripts/ssot/diagnose_p06_phase.js --seam P06-SEAM-P05-POLICY",
+        "node scripts/ssot/diagnose_p06_phase.js --gate role_tenant_field_scope",
+        "node scripts/ssot/diagnose_p06_phase.js --gate audit_outbox_atomicity"
+      ],
+      "dependent_seams": [
+        "P06-SEAM-P05-POLICY",
+        "P06-SEAM-MUTATION-AUDIT"
+      ],
+      "status": "OPEN"
+    },
+    {
+      "id": "P06-R1-B10",
+      "title": "Canonical frontend screens still use production fallback data",
+      "root_cause": "Supplier, customer, goods, and warehouse frontend pages contain INITIAL_* mock fallback arrays; scanner hardcoded a partial list of screens",
+      "owning_files": [
+        "frontend/src/app/(dashboard)/master/suppliers/page.tsx",
+        "frontend/src/app/(dashboard)/master/customers/page.tsx",
+        "frontend/src/app/(dashboard)/master/goods/page.tsx",
+        "frontend/src/app/(dashboard)/master/warehouses/page.tsx",
+        "scripts/ssot/lib/p06_analyzers.js",
+        "scripts/ssot/lib/p06_gates.js"
+      ],
+      "target_tests": [
+        "node scripts/ssot/diagnose_p06_phase.js --subphase P06-SF5-frontend-ui",
+        "node scripts/ssot/diagnose_p06_phase.js --seam P06-SEAM-API-UI",
+        "node scripts/ssot/diagnose_p06_phase.js --gate frontend_live_data_and_dna"
+      ],
+      "dependent_seams": [
+        "P06-SEAM-API-UI"
+      ],
+      "status": "OPEN"
+    },
+    {
+      "id": "P06-R1-B11",
+      "title": "No real regression/build admission exists in certifier",
+      "root_cause": "subphase_seam_and_regression gate does not execute real nest build, next build, typecheck, lint, or SSOT validation",
+      "owning_files": [
+        "scripts/ssot/lib/p06_gates.js",
+        "scripts/ssot/lib/p06_certification.js"
+      ],
+      "target_tests": [
+        "node scripts/ssot/diagnose_p06_phase.js --gate subphase_seam_and_regression",
+        "node scripts/ssot/diagnose_p06_phase.js --subphase P06-SF6-integration"
+      ],
+      "dependent_seams": [
+        "P06-SEAM-MUTATION-AUDIT"
+      ],
+      "status": "OPEN"
+    },
+    {
+      "id": "P06-R1-B12",
+      "title": "Database isolation terminates source-database sessions",
+      "root_cause": "createIsolatedDatabase uses TEMPLATE source_db and terminates sessions on source DB instead of migrating a clean empty database",
+      "owning_files": [
+        "scripts/ssot/lib/p06_safety.js",
+        "scripts/ssot/lib/p06_certification.js"
+      ],
+      "target_tests": [
+        "node scripts/ssot/test_p06_master_negative.js --meta",
+        "node scripts/ssot/diagnose_p06_phase.js --gate predecessor_scope_and_safety"
+      ],
+      "dependent_seams": [
+        "P06-SEAM-MUTATION-AUDIT"
+      ],
+      "status": "OPEN"
+    }
+  ]
+}

@@ -68,47 +68,6 @@ export interface MasterRoleItem {
 }
 
 // ── Seed Data from USERS.csv ──
-const INITIAL_USERS: MasterUserItem[] = [
-  { id: "u-000", kodeNip: "000", nama: "Super Admin", email: "goodsyst@gmail.com", phone: "081231418159", hakAkses: "Super Administrator", divisi: "Technology & System", status: "ACTIVE" },
-  { id: "u-001", kodeNip: "001", nama: "Fadilah Syahab", email: "fadilah.syahab@dreamlab.id", phone: "087722291012", hakAkses: "Administrator", divisi: "Executive / Management", status: "ACTIVE" },
-  { id: "u-002", kodeNip: "002", nama: "Achmad Bagir", email: "achmad.bagir@dreamlab.id", phone: "081999122990", hakAkses: "Administrator", divisi: "Executive / Management", status: "ACTIVE" },
-  { id: "u-003", kodeNip: "003", nama: "Zaki", email: "zaki@dreamlab.id", phone: "085659360766", hakAkses: "Administrator", divisi: "Operations Support", status: "ACTIVE" },
-  { id: "u-004", kodeNip: "004", nama: "Fatimah Amira", email: "fatimah.amira@dreamlab.id", phone: "085174191902", hakAkses: "Head Research and Development", divisi: "R&D / QC Laboratory", status: "ACTIVE" },
-  { id: "u-005", kodeNip: "005", nama: "Ribut Supriyono", email: "ribut.supriyono@dreamlab.id", phone: "085604348983", hakAkses: "Research and Development", divisi: "R&D / QC Laboratory", status: "ACTIVE" },
-  { id: "u-006", kodeNip: "006", nama: "Riyantita Tunjungsari", email: "riyantita.tunjungsari@dreamlab.id", phone: "081356351997", hakAkses: "Production Mixing & Filling Lead", divisi: "Produksi", status: "ACTIVE" },
-  { id: "u-007", kodeNip: "007", nama: "Muhammad Ghufron", email: "muhammad.ghufron@dreamlab.id", phone: "0895341099232", hakAkses: "Warehouse Lead", divisi: "Gudang & Logistik", status: "ACTIVE" },
-  { id: "u-008", kodeNip: "008", nama: "Akhmad Ratriono Anggoro", email: "akhmad.ratriono@dreamlab.id", phone: "081213971639", hakAkses: "Business Development", divisi: "Commercial / Sales", status: "ACTIVE" },
-  { id: "u-009", kodeNip: "009", nama: "Dicky Barkah", email: "dicky.barkah@dreamlab.id", phone: "628979152855", hakAkses: "Production Packaging Lead", divisi: "Produksi", status: "ACTIVE" },
-  { id: "u-010", kodeNip: "010", nama: "Keviana", email: "keviana@dreamlab.id", phone: "62895375470001", hakAkses: "Business Development", divisi: "Commercial / Sales", status: "ACTIVE" },
-  { id: "u-012", kodeNip: "012", nama: "Irma Safarina", email: "irma.safarina@dreamlab.id", phone: "083820898788", hakAkses: "BusDev + Purchasing", divisi: "SCM & Purchasing", status: "ACTIVE" },
-  { id: "u-013", kodeNip: "013", nama: "Ekky Ilham", email: "ekky.ilham@dreamlab.id", phone: "081214727282", hakAkses: "Finance & Accounting", divisi: "Finance & Tax", status: "ACTIVE" },
-  { id: "u-014", kodeNip: "014", nama: "Irma Finance", email: "irma.finance@dreamlab.id", phone: "088229186548", hakAkses: "Finance Controller", divisi: "Finance & Tax", status: "ACTIVE" },
-  { id: "u-015", kodeNip: "015", nama: "Vira", email: "vira@dreamlab.id", phone: "088235482487", hakAkses: "Business Development", divisi: "Commercial / Sales", status: "ACTIVE" },
-  { id: "u-016", kodeNip: "016", nama: "Desy", email: "desy@dreamlab.id", phone: "085604015560", hakAkses: "Business Development", divisi: "Commercial / Sales", status: "ACTIVE" },
-  { id: "u-017", kodeNip: "017", nama: "Gabriella Maulidha", email: "gabriella.maulidha@dreamlab.id", phone: "087899752715", hakAkses: "Research and Development", divisi: "R&D / QC Laboratory", status: "ACTIVE" },
-  { id: "u-018", kodeNip: "018", nama: "Nur Kholilah", email: "nur.kholilah@dreamlab.id", phone: "085851237453", hakAkses: "Production Filling Specialist", divisi: "Produksi", status: "ACTIVE" },
-  { id: "u-019", kodeNip: "019", nama: "Muhammad Ruhullah", email: "muhammad.ruhullah@dreamlab.id", phone: "089524640010", hakAkses: "Production Mixing Operator", divisi: "Produksi", status: "ACTIVE" },
-  { id: "u-020", kodeNip: "020", nama: "Salfa Delia Fernanda", email: "salfa.delia@dreamlab.id", phone: "08819405360", hakAkses: "Business Development", divisi: "Commercial / Sales", status: "ACTIVE" },
-  { id: "u-021", kodeNip: "021", nama: "Rudy Affandy", email: "rudy.affandy@dreamlab.id", phone: "081358590645", hakAkses: "Packaging Line Operator", divisi: "Produksi", status: "ACTIVE" },
-  { id: "u-022", kodeNip: "022", nama: "Yulia Esther", email: "yulia.esther@dreamlab.id", phone: "082337458118", hakAkses: "HRD & General Affairs", divisi: "Human Resource", status: "ACTIVE" },
-  { id: "u-023", kodeNip: "023", nama: "Ayu Anindya", email: "ayu.anindya@dreamlab.id", phone: "085731558835", hakAkses: "Business Development", divisi: "Commercial / Sales", status: "ACTIVE" },
-  { id: "u-024", kodeNip: "024", nama: "Krisna Putra Ramadhani", email: "krisna.putra@dreamlab.id", phone: "082230206692", hakAkses: "Warehouse Staff", divisi: "Gudang & Logistik", status: "ACTIVE" },
-];
-
-const INITIAL_ROLES: MasterRoleItem[] = [
-  { id: "rol-1", kodeRole: "SUPER_ADMIN", namaRole: "Super Administrator", levelOtoritas: "Executive / Super", deskripsi: "Akses penuh konfigurasi sistem, database, audit log, dan otoritas approval", totalPengguna: 1 },
-  { id: "rol-2", kodeRole: "EXECUTIVE", namaRole: "Administrator / Management", levelOtoritas: "Executive / Super", deskripsi: "Direksi, CFO, COO dengan kendali operasional dan approval berjenjang", totalPengguna: 3 },
-  { id: "rol-3", kodeRole: "RND_HEAD", namaRole: "Head Research and Development", levelOtoritas: "Department Head", deskripsi: "Otoritas rilis formula, approval PNF sampel, evaluasi uji stabilitas", totalPengguna: 1 },
-  { id: "rol-4", kodeRole: "RND_STAFF", namaRole: "Research and Development", levelOtoritas: "Operational Staff", deskripsi: "Formulator lab, pencatatan batch trial, dan uji organoleptik", totalPengguna: 2 },
-  { id: "rol-5", kodeRole: "PROD_LEAD", namaRole: "Production Mixing & Filling Lead", levelOtoritas: "Department Head", deskripsi: "Penjadwalan SP/SF/SM, approval upscale formula, dan verifikasi batch", totalPengguna: 2 },
-  { id: "rol-6", kodeRole: "PROD_STAFF", namaRole: "Production Operator", levelOtoritas: "Operational Staff", deskripsi: "Pencatatan aktual proses mixing curah, filling, dan packaging sekunder", totalPengguna: 3 },
-  { id: "rol-7", kodeRole: "WH_LEAD", namaRole: "Warehouse Lead", levelOtoritas: "Department Head", deskripsi: "Penerimaan GR, stock opname, transfer antar gudang, dan retur supplier", totalPengguna: 1 },
-  { id: "rol-8", kodeRole: "WH_STAFF", namaRole: "Warehouse Staff", levelOtoritas: "Operational Staff", deskripsi: "Penyiapan material picking cart, packing pengiriman, dan serah terima", totalPengguna: 1 },
-  { id: "rol-9", kodeRole: "BUSDEV", namaRole: "Business Development (Sales)", levelOtoritas: "Operational Staff", deskripsi: "Pipeline CRM, input SO sample/produk, komunikasi klien brand owner", totalPengguna: 6 },
-  { id: "rol-10", kodeRole: "FINANCE", namaRole: "Finance & Accounting", levelOtoritas: "Department Head", deskripsi: "Faktur pembelian, invoice penjualan, ledger COA, dan rekonsiliasi kas", totalPengguna: 2 },
-  { id: "rol-11", kodeRole: "HRD", namaRole: "HRD & General Affairs", levelOtoritas: "Department Head", deskripsi: "Manajemen personil, payroll, absensi, dan aset inventaris kantor", totalPengguna: 1 },
-];
-
 export function PersonnelRegistry() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -134,8 +93,8 @@ export function PersonnelRegistry() {
   };
 
   // ── States ──
-  const [usersList, setUsersList] = useState<MasterUserItem[]>(INITIAL_USERS);
-  const [rolesList, setRolesList] = useState<MasterRoleItem[]>(INITIAL_ROLES);
+  const [usersList, setUsersList] = useState<MasterUserItem[]>([]);
+  const [rolesList, setRolesList] = useState<MasterRoleItem[]>([]);
 
   // Filter & Search
   const [searchQuery, setSearchQuery] = useState("");

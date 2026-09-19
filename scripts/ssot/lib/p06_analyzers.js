@@ -49,22 +49,218 @@ function listAllFiles(root, subdir) {
 // ----------------------------------------------------------------------------
 
 const CANONICAL_MASTER_ENTITIES = [
-  { id: 'Organization', physicalModel: 'SystemConfig', domain: 'system', writer: 'system', notes: 'Tenant metadata mapped to SystemConfig/TenantScope' },
-  { id: 'Division', physicalModel: 'Employee', domain: 'hr', writer: 'hr', notes: 'Division represented on staff entities' },
-  { id: 'User', physicalModel: 'User', domain: 'auth', writer: 'auth' },
-  { id: 'Role', physicalModel: 'UserRole', domain: 'auth', writer: 'auth' },
-  { id: 'Customer', physicalModel: 'SalesLead', domain: 'busdev', writer: 'busdev', alias: 'SalesLead' },
-  { id: 'Supplier', physicalModel: 'Supplier', domain: 'scm', writer: 'scm' },
-  { id: 'Goods', physicalModel: 'MaterialItem', domain: 'scm', writer: 'scm', alias: 'MaterialItem' },
-  { id: 'MasterCategory', physicalModel: 'MasterCategory', domain: 'master', writer: 'master' },
-  { id: 'MasterUnit', physicalModel: 'MasterUnit', domain: 'master', writer: 'master' },
-  { id: 'TaxRate', physicalModel: 'TaxRate', domain: 'finance', writer: 'finance' },
-  { id: 'Warehouse', physicalModel: 'Warehouse', domain: 'warehouse', writer: 'warehouse' },
-  { id: 'WarehouseAccess', physicalModel: 'WarehouseAccess', domain: 'warehouse', writer: 'warehouse' },
-  { id: 'ChartOfAccount', physicalModel: 'Account', domain: 'finance', writer: 'finance', alias: 'Account' },
-  { id: 'Formulation', physicalModel: 'Formula', domain: 'rnd', writer: 'rnd', alias: 'Formula' },
-  { id: 'SystemConfig', physicalModel: 'SystemConfig', domain: 'system', writer: 'system' },
-  { id: 'MasterKode', physicalModel: 'MasterKode', domain: 'system', writer: 'system' }
+  {
+    id: 'Organization',
+    physicalModel: 'SystemConfig',
+    domain: 'system',
+    source: 'contracts/01_DOMAIN_MODEL.md#Organization',
+    writer: 'system.config',
+    adapter: 'OrganizationConfigAdapter',
+    operations: ['GET /api/v1/system/config/organization', 'PATCH /api/v1/system/config/organization'],
+    screen: 'SCR-SYS-001',
+    permissions: ['system.config:read', 'system.config:write'],
+    events: ['ORGANIZATION_CONFIG_UPDATED'],
+    testedTargetId: 'P06-SF2-identity-config'
+  },
+  {
+    id: 'Division',
+    physicalModel: 'Employee',
+    domain: 'hr',
+    source: 'contracts/01_DOMAIN_MODEL.md#Division',
+    writer: 'hr.divisions',
+    adapter: 'DivisionStaffAdapter',
+    operations: ['GET /api/v1/master/divisions'],
+    screen: 'SCR-087',
+    permissions: ['divisions:read', 'divisions:write'],
+    events: ['DIVISION_UPDATED'],
+    testedTargetId: 'P06-SF2-identity-config'
+  },
+  {
+    id: 'User',
+    physicalModel: 'User',
+    domain: 'auth',
+    source: 'contracts/01_DOMAIN_MODEL.md#User',
+    writer: 'auth.users',
+    adapter: null,
+    operations: ['GET /api/v1/users', 'POST /api/v1/users', 'PATCH /api/v1/users/{id}', 'DELETE /api/v1/users/{id}'],
+    screen: 'SCR-088',
+    permissions: ['users:read', 'users:write'],
+    events: ['USER_CREATED', 'USER_UPDATED', 'USER_DEACTIVATED'],
+    testedTargetId: 'P06-SF2-identity-config'
+  },
+  {
+    id: 'Role',
+    physicalModel: 'UserRole',
+    domain: 'auth',
+    source: 'contracts/01_DOMAIN_MODEL.md#Role',
+    writer: 'auth.roles',
+    adapter: null,
+    operations: ['GET /api/v1/roles'],
+    screen: 'SCR-088',
+    permissions: ['roles:read'],
+    events: ['USER_ROLE_ASSIGNED'],
+    testedTargetId: 'P06-SF2-identity-config'
+  },
+  {
+    id: 'WarehouseAccess',
+    physicalModel: 'WarehouseAccess',
+    domain: 'warehouse',
+    source: 'contracts/01_DOMAIN_MODEL.md#WarehouseAccess',
+    writer: 'warehouse.access',
+    adapter: null,
+    operations: ['GET /api/v1/master/warehouses/access', 'POST /api/v1/master/warehouses/access'],
+    screen: 'SCR-012',
+    permissions: ['warehouses:read', 'warehouses:write'],
+    events: ['WAREHOUSE_ACCESS_GRANTED', 'WAREHOUSE_ACCESS_REVOKED'],
+    testedTargetId: 'P06-SF2-identity-config'
+  },
+  {
+    id: 'Customer',
+    physicalModel: 'SalesLead',
+    domain: 'busdev',
+    source: 'contracts/01_DOMAIN_MODEL.md#Customer',
+    writer: 'busdev.leads',
+    adapter: 'CustomerSalesLeadAdapter',
+    alias: 'SalesLead',
+    operations: ['GET /api/v1/customers', 'POST /api/v1/customers', 'GET /api/v1/customers/{id}', 'PATCH /api/v1/customers/{id}', 'DELETE /api/v1/customers/{id}', 'POST /api/v1/customers/import', 'GET /api/v1/customers/export'],
+    screen: 'SCR-007',
+    permissions: ['customers:read', 'customers:write'],
+    events: ['CUSTOMER_CREATED', 'CUSTOMER_UPDATED', 'CUSTOMER_DEACTIVATED'],
+    testedTargetId: 'P06-SF3-catalog-masters'
+  },
+  {
+    id: 'Supplier',
+    physicalModel: 'Supplier',
+    domain: 'scm',
+    source: 'contracts/01_DOMAIN_MODEL.md#Supplier',
+    writer: 'scm.suppliers',
+    adapter: null,
+    operations: ['GET /api/v1/suppliers', 'POST /api/v1/suppliers', 'GET /api/v1/suppliers/{id}', 'PATCH /api/v1/suppliers/{id}', 'DELETE /api/v1/suppliers/{id}', 'POST /api/v1/suppliers/import', 'GET /api/v1/suppliers/export'],
+    screen: 'SCR-006',
+    permissions: ['suppliers:read', 'suppliers:write'],
+    events: ['SUPPLIER_CREATED', 'SUPPLIER_UPDATED', 'SUPPLIER_DEACTIVATED'],
+    testedTargetId: 'P06-SF3-catalog-masters'
+  },
+  {
+    id: 'Goods',
+    physicalModel: 'MaterialItem',
+    domain: 'scm',
+    source: 'contracts/01_DOMAIN_MODEL.md#Goods',
+    writer: 'scm.materials',
+    adapter: 'GoodsMaterialItemAdapter',
+    alias: 'MaterialItem',
+    operations: ['GET /api/v1/master/materials', 'POST /api/v1/master/materials', 'GET /api/v1/master/materials/{id}', 'PATCH /api/v1/master/materials/{id}', 'DELETE /api/v1/master/materials/{id}', 'POST /api/v1/master/materials/import', 'GET /api/v1/master/materials/export'],
+    screen: 'SCR-008',
+    permissions: ['materials:read', 'materials:write'],
+    events: ['MATERIAL_CREATED', 'MATERIAL_UPDATED', 'MATERIAL_DEACTIVATED'],
+    testedTargetId: 'P06-SF3-catalog-masters'
+  },
+  {
+    id: 'MasterCategory',
+    physicalModel: 'MasterCategory',
+    domain: 'master',
+    source: 'contracts/01_DOMAIN_MODEL.md#MasterCategory',
+    writer: 'master.categories',
+    adapter: null,
+    operations: ['GET /api/v1/master/categories', 'POST /api/v1/master/categories', 'GET /api/v1/master/categories/{id}', 'PATCH /api/v1/master/categories/{id}', 'DELETE /api/v1/master/categories/{id}'],
+    screen: 'SCR-009',
+    permissions: ['categories:read', 'categories:write'],
+    events: ['CATEGORY_CREATED', 'CATEGORY_UPDATED', 'CATEGORY_DEACTIVATED'],
+    testedTargetId: 'P06-SF3-catalog-masters'
+  },
+  {
+    id: 'MasterUnit',
+    physicalModel: 'MasterUnit',
+    domain: 'master',
+    source: 'contracts/01_DOMAIN_MODEL.md#MasterUnit',
+    writer: 'master.units',
+    adapter: null,
+    operations: ['GET /api/v1/master/units', 'POST /api/v1/master/units', 'GET /api/v1/master/units/{id}', 'PATCH /api/v1/master/units/{id}', 'DELETE /api/v1/master/units/{id}'],
+    screen: 'SCR-010',
+    permissions: ['units:read', 'units:write'],
+    events: ['UNIT_CREATED', 'UNIT_UPDATED', 'UNIT_DEACTIVATED'],
+    testedTargetId: 'P06-SF3-catalog-masters'
+  },
+  {
+    id: 'TaxRate',
+    physicalModel: 'TaxRate',
+    domain: 'finance',
+    source: 'contracts/01_DOMAIN_MODEL.md#TaxRate',
+    writer: 'finance.taxes',
+    adapter: null,
+    operations: ['GET /api/v1/master/tax-rates', 'POST /api/v1/master/tax-rates', 'GET /api/v1/master/tax-rates/{id}', 'PATCH /api/v1/master/tax-rates/{id}', 'DELETE /api/v1/master/tax-rates/{id}'],
+    screen: 'SCR-011',
+    permissions: ['taxes:read', 'taxes:write'],
+    events: ['TAX_RATE_CREATED', 'TAX_RATE_UPDATED', 'TAX_RATE_DEACTIVATED'],
+    testedTargetId: 'P06-SF3-catalog-masters'
+  },
+  {
+    id: 'Warehouse',
+    physicalModel: 'Warehouse',
+    domain: 'warehouse',
+    source: 'contracts/01_DOMAIN_MODEL.md#Warehouse',
+    writer: 'warehouse.warehouses',
+    adapter: null,
+    operations: ['GET /api/v1/master/warehouses', 'POST /api/v1/master/warehouses', 'GET /api/v1/master/warehouses/{id}', 'PATCH /api/v1/master/warehouses/{id}', 'DELETE /api/v1/master/warehouses/{id}'],
+    screen: 'SCR-012',
+    permissions: ['warehouses:read', 'warehouses:write'],
+    events: ['WAREHOUSE_CREATED', 'WAREHOUSE_UPDATED', 'WAREHOUSE_DEACTIVATED'],
+    testedTargetId: 'P06-SF3-catalog-masters'
+  },
+  {
+    id: 'ChartOfAccount',
+    physicalModel: 'Account',
+    domain: 'finance',
+    source: 'contracts/01_DOMAIN_MODEL.md#ChartOfAccount',
+    writer: 'finance.accounts',
+    adapter: 'ChartOfAccountAdapter',
+    alias: 'Account',
+    operations: ['GET /api/v1/finance/accounts'],
+    screen: 'SCR-013',
+    permissions: ['accounts:read', 'accounts:write'],
+    events: ['ACCOUNT_CREATED', 'ACCOUNT_UPDATED', 'ACCOUNT_DEACTIVATED'],
+    testedTargetId: 'P06-SF3-catalog-masters'
+  },
+  {
+    id: 'Formulation',
+    physicalModel: 'Formula',
+    domain: 'rnd',
+    source: 'contracts/01_DOMAIN_MODEL.md#Formulation',
+    writer: 'rnd.formulas',
+    adapter: 'FormulationFormulaAdapter',
+    alias: 'Formula',
+    operations: ['GET /api/v1/rnd/formulas'],
+    screen: 'SCR-014',
+    permissions: ['formulas:read', 'formulas:write'],
+    events: ['FORMULA_CREATED', 'FORMULA_UPDATED', 'FORMULA_DEACTIVATED'],
+    testedTargetId: 'P06-SF3-catalog-masters'
+  },
+  {
+    id: 'SystemConfig',
+    physicalModel: 'SystemConfig',
+    domain: 'system',
+    source: 'contracts/01_DOMAIN_MODEL.md#SystemConfig',
+    writer: 'system.config',
+    adapter: null,
+    operations: ['GET /api/v1/system/config', 'PATCH /api/v1/system/config'],
+    screen: 'SCR-SYS-001',
+    permissions: ['system.config:read', 'system.config:write'],
+    events: ['SYSTEM_CONFIG_UPDATED'],
+    testedTargetId: 'P06-SF2-identity-config'
+  },
+  {
+    id: 'MasterKode',
+    physicalModel: 'MasterKode',
+    domain: 'system',
+    source: 'contracts/01_DOMAIN_MODEL.md#MasterKode',
+    writer: 'system.kodes',
+    adapter: null,
+    operations: ['GET /api/v1/system/kodes', 'POST /api/v1/system/kodes'],
+    screen: 'SCR-SYS-001',
+    permissions: ['system.kodes:read', 'system.kodes:write'],
+    events: ['MASTER_KODE_UPDATED'],
+    testedTargetId: 'P06-SF2-identity-config'
+  }
 ];
 
 const CANONICAL_MASTER_OPERATIONS = [
@@ -287,11 +483,11 @@ function analyzeProductionMockFallbacks(root) {
 
     // Detect hardcoded fallback arrays used on catch or default state
     const hasFallbackConst = /const\s+FALLBACK\s*[:=]/i.test(content);
-    const hasInitialArray = /const\s+INITIAL_[A-Z_]+\s*[:=]\s*\[\s*\{/i.test(content);
-    const usesFallbackOnCatch = /catch\s*\{?\s*return\s+(?:FALLBACK|INITIAL_[A-Z_]+)/i.test(content);
+    const hasInitialArray = /const\s+INITIAL_[A-Z_]+(?:\s*:\s*[^=]+)?=\s*\[/i.test(content);
+    const usesFallbackOnCatch = /catch\s*\{?[^}]*return\s+(?:FALLBACK|INITIAL_[A-Z_]+)/i.test(content);
     const stateInitializedWithMock = /useState<[^>]*>\(\s*(?:FALLBACK|INITIAL_[A-Z_]+)\s*\)/i.test(content);
 
-    if (hasFallbackConst || (hasInitialArray && stateInitializedWithMock) || usesFallbackOnCatch) {
+    if (hasFallbackConst || hasInitialArray || usesFallbackOnCatch || stateInitializedWithMock) {
       violations.push({
         file: rel,
         hasFallbackConst,

@@ -13,6 +13,7 @@ import { SuppliersService } from './services/suppliers.service';
 import { CustomersService } from './services/customers.service';
 import { TaxRatesService } from './services/tax-rates.service';
 import { UnitsService } from './services/units.service';
+import { ImportExportService } from './services/import-export.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
@@ -34,6 +35,7 @@ import { PrismaModule } from '../../prisma/prisma.module';
     CustomersService,
     TaxRatesService,
     UnitsService,
+    ImportExportService,
   ],
   exports: [
     MaterialsService,
@@ -43,6 +45,7 @@ import { PrismaModule } from '../../prisma/prisma.module';
     CustomersService,
     TaxRatesService,
     UnitsService,
+    ImportExportService,
   ],
 })
 export class MasterModule {}

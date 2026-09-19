@@ -49,14 +49,7 @@ interface PayrollItem {
   status: "DRAFT" | "CALCULATED" | "APPROVED" | "PAID";
 }
 
-const INITIAL_PAYROLL: PayrollItem[] = [
-  { id: "PAY-01", empId: "KIL-2022-001", empName: "Budi Santoso, S.T", department: "Produksi Mixing", role: "Supervisor Produksi", basicSalary: 6500000, allowance: 1200000, overtimePay: 850000, bpjsDeduction: 260000, taxPph21: 150000, lateDeduction: 0, netSalary: 8140000, bankName: "BCA", bankAccount: "521-0099881", status: "APPROVED" },
-  { id: "PAY-02", empId: "KIL-2023-014", empName: "Rian Saputra, S.Farm", department: "R&D Formulasi", role: "Senior Formulator", basicSalary: 8000000, allowance: 1500000, overtimePay: 0, bpjsDeduction: 320000, taxPph21: 210000, lateDeduction: 0, netSalary: 8970000, bankName: "Bank Mandiri", bankAccount: "137-0099112", status: "APPROVED" },
-  { id: "PAY-03", empId: "KIL-2023-022", empName: "Siti Rahmawati, S.Si", department: "QC Mikrobiologi", role: "Analis Kimia & QC", basicSalary: 5500000, allowance: 900000, overtimePay: 450000, bpjsDeduction: 220000, taxPph21: 90000, lateDeduction: 50000, netSalary: 6490000, bankName: "BCA", bankAccount: "521-1122334", status: "APPROVED" },
-  { id: "PAY-04", empId: "KIL-2024-005", empName: "Dewi Lestari, S.E", department: "BusDev Maklon", role: "Senior AE BusDev", basicSalary: 7000000, allowance: 2000000, overtimePay: 0, bpjsDeduction: 280000, taxPph21: 180000, lateDeduction: 0, netSalary: 8540000, bankName: "BCA", bankAccount: "521-7788990", status: "APPROVED" },
-  { id: "PAY-05", empId: "KIL-2024-031", empName: "Ahmad Dani", department: "Gudang Inbound", role: "Staff Inbound", basicSalary: 4800000, allowance: 600000, overtimePay: 350000, bpjsDeduction: 192000, taxPph21: 45000, lateDeduction: 0, netSalary: 5513000, bankName: "BRI", bankAccount: "012-3344556", status: "APPROVED" },
-  { id: "PAY-06", empId: "KIL-2025-012", empName: "dr. Amanda Putri, M.Biomed", department: "QA & APJ", role: "Apoteker PJ", basicSalary: 11000000, allowance: 2500000, overtimePay: 0, bpjsDeduction: 440000, taxPph21: 480000, lateDeduction: 0, netSalary: 12580000, bankName: "BCA", bankAccount: "521-9988776", status: "APPROVED" },
-];
+const EMPTY_PAYROLL: PayrollItem[] = [];
 
 export default function HrPayrollPage() {
   const toast = useDnaToast();
@@ -64,12 +57,12 @@ export default function HrPayrollPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSlip, setSelectedSlip] = useState<PayrollItem | null>(null);
 
-  const totalBasic = INITIAL_PAYROLL.reduce((acc, r) => acc + r.basicSalary, 0);
-  const totalAllowances = INITIAL_PAYROLL.reduce((acc, r) => acc + r.allowance + r.overtimePay, 0);
-  const totalDeductions = INITIAL_PAYROLL.reduce((acc, r) => acc + r.bpjsDeduction + r.taxPph21 + r.lateDeduction, 0);
-  const totalNetPayroll = INITIAL_PAYROLL.reduce((acc, r) => acc + r.netSalary, 0);
+  const totalBasic = EMPTY_PAYROLL.reduce((acc, r) => acc + r.basicSalary, 0);
+  const totalAllowances = EMPTY_PAYROLL.reduce((acc, r) => acc + r.allowance + r.overtimePay, 0);
+  const totalDeductions = EMPTY_PAYROLL.reduce((acc, r) => acc + r.bpjsDeduction + r.taxPph21 + r.lateDeduction, 0);
+  const totalNetPayroll = EMPTY_PAYROLL.reduce((acc, r) => acc + r.netSalary, 0);
 
-  const filteredPayroll = INITIAL_PAYROLL.filter(r =>
+  const filteredPayroll = EMPTY_PAYROLL.filter(r =>
     r.empName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.empId.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.department.toLowerCase().includes(searchQuery.toLowerCase())
