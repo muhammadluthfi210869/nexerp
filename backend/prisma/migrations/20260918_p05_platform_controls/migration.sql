@@ -180,3 +180,47 @@ DROP TRIGGER IF EXISTS audit_logs_immutable ON "audit_logs";
 CREATE TRIGGER audit_logs_immutable
   BEFORE UPDATE OR DELETE ON "audit_logs"
   FOR EACH ROW EXECUTE FUNCTION audit_immutable();
+
+-- Core entity compatibility for isolated database execution
+DO $$ BEGIN
+  CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'INACTIVE');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "UserRole" AS ENUM (
+    'SUPER_ADMIN', 'HEAD_OPS', 'COMMERCIAL', 'DIGIMAR', 'RND', 'COMPLIANCE',
+    'FINANCE', 'PURCHASING', 'PPIC', 'WAREHOUSE', 'PRODUCTION_OP', 'QC_LAB',
+    'HR', 'IT_SYS', 'ADMIN', 'SCM', 'PRODUCTION', 'MARKETING', 'APJ', 'DIRECTOR'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+CREATE TABLE IF NOT EXISTS "users" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "fullName" TEXT,
+  "email" TEXT UNIQUE,
+  "passwordHash" TEXT,
+  "roles" "UserRole"[] DEFAULT ARRAY[]::"UserRole"[],
+  "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
+  "managerPin" TEXT,
+  "approvalPin" TEXT,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "deletedAt" TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "notifications" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "userId" UUID NOT NULL,
+  "title" TEXT NOT NULL,
+  "body" TEXT NOT NULL,
+  "type" TEXT NOT NULL,
+  "referenceType" TEXT,
+  "referenceId" TEXT,
+  "link" TEXT,
+  "isRead" BOOLEAN NOT NULL DEFAULT false,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
