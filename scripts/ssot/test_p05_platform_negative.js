@@ -24,6 +24,31 @@ const analyzers = require('./lib/p05_analyzers');
 const gates = require('./lib/p05_gates');
 const { P05GateError } = safety;
 
+function safeWriteFileSync(filePath, content, retries = 10, delayMs = 100) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      fs.writeFileSync(filePath, content, 'utf8');
+      return;
+    } catch (err) {
+      if (i === retries - 1) throw err;
+      const start = Date.now();
+      while (Date.now() - start < delayMs) {}
+    }
+  }
+}
+
+function safeReadFileSync(filePath, retries = 10, delayMs = 100) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return fs.readFileSync(filePath, 'utf8');
+    } catch (err) {
+      if (i === retries - 1) throw err;
+      const start = Date.now();
+      while (Date.now() - start < delayMs) {}
+    }
+  }
+}
+
 async function expectProductionRejection({
   id,
   gateFunction,
@@ -225,12 +250,12 @@ async function mutationSharedDumpingGround(ctx) {
 // 6. P05-UNUSED-PRODUCTION-DEPENDENCY
 async function mutationUnusedProductionDependency(ctx) {
   const pkgPath = path.join(ctx.root, 'backend/package.json');
-  const originalPkg = fs.readFileSync(pkgPath, 'utf8');
+  const originalPkg = safeReadFileSync(pkgPath);
   try {
     const pkg = JSON.parse(originalPkg);
     pkg.dependencies = pkg.dependencies || {};
     pkg.dependencies['p05-unused-adversarial-pkg'] = '1.0.0';
-    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+    safeWriteFileSync(pkgPath, JSON.stringify(pkg, null, 2));
 
     return await expectProductionRejection({
       id: 'P05-UNUSED-PRODUCTION-DEPENDENCY',
@@ -243,7 +268,7 @@ async function mutationUnusedProductionDependency(ctx) {
       }
     });
   } finally {
-    fs.writeFileSync(pkgPath, originalPkg);
+    safeWriteFileSync(pkgPath, originalPkg);
   }
 }
 
@@ -691,7 +716,7 @@ async function mutationMentionUnauthorizedTarget(ctx) {
     data: { userId: actorUser, organizationId: orgA, effectiveFrom: new Date(), primary: true }
   });
 
-  const unauthorizedTargetId = crypto.randomUUID();
+  const unauthorizedTargetId = 'target-user-unauthorized';
   return await expectProductionRejection({
     id: 'P05-MENTION-UNAUTHORIZED-TARGET',
     gateFunction: 'CommunicationAclService.createNoteWithMentions',

@@ -142,13 +142,16 @@ function assertNoSecrets(value, env = process.env, path = 'root') {
       );
     }
     const isHexHashOrUuid = /^[a-f0-9]{32,}$/i.test(str) || /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str) || str.includes('gen_random_uuid');
-    if (!isHexHashOrUuid && /(?<![-\d])\+?6?2?0?[\d\s-]{9,15}\d(?![-\dT:.\d])/.test(str)) {
+    const sanitizedForPii = str
+      .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '')
+      .replace(/[a-f0-9]{32,}/gi, '');
+    if (!isHexHashOrUuid && /(?<![-\d])\+?6?2?0?[\d\s-]{9,15}\d(?![-\dT:.\d])/.test(sanitizedForPii)) {
       throw new P05GateError(
         'predecessor_scope_and_safety', 'PII_IN_EVIDENCE',
         `Phone-shaped value detected at ${currentPath}`, { path: currentPath }
       );
     }
-    if (!isHexHashOrUuid && /(?<![\d])\d{16}(?![\d])/.test(str)) {
+    if (!isHexHashOrUuid && /(?<![\d])\d{16}(?![\d])/.test(sanitizedForPii)) {
       throw new P05GateError(
         'predecessor_scope_and_safety', 'PII_IN_EVIDENCE',
         `NIK-shaped value detected at ${currentPath}`, { path: currentPath }
