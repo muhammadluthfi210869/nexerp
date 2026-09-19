@@ -141,13 +141,14 @@ function assertNoSecrets(value, env = process.env, path = 'root') {
         `Email-shaped value detected at ${currentPath}`, { path: currentPath }
       );
     }
-    if (/(?<![-\d])\+?6?2?0?[\d\s-]{9,15}\d(?![-\dT:.\d])/.test(str)) {
+    const isHexHash = /^[a-f0-9]{32,}$/i.test(str);
+    if (!isHexHash && /(?<![-\d])\+?6?2?0?[\d\s-]{9,15}\d(?![-\dT:.\d])/.test(str)) {
       throw new P05GateError(
         'predecessor_scope_and_safety', 'PII_IN_EVIDENCE',
         `Phone-shaped value detected at ${currentPath}`, { path: currentPath }
       );
     }
-    if (/(?<![\d])\d{16}(?![\d])/.test(str)) {
+    if (!isHexHash && /(?<![\d])\d{16}(?![\d])/.test(str)) {
       throw new P05GateError(
         'predecessor_scope_and_safety', 'PII_IN_EVIDENCE',
         `NIK-shaped value detected at ${currentPath}`, { path: currentPath }
