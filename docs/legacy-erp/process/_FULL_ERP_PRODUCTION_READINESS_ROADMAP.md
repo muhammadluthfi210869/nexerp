@@ -24,6 +24,7 @@ Rules:
 8. Every change must preserve or improve changeability: no new unexplained dead code, duplicate implementation, forbidden dependency, circular dependency, or undocumented architectural exception.
 9. Every phase uses the one-pass package in `verification/_ONE_PASS_PHASE_EXECUTION_STANDARD.md`: one complete prompt, one frozen acceptance contract, one authoritative command, adversarial proof, pre-certification checklist, and independent rerun.
 10. A phase executor continues through remediation and retest until the authoritative command passes, except for an explicit decision/authority/external-system/destructive-action blocker; partial green results are not a handoff condition.
+11. Inner-loop remediation follows `verification/_LAYERED_CERTIFICATION_ACCELERATION_STANDARD.md`: inventory once, repair by root-cause group, targeted production-path tests, cumulative preflight, then one authoritative certification and one independent reproduction.
 
 ### Verification cadence
 
@@ -33,6 +34,7 @@ Rules:
 - Prefer audit milestones `P00–P03`, `P04–P06`, `P07–P10`, `P11–P14`, `P15`, `P16–P18`, `P19`, and `P20–P22`. P15 and P19–P22 receive dedicated depth due to financial, UI, system, migration/DR, and pre-UAT risk.
 - The shorthand `verifikasi fase X-Y` is sufficient to invoke the complete batch protocol; ranges above five phases are split automatically.
 - Per-phase commands are bounded `PHASE_GATE` checks and should normally finish in roughly 10–25 minutes on a prepared workspace. Clean-room installs, Docker/runtime, cumulative E2E, load/browser matrices, deployment and DR belong to integration checkpoints or P20–P22 unless a phase explicitly owns them.
+- The 10–25 minute command is not used after every edit. Targeted groups should normally finish in 10–120 seconds and cumulative preflight in 5–8 minutes; only a green preflight admits the full phase certifier.
 
 ## Universal Definition of Done
 
