@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-09-19T00:05:51.075Z",
+  "generated_at": "2026-09-19T03:42:48.414Z",
   "phase": "P05",
-  "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+  "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
   "controls": [
     {
       "id": "predecessor_scope_and_safety",
@@ -17,8 +17,8 @@
     },
     {
       "id": "architecture_fitness_suite",
-      "status": "PASS",
-      "target_count": 6,
+      "status": "FAIL",
+      "target_count": 2,
       "evidence_path": "evidence/P05_PHASE_CERTIFICATION_RESULT.json#architecture_fitness_suite"
     },
     {
@@ -30,13 +30,13 @@
     {
       "id": "dependency_graph_snapshot",
       "status": "PASS",
-      "target_count": 784,
+      "target_count": 1654,
       "evidence_path": "evidence/P05_PHASE_CERTIFICATION_RESULT.json#dependency_graph_snapshot"
     },
     {
       "id": "module_boundary_test",
       "status": "PASS",
-      "target_count": 747,
+      "target_count": 1617,
       "evidence_path": "evidence/P05_PHASE_CERTIFICATION_RESULT.json#module_boundary_test"
     },
     {
@@ -47,13 +47,13 @@
     },
     {
       "id": "coupling_complexity_scan",
-      "status": "PASS",
-      "target_count": 87,
+      "status": "FAIL",
+      "target_count": 102,
       "evidence_path": "evidence/P05_PHASE_CERTIFICATION_RESULT.json#coupling_complexity_scan"
     },
     {
       "id": "duplicate_dead_code_scan",
-      "status": "PASS",
+      "status": "FAIL",
       "target_count": 19,
       "evidence_path": "evidence/P05_PHASE_CERTIFICATION_RESULT.json#duplicate_dead_code_scan"
     },
@@ -66,19 +66,19 @@
     {
       "id": "auth_session_mfa",
       "status": "PASS",
-      "target_count": 7,
+      "target_count": 12,
       "evidence_path": "evidence/P05_PHASE_CERTIFICATION_RESULT.json#auth_session_mfa"
     },
     {
       "id": "role_permission_matrix",
       "status": "PASS",
-      "target_count": 3,
+      "target_count": 4,
       "evidence_path": "evidence/P05_PHASE_CERTIFICATION_RESULT.json#role_permission_matrix"
     },
     {
       "id": "tenant_isolation",
-      "status": "PASS",
-      "target_count": 3,
+      "status": "FAIL",
+      "target_count": 4,
       "evidence_path": "evidence/P05_PHASE_CERTIFICATION_RESULT.json#tenant_isolation"
     },
     {
@@ -102,7 +102,7 @@
     {
       "id": "communication_acl",
       "status": "PASS",
-      "target_count": 2,
+      "target_count": 5,
       "evidence_path": "evidence/P05_PHASE_CERTIFICATION_RESULT.json#communication_acl"
     },
     {
@@ -113,7 +113,7 @@
     },
     {
       "id": "configuration_ownership_test",
-      "status": "PASS",
+      "status": "FAIL",
       "target_count": 19,
       "evidence_path": "evidence/P05_PHASE_CERTIFICATION_RESULT.json#configuration_ownership_test"
     }

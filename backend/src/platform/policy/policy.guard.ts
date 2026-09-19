@@ -18,7 +18,7 @@ export const Require = (permission: string, opts?: { dataScope?: 'tenant' | 'org
 export class PolicyGuard implements CanActivate {
   constructor(private readonly reflector: Reflector, private readonly policy: PolicyService) {}
 
-  async canActivate(ctx: ExecutionContext): Promise<boolean> {
+  canActivate(ctx: ExecutionContext): boolean {
     const meta = this.reflector.getAllAndOverride<{ permission: string; dataScope?: string } | undefined>(REQUIRE_KEY, [
       ctx.getHandler(),
       ctx.getClass()
@@ -35,7 +35,7 @@ export class PolicyGuard implements CanActivate {
       requiredPermission: meta.permission,
       dataScope: meta.dataScope as 'tenant' | 'organization' | 'division' | 'owner' | undefined || 'tenant'
     };
-    const result = await this.policy.decide(decision);
+    const result = this.policy.decide(decision);
     if (!result.allow) {
       // never log user.email / role; only the decision_id (hash of ctx) + gate_id + reason_code
       const decisionId = crypto.createHash('sha256').update(JSON.stringify({ actor: actor.id, action: decision.action, resource: decision.resource })).digest('hex').slice(0, 16);

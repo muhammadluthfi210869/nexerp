@@ -3,11 +3,11 @@
   "level": "PHASE_GATE",
   "contract_version": "1.0.0",
   "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
-  "candidate_sha": "ff6b2947b6265520c521a438e86a1703a88863b1",
-  "started_at": "2026-09-19T03:30:39.406Z",
-  "completed_at": "2026-09-19T03:36:21.266Z",
+  "candidate_sha": "145a7b497374b7ae78fa1853146f07039983ccee",
+  "started_at": "2026-09-19T03:37:18.772Z",
+  "completed_at": "2026-09-19T03:42:49.111Z",
   "verdict": "FAIL",
   "token": null,
   "result": null,
-  "failure": "P05GateError: [predecessor_scope_and_safety] PII_IN_EVIDENCE: Phone-shaped value detected at root.tests.dependency_graph_snapshot.candidate_digest\n    at checkString (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:145:13)\n    at assertNoSecrets (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:169:5)\n    at assertNoSecrets (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:182:7)\n    at assertNoSecrets (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:182:7)\n    at Object.assertNoSecrets (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_safety.js:182:7)\n    at Object.certifyP05 (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:413:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:105:20)"
+  "failure": "P05GateError: [contract_consistency] EVIDENCE_VALIDATION_FAILED: Check architecture_fitness_suite status is not PASS\n    at assert (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:20:20)\n    at validateP05Evidence (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:38:5)\n    at Object.certifyP05 (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\lib\\p05_certification.js:474:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p05_phase.js:105:20)"
 }
