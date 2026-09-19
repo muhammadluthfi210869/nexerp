@@ -17,7 +17,7 @@ export class RolesGuard implements CanActivate {
     this.policy = policy || new PolicyService();
   }
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     // 1. Check for canonical P05 permission metadata first
     const requireMeta = this.reflector.getAllAndOverride<{ permission: string; dataScope?: string } | undefined>(
       REQUIRE_KEY,
@@ -25,7 +25,7 @@ export class RolesGuard implements CanActivate {
     );
 
     if (requireMeta) {
-      return this.evaluatePermissionPolicy(context, requireMeta);
+      return await this.evaluatePermissionPolicy(context, requireMeta);
     }
 
     // 2. Legacy / role-based metadata check
@@ -69,7 +69,7 @@ export class RolesGuard implements CanActivate {
     return hasRole;
   }
 
-  private evaluatePermissionPolicy(context: ExecutionContext, requireMeta: { permission: string; dataScope?: string }): boolean {
+  private async evaluatePermissionPolicy(context: ExecutionContext, requireMeta: { permission: string; dataScope?: string }): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
     const actor = req.user || { id: 'anonymous', roles: [] };
     const resId = req.params?.id;
@@ -82,7 +82,7 @@ export class RolesGuard implements CanActivate {
       requiredPermission: requireMeta.permission,
       dataScope: (requireMeta.dataScope as any) || 'tenant'
     };
-    const result = this.policy.decide(decision);
+    const result = await this.policy.decide(decision);
     if (!result.allow) {
       console.log(JSON.stringify({
         level: 'info',

@@ -1,0 +1,637 @@
+{
+  "phase": "P05",
+  "name": "Platform architecture, maintainability, and controls",
+  "timestamp": "2026-09-19T00:05:51.189Z",
+  "verdict": "PASS",
+  "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+  "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+  "tests_summary": {
+    "total": 19,
+    "passed": 19,
+    "failed": 0
+  },
+  "tests": {
+    "predecessor_scope_and_safety": {
+      "id": "predecessor_scope_and_safety",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 289,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "git merge-base 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a 4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+          "exit_code": 0
+        },
+        {
+          "command": "grep _PRODUCTION_PHASE_GATES.yaml",
+          "exit_code": 0
+        },
+        {
+          "command": "git status --porcelain",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 1,
+      "dirty_files_total": 0,
+      "dirty_outside_allowlist": [],
+      "registry_verified": true
+    },
+    "canonical_traceability": {
+      "id": "canonical_traceability",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 3,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "grep 10_TRACEABILITY_MATRIX.yaml",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 9,
+      "controls_present": 9,
+      "controls_missing": [],
+      "controls_present_list": [
+        "auth.session",
+        "auth.mfa",
+        "policy.tenant",
+        "audit.immutable",
+        "approval.maker_checker",
+        "outbox.atomic",
+        "communication.acl",
+        "errors.canonical",
+        "config.typed"
+      ]
+    },
+    "architecture_fitness_suite": {
+      "id": "architecture_fitness_suite",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 149621,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "npx tsc -p backend/tsconfig.build.json --noEmit",
+          "exit_code": 0
+        },
+        {
+          "command": "npm --prefix backend run lint",
+          "exit_code": 0
+        },
+        {
+          "command": "npm --prefix backend run test:unit",
+          "exit_code": 0
+        },
+        {
+          "command": "node scripts/ssot/_p05_unit_tests.js",
+          "exit_code": 0
+        },
+        {
+          "command": "node scripts/ssot/_p05_integration_tests.js",
+          "exit_code": 0
+        },
+        {
+          "command": "npm --prefix backend run build",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 6,
+      "analyzers_count": 6,
+      "analyzers_ok": true
+    },
+    "module_owner_registry": {
+      "id": "module_owner_registry",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 57,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "node p05_analyzers.deriveModuleOwnership",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 37,
+      "modules_total": 37,
+      "modules_with_owner": 37,
+      "modules_with_purpose": 37,
+      "modules_with_layer": 37,
+      "modules_with_allowed_deps": 37,
+      "modules_with_data_owner": 37,
+      "modules_with_public_interface": 37,
+      "modules_with_tests": 37,
+      "ownership_coverage_percent": 100
+    },
+    "dependency_graph_snapshot": {
+      "id": "dependency_graph_snapshot",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 31901,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "node p05_analyzers.deriveDependencyGraph",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 784,
+      "node_count": 37,
+      "edge_count": 747,
+      "baseline_digest": "ec31fdc9cf4b473b44c2701f99dbb5465d0c4460c8ee3775ce82015d19c063ee",
+      "candidate_digest": "bfd5216038e8054c46d78ab7af8f0afc53dde721cf31e02513fb3342934beeee",
+      "edge_delta_count": 6,
+      "classified_edge_deltas": [
+        {
+          "delta": "added",
+          "edge": {
+            "from": "auth",
+            "to": "@nestjs/config",
+            "kind": "import",
+            "file": "backend/src/modules/auth/auth.module.ts",
+            "classification": "allowed"
+          }
+        },
+        {
+          "delta": "added",
+          "edge": {
+            "from": "auth",
+            "to": "crypto",
+            "kind": "import",
+            "file": "backend/src/modules/auth/auth.service.ts",
+            "classification": "allowed"
+          }
+        },
+        {
+          "delta": "added",
+          "edge": {
+            "from": "auth",
+            "to": "@nestjs/config",
+            "kind": "import",
+            "file": "backend/src/modules/auth/jwt.strategy.ts",
+            "classification": "allowed"
+          }
+        },
+        {
+          "delta": "added",
+          "edge": {
+            "from": "auth",
+            "to": "crypto",
+            "kind": "import",
+            "file": "backend/src/modules/auth/roles.guard.ts",
+            "classification": "allowed"
+          }
+        },
+        {
+          "delta": "added",
+          "edge": {
+            "from": "config",
+            "to": "@nestjs/common",
+            "kind": "import",
+            "file": "backend/src/platform/config/config.module.ts",
+            "classification": "allowed"
+          }
+        },
+        {
+          "delta": "added",
+          "edge": {
+            "from": "config",
+            "to": "@nestjs/config",
+            "kind": "import",
+            "file": "backend/src/platform/config/config.module.ts",
+            "classification": "allowed"
+          }
+        }
+      ]
+    },
+    "module_boundary_test": {
+      "id": "module_boundary_test",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 29642,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "forbidden-domain-import scan",
+          "exit_code": 0
+        },
+        {
+          "command": "cross-domain-persistence scan",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 747,
+      "forbidden_domain_edges": 0,
+      "direct_cross_domain_persistence": 0,
+      "samples": []
+    },
+    "circular_dependency_scan": {
+      "id": "circular_dependency_scan",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 87,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "circular-dependency scan",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 37,
+      "domain_cycles": 0,
+      "cycles": []
+    },
+    "coupling_complexity_scan": {
+      "id": "coupling_complexity_scan",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 97,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "complexity scan",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 87,
+      "changed_max_cyclomatic_complexity": 9,
+      "regression_count": 0,
+      "exceptions_count": 0,
+      "whole_code_debt_delta": 0
+    },
+    "duplicate_dead_code_scan": {
+      "id": "duplicate_dead_code_scan",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 162,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "duplicate scan",
+          "exit_code": 0
+        },
+        {
+          "command": "unused-dep scan",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 19,
+      "changed_duplication_percent": 0,
+      "whole_duplication_delta_percent": 0,
+      "unused_production_dependencies": 0,
+      "unexplained_orphans": 0,
+      "duplicate_rules": 0
+    },
+    "representative_module_change_test": {
+      "id": "representative_module_change_test",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 378,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "predict-blast-radius backend/src/platform/auth/session.service.ts",
+          "exit_code": 0
+        },
+        {
+          "command": "predict-blast-radius backend/src/platform/communication/acl.adapter.ts",
+          "exit_code": 0
+        },
+        {
+          "command": "predict-blast-radius backend/src/platform/outbox/outbox.service.ts",
+          "exit_code": 0
+        },
+        {
+          "command": "git diff --name-only 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a..4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 3,
+      "archetypes_total": 3,
+      "archetypes_passed": 3,
+      "prediction_coverage_percent": 100,
+      "unrelated_change_paths": 0
+    },
+    "auth_session_mfa": {
+      "id": "auth_session_mfa",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 1404,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "SessionService.issueSession",
+          "exit_code": 0
+        },
+        {
+          "command": "SessionService.verifyAccessToken",
+          "exit_code": 0
+        },
+        {
+          "command": "SessionService.rotateRefresh",
+          "exit_code": 0
+        },
+        {
+          "command": "SessionService replay family revocation",
+          "exit_code": 0
+        },
+        {
+          "command": "MfaService.enrollTOTP",
+          "exit_code": 0
+        },
+        {
+          "command": "MfaService.confirmTOTP RFC 6238",
+          "exit_code": 0
+        },
+        {
+          "command": "MfaService reject invalid code",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 7,
+      "mutation_count": 7,
+      "metrics": {
+        "auth_bypasses": 0
+      },
+      "db": "nex_p05_4372fb46_11128_main"
+    },
+    "role_permission_matrix": {
+      "id": "role_permission_matrix",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 0,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "PolicyService deny by default",
+          "exit_code": 0
+        },
+        {
+          "command": "PolicyService allow matching slug",
+          "exit_code": 0
+        },
+        {
+          "command": "PolicyService client injected tenant rejection",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 3,
+      "mutation_count": 3,
+      "db": "nex_p05_4372fb46_11128_main"
+    },
+    "tenant_isolation": {
+      "id": "tenant_isolation",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 0,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "PolicyService cross-tenant access rejection",
+          "exit_code": 0
+        },
+        {
+          "command": "PolicyService division scope check",
+          "exit_code": 0
+        },
+        {
+          "command": "ScopeService sensitive field masking",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 3,
+      "mutation_count": 3,
+      "db": "nex_p05_4372fb46_11128_main"
+    },
+    "immutable_audit": {
+      "id": "immutable_audit",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 39,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "AuditService.withAudit atomic write",
+          "exit_code": 0
+        },
+        {
+          "command": "PostgreSQL trigger audit_immutable UPDATE rejection",
+          "exit_code": 0
+        },
+        {
+          "command": "PostgreSQL trigger audit_immutable DELETE rejection",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 3,
+      "mutation_count": 3,
+      "db": "nex_p05_4372fb46_11128_main"
+    },
+    "maker_checker": {
+      "id": "maker_checker",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 111,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "ApprovalService.requestApproval",
+          "exit_code": 0
+        },
+        {
+          "command": "ApprovalService self-approval forbidden",
+          "exit_code": 0
+        },
+        {
+          "command": "ApprovalService checker 1 threshold progression",
+          "exit_code": 0
+        },
+        {
+          "command": "ApprovalService duplicate checker rejection",
+          "exit_code": 0
+        },
+        {
+          "command": "ApprovalService checker 2 threshold completion",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 5,
+      "mutation_count": 5,
+      "db": "nex_p05_4372fb46_11128_main"
+    },
+    "outbox_retry_dedup": {
+      "id": "outbox_retry_dedup",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 60,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "OutboxService.enqueue",
+          "exit_code": 0
+        },
+        {
+          "command": "OutboxService duplicate idempotencyKey rejection",
+          "exit_code": 0
+        },
+        {
+          "command": "OutboxService.claimBatch",
+          "exit_code": 0
+        },
+        {
+          "command": "OutboxService.ack PROCESSED",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 4,
+      "mutation_count": 4,
+      "db": "nex_p05_4372fb46_11128_main"
+    },
+    "communication_acl": {
+      "id": "communication_acl",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 22,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "CommunicationAclService cross-tenant mention rejection",
+          "exit_code": 0
+        },
+        {
+          "command": "CommunicationAclService unknown context type rejection",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 2,
+      "mutation_count": 2,
+      "db": "nex_p05_4372fb46_11128_main"
+    },
+    "canonical_error_contract": {
+      "id": "canonical_error_contract",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 15,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "CanonicalErrorFilter canonical envelope structure",
+          "exit_code": 0
+        },
+        {
+          "command": "CanonicalErrorFilter SQL/secret scrubbing",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 2,
+      "mutation_count": 2
+    },
+    "configuration_ownership_test": {
+      "id": "configuration_ownership_test",
+      "status": "PASS",
+      "executed": true,
+      "synthetic": false,
+      "skipped": false,
+      "duration_ms": 81,
+      "phase_base_sha": "5195fa2aaa838ebb7faea2a3b207f27689b7ed4a",
+      "candidate_sha": "4372fb46575eb7a5c1c4b333840222cfb0ca8dcc",
+      "commands": [
+        {
+          "command": "direct process.env scan",
+          "exit_code": 0
+        },
+        {
+          "command": "platform/config/config.module.ts presence",
+          "exit_code": 0
+        }
+      ],
+      "target_count": 19,
+      "configuration_violations": 0,
+      "config_module_present": true
+    }
+  },
+  "mutations_summary": {
+    "total": 31,
+    "passed": 31,
+    "failed": 0
+  },
+  "metrics": {
+    "forbidden_domain_edges": 0,
+    "domain_cycles": 0,
+    "unowned_modules": 0,
+    "unexplained_shared_exports": 0,
+    "direct_cross_domain_persistence": 0,
+    "unused_production_dependencies": 0,
+    "unexplained_orphans": 0,
+    "architecture_debt_delta": 0,
+    "auth_bypasses": 0,
+    "tenant_leaks": 0,
+    "self_approvals": 0,
+    "audit_mutations": 0,
+    "outbox_loss_or_duplicates": 0,
+    "communication_acl_bypasses": 0,
+    "error_contract_violations": 0,
+    "configuration_violations": 0,
+    "unexpected_skips": 0,
+    "unrelated_change_paths": 0,
+    "changed_duplication_percent": 0,
+    "whole_duplication_delta_percent": 0,
+    "changed_max_cyclomatic_complexity": 9,
+    "module_ownership_coverage_percent": 100,
+    "representative_change_prediction_percent": 100,
+    "control_matrix_execution_percent": 100
+  }
+}

@@ -7,7 +7,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 export interface AclContext {
   tenantId: string;
@@ -126,12 +126,23 @@ registerParentAcl(genericAdapter);
 registerParentAcl(salesOrderAdapter);
 registerParentAcl(sampleAdapter);
 
+import { randomUUID } from 'crypto';
+
 export interface MentionCheckInput {
   contextType: string;
   parentId: string;
   actorUserId: string;
   targetUserId: string;
   targetTenantId: string;
+}
+
+export interface PostNoteInput {
+  contextType: string;
+  parentId: string;
+  actorUserId: string;
+  content: string;
+  mentions: string[];
+  idempotencyKey?: string;
 }
 
 @Injectable()
@@ -156,14 +167,124 @@ export class CommunicationAclService {
 
   async canMention(input: MentionCheckInput): Promise<{ ok: boolean; allowed: boolean; code?: string; reason?: string }> {
     const r = await this.resolve(input.contextType, input.parentId, input.actorUserId);
-    const parentTenant = r.ok ? r.ctx.tenantId : `tenant-of-${input.parentId}`;
+    if (!r.ok) {
+      return { ok: false, allowed: false, code: r.code, reason: r.code };
+    }
+    const parentTenant = r.ctx.tenantId;
     if (input.targetTenantId && input.targetTenantId !== parentTenant) {
       return { ok: false, allowed: false, code: 'CROSS_TENANT_MENTION', reason: 'CROSS_TENANT_MENTION' };
     }
-    if (!r.ok) return { ok: false, allowed: false, code: r.code, reason: r.code };
-    if (input.targetTenantId !== r.ctx.tenantId && !r.ctx.allowedMentionTargets.includes(input.targetUserId)) {
-      return { ok: false, allowed: false, code: 'CROSS_TENANT_MENTION', reason: 'CROSS_TENANT_MENTION' };
+    if (r.ctx.allowedMentionTargets && r.ctx.allowedMentionTargets.length > 0 && !r.ctx.allowedMentionTargets.includes(input.targetUserId)) {
+      return { ok: false, allowed: false, code: 'UNAUTHORIZED_MENTION_TARGET', reason: 'UNAUTHORIZED_MENTION_TARGET' };
     }
     return { ok: true, allowed: true };
+  }
+
+  async createNoteWithMentions(input: PostNoteInput, failSimulationHook?: () => void) {
+    // 1. Resolve parent ACL
+    const aclRes = await this.resolve(input.contextType, input.parentId, input.actorUserId);
+    if (!aclRes.ok) {
+      const err = new Error(`Parent ACL resolution failed: ${aclRes.code}`);
+      (err as any).code = aclRes.code;
+      (err as any).reason_code = aclRes.code;
+      throw err;
+    }
+    const parentAcl = aclRes.ctx;
+
+    // 2. Validate mention targets
+    const uniqueMentions = Array.from(new Set(input.mentions || []));
+    for (const targetUserId of uniqueMentions) {
+      if (parentAcl.allowedMentionTargets && parentAcl.allowedMentionTargets.length > 0) {
+        if (!parentAcl.allowedMentionTargets.includes(targetUserId)) {
+          const err = new Error(`Mention target ${targetUserId} is unauthorized in this context`);
+          (err as any).code = 'UNAUTHORIZED_MENTION_TARGET';
+          (err as any).reason_code = 'UNAUTHORIZED_MENTION_TARGET';
+          throw err;
+        }
+      }
+    }
+
+    // 3. Single atomic transaction: Notification(s) + OutboxEvent(s) + AuditLog
+    return await this.prisma.$transaction(async tx => {
+      const noteId = randomUUID();
+      const corrId = randomUUID();
+      const txId = `tx-note-${noteId}`;
+      const idemKey = input.idempotencyKey || `comm-note-${noteId}`;
+
+      const createdNotifications = [];
+      for (const targetUserId of uniqueMentions) {
+        const notif = await tx.notification.create({
+          data: {
+            userId: targetUserId,
+            title: `Mentioned in ${input.contextType}`,
+            body: input.content,
+            type: 'COMMUNICATION_MENTION',
+            referenceType: input.contextType,
+            referenceId: input.parentId
+          }
+        });
+        createdNotifications.push(notif);
+
+        await tx.outboxEvent.create({
+          data: {
+            eventType: 'communication.mention_notified',
+            aggregateType: 'Notification',
+            aggregateId: notif.id,
+            idempotencyKey: `notif-outbox-${notif.id}`,
+            payload: {
+              targetUserId,
+              actorUserId: input.actorUserId,
+              parentId: input.parentId,
+              contextType: input.contextType
+            },
+            correlationId: corrId,
+            tenantId: parentAcl.tenantId,
+            status: 'PENDING'
+          }
+        });
+      }
+
+      const audit = await tx.auditLog.create({
+        data: {
+          actorUserId: input.actorUserId,
+          actorRoleSlug: 'authenticated_user',
+          actorPermissionSnapshot: {},
+          tenantId: parentAcl.tenantId,
+          correlationId: corrId,
+          idempotencyKey: idemKey,
+          source: 'communication.service',
+          entityType: input.contextType,
+          entityId: input.parentId,
+          action: 'communication.note_created',
+          beforeSnapshot: Prisma.JsonNull,
+          afterSnapshot: { noteId, content: input.content, mentionCount: uniqueMentions.length },
+          txId
+        }
+      });
+
+      if (failSimulationHook) {
+        failSimulationHook();
+      }
+
+      return {
+        noteId,
+        notificationsCount: createdNotifications.length,
+        outboxEventsCount: createdNotifications.length,
+        auditId: audit.id
+      };
+    });
+  }
+
+  async preventDuplicateNotification(userId: string, referenceId: string): Promise<void> {
+    const existing = await this.prisma.notification.findFirst({
+      where: { userId, referenceId, type: 'COMMUNICATION_MENTION' }
+    });
+    if (existing) {
+      throw Object.assign(new Error('Duplicate mention notification prevented by deduplication control'), {
+        code: 'MENTION_DUPLICATE_NOTIFICATION_REJECTED',
+        reason_code: 'MENTION_DUPLICATE_NOTIFICATION_REJECTED',
+        gateId: 'communication_acl'
+      });
+    }
   }
 }

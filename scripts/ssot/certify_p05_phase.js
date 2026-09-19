@@ -13,18 +13,26 @@ const OUT = path.join(ROOT, 'docs/legacy-erp/verification/evidence/P05_PHASE_CER
 function git(args) {
   const r = spawnSync('git', args, { cwd: ROOT, encoding: 'utf8', shell: process.platform === 'win32' });
   if (r.status !== 0) throw new Error(String(r.stderr || r.stdout || `git ${args.join(' ')} failed`));
-  return String(r.stdout || '').trim();
+  return String(r.stdout || '').replace(/[\r\n]+$/, '');
 }
 
 function normalize(v) { return String(v || '').replace(/\\/g, '/'); }
 function assert(ok, message) { if (!ok) throw new Error(message); }
 
+function parsePorcelainLine(line) {
+  if (!line || line.length < 4) return null;
+  const status = line.slice(0, 2);
+  let file = line.slice(3);
+  if (file.includes(' -> ')) {
+    file = file.split(' -> ').pop();
+  }
+  file = normalize(file.replace(/^"|"$/g, ''));
+  return { status, file };
+}
+
 function dirtyOutsideAllowlist(contract) {
   const allow = new Set(contract.generated_output_allowlist.map(normalize));
-  return git(['status', '--porcelain']).split(/\r?\n/).filter(Boolean).map(line => ({
-    status: line.slice(0, 2),
-    file: normalize(line.slice(3).trim().replace(/^"|"$/g, ''))
-  })).filter(x => x.file && !allow.has(x.file));
+  return git(['status', '--porcelain']).split(/\r?\n/).filter(Boolean).map(parsePorcelainLine).filter(x => x && x.file && !allow.has(x.file));
 }
 
 function containsCredentialMaterial(value) {

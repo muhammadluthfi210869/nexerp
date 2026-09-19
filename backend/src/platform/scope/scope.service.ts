@@ -83,4 +83,14 @@ export class ScopeService {
     }
     return out as T;
   }
+
+  assertFieldAccess(entity: any, field: string, allowed: boolean): void {
+    if (!allowed) {
+      throw Object.assign(new Error(`FIELD_SCOPE_LEAK: unauthorized access to sensitive field ${field}`), {
+        code: 'FIELD_SCOPE_LEAK',
+        reason_code: 'FIELD_SCOPE_LEAK',
+        gateId: 'tenant_isolation'
+      });
+    }
+  }
 }

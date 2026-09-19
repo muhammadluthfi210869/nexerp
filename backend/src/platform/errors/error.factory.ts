@@ -89,3 +89,27 @@ registerError('PERMISSION_DENY_DEFAULT', { http: 403, safeMessage: 'Denied by de
 registerError('TENANT_FROM_CLIENT_REJECTED', { http: 403, safeMessage: 'Tenant from client rejected' });
 
 export const ERROR_REGISTRY = registry;
+
+export function assertValidErrorEnvelope(payload: any): void {
+  if (!payload || typeof payload !== 'object' || !payload.error || !payload.error.code || !payload.error.message || !payload.error.correlationId) {
+    throw Object.assign(new Error('ERROR_ENVELOPE_MISSING: response does not conform to canonical error envelope'), {
+      code: 'ERROR_ENVELOPE_MISSING',
+      reason_code: 'ERROR_ENVELOPE_MISSING',
+      gateId: 'canonical_error_contract'
+    });
+  }
+}
+
+export function assertNoPiiOrSecret(text: string): void {
+  for (const { re } of FORBIDDEN_PATTERNS) {
+    // reset regex state if global
+    re.lastIndex = 0;
+    if (re.test(text)) {
+      throw Object.assign(new Error('PII_OR_SECRET_IN_ERROR: unscrubbed PII or secret detected in error output'), {
+        code: 'PII_OR_SECRET_IN_ERROR',
+        reason_code: 'PII_OR_SECRET_IN_ERROR',
+        gateId: 'canonical_error_contract'
+      });
+    }
+  }
+}

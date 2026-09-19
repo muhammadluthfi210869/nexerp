@@ -6,8 +6,9 @@
  * with code MFA_REQUIRED.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { PlatformConfig } from '../config/config.module';
 import {
   createCipheriv,
   createDecipheriv,
@@ -54,12 +55,18 @@ export function verifyRFC6238Totp(secretHex: string, code: string, windowSteps =
 
 @Injectable()
 export class MfaService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    @Optional() private readonly config?: PlatformConfig
+  ) {}
 
   private getEncryptionKey(): Buffer {
-    const raw = process.env.MFA_ENCRYPTION_KEY || process.env.AES_SECRET_KEY || '';
-    if (raw.length < 32) {
-      throw new Error('WEAK_CONFIGURATION: MFA encryption key must be at least 32 characters');
+    const raw = this.config?.mfaEncryptionKey || process.env.MFA_ENCRYPTION_KEY || process.env.AES_SECRET_KEY || '';
+    if (!raw || raw.length < 32) {
+      const err = new Error('WEAK_CONFIGURATION: MFA encryption key must be at least 32 characters');
+      (err as any).code = 'WEAK_CONFIGURATION';
+      (err as any).reason_code = 'WEAK_CONFIGURATION';
+      throw err;
     }
     return createHash('sha256').update(raw).digest();
   }

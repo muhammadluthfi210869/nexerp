@@ -74,70 +74,94 @@ export class SessionService {
     };
   }
 
-  async rotateRefresh(sessionId: string, presentedRefresh: string) {
-    // Atomic claim: SELECT FOR UPDATE then UPDATE.
-    return await this.prisma.$transaction(async tx => {
-      const session = await tx.$queryRawUnsafe<Array<{
-        id: string; userId: string; familyId: string; refreshTokenHash: string;
-        revokedAt: Date | null; mfaPending: boolean; refreshExpiresAt: Date;
-      }>>(
-        `SELECT id, "userId", "familyId", "refreshTokenHash", "revokedAt", "mfaPending", "refreshExpiresAt"
-         FROM auth_sessions WHERE id = $1 FOR UPDATE`,
-        sessionId
-      );
-      const s = session[0];
-      if (!s) {
-        throw Object.assign(new Error('Session not found'), { code: 'SESSION_REVOKED' });
-      }
-      if (s.revokedAt) {
-        // Replay of an already revoked/rotated token: durably revoke the family
+  async rotateRefresh(sessionId: string, presentedRefresh: string): Promise<SessionOutput> {
+    let replayFamilyId: string | null = null;
+    let mismatchFamilyId: string | null = null;
+    let sessionNotFound = false;
+
+    let result: SessionOutput | null = null;
+
+    try {
+      result = await this.prisma.$transaction(async tx => {
+        const session = await tx.$queryRawUnsafe<Array<{
+          id: string; userId: string; familyId: string; refreshTokenHash: string;
+          revokedAt: Date | null; mfaPending: boolean; refreshExpiresAt: Date;
+        }>>(
+          `SELECT id, "userId", "familyId", "refreshTokenHash", "revokedAt", "mfaPending", "refreshExpiresAt"
+           FROM auth_sessions WHERE id = $1 FOR UPDATE`,
+          sessionId
+        );
+        const s = session[0];
+        if (!s) {
+          sessionNotFound = true;
+          throw Object.assign(new Error('Session not found'), { code: 'SESSION_REVOKED' });
+        }
+        if (s.revokedAt) {
+          // Replay of an already revoked/rotated token: trigger family revocation
+          replayFamilyId = s.familyId;
+          throw Object.assign(new Error('Session revoked / replay detected'), {
+            code: 'REFRESH_REPLAY',
+            familyId: s.familyId
+          });
+        }
+        const matches = await bcrypt.compare(presentedRefresh, s.refreshTokenHash);
+        if (!matches) {
+          // Refresh token mismatch -> trigger family revocation
+          mismatchFamilyId = s.familyId;
+          throw Object.assign(new Error('Refresh token mismatch — possible replay'), {
+            code: 'REFRESH_REPLAY',
+            familyId: s.familyId
+          });
+        }
+        // Issue new session in same family, mark old as replaced
+        const newRefresh = randomUUID() + '.' + randomUUID();
+        const newRefreshHash = await bcrypt.hash(newRefresh, REFRESH_HASH_COST);
+        const now = Date.now();
+        const created = await tx.authSession.create({
+          data: {
+            userId: s.userId,
+            refreshTokenHash: newRefreshHash,
+            accessExpiresAt: new Date(now + ACCESS_TTL_MIN * 60_000),
+            refreshExpiresAt: new Date(now + REFRESH_TTL_DAYS * 24 * 60 * 60_000),
+            mfaPending: s.mfaPending,
+            familyId: s.familyId,
+            parentSessionId: s.id
+          }
+        });
+        await tx.authSession.update({
+          where: { id: s.id },
+          data: { revokedAt: new Date(), revokedReason: 'rotated', replacedById: created.id }
+        });
+        return {
+          id: created.id,
+          userId: created.userId,
+          refreshToken: newRefresh,
+          accessExpiresAt: created.accessExpiresAt,
+          refreshExpiresAt: created.refreshExpiresAt,
+          familyId: created.familyId,
+          mfaPending: created.mfaPending
+        };
+      });
+    } catch (err: any) {
+      if (replayFamilyId || mismatchFamilyId) {
+        const fid: string = (replayFamilyId || mismatchFamilyId)!;
+        // Durably revoke the family in a separate committed write so it persists despite the rejection
         await this.prisma.authSession.updateMany({
-          where: { familyId: s.familyId, revokedAt: null },
+          where: { familyId: fid, revokedAt: null },
           data: { revokedAt: new Date(), revokedReason: 'replay_detected' }
         });
         throw Object.assign(new Error('Session revoked / replay detected'), {
           code: 'REFRESH_REPLAY',
-          familyId: s.familyId
+          familyId: fid
         });
       }
-      const matches = await bcrypt.compare(presentedRefresh, s.refreshTokenHash);
-      if (!matches) {
-        // Refresh token mismatch -> durably revoke token family
-        await this.prisma.authSession.updateMany({
-          where: { familyId: s.familyId, revokedAt: null },
-          data: { revokedAt: new Date(), revokedReason: 'replay_detected' }
-        });
-        throw Object.assign(new Error('Refresh token mismatch — possible replay'), {
-          code: 'REFRESH_REPLAY',
-          familyId: s.familyId
-        });
-      }
-      // Issue new session in same family, mark old as replaced
-      const newRefresh = randomUUID() + '.' + randomUUID();
-      const newRefreshHash = await bcrypt.hash(newRefresh, REFRESH_HASH_COST);
-      const now = Date.now();
-      const created = await tx.authSession.create({
-        data: {
-          userId: s.userId,
-          refreshTokenHash: newRefreshHash,
-          accessExpiresAt: new Date(now + ACCESS_TTL_MIN * 60_000),
-          refreshExpiresAt: new Date(now + REFRESH_TTL_DAYS * 24 * 60 * 60_000),
-          mfaPending: s.mfaPending,
-          familyId: s.familyId,
-          parentSessionId: s.id
-        }
-      });
-      await tx.authSession.update({
-        where: { id: s.id },
-        data: { revokedAt: new Date(), revokedReason: 'rotated', replacedById: created.id }
-      });
-      return {
-        id: created.id,
-        userId: created.userId,
-        refreshToken: newRefresh,
-        familyId: created.familyId
-      };
-    });
+      throw err;
+    }
+
+    if (!result) {
+      throw new Error('Rotation failed');
+    }
+    return result;
   }
 
   async revokeFamily(familyId: string, reason = 'family_revoked') {
@@ -189,6 +213,10 @@ export class SessionService {
       where: { userId, mfaPending: true },
       data: { mfaPending: false, mfaMethod: null, lastUsedAt: new Date() }
     });
+  }
+
+  async invalidatePasswordReset(userId: string) {
+    return await this.revokeAllForUser(userId, 'password_reset_invalidation');
   }
 }
 

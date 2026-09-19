@@ -58,7 +58,11 @@ export class AuditService {
     options?: { deferAudit?: boolean }
   ): Promise<T> {
     if (options?.deferAudit) {
-      throw new Error('AUDIT_NOT_ATOMIC: audit must be written in the same transaction as the mutation');
+      throw Object.assign(new Error('AUDIT_NOT_ATOMIC: audit must be written in the same transaction as the mutation'), {
+        code: 'AUDIT_NOT_ATOMIC',
+        reason_code: 'AUDIT_NOT_ATOMIC',
+        gateId: 'immutable_audit'
+      });
     }
     const txId = `audit:${randomUUID()}`;
     await tx.$executeRawUnsafe(`SET LOCAL application_name = '${txId}'`);

@@ -215,61 +215,89 @@ async function certifyP05({ root, contract, candidateSha }) {
     // -------------------------------------------------------------------------
     // 19 GATES
     // -------------------------------------------------------------------------
-    checks.push(await gates.gatePredecessorScopeAndSafety(ctx));
-    checks.push(await gates.gateCanonicalTraceability(ctx));
-    checks.push(await gates.gateArchitectureFitnessSuite(ctx));
+    const pss = await gates.gatePredecessorScopeAndSafety(ctx);
+    checks.push(pss);
+    metrics.unexpected_skips = pss.unexpected_skips ?? 0;
+
+    const ctm = await gates.gateCanonicalTraceability(ctx);
+    checks.push(ctm);
+
+    const afs = await gates.gateArchitectureFitnessSuite(ctx);
+    checks.push(afs);
 
     const own = await gates.gateModuleOwnerRegistry(ctx);
     checks.push(own);
     metrics.unowned_modules = own.modules_total - own.modules_with_owner;
     metrics.module_ownership_coverage_percent = own.ownership_coverage_percent;
 
-    checks.push(await gates.gateDependencyGraphSnapshot(ctx));
+    const dgs = await gates.gateDependencyGraphSnapshot(ctx);
+    checks.push(dgs);
+
     const mbt = await gates.gateModuleBoundaryTest(ctx);
     checks.push(mbt);
-    metrics.forbidden_domain_edges = mbt.forbidden_domain_edges;
-    metrics.direct_cross_domain_persistence = mbt.direct_cross_domain_persistence;
+    metrics.forbidden_domain_edges = mbt.forbidden_domain_edges ?? 0;
+    metrics.direct_cross_domain_persistence = mbt.direct_cross_domain_persistence ?? 0;
+    metrics.unexplained_shared_exports = mbt.shared_dumping_ground_violations ?? 0;
 
     const cds = await gates.gateCircularDependencyScan(ctx);
     checks.push(cds);
-    metrics.domain_cycles = cds.domain_cycles;
+    metrics.domain_cycles = cds.domain_cycles ?? 0;
 
     const cpl = await gates.gateCouplingComplexityScan(ctx);
     checks.push(cpl);
-    metrics.changed_max_cyclomatic_complexity = cpl.changed_max_cyclomatic_complexity;
+    metrics.changed_max_cyclomatic_complexity = cpl.changed_max_cyclomatic_complexity ?? 0;
+    metrics.architecture_debt_delta = cpl.architecture_debt_delta ?? 0;
 
     const dds = await gates.gateDuplicateDeadCodeScan(ctx);
     checks.push(dds);
-    metrics.unused_production_dependencies = dds.unused_production_dependencies;
+    metrics.unused_production_dependencies = dds.unused_production_dependencies ?? 0;
+    metrics.unexplained_orphans = dds.unexplained_orphans ?? 0;
+    metrics.changed_duplication_percent = dds.changed_duplication_percent ?? 0;
+    metrics.whole_duplication_delta_percent = dds.whole_duplication_delta_percent ?? 0;
 
     const rmc = await gates.gateRepresentativeModuleChangeTest(ctx);
     checks.push(rmc);
-    metrics.unrelated_change_paths = rmc.unrelated_change_paths;
-    metrics.representative_change_prediction_percent = rmc.prediction_coverage_percent;
+    metrics.unrelated_change_paths = rmc.unrelated_change_paths ?? 0;
+    metrics.representative_change_prediction_percent = rmc.prediction_coverage_percent ?? 0;
 
     // Real DB-backed gates
-    checks.push(await gates.gateAuthSessionMfa({ root, candidateSha, contract, ctx }));
-    metrics.auth_bypasses = 0;
-    checks.push(await gates.gateRolePermissionMatrix({ root, candidateSha, contract, ctx }));
-    checks.push(await gates.gateTenantIsolation({ root, candidateSha, contract, ctx }));
-    metrics.tenant_leaks = 0;
-    checks.push(await gates.gateImmutableAudit({ root, candidateSha, contract, ctx }));
-    metrics.audit_mutations = 0;
-    checks.push(await gates.gateMakerChecker({ root, candidateSha, contract, ctx }));
-    metrics.self_approvals = 0;
-    checks.push(await gates.gateOutboxRetryDedup({ root, candidateSha, contract, ctx }));
-    metrics.outbox_loss_or_duplicates = 0;
-    checks.push(await gates.gateCommunicationAcl({ root, candidateSha, contract, ctx }));
-    metrics.communication_acl_bypasses = 0;
+    const asm = await gates.gateAuthSessionMfa({ root, candidateSha, contract, ctx });
+    checks.push(asm);
+    metrics.auth_bypasses = asm.auth_bypasses ?? 0;
+
+    const rpm = await gates.gateRolePermissionMatrix({ root, candidateSha, contract, ctx });
+    checks.push(rpm);
+
+    const tis = await gates.gateTenantIsolation({ root, candidateSha, contract, ctx });
+    checks.push(tis);
+    metrics.tenant_leaks = tis.tenant_leaks ?? 0;
+
+    const ima = await gates.gateImmutableAudit({ root, candidateSha, contract, ctx });
+    checks.push(ima);
+    metrics.audit_mutations = ima.audit_mutations ?? 0;
+
+    const mkc = await gates.gateMakerChecker({ root, candidateSha, contract, ctx });
+    checks.push(mkc);
+    metrics.self_approvals = mkc.self_approvals ?? 0;
+
+    const obx = await gates.gateOutboxRetryDedup({ root, candidateSha, contract, ctx });
+    checks.push(obx);
+    metrics.outbox_loss_or_duplicates = obx.outbox_loss_or_duplicates ?? 0;
+
+    const cac = await gates.gateCommunicationAcl({ root, candidateSha, contract, ctx });
+    checks.push(cac);
+    metrics.communication_acl_bypasses = cac.communication_acl_bypasses ?? 0;
+
     const cec = await gates.gateCanonicalErrorContract({ root, candidateSha, contract, ctx });
     checks.push(cec);
-    metrics.error_contract_violations = 0;
+    metrics.error_contract_violations = cec.error_contract_violations ?? 0;
 
     const cfg = await gates.gateConfigurationOwnershipTest(ctx);
     checks.push(cfg);
-    metrics.configuration_violations = cfg.configuration_violations;
-    metrics.unexpected_skips = 0;
-    metrics.control_matrix_execution_percent = 100;
+    metrics.configuration_violations = cfg.configuration_violations ?? 0;
+
+    const passedChecks = checks.filter(c => c.status === 'PASS').length;
+    metrics.control_matrix_execution_percent = Math.round((passedChecks / checks.length) * 100);
 
     // -------------------------------------------------------------------------
     // 31 PRODUCTION-PATH MUTATIONS

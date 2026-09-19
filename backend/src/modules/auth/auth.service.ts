@@ -72,7 +72,16 @@ export class AuthService {
 
   async login(userOrEmail: any, password?: string) {
     const user = await this.resolveLoginUser(userOrEmail, password);
-    if (!user) return null;
+    if (!user) {
+      if (password !== undefined) {
+        throw Object.assign(new Error('Invalid email or password'), {
+          code: 'INVALID_CREDENTIALS',
+          reason_code: 'INVALID_CREDENTIALS',
+          gateId: 'auth_session_mfa'
+        });
+      }
+      return null;
+    }
 
     const mfaRequired = await this.isMfaRequiredForUser(user.id);
     const session = await this.sessions.issueSession({

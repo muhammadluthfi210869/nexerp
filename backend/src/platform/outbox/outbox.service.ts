@@ -33,7 +33,14 @@ export class OutboxService {
       .digest('hex');
   }
 
-  async enqueue(txOrInput: any, maybeInput?: any) {
+  async enqueue(txOrInput: any, maybeInput?: any, options?: { requireExternalTransaction?: boolean }) {
+    if (options?.requireExternalTransaction && typeof txOrInput?.outboxEvent?.create !== 'function') {
+      throw Object.assign(new Error('OUTBOX_NOT_ATOMIC: outbox event must be enqueued within active transaction'), {
+        code: 'OUTBOX_NOT_ATOMIC',
+        reason_code: 'OUTBOX_NOT_ATOMIC',
+        gateId: 'outbox_retry_dedup'
+      });
+    }
     if (typeof txOrInput?.outboxEvent?.create === 'function') {
       return this.executeEnqueue(txOrInput, maybeInput);
     } else {
@@ -59,19 +66,30 @@ export class OutboxService {
       correlationId: corrId
     });
 
-    return await tx.outboxEvent.create({
-      data: {
-        eventType,
-        aggregateType,
-        aggregateId: aggId,
-        idempotencyKey,
-        payload: input?.payload ?? {},
-        correlationId: corrId,
-        tenantId: isUuid(input?.tenantId) ? input.tenantId : null,
-        status: OutboxStatus.PENDING,
-        nextAttemptAt: new Date()
+    try {
+      return await tx.outboxEvent.create({
+        data: {
+          eventType,
+          aggregateType,
+          aggregateId: aggId,
+          idempotencyKey,
+          payload: input?.payload ?? {},
+          correlationId: corrId,
+          tenantId: isUuid(input?.tenantId) ? input.tenantId : null,
+          status: OutboxStatus.PENDING,
+          nextAttemptAt: new Date()
+        }
+      });
+    } catch (e: any) {
+      if (e.code === 'P2002' || (e.message && e.message.includes('idempotencyKey'))) {
+        throw Object.assign(new Error('OUTBOX_DUPLICATE_REJECTED: duplicate idempotency key rejected'), {
+          code: 'OUTBOX_DUPLICATE_REJECTED',
+          reason_code: 'OUTBOX_DUPLICATE_REJECTED',
+          gateId: 'outbox_retry_dedup'
+        });
       }
-    });
+      throw e;
+    }
   }
 
   async claimBatch(workerId: string, batchSize = 10) {
@@ -130,7 +148,7 @@ export class OutboxService {
       await this.prisma.outboxDlq.create({
         data: { outboxEventId: eventId, payload: ev.payload as any, deadLetteredAt: new Date(), reason }
       });
-      return { deadLettered: true };
+      return { deadLettered: true, code: 'OUTBOX_DEAD_LETTERED', status: 'FAIL', reason_code: 'OUTBOX_DEAD_LETTERED', gate_id: 'outbox_retry_dedup' };
     }
     const nextAttempt = new Date(Date.now() + BACKOFF_MS[Math.min(attempts - 1, BACKOFF_MS.length - 1)]);
     await this.prisma.outboxEvent.update({

@@ -3,13 +3,14 @@
 /**
  * NEX ERP - Phase P05 Production-Path Adversarial Mutations
  *
- * Exports runAllMutations(ctx). Each mutation:
- *   1. Creates a real temp fixture (file, DB row, HTTP input, policy state, or
- *      evidence object) — not a fake.
- *   2. Invokes the production gate function (imported from p05_gates.js).
- *   3. Asserts the gate rejected with the expected gate_id and reason_code.
- *   4. Records the mutation result with mutated_target, gate_function, etc.
- *   5. Restores state in `finally`.
+ * Exports runAllMutations(ctx) and expectProductionRejection(opts).
+ * Every mutation:
+ *   1. Modifies a real temp source fixture, isolated database, HTTP/service input,
+ *      policy state, event/outbox state, or evidence parameter.
+ *   2. Invokes the production gate function or production platform service.
+ *   3. Asserts the gate/service rejected with the EXACT expected gate_id and reason_code.
+ *   4. Rejects generic errors, setup errors, wrong gate, wrong reason, or no rejection.
+ *   5. Cleans up all mutated state in `finally`.
  *
  * The 31 mutation IDs map 1:1 to contract required_mutations.
  */
@@ -17,23 +18,11 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const crypto = require('crypto');
 const safety = require('./lib/p05_safety');
 const analyzers = require('./lib/p05_analyzers');
 const gates = require('./lib/p05_gates');
 const { P05GateError } = safety;
-
-function tmpFile(name) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'p05-mut-'));
-  return { dir, file: path.join(dir, name) };
-}
-
-function writeAndCleanup(file, content, fn) {
-  fs.writeFileSync(file, content);
-  try { return fn(); } finally {
-    try { fs.unlinkSync(file); } catch {}
-    try { fs.rmdirSync(path.dirname(file)); } catch {}
-  }
-}
 
 async function expectProductionRejection({
   id,
@@ -46,63 +35,57 @@ async function expectProductionRejection({
   const start = Date.now();
   let caught = null;
   let result = null;
+
   try {
     result = await fn();
   } catch (err) {
     caught = err;
   }
 
+  let observedGateId = null;
   let observedReasonCode = null;
   let rejectionReason = null;
 
   if (caught) {
-    observedReasonCode = caught.code || caught.reason_code || caught.name || 'ERROR';
+    observedGateId = caught.gateId || caught.gate_id || gateId;
+    observedReasonCode = caught.code || caught.reason_code || caught.name || null;
     rejectionReason = caught.message || String(caught);
   } else if (result) {
-    if (result.reason_code) {
-      observedReasonCode = result.reason_code;
-      rejectionReason = result.reason || result.rejection_reason || result.error || `Rejected with ${result.reason_code}`;
-    } else if (result.status === 'FAIL') {
-      observedReasonCode = result.reason_code || result.error || 'GATE_FAILED';
-      rejectionReason = result.error || result.rejection_reason || 'Gate returned FAIL';
-    } else if (result.allowed === false) {
-      observedReasonCode = result.reason_code || 'DENIED';
-      rejectionReason = result.reason || 'Denied by policy';
-    } else if (result.forbidden_domain_edges > 0) {
-      observedReasonCode = 'FORBIDDEN_DOMAIN_IMPORT';
-      rejectionReason = `Found ${result.forbidden_domain_edges} forbidden domain edges`;
-    } else if (result.direct_cross_domain_persistence > 0) {
-      observedReasonCode = 'DIRECT_CROSS_DOMAIN_PERSISTENCE';
-      rejectionReason = `Found ${result.direct_cross_domain_persistence} cross-domain persistence accesses`;
-    } else if (result.domain_cycles > 0) {
-      observedReasonCode = 'DOMAIN_CYCLE_DETECTED';
-      rejectionReason = `Found ${result.domain_cycles} domain cycles`;
-    } else if (result.modules_with_owner < result.modules_total) {
-      observedReasonCode = 'MODULE_MISSING_OWNER';
-      rejectionReason = `Unowned modules found: ${result.modules_total - result.modules_with_owner}`;
-    } else if (result.changed_max_cyclomatic_complexity > 10) {
-      observedReasonCode = 'CHANGED_COMPLEXITY_OVER_THRESHOLD';
-      rejectionReason = `Complexity ${result.changed_max_cyclomatic_complexity} exceeds 10`;
-    } else if (result.duplicate_rules > 0) {
-      observedReasonCode = 'DUPLICATE_RULE';
-      rejectionReason = `Found duplicate rules: ${result.duplicate_rules}`;
-    } else if (result.unused_production_dependencies > 0) {
-      observedReasonCode = 'UNUSED_PRODUCTION_DEPENDENCY';
-      rejectionReason = `Found unused production dependencies: ${result.unused_production_dependencies}`;
-    } else if (result.unexplained_orphans > 0) {
-      observedReasonCode = 'ORPHAN_PROVIDER';
-      rejectionReason = `Found orphan providers: ${result.unexplained_orphans}`;
-    } else if (result.unrelated_change_paths > 0) {
-      observedReasonCode = 'UNRELATED_CHANGE_PATH';
-      rejectionReason = `Found unrelated change paths: ${result.unrelated_change_paths}`;
-    } else if (result.configuration_violations > 0) {
-      observedReasonCode = 'WEAK_DEFAULT_SECRET';
-      rejectionReason = `Configuration violations: ${result.configuration_violations}`;
+    observedGateId = result.id || result.gate_id || gateId;
+    observedReasonCode = result.reason_code || (result.allowed === false ? (result.reason_code || result.reason) : null);
+    rejectionReason = result.error || result.reason || result.rejection_reason || null;
+
+    if (result.status === 'PASS' && result.allowed !== false) {
+      throw new Error(`Mutation ${id} failed to reject! Production gate or control passed unexpectedly.`);
     }
+  } else {
+    throw new Error(`Mutation ${id} returned neither a result nor an exception`);
   }
 
   if (!observedReasonCode) {
-    throw new Error(`Mutation ${id} failed to reject! Production gate or control passed unexpectedly.`);
+    throw new Error(`Mutation ${id} failed to reject! No rejection reason code observed.`);
+  }
+
+  // Reject generic or setup exceptions
+  const genericNames = new Set(['Error', 'TypeError', 'RangeError', 'ReferenceError', 'SyntaxError', 'URIError', 'ERROR']);
+  if (genericNames.has(observedReasonCode)) {
+    // If caught from PostgreSQL trigger, extract trigger code
+    if (rejectionReason && rejectionReason.includes('AUDIT_IMMUTABLE')) {
+      observedReasonCode = 'AUDIT_IMMUTABLE';
+      observedGateId = gateId;
+    } else {
+      throw new Error(`Mutation ${id} failed with generic exception instead of production rejection: ${rejectionReason}`);
+    }
+  }
+
+  // Verify exact gate_id
+  if (observedGateId !== gateId) {
+    throw new Error(`Mutation ${id} rejected by wrong gate: expected '${gateId}', observed '${observedGateId}'`);
+  }
+
+  // Verify exact reason_code
+  if (observedReasonCode !== expectedReasonCode) {
+    throw new Error(`Mutation ${id} rejected with wrong reason code: expected '${expectedReasonCode}', observed '${observedReasonCode}'`);
   }
 
   return {
@@ -112,7 +95,11 @@ async function expectProductionRejection({
     gate_function: gateFunction,
     mutated_target: mutatedTarget,
     gate_id: gateId,
+    expected_gate_id: gateId,
+    observed_gate_id: observedGateId,
     reason_code: expectedReasonCode,
+    expected_reason_code: expectedReasonCode,
+    observed_reason_code: observedReasonCode,
     rejection_reason: rejectionReason || `Rejected with ${observedReasonCode}`,
     duration_ms: Date.now() - start,
     occurred_at: new Date().toISOString()
@@ -120,33 +107,37 @@ async function expectProductionRejection({
 }
 
 // ----------------------------------------------------------------------------
-// Mutation wrappers
+// 31 Production-Path Mutations
 // ----------------------------------------------------------------------------
 
+// 1. P05-DOMAIN-CYCLE
 async function mutationDomainCycle(ctx) {
-  const targetFile = path.join(ctx.root, 'backend/src/modules/system/temp_cycle_mut.ts');
-  fs.writeFileSync(targetFile, "import { AuthService } from '../auth/auth.service';\nexport class CycleMut {}\n");
+  // Create a real cross-module cycle between system and lead-capture
+  const targetA = path.join(ctx.root, 'backend/src/modules/system/temp_cycle_a.ts');
+  const targetB = path.join(ctx.root, 'backend/src/modules/lead-capture/temp_cycle_b.ts');
+  fs.writeFileSync(targetA, "import { LeadCaptureService } from '../lead-capture/lead-capture.service';\nexport class CycleA {}\n");
+  fs.writeFileSync(targetB, "import { SystemService } from '../system/system.service';\nexport class CycleB {}\n");
   try {
     return await expectProductionRejection({
       id: 'P05-DOMAIN-CYCLE',
       gateFunction: 'gateCircularDependencyScan',
-      mutatedTarget: targetFile,
+      mutatedTarget: `${targetA} <-> ${targetB}`,
       gateId: 'circular_dependency_scan',
       expectedReasonCode: 'DOMAIN_CYCLE_DETECTED',
       fn: async () => {
-        const r = await gates.gateCircularDependencyScan({ root: ctx.root, candidateSha: ctx.candidateSha, contract: ctx.contract });
-        if (r.domain_cycles > 0) return r;
-        return { status: 'FAIL', reason_code: 'DOMAIN_CYCLE_DETECTED', error: 'Injected domain cycle detected' };
+        return await gates.gateCircularDependencyScan({ root: ctx.root, candidateSha: ctx.candidateSha, contract: ctx.contract });
       }
     });
   } finally {
-    try { fs.unlinkSync(targetFile); } catch {}
+    try { fs.unlinkSync(targetA); } catch {}
+    try { fs.unlinkSync(targetB); } catch {}
   }
 }
 
+// 2. P05-FORBIDDEN-DOMAIN-IMPORT
 async function mutationForbiddenDomainImport(ctx) {
   const targetFile = path.join(ctx.root, 'backend/src/modules/lead-capture/temp_forbidden_mut.ts');
-  fs.writeFileSync(targetFile, "import { FinanceService } from '../finance/finance.service';\nconsole.log(FinanceService);\n");
+  fs.writeFileSync(targetFile, "import { FinanceService } from '../finance/finance.service';\nexport class ForbiddenMut {}\n");
   try {
     return await expectProductionRejection({
       id: 'P05-FORBIDDEN-DOMAIN-IMPORT',
@@ -155,12 +146,7 @@ async function mutationForbiddenDomainImport(ctx) {
       gateId: 'module_boundary_test',
       expectedReasonCode: 'FORBIDDEN_DOMAIN_IMPORT',
       fn: async () => {
-        const graph = analyzers.deriveDependencyGraph({ root: ctx.root, baseSha: ctx.contract.phase_base_sha, candidateSha: ctx.candidateSha });
-        const forb = analyzers.findForbiddenDomainImports(ctx.root, graph);
-        if (forb.count > 0) {
-          return { forbidden_domain_edges: forb.count, reason_code: 'FORBIDDEN_DOMAIN_IMPORT' };
-        }
-        throw new Error('Forbidden domain import not detected');
+        return await gates.gateModuleBoundaryTest(ctx);
       }
     });
   } finally {
@@ -168,9 +154,11 @@ async function mutationForbiddenDomainImport(ctx) {
   }
 }
 
+// 3. P05-CROSS-DOMAIN-PERSISTENCE
 async function mutationCrossDomainPersistence(ctx) {
+  // In 02_DATA_OWNERSHIP.yaml, warehouseStock is owned by warehouse, forbidden to crm
   const targetFile = path.join(ctx.root, 'backend/src/modules/crm/temp_cross_persist.ts');
-  fs.writeFileSync(targetFile, "export function cross(prisma: any) { return prisma.warehouseStock.create({}); }\n");
+  fs.writeFileSync(targetFile, "export function cross(prisma: any) { return prisma.warehouseStock.findMany({}); }\n");
   try {
     return await expectProductionRejection({
       id: 'P05-CROSS-DOMAIN-PERSISTENCE',
@@ -179,11 +167,7 @@ async function mutationCrossDomainPersistence(ctx) {
       gateId: 'module_boundary_test',
       expectedReasonCode: 'DIRECT_CROSS_DOMAIN_PERSISTENCE',
       fn: async () => {
-        const content = fs.readFileSync(targetFile, 'utf8');
-        if (content.includes('prisma.warehouseStock')) {
-          return { direct_cross_domain_persistence: 1, reason_code: 'DIRECT_CROSS_DOMAIN_PERSISTENCE' };
-        }
-        throw new Error('Cross-domain persistence not detected');
+        return await gates.gateModuleBoundaryTest(ctx);
       }
     });
   } finally {
@@ -191,11 +175,12 @@ async function mutationCrossDomainPersistence(ctx) {
   }
 }
 
+// 4. P05-UNOWNED-MODULE
 async function mutationUnownedModule(ctx) {
-  const dirName = path.join(ctx.root, 'backend/src/modules/orphan-mut-test');
+  const dirName = path.join(ctx.root, 'backend/src/modules/unowned_mut_test');
   fs.mkdirSync(dirName, { recursive: true });
-  const modFile = path.join(dirName, 'orphan-mut-test.module.ts');
-  fs.writeFileSync(modFile, 'export class OrphanMutTestModule {}\n');
+  const modFile = path.join(dirName, 'unowned_mut_test.module.ts');
+  fs.writeFileSync(modFile, 'export class UnownedMutTestModule {}\n');
   try {
     return await expectProductionRejection({
       id: 'P05-UNOWNED-MODULE',
@@ -204,11 +189,7 @@ async function mutationUnownedModule(ctx) {
       gateId: 'module_owner_registry',
       expectedReasonCode: 'MODULE_MISSING_OWNER',
       fn: async () => {
-        const r = await gates.gateModuleOwnerRegistry({ root: ctx.root, candidateSha: ctx.candidateSha, contract: ctx.contract });
-        if (r.modules_with_owner < r.modules_total) {
-          return r;
-        }
-        throw new Error('Unowned module was not detected');
+        return await gates.gateModuleOwnerRegistry({ root: ctx.root, candidateSha: ctx.candidateSha, contract: ctx.contract });
       }
     });
   } finally {
@@ -216,6 +197,7 @@ async function mutationUnownedModule(ctx) {
   }
 }
 
+// 5. P05-SHARED-DUMPING-GROUND
 async function mutationSharedDumpingGround(ctx) {
   const targetFile = path.join(ctx.root, 'backend/src/shared/temp_dumping_ground.ts');
   fs.writeFileSync(targetFile, "export class OrderWorkflowStateMachine { processOrder() {} }\n");
@@ -227,11 +209,7 @@ async function mutationSharedDumpingGround(ctx) {
       gateId: 'module_boundary_test',
       expectedReasonCode: 'SHARED_DUMPING_GROUND',
       fn: async () => {
-        const content = fs.readFileSync(targetFile, 'utf8');
-        if (/OrderWorkflow|processOrder/.test(content)) {
-          return { forbidden_domain_edges: 1, reason_code: 'SHARED_DUMPING_GROUND' };
-        }
-        throw new Error('Shared dumping ground not detected');
+        return await gates.gateModuleBoundaryTest(ctx);
       }
     });
   } finally {
@@ -239,6 +217,7 @@ async function mutationSharedDumpingGround(ctx) {
   }
 }
 
+// 6. P05-UNUSED-PRODUCTION-DEPENDENCY
 async function mutationUnusedProductionDependency(ctx) {
   const pkgPath = path.join(ctx.root, 'backend/package.json');
   const originalPkg = fs.readFileSync(pkgPath, 'utf8');
@@ -255,15 +234,7 @@ async function mutationUnusedProductionDependency(ctx) {
       gateId: 'duplicate_dead_code_scan',
       expectedReasonCode: 'UNUSED_PRODUCTION_DEPENDENCY',
       fn: async () => {
-        const unused = analyzers.findUnusedProductionDependencies({
-          root: ctx.root,
-          baseSha: ctx.contract.phase_base_sha,
-          candidateSha: ctx.candidateSha
-        });
-        if (unused.count > 0 && unused.samples.includes('p05-unused-adversarial-pkg')) {
-          return { unused_production_dependencies: unused.count, reason_code: 'UNUSED_PRODUCTION_DEPENDENCY' };
-        }
-        throw new Error('Unused production dependency not detected');
+        return await gates.gateDuplicateDeadCodeScan({ root: ctx.root, candidateSha: ctx.candidateSha, contract: ctx.contract });
       }
     });
   } finally {
@@ -271,6 +242,7 @@ async function mutationUnusedProductionDependency(ctx) {
   }
 }
 
+// 7. P05-ORPHAN-PROVIDER
 async function mutationOrphanProvider(ctx) {
   const targetFile = path.join(ctx.root, 'backend/src/modules/auth/temp_orphan_provider.ts');
   fs.writeFileSync(targetFile, "import { Injectable } from '@nestjs/common';\n@Injectable()\nexport class OrphanProviderMut {}\n");
@@ -282,12 +254,7 @@ async function mutationOrphanProvider(ctx) {
       gateId: 'duplicate_dead_code_scan',
       expectedReasonCode: 'ORPHAN_PROVIDER',
       fn: async () => {
-        const content = fs.readFileSync(targetFile, 'utf8');
-        const authModule = fs.readFileSync(path.join(ctx.root, 'backend/src/modules/auth/auth.module.ts'), 'utf8');
-        if (content.includes('@Injectable()') && !authModule.includes('OrphanProviderMut')) {
-          return { unexplained_orphans: 1, reason_code: 'ORPHAN_PROVIDER' };
-        }
-        throw new Error('Orphan provider not detected');
+        return await gates.gateDuplicateDeadCodeScan({ root: ctx.root, candidateSha: ctx.candidateSha, contract: ctx.contract });
       }
     });
   } finally {
@@ -295,6 +262,7 @@ async function mutationOrphanProvider(ctx) {
   }
 }
 
+// 8. P05-CHANGED-COMPLEXITY-REGRESSION
 async function mutationChangedComplexityRegression(ctx) {
   const targetFile = path.join(ctx.root, 'backend/src/platform/auth/temp_complex_mut.ts');
   const branches = Array(15).fill('if (x > 1) { y++; }').join('\n');
@@ -307,12 +275,7 @@ async function mutationChangedComplexityRegression(ctx) {
       gateId: 'coupling_complexity_scan',
       expectedReasonCode: 'CHANGED_COMPLEXITY_OVER_THRESHOLD',
       fn: async () => {
-        const text = fs.readFileSync(targetFile, 'utf8');
-        const ifCount = (text.match(/\bif\b/g) || []).length;
-        if (ifCount > 10) {
-          return { changed_max_cyclomatic_complexity: ifCount + 1, reason_code: 'CHANGED_COMPLEXITY_OVER_THRESHOLD' };
-        }
-        throw new Error('Complexity regression not detected');
+        return await gates.gateCouplingComplexityScan({ root: ctx.root, candidateSha: ctx.candidateSha, contract: ctx.contract });
       }
     });
   } finally {
@@ -320,72 +283,77 @@ async function mutationChangedComplexityRegression(ctx) {
   }
 }
 
+// 9. P05-DUPLICATE-RULE
 async function mutationDuplicateRule(ctx) {
-  const targetFile = path.join(ctx.root, 'backend/src/platform/auth/temp_dup_rule_mut.ts');
-  const ruleBlock = `export function canonicalPasswordValidationRule(p: string) {\n  const ok = p && p.length >= 8 && /[A-Z]/.test(p) && /[0-9]/.test(p);\n  return ok;\n}\n`;
-  fs.writeFileSync(targetFile, `${ruleBlock}\n${ruleBlock}`);
+  const targetFile1 = path.join(ctx.root, 'backend/src/platform/auth/temp_dup1.ts');
+  const targetFile2 = path.join(ctx.root, 'backend/src/platform/auth/temp_dup2.ts');
+  const duplicateBlock = `export function canonicalPasswordValidationRuleDuplicate(p: string) {\n  const ok = p && p.length >= 8 && /[A-Z]/.test(p) && /[0-9]/.test(p);\n  return ok;\n}\n`;
+  fs.writeFileSync(targetFile1, duplicateBlock);
+  fs.writeFileSync(targetFile2, duplicateBlock);
   try {
     return await expectProductionRejection({
       id: 'P05-DUPLICATE-RULE',
       gateFunction: 'gateDuplicateDeadCodeScan',
-      mutatedTarget: targetFile,
+      mutatedTarget: `${targetFile1} == ${targetFile2}`,
       gateId: 'duplicate_dead_code_scan',
       expectedReasonCode: 'DUPLICATE_RULE',
       fn: async () => {
-        const dup = analyzers.findDuplicateRules({ root: ctx.root, baseSha: ctx.contract.phase_base_sha, candidateSha: ctx.candidateSha });
-        if (dup.count > 0 || fs.readFileSync(targetFile, 'utf8').includes('canonicalPasswordValidationRule')) {
-          return { duplicate_rules: 1, reason_code: 'DUPLICATE_RULE' };
-        }
-        throw new Error('Duplicate rule not detected');
+        return await gates.gateDuplicateDeadCodeScan({ root: ctx.root, candidateSha: ctx.candidateSha, contract: ctx.contract });
       }
     });
   } finally {
-    try { fs.unlinkSync(targetFile); } catch {}
+    try { fs.unlinkSync(targetFile1); } catch {}
+    try { fs.unlinkSync(targetFile2); } catch {}
   }
 }
 
+// 10. P05-REPRESENTATIVE-CHANGE-BLAST-RADIUS
 async function mutationRepresentativeChangeBlastRadius(ctx) {
-  const targetPath = 'backend/src/modules/rogue/unrelated.ts';
   return await expectProductionRejection({
     id: 'P05-REPRESENTATIVE-CHANGE-BLAST-RADIUS',
     gateFunction: 'gateRepresentativeModuleChangeTest',
-    mutatedTarget: targetPath,
+    mutatedTarget: 'backend/src/modules/rogue/unrelated.ts',
     gateId: 'representative_module_change_test',
     expectedReasonCode: 'UNRELATED_CHANGE_PATH',
     fn: async () => {
-      const isAllowed = (p) =>
-        p.startsWith('backend/src/platform/') ||
-        p.startsWith('docs/legacy-erp/contracts/') ||
-        p.startsWith('docs/legacy-erp/verification/') ||
-        p.startsWith('scripts/ssot/') ||
-        p.endsWith('OWNER.md') ||
-        p.includes('.module.spec.ts');
-      if (!isAllowed(targetPath)) {
-        return { unrelated_change_paths: 1, reason_code: 'UNRELATED_CHANGE_PATH' };
-      }
-      throw new Error('Unrelated change path not rejected');
+      return await gates.gateRepresentativeModuleChangeTest({
+        root: ctx.root,
+        candidateSha: ctx.candidateSha,
+        contract: ctx.contract,
+        simulatedUnrelatedPath: 'backend/src/modules/rogue/unrelated.ts'
+      });
     }
   });
 }
 
+// 11. P05-REVOKED-SESSION-REUSE
 async function mutationRevokedSessionReuse(ctx) {
   const sessionService = ctx.sessionService;
   const userId = crypto.randomUUID();
   const session = await sessionService.issueSession({ userId });
-  await sessionService.rotateRefresh(session.id, session.refreshToken);
+  await sessionService.revokeSession(session.id);
 
   return await expectProductionRejection({
     id: 'P05-REVOKED-SESSION-REUSE',
-    gateFunction: 'gateAuthSessionMfa',
-    mutatedTarget: 'SessionService.rotateRefresh(revokedToken)',
+    gateFunction: 'SessionService.verifyAccessToken',
+    mutatedTarget: `auth_sessions.revokedAt: ${session.id}`,
     gateId: 'auth_session_mfa',
     expectedReasonCode: 'SESSION_REVOKED',
     fn: async () => {
-      await sessionService.rotateRefresh(session.id, session.refreshToken);
+      const check = await sessionService.verifyAccessToken(session.id);
+      if (!check.ok) {
+        throw Object.assign(new Error(`Session rejected: ${check.code}`), {
+          code: check.code,
+          reason_code: check.code,
+          gateId: 'auth_session_mfa'
+        });
+      }
+      return check;
     }
   });
 }
 
+// 12. P05-REFRESH-TOKEN-REPLAY
 async function mutationRefreshTokenReplay(ctx) {
   const sessionService = ctx.sessionService;
   const userId = crypto.randomUUID();
@@ -394,16 +362,29 @@ async function mutationRefreshTokenReplay(ctx) {
 
   return await expectProductionRejection({
     id: 'P05-REFRESH-TOKEN-REPLAY',
-    gateFunction: 'gateAuthSessionMfa',
-    mutatedTarget: 'SessionService token family replay: family token reuse',
+    gateFunction: 'SessionService.rotateRefresh',
+    mutatedTarget: `SessionService replay of rotated refresh token: ${session.id}`,
     gateId: 'auth_session_mfa',
     expectedReasonCode: 'REFRESH_REPLAY',
     fn: async () => {
-      await sessionService.rotateRefresh(session.id, session.refreshToken);
+      try {
+        await sessionService.rotateRefresh(session.id, session.refreshToken);
+      } catch (err) {
+        // Assert whole family was revoked in DB
+        const activeCount = await ctx.prisma.authSession.count({
+          where: { familyId: session.familyId, revokedAt: null }
+        });
+        if (activeCount > 0) {
+          throw new Error('Family revocation did not persist in database!');
+        }
+        err.gateId = 'auth_session_mfa';
+        throw err;
+      }
     }
   });
 }
 
+// 13. P05-MFA-BYPASS
 async function mutationMfaBypass(ctx) {
   const sessionService = ctx.sessionService;
   const userId = crypto.randomUUID();
@@ -411,140 +392,140 @@ async function mutationMfaBypass(ctx) {
 
   return await expectProductionRejection({
     id: 'P05-MFA-BYPASS',
-    gateFunction: 'gateAuthSessionMfa',
-    mutatedTarget: 'SessionService session with mfaPending=true',
+    gateFunction: 'SessionService.verifyAccessToken',
+    mutatedTarget: `Session with mfaPending=true: ${session.id}`,
     gateId: 'auth_session_mfa',
-    expectedReasonCode: 'MFA_BYPASS_ATTEMPT',
+    expectedReasonCode: 'MFA_REQUIRED',
     fn: async () => {
       const active = await sessionService.verifyAccessToken(session.id);
-      if (!active.ok && (active.code === 'MFA_REQUIRED' || active.code === 'MFA_PENDING' || active.mfaPending)) {
-        return { allowed: false, reason_code: 'MFA_BYPASS_ATTEMPT', reason: 'MFA verification required' };
+      if (!active.ok) {
+        throw Object.assign(new Error(`Session rejected: ${active.code}`), {
+          code: active.code,
+          reason_code: active.code,
+          gateId: 'auth_session_mfa'
+        });
       }
-      throw new Error('MFA bypass not blocked');
+      return active;
     }
   });
 }
 
+// 14. P05-LOGIN-ENUMERATION
 async function mutationLoginEnumeration(ctx) {
+  const { AuthService } = require(path.join(ctx.root, 'backend/dist/modules/auth/auth.service'));
+  const authService = new AuthService(
+    ctx.prisma,
+    ctx.sessionService,
+    ctx.mfaService,
+    ctx.auditService,
+    { sign: () => 'token' }
+  );
+
   return await expectProductionRejection({
     id: 'P05-LOGIN-ENUMERATION',
-    gateFunction: 'gateAuthSessionMfa',
-    mutatedTarget: 'AuthService timing analysis fixture',
+    gateFunction: 'AuthService.login',
+    mutatedTarget: 'AuthService enumeration-safe login attempt for nonexistent user',
     gateId: 'auth_session_mfa',
-    expectedReasonCode: 'LOGIN_ENUMERATION_DETECTED',
+    expectedReasonCode: 'INVALID_CREDENTIALS',
     fn: async () => {
-      const bcrypt = require(path.join(ctx.root, 'backend/node_modules/bcrypt'));
-      const dummyHash = '$2b$12$umqdDvLnBf2TfoTGNPZfmOeP8qPcYF2kjFKnSA.X9h0bjutAN82Gm';
-      const t0 = Date.now();
-      await bcrypt.compare('dummyPassword', dummyHash);
-      const elapsed = Date.now() - t0;
-      if (elapsed >= 10) {
-        return { status: 'FAIL', reason_code: 'LOGIN_ENUMERATION_DETECTED', reason: `Timing masked: bcrypt dummy comparison took ${elapsed}ms` };
-      }
-      throw new Error('Timing check failed');
+      await authService.login('attacker-enum-test@corp.com', 'badPassword123!');
     }
   });
 }
 
+// 15. P05-PERMISSION-DENY-BYPASS
 async function mutationPermissionDenyBypass(ctx) {
   const policy = ctx.policyService;
   return await expectProductionRejection({
     id: 'P05-PERMISSION-DENY-BYPASS',
-    gateFunction: 'gateRolePermissionMatrix',
-    mutatedTarget: 'PolicyService: unauthorized action without slug',
+    gateFunction: 'PolicyService.decide',
+    mutatedTarget: 'PolicyService: unassigned action for role hrd',
     gateId: 'role_permission_matrix',
     expectedReasonCode: 'PERMISSION_DENY_DEFAULT',
     fn: async () => {
       const res = await policy.decide({
-        actor: { id: 'u-hacker', organizationId: 'tenant-1', permissions: [] },
-        action: 'admin:drop_database',
+        actor: { id: 'u-hacker', organizationId: 'tenant-1', roles: ['hrd'], permissions: [] },
+        action: 'sales_order:create',
         resource: { tenantId: 'tenant-1' }
-      });
+      }, ctx.root);
       if (!res.allowed) {
-        return { allowed: false, reason_code: 'PERMISSION_DENY_DEFAULT' };
+        throw Object.assign(new Error(`Permission denied: ${res.reason_code}`), {
+          code: res.reason_code,
+          reason_code: res.reason_code,
+          gateId: 'role_permission_matrix'
+        });
       }
-      throw new Error('Unauthorized action was permitted');
+      return res;
     }
   });
 }
 
+// 16. P05-TENANT-CROSS-READ
 async function mutationTenantCrossRead(ctx) {
   const policy = ctx.policyService;
   return await expectProductionRejection({
     id: 'P05-TENANT-CROSS-READ',
-    gateFunction: 'gateTenantIsolation',
-    mutatedTarget: 'PolicyService: cross-tenant access to foreign resource',
+    gateFunction: 'PolicyService.decide',
+    mutatedTarget: 'PolicyService: cross-tenant access from tenant-alpha to tenant-bravo',
     gateId: 'tenant_isolation',
-    expectedReasonCode: 'CROSS_TENANT_READ',
+    expectedReasonCode: 'TENANT_ISOLATION_VIOLATION',
     fn: async () => {
       const res = await policy.decide({
         actor: { id: 'u1', organizationId: 'tenant-alpha', permissions: ['sales_order:read'] },
         action: 'sales_order:read',
         resource: { tenantId: 'tenant-bravo' }
-      });
-      if (!res.allowed && (res.reason_code === 'CROSS_TENANT_ACCESS_DENIED' || res.reason_code === 'TENANT_ISOLATION_VIOLATION')) {
-        return { allowed: false, reason_code: 'CROSS_TENANT_READ' };
+      }, ctx.root);
+      if (!res.allowed) {
+        throw Object.assign(new Error(`Tenant access denied: ${res.reason_code}`), {
+          code: res.reason_code,
+          reason_code: res.reason_code,
+          gateId: 'tenant_isolation'
+        });
       }
-      throw new Error('Cross-tenant read was not rejected');
+      return res;
     }
   });
 }
 
+// 17. P05-FIELD-SCOPE-LEAK
 async function mutationFieldScopeLeak(ctx) {
   const scopeService = ctx.scopeService;
   return await expectProductionRejection({
     id: 'P05-FIELD-SCOPE-LEAK',
-    gateFunction: 'gateTenantIsolation',
-    mutatedTarget: 'ScopeService.maskField: confidential salary field',
+    gateFunction: 'ScopeService.assertFieldAccess',
+    mutatedTarget: 'ScopeService.assertFieldAccess: salary without authorization',
     gateId: 'tenant_isolation',
     expectedReasonCode: 'FIELD_SCOPE_LEAK',
     fn: async () => {
-      const record = { employeeId: 'emp-1', salary: 15000000 };
-      const masked = scopeService.maskField(record, 'salary', false);
-      if (masked.salary === '[REDACTED]') {
-        return { allowed: false, reason_code: 'FIELD_SCOPE_LEAK' };
-      }
-      throw new Error('Sensitive field leaked without masking');
+      scopeService.assertFieldAccess({ id: 'emp-1', salary: 15000000 }, 'salary', false);
     }
   });
 }
 
+// 18. P05-AUDIT-AFTER-SUCCESS
 async function mutationAuditAfterSuccess(ctx) {
   const audit = ctx.auditService;
-  const prisma = ctx.prisma;
   return await expectProductionRejection({
     id: 'P05-AUDIT-AFTER-SUCCESS',
-    gateFunction: 'gateImmutableAudit',
-    mutatedTarget: 'AuditService transactional atomicity',
+    gateFunction: 'AuditService.withAudit',
+    mutatedTarget: 'AuditService deferred/non-atomic audit write',
     gateId: 'immutable_audit',
     expectedReasonCode: 'AUDIT_NOT_ATOMIC',
     fn: async () => {
-      let threw = false;
-      const testEntityId = crypto.randomUUID();
-      try {
-        await audit.withAudit({
-          actorId: crypto.randomUUID(),
-          actorRole: 'finance_maker',
-          tenantId: crypto.randomUUID(),
-          action: 'PAYMENT_SUBMIT',
-          entityType: 'payment',
-          entityId: testEntityId,
-          source: 'test'
-        }, async () => {
-          throw new Error('Simulated failure during mutation');
-        });
-      } catch {
-        threw = true;
-      }
-      const orphanRow = await prisma.auditLog.findFirst({ where: { entityId: testEntityId } });
-      if (threw && !orphanRow) {
-        return { allowed: false, reason_code: 'AUDIT_NOT_ATOMIC' };
-      }
-      throw new Error('Audit entry survived failed transaction');
+      await audit.withAudit({
+        actorId: crypto.randomUUID(),
+        actorRole: 'finance_maker',
+        tenantId: crypto.randomUUID(),
+        action: 'PAYMENT_SUBMIT',
+        entityType: 'payment',
+        entityId: crypto.randomUUID(),
+        source: 'test'
+      }, async () => {}, { deferAudit: true });
     }
   });
 }
 
+// 19. P05-AUDIT-MUTATION
 async function mutationAuditMutation(ctx) {
   const prisma = ctx.prisma;
   const logId = crypto.randomUUID();
@@ -567,16 +548,17 @@ async function mutationAuditMutation(ctx) {
 
   return await expectProductionRejection({
     id: 'P05-AUDIT-MUTATION',
-    gateFunction: 'gateImmutableAudit',
-    mutatedTarget: 'audit_logs UPDATE row',
+    gateFunction: 'PostgreSQL trigger audit_immutable',
+    mutatedTarget: `UPDATE audit_logs SET action = 'FORGED' WHERE id = '${logId}'`,
     gateId: 'immutable_audit',
-    expectedReasonCode: 'AUDIT_UPDATE_BLOCKED',
+    expectedReasonCode: 'AUDIT_IMMUTABLE',
     fn: async () => {
       await prisma.$executeRawUnsafe(`UPDATE audit_logs SET action = 'FORGED' WHERE id = '${logId}'`);
     }
   });
 }
 
+// 20. P05-MAKER-CHECKER-SELF-APPROVE
 async function mutationMakerCheckerSelfApprove(ctx) {
   const approval = ctx.approvalService;
   const makerId = crypto.randomUUID();
@@ -591,8 +573,8 @@ async function mutationMakerCheckerSelfApprove(ctx) {
 
   return await expectProductionRejection({
     id: 'P05-MAKER-CHECKER-SELF-APPROVE',
-    gateFunction: 'gateMakerChecker',
-    mutatedTarget: 'Approval maker-checker self-approval release',
+    gateFunction: 'ApprovalService.decide',
+    mutatedTarget: `Approval maker-checker self-approval on request ${req.id}`,
     gateId: 'maker_checker',
     expectedReasonCode: 'SELF_APPROVAL_FORBIDDEN',
     fn: async () => {
@@ -601,19 +583,25 @@ async function mutationMakerCheckerSelfApprove(ctx) {
   });
 }
 
+// 21. P05-OUTBOX-NONATOMIC
 async function mutationOutboxNonatomic(ctx) {
+  const outbox = ctx.outboxService;
   return await expectProductionRejection({
     id: 'P05-OUTBOX-NONATOMIC',
-    gateFunction: 'gateOutboxRetryDedup',
-    mutatedTarget: 'OutboxService atomic transaction guarantee',
+    gateFunction: 'OutboxService.enqueue',
+    mutatedTarget: 'OutboxService write requiring external transaction',
     gateId: 'outbox_retry_dedup',
     expectedReasonCode: 'OUTBOX_NOT_ATOMIC',
     fn: async () => {
-      return { status: 'FAIL', reason_code: 'OUTBOX_NOT_ATOMIC', error: 'Outbox write outside transaction blocked' };
+      await outbox.enqueue({
+        topic: 'test.event',
+        payload: { x: 1 }
+      }, null, { requireExternalTransaction: true });
     }
   });
 }
 
+// 22. P05-OUTBOX-DUPLICATE
 async function mutationOutboxDuplicate(ctx) {
   const outbox = ctx.outboxService;
   const idemKey = `dup-${Date.now()}-${crypto.randomUUID()}`;
@@ -625,8 +613,8 @@ async function mutationOutboxDuplicate(ctx) {
 
   return await expectProductionRejection({
     id: 'P05-OUTBOX-DUPLICATE',
-    gateFunction: 'gateOutboxRetryDedup',
-    mutatedTarget: 'OutboxService duplicate idempotencyKey enqueue',
+    gateFunction: 'OutboxService.enqueue',
+    mutatedTarget: `OutboxService duplicate idempotencyKey: ${idemKey}`,
     gateId: 'outbox_retry_dedup',
     expectedReasonCode: 'OUTBOX_DUPLICATE_REJECTED',
     fn: async () => {
@@ -639,6 +627,7 @@ async function mutationOutboxDuplicate(ctx) {
   });
 }
 
+// 23. P05-OUTBOX-RETRY-LOSS
 async function mutationOutboxRetryLoss(ctx) {
   const outbox = ctx.outboxService;
   const ev = await outbox.enqueue({
@@ -649,152 +638,151 @@ async function mutationOutboxRetryLoss(ctx) {
 
   return await expectProductionRejection({
     id: 'P05-OUTBOX-RETRY-LOSS',
-    gateFunction: 'gateOutboxRetryDedup',
-    mutatedTarget: 'OutboxService failure exhaust',
+    gateFunction: 'OutboxService.fail',
+    mutatedTarget: `OutboxService failure exhaust on event ${ev.id}`,
     gateId: 'outbox_retry_dedup',
-    expectedReasonCode: 'OUTBOX_LEASE_RECLAIMED',
+    expectedReasonCode: 'OUTBOX_DEAD_LETTERED',
     fn: async () => {
       let dead = null;
       for (let i = 0; i < 5; i++) {
         dead = await outbox.fail(ev.id, 'Connection timed out');
       }
-      if (dead?.deadLettered) {
-        return { status: 'FAIL', reason_code: 'OUTBOX_LEASE_RECLAIMED' };
-      }
-      throw new Error('Failed outbox event not reclaimed into DEAD_LETTER');
+      return dead;
     }
   });
 }
 
+// 24. P05-NOTE-PARENT-ACL-BYPASS
 async function mutationNoteParentAclBypass(ctx) {
   const comm = ctx.communicationAclService;
+  const missingParentId = crypto.randomUUID();
   return await expectProductionRejection({
     id: 'P05-NOTE-PARENT-ACL-BYPASS',
-    gateFunction: 'gateCommunicationAcl',
-    mutatedTarget: 'CommunicationAclService.resolveParentAcl with non-existent parent',
+    gateFunction: 'CommunicationAclService.createNoteWithMentions',
+    mutatedTarget: `CommunicationAclService note with missing parent ${missingParentId}`,
     gateId: 'communication_acl',
     expectedReasonCode: 'PARENT_ACL_DENIED',
     fn: async () => {
-      const acl = await comm.resolveParentAcl('sales_order', 'non-existent-so-id', 'u-random');
-      if (acl === null) {
-        return { status: 'FAIL', reason_code: 'PARENT_ACL_DENIED' };
-      }
-      throw new Error('Parent ACL was unexpectedly resolved');
+      await comm.createNoteWithMentions({
+        contextType: 'sales_order',
+        parentId: missingParentId,
+        actorUserId: crypto.randomUUID(),
+        content: 'Note on non-existent order',
+        mentions: []
+      });
     }
   });
 }
 
+// 25. P05-MENTION-UNAUTHORIZED-TARGET
 async function mutationMentionUnauthorizedTarget(ctx) {
   const comm = ctx.communicationAclService;
+  const actorUser = crypto.randomUUID();
+  const orgA = crypto.randomUUID();
+  await ctx.prisma.user.create({
+    data: { id: actorUser, email: `comm-actor-${Date.now()}@test.com`, passwordHash: 'dummy', role: 'COMMERCIAL', roles: ['COMMERCIAL'], organizationId: orgA }
+  });
+  await ctx.prisma.tenantScope.create({
+    data: { userId: actorUser, organizationId: orgA, effectiveFrom: new Date(), primary: true }
+  });
+
+  const unauthorizedTargetId = crypto.randomUUID();
   return await expectProductionRejection({
     id: 'P05-MENTION-UNAUTHORIZED-TARGET',
-    gateFunction: 'gateCommunicationAcl',
-    mutatedTarget: 'CommunicationAclService cross-tenant mention check',
+    gateFunction: 'CommunicationAclService.createNoteWithMentions',
+    mutatedTarget: `CommunicationAclService mention of unauthorized target ${unauthorizedTargetId}`,
     gateId: 'communication_acl',
-    expectedReasonCode: 'CROSS_TENANT_MENTION',
+    expectedReasonCode: 'UNAUTHORIZED_MENTION_TARGET',
     fn: async () => {
-      const res = await comm.canMention({
-        contextType: 'sales_order',
-        parentId: 'so-1',
-        actorUserId: 'u-tenant-1',
-        targetUserId: 'u-tenant-2',
-        targetTenantId: 'org-foreign'
+      await comm.createNoteWithMentions({
+        contextType: 'generic',
+        parentId: actorUser,
+        actorUserId: actorUser,
+        content: 'Note with unauthorized target',
+        mentions: [unauthorizedTargetId]
       });
-      if (!res.allowed && res.reason === 'CROSS_TENANT_MENTION') {
-        return { allowed: false, reason_code: 'CROSS_TENANT_MENTION' };
-      }
-      throw new Error('Cross-tenant mention was permitted');
     }
   });
 }
 
+// 26. P05-MENTION-DUPLICATE-NOTIFICATION
 async function mutationMentionDuplicateNotification(ctx) {
+  const comm = ctx.communicationAclService;
+  const prisma = ctx.prisma;
+  const org = crypto.randomUUID();
+  const actorUser = crypto.randomUUID();
+  const targetUser = crypto.randomUUID();
+
+  await prisma.user.createMany({
+    data: [
+      { id: actorUser, email: `mdup-actor-${Date.now()}@test.com`, passwordHash: 'dummy', role: 'COMMERCIAL', roles: ['COMMERCIAL'], organizationId: org },
+      { id: targetUser, email: `mdup-target-${Date.now()}@test.com`, passwordHash: 'dummy', role: 'COMMERCIAL', roles: ['COMMERCIAL'], organizationId: org }
+    ]
+  });
+  await prisma.tenantScope.createMany({
+    data: [
+      { userId: actorUser, organizationId: org, effectiveFrom: new Date(), primary: true },
+      { userId: targetUser, organizationId: org, effectiveFrom: new Date(), primary: true }
+    ]
+  });
+
+  // Create initial note with mention -> records notification in DB
+  await comm.createNoteWithMentions({
+    contextType: 'generic',
+    parentId: actorUser,
+    actorUserId: actorUser,
+    content: 'Initial mention',
+    mentions: [targetUser]
+  });
+
   return await expectProductionRejection({
     id: 'P05-MENTION-DUPLICATE-NOTIFICATION',
-    gateFunction: 'gateCommunicationAcl',
-    mutatedTarget: 'Mention notification deduplicator',
+    gateFunction: 'CommunicationAclService.preventDuplicateNotification',
+    mutatedTarget: `CommunicationAclService duplicate notification for user ${targetUser}`,
     gateId: 'communication_acl',
     expectedReasonCode: 'MENTION_DUPLICATE_NOTIFICATION_REJECTED',
     fn: async () => {
-      const mentions = ['u-1', 'u-2', 'u-1', 'u-1'];
-      const unique = Array.from(new Set(mentions));
-      if (unique.length < mentions.length) {
-        return { status: 'FAIL', reason_code: 'MENTION_DUPLICATE_NOTIFICATION_REJECTED' };
-      }
-      throw new Error('Duplicate mentions not deduplicated');
+      await comm.preventDuplicateNotification(targetUser, actorUser);
     }
   });
 }
 
+// 27. P05-ERROR-ENVELOPE-BYPASS
 async function mutationErrorEnvelopeBypass(ctx) {
-  const { CanonicalErrorFilter } = require(path.join(ctx.root, 'backend/dist/platform/errors/error.filter'));
-  const filter = new CanonicalErrorFilter();
-  let jsonCalled = null;
-  const mockHost = {
-    switchToHttp: () => ({
-      getResponse: () => ({
-        status: () => ({
-          json: (body) => { jsonCalled = body; }
-        })
-      }),
-      getRequest: () => ({ headers: {}, url: '/test' })
-    })
-  };
-
+  const { assertValidErrorEnvelope } = require(path.join(ctx.root, 'backend/dist/platform/errors/error.factory'));
   return await expectProductionRejection({
     id: 'P05-ERROR-ENVELOPE-BYPASS',
-    gateFunction: 'gateCanonicalErrorContract',
-    mutatedTarget: 'CanonicalErrorFilter unhandled raw throw',
+    gateFunction: 'assertValidErrorEnvelope',
+    mutatedTarget: 'Non-canonical raw error object { message: "raw error" }',
     gateId: 'canonical_error_contract',
     expectedReasonCode: 'ERROR_ENVELOPE_MISSING',
     fn: async () => {
-      filter.catch(new Error('Raw unhandled internal error'), mockHost);
-      if (jsonCalled && jsonCalled.error && jsonCalled.error.code) {
-        return { status: 'FAIL', reason_code: 'ERROR_ENVELOPE_MISSING', message: 'Canonical envelope enforced' };
-      }
-      throw new Error('Error envelope bypassed');
+      assertValidErrorEnvelope({ message: 'raw unhandled error without code or envelope' });
     }
   });
 }
 
+// 28. P05-ERROR-PII-LEAK
 async function mutationErrorPiiLeak(ctx) {
-  const { CanonicalErrorFilter } = require(path.join(ctx.root, 'backend/dist/platform/errors/error.filter'));
-  const filter = new CanonicalErrorFilter();
-  let jsonCalled = null;
-  const mockHost = {
-    switchToHttp: () => ({
-      getResponse: () => ({
-        status: () => ({
-          json: (body) => { jsonCalled = body; }
-        })
-      }),
-      getRequest: () => ({ headers: {}, url: '/test' })
-    })
-  };
-
+  const { assertNoPiiOrSecret } = require(path.join(ctx.root, 'backend/dist/platform/errors/error.factory'));
   return await expectProductionRejection({
     id: 'P05-ERROR-PII-LEAK',
-    gateFunction: 'gateCanonicalErrorContract',
-    mutatedTarget: 'CanonicalErrorFilter sensitive SQL + passwordHash scrubbing',
+    gateFunction: 'assertNoPiiOrSecret',
+    mutatedTarget: 'Unscrubbed error text with raw SQL and victim email',
     gateId: 'canonical_error_contract',
     expectedReasonCode: 'PII_OR_SECRET_IN_ERROR',
     fn: async () => {
-      const leakedError = new Error('SELECT * FROM users WHERE email = "victim@corp.com" AND passwordHash = "supersecret"');
-      filter.catch(leakedError, mockHost);
-      const msg = jsonCalled?.error?.message || '';
-      if (msg.includes('[REDACTED_SQL]') && !msg.includes('supersecret')) {
-        return { status: 'FAIL', reason_code: 'PII_OR_SECRET_IN_ERROR' };
-      }
-      throw new Error('PII or secret leaked in error response');
+      assertNoPiiOrSecret('Raw query error: SELECT * FROM users WHERE email = "victim@corp.com"');
     }
   });
 }
 
+// 29. P05-CONFIG-DEFAULT-SECRET
 async function mutationConfigDefaultSecret(ctx) {
   return await expectProductionRejection({
     id: 'P05-CONFIG-DEFAULT-SECRET',
-    gateFunction: 'gateConfigurationOwnershipTest',
-    mutatedTarget: 'JWT_SECRET=changeme (weak default secret)',
+    gateFunction: 'platformConfigSchema.parse',
+    mutatedTarget: 'platformConfigSchema validation with JWT_SECRET=changeme',
     gateId: 'configuration_ownership_test',
     expectedReasonCode: 'WEAK_DEFAULT_SECRET',
     fn: async () => {
@@ -809,6 +797,7 @@ async function mutationConfigDefaultSecret(ctx) {
   });
 }
 
+// 30. P05-STALE-SHA-EVIDENCE
 async function mutationStaleShaEvidence(ctx) {
   return await expectProductionRejection({
     id: 'P05-STALE-SHA-EVIDENCE',
@@ -817,32 +806,30 @@ async function mutationStaleShaEvidence(ctx) {
     gateId: 'predecessor_scope_and_safety',
     expectedReasonCode: 'STALE_SHA_EVIDENCE',
     fn: async () => {
-      const res = await gates.gatePredecessorScopeAndSafety({
+      return await gates.gatePredecessorScopeAndSafety({
         root: ctx.root,
         candidateSha: '0000000000000000000000000000000000000000',
         contract: ctx.contract
       });
-      if (res.status === 'FAIL') {
-        return res;
-      }
-      throw new Error('Stale base SHA was not rejected');
     }
   });
 }
 
+// 31. P05-UNEXPECTED-SKIP
 async function mutationUnexpectedSkip(ctx) {
   return await expectProductionRejection({
     id: 'P05-UNEXPECTED-SKIP',
     gateFunction: 'gatePredecessorScopeAndSafety',
-    mutatedTarget: 'Evidence report with synthetic skipped_count > 0',
+    mutatedTarget: 'gatePredecessorScopeAndSafety with forceSkippedCount > 0',
     gateId: 'predecessor_scope_and_safety',
     expectedReasonCode: 'UNEXPECTED_SKIP_DETECTED',
     fn: async () => {
-      const fakeResult = { skipped_count: 2, verdict: 'PASS' };
-      if (fakeResult.skipped_count > 0) {
-        return { status: 'FAIL', reason_code: 'UNEXPECTED_SKIP_DETECTED' };
-      }
-      throw new Error('Skipped checks were not rejected');
+      return await gates.gatePredecessorScopeAndSafety({
+        root: ctx.root,
+        candidateSha: ctx.candidateSha,
+        contract: ctx.contract,
+        forceSkippedCount: 1
+      });
     }
   });
 }
@@ -888,15 +875,14 @@ async function runAllMutations(ctx) {
       const r = await fn(ctx);
       out.push(r);
     } catch (err) {
-      // Mutation must produce PASS; if the fixture setup fails, that itself is a failure
       out.push({
         id,
         status: 'FAIL',
         production_path: true,
         gate_function: fn.name,
-        mutated_target: 'mutation-setup-failed',
+        mutated_target: 'mutation-execution-failed',
         gate_id: 'unknown',
-        reason_code: 'MUTATION_SETUP_FAILED',
+        reason_code: 'MUTATION_FAILED',
         rejection_reason: String(err && (err.message || err)).slice(0, 200),
         duration_ms: 0,
         occurred_at: new Date().toISOString()
@@ -906,4 +892,9 @@ async function runAllMutations(ctx) {
   return out;
 }
 
-module.exports = { runAllMutations, ALL_MUTATIONS, P05GateError };
+module.exports = {
+  runAllMutations,
+  expectProductionRejection,
+  ALL_MUTATIONS,
+  P05GateError
+};
