@@ -1,5 +1,10 @@
-﻿import { Logger, Injectable, NotFoundException } from '@nestjs/common';
+import { Logger, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
+import {
+  CreateSupplierDto,
+  UpdateSupplierDto,
+  QuerySupplierDto,
+} from '../dto/supplier.dto';
 
 @Injectable()
 export class SuppliersService {
@@ -7,11 +12,7 @@ export class SuppliersService {
   constructor(private prisma: PrismaService) {}
 
   // Item 50: Find suppliers with optional bahanType filter
-  async findAll(query?: {
-    search?: string;
-    categoryId?: string;
-    bahanType?: string;
-  }) {
+  async findAll(query?: QuerySupplierDto) {
     const search = query?.search?.trim();
     const categoryId = query?.categoryId;
     const bahanType = query?.bahanType;
@@ -100,7 +101,7 @@ export class SuppliersService {
     return supplier;
   }
 
-  async create(dto: any) {
+  async create(dto: CreateSupplierDto) {
     return this.prisma.supplier.create({
       data: {
         name: dto.name,
@@ -110,6 +111,8 @@ export class SuppliersService {
         address: dto.address || null,
         city: dto.city || null,
         province: dto.province || null,
+        district: dto.district || null,
+        addressDetail: dto.addressDetail || null,
         termOfPayment: Number(dto.termOfPayment) || 0,
         categoryId: dto.categoryId || null,
       },
@@ -119,7 +122,7 @@ export class SuppliersService {
     });
   }
 
-  async update(id: string, dto: any) {
+  async update(id: string, dto: UpdateSupplierDto) {
     const existing = await this.prisma.supplier.findUnique({ where: { id } });
     if (!existing || existing.deletedAt) {
       throw new NotFoundException('Supplier not found');

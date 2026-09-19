@@ -33,13 +33,6 @@ interface Material {
   categoryId?: string;
 }
 
-const FALLBACK: Material[] = [
-  { id: "mat-1", code: "RAW-001", name: "Aqua Destilasi", type: "RAW_MATERIAL", unit: "L", unitPrice: 5000, stockQty: 500, minStock: 50, status: "ACTIVE" },
-  { id: "mat-2", code: "RAW-002", name: "Glycerin USP", type: "RAW_MATERIAL", unit: "Kg", unitPrice: 85000, stockQty: 120, minStock: 20, status: "ACTIVE" },
-  { id: "mat-3", code: "PKG-001", name: "Botol Pump 30ml", type: "PACKAGING", unit: "Pcs", unitPrice: 2500, stockQty: 5000, minStock: 1000, status: "ACTIVE" },
-  { id: "mat-4", code: "PRD-001", name: "Sunscreen Glow Gel SPF 50", type: "FINISHED_GOOD", unit: "Pcs", unitPrice: 35000, stockQty: 800, minStock: 100, status: "ACTIVE" },
-];
-
 export default function MasterMaterialsPage() {
   const toast = useDnaToast();
   const qc = useQueryClient();
@@ -58,17 +51,13 @@ export default function MasterMaterialsPage() {
   const [minStock, setMinStock] = useState("");
   const [status, setStatus] = useState("ACTIVE");
 
-  const { data: materials = FALLBACK, isLoading } = useQuery({
+  const { data: materials = [], isLoading } = useQuery({
     queryKey: ["master-materials", search],
     queryFn: async () => {
-      try {
-        const res = await api.get(`/master/materials?search=${encodeURIComponent(search)}`);
-        const body = unwrapResponse(res);
-        const list = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : FALLBACK;
-        return list;
-      } catch {
-        return FALLBACK;
-      }
+      const res = await api.get(`/master/materials?search=${encodeURIComponent(search)}`);
+      const body = unwrapResponse(res);
+      const list = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+      return list as Material[];
     },
   });
 

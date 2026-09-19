@@ -17,6 +17,13 @@ export class WarehousesService {
     });
   }
 
+  async findActive() {
+    return this.prisma.warehouse.findMany({
+      where: { status: 'ACTIVE' },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   async findOne(id: string) {
     const warehouse = await this.prisma.warehouse.findUnique({
       where: { id },
