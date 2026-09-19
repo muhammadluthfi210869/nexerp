@@ -8,12 +8,13 @@ Read completely before editing:
 
 1. `docs/legacy-erp/AGENTS.md`
 2. `docs/legacy-erp/verification/_ONE_PASS_PHASE_EXECUTION_STANDARD.md`
-3. `docs/legacy-erp/verification/_PRODUCTION_PHASE_GATES.yaml` — `{{PHASE_ID}}` and predecessor
-4. `docs/legacy-erp/process/_FULL_ERP_PRODUCTION_READINESS_ROADMAP.md` — `{{PHASE_ID}}`
-5. `{{PHASE_AUDIT_EVIDENCE_PATH}}`
-6. `{{PHASE_REMEDIATION_MAP_PATH}}`
-7. `{{PHASE_SPECIFIC_CONTRACTS_AND_STANDARDS}}`
-8. existing implementation, tests, migrations, evidence, CI and operational files in scope
+3. `docs/legacy-erp/verification/_LAYERED_CERTIFICATION_ACCELERATION_STANDARD.md`
+4. `docs/legacy-erp/verification/_PRODUCTION_PHASE_GATES.yaml` — `{{PHASE_ID}}` and predecessor
+5. `docs/legacy-erp/process/_FULL_ERP_PRODUCTION_READINESS_ROADMAP.md` — `{{PHASE_ID}}`
+6. `{{PHASE_AUDIT_EVIDENCE_PATH}}`
+7. `{{PHASE_REMEDIATION_MAP_PATH}}`
+8. `{{PHASE_SPECIFIC_CONTRACTS_AND_STANDARDS}}`
+9. existing implementation, tests, migrations, evidence, CI and operational files in scope
 
 ## Frozen acceptance contract
 
@@ -27,6 +28,9 @@ Read completely before editing:
 - Required tests/gates: `{{REQUIRED_TEST_AND_GATE_IDS}}`
 - Required adversarial IDs: `{{REQUIRED_ADVERSARIAL_IDS}}`
 - Required environment/services: `{{REQUIRED_ENVIRONMENT}}`
+- Non-certifying diagnostic command: `{{DIAGNOSTIC_COMMAND}}`
+- Cumulative preflight command: `{{PREFLIGHT_COMMAND}}`
+- Gate/mutation groups and expected budgets: `{{LAYERED_GROUP_MAP_AND_BUDGETS}}`
 
 Do not modify or weaken this contract to obtain PASS. If the contract itself is demonstrably defective, record the reproduction and proposed correction; do not silently change it.
 
@@ -55,13 +59,15 @@ Mark each lens `REQUIRED` or `NOT_APPLICABLE` with evidence-backed rationale, th
 ## One-pass execution order
 
 1. Preserve current state; record HEAD/base/status and create a path-level impact ledger.
-2. Resolve contract/decision ambiguity first; update canonical owners and traceability before behavior.
-3. Repair shared foundations and root causes before dependent symptoms.
-4. Implement database/backfill/backend/API/RBAC/audit/events/frontend/UI DNA/reports/operations in dependency order.
-5. Add positive, negative, mutation, authorization, idempotency, concurrency, rollback, regression and failure tests required by the phase.
-6. Run focused tests after each coherent change, then the full phase runner.
-7. Diagnose every failure to root cause, repair it, and rerun targeted checks; run the complete authoritative command only at integration-ready milestones and continue until it passes.
-8. Generate evidence from raw outputs, bind it to the candidate SHA, and complete the pre-certification checklist.
+2. Run one baseline inventory and enumerate all reproducible failures before editing; cluster them by root cause and owning gate group.
+3. Resolve contract/decision ambiguity first; update canonical owners and traceability before behavior.
+4. Repair shared foundations and root causes before dependent symptoms.
+5. Implement database/backfill/backend/API/RBAC/audit/events/frontend/UI DNA/reports/operations in dependency order.
+6. Add positive, negative, mutation, authorization, idempotency, concurrency, rollback, regression and failure tests required by the phase.
+7. After each root-cause cluster, run only its production-path gate, mapped mutations, and affected regressions. Target 10–120 seconds per feedback group.
+8. Once every group is green, run cumulative preflight. Do not invoke the full certifier while preflight is red or scope changed afterward.
+9. Run the authoritative certifier once, repair any certification-only failure through its smallest owning group, rerun preflight, and only then rerun certification when justified.
+10. Generate evidence from raw outputs, bind it to the candidate SHA, and complete the pre-certification checklist.
 
 Phase-specific ordered details:
 
@@ -75,6 +81,8 @@ Phase-specific ordered details:
 - no unrelated-domain edits without an explicit dependency and impact explanation;
 - no reset/delete/overwrite of unrelated user work;
 - no PASS claim from a non-certifying diagnostic mode.
+- no repeated full-certifier execution for a failure reproducible by a smaller gate/group command;
+- no independent duplicate implementation of rules or thresholds in the diagnostic runner;
 - no deploy, image push, Docker runtime, full browser/load/DR, or release-depth suite during a normal phase unless explicitly required by that phase's frozen contract.
 
 ## Pre-certification checklist
