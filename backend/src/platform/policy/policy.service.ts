@@ -64,31 +64,41 @@ function processActions(
   }
 }
 
+function parseMatrixSingleLine(
+  line: string,
+  state: MatrixParseState,
+  slugSet: Set<string>,
+  roleMap: Map<string, Set<string>>
+) {
+  const roleMatch = line.match(/^\s*-\s*id:\s*([a-zA-Z0-9_.-]+)/);
+  if (roleMatch) {
+    state.currentRoleNames = [roleMatch[1].toLowerCase()];
+    return;
+  }
+  const nameMatch = line.match(/^\s*name:\s*([a-zA-Z0-9_.-]+)/);
+  if (nameMatch && state.currentRoleNames.length > 0) {
+    const nm = nameMatch[1].toLowerCase();
+    state.currentRoleNames.push(nm);
+    if (!roleMap.has(nm)) roleMap.set(nm, new Set());
+    return;
+  }
+  const cleanLine = line.replace(/['"]/g, '');
+  const modMatch = cleanLine.match(/^\s*-\s*module:\s*([*a-zA-Z0-9_.-]+)/);
+  if (modMatch) {
+    state.currentModule = modMatch[1].trim().toLowerCase().replace(/-/g, '_');
+    return;
+  }
+  const actMatch = line.match(/^\s*actions:\s*\[([^\]]+)\]/);
+  if (actMatch && state.currentRoleNames.length > 0) {
+    processActions(actMatch[1], state, slugSet, roleMap);
+  }
+}
+
 function parseMatrixLines(text: string, slugSet: Set<string>, roleMap: Map<string, Set<string>>) {
   const state: MatrixParseState = { currentRoleNames: [], currentModule: '' };
   const lines = text.split('\n');
   for (const line of lines) {
-    const roleMatch = line.match(/^\s*-\s*id:\s*([a-zA-Z0-9_.-]+)/);
-    if (roleMatch) {
-      state.currentRoleNames = [roleMatch[1].toLowerCase()];
-      continue;
-    }
-    const nameMatch = line.match(/^\s*name:\s*([a-zA-Z0-9_.-]+)/);
-    if (nameMatch && state.currentRoleNames.length > 0) {
-      const nm = nameMatch[1].toLowerCase();
-      state.currentRoleNames.push(nm);
-      if (!roleMap.has(nm)) roleMap.set(nm, new Set());
-      continue;
-    }
-    const modMatch = line.match(/^\s*-\s*module:\s*['"]?([*a-zA-Z0-9_.-]+)['"]?/);
-    if (modMatch) {
-      state.currentModule = modMatch[1].trim().toLowerCase().replace(/-/g, '_');
-      continue;
-    }
-    const actMatch = line.match(/^\s*actions:\s*\[([^\]]+)\]/);
-    if (actMatch && state.currentRoleNames.length > 0) {
-      processActions(actMatch[1], state, slugSet, roleMap);
-    }
+    parseMatrixSingleLine(line, state, slugSet, roleMap);
   }
 }
 

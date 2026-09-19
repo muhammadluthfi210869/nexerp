@@ -33,21 +33,22 @@ export class OutboxService {
       .digest('hex');
   }
 
-  async enqueue(txOrInput: any, maybeInput?: any, options?: { requireExternalTransaction?: boolean }) {
-    if (options?.requireExternalTransaction && typeof txOrInput?.outboxEvent?.create !== 'function') {
+  async enqueue(txOrInput: any, maybeInput: any = undefined, options: any = {}) {
+    const isTx = Boolean(txOrInput && txOrInput.outboxEvent && typeof txOrInput.outboxEvent.create === 'function');
+    const reqExt = Boolean(options && options.requireExternalTransaction);
+    if (reqExt && !isTx) {
       throw Object.assign(new Error('OUTBOX_NOT_ATOMIC: outbox event must be enqueued within active transaction'), {
         code: 'OUTBOX_NOT_ATOMIC',
         reason_code: 'OUTBOX_NOT_ATOMIC',
         gateId: 'outbox_retry_dedup'
       });
     }
-    if (typeof txOrInput?.outboxEvent?.create === 'function') {
+    if (isTx) {
       return this.executeEnqueue(txOrInput, maybeInput);
-    } else {
-      return await this.prisma.$transaction(async tx => {
-        return this.executeEnqueue(tx, txOrInput);
-      });
     }
+    return await this.prisma.$transaction(async tx => {
+      return this.executeEnqueue(tx, txOrInput);
+    });
   }
 
   private resolveAggregateId(input: any): string {

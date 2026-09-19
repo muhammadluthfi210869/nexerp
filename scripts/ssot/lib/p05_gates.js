@@ -516,6 +516,7 @@ async function gateRepresentativeModuleChangeTest({ root, candidateSha, contract
       p.startsWith('backend/src/platform/') ||
       p.startsWith('docs/legacy-erp/contracts/') ||
       p.startsWith('docs/legacy-erp/verification/') ||
+      p.startsWith('docs/legacy-erp/process/') ||
       p.startsWith('scripts/ssot/') ||
       p.startsWith('backend/prisma/schema/') ||
       p.startsWith('backend/prisma/migrations/20260918_p05_platform_controls/') ||
