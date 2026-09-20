@@ -280,7 +280,7 @@ phases:
 
   - id: P06
     name: Master data and system configuration
-    status: NOT_STARTED
+    status: PASS
     depends_on: [P05]
     acceptance_contract: P06_FROZEN_ACCEPTANCE_CONTRACT.md
     certification_command: node scripts/ssot/certify_p06_phase.js
@@ -294,7 +294,22 @@ phases:
       - P05 role tenant field-scope immutable audit outbox and canonical error controls govern every master mutation
       - affected frontend screens use canonical DNA and complete live-data UI states
     required_tests: [predecessor_scope_and_safety, canonical_master_inventory, schema_alias_and_referential_integrity, organization_division_user_role_config, catalog_reference_masters, customer_supplier_masters, warehouse_coa_formulation_ownership, master_crud, uniqueness_and_code_generation, soft_delete_and_reference_policy, import_export, pagination_filter_and_search, role_tenant_field_scope, audit_outbox_atomicity, frontend_live_data_and_dna, subphase_seam_and_regression]
-  - {id: P07, name: CRM marketing guest book and BusDev, status: NOT_STARTED, depends_on: [P06], required_gates: [lead-to-qualified-opportunity golden thread passes], required_tests: [dedup, ownership_reassignment, attribution, followup_sla, consent, role_visibility, dashboard_reconciliation]}
+  - id: P07
+    name: CRM marketing guest book and BusDev
+    status: NOT_STARTED
+    depends_on: [P06]
+    acceptance_contract: P07_FROZEN_ACCEPTANCE_CONTRACT.md
+    certification_command: node scripts/ssot/certify_p07_phase.js
+    diagnostic_command: node scripts/ssot/diagnose_p07_phase.js
+    certification_success: exit 0 and token P07:<candidate-full-sha>:PHASE_PASS
+    required_gates:
+      - canonical P07 inventory and ownership reconcile to contracts without parallel lead authority
+      - lead capture dedup consent attribution ownership reassignment and follow-up SLA are production-ready
+      - qualified opportunity handoff is idempotent tenant-safe audited and transactional
+      - guest book marketing activity and BusDev dashboards reconcile to source transactions
+      - affected frontend screens use live APIs canonical DNA and complete UI states
+      - lead-to-qualified-opportunity golden thread passes
+    required_tests: [predecessor_and_scope, contract_inventory, lead_intake_dedup_consent_attribution, ownership_reassignment_visibility, lifecycle_sla_idempotency_concurrency, guestbook_marketing_activity, audit_outbox_atomicity, dashboard_reconciliation, frontend_live_data_dna_states, golden_thread, changed_scope_quality, cleanup_and_evidence]
   - {id: P08, name: Sample RnD formulation creative and legality, status: NOT_STARTED, depends_on: [P07], required_gates: [sample-to-approved-release golden thread passes], required_tests: [revision_immutability, adjustment_lineage, approval_rework, attachment_version, stability_expiry, segregation_of_duties]}
   - {id: P09, name: Sales DP delivery AR and returns, status: NOT_STARTED, depends_on: [P08], required_gates: [sales golden thread passes with exact journals and stock effects], required_tests: [pricing_discount, credit_limit, dp_amend_cancel, delivery_proof, invoice_receipt_allocation, return_credit_note, reversal, concurrency]}
   - {id: P10, name: SCM MRP procurement AP and matching, status: NOT_STARTED, depends_on: [P09], required_gates: [procurement golden thread passes with exact reconciliation], required_tests: [mrp_shortage, pr_po_approval, partial_receipt, four_leg_zero_tolerance_match, debit_note, duplicate_invoice, ap_payment_reversal]}
