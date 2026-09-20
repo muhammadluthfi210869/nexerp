@@ -43,7 +43,7 @@ This compact projection exposes the currently available requirement-to-interface
 | REQ-035 | BUS-RULE-072, BUS-RULE-090, BUS-RULE-106 | EmployeePerformance, EmployeeKpiResult, KpiDefinition | GET /api/v1/employees/{id}/kpi | SCR-179 |
 | REQ-036 | BUS-RULE-074, BUS-RULE-106 | EmployeeRoleAssignment, EmployeeKpiResult | POST /api/v1/employees/{id}/kpi/recalculate | SCR-179 |
 | REQ-037 | BUS-RULE-091, BUS-RULE-092, BUS-RULE-094 | Note, Comment, Tag, Notification | POST /api/v1/entities/{type}/{id}/notes<br>POST /api/v1/entities/{type}/{id}/comments<br>POST /api/v1/entities/{type}/{id}/tags | SCR-179 |
-| REQ-038 | BUS-RULE-107 | SalesSample, Formulation | POST /api/v1/sales/samples/{id}/request-payment<br>POST /api/v1/sales/samples/{id}/verify-payment | SCR-182 |
+| REQ-038 | BUS-RULE-107 | SalesSample, Formulation | POST /api/v1/rnd/sample/{id}/request-payment<br>POST /api/v1/rnd/sample/{id}/verify-payment<br>GET /api/v1/rnd/samples | SCR-182 |
 | REQ-039 | BUS-RULE-110, BUS-RULE-111 | DesignTask, DesignVersion, DesignFeedback | GET /api/v1/creative/finalized<br>GET /api/v1/creative/tasks/{id}/history<br>PATCH /api/v1/creative/task/{id}/client-review<br>PATCH /api/v1/creative/task/{id}/unlock | SCR-180, SCR-181 |
 | REQ-040 | BUS-RULE-112 | HkiRecord, BpomRecord, HalalRecord, LegalTimelineLog | GET /api/v1/legality/permits<br>GET /api/v1/legality/expiry<br>POST /api/v1/legality/hki<br>POST /api/v1/legality/bpom<br>POST /api/v1/legality/halal | SCR-183, SCR-184 |
 | REQ-041 | BUS-RULE-108, BUS-RULE-109, BUS-RULE-114 | Formulation, FormulationAdjustment | POST /api/v1/rnd/formulations<br>POST /api/v1/rnd/formulations/{id}/adjustments | SCR-027 |

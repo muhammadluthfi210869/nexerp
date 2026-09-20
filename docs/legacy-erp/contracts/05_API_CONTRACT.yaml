@@ -5769,48 +5769,66 @@ paths:
         '200': { description: ACL-scoped pending approvals }
 
   # ============================================================
-  # SAMPLE FEE VERIFICATION (3 endpoints)
+  # SAMPLE FEE VERIFICATION (4 endpoints)
   # ============================================================
   # Owner decision 2026-09-20 (DEC-2026-09-20-051, BUS-RULE-107): Finance must
-  # verify the sample fee actually arrived before formulation starts. These are
-  # additive operations; the existing /sales/samples/{id}/submit and
-  # /sales/samples/{id}/payments are unchanged.
+  # verify the sample fee actually arrived before formulation starts.
+  #
+  # Path note: these live under `/rnd/sample/{id}/…`, alongside the existing
+  # `/rnd/sample/{id}/accept` and `/rnd/sample/{id}/advance` they gate, because no
+  # live controller serves the `/sales/samples` family at all. That divergence is
+  # recorded in DEC-2026-09-20-060; the contract documents what the system serves.
 
-  /sales/samples/{id}/request-payment:
+  /rnd/samples:
+    get:
+      tags: [rnd]
+      operationId: listSampleRequests
+      summary: List sample requests, filterable by stage
+      parameters:
+        - { name: stage, in: query, schema: { type: string, enum: [WAITING_FINANCE, QUEUE, FORMULATING, LAB_TEST, READY_TO_SHIP, SHIPPED, RECEIVED, CLIENT_REVIEW, APPROVED, REJECTED, CANCELLED] } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+      responses:
+        '200': { description: Sample requests in the caller's data scope }
+
+  /rnd/sample/{id}/request-payment:
     post:
-      tags: [sales]
+      tags: [rnd]
       operationId: requestSamplePayment
       summary: R&D hands the sample fee to Finance for verification
       parameters: [{ $ref: '#/components/parameters/IdPath' }]
-      responses:
-        '200': { description: Sample moved to WAITING_FINANCE }
-        '409': { description: Sample is not in a state that may request payment }
-
-  /sales/samples/{id}/verify-payment:
-    post:
-      tags: [sales]
-      operationId: verifySamplePayment
-      summary: Finance confirms the sample fee was received (the only writer of the verification timestamp)
-      parameters: [{ $ref: '#/components/parameters/IdPath' }]
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               type: object
-              required: [received]
               properties:
-                received: { type: boolean }
                 payment_proof_url: { type: string }
-                note: { type: string, maxLength: 500 }
       responses:
-        '200': { description: 'Verified — sample moves to IN_PROGRESS and formulation may start' }
-        '403': { description: Actor lacks the Finance verification permission }
-        '409': { description: Sample is not in WAITING_FINANCE }
+        '200': { description: Sample moved to WAITING_FINANCE }
+        '409': { description: Sample is not in a state that may request payment }
 
-  /sales/samples/{id}/reject-payment:
+  /rnd/sample/{id}/verify-payment:
     post:
-      tags: [sales]
+      tags: [rnd]
+      operationId: verifySamplePayment
+      summary: Finance confirms the sample fee was received (the only writer of the verification fields)
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note: { type: string, maxLength: 500 }
+                payment_proof_url: { type: string }
+      responses:
+        '200': { description: 'Verified — sample moves to QUEUE and formulation may start' }
+        '403': { description: Actor lacks the Finance verification role }
+        '409': { description: 'SAMPLE_NOT_AWAITING_FINANCE — sample is not in WAITING_FINANCE' }
+
+  /rnd/sample/{id}/reject-payment:
+    post:
+      tags: [rnd]
       operationId: rejectSamplePayment
       summary: Finance records that the sample fee was not received
       parameters: [{ $ref: '#/components/parameters/IdPath' }]
@@ -5825,7 +5843,7 @@ paths:
                 reason: { type: string, minLength: 10, maxLength: 500 }
       responses:
         '200': { description: Sample rejected }
-        '409': { description: Sample is not in WAITING_FINANCE }
+        '409': { description: 'SAMPLE_NOT_AWAITING_FINANCE — sample is not in WAITING_FINANCE' }
 
   # ============================================================
   # CREATIVE / DESIGN APPROVAL (6 endpoints)

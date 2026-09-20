@@ -6,6 +6,7 @@ import {
   Param,
   Get,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -40,8 +41,57 @@ export class RndController {
 
   @Post('sample/:id/accept')
   @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
-  acceptSample(@Param('id') id: string) {
-    return this.rndService.acceptSample(id);
+  acceptSample(@Param('id') id: string, @Req() req: any) {
+    return this.rndService.acceptSample(id, req?.user?.id);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Sample-fee gate (BUS-RULE-107 / DEC-2026-09-20-051).
+  // R&D hands the fee to Finance; ONLY Finance may verify or reject it.
+  // ---------------------------------------------------------------------------
+
+  @Post('sample/:id/request-payment')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
+  @ApiOperation({ summary: 'Hand the sample fee to Finance for verification' })
+  requestSamplePayment(
+    @Param('id') id: string,
+    @Body() body: { paymentProofUrl?: string },
+    @Req() req: any,
+  ) {
+    return this.rndService.requestSamplePayment(
+      id,
+      req?.user?.id,
+      body?.paymentProofUrl,
+    );
+  }
+
+  @Post('sample/:id/verify-payment')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({
+    summary: 'Finance confirms the sample fee was received (releases formulation)',
+  })
+  verifySamplePayment(
+    @Param('id') id: string,
+    @Body() body: { note?: string; paymentProofUrl?: string },
+    @Req() req: any,
+  ) {
+    return this.rndService.verifySamplePayment(
+      id,
+      req?.user?.id,
+      body?.note,
+      body?.paymentProofUrl,
+    );
+  }
+
+  @Post('sample/:id/reject-payment')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Finance records that the sample fee was not received' })
+  rejectSamplePayment(
+    @Param('id') id: string,
+    @Body() body: { reason: string },
+    @Req() req: any,
+  ) {
+    return this.rndService.rejectSamplePayment(id, req?.user?.id, body?.reason);
   }
 
   @Get('dashboard')

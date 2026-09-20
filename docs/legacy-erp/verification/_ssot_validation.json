@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-20T14:42:12.265Z",
+  "generated_at": "2026-09-20T14:46:58.984Z",
   "gates": {
     "yaml_parse": {
       "status": "PASS",
@@ -101,7 +101,7 @@
   },
   "counts": {
     "prisma_models": 100,
-    "api_operations": 395,
+    "api_operations": 396,
     "roles": 44,
     "permissions": 149,
     "screens": 184,

@@ -49,7 +49,7 @@ requirements:
   - {id: REQ-036, prio: high, desc: 'Dual-role KPI memakai bobot effective-dated dan total bobot aktif 100%', rules: [BUS-RULE-074,BUS-RULE-106], ents: [EmployeeRoleAssignment,EmployeeKpiResult], apis: ['POST /api/v1/employees/{id}/kpi/recalculate'], screens: [SCR-179], notes: 'Recalculate replays source events only'}
   - {id: REQ-037, prio: high, desc: 'Notes/comments/@mention tersedia pada entity bisnis dan mengikuti parent ACL', rules: [BUS-RULE-091,BUS-RULE-092,BUS-RULE-094], ents: [Note,Comment,Tag,Notification], apis: ['POST /api/v1/entities/{type}/{id}/notes','POST /api/v1/entities/{type}/{id}/comments','POST /api/v1/entities/{type}/{id}/tags'], screens: [SCR-179], notes: 'Atomic content + tags + notifications + outbox'}
   # --- P08: sample fee, design approval, permits (owner decisions 2026-09-20) ---
-  - {id: REQ-038, prio: high, desc: 'Biaya sample wajib diverifikasi Finance sebelum formulasi dimulai', rules: [BUS-RULE-107], ents: [SalesSample,Formulation], apis: ['POST /api/v1/sales/samples/{id}/request-payment','POST /api/v1/sales/samples/{id}/verify-payment'], screens: [SCR-182], notes: 'DEC-2026-09-20-051; auto-approve dihapus, bukan ditandai'}
+  - {id: REQ-038, prio: high, desc: 'Biaya sample wajib diverifikasi Finance sebelum formulasi dimulai', rules: [BUS-RULE-107], ents: [SalesSample,Formulation], apis: ['POST /api/v1/rnd/sample/{id}/request-payment','POST /api/v1/rnd/sample/{id}/verify-payment','GET /api/v1/rnd/samples'], screens: [SCR-182], notes: 'DEC-2026-09-20-051; auto-approve dihapus, bukan ditandai'}
   - {id: REQ-039, prio: high, desc: 'Approval desain terikat versi artwork, revisi dibatasi 3, supervisor boleh reopen dengan jatah dihitung ulang', rules: [BUS-RULE-110,BUS-RULE-111], ents: [DesignTask,DesignVersion,DesignFeedback], apis: ['GET /api/v1/creative/finalized','GET /api/v1/creative/tasks/{id}/history','PATCH /api/v1/creative/task/{id}/client-review','PATCH /api/v1/creative/task/{id}/unlock'], screens: [SCR-180,SCR-181], notes: 'DEC-2026-09-20-052/054/055/056/057'}
   - {id: REQ-040, prio: high, desc: 'Izin BPOM/HKI-Merek/Halal dicatat dan kadaluarsanya dipantau dengan satu kebijakan', rules: [BUS-RULE-112], ents: [HkiRecord,BpomRecord,HalalRecord,LegalTimelineLog], apis: ['GET /api/v1/legality/permits','GET /api/v1/legality/expiry','POST /api/v1/legality/hki','POST /api/v1/legality/bpom','POST /api/v1/legality/halal'], screens: [SCR-183,SCR-184], notes: 'DEC-2026-09-20-053; alur pengajuan izin di luar scope'}
   - {id: REQ-041, prio: high, desc: 'Komposisi formula tepat 100%, konversi gram/HPP deterministik, revisi terkunci tidak dapat diubah, adjustment punya lineage sendiri', rules: [BUS-RULE-108,BUS-RULE-109,BUS-RULE-114], ents: [Formulation,FormulationAdjustment], apis: ['POST /api/v1/rnd/formulations','POST /api/v1/rnd/formulations/{id}/adjustments'], screens: [SCR-027], notes: 'Locked revision immutability + adjustment lineage'}
@@ -166,7 +166,7 @@ business_rules:
   - {id: BUS-RULE-105, cat: system, sev: P1, desc: 'Orphan Input/Output Removal', ents: [All], apis: ['DELETE /api/v1/*'], screens: [ALL], err: 'n/a'}
   - {id: BUS-RULE-106, cat: kpi, sev: P1, desc: 'Per-Person KPI Aggregate', ents: [KpiDefinition,EmployeeKpiResult,EmployeeRoleAssignment,EmployeePerformance], apis: ['GET /employees/{id}/kpi','GET /kpi/me'], screens: [SCR-179], err: 'KPI_EVIDENCE_INSUFFICIENT'}
   # --- P08 rules 107..114 (owner decisions 2026-09-20) ---
-  - {id: BUS-RULE-107, cat: rnd, sev: P1, desc: 'Sample Fee: Finance Verification Gate (no auto-approve)', ents: [SalesSample,Formulation], apis: ['POST /api/v1/sales/samples/{id}/verify-payment','POST /api/v1/sales/samples/{id}/reject-payment'], screens: [SCR-182], err: 'SAMPLE_FEE_NOT_VERIFIED'}
+  - {id: BUS-RULE-107, cat: rnd, sev: P1, desc: 'Sample Fee: Finance Verification Gate (no auto-approve)', ents: [SalesSample,Formulation], apis: ['POST /api/v1/rnd/sample/{id}/verify-payment','POST /api/v1/rnd/sample/{id}/reject-payment'], screens: [SCR-182], err: 'SAMPLE_FEE_NOT_VERIFIED'}
   - {id: BUS-RULE-108, cat: rnd, sev: P1, desc: 'Formulation Composition 100% + Deterministic Gram/HPP', ents: [Formulation], apis: ['POST /api/v1/rnd/formulations'], screens: [SCR-027], err: 'COMPOSITION_TOTAL_INVALID'}
   - {id: BUS-RULE-109, cat: rnd, sev: P1, desc: 'Approved and Locked Revision Immutability', ents: [Formulation], apis: ['PATCH /api/v1/rnd/formulations/{id}','POST /api/v1/rnd/formulations/{id}/lock'], screens: [SCR-027], err: 'FORMULA_LOCKED'}
   - {id: BUS-RULE-110, cat: creative, sev: P1, desc: 'Artwork Approval Binds to an Exact Version', ents: [DesignFeedback,DesignVersion], apis: ['PATCH /api/v1/creative/task/{id}/apj-review','PATCH /api/v1/creative/task/{id}/client-review'], screens: [SCR-181], err: 'DESIGN_VERSION_REQUIRED'}
@@ -616,9 +616,10 @@ api_endpoints:
   - {id: OP-296, tag: system, op: 'extended_96', spec: 'GET /api/v1/legacy/96'}
   - {id: OP-297, tag: system, op: 'extended_97', spec: 'GET /api/v1/legacy/97'}
   # --- P08 operations (sample fee gate, creative approval, permits) ---
-  - {id: OP-298, tag: sales, op: 'requestSamplePayment', spec: 'POST /api/v1/sales/samples/{id}/request-payment'}
-  - {id: OP-299, tag: sales, op: 'verifySamplePayment', spec: 'POST /api/v1/sales/samples/{id}/verify-payment'}
-  - {id: OP-300, tag: sales, op: 'rejectSamplePayment', spec: 'POST /api/v1/sales/samples/{id}/reject-payment'}
+  - {id: OP-298, tag: rnd, op: 'requestSamplePayment', spec: 'POST /api/v1/rnd/sample/{id}/request-payment'}
+  - {id: OP-299, tag: rnd, op: 'verifySamplePayment', spec: 'POST /api/v1/rnd/sample/{id}/verify-payment'}
+  - {id: OP-300, tag: rnd, op: 'rejectSamplePayment', spec: 'POST /api/v1/rnd/sample/{id}/reject-payment'}
+  - {id: OP-316, tag: rnd, op: 'listSampleRequests', spec: 'GET /api/v1/rnd/samples'}
   - {id: OP-301, tag: creative, op: 'getCreativeBoard', spec: 'GET /api/v1/creative/board'}
   - {id: OP-302, tag: creative, op: 'getFinalizedDesigns', spec: 'GET /api/v1/creative/finalized'}
   - {id: OP-303, tag: creative, op: 'getDesignHistory', spec: 'GET /api/v1/creative/tasks/{id}/history'}

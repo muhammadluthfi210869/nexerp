@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { CreateSampleRequestDto } from './dto/create-sample-request.dto';
@@ -16,11 +17,23 @@ import {
   UserRole,
   RevisionStatus,
 } from '@prisma/client';
+import type { SampleRequest, Formula } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ACTIVITY_EVENT } from '../activity-stream/events/activity.events';
 
 import { IdGeneratorService } from '../system/id-generator.service';
 import { StateTransitionService } from '../system/state-transition.service';
+import { AuditService } from '../../platform/audit/audit.service';
+import { OutboxService } from '../../platform/outbox/outbox.service';
+
+/** Canonical error codes for the sample-fee gate (BUS-RULE-107). */
+export const SAMPLE_FEE_NOT_VERIFIED = 'SAMPLE_FEE_NOT_VERIFIED';
+export const SAMPLE_NOT_AWAITING_FINANCE = 'SAMPLE_NOT_AWAITING_FINANCE';
+
+/** Event names emitted on the sample-fee path (08_INTEGRATION_EVENT_CONTRACT.yaml). */
+export const EVENT_SAMPLE_PAYMENT_REQUESTED = 'sample.payment_requested';
+export const EVENT_SAMPLE_PAYMENT_VERIFIED = 'sample.payment_verified';
+export const EVENT_SAMPLE_PAYMENT_REJECTED = 'sample.payment_rejected';
 
 @Injectable()
 export class RndService {
@@ -29,7 +42,30 @@ export class RndService {
     private eventEmitter: EventEmitter2,
     private idGenerator: IdGeneratorService,
     private stateTransition: StateTransitionService,
+    private audit: AuditService,
+    private outbox: OutboxService,
   ) {}
+
+  /**
+   * The sample-fee gate (BUS-RULE-107 / DEC-2026-09-20-051).
+   *
+   * One guard on the shared path: every route that would start formulation must
+   * pass through here, so no caller can re-introduce the auto-approval that used
+   * to live in `acceptSample`. Finance verification is the ONLY writer of
+   * `paymentApprovedAt` / `paymentApprovedById`.
+   */
+  private assertSampleFeeVerified(
+    sample: { sampleCode: string; paymentApprovedAt: Date | null; paymentApprovedById: string | null },
+  ): void {
+    if (!sample.paymentApprovedAt || !sample.paymentApprovedById) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: `Pembayaran sample belum diverifikasi Finance. Formulasi tidak dapat dimulai untuk ${sample.sampleCode}.`,
+        reason_code: SAMPLE_FEE_NOT_VERIFIED,
+      });
+    }
+  }
 
   async createSample(dto: CreateSampleRequestDto) {
     const sampleCode = await this.idGenerator.generateId('SMP');
@@ -49,10 +85,12 @@ export class RndService {
             : null,
           difficultyLevel: dto.difficultyLevel || 1,
           picId: dto.picId,
-          stage: SampleStage.QUEUE,
+          // BUS-RULE-107: a new sample waits for Finance. It cannot reach
+          // FORMULATING until the fee is verified, so it must not start in QUEUE.
+          stage: SampleStage.WAITING_FINANCE,
           stageLogs: {
             create: {
-              stage: SampleStage.QUEUE,
+              stage: SampleStage.WAITING_FINANCE,
               enteredAt: new Date(),
             },
           },
@@ -114,6 +152,14 @@ export class RndService {
         textureReq: 'Standard',
         colorReq: 'Natural',
         aromaReq: 'Fresh',
+        // BUS-RULE-107: same fee gate as createSample.
+        stage: SampleStage.WAITING_FINANCE,
+        stageLogs: {
+          create: {
+            stage: SampleStage.WAITING_FINANCE,
+            enteredAt: new Date(),
+          },
+        },
       },
     });
   }
@@ -167,7 +213,7 @@ export class RndService {
     });
   }
 
-  async acceptSample(sampleId: string) {
+  async acceptSample(sampleId: string, actorId?: string) {
     return this.prisma.$transaction(async (tx) => {
       const sample = await tx.sampleRequest.findUnique({
         where: { id: sampleId },
@@ -175,61 +221,305 @@ export class RndService {
 
       if (!sample) throw new NotFoundException('Sample request not found');
 
-      if (!sample.paymentApprovedAt) {
-        // Auto-approve payment on acceptance (dev mode)
-        await tx.sampleRequest.update({
-          where: { id: sampleId },
-          data: { paymentApprovedAt: new Date() },
+      // BUS-RULE-107 / DEC-2026-09-20-051. The previous "Auto-approve payment on
+      // acceptance (dev mode)" block was removed, not flagged: it fabricated the
+      // verification fact and left paymentApprovedById null, so the audit trail
+      // could not name a verifier. Finance verification is now the only writer.
+      this.assertSampleFeeVerified(sample);
+
+      const formulaCode = await this.idGenerator.generateId('FRM');
+
+      return this.audit.withAudit<{ sample: SampleRequest; formula: Formula }>(
+        tx,
+        {
+          actorUserId: actorId ?? null,
+          actorRoleSlug: UserRole.RND,
+          actorPermissionSnapshot: { module: 'rnd', action: 'accept_sample' },
+          source: 'rnd.service.acceptSample',
+          entityType: 'SampleRequest',
+          entityId: sampleId,
+          action: 'ACCEPT_SAMPLE',
+          beforeSnapshot: { stage: sample.stage },
+          afterSnapshot: { stage: SampleStage.FORMULATING, formulaCode },
+        },
+        async (tx2: any) => {
+          const updatedSample = await tx2.sampleRequest.update({
+            where: { id: sampleId },
+            data: { stage: SampleStage.FORMULATING },
+          });
+
+          const formula = await tx2.formula.create({
+            data: {
+              formulaCode: formulaCode,
+              sampleRequestId: sampleId,
+              targetYieldGram: 1000.0, // Default 1kg
+              status: 'DRAFT',
+              version: 1,
+              phases: {
+                create: [
+                  {
+                    prefix: 'A',
+                    customName: 'Phase A',
+                    order: 1,
+                  },
+                ],
+              },
+              qcparameter: {
+                create: {},
+              },
+            },
+          });
+
+          await this.outbox.enqueue(
+            tx2,
+            {
+              eventType: 'sample.formulation_started',
+              aggregateType: 'SampleRequest',
+              aggregateId: sampleId,
+              payload: {
+                sample_id: sampleId,
+                lead_id: sample.leadId,
+                formula_id: formula.id,
+                formula_code: formulaCode,
+              },
+              correlationId: `sample:${sampleId}`,
+            },
+            { requireExternalTransaction: true },
+          );
+
+          this.eventEmitter.emit(ACTIVITY_EVENT, {
+            leadId: sample.leadId,
+            senderDivision: Division.RND,
+            eventType: StreamEventType.STATE_CHANGE,
+            notes: `R&D Menerima Task: Formula V1 (${formulaCode}) diinisialisasi.`,
+            loggedBy: actorId ?? 'SYSTEM_RND',
+          });
+
+          return { sample: updatedSample, formula };
+        },
+      );
+    });
+  }
+
+  /**
+   * R&D hands the sample fee to Finance for verification.
+   * SUBMITTED -> WAITING_FINANCE (03_WORKFLOW_STATE_MACHINE.yaml, sales_pipeline).
+   */
+  async requestSamplePayment(sampleId: string, actorId?: string, proofUrl?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const sample = await tx.sampleRequest.findUnique({ where: { id: sampleId } });
+      if (!sample) throw new NotFoundException('Sample request not found');
+
+      if (sample.stage === SampleStage.WAITING_FINANCE) {
+        // Already awaiting Finance; treat as the same single business effect.
+        return sample;
+      }
+
+      this.stateTransition.validateTransition(
+        'SampleStage',
+        sample.stage,
+        SampleStage.WAITING_FINANCE,
+      );
+
+      return this.audit.withAudit<SampleRequest>(
+        tx,
+        {
+          actorUserId: actorId ?? null,
+          actorRoleSlug: UserRole.RND,
+          actorPermissionSnapshot: { module: 'rnd', action: 'request_sample_payment' },
+          source: 'rnd.service.requestSamplePayment',
+          entityType: 'SampleRequest',
+          entityId: sampleId,
+          action: 'REQUEST_SAMPLE_PAYMENT',
+          beforeSnapshot: { stage: sample.stage },
+          afterSnapshot: { stage: SampleStage.WAITING_FINANCE },
+        },
+        async (tx2: any) => {
+          const updated = await tx2.sampleRequest.update({
+            where: { id: sampleId },
+            data: {
+              stage: SampleStage.WAITING_FINANCE,
+              paymentProofUrl: proofUrl ?? sample.paymentProofUrl,
+              stageLogs: {
+                create: { stage: SampleStage.WAITING_FINANCE, enteredAt: new Date() },
+              },
+            },
+          });
+
+          await this.outbox.enqueue(
+            tx2,
+            {
+              eventType: EVENT_SAMPLE_PAYMENT_REQUESTED,
+              aggregateType: 'SampleRequest',
+              aggregateId: sampleId,
+              payload: { sample_id: sampleId, lead_id: sample.leadId },
+              correlationId: `sample:${sampleId}`,
+            },
+            { requireExternalTransaction: true },
+          );
+
+          return updated;
+        },
+      );
+    });
+  }
+
+  /**
+   * Finance confirms the sample fee was received. This is the ONLY writer of
+   * paymentApprovedAt / paymentApprovedById (BUS-RULE-107).
+   * WAITING_FINANCE -> QUEUE (R&D inbox; formulation may now start).
+   */
+  async verifySamplePayment(
+    sampleId: string,
+    actorId: string,
+    note?: string,
+    proofUrl?: string,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const sample = await tx.sampleRequest.findUnique({ where: { id: sampleId } });
+      if (!sample) throw new NotFoundException('Sample request not found');
+
+      if (sample.stage !== SampleStage.WAITING_FINANCE) {
+        throw new ConflictException({
+          statusCode: 409,
+          error: 'Conflict',
+          message: `Sample ${sample.sampleCode} tidak sedang menunggu verifikasi Finance (stage: ${sample.stage}).`,
+          reason_code: SAMPLE_NOT_AWAITING_FINANCE,
         });
       }
 
-      // 1. Update Sample Status
-      const updatedSample = await tx.sampleRequest.update({
-        where: { id: sampleId },
-        data: {
-          stage: SampleStage.FORMULATING,
+      this.stateTransition.validateTransition(
+        'SampleStage',
+        sample.stage,
+        SampleStage.QUEUE,
+      );
+
+      const verifiedAt = new Date();
+
+      return this.audit.withAudit<SampleRequest>(
+        tx,
+        {
+          actorUserId: actorId,
+          actorRoleSlug: UserRole.FINANCE,
+          actorPermissionSnapshot: { module: 'finance', action: 'verify_sample_payment' },
+          source: 'rnd.service.verifySamplePayment',
+          entityType: 'SampleRequest',
+          entityId: sampleId,
+          action: 'VERIFY_SAMPLE_PAYMENT',
+          beforeSnapshot: {
+            stage: sample.stage,
+            paymentApprovedAt: sample.paymentApprovedAt,
+            paymentApprovedById: sample.paymentApprovedById,
+          },
+          afterSnapshot: {
+            stage: SampleStage.QUEUE,
+            paymentApprovedAt: verifiedAt,
+            paymentApprovedById: actorId,
+            note: note ?? null,
+          },
         },
-      });
-
-      // 2. Generate Formula Code
-      const formulaCode = await this.idGenerator.generateId('FRM');
-
-      // 3. Create Blank Formula V1
-      const formula = await tx.formula.create({
-        data: {
-          formulaCode: formulaCode,
-          sampleRequestId: sampleId,
-          targetYieldGram: 1000.0, // Default 1kg
-          status: 'DRAFT',
-          version: 1,
-          phases: {
-            create: [
-              {
-                prefix: 'A',
-                customName: 'Phase A',
-                order: 1,
+        async (tx2: any) => {
+          const updated = await tx2.sampleRequest.update({
+            where: { id: sampleId },
+            data: {
+              stage: SampleStage.QUEUE,
+              paymentApprovedAt: verifiedAt,
+              paymentApprovedById: actorId,
+              paymentProofUrl: proofUrl ?? sample.paymentProofUrl,
+              stageLogs: {
+                create: { stage: SampleStage.QUEUE, enteredAt: verifiedAt },
               },
-            ],
-          },
-          qcparameter: {
-            create: {},
-          },
+            },
+          });
+
+          await this.outbox.enqueue(
+            tx2,
+            {
+              eventType: EVENT_SAMPLE_PAYMENT_VERIFIED,
+              aggregateType: 'SampleRequest',
+              aggregateId: sampleId,
+              // Deliberately free of per-call timestamps so the outbox idempotency
+              // key stays stable: a repeated verification cannot enqueue a second
+              // event for the same fact.
+              payload: {
+                sample_id: sampleId,
+                lead_id: sample.leadId,
+                verified_by: actorId,
+              },
+              correlationId: `sample:${sampleId}`,
+            },
+            { requireExternalTransaction: true },
+          );
+
+          this.eventEmitter.emit(ACTIVITY_EVENT, {
+            leadId: sample.leadId,
+            senderDivision: Division.FINANCE,
+            eventType: StreamEventType.STATE_CHANGE,
+            notes: `Finance memverifikasi pembayaran sample ${sample.sampleCode}. Formulasi dapat dimulai.`,
+            loggedBy: actorId,
+          });
+
+          return updated;
         },
-      });
+      );
+    });
+  }
 
-      // 4. Log Activity
-      this.eventEmitter.emit(ACTIVITY_EVENT, {
-        leadId: sample.leadId,
-        senderDivision: Division.RND,
-        eventType: StreamEventType.STATE_CHANGE,
-        notes: `R&D Menerima Task: Formula V1 (${formulaCode}) diinisialisasi.`,
-        loggedBy: 'SYSTEM_RND',
-      });
+  /** Finance records that the sample fee was not received. WAITING_FINANCE -> REJECTED. */
+  async rejectSamplePayment(sampleId: string, actorId: string, reason: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const sample = await tx.sampleRequest.findUnique({ where: { id: sampleId } });
+      if (!sample) throw new NotFoundException('Sample request not found');
 
-      return {
-        sample: updatedSample,
-        formula: formula,
-      };
+      if (sample.stage !== SampleStage.WAITING_FINANCE) {
+        throw new ConflictException({
+          statusCode: 409,
+          error: 'Conflict',
+          message: `Sample ${sample.sampleCode} tidak sedang menunggu verifikasi Finance (stage: ${sample.stage}).`,
+          reason_code: SAMPLE_NOT_AWAITING_FINANCE,
+        });
+      }
+
+      return this.audit.withAudit<SampleRequest>(
+        tx,
+        {
+          actorUserId: actorId,
+          actorRoleSlug: UserRole.FINANCE,
+          actorPermissionSnapshot: { module: 'finance', action: 'reject_sample_payment' },
+          source: 'rnd.service.rejectSamplePayment',
+          entityType: 'SampleRequest',
+          entityId: sampleId,
+          action: 'REJECT_SAMPLE_PAYMENT',
+          beforeSnapshot: { stage: sample.stage },
+          afterSnapshot: { stage: SampleStage.REJECTED, reason },
+        },
+        async (tx2: any) => {
+          const updated = await tx2.sampleRequest.update({
+            where: { id: sampleId },
+            data: {
+              stage: SampleStage.REJECTED,
+              rejectionReason: reason,
+              stageLogs: {
+                create: { stage: SampleStage.REJECTED, enteredAt: new Date() },
+              },
+            },
+          });
+
+          await this.outbox.enqueue(
+            tx2,
+            {
+              eventType: EVENT_SAMPLE_PAYMENT_REJECTED,
+              aggregateType: 'SampleRequest',
+              aggregateId: sampleId,
+              payload: { sample_id: sampleId, rejected_by: actorId, reason },
+              correlationId: `sample:${sampleId}`,
+            },
+            { requireExternalTransaction: true },
+          );
+
+          return updated;
+        },
+      );
     });
   }
 
@@ -266,6 +556,16 @@ export class RndService {
       });
 
       if (!current) throw new NotFoundException('Sample request not found');
+
+      // BUS-RULE-107: the shared transition path is the one place every caller
+      // routes through, so the fee gate lives here rather than being re-checked
+      // per caller. Starting formulation without a verified fee is refused.
+      if (
+        dto.newStage === SampleStage.FORMULATING &&
+        current.stage !== SampleStage.FORMULATING
+      ) {
+        this.assertSampleFeeVerified(current);
+      }
 
       // Validate state transition via canonical service
       this.stateTransition.validateTransition(

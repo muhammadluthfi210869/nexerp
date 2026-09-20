@@ -14242,7 +14242,7 @@
       "title": "Verifikasi Pembayaran Sample",
       "route": "/samples/payment-verification",
       "type": "list",
-      "data_source": "GET /api/v1/sales/samples?stage=WAITING_FINANCE",
+      "data_source": "GET /api/v1/rnd/samples?stage=WAITING_FINANCE",
       "columns": [
         {
           "key": "sampleCode",
@@ -14284,12 +14284,12 @@
       "actions": [
         {
           "text": "Verifikasi Diterima",
-          "api": "POST /api/v1/sales/samples/{id}/verify-payment",
+          "api": "POST /api/v1/rnd/sample/{id}/verify-payment",
           "permission": "sample-payment-verify"
         },
         {
           "text": "Tolak",
-          "api": "POST /api/v1/sales/samples/{id}/reject-payment",
+          "api": "POST /api/v1/rnd/sample/{id}/reject-payment",
           "permission": "sample-payment-verify"
         }
       ],

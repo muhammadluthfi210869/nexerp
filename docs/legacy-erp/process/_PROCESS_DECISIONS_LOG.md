@@ -716,6 +716,19 @@ Plus `AGENTS.md` at root as **AI CLI entry point** with:
 **Spec doc affected**: `contracts/01_DOMAIN_MODEL.md` §1.1, `contracts/10_TRACEABILITY_MATRIX.yaml`
 **Status**: ✅ LOCKED
 
+### DEC-2026-09-20-061 — Two Legacy R&D E2E Suites Cannot Build; Recorded, Not Chased
+
+**Topik**: Suite e2e R&D lama yang tidak pernah benar-benar berjalan
+**Keputusan**: `backend/test/rnd-audit.e2e-spec.ts` dan `backend/test/rnd-business-process.e2e-spec.ts` **tidak dapat dibangun** oleh Nest karena `TestingModule`-nya tidak menyediakan seluruh dependensi `RndService`/`LegalityService`. Kekurangan ini **sudah ada sebelum P08** dan tidak diperbaiki di dalam P08. Yang dilakukan P08 hanya memperbaiki bagian yang bersinggungan langsung dengan perubahannya (menambahkan `paymentApprovedById` pada helper `markAsPaid` sesuai BUS-RULE-107, serta menyediakan `AuditService`/`OutboxService` yang kini dibutuhkan `RndService`). Sisa kekurangan dependensi dicatat sebagai backlog P2 dengan bukti di bawah.
+**Rationale**: Setiap kali satu dependensi ditambahkan, muncul kekurangan berikutnya (`IdGeneratorService`, lalu `BussdevService` melalui `forwardRef`). Suite ini jelas ditulis terhadap graf DI yang lebih lama dan tidak pernah dieksekusi. Mengejarnya berpotensi tak berujung dan bukan bagian dari acceptance P08. Menyembunyikannya akan membuat status pengujian P08 terlihat lebih baik daripada kenyataan.
+**Bukti**:
+- `RndService` sudah membutuhkan `IdGeneratorService` pada `HEAD` (sebelum perubahan P08), sementara kedua spec tidak pernah menyediakannya.
+- `LegalityService` membutuhkan `BussdevService` lewat `@Inject(forwardRef(...))`; `backend/src/modules/legality/legality.service.ts` tidak disentuh P08 sama sekali.
+- Akibatnya: `Tests: 12 failed, 12 total` pada `rnd-audit`, gagal di `beforeAll` saat kompilasi modul — bukan kegagalan assertion.
+**Implikasi ke code**: Tidak ada perubahan perilaku. Acceptance P08 tidak bergantung pada kedua suite ini; buktinya adalah suite baru `test/unit/p08/*` dan golden thread disposable-database.
+**Spec doc affected**: `verification/TESTING_STRATEGY.md` (backlog), `verification/P08_FROZEN_ACCEPTANCE_CONTRACT.md` (tidak mengubah acceptance)
+**Status**: ✅ LOCKED
+
 ---
 
 ## Pending Decisions (Open)
