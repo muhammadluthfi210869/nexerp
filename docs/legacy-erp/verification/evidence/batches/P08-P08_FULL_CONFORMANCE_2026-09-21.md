@@ -30,7 +30,7 @@ PostgreSQL named by `backend/.env`, using the existing `backend/test/jest-e2e.js
 |---|---|---:|---:|---:|
 | `p08-s1-sample-http.e2e-spec.ts` | `npm --prefix backend run test:p08:sample` | 0 | 6/6 | 39.3s |
 | `p08-s2-formulation.e2e-spec.ts` | `npm --prefix backend run test:p08:formulation` | 0 | 5/5 | 44.2s |
-| `p08-s3-release.e2e-spec.ts` | `npm --prefix backend run test:p08:creative-legal` | 0 | 6/6 | 43.8s |
+| `p08-s3-release.e2e-spec.ts` | `npm --prefix backend run test:p08:creative-legal` | 0 | 6/6 | 41.6s |
 
 Fixtures create tenants, users, staff, a lead and SCM materials only. They never create the audit
 row, outbox event, payment verification, approval, finalized state or permit being proved.
@@ -310,6 +310,13 @@ Root: `scripts/ssot/p08_clean_db.js`.
   sample shell was wired.
 - **P3 — `placehold.co` in `legality/inbox`** (see Deviations): the deferred regulatory
   artwork-review slice.
+- **P3 — a refused multipart upload still writes to disk.** `POST/PATCH` on
+  `creative/task/:id/version` runs multer's disk storage before the controller reaches
+  `CreativeService`, so the fourth-revision refusal (a `400` the suite asserts) still leaves the
+  artwork and mockup files in `backend/uploads/creative_assets`. The S3 suite cleans them by
+  snapshotting the directory in `beforeAll` and removing anything new in `finally`; the platform
+  behaviour itself is unchanged and unfixed. Found by the residue check, not by a business
+  assertion.
 
 ## Delivery metric
 
@@ -327,4 +334,5 @@ Root: `scripts/ssot/p08_clean_db.js`.
 | `contract_ownership` | PASS (carried) | canonical contracts already carry the P08 owners (`DEC-051..060`); the one stale command name in the traceability block was corrected |
 
 **Unexpected skipped/pending/todo/flaky tests: 0. Cross-tenant or unauthorized mutation: 0.
-New type errors and lint errors in changed scope: 0. Residual `nex_p08_*` databases: 0.**
+New type errors and lint errors in changed scope: 0. Residual `nex_p08_*` databases: 0.
+Residual upload artifacts after the S3 suite: 0.**

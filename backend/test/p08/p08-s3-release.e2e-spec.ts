@@ -61,7 +61,13 @@ describe('P08-S3 lineage, design bound and permit expiry (real HTTP, real Postgr
   let tRnd: string;
 
   const taskIds: string[] = [];
-  const uploadedFiles: string[] = [];
+  /**
+   * Multer's disk storage writes the artwork BEFORE the controller reaches the
+   * service, so an upload the hard lock REFUSES still leaves files behind that no
+   * response body can name. The cleanup therefore works off a directory snapshot
+   * taken in `beforeAll`, not off the responses.
+   */
+  let uploadsBefore: Set<string> = new Set();
   const permitIds: string[] = [];
   const sampleIds: string[] = [];
   const formulaIds: string[] = [];
@@ -102,13 +108,8 @@ describe('P08-S3 lineage, design bound and permit expiry (real HTTP, real Postgr
   const finalized = (token: string) =>
     request(server()).get('/creative/finalized').set(auth(token));
 
-  /** Records the on-disk artefacts so the suite leaves no upload litter behind. */
+  /** Pass-through that keeps the upload response in the call chain readable. */
   function trackUpload(body: any) {
-    for (const url of [body?.artworkUrl, body?.mockupUrl]) {
-      if (typeof url === 'string' && url.startsWith('/uploads/creative_assets/')) {
-        uploadedFiles.push(path.join(UPLOADS, path.basename(url)));
-      }
-    }
     return body;
   }
 
@@ -153,6 +154,7 @@ describe('P08-S3 lineage, design bound and permit expiry (real HTTP, real Postgr
   beforeAll(async () => {
     ctx = await bootP08App();
     prisma = ctx.prisma;
+    uploadsBefore = new Set(fs.existsSync(UPLOADS) ? fs.readdirSync(UPLOADS) : []);
 
     const mkUser = async (label: string, roles: string[], extra: any = {}) => {
       const user = await prisma.user.create({
@@ -212,13 +214,6 @@ describe('P08-S3 lineage, design bound and permit expiry (real HTTP, real Postgr
       await prisma.formula.deleteMany({ where: { id: { in: formulaIds } } });
       await prisma.sampleStageLog.deleteMany({ where: { sampleRequestId: { in: sampleIds } } });
       await prisma.sampleRequest.deleteMany({ where: { id: { in: sampleIds } } });
-      for (const file of uploadedFiles) {
-        try {
-          fs.rmSync(file, { force: true });
-        } catch {
-          /* the upload directory is not part of the acceptance */
-        }
-      }
       await prisma.legalTimelineLog.deleteMany({ where: { recordId: { in: permitIds } } });
       await prisma.bpomRecord.deleteMany({ where: { bpomId: { startsWith: `${TAG}-` } } });
       await prisma.hkiRecord.deleteMany({ where: { hkiId: { startsWith: `${TAG}-` } } });
@@ -229,7 +224,16 @@ describe('P08-S3 lineage, design bound and permit expiry (real HTTP, real Postgr
       await prisma.bussdevStaff.deleteMany({ where: { name: `${TAG} Staff` } });
       await prisma.user.deleteMany({ where: { email: { startsWith: `${TAG}.` } } });
     } finally {
-      // Always close the app: a leaked Nest server keeps jest's event loop alive.
+      // Always close the app, and always sweep the upload directory: a leaked Nest
+      // server keeps jest's event loop alive, and a refused upload still wrote files.
+      for (const file of fs.existsSync(UPLOADS) ? fs.readdirSync(UPLOADS) : []) {
+        if (uploadsBefore.has(file)) continue;
+        try {
+          fs.rmSync(path.join(UPLOADS, file), { force: true });
+        } catch {
+          /* the upload directory is not part of the acceptance */
+        }
+      }
       await ctx.app.close();
     }
   }, 120000);
