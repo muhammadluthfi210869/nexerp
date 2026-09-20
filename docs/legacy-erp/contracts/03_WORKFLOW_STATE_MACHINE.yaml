@@ -1844,6 +1844,29 @@ creative_pipeline:
           - DesignTask.isFinal = false
           - outbox.enqueue(design.revision_requested)
           - notification.send_to(role=Director)
+      # The same client request made BEFORE approval — the ordinary case, and the one
+      # the running system already serves (`CreativeService.clientReview` with a
+      # non-APPROVED status). Same trigger, same preconditions, same effects as the
+      # LOCKED variant above; recorded here because the contract listed only the
+      # post-approval form.
+      - from: WAITING_CLIENT
+        to: REVISION
+        trigger: client.request_revision
+        authorized_actor:
+          role: BusDevStaff
+          scope: own_only
+        preconditions:
+          - isLocked == false                       # BUS-RULE-111: in-bound only
+          - revisionCount < 3
+          - revision_reason != null
+          - DesignFeedback.versionId == DesignVersion.latest.id   # BUS-RULE-110
+        side_effects:
+          - audit_log.create(action=client_revision_request)
+          - DesignFeedback.create(approvalStatus=REJECTED, versionId=latest)
+          - revisionCount.increment                 # consumes the allowance
+          - DesignTask.isLocked = (revisionCount >= 3)
+          - outbox.enqueue(design.revision_requested)
+          - notification.send_to(role=Director)
       - from: REVISION
         to: IN_PROGRESS
         trigger: designer.resume
@@ -1858,21 +1881,25 @@ creative_pipeline:
       # Owner decision 2026-09-20 (DEC-2026-09-20-056): past the bound the design locks,
       # but a supervisor may reopen it and the revision allowance is recounted from zero.
       # The reopen is itself recorded in the design history so the override is auditable.
-      # Live counterpart: `CreativeService.unlockTask`, which today clears `isLocked` but
-      # never resets `revisionCount` — repaired under BUS-RULE-111.
+      # Live counterpart: `CreativeService.unlockTask`, repaired under BUS-RULE-111 —
+      # it now requires the supervisor role, requires a reason, records a DesignFeedback
+      # row, resets `revisionCount` to 0, and `uploadVersion` no longer overwrites the
+      # counter (which is what used to re-lock the task immediately afterwards).
       - from: LOCKED
         to: REVISION
         trigger: supervisor.reopen
         authorized_actor:
           role: Director
+          role_alternates: [SuperAdmin]
         preconditions:
           - isLocked == true                        # only the at-bound lock is reopenable
           - reopen_reason != null
         side_effects:
-          - audit_log.create(action=supervisor_reopen, after.reason)
+          - audit_log.create(action=supervisor_reopen, before.revisionCount, after.reason)
           - DesignFeedback.create(content=reopen_reason, versionId=latest)
           - DesignTask.revisionCount = 0            # allowance restarts
           - DesignTask.isLocked = false
+          - DesignTask.isFinal = false
           - outbox.enqueue(design.reopened)
           - notification.send_to(role=Director, BusDevStaff=owner)
     forbidden:
@@ -1891,6 +1918,10 @@ creative_pipeline:
         when: isLocked == true AND trigger == client.request_revision
                                     # BUS-RULE-111: at-bound revisions require the
                                     # supervisor reopen path. Ordinary requests refused.
+      # The hard lock also closes the upload path: no new artwork may be added to a
+      # task whose allowance is spent. Enforced by `uploadVersion`.
+      - trigger: designer.upload_version
+        when: isLocked == true
 
 # ===============================================================
 # 6. CHECKLIST PIPELINE (17-stage QC + Closing)

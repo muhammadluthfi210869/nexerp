@@ -183,15 +183,86 @@ export class CreativeController {
       authorId: req.user?.id,
       pin: dto.pin!,
       ipAddress: req.ip ?? null,
+      versionId: dto.versionId,
     });
   }
 
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL)
   @Patch('task/:id/client-review')
-  clientReview(@Param('id') id: string, @Body() dto: ClientReviewDto) {
-    return this.creativeService.clientReview(id, dto.status!, dto.notes);
+  clientReview(
+    @Param('id') id: string,
+    @Body() dto: ClientReviewDto,
+    @Req() req: any,
+  ) {
+    // The decision's author comes from the verified JWT, not the body.
+    return this.creativeService.clientReview(id, dto.status!, {
+      versionId: dto.versionId,
+      authorId: req.user?.id,
+      notes: dto.notes,
+      reason: dto.reason,
+    });
   }
 
+  /**
+   * Owner decision 2026-09-20 (DEC-2026-09-20-054/057): exactly one dedicated page
+   * for revision history and finalized designs only, readable by every internal PIC
+   * who appears on the milestone checklist progress/tracking — a deliberately broad
+   * internal read, not a narrow role list.
+   */
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.DIRECTOR,
+    UserRole.HEAD_OPS,
+    UserRole.COMMERCIAL,
+    UserRole.DIGIMAR,
+    UserRole.RND,
+    UserRole.COMPLIANCE,
+    UserRole.FINANCE,
+    UserRole.PURCHASING,
+    UserRole.PPIC,
+    UserRole.WAREHOUSE,
+    UserRole.PRODUCTION_OP,
+    UserRole.QC_LAB,
+    UserRole.HR,
+    UserRole.IT_SYS,
+    UserRole.ADMIN,
+    UserRole.SCM,
+    UserRole.PRODUCTION,
+    UserRole.MARKETING,
+    UserRole.APJ,
+  )
+  @Get('finalized')
+  getFinalizedDesigns(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.creativeService.getFinalizedDesigns(
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 50,
+    );
+  }
+
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.DIRECTOR,
+    UserRole.HEAD_OPS,
+    UserRole.COMMERCIAL,
+    UserRole.DIGIMAR,
+    UserRole.RND,
+    UserRole.COMPLIANCE,
+    UserRole.APJ,
+    UserRole.MARKETING,
+  )
+  @Get('tasks/:id/history')
+  getTaskHistory(@Param('id') id: string) {
+    return this.creativeService.getTaskHistory(id);
+  }
+
+  /**
+   * Supervisor reopen. Role-gated here AND re-checked inside the service
+   * (BUS-RULE-111 / DEC-2026-09-20-056): only a supervisor may reopen a locked
+   * design, and doing so restarts the revision allowance from zero.
+   */
   @Roles(UserRole.SUPER_ADMIN, UserRole.DIRECTOR)
   @Patch('task/:id/unlock')
   unlockTask(
@@ -204,6 +275,7 @@ export class CreativeController {
       action: dto.action!,
       managerPin: dto.managerPin!,
       userId: req.user?.id,
+      reason: dto.reason,
     });
   }
 }

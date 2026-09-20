@@ -2,7 +2,7 @@
 
 > GENERATED — DO NOT EDIT DIRECTLY. Run `node scripts/ssot/validate_ssot.js`.
 
-Generated: 2026-09-20T15:13:42.476Z
+Generated: 2026-09-20T15:41:05.435Z
 
 ## Result
 
@@ -45,7 +45,7 @@ Generated: 2026-09-20T15:13:42.476Z
 - workflows: 38
 - integration_events: 88
 - requirements: 42
-- trace_tests: 255
+- trace_tests: 260
 
 ## Exact failed gates
 

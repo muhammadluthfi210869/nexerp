@@ -773,6 +773,42 @@ Plus `AGENTS.md` at root as **AI CLI entry point** with:
 **Spec doc affected**: `contracts/05_API_CONTRACT.yaml` (keluarga nyata didaftarkan, keluarga lama ditandai deprecated), `contracts/10_TRACEABILITY_MATRIX.yaml`, `contracts/06_SCREEN_CONTRACT.json` (backlog penggantian nama)
 **Status**: ✅ LOCKED
 
+### DEC-2026-09-20-066 — Keputusan Desain Terikat Versi; Kolom `versionId` Ditambahkan
+
+**Topik**: Keaslian keputusan approval desain
+**Keputusan**: Kolom nullable `design_feedbacks."versionId"` ditambahkan (migrasi `20260920130000_p08_design_feedback_version`, expand-only, `ON DELETE SET NULL`) dan `apjReview`/`clientReview` **wajib** menyebut versi artwork yang diputuskan, dan versi itu harus versi terbaru. Keputusan tanpa versi ditolak `DESIGN_VERSION_REQUIRED`. `authorId` untuk `clientReview` diambil dari JWT, bukan body.
+**Rationale**: Sebelumnya versi yang disetujui disimpulkan dari "baris mana yang kebetulan terbaru" (`versions[0]`), sehingga approval atas artwork lama tetap tercatat sah walaupun artwork baru sudah ada di meja. Fakta itu harus disimpan, bukan disimpulkan — itu isi BUS-RULE-110.
+**Implikasi ke code**: `creative.service.ts` (`assertDecisionVersion`, `latestVersionOf`), `creative.controller.ts`, DTO `apj-review`/`client-review`, `prisma/schema/creative.prisma`. Baris feedback lama tetap `versionId = NULL` — tidak ditebak.
+**Spec doc affected**: `contracts/03_WORKFLOW_STATE_MACHINE.yaml` (creative_pipeline), `contracts/04_BUSINESS_RULES.md` (BUS-RULE-110)
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-067 — Reopen Supervisor: Jatah Benar-Benar Dihitung Ulang dan Tercatat
+
+**Topik**: Mengapa tombol unlock dulu tidak berpengaruh
+**Keputusan**: Tiga cacat diperbaiki sekaligus:
+1. `uploadVersion` **tidak lagi menulis** `revisionCount`. Sebelumnya ia menurunkannya dari `versions.length`, sehingga reopen yang sudah mereset penghitung ke 0 langsung ditimpa kembali menjadi `versions.length - 1` pada upload berikutnya dan task terkunci lagi. Penghitung sekarang dimiliki oleh transisi revisi saja (`apjReview`, `clientReview`, dan reopen).
+2. Jalur APJ **ikut menghabiskan jatah**. Sebelumnya hanya `clientReview` yang menaikkan penghitung, sehingga APJ bisa meminta revisi tanpa batas.
+3. `unlockTask` sekarang **wajib role supervisor** (`SUPER_ADMIN`/`DIRECTOR`), **wajib alasan**, **mereset `revisionCount` ke 0**, **mencatat alasannya sebagai baris riwayat desain**, dan menulis audit + outbox `design.reopened`. Non-supervisor ditolak `DESIGN_REOPEN_UNAUTHORIZED` dan desain **tetap terkunci**.
+**Rationale**: Owner memutuskan desain yang sudah lewat batas boleh dibuka supervisor dengan jatah dihitung ulang dari nol (DEC-2026-09-20-056). Tanpa (1) keputusan itu tidak bisa dijalankan sama sekali; tanpa (2) batas 3 tidak bermakna; tanpa (3) pembukaan kembali tidak dapat diaudit dan siapa pun bisa melakukannya.
+**Bukti**: `p08-sf4-design-legal.unit-spec.ts` menjalankan siklus revisi penuh lewat state machine nyata, lalu membuktikan jatah masih 0 **setelah** upload berikutnya dan satu siklus revisi baru diterima.
+**Implikasi ke code**: `creative.service.ts` (`uploadVersion`, `apjReview`, `clientReview`, `unlockTask`), `creative.controller.ts` (`@Roles(SUPER_ADMIN, DIRECTOR)` + pengecekan ulang di service), DTO `unlock-task`.
+**Spec doc affected**: `contracts/03_WORKFLOW_STATE_MACHINE.yaml` (creative_pipeline: transisi `WAITING_CLIENT → REVISION`, catatan reopen, larangan upload saat terkunci), `contracts/04_BUSINESS_RULES.md` (BUS-RULE-111)
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-068 — Satu Kebijakan Kadaluarsa Izin; `auditRisk` Diturunkan, Bukan Diklaim
+
+**Topik**: Tiga perhitungan kadaluarsa dan status verifikasi yang dikarang
+**Keputusan**:
+1. Satu kebijakan dipakai bersama (`permitExpiryBucket`, `permitDaysLeft`, `permitAuditRisk` di `legality.service.ts`): **EXPIRED ≤0, CRITICAL ≤30, WARNING ≤90, SAFE, NO_EXPIRY**. Sebelumnya dashboard dan daftar izin memakai 90 hari sementara feed kadaluarsa memakai 30/60, sehingga satu izin berumur 75 hari bisa `SAFE` di satu layar dan "segera habis" di layar lain pada hari yang sama.
+2. `NO_EXPIRY` dipisahkan dari `SAFE`. Izin tanpa tanggal kadaluarsa bukan izin yang aman.
+3. Perhitungan rata-rata lama proses **tidak lagi** memakai `expiryDate || today`. Izin tanpa tanggal kini dilewati, bukan diberi tanggal karangan.
+4. `auditRisk` **diturunkan** dari tanggal kadaluarsa nyata (tanpa tanggal → `DELAY_AUDIT`, lewat/≤30 hari → `CRITICAL`, ≤90 → `DELAY_AUDIT`, aman → `OK`), bukan lagi ditulis `'OK'` saat insert. `status` dan `stage` dari pemanggil kini dihormati, tidak lagi ditimpa paksa.
+**Yang sengaja tidak diubah**: bentuk respons `getPermits` (`ACTIVE`/`EXPIRING_SOON`/`EXPIRED`) dipertahankan karena melayani layar yang sudah ada; yang disatukan adalah ambang dan perhitungannya. `legality.listener.ts` yang menelan kegagalan **tidak disentuh** — ia melayani stack pengajuan izin (`RegulatoryPipeline`/`PNBPRequest`) yang dinyatakan di luar P08 oleh keputusan owner 3; dicatat sebagai backlog P2 dengan alasan, bukan diperbaiki setengah.
+**Rationale**: Ambang ganda adalah cacat bisnis: layar yang berbeda memberi jawaban berbeda atas izin yang sama. `auditRisk: 'OK'` saat insert adalah klaim bahwa audit sudah lolos padahal belum pernah dijalankan.
+**Implikasi ke code**: `legality.service.ts` (`getDashboardMetrics`, `getPermits`, `getExpiryData`, `createHki`/`createBpom`/`createHalal`).
+**Spec doc affected**: `contracts/04_BUSINESS_RULES.md` (BUS-RULE-112), `contracts/10_TRACEABILITY_MATRIX.yaml` (TEST-277)
+**Status**: ✅ LOCKED
+
 ---
 
 ## Pending Decisions (Open)

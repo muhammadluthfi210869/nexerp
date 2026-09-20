@@ -12,6 +12,71 @@ import {
 
 import { BussdevService } from '../bussdev/bussdev.service';
 
+/**
+ * BUS-RULE-112 — the single permit expiry policy.
+ *
+ * Before this, the module carried three separate computations with two different
+ * thresholds (90 days in the dashboard and the permit list, 30/60 days in the
+ * expiry feed) and three response vocabularies. A permit could therefore be
+ * "EXPIRING_SOON" on one screen and "SAFE" on another on the same day.
+ *
+ * Canonical buckets: EXPIRED (<=0), CRITICAL (<=30), WARNING (<=90), SAFE, and
+ * NO_EXPIRY for a record with no expiry date recorded. NO_EXPIRY is deliberately
+ * distinct from SAFE: an unknown expiry is not a safe one.
+ */
+export const PERMIT_CRITICAL_DAYS = 30;
+export const PERMIT_WARNING_DAYS = 90;
+
+export type PermitExpiryBucket =
+  | 'EXPIRED'
+  | 'CRITICAL'
+  | 'WARNING'
+  | 'SAFE'
+  | 'NO_EXPIRY';
+
+export function permitDaysLeft(
+  expiryDate: Date | string | null | undefined,
+  today: Date = new Date(),
+): number | null {
+  if (!expiryDate) return null;
+  const expiry = expiryDate instanceof Date ? expiryDate : new Date(expiryDate);
+  if (Number.isNaN(expiry.getTime())) return null;
+  return Math.floor((expiry.getTime() - today.getTime()) / 86400000);
+}
+
+export function permitExpiryBucket(
+  expiryDate: Date | string | null | undefined,
+  today: Date = new Date(),
+): PermitExpiryBucket {
+  const daysLeft = permitDaysLeft(expiryDate, today);
+  if (daysLeft === null) return 'NO_EXPIRY';
+  if (daysLeft <= 0) return 'EXPIRED';
+  if (daysLeft <= PERMIT_CRITICAL_DAYS) return 'CRITICAL';
+  if (daysLeft <= PERMIT_WARNING_DAYS) return 'WARNING';
+  return 'SAFE';
+}
+
+/**
+ * Audit risk derived from the record's real state rather than asserted at insert.
+ * A record with no expiry date on file is not "OK" — the audit it would rest on
+ * has not happened, so it is a delayed audit.
+ */
+export function permitAuditRisk(
+  expiryDate: Date | string | null | undefined,
+  today: Date = new Date(),
+): 'OK' | 'DELAY_AUDIT' | 'CRITICAL' {
+  switch (permitExpiryBucket(expiryDate, today)) {
+    case 'EXPIRED':
+    case 'CRITICAL':
+      return 'CRITICAL';
+    case 'WARNING':
+    case 'NO_EXPIRY':
+      return 'DELAY_AUDIT';
+    default:
+      return 'OK';
+  }
+}
+
 @Injectable()
 export class LegalityService {
   constructor(
@@ -23,8 +88,6 @@ export class LegalityService {
 
   async getDashboardMetrics() {
     const today = new Date();
-    const expiryThreshold = new Date();
-    expiryThreshold.setDate(today.getDate() + 90);
 
     const hkiAll = await this.prisma.hkiRecord.findMany({
       include: { pic: true },
@@ -53,52 +116,46 @@ export class LegalityService {
         new Date(r.expiryDate) < today,
     );
     const expiredRecords = allRecords.filter(
-      (r) => r.expiryDate && new Date(r.expiryDate) < today,
+      (r) => permitExpiryBucket(r.expiryDate, today) === 'EXPIRED',
     );
+    // BUS-RULE-112: "critical" is the CRITICAL bucket, not "anything inside 90 days".
     const criticalHkis = hkiAll.filter(
-      (r) =>
-        r.expiryDate &&
-        new Date(r.expiryDate) <= expiryThreshold &&
-        new Date(r.expiryDate) >= today,
+      (r) => permitExpiryBucket(r.expiryDate, today) === 'CRITICAL',
     );
     const criticalBpoms = bpomAll.filter(
-      (r) =>
-        r.expiryDate &&
-        new Date(r.expiryDate) <= expiryThreshold &&
-        new Date(r.expiryDate) >= today,
+      (r) => permitExpiryBucket(r.expiryDate, today) === 'CRITICAL',
     );
     const criticalHalals = halalAll.filter(
-      (r) =>
-        r.expiryDate &&
-        new Date(r.expiryDate) <= expiryThreshold &&
-        new Date(r.expiryDate) >= today,
+      (r) => permitExpiryBucket(r.expiryDate, today) === 'CRITICAL',
     );
     const criticalTotal =
       criticalHkis.length + criticalBpoms.length + criticalHalals.length;
 
-    // Compute average processing time
-    const bpomDays = bpomAll
-      .filter((r) => r.status === LegalStatus.DONE)
-      .map((r) =>
-        Math.floor(
-          (new Date(r.expiryDate || today).getTime() -
-            new Date(r.applicationDate).getTime()) /
-            (1000 * 60 * 60 * 24),
-        ),
-      );
+    // Compute average processing time. Records with no expiry date on file are
+    // skipped rather than treated as expiring today — fabricating a date produced
+    // a processing time of "however long since application", which is not a fact.
+    const processingDays = (
+      rows: Array<{
+        expiryDate: Date | null;
+        applicationDate: Date;
+        status: LegalStatus;
+      }>,
+    ) =>
+      rows
+        .filter((r) => r.status === LegalStatus.DONE && r.expiryDate)
+        .map((r) =>
+          Math.floor(
+            (new Date(r.expiryDate as Date).getTime() -
+              new Date(r.applicationDate).getTime()) /
+              (1000 * 60 * 60 * 24),
+          ),
+        );
+    const bpomDays = processingDays(bpomAll);
     const avgBpomDays =
       bpomDays.length > 0
         ? Math.round(bpomDays.reduce((a, b) => a + b, 0) / bpomDays.length)
         : 45;
-    const hkiDays = hkiAll
-      .filter((r) => r.status === LegalStatus.DONE)
-      .map((r) =>
-        Math.floor(
-          (new Date(r.expiryDate || today).getTime() -
-            new Date(r.applicationDate).getTime()) /
-            (1000 * 60 * 60 * 24),
-        ),
-      );
+    const hkiDays = processingDays(hkiAll);
     const avgHkiDays =
       hkiDays.length > 0
         ? Math.round(hkiDays.reduce((a, b) => a + b, 0) / hkiDays.length)
@@ -290,15 +347,16 @@ export class LegalityService {
               ? new Date(tm.expiryDate).toISOString().split('T')[0]
               : 'N/A',
             left: `${daysLeft}D`,
+            // BUS-RULE-112: one policy, so the colour cannot disagree with the bucket.
             color:
-              daysLeft <= 0
+              permitExpiryBucket(tm.expiryDate, today) === 'EXPIRED'
                 ? 'bg-rose-500'
-                : daysLeft <= 30
+                : permitExpiryBucket(tm.expiryDate, today) === 'CRITICAL'
                   ? 'bg-rose-500'
-                  : daysLeft <= 60
+                  : permitExpiryBucket(tm.expiryDate, today) === 'WARNING'
                     ? 'bg-amber-500'
-                    : daysLeft <= 90
-                      ? 'bg-amber-400'
+                    : permitExpiryBucket(tm.expiryDate, today) === 'NO_EXPIRY'
+                      ? 'bg-slate-500'
                       : 'bg-emerald-500',
           };
         }),
@@ -322,9 +380,11 @@ export class LegalityService {
         data: {
           ...rest,
           pic: { connect: { id: picId } },
-          status: LegalStatus.IN_PROGRESS,
-          stage: 'DRAFT',
-          auditRisk: 'OK',
+          // BUS-RULE-112: the caller's status is respected, and auditRisk is derived
+          // from the record's real expiry rather than asserted as 'OK' at insert.
+          status: rest.status ?? LegalStatus.IN_PROGRESS,
+          stage: rest.stage ?? 'DRAFT',
+          auditRisk: permitAuditRisk(rest.expiryDate),
         },
       });
 
@@ -391,9 +451,9 @@ export class LegalityService {
         data: {
           ...rest,
           pic: { connect: { id: picId } },
-          status: LegalStatus.IN_PROGRESS,
-          stage: 'DRAFT',
-          auditRisk: 'OK',
+          status: rest.status ?? LegalStatus.IN_PROGRESS,
+          stage: rest.stage ?? 'DRAFT',
+          auditRisk: permitAuditRisk(rest.expiryDate),
         },
       });
 
@@ -460,9 +520,9 @@ export class LegalityService {
         data: {
           ...rest,
           pic: { connect: { id: picId } },
-          status: LegalStatus.IN_PROGRESS,
-          stage: 'DRAFT',
-          auditRisk: 'OK',
+          status: rest.status ?? LegalStatus.IN_PROGRESS,
+          stage: rest.stage ?? 'DRAFT',
+          auditRisk: permitAuditRisk(rest.expiryDate),
         },
       });
 
@@ -613,12 +673,17 @@ export class LegalityService {
       issuer: string;
     }> = [];
 
+    // BUS-RULE-112: the shape of this response is unchanged, but the threshold now
+    // comes from the one shared policy instead of a second, local 90-day rule.
+    const listStatus = (expiryDate: Date | null) =>
+      permitExpiryBucket(expiryDate) === 'EXPIRED'
+        ? 'EXPIRED'
+        : permitExpiryBucket(expiryDate) === 'SAFE' ||
+            permitExpiryBucket(expiryDate) === 'NO_EXPIRY'
+          ? 'ACTIVE'
+          : 'EXPIRING_SOON';
+
     for (const bpom of bpomWithReg) {
-      const expired = bpom.expiryDate && new Date(bpom.expiryDate) < new Date();
-      const expiring =
-        bpom.expiryDate &&
-        new Date(bpom.expiryDate) > new Date() &&
-        new Date(bpom.expiryDate) <= new Date(Date.now() + 90 * 86400000);
       permits.push({
         id: bpom.bpomId,
         name: `Izin Edar BPOM — ${bpom.productName}`,
@@ -626,17 +691,12 @@ export class LegalityService {
         expiry: bpom.expiryDate
           ? new Date(bpom.expiryDate).toISOString().split('T')[0]
           : 'N/A',
-        status: expired ? 'EXPIRED' : expiring ? 'EXPIRING_SOON' : 'ACTIVE',
+        status: listStatus(bpom.expiryDate),
         issuer: 'BPOM RI',
       });
     }
 
     for (const hki of hkiWithReg) {
-      const expired = hki.expiryDate && new Date(hki.expiryDate) < new Date();
-      const expiring =
-        hki.expiryDate &&
-        new Date(hki.expiryDate) > new Date() &&
-        new Date(hki.expiryDate) <= new Date(Date.now() + 90 * 86400000);
       permits.push({
         id: hki.hkiId,
         name: `${hki.type} — ${hki.brandName}`,
@@ -644,18 +704,12 @@ export class LegalityService {
         expiry: hki.expiryDate
           ? new Date(hki.expiryDate).toISOString().split('T')[0]
           : 'N/A',
-        status: expired ? 'EXPIRED' : expiring ? 'EXPIRING_SOON' : 'ACTIVE',
+        status: listStatus(hki.expiryDate),
         issuer: 'DJKI',
       });
     }
 
     for (const halal of halalWithReg) {
-      const expired =
-        halal.expiryDate && new Date(halal.expiryDate) < new Date();
-      const expiring =
-        halal.expiryDate &&
-        new Date(halal.expiryDate) > new Date() &&
-        new Date(halal.expiryDate) <= new Date(Date.now() + 90 * 86400000);
       permits.push({
         id: halal.halalId,
         name: `Sertifikasi Halal — ${halal.productName}`,
@@ -663,7 +717,7 @@ export class LegalityService {
         expiry: halal.expiryDate
           ? new Date(halal.expiryDate).toISOString().split('T')[0]
           : 'N/A',
-        status: expired ? 'EXPIRED' : expiring ? 'EXPIRING_SOON' : 'ACTIVE',
+        status: listStatus(halal.expiryDate),
         issuer: 'MUI / BPJPH',
       });
     }
@@ -1127,75 +1181,45 @@ export class LegalityService {
       certNumber: string;
       expiry: string;
       daysLeft: number;
-      status: 'EXPIRED' | 'CRITICAL' | 'WARNING' | 'SAFE';
+      status: PermitExpiryBucket;
     }> = [];
 
     for (const r of hkiAll) {
       if (!r.expiryDate) continue;
-      const daysLeft = Math.floor(
-        (r.expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-      );
       items.push({
         id: r.id,
         name: r.brandName,
         type: 'HKI',
         certNumber: r.hkiId,
         expiry: r.expiryDate.toISOString().split('T')[0],
-        daysLeft,
-        status:
-          daysLeft <= 0
-            ? 'EXPIRED'
-            : daysLeft <= 30
-              ? 'CRITICAL'
-              : daysLeft <= 60
-                ? 'WARNING'
-                : 'SAFE',
+        daysLeft: permitDaysLeft(r.expiryDate, today) as number,
+        status: permitExpiryBucket(r.expiryDate, today),
       });
     }
 
     for (const r of bpomAll) {
       if (!r.expiryDate) continue;
-      const daysLeft = Math.floor(
-        (r.expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-      );
       items.push({
         id: r.id,
         name: r.productName,
         type: 'BPOM',
         certNumber: r.bpomId,
         expiry: r.expiryDate.toISOString().split('T')[0],
-        daysLeft,
-        status:
-          daysLeft <= 0
-            ? 'EXPIRED'
-            : daysLeft <= 30
-              ? 'CRITICAL'
-              : daysLeft <= 60
-                ? 'WARNING'
-                : 'SAFE',
+        daysLeft: permitDaysLeft(r.expiryDate, today) as number,
+        status: permitExpiryBucket(r.expiryDate, today),
       });
     }
 
     for (const r of halalAll) {
       if (!r.expiryDate) continue;
-      const daysLeft = Math.floor(
-        (r.expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-      );
       items.push({
         id: r.id,
         name: r.productName,
         type: 'HALAL',
         certNumber: r.halalId,
         expiry: r.expiryDate.toISOString().split('T')[0],
-        daysLeft,
-        status:
-          daysLeft <= 0
-            ? 'EXPIRED'
-            : daysLeft <= 30
-              ? 'CRITICAL'
-              : daysLeft <= 60
-                ? 'WARNING'
-                : 'SAFE',
+        daysLeft: permitDaysLeft(r.expiryDate, today) as number,
+        status: permitExpiryBucket(r.expiryDate, today),
       });
     }
 
