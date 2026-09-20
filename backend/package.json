@@ -27,7 +27,7 @@
     "test:p07:activity": "jest --config ./test/jest-unit.json --runInBand --testPathPatterns p07-sf4-activity",
     "test:p07:dashboard": "jest --config ./test/jest-unit.json --runInBand --testPathPatterns p07-sf4-dashboard",
     "test:p07:golden-thread": "jest --config ./test/jest-unit.json --runInBand --testPathPatterns p07-sf6-golden-thread",
-    "test:p07:mutations": "jest --config ./test/jest-unit.json --runInBand --testPathPatterns p07-mutation",
+    "test:p07:negative": "jest --config ./test/jest-unit.json --runInBand --testPathPatterns p07-negative-",
     "test:p07": "jest --config ./test/jest-unit.json --runInBand --testPathPatterns p07-",
     "cleanup:uploads": "ts-node scripts/cleanup-orphan-uploads.ts",
     "cleanup:uploads:apply": "ts-node scripts/cleanup-orphan-uploads.ts --apply",

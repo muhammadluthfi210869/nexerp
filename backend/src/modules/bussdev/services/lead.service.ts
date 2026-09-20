@@ -27,6 +27,50 @@ export class LeadService {
     private idGenerator: IdGeneratorService,
   ) {}
 
+  // P07-SF3: legal workflow transitions for the sales pipeline. The production
+  // service previously allowed any stage → stage update; the frozen acceptance
+  // contract requires illegal transitions to be rejected so dashboards, audit
+  // and outbox cannot drift from a controlled state machine.
+  private static readonly WORKFLOW_TRANSITIONS: Partial<
+    Record<WorkflowStatus, readonly WorkflowStatus[]>
+  > = {
+    NEW_LEAD: ['CONTACTED', 'FOLLOW_UP_1', 'COLD', 'WARM', 'LOST', 'ABORTED'],
+    CONTACTED: [
+      'FOLLOW_UP_1', 'FOLLOW_UP_2', 'SAMPLE_REQUESTED', 'LOST', 'ABORTED',
+    ],
+    FOLLOW_UP_1: [
+      'FOLLOW_UP_2', 'SAMPLE_REQUESTED', 'LOST', 'ABORTED',
+    ],
+    FOLLOW_UP_2: [
+      'FOLLOW_UP_3', 'SAMPLE_REQUESTED', 'LOST', 'ABORTED',
+    ],
+    FOLLOW_UP_3: [
+      'NEGOTIATION', 'SAMPLE_REQUESTED', 'LOST', 'ABORTED',
+    ],
+    NEGOTIATION: [
+      'SAMPLE_REQUESTED', 'SPK_SIGNED', 'LOST', 'ABORTED',
+    ],
+    SAMPLE_REQUESTED: ['SAMPLE_SENT', 'LOST', 'ABORTED'],
+    SAMPLE_SENT: ['SAMPLE_APPROVED', 'LOST', 'ABORTED'],
+    SAMPLE_APPROVED: ['SPK_SIGNED', 'LOST', 'ABORTED'],
+    SPK_SIGNED: ['WAITING_FINANCE_APPROVAL', 'DP_PAID', 'LOST', 'ABORTED'],
+    WAITING_FINANCE_APPROVAL: ['DP_PAID', 'LOST', 'ABORTED'],
+    DP_PAID: ['PRODUCTION_PLAN', 'LOST', 'ABORTED'],
+    PRODUCTION_PLAN: ['READY_TO_SHIP', 'LOST', 'ABORTED'],
+    READY_TO_SHIP: ['WON_DEAL', 'LOST', 'ABORTED'],
+    WON_DEAL: [],
+    LOST: [],
+    ABORTED: [],
+    COLD: ['WARM', 'LOST', 'ABORTED'],
+    WARM: ['HOT', 'CONTACTED', 'LOST', 'ABORTED'],
+    HOT: ['CONTACTED', 'SAMPLE_REQUESTED', 'LOST', 'ABORTED'],
+  };
+
+  static isLegalTransition(from: WorkflowStatus, to: WorkflowStatus): boolean {
+    const allowed = LeadService.WORKFLOW_TRANSITIONS[from];
+    return Array.isArray(allowed) && allowed.includes(to);
+  }
+
   async createLead(dto: CreateLeadDto) {
     return this.prisma.$transaction(async (tx) => {
       let targetPicId = dto.picId;
@@ -159,6 +203,18 @@ export class LeadService {
 
       if (!currentLead) {
         throw new NotFoundException('Lead with ID ' + leadId + ' not found');
+      }
+
+      // P07-SF3: enforce the workflow state machine. Terminal states are
+      // absorbing; non-adjacent stages (e.g. NEW_LEAD → WON_DEAL) are rejected.
+      if (
+        currentLead.status !== dto.newStatus &&
+        !LeadService.isLegalTransition(currentLead.status, dto.newStatus)
+      ) {
+        throw new BadRequestException({
+          code: 'WORKFLOW_TRANSITION_ILLEGAL',
+          message: `Transisi ${currentLead.status} → ${dto.newStatus} tidak diizinkan oleh state machine.`,
+        });
       }
 
       const paymentProofUrl =

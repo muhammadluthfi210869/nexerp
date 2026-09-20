@@ -16,6 +16,7 @@
     "test:visual:update": "playwright test tests/visual-regression/ --update-snapshots",
     "test:perf": "playwright test tests/e2e/PERFORMANCE_INTEGRITY_AUDIT.spec.ts",
     "test": "vitest run",
+    "test:p07": "vitest run --reporter=default src/app/(dashboard)/marketing/omnicrm/__tests__/p07-crm-kpi-tiles.behavior.test.tsx",
     "typecheck:marketing": "tsc --noEmit -p tsconfig.marketing.json",
     "test:watch": "vitest",
     "sync-api": "openapi-typescript ../backend/swagger-spec.json -o ./src/types/api-schema.d.ts",

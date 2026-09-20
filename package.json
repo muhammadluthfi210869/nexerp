@@ -15,7 +15,7 @@
     "prebuild": "npm run sync:types",
     "verify:p07:contracts": "node scripts/ssot/p07_verify.js",
     "verify:p07:clean-db": "node scripts/ssot/p07_clean_db.js",
-    "verify:p07": "npm run verify:p07:contracts && npm --prefix backend run test:p07 && npm run verify:p07:clean-db"
+    "verify:p07": "npm run verify:p07:contracts && npm --prefix backend run test:p07 && npm --prefix frontend run test:p07 && npm run verify:p07:clean-db"
   },
   "keywords": [],
   "author": "",

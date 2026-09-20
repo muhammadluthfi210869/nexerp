@@ -179,52 +179,96 @@ export class LeadCaptureService {
     const normalizedPhone = this.normalizePhone(phone);
     const windowMs =
       Number(process.env.ORPHAN_DEDUP_WINDOW_MS) || 7 * 24 * 60 * 60 * 1000;
+    // Advisory-lock key scoped to this module so other callers cannot
+    // accidentally share the same lock space. Same phone => same key.
+    const lockKey = `nex_p07_phone:${normalizedPhone}`;
 
-    const existing = await this.prisma.leadCapture.findFirst({
-      where: {
-        phone: normalizedPhone,
-        status: { notIn: ['CONVERTED', 'DISQUALIFIED'] as LeadStatus[] },
-        workflowStatus: {
-          notIn: ['WON_DEAL', 'LOST', 'ABORTED'] as WorkflowStatus[],
-        },
-        createdAt: { gte: new Date(Date.now() - windowMs) },
+    // P07-SF2: serialize concurrent calls per phone via a transaction-scoped
+    // advisory lock. Without this, two concurrent webhooks for the same
+    // normalized phone both see "no existing lead" and create two rows.
+    // `pg_advisory_xact_lock(bigint)` is released on commit/rollback.
+    return this.prisma.$transaction(
+      async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+
+        const existing = await tx.leadCapture.findFirst({
+          where: {
+            phone: normalizedPhone,
+            status: { notIn: ['CONVERTED', 'DISQUALIFIED'] as LeadStatus[] },
+            workflowStatus: {
+              notIn: ['WON_DEAL', 'LOST', 'ABORTED'] as WorkflowStatus[],
+            },
+            createdAt: { gte: new Date(Date.now() - windowMs) },
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        if (existing) {
+          this.logger.log(
+            `🔄 Dedup: ${normalizedPhone} → update lead ${existing.trackingCode}`,
+          );
+          const updated = await tx.leadCapture.update({
+            where: { id: existing.id },
+            data: {
+              phone: normalizedPhone,
+              waMessage: text,
+              status: 'WA_CONTACTED' as LeadStatus,
+              contactedAt: new Date(),
+            },
+          });
+          // Inline the message append so it lives in the same transaction.
+          // Reuse the existing msgId-dedup rule from `appendLeadMessage`.
+          if (msgId) {
+            const dup = await tx.leadMessage.findUnique({ where: { msgId } });
+            if (dup) return updated;
+          }
+          await tx.leadMessage.create({
+            data: {
+              leadId: updated.id,
+              direction: 'INBOUND',
+              phone: normalizedPhone,
+              waName: waName || null,
+              body: text,
+              msgId: msgId || null,
+            },
+          });
+          return updated;
+        }
+
+        this.logger.log(`✨ Orphan baru: ${normalizedPhone}`);
+        const trackingCode = this.generateTrackingCode();
+        const created = await tx.leadCapture.create({
+          data: {
+            trackingCode,
+            status: 'WA_CONTACTED' as LeadStatus,
+            workflowStatus: 'NEW_LEAD' as WorkflowStatus,
+            phone: normalizedPhone,
+            waProfileName: waName,
+            waMessage: text,
+            contactedAt: new Date(),
+            intent: 'WhatsApp Direct',
+            pageUrl: 'wa-direct',
+            kommoFirstResponseSec: 0,
+          },
+        });
+        if (msgId) {
+          const dup = await tx.leadMessage.findUnique({ where: { msgId } });
+          if (dup) return created;
+        }
+        await tx.leadMessage.create({
+          data: {
+            leadId: created.id,
+            direction: 'INBOUND',
+            phone: normalizedPhone,
+            waName: waName || null,
+            body: text,
+            msgId: msgId || null,
+          },
+        });
+        return created;
       },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    if (existing) {
-      this.logger.log(
-        `🔄 Dedup: ${normalizedPhone} → update lead ${existing.trackingCode}`,
-      );
-      const updated = await this.prisma.leadCapture.update({
-        where: { id: existing.id },
-        data: {
-          phone: normalizedPhone,
-          waMessage: text,
-          status: 'WA_CONTACTED' as LeadStatus,
-          contactedAt: new Date(),
-        },
-      });
-      await this.appendLeadMessage(updated.id, {
-        phone: normalizedPhone,
-        waName,
-        body: text,
-        msgId,
-      });
-      return updated;
-    }
-
-    this.logger.log(`✨ Orphan baru: ${normalizedPhone}`);
-    const lead = await this.track({
-      intent: 'WhatsApp Direct',
-      pageUrl: 'wa-direct',
-    });
-    return this.updateFromWhatsApp(lead.trackingCode, {
-      phone: normalizedPhone,
-      waName,
-      waMessage: text,
-      msgId,
-    });
+      { timeout: 10000 },
+    );
   }
 
   // ──────────────────────────────────────────────
