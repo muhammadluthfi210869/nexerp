@@ -2,7 +2,7 @@
 
 > GENERATED — DO NOT EDIT DIRECTLY. Run `node scripts/ssot/validate_ssot.js`.
 
-Generated: 2026-09-20T14:46:58.984Z
+Generated: 2026-09-20T15:13:42.476Z
 
 ## Result
 
@@ -35,7 +35,7 @@ Generated: 2026-09-20T14:46:58.984Z
 ## Generated counts
 
 - prisma_models: 100
-- api_operations: 396
+- api_operations: 407
 - roles: 44
 - permissions: 149
 - screens: 184
@@ -45,7 +45,7 @@ Generated: 2026-09-20T14:46:58.984Z
 - workflows: 38
 - integration_events: 88
 - requirements: 42
-- trace_tests: 251
+- trace_tests: 255
 
 ## Exact failed gates
 

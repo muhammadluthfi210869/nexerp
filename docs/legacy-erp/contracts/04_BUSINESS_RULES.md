@@ -1761,30 +1761,40 @@ NEVER auto-set payment_verified_at implicitly on any other action
 **Konteks**: Entity `Formulation` (live: `Formula`), `FormulaPhase`, `FormulaItem`.
 **Logika**:
 ```
-IF abs(sum(item.percentage) - 100) > 0.001 THEN reject SAVE
+IF abs(sum(item.percentage) - 100) > 0.001 THEN reject SAVE   # COMPOSITION_TOTAL_INVALID
 gram(item) = round(percentage / 100 * targetYieldGram, 3)
-hpp = sum(gram(item) * item.unitCostSnapshot) / batch_yield
+hpp       = sum(percentage * costSnapshot) / 100
 SAME input MUST produce SAME gram and SAME hpp on every run
 ```
+Satu implementasi dipakai bersama oleh jalur create dan jalur update — `gramFor()`,
+`costPerGramFor()`, `compositionTotal()` di `formulas.service.ts` — supaya kedua jalur
+tidak bisa menyimpang satu sama lain.
 **Pesan Error**: `Total komposisi harus 100%.` / `COMPOSITION_TOTAL_INVALID`
-**Sumber Spec**: REQUIREMENT Poin 11; `raw/r&d.md`; `formulas.service.ts:48-63`
+**Sumber Spec**: REQUIREMENT Poin 11; `raw/r&d.md`; `formulas.service.ts` (`gramFor`, `costPerGramFor`, `compositionTotal`)
 **Siapa Terlibat**: RnD Chemist, RnD Manager
-**Test Case**: Komposisi 99.5% ditolak; komposisi 100% menghasilkan gram dan HPP identik pada dua eksekusi berturut-turut.
+**Test Case**: Komposisi 99.5% dan 100.001% ditolak; komposisi 100% menghasilkan gram dan HPP identik pada dua eksekusi berturut-turut.
 
 ### BUS-RULE-109 — Approved and Locked Revision Immutability
-**Deskripsi**: Formula yang sudah `APPROVED` atau `LOCKED` menolak setiap perubahan. Perubahan wajib lewat revisi baru, bukan penulisan ulang.
-**Konteks**: Entity `Formulation.status` ∈ {APPROVED, LOCKED}, `FormulaRevision`.
+**Deskripsi**: Formula yang sudah disetujui atau terkunci menolak setiap perubahan. Perubahan wajib lewat revisi baru, bukan penulisan ulang.
+**Konteks**: Entity `Formulation.status` (live `FormulaStatus`), `FormulaRevision`.
 **Logika**:
 ```
-IF formulation.status IN ('APPROVED','LOCKED','PRODUCTION_LOCKED','SAMPLE_LOCKED')
-   THEN reject UPDATE | DELETE of phases, items, targetYieldGram
-ALLOWED only: createRevision (new row, version++)
-IF formulation.status == 'LOCKED' THEN reject createRevision without authorized unlock
+IMMUTABLE = ('SAMPLE_LOCKED','PRODUCTION_LOCKED','SUPERSEDED')   # status terkunci + riwayat
+IF formulation.status IN IMMUTABLE
+   THEN reject UPDATE | DELETE of phases, items, targetYieldGram   # FORMULA_LOCKED
+ALLOWED only: createRevision (baris baru, version++)
 ```
+`SAMPLE_LOCKED` di-set `approveFormula()`, `PRODUCTION_LOCKED` di-set `lockProduction()`
+setelah gate BPOM. `SUPERSEDED` ikut masuk himpunan karena revisi yang sudah digantikan
+adalah riwayat beku — mengubahnya berarti menulis ulang sejarah.
+
+Revisi dari induk yang terkunci **diizinkan**, justru karena revisi tidak menulis ulang
+induknya (lihat BUS-RULE-114); itu satu-satunya jalur resmi untuk mengubah formula yang
+sudah terkunci. Karena itu tidak ada klausa "tolak createRevision tanpa unlock".
 **Pesan Error**: `Formula terkunci tidak dapat diubah.` / `FORMULA_LOCKED`
-**Sumber Spec**: `03_WORKFLOW_STATE_MACHINE.yaml` rnd_pipeline Formulation; `formulas.service.ts:376`
+**Sumber Spec**: `03_WORKFLOW_STATE_MACHINE.yaml` rnd_pipeline Formulation; `02_DATA_OWNERSHIP.yaml` (delegation `Formulation.update`, condition `status in {DRAFT, SUBMITTED}`); `formulas.service.ts` (`assertMutable`)
 **Siapa Terlibat**: RnD Chemist, RnD Manager, Head Ops
-**Test Case**: Mutasi item pada formula `LOCKED` ditolak `FORMULA_LOCKED`; nomor versi induk tidak berubah.
+**Test Case**: Mutasi item pada formula `SAMPLE_LOCKED` dan `PRODUCTION_LOCKED` ditolak `FORMULA_LOCKED`; baris item dan nomor versi induk tidak berubah.
 
 ### BUS-RULE-110 — Artwork Approval Binds to an Exact Version
 **Deskripsi**: Setiap keputusan approval desain wajib menunjuk versi artwork yang disetujui. Fakta ini disimpan, tidak disimpulkan dari urutan waktu.
@@ -1862,19 +1872,21 @@ Same idempotency key twice MUST produce exactly one business effect.
 
 ### BUS-RULE-114 — Adjustment Lineage Never Rewrites the Parent
 **Deskripsi**: Penyesuaian atau rework membuat garis keturunan sendiri dan tidak pernah menulis ulang revisi yang sudah disetujui atau terkunci.
-**Konteks**: Entity `FormulationAdjustment`, `FormulaRevision`.
+**Konteks**: Konsep kanonik `FormulationAdjustment` + `FormulaRevision`; kendaraan live-nya adalah `Formula.version` + `createRevision()` (tidak ada tabel adjustment terpisah di skema live — DEC-2026-09-20-062).
 **Logika**:
 ```
-ON adjustment.create:
-   adjustment.formulationId = parent.id
-   parent.revisionNumber MUST remain unchanged
-   IF parent.status IN ('APPROVED','LOCKED') THEN adjustment.requiresApproval = true
+ON adjustment.create (live: createRevision):
+   copy parent.targetYieldGram, phases, items, qcparameter into a NEW row
+   new.version = max(version of sampleRequest) + 1
+   parent.version, parent.targetYieldGram, parent rows MUST remain unchanged
+   parent.status := SUPERSEDED          # 03: old_formulation.marked_superseded
+Rework of a LOCKED parent is ALLOWED and is the only sanctioned change path.
 Adjustment MUST NOT mutate any parent phase or item row.
 ```
 **Pesan Error**: `Penyesuaian tidak boleh mengubah revisi induk.` / `ADJUSTMENT_PARENT_IMMUTABLE`
-**Sumber Spec**: `03_WORKFLOW_STATE_MACHINE.yaml` rnd_pipeline FormulationAdjustment; `formulas.service.ts:240`
+**Sumber Spec**: `03_WORKFLOW_STATE_MACHINE.yaml` rnd_pipeline Formulation + FormulationAdjustment, `rnd_formulation_revisions`; `formulas.service.ts` (`createRevision`)
 **Siapa Terlibat**: RnD Chemist, RnD Manager
-**Test Case**: Membuat penyesuaian pada formula `APPROVED` tidak mengubah nomor revisi induk dan tidak mengubah baris item induk.
+**Test Case**: Membuat penyesuaian pada formula terkunci tidak mengubah nomor revisi induk, tidak mengubah satu baris item induk, dan meninggalkan baris induk tetap ada.
 
 ---
 

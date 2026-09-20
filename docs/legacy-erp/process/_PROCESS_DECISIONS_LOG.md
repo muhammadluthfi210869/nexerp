@@ -729,6 +729,50 @@ Plus `AGENTS.md` at root as **AI CLI entry point** with:
 **Spec doc affected**: `verification/TESTING_STRATEGY.md` (backlog), `verification/P08_FROZEN_ACCEPTANCE_CONTRACT.md` (tidak mengubah acceptance)
 **Status**: ✅ LOCKED
 
+### DEC-2026-09-20-062 — BUS-RULE-109/114 Diselaraskan dengan Bentuk Live; Status Immutable Bertambah SUPERSEDED
+
+**Topik**: Himpunan status yang menolak mutasi formula
+**Keputusan**: Tiga hal diselaraskan antara aturan bisnis, state machine, dan kode berjalan:
+1. `BUS-RULE-109` memakai nama status live (`SAMPLE_LOCKED`, `PRODUCTION_LOCKED`) dan **menambahkan `SUPERSEDED`** ke himpunan immutable. Revisi yang sudah digantikan adalah riwayat beku; mengubahnya berarti menulis ulang sejarah.
+2. Klausa lama `IF status == 'LOCKED' THEN reject createRevision without authorized unlock` **dihapus**. Klausa itu bertabrakan dengan `03_WORKFLOW_STATE_MACHINE.yaml` (`APPROVED → REVISED`, `parent.status in [APPROVED, LOCKED]`) dan dengan acceptance `adjustment_lineage_preserved`, yang justru mengharuskan rework membuat lineage sendiri. Revisi dari induk terkunci **diizinkan** justru karena tidak menulis ulang induknya — itu satu-satunya jalur resmi mengubah formula terkunci.
+3. `BUS-RULE-114` menyebut kendaraan live-nya: tidak ada tabel `FormulationAdjustment` di skema live; lineage dijalankan `Formula.version` + `createRevision()`.
+**Rationale**: Aturan yang menyebut status yang tidak ada (`APPROVED`, `LOCKED`) tidak bisa diuji dan tidak bisa ditegakkan. Aturan yang saling bertabrakan membuat pelaksana memilih salah satunya diam-diam. Kontrak harus menyebut apa yang benar-benar dijalankan sistem.
+**Implikasi ke code**: `formulas.service.ts` — satu guard bersama `assertMutable()` dipakai jalur mutasi; `IMMUTABLE_STATUSES = [SAMPLE_LOCKED, PRODUCTION_LOCKED, SUPERSEDED]`.
+**Spec doc affected**: `contracts/04_BUSINESS_RULES.md` (BUS-RULE-108/109/114), `contracts/10_TRACEABILITY_MATRIX.yaml` (TEST-269..272)
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-063 — Aktor Lock Diambil dari JWT, Bukan dari Body Request
+
+**Topik**: Keaslian jejak audit pada approval formula
+**Keputusan**: `POST /rnd/formulas/:id/approve` dan `PATCH /rnd/formulas/:id/lock-production` mengambil `userId` dari `req.user.id` (JWT terverifikasi), **bukan** lagi dari `@Body('userId')`. `updateFormulaV4` dan `createRevision` ikut menerima aktor dari JWT untuk baris auditnya.
+**Rationale**: Sebelumnya siapa pun yang memegang role `RND`/`HEAD_OPS` dapat menyebut nama pengguna lain di body dan menuliskan nama itu ke `Formula.lockedById` serta ke jejak audit. Jejak audit yang bisa dipalsukan oleh pemanggilnya tidak membuktikan apa pun, sehingga acceptance `audit_outbox_atomicity` dan `formulation_deterministic_and_immutable` ("approved revision") tidak punya dasar.
+**Implikasi ke code**: `formulas.controller.ts` — empat route memakai `@Req()`. Field `userId` di body tidak lagi dibaca; klien yang masih mengirimkannya tidak rusak, hanya diabaikan.
+**Spec doc affected**: `contracts/05_API_CONTRACT.yaml` (aktor dinyatakan berasal dari JWT)
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-064 — Read di Dalam Transaksi, Efek Lock Tepat Sekali, dan Event `.created` yang Tidak Dipancarkan
+
+**Topik**: Tiga cacat jalur formula yang ditemukan saat S3
+**Keputusan**:
+1. `getFormulaDetails()` dan `generateFormulaCode()` menerima `client` opsional. Sebelumnya keduanya membaca lewat `this.prisma` **dari dalam transaksi yang masih terbuka**, sehingga `PATCH /rnd/formulas/:id` membaca baris yang dikunci transaksinya sendiri. Sekarang pembacaan ikut transaksi.
+2. `approveFormula()` dan `lockProduction()` bersifat **no-op** bila formula sudah berada di status target: tidak ada penulisan, tidak ada baris audit, tidak ada event kedua. Ini yang membuat "tepat sekali" dapat dibuktikan, bukan sekadar diklaim.
+3. `rnd.formulation.created` **tidak dipancarkan** P08. Payload yang dideklarasikan `08_INTEGRATION_EVENT_CONTRACT.yaml` mewajibkan `goods_id`, dan tidak ada padanannya di model `Formula` live. Memancarkan event dengan `goods_id` karangan akan melanggar kontraknya sendiri. `rnd.formulation.locked` dipancarkan pada kedua jalur lock karena payload-nya (`formulation_id`, `locked_by`, `locked_at`) dapat dipenuhi seluruhnya.
+**Rationale**: (1) adalah jalan buntu transaksi yang nyata, bukan teori. (2) memisahkan "tepat sekali" dari kebetulan. (3) lebih baik mencatat celah daripada mengarang data agar event tampak lengkap.
+**Implikasi ke code**: `formulas.service.ts` — `getFormulaDetails(id, client?)`, `generateFormulaCode(client?)`, guard status di `approveFormula`/`lockProduction`, `outbox.enqueue(..., { requireExternalTransaction: true })` pada kedua jalur lock.
+**Spec doc affected**: `contracts/08_INTEGRATION_EVENT_CONTRACT.yaml` (celah `rnd.formulation.created` dicatat)
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-065 — Kontrak API Menyebut `/rnd/formulations*`, Sistem Melayani `/rnd/formulas*`
+
+**Topik**: Divergensi jalur API pada modul formula
+**Keputusan**: Divergensi **didaftarkan apa adanya, belum diganti nama**. `05_API_CONTRACT.yaml` mendeklarasikan `/rnd/formulations`, `/rnd/formulations/{id}`, `/rnd/formulations/{id}/lock`, `/rnd/formulations/{id}/adjustments`, `/rnd/formulations/{id}/clone`, `/rnd/formulations/{id}/push-bpom`. `FormulasController` melayani `/rnd/formulas`, `/rnd/formulas/{id}`, `/rnd/formulas/{id}/revision`, `/rnd/formulas/{id}/approve`, `/rnd/formulas/{id}/lock-production`. Radius dampak terukur: **~60 rujukan di tiga berkas** (`05`, `06_SCREEN_CONTRACT.json`, `10_TRACEABILITY_MATRIX.yaml`), dan validator SSOT meresolusi `data_source` layar terhadap `05`, sehingga penggantian nama menyentuh katalog layar sekaligus.
+**Yang sudah dikerjakan**: keluarga jalur nyata `/rnd/formulas*` (11 operasi) **didaftarkan** di `05_API_CONTRACT.yaml`, dan keluarga `/rnd/formulations*` lama ditandai `DEPRECATED` dengan catatan agar tidak dipakai untuk pekerjaan baru. Aturan `BUS-RULE-108/109/114` dan `REQ-041` di `10_TRACEABILITY_MATRIX.yaml` sudah menunjuk jalur nyata. Validator SSOT meresolusi rujukan API aturan/requirement terhadap `05`, sehingga tanpa pendaftaran ini gate `traceability_refs` merah.
+**Yang belum dikerjakan**: penggantian nama `/rnd/formulations*` → `/rnd/formulas*` dan penghapusan keluarga lama, karena menyentuh katalog layar. Itu pekerjaan tersendiri.
+**Rationale**: Ini pekerjaan rekonsiliasi otoritas API, bukan pekerjaan integritas formulasi, dan `P08_FROZEN_ACCEPTANCE_CONTRACT.md` tidak memintanya. Mengerjakan penggantian nama di dalam S3 berarti memperbesar diff ke wilayah yang bukan miliknya dan berisiko memerahkan gate layar. Mendaftarkan jalur nyata dan menandai yang fiktif sudah cukup untuk membuat kontrak tidak lagi menyesatkan, dengan diff kecil. Kelasnya sama dengan DEC-2026-09-20-060.
+**Implikasi ke code**: Tidak ada perubahan perilaku. `api_operations` naik 396 → 407.
+**Spec doc affected**: `contracts/05_API_CONTRACT.yaml` (keluarga nyata didaftarkan, keluarga lama ditandai deprecated), `contracts/10_TRACEABILITY_MATRIX.yaml`, `contracts/06_SCREEN_CONTRACT.json` (backlog penggantian nama)
+**Status**: ✅ LOCKED
+
 ---
 
 ## Pending Decisions (Open)

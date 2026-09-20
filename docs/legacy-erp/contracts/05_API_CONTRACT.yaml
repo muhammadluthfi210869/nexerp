@@ -4484,7 +4484,165 @@ paths:
                   meta: { $ref: '#/components/schemas/PaginationMeta' }
 
   # ============================================================
-  # R&D / FORMULATIONS (5 endpoints)
+  # R&D / FORMULAS — the paths the running system actually serves
+  # (`FormulasController`, @Controller('rnd/formulas')). BUS-RULE-108/109/114 and
+  # REQ-041 resolve against this family. DEC-2026-09-20-065 records why the
+  # `/rnd/formulations` family below is still present and flagged deprecated.
+  # ============================================================
+  /rnd/formulas:
+    get:
+      tags: [rnd]
+      summary: List formulas
+      operationId: listFormulaRows
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Formulas with sample, locker and lab-test summary }
+    post:
+      tags: [rnd]
+      summary: Create a formula for a sample request (composition must total 100%)
+      operationId: createFormulaRow
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sampleRequestId, items]
+              properties:
+                sampleRequestId: { type: string, format: uuid }
+                totalWeightGr: { type: number }
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      materialId: { type: string, format: uuid, nullable: true }
+                      dosagePercentage: { type: number }
+                      costSnapshot: { type: number }
+      responses:
+        '201': { description: Created with costPerGram and totalEstimateCost }
+        '400': { description: 'COMPOSITION_TOTAL_INVALID — composition does not total 100%' }
+
+  /rnd/formulas/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [rnd]
+      summary: Formula detail (phases, items, QC parameters, sample request)
+      operationId: getFormulaRow
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Formula detail }
+        '404': { description: Not found }
+    patch:
+      tags: [rnd]
+      summary: Replace composition, phases, items and QC parameters
+      operationId: updateFormulaComposition
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetYieldGram, phases]
+              properties:
+                targetYieldGram: { type: number }
+                phases: { type: array, items: { type: object } }
+                qcParameters: { type: object }
+      responses:
+        '200': { description: Updated formula detail }
+        '400': { description: 'COMPOSITION_TOTAL_INVALID or FORMULA_LOCKED' }
+        '404': { description: Not found }
+
+  /rnd/formulas/{id}/revision:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [rnd]
+      summary: Create a new revision by copying the parent (parent is never rewritten)
+      operationId: createFormulaRevision
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201': { description: 'New DRAFT revision; parent version unchanged, parent marked SUPERSEDED' }
+        '404': { description: Source formula not found }
+
+  /rnd/formulas/{id}/request-approval:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [rnd]
+      summary: Submit a draft formula for approval
+      operationId: requestFormulaApproval
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: 'Status WAITING_APPROVAL' }
+
+  /rnd/formulas/{id}/approve:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [rnd]
+      summary: Approve and lock the formula for sample production (SAMPLE_LOCKED)
+      description: The lock actor is taken from the verified JWT (DEC-2026-09-20-063), never from the request body.
+      operationId: approveFormulaRow
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: 'Status SAMPLE_LOCKED, lockedById set, audited, rnd.formulation.locked enqueued' }
+        '404': { description: Not found }
+
+  /rnd/formulas/{id}/lock-production:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    patch:
+      tags: [rnd]
+      summary: Lock for production after the SCM-material and BPOM regulatory gates pass
+      description: The lock actor is taken from the verified JWT (DEC-2026-09-20-063).
+      operationId: lockFormulaProduction
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: 'Status PRODUCTION_LOCKED, audited, rnd.formulation.locked enqueued' }
+        '400': { description: 'Items without linked SCM materials' }
+        '403': { description: 'REGULATORY REJECT — prohibited ingredient or dangerous concentration' }
+        '404': { description: Not found }
+
+  /rnd/formulas/{id}/lab-tests:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [rnd]
+      summary: List lab test results for a formula
+      operationId: listFormulaLabTests
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Lab test results, newest first }
+    post:
+      tags: [rnd]
+      summary: Record a lab test result
+      operationId: recordFormulaLabTest
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201': { description: Created }
+
+  /rnd/formulas/{id}/inci:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [rnd]
+      summary: Generate the INCI ingredient declaration for a formula
+      operationId: getFormulaInci
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: INCI declaration }
+
+  # ============================================================
+  # R&D / FORMULATIONS (aspirational family — NOT served by any controller)
+  # DEPRECATED, see DEC-2026-09-20-065. Kept only because screens and traceability
+  # rows still cite these keys; the rename to /rnd/formulas is a separate change.
+  # Do NOT use these paths for new work — they describe endpoints that do not exist.
   # ============================================================
   /rnd/formulations:
     get:

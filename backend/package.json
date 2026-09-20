@@ -31,6 +31,7 @@
     "test:p07:http-closure": "node --max-old-space-size=8192 ./node_modules/jest/bin/jest.js --config ./test/jest-e2e.json --runInBand --testPathPatterns p07-http-closure",
     "test:p07": "node --max-old-space-size=8192 ./node_modules/jest/bin/jest.js --config ./test/jest-unit.json --runInBand --testPathPatterns p07-",
     "test:p08:sample-payment": "node --max-old-space-size=8192 ./node_modules/jest/bin/jest.js --config ./test/jest-unit.json --runInBand --testPathPatterns p08-sf2",
+    "test:p08:formulation": "node --max-old-space-size=8192 ./node_modules/jest/bin/jest.js --config ./test/jest-unit.json --runInBand --testPathPatterns p08-sf3",
     "test:p08": "node --max-old-space-size=8192 ./node_modules/jest/bin/jest.js --config ./test/jest-unit.json --runInBand --testPathPatterns p08-",
     "cleanup:uploads": "ts-node scripts/cleanup-orphan-uploads.ts",
     "cleanup:uploads:apply": "ts-node scripts/cleanup-orphan-uploads.ts --apply",

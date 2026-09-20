@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Param,
+  Req,
   UseGuards,
   Patch,
   Query,
@@ -44,14 +45,15 @@ export class FormulasController {
   update(
     @Param('id') id: string,
     @Body() updateFormulaDto: UpdateFormulaV4Dto,
+    @Req() req: any,
   ) {
-    return this.formulasService.updateFormulaV4(id, updateFormulaDto);
+    return this.formulasService.updateFormulaV4(id, updateFormulaDto, req?.user?.id);
   }
 
   @Post(':id/revision')
   @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
-  createRevision(@Param('id') id: string) {
-    return this.formulasService.createRevision(id);
+  createRevision(@Param('id') id: string, @Req() req: any) {
+    return this.formulasService.createRevision(id, req?.user?.id);
   }
 
   @Post(':id/request-approval')
@@ -60,19 +62,18 @@ export class FormulasController {
     return this.formulasService.requestApproval(id);
   }
 
+  // The lock actor comes from the verified JWT, never from the request body: the
+  // body could name someone else and forge the audit trail.
   @Post(':id/approve')
   @Roles(UserRole.SUPER_ADMIN, UserRole.HEAD_OPS) // Only Head Ops or Admin can approve
-  approve(@Param('id') id: string, @Body('userId') userId: string) {
-    return this.formulasService.approveFormula(id, userId);
+  approve(@Param('id') id: string, @Req() req: any) {
+    return this.formulasService.approveFormula(id, req?.user?.id);
   }
 
   @Patch(':id/lock-production')
   @Roles(UserRole.SUPER_ADMIN, UserRole.RND, UserRole.HEAD_OPS)
-  async lockProduction(
-    @Param('id') id: string,
-    @Body('userId') userId: string,
-  ) {
-    return this.formulasService.lockProduction(id, userId);
+  async lockProduction(@Param('id') id: string, @Req() req: any) {
+    return this.formulasService.lockProduction(id, req?.user?.id);
   }
 
   @Post(':id/lab-tests')
