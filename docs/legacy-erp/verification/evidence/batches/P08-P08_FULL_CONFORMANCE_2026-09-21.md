@@ -45,12 +45,16 @@ source or placeholder URL`, `… composes its primitives from @/components/dna o
 - After the fix: **18 passed / 18**, no other case changed.
 
 **Backend proof through real HTTP** (the prompt's optional-but-warranted assertion): a 6th case in
-`backend/test/p08/p08-s3-release.e2e-spec.ts` — a lead with a pipeline and a design task but no
-version gets `artworkUrl: null` / `artworkVersion: null`; after a real multipart upload the same
-task carries that version's `artworkUrl` / `mockupUrl` / `artworkVersion: 1`, with no `placehold`
+`backend/test/p08/p08-s3-release.e2e-spec.ts` — a lead with a pipeline and no design version at all
+gets `artworkUrl: null` / `artworkVersion: null`; after a real multipart upload the same task
+carries that version's `artworkUrl` / `mockupUrl` / `artworkVersion: 1`, with no `placehold`
 anywhere in the payload; and `POST /legality/pipeline/:id/artwork-review` returns the same URL. Its
-fixtures are removed in the suite's `afterAll` (row added for `artwork_reviews` /
-`regulatory_pipelines`). `test:p08:creative-legal` → **7/7** (was 6/6).
+fixtures are removed in the suite's `afterAll` (rows added for `artwork_reviews` /
+`regulatory_pipelines`). `test:p08:creative-legal` → **7/7** (was 6/6). The case uses its own lead:
+the shared fixture lead already carries a client-approved design, and a first draft of the case
+(asserting the `null` state on that lead) failed with the finalized task's URL — the resolver was
+reading the **oldest** design task instead of the newest for a non-finalized lead, which that
+failure is what caught and fixed.
 
 **Type error fixed by measurement, not inspection.** `p08-s3-release.e2e-spec.ts:700` destructured
 `INestApplication` out of `await import('@nestjs/common')` — a type-only export, so it is absent
