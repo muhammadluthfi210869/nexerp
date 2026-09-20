@@ -16,9 +16,9 @@
           "executed": true,
           "synthetic": false,
           "skipped": false,
-          "duration_ms": 9,
+          "duration_ms": 6,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "analyzeCanonicalMasterInventory",
@@ -66,9 +66,9 @@
           "executed": true,
           "synthetic": false,
           "skipped": false,
-          "duration_ms": 88,
+          "duration_ms": 41,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "analyzeSchemaAliases",
@@ -114,7 +114,7 @@
           "skipped": false,
           "duration_ms": 0,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "verify warehouse_coa_formulation_ownership",
@@ -125,7 +125,7 @@
         }
       ],
       "target_count": 24,
-      "duration_ms": 99
+      "duration_ms": 48
     },
     {
       "id": "P06-SF2-identity-config",
@@ -143,9 +143,9 @@
           "executed": true,
           "synthetic": false,
           "skipped": false,
-          "duration_ms": 79,
+          "duration_ms": 49,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "verify system_configs table rows",
@@ -180,9 +180,9 @@
           "executed": true,
           "synthetic": false,
           "skipped": false,
-          "duration_ms": 457,
+          "duration_ms": 390,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "execute PolicyService.decide for SuperAdmin",
@@ -216,9 +216,9 @@
           "executed": true,
           "synthetic": false,
           "skipped": false,
-          "duration_ms": 180,
+          "duration_ms": 173,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "verify audit_logs table presence and queryability",
@@ -242,7 +242,7 @@
         }
       ],
       "target_count": 15,
-      "duration_ms": 717
+      "duration_ms": 612
     },
     {
       "id": "P06-SF3-catalog-masters",
@@ -264,7 +264,7 @@
           "skipped": false,
           "duration_ms": 9,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "verify active master_units rows in DB",
@@ -299,9 +299,9 @@
           "executed": true,
           "synthetic": false,
           "skipped": false,
-          "duration_ms": 2,
+          "duration_ms": 3,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "verify supplier controller strongly typed DTOs",
@@ -326,7 +326,7 @@
           "skipped": false,
           "duration_ms": 2,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "analyzeDirectPrismaInControllers",
@@ -344,7 +344,7 @@
           "skipped": false,
           "duration_ms": 1,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "analyzeCodeGeneration",
@@ -365,9 +365,9 @@
           "executed": true,
           "synthetic": false,
           "skipped": false,
-          "duration_ms": 1,
+          "duration_ms": 2,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "verify active master units count in DB",
@@ -401,9 +401,9 @@
           "executed": true,
           "synthetic": false,
           "skipped": false,
-          "duration_ms": 107,
+          "duration_ms": 64,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "verify ImportExportService file present",
@@ -432,9 +432,9 @@
           "executed": true,
           "synthetic": false,
           "skipped": false,
-          "duration_ms": 2,
+          "duration_ms": 1,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "analyzePaginationAndFilters",
@@ -447,7 +447,7 @@
         }
       ],
       "target_count": 10,
-      "duration_ms": 110
+      "duration_ms": 66
     },
     {
       "id": "P06-SF5-frontend-ui",
@@ -463,9 +463,9 @@
           "executed": true,
           "synthetic": false,
           "skipped": false,
-          "duration_ms": 11,
+          "duration_ms": 9,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
             {
               "command": "analyzeProductionMockFallbacks",
@@ -483,7 +483,7 @@
         }
       ],
       "target_count": 15,
-      "duration_ms": 11
+      "duration_ms": 9
     },
     {
       "id": "P06-SF6-integration",
@@ -499,18 +499,10 @@
           "executed": true,
           "synthetic": false,
           "skipped": false,
-          "duration_ms": 42920,
+          "duration_ms": 21054,
           "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-          "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
+          "candidate_sha": "6a860d85f321201623eccffec63a68205c7894d1",
           "commands": [
-            {
-              "command": "node scripts/ssot/validate_ssot.js",
-              "exit_code": 0
-            },
-            {
-              "command": "node scripts/ssot/audit_lifecycle_reconciliation.js",
-              "exit_code": 0
-            },
             {
               "command": "npx tsc --noEmit -p backend/tsconfig.build.json",
               "exit_code": 0
@@ -520,20 +512,8 @@
               "exit_code": 0
             }
           ],
-          "target_count": 4,
+          "target_count": 2,
           "regressions_measured": [
-            {
-              "label": "p01_ssot_validation",
-              "exit_code": 0,
-              "target_count": null,
-              "passed": null
-            },
-            {
-              "label": "p02_lifecycle_reconciliation",
-              "exit_code": 0,
-              "target_count": null,
-              "passed": null
-            },
             {
               "label": "backend_tsc",
               "exit_code": 0,
@@ -553,8 +533,8 @@
           "changed_duplication_percent": 0
         }
       ],
-      "target_count": 4,
-      "duration_ms": 42921
+      "target_count": 2,
+      "duration_ms": 21056
     }
   ]
 }

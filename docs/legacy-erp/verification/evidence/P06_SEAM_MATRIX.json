@@ -24,7 +24,7 @@
           "id": "p05_scope_enforce_tenant_boundary",
           "status": "PASS",
           "target_count": 4,
-          "duration_ms": 5
+          "duration_ms": 4
         }
       ],
       "failure_results": [
@@ -41,7 +41,7 @@
           "duration_ms": 0
         }
       ],
-      "duration_ms": 7
+      "duration_ms": 5
     },
     {
       "id": "P06-SEAM-IDENTITY-MASTER",
@@ -61,13 +61,13 @@
           "id": "identity_scoped_master_list",
           "status": "PASS",
           "target_count": 1,
-          "duration_ms": 19
+          "duration_ms": 32
         },
         {
           "id": "identity_scoped_master_export",
           "status": "PASS",
           "target_count": 4,
-          "duration_ms": 5
+          "duration_ms": 12
         }
       ],
       "failure_results": [
@@ -84,7 +84,7 @@
           "duration_ms": 0
         }
       ],
-      "duration_ms": 25
+      "duration_ms": 45
     },
     {
       "id": "P06-SEAM-CATALOG-REFERENCES",
@@ -103,7 +103,7 @@
           "id": "valid_category_unit_warehouse_reference",
           "status": "PASS",
           "target_count": 4,
-          "duration_ms": 166
+          "duration_ms": 102
         }
       ],
       "failure_results": [
@@ -111,16 +111,16 @@
           "id": "orphan_category_reference_rejected",
           "status": "PASS",
           "target_count": 1,
-          "duration_ms": 13
+          "duration_ms": 15
         },
         {
           "id": "inactive_unit_reference_rejected",
           "status": "PASS",
           "target_count": 1,
-          "duration_ms": 10
+          "duration_ms": 5
         }
       ],
-      "duration_ms": 189
+      "duration_ms": 122
     },
     {
       "id": "P06-SEAM-IMPORT-CRUD",
@@ -140,13 +140,13 @@
           "id": "import_valid_batch_commits_via_crud_service",
           "status": "PASS",
           "target_count": 2,
-          "duration_ms": 48
+          "duration_ms": 18
         },
         {
           "id": "export_matches_filtered_dataset",
           "status": "PASS",
           "target_count": 6,
-          "duration_ms": 5
+          "duration_ms": 2
         }
       ],
       "failure_results": [
@@ -154,16 +154,16 @@
           "id": "import_invalid_batch_rolls_back",
           "status": "PASS",
           "target_count": 1,
-          "duration_ms": 5
+          "duration_ms": 2
         },
         {
           "id": "export_neutralizes_formula_injection",
           "status": "PASS",
           "target_count": 6,
-          "duration_ms": 1
+          "duration_ms": 0
         }
       ],
-      "duration_ms": 61
+      "duration_ms": 22
     },
     {
       "id": "P06-SEAM-API-UI",
@@ -183,7 +183,7 @@
           "id": "ui_renders_live_master_data",
           "status": "PASS",
           "target_count": 1,
-          "duration_ms": 10
+          "duration_ms": 4
         },
         {
           "id": "ui_crud_actions_call_live_api",
@@ -197,16 +197,16 @@
           "id": "ui_api_error_renders_retry_state_not_mock",
           "status": "PASS",
           "target_count": 1,
-          "duration_ms": 0
+          "duration_ms": 1
         },
         {
           "id": "ui_dna_primitive_boundary_intact",
           "status": "PASS",
           "target_count": 1,
-          "duration_ms": 8
+          "duration_ms": 2
         }
       ],
-      "duration_ms": 20
+      "duration_ms": 7
     },
     {
       "id": "P06-SEAM-MUTATION-AUDIT",
@@ -224,7 +224,7 @@
           "id": "master_mutation_and_audit_commit_together",
           "status": "PASS",
           "target_count": 2,
-          "duration_ms": 15
+          "duration_ms": 10
         }
       ],
       "failure_results": [
@@ -232,10 +232,10 @@
           "id": "audit_failure_aborts_master_mutation",
           "status": "PASS",
           "target_count": 1,
-          "duration_ms": 4
+          "duration_ms": 3
         }
       ],
-      "duration_ms": 20
+      "duration_ms": 14
     }
   ]
 }
