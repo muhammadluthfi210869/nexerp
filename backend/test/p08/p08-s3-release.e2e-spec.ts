@@ -4,6 +4,7 @@ import * as jwt from 'jsonwebtoken';
 import * as path from 'path';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
+import type { INestApplication } from '@nestjs/common';
 import { ApprovalStatus, DesignState, Division, FormulaStatus, LegalStatus } from '@prisma/client';
 
 import { bootP08App, p08Code, type P08App } from './p08-http-harness';
@@ -208,6 +209,10 @@ describe('P08-S3 lineage, design bound and permit expiry (real HTTP, real Postgr
       await prisma.designTask.deleteMany({ where: { id: { in: taskIds } } });
       // a client approval auto-generates the design PO; it belongs to the fixture lead
       await prisma.purchaseOrder.deleteMany({ where: { lead: leadFilter } });
+      await prisma.artworkReview.deleteMany({
+        where: { pipeline: { lead: leadFilter } },
+      });
+      await prisma.regulatoryPipeline.deleteMany({ where: { lead: leadFilter } });
       await prisma.formulaItem.deleteMany({ where: { phase: { formulaId: { in: formulaIds } } } });
       await prisma.formulaPhase.deleteMany({ where: { formulaId: { in: formulaIds } } });
       await prisma.qCParameter.deleteMany({ where: { formulaId: { in: formulaIds } } });
@@ -677,6 +682,74 @@ describe('P08-S3 lineage, design bound and permit expiry (real HTTP, real Postgr
     expect(halalRow.expiry).toBe('N/A');
     expect(halalRow.status).toBe('ACTIVE');
   }, 120000);
+
+  // ── 6 ─────────────────────────────────────────────────────────────────────
+  it('6. the compliance inbox carries the governed artwork of the version under review, never a placeholder', async () => {
+    // Its own lead: the shared fixture lead already carries a client-approved
+    // design, which is the governed artwork for that lead and would mask this.
+    const inboxLead = await prisma.salesLead.create({
+      data: {
+        clientName: `${TAG} Corp`,
+        contactInfo: `0815${RUN_ID}`,
+        source: 'GOOGLE',
+        productInterest: 'P08 S3 inbox artwork',
+        picId: lead.picId,
+      },
+    });
+
+    const pipeline = await prisma.regulatoryPipeline.create({
+      data: {
+        leadId: inboxLead.id,
+        type: 'BPOM',
+        currentStage: 'DRAFT' as any,
+        legalPicId: director.id,
+      },
+    });
+
+    const inbox = async () => {
+      const res = await request(server())
+        .get('/legality/inbox/tasks')
+        .set(auth(tCompliance));
+      expect(res.status).toBe(200);
+      return res.body.find((t: any) => t.id === `artwork-${pipeline.id}`);
+    };
+
+    const created = await request(server())
+      .post('/creative/task')
+      .set(auth(tDirector))
+      .send({ leadId: inboxLead.id, brief: `${TAG} inbox artwork` });
+    expect(created.status).toBe(201);
+    taskIds.push(created.body.id);
+
+    // no version yet — the payload says so instead of naming a fabricated image
+    const beforeArtwork = await inbox();
+    expect(beforeArtwork).toBeDefined();
+    expect(beforeArtwork.type).toBe('ARTWORK_REVIEW');
+    expect(beforeArtwork.artworkUrl).toBeNull();
+    expect(beforeArtwork.artworkVersion).toBeNull();
+    expect(JSON.stringify(beforeArtwork)).not.toMatch(/placehold/i);
+
+    const version = trackUpload(
+      (await uploadVersion(tDirector, created.body.id, 'inbox-v1')).body,
+    );
+    expect(version.artworkUrl).toBeTruthy();
+
+    // the artwork of the exact version under review, not whatever was written last
+    const afterArtwork = await inbox();
+    expect(afterArtwork.artworkUrl).toBe(version.artworkUrl);
+    expect(afterArtwork.artworkPreviewUrl).toBe(version.mockupUrl);
+    expect(afterArtwork.artworkVersion).toBe(1);
+    expect(JSON.stringify(afterArtwork)).not.toMatch(/placehold/i);
+
+    // and the review records the artwork it was made ON, not a stand-in URL
+    const review = await request(server())
+      .post(`/legality/pipeline/${pipeline.id}/artwork-review`)
+      .set(auth(tCompliance))
+      .send({ isApproved: true, notes: `${TAG} artwork approved` });
+    expect([200, 201]).toContain(review.status);
+    expect(review.body.artworkUrl).toBe(version.artworkUrl);
+    expect(review.body.artworkUrl).not.toMatch(/placehold/i);
+  }, 120000);
 });
 
 /**
@@ -697,7 +770,7 @@ describe('P08-S3 rollback: a provider failure between the write and the commit',
 
   beforeAll(async () => {
     const { Test } = await import('@nestjs/testing');
-    const { ValidationPipe, INestApplication } = await import('@nestjs/common');
+    const { ValidationPipe } = await import('@nestjs/common');
     const { AppModule } = await import('../../src/app.module');
     const { PrismaService } = await import('../../src/prisma/prisma/prisma.service');
     const { PlatformConfig } = await import('../../src/platform/config/config.module');
@@ -724,7 +797,7 @@ describe('P08-S3 rollback: a provider failure between the write and the commit',
       .compile();
 
     app = fixture.createNestApplication();
-    (app as InstanceType<typeof INestApplication>).useGlobalPipes(
+    (app as INestApplication).useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
         transform: true,

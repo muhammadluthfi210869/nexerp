@@ -16,7 +16,6 @@ import {
   CreditCard,
   ChevronRight,
   AlertTriangle,
-  ZoomIn,
   Download,
   Maximize2,
   PlusCircle,
@@ -28,13 +27,32 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaDataTableCard, DnaCard, DnaBadge, DnaButton, DnaInput, DnaTextarea, DnaCell } from "@/components/dna";
+import {
+  DnaDataTableCard,
+  DnaCard,
+  DnaBadge,
+  DnaButton,
+  DnaInput,
+  DnaTextarea,
+  DnaCell,
+  DnaEmptyState,
+  DnaErrorState,
+  DnaLoadingSkeleton,
+} from "@/components/dna";
+
+/** A design version's master file is often .ai/.pdf/.cdr/.tif — not displayable. */
+const DISPLAYABLE_RENDITION = /\.(png|jpe?g|webp|gif|avif|svg)$/i;
+
+const isDisplayable = (url?: string | null) =>
+  !!url && DISPLAYABLE_RENDITION.test(url.split("?")[0]);
+
+const fileNameOf = (url: string) => url.split("/").pop() || url;
 
 export default function ComplianceInboxPage() {
   const queryClient = useQueryClient();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
-  const { data: tasks, isLoading, isError, refetch } = useQuery({
+  const { data: tasks, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["compliance-tasks"],
     queryFn: async () => {
       const resp = await api.get("/legality/inbox/tasks");
@@ -49,6 +67,9 @@ export default function ComplianceInboxPage() {
       queryClient.invalidateQueries({ queryKey: ["compliance-tasks"] });
       toast.success("Review finalized");
       setSelectedTaskId(null);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.error?.message || "Review could not be recorded");
     }
   });
 
@@ -58,6 +79,24 @@ export default function ComplianceInboxPage() {
     selectedTaskId ?? tasks?.[0]?.id ?? null;
   const activeTask =
     tasks?.find((t: any) => t.id === effectiveSelectedId) ?? null;
+
+  // The artwork under review, as the API returned it. The master file is what the
+  // review is bound to; a displayable rendition (the version's mockup) is shown
+  // when the master itself is not a browser-renderable file.
+  const artworkUrl: string | null = activeTask?.artworkUrl ?? null;
+  const artworkPreviewUrl: string | null = activeTask?.artworkPreviewUrl ?? null;
+  const artworkSrc: string | null = isDisplayable(artworkUrl)
+    ? artworkUrl
+    : isDisplayable(artworkPreviewUrl)
+      ? artworkPreviewUrl
+      : null;
+
+  const errorStatus = (error as any)?.response?.status;
+  const denied = errorStatus === 403;
+  const errorMessage =
+    (error as any)?.response?.data?.error?.message ||
+    (error as any)?.response?.data?.message ||
+    "Gagal memuat tugas kepatuhan.";
 
   const { data: validationResult, isLoading: isValidating } = useQuery({
     queryKey: ["formula-validation", activeTask?.formulaId],
@@ -178,6 +217,23 @@ export default function ComplianceInboxPage() {
 
         {/* Right Content: Workspace */}
         <main className="flex-1 flex flex-col bg-white overflow-hidden">
+          {isLoading ? (
+            <div className="flex-1 p-6">
+              <DnaLoadingSkeleton rows={6} />
+            </div>
+          ) : isError ? (
+            <div className="flex-1 p-6">
+              <DnaErrorState
+                title={denied ? "Akses ditolak" : "Gagal memuat data"}
+                message={
+                  denied
+                    ? "Anda tidak memiliki akses ke inbox kepatuhan."
+                    : errorMessage
+                }
+                onRetry={() => refetch()}
+              />
+            </div>
+          ) : (
           <AnimatePresence mode="wait">
             {activeTask ? (
               <motion.div 
@@ -219,22 +275,60 @@ export default function ComplianceInboxPage() {
                 {activeTask.type === "ARTWORK_REVIEW" && (
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
                     <div className="col-span-12 lg:col-span-8 space-y-6">
-                      <div className="aspect-video rounded-2xl border border-slate-200 shadow-sm bg-white relative overflow-hidden group flex items-center justify-center">
-                        <ImageIcon className="w-12 h-12 text-slate-300 absolute pointer-events-none" />
-                        <Image
-                          src="https://placehold.co/1200x800/f8fafc/cbd5e1?text=ARTWORK+PREVIEW"
-                          alt="Artwork Preview"
-                          width={1200}
-                          height={800}
-                          className="w-full h-full object-cover"
-                          unoptimized
+                      {!artworkUrl ? (
+                        <DnaEmptyState
+                          title="Belum ada artwork pada versi ini"
+                          description="Creative belum mengunggah berkas artwork untuk versi desain ini, jadi belum ada yang bisa direview."
                         />
+                      ) : (
+                      <>
+                      <div className="aspect-video rounded-2xl border border-slate-200 shadow-sm bg-white relative overflow-hidden group flex items-center justify-center">
+                        {artworkSrc ? (
+                          <Image
+                            src={artworkSrc}
+                            alt={`Artwork V${activeTask.artworkVersion ?? "-"}`}
+                            width={1200}
+                            height={800}
+                            className="w-full h-full object-contain"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="text-center space-y-2 px-8">
+                            <ImageIcon className="w-12 h-12 text-slate-300 mx-auto" />
+                            <p className="text-[11px] font-black uppercase italic text-slate-600 break-all">
+                              {fileNameOf(artworkUrl)}
+                            </p>
+                            <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400">
+                              Master artwork bukan berkas gambar — buka berkasnya untuk meninjau
+                            </p>
+                          </div>
+                        )}
                         <div className="absolute bottom-4 right-4 flex gap-2">
-                          <button className="h-9 w-9 rounded-lg bg-white/90 border border-slate-200 text-slate-600 shadow-sm hover:bg-white flex items-center justify-center cursor-pointer transition-colors"><ZoomIn className="w-4 h-4" /></button>
-                          <button className="h-9 w-9 rounded-lg bg-white/90 border border-slate-200 text-slate-600 shadow-sm hover:bg-white flex items-center justify-center cursor-pointer transition-colors"><Maximize2 className="w-4 h-4" /></button>
-                          <button className="h-9 w-9 rounded-lg bg-white/90 border border-slate-200 text-slate-600 shadow-sm hover:bg-white flex items-center justify-center cursor-pointer transition-colors"><Download className="w-4 h-4" /></button>
+                          <a href={artworkUrl} target="_blank" rel="noreferrer" title="Buka artwork" className="h-9 w-9 rounded-lg bg-white/90 border border-slate-200 text-slate-600 shadow-sm hover:bg-white flex items-center justify-center cursor-pointer transition-colors"><Maximize2 className="w-4 h-4" /></a>
+                          <a href={artworkUrl} download title="Unduh artwork" className="h-9 w-9 rounded-lg bg-white/90 border border-slate-200 text-slate-600 shadow-sm hover:bg-white flex items-center justify-center cursor-pointer transition-colors"><Download className="w-4 h-4" /></a>
                         </div>
                       </div>
+                      <DnaCard>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">ARTWORK UNDER REVIEW</h3>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-black uppercase italic text-slate-700 break-all">
+                              {fileNameOf(artworkUrl)}
+                            </p>
+                            <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400 mt-1">
+                              Versi desain V{activeTask.artworkVersion ?? "-"}
+                            </p>
+                          </div>
+                          <a href={artworkUrl} target="_blank" rel="noreferrer" className="shrink-0">
+                            <DnaButton variant="outline" size="sm" icon={<Maximize2 />}>
+                              Buka Master
+                            </DnaButton>
+                          </a>
+                        </div>
+                      </DnaCard>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <DnaCard>
                           <div className="flex items-center gap-2 mb-3">
@@ -260,6 +354,8 @@ export default function ComplianceInboxPage() {
                           </p>
                         </DnaCard>
                       </div>
+                      </>
+                      )}
                     </div>
 
                     <div className="col-span-12 lg:col-span-4">
@@ -472,6 +568,7 @@ export default function ComplianceInboxPage() {
             </motion.div>
           )}
         </AnimatePresence>
+          )}
       </main>
       </div>
     </DashboardShell>

@@ -4,6 +4,85 @@
 **Contract:** `verification/P08_FROZEN_ACCEPTANCE_CONTRACT.md` (`P08-v1`, frozen 2026-09-20). Not amended.
 **Verdict:** CLOSED — `npm run verify:p08` exits 0, scoped P0/P1 = 0, all contract-named files and commands exist.
 
+---
+
+## Bounded correction cycle — the legality artwork review (audit P1)
+
+`prompts/P08_LEGALITY_ARTWORK_FIX_PROMPT.md`. An independent audit of the closure above
+found one scoped P1; everything else it verified stands and was not redone.
+
+**What the audit found.** `frontend/src/app/(dashboard)/legality/inbox/page.tsx:225` rendered a
+hardcoded `placehold.co` image as the artwork under review, inside the
+`activeTask.type === "ARTWORK_REVIEW"` branch — a P08 primary surface (design/artwork approval with
+bounded revision) showing a fabricated image, which frozen Acceptance 5 forbids. The root cause was
+one step upstream: the payload that screen consumes, `GET /legality/inbox/tasks`, carried **no**
+artwork URL at all. `LegalityService.getPendingTasks` built `{id, type, priority, title, pipelineId,
+createdAt}`, and `LegalityService.submitArtworkReview` wrote the review row with
+`artworkUrl: 'https://placehold.co/600x400'` — so the governed `ArtworkReview` record the SCM gate
+reads was fabricated too.
+
+**What changed (legality/creative boundary only; no schema change, no renamed `SalesSample`/`Formula`).**
+
+| Path | Change |
+|---|---|
+| `backend/src/modules/legality/legality.service.ts` | new `governedArtworkByLead()` resolver + `GovernedArtwork` type + `ARTWORK_NOT_ON_FILE` code. `getPendingTasks` now carries `artworkUrl`, `artworkPreviewUrl` and `artworkVersion` on every `ARTWORK_REVIEW` task. `submitArtworkReview` records the artwork it was made ON, and refuses with `400 ARTWORK_NOT_ON_FILE` when there is none. |
+| `frontend/src/app/(dashboard)/legality/inbox/page.tsx` | the artwork frame renders the API's artwork (master file, or the version's mockup when the master is `.ai`/`.pdf`/`.cdr`/`.tif` and not browser-renderable), with real open/download links to the master; honest empty state, plus loading / error / denied / empty states for the workspace via `@/components/dna` only. No `http(s)://` literal remains in the file. |
+
+The resolver takes the client-approved `finalArtworkUrl` when the lead's design is finalized (an
+upload after finalization clears `isFinal`, so a finalized task's latest version *is* the approved
+one), otherwise the version on the table — the newest design task, never "whatever row was written
+last". A lead with no artwork resolves to `null`, and the payload says so.
+
+**Regression test, failing first.** `legality/inbox renders the governed artwork the API returned,
+never a placeholder` in
+`frontend/src/app/(dashboard)/creative/finalized/__tests__/p08-live-flow.behavior.test.tsx`, plus
+the same page added to that describe block's source guard (`legality/inbox has no in-file data
+source or placeholder URL`, `… composes its primitives from @/components/dna only`).
+
+- Before the fix: **2 failed / 16 passed**. The source guard failed with
+  `expected '…' not to match /https?:\/\//` (the `placehold.co` URL) and the render case failed at
+  `expect(screen.getByText(/V2/))` — the surface named no version and showed no API artwork.
+- After the fix: **18 passed / 18**, no other case changed.
+
+**Backend proof through real HTTP** (the prompt's optional-but-warranted assertion): a 6th case in
+`backend/test/p08/p08-s3-release.e2e-spec.ts` — a lead with a pipeline and a design task but no
+version gets `artworkUrl: null` / `artworkVersion: null`; after a real multipart upload the same
+task carries that version's `artworkUrl` / `mockupUrl` / `artworkVersion: 1`, with no `placehold`
+anywhere in the payload; and `POST /legality/pipeline/:id/artwork-review` returns the same URL. Its
+fixtures are removed in the suite's `afterAll` (row added for `artwork_reviews` /
+`regulatory_pipelines`). `test:p08:creative-legal` → **7/7** (was 6/6).
+
+**Type error fixed by measurement, not inspection.** `p08-s3-release.e2e-spec.ts:700` destructured
+`INestApplication` out of `await import('@nestjs/common')` — a type-only export, so it is absent
+from the module object. `INestApplication` is now a top-level `import type`, the dynamic destructure
+keeps only `ValidationPipe`, and the cast at the `.useGlobalPipes(...)` site is `as INestApplication`
+instead of the invalid `InstanceType<typeof INestApplication>`. `jest` sets `diagnostics: false`, so
+no gate in `verify:p08` could see this: `npx tsc --noEmit -p backend/tsconfig.json` reports **0
+errors** (exit 0) across the tree including `test/`, and a throwaway probe reproducing the old
+pattern reported `error TS2339: Property 'INestApplication' does not exist on type '{…}'` before
+being deleted.
+
+**Affected predecessor smoke (roadmap rule 6).** The closure changed
+`backend/src/platform/errors/error.filter.ts`, which moved error-code precedence under 43
+`reason_code` sites. `npm --prefix backend run test:p07:http-closure` → **exit 0**, **1 suite passed,
+8 tests passed / 8**, 49.1s (cases 1–8: lead-capture auth, public intake tenancy and fail-closed,
+tenant-A capture, tenant-B non-disclosure, governed advance + concurrency + key reuse, consent
+qualification, `/bussdev/dashboard` reconciliation, outbox-failure rollback). The error-filter
+change is therefore not a regression; nothing was repaired on its account.
+
+**New `verify:p08` result.** `npm run verify:p08` → **exit 0** (step results: sample 6/6, formulation
+5/5, creative-legal 7/7, frontend `test:p08` 18/18, `lint:p08` 0 errors, backend build 0, frontend
+build `✓ Compiled successfully`, golden thread 7/7, `clean-db` `test-DB residue: 0` / `server
+residue: 0 nex_p08_* databases`). No step was added, removed or reordered.
+
+**Still not proved.** The artwork frame's rendered outcome for a real non-image master
+(`.ai`/`.pdf`/`.cdr`/`.tif`) is asserted only at the payload/DOM boundary — jsdom does not fetch
+`/uploads/…`, and no browser run against the live stack was performed in this cycle. The
+`placehold.co` write into `artwork_reviews` had never been read back by any UI, so its removal
+changes no other surface; that is reasoning from the call sites, not an observation of a run.
+
+---
+
 Environment preflight, before any edit:
 
 - `backend/.env` `DATABASE_URL` → `localhost` / `erp_db_test` / user `postgres`.
@@ -31,6 +110,9 @@ PostgreSQL named by `backend/.env`, using the existing `backend/test/jest-e2e.js
 | `p08-s1-sample-http.e2e-spec.ts` | `npm --prefix backend run test:p08:sample` | 0 | 6/6 | 39.3s |
 | `p08-s2-formulation.e2e-spec.ts` | `npm --prefix backend run test:p08:formulation` | 0 | 5/5 | 44.2s |
 | `p08-s3-release.e2e-spec.ts` | `npm --prefix backend run test:p08:creative-legal` | 0 | 6/6 | 41.6s |
+
+> The S3 row above is the closure run. In the correction cycle the suite gained case 6
+> (compliance-inbox artwork payload) and reads **7/7**, 24.1s — see the correction section.
 
 Fixtures create tenants, users, staff, a lead and SCM materials only. They never create the audit
 row, outbox event, payment verification, approval, finalized state or permit being proved.
@@ -167,20 +249,23 @@ Root `package.json`:
 ## C3 — live UI suite (Acceptance 5)
 
 `frontend/src/app/(dashboard)/creative/finalized/__tests__/p08-live-flow.behavior.test.tsx`
-— `npm --prefix frontend run test:p08`, exit 0, **15/15**, 6.3s.
+— `npm --prefix frontend run test:p08`, exit 0, **15/15**, 6.3s. (Correction cycle: the same suite
+now covers `legality/inbox/page.tsx` as well — **18/18**.)
 
 The production API client (`@/lib/api`) is what runs: the axios instance keeps its `baseURL` and
 its interceptors, and only the socket beneath it is replaced, because the network is the one
 boundary that cannot be observed in jsdom.
 
-It proves, for `creative/finalized/page.tsx` and `legality/permits/page.tsx`:
+It proves, for `creative/finalized/page.tsx`, `legality/permits/page.tsx` and (from the correction
+cycle) `legality/inbox/page.tsx`:
 
 - **no static / localStorage / placeholder / mock source is reachable** — a source guard asserts
-  neither page contains `localStorage`, `sessionStorage`, an absolute `http(s)://` literal,
-  an `INITIAL_`/`MOCK_`/`FALLBACK_`/`DEMO_`/`DUMMY_` constant, or `placehold.co`; both import
+  none of the pages contains `localStorage`, `sessionStorage`, an absolute `http(s)://` literal,
+  an `INITIAL_`/`MOCK_`/`FALLBACK_`/`DEMO_`/`DUMMY_` constant, or `placehold.co`; all import
   their data from `@/lib/api` and call `api.get(...)`. A runtime probe then renders a unique
   sentinel payload and asserts the DOM contains that sentinel and that exactly one call was made,
-  to the production path;
+  to the production path; a second runtime probe renders the artwork-review surface and asserts the
+  rendition and the master-file link are the API's URLs, with no placeholder host in the DOM;
 - **primitives come only from `@/components/dna`** — the import surface contains no
   `@/components/ui/`, `@radix-ui/` or `@/components/shadcn`;
 - **loading, empty, error, denied and success** are each visible on both pages.
@@ -192,7 +277,7 @@ Other P08 screens checked, and what was done:
 | `finance/bayar-sample` | live API + loading + error; a 401/403 was collapsed into the generic load failure | distinct access-refusal message added |
 | `inventory/formula-adjustment-rnd` | live API, but the query swallowed its error and fell back to an in-file `MOCK_ADJUSTMENTS` array, and had no loading/error state | fallback array deleted, error surfaced, loading/error/denied states added |
 | `approvals/sales-sample` | 100% in-file `INITIAL_SAMPLE_DATA` of three invented samples (no API at all) | wired to the live `GET /rnd/samples`: list, revision, formulator, sales PIC, dates, status and line items all come from the API, with loading/error/denied/empty states |
-| `legality/inbox` | live API + loading + error + empty; an artwork preview is a hardcoded `placehold.co` image | **not changed — out of P08 scope**, see Deviations |
+| `legality/inbox` | live API + loading + error + empty; an artwork preview is a hardcoded `placehold.co` image | closure: **not changed — out of P08 scope**, see Deviations. Correction cycle: **fixed** — payload carries the governed artwork, surface renders it with empty/loading/error/denied states, see the correction section |
 | `penjualan/sample-fee` | 100% in-file `SAMPLE_FEES` array with a local create that only mutates React state | **not changed — out of P08 scope**, see Deviations |
 
 ## C4 — golden thread and builds
@@ -212,10 +297,15 @@ a cleanup failure fails the run, so a leftover can never pass silently.
 | Command | Exit | Result | Duration |
 |---|---:|---|---:|
 | `npm run verify:p08` | **0** | natural exit; 6+5+6 backend HTTP + 15 frontend + 7 golden thread; `test-DB residue: 0`, `server residue: 0 nex_p08_* databases` | 214s |
+| `npm run verify:p08` (correction cycle) | **0** | natural exit; 6+5+7 backend HTTP + 18 frontend + 7 golden thread; `test-DB residue: 0`, `server residue: 0 nex_p08_* databases` | not instrumented |
 
 Run once on the final committed revision (`01f1048d`). An earlier run on `6ffa0a37`
 also exited 0 in 206s; the only later change was the S3 upload sweep's cleanup, whose
 owning suite was re-run green (6/6, 41.6s) before this final composition.
+
+The correction-cycle row is the single rerun after the artwork fix, taken after
+`test:p07:http-closure` (8/8, exit 0) and the S3 suite (7/7) were green on their own.
+Composition unchanged: the same nine steps, in the same order.
 
 `npm run verify:p08:clean-db` → `[P08] test-DB residue: 0`, `[P08] server residue: 0 nex_p08_* databases`.
 
@@ -269,6 +359,10 @@ Root: `scripts/ssot/p08_clean_db.js`.
   so the panel renders a `placehold.co` image. That panel is the regulatory artwork-review slice,
   and permit submission / regulatory filing is explicitly deferred by the owner decision of
   2026-09-20. Removed nothing, invented no source; the placeholder is recorded here.
+  **Corrected 2026-09-21:** the independent audit of this closure classified that placeholder as a
+  scoped P1 (artwork review IS a P08 subject, so this is a P08 primary surface rendering a
+  fabricated image) and it was fixed in the bounded correction cycle above. This bullet is kept as
+  the record of why the closure left it.
 - **`penjualan/sample-fee` not changed — it is the P09 sales/AR slice.** The page renders a
   fee registry with `clientName`, a `RECEIVED/OFFSET/EXPIRED` status carrying a 30-day validity,
   and a `jobOrderRef`. The live `GET /finance/sample-fees` returns
@@ -322,7 +416,9 @@ Root: `scripts/ssot/p08_clean_db.js`.
   the same shape `sales-sample` used. They are P04–P14 surfaces, outside this phase; only the P08
   sample shell was wired.
 - **P3 — `placehold.co` in `legality/inbox`** (see Deviations): the deferred regulatory
-  artwork-review slice.
+  artwork-review slice. **Closed 2026-09-21** — reclassified as a scoped P1 by the independent
+  audit and fixed in the bounded correction cycle; no `placehold.co` remains in any P08 surface or
+  in the backend that feeds them.
 - **P3 — a refused multipart upload still writes to disk.** `POST/PATCH` on
   `creative/task/:id/version` runs multer's disk storage before the controller reaches
   `CreativeService`, so the fourth-revision refusal (a `400` the suite asserts) still leaves the
@@ -342,8 +438,9 @@ Root: `scripts/ssot/p08_clean_db.js`.
 | `permit_record_and_expiry` | PASS | `p08-s3` test 5; issue + expiry kept, 0/30/90 buckets, `EXPIRED` never valid |
 | `audit_outbox_atomicity` | PASS | `p08-s3` rollback describe; 500 leaves 0 audit + 0 outbox + no state change |
 | `golden_thread` | PASS | 7/7 on a disposable `nex_p08_golden_*` database, dropped in `finally` |
-| `frontend_live_data_dna_states` | PASS | `p08-live-flow.behavior.test.tsx` 15/15; production client, `@/components/dna`, all five states |
-| `affected_regression_and_cleanup` | PASS | unit inner loop 27/27 unchanged; backend + frontend build 0; residue 0 |
+| `design_artwork_review_live` | PASS (correction cycle) | `p08-s3` test 6 over HTTP: `artworkUrl`/`artworkPreviewUrl`/`artworkVersion` on the task, `null` when there is none, review row bound to the same URL; `p08-live-flow` artwork case renders the API's URLs with no placeholder host |
+| `frontend_live_data_dna_states` | PASS | `p08-live-flow.behavior.test.tsx` 15/15 at closure, **18/18** after the correction; production client, `@/components/dna`, all five states |
+| `affected_regression_and_cleanup` | PASS | unit inner loop 27/27 unchanged; backend + frontend build 0; residue 0; `test:p07:http-closure` 8/8 exit 0 after the error-filter change |
 | `contract_ownership` | PASS (carried) | canonical contracts already carry the P08 owners (`DEC-051..060`); the one stale command name in the traceability block was corrected |
 
 **Unexpected skipped/pending/todo/flaky tests: 0. Cross-tenant or unauthorized mutation: 0.

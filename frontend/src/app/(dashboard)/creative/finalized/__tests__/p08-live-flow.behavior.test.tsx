@@ -38,12 +38,15 @@ vi.mock("next/navigation", () => ({
 import { api } from "@/lib/api";
 import FinalizedDesignsPage from "@/app/(dashboard)/creative/finalized/page";
 import PermitsPage from "@/app/(dashboard)/legality/permits/page";
+import ComplianceInboxPage from "@/app/(dashboard)/legality/inbox/page";
 
 const FINALIZED_PATH = "/creative/finalized";
 const PERMITS_PATH = "/legality/permits";
+const INBOX_PATH = "/legality/inbox/tasks";
 
 const FINALIZED_SRC = path.resolve(__dirname, "..", "page.tsx");
 const PERMITS_SRC = path.resolve(__dirname, "..", "..", "..", "legality", "permits", "page.tsx");
+const INBOX_SRC = path.resolve(__dirname, "..", "..", "..", "legality", "inbox", "page.tsx");
 
 type Reply = { status: number; body: unknown };
 
@@ -98,6 +101,7 @@ describe("P08 Acceptance 5 — live P08 UI", () => {
     const pages: Array<[string, string]> = [
       ["creative/finalized", FINALIZED_SRC],
       ["legality/permits", PERMITS_SRC],
+      ["legality/inbox", INBOX_SRC],
     ];
 
     it.each(pages)("%s has no in-file data source or placeholder URL", (_label, file) => {
@@ -170,6 +174,66 @@ describe("P08 Acceptance 5 — live P08 UI", () => {
       expect(calls).toEqual([FINALIZED_PATH]);
       // the page renders the sentinel and nothing fabricated alongside it
       expect(container.textContent).toContain(sentinel);
+    });
+
+    it("legality/inbox renders the governed artwork the API returned, never a placeholder", async () => {
+      // The artwork a compliance officer reviews is the design version on the
+      // table: the rendered rendition and the governed master file, both as the
+      // API returned them.
+      const ARTWORK = "/uploads/creative_assets/nex-artwork-v2.ai";
+      const MOCKUP = "/uploads/creative_assets/nex-artwork-v2.png";
+
+      reply = async (url) => {
+        if (url !== INBOX_PATH) throw new Error(`unexpected call: ${url}`);
+        return {
+          status: 200,
+          body: [
+            {
+              id: "artwork-pipeline-1",
+              type: "ARTWORK_REVIEW",
+              priority: "MEDIUM",
+              title: "Review Artwork: Kirana Glow",
+              pipelineId: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+              formulaId: null,
+              createdAt: "2026-09-20T00:00:00.000Z",
+              artworkUrl: ARTWORK,
+              artworkPreviewUrl: MOCKUP,
+              artworkVersion: 2,
+            },
+          ],
+        };
+      };
+
+      const { container } = renderWithClient(<ComplianceInboxPage />);
+
+      // the title appears in both the task list and the workspace header
+      await waitFor(() => {
+        expect(screen.getAllByText("Review Artwork: Kirana Glow").length).toBeGreaterThan(0);
+      });
+
+      // the surface names the exact version under review
+      expect(screen.getByText(/V2/)).toBeInTheDocument();
+
+      // the rendition on screen is the one the API named for that version
+      const img = container.querySelector("img");
+      expect(img).not.toBeNull();
+      expect(img?.getAttribute("src")).toBe(MOCKUP);
+
+      // and the governed master file itself is reachable from the surface
+      const hrefs = Array.from(container.querySelectorAll("a")).map((a) =>
+        a.getAttribute("href"),
+      );
+      expect(hrefs).toContain(ARTWORK);
+
+      // no placeholder, stock or example URL survives into the rendered output
+      // (the CSS `placeholder:` variant classes are not a URL source)
+      const html = container.innerHTML;
+      expect(html).not.toMatch(/placehold\.co/i);
+      expect(html).not.toMatch(/placeholder\.com/i);
+      expect(html).not.toMatch(/via\.placeholder/i);
+      expect(html).not.toMatch(/dummyimage/i);
+      expect(html).not.toMatch(/example\.com/i);
+      expect(calls).toEqual([INBOX_PATH]);
     });
   });
 

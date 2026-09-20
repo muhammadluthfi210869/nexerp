@@ -1,4 +1,10 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  forwardRef,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import {
@@ -11,6 +17,26 @@ import {
 } from '@prisma/client';
 
 import { BussdevService } from '../bussdev/bussdev.service';
+
+/**
+ * BUS-RULE-115 — an artwork review is recorded against the artwork that exists.
+ *
+ * The pipeline names a lead, not a design version, so the artwork under review is
+ * resolved from that lead's design task: the client-approved master when the
+ * design is finalized, otherwise the version on the table. A review with no
+ * artwork behind it is refused rather than written against a fabricated URL.
+ */
+export const ARTWORK_NOT_ON_FILE = 'ARTWORK_NOT_ON_FILE';
+
+/** The governed artwork of a lead's design version under review. */
+export interface GovernedArtwork {
+  /** The master file the review is performed on. */
+  artworkUrl: string | null;
+  /** A rendition a browser can display (the version's mockup), when there is one. */
+  previewUrl: string | null;
+  /** The version that artwork belongs to. */
+  version: number | null;
+}
 
 /**
  * BUS-RULE-112 — the single permit expiry policy.
@@ -1018,6 +1044,60 @@ export class LegalityService {
 
   // --- COMPLIANCE INBOX & WORKSPACE (PHASE 3) ---
 
+  private badRequest(reasonCode: string, message: string) {
+    return new BadRequestException({
+      statusCode: 400,
+      error: 'Bad Request',
+      message,
+      reason_code: reasonCode,
+    });
+  }
+
+  /**
+   * BUS-RULE-115. The artwork each lead's design is on the table with.
+   *
+   * A finalized design is the governed one — its `finalArtworkUrl` is the version
+   * the client approved, and an upload after finalization clears `isFinal`, so the
+   * latest version of a finalized task IS the approved one. Otherwise the version
+   * on the table. Nothing is inferred from "whatever row was written last": a lead
+   * with no artwork resolves to `null` and the surface says so.
+   */
+  private async governedArtworkByLead(
+    leadIds: string[],
+  ): Promise<Map<string, GovernedArtwork>> {
+    const unique = [...new Set(leadIds)];
+    const byLead = new Map<string, { artwork: GovernedArtwork; finalized: boolean }>();
+    if (unique.length === 0) return new Map();
+
+    const tasks = await this.prisma.designTask.findMany({
+      where: { leadId: { in: unique } },
+      include: { versions: { orderBy: { versionNumber: 'desc' }, take: 1 } },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    for (const task of tasks) {
+      const current = byLead.get(task.leadId);
+      // The newest task on the table wins, unless a client-approved (finalized)
+      // design exists — that one is the governed artwork.
+      if (current && (current.finalized || !task.isFinal)) continue;
+
+      const version = task.versions[0];
+      byLead.set(task.leadId, {
+        artwork: {
+          artworkUrl:
+            (task.isFinal ? task.finalArtworkUrl : null) ??
+            version?.artworkUrl ??
+            null,
+          previewUrl: version?.mockupUrl ?? null,
+          version: version?.versionNumber ?? null,
+        },
+        finalized: task.isFinal,
+      });
+    }
+
+    return new Map([...byLead].map(([leadId, entry]) => [leadId, entry.artwork]));
+  }
+
   async getPendingTasks() {
     const pipelines = await this.prisma.regulatoryPipeline.findMany({
       where: { currentStage: { not: RegStage.PUBLISHED } },
@@ -1028,6 +1108,10 @@ export class LegalityService {
         pnbpRequests: { orderBy: { createdAt: 'desc' }, take: 1 },
       },
     });
+
+    const artwork = await this.governedArtworkByLead(
+      pipelines.map((p) => p.leadId),
+    );
 
     const tasks = [];
 
@@ -1048,6 +1132,7 @@ export class LegalityService {
       // Task 2: Artwork Review (If no approved review exists)
       const lastReview = p.artworkReviews[0];
       if (!lastReview || !lastReview.isApproved) {
+        const artworkOfLead = artwork.get(p.leadId);
         tasks.push({
           id: `artwork-${p.id}`,
           type: 'ARTWORK_REVIEW',
@@ -1055,6 +1140,12 @@ export class LegalityService {
           title: `Review Artwork: ${p.lead?.brandName || 'Unnamed'}`,
           pipelineId: p.id,
           createdAt: lastReview?.createdAt || p.createdAt,
+          // BUS-RULE-115: the governed artwork of the exact design version under
+          // review. `null` means there is none yet — the surface shows that
+          // instead of a fabricated preview.
+          artworkUrl: artworkOfLead?.artworkUrl ?? null,
+          artworkPreviewUrl: artworkOfLead?.previewUrl ?? null,
+          artworkVersion: artworkOfLead?.version ?? null,
         });
       }
 
@@ -1078,27 +1169,40 @@ export class LegalityService {
     pipelineId: string,
     data: { isApproved: boolean; notes: string; reviewer: string },
   ) {
+    const pipeline = await this.prisma.regulatoryPipeline.findUnique({
+      where: { id: pipelineId },
+      include: { pnbpRequests: { where: { isPaid: true } } },
+    });
+    if (!pipeline) throw new NotFoundException('Pipeline not found');
+
+    // BUS-RULE-115: the review records the artwork it was made ON. A review of
+    // artwork that does not exist is not a review, and the SCM gate downstream
+    // reads this row to release the packaging order.
+    const governed = (
+      await this.governedArtworkByLead([pipeline.leadId])
+    ).get(pipeline.leadId);
+    if (!governed?.artworkUrl) {
+      throw this.badRequest(
+        ARTWORK_NOT_ON_FILE,
+        'Belum ada artwork pada versi desain ini. Minta Creative mengunggah versi terlebih dahulu.',
+      );
+    }
+
     const review = await this.prisma.artworkReview.create({
       data: {
         pipelineId,
         isApproved: data.isApproved,
         notes: data.notes,
         designerPicId: (await this.prisma.user.findFirst())?.id || '', // Fallback
-        artworkUrl: 'https://placehold.co/600x400', // Placeholder for real storage link
+        artworkUrl: governed.artworkUrl,
       },
     });
 
     // If artwork is approved, check if we should advance stage
     if (data.isApproved) {
-      const p = await this.prisma.regulatoryPipeline.findUnique({
-        where: { id: pipelineId },
-        include: { pnbpRequests: { where: { isPaid: true } } },
-      });
-
       if (
-        p &&
-        p.currentStage === RegStage.SUBMITTED &&
-        (p as any).pnbpRequests.length > 0
+        pipeline.currentStage === RegStage.SUBMITTED &&
+        pipeline.pnbpRequests.length > 0
       ) {
         await this.updatePipeline(pipelineId, {
           currentStage: RegStage.EVALUATION,
