@@ -55,7 +55,7 @@ export default function BayarSamplePage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: samples, isLoading, isError } = useQuery<SamplePayment[]>({
+  const { data: samples, isLoading, isError, error: queryError } = useQuery<SamplePayment[]>({
     queryKey: ["bussdev-samples-payment"],
     queryFn: async () => {
       const resp = await api.get("/bussdev/samples");
@@ -117,8 +117,16 @@ export default function BayarSamplePage() {
       {isLoading ? (
         <QueryLoading message="Memuat data pembayaran sample..." />
       ) : isError ? (
+        // P08 acceptance 5: a 401/403 is surfaced as an access refusal, not as a
+        // generic load failure.
         <QueryError
-          error="Gagal memuat data sample"
+          error={
+            [401, 403].includes(
+              (queryError as { response?: { status?: number } })?.response?.status ?? 0
+            )
+              ? "Akses ditolak — Anda tidak memiliki izin ke pembayaran sample"
+              : "Gagal memuat data sample"
+          }
           onRetry={() => queryClient.invalidateQueries({ queryKey: ["bussdev-samples-payment"] })}
         />
       ) : (

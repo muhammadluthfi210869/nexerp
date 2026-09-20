@@ -143,6 +143,12 @@ export { ApprovalDetailModal } from "./approval/ApprovalDetailModal";
 export type { ApprovalDetailData } from "./approval/ApprovalDetailModal";
 export { DnaBulkActionBar } from "./DnaBulkActionBar";
 
+// ── ERROR FEEDBACK STATE ──
+// DnaErrorState was implemented but never re-exported here, so the P08 screens
+// that import it from "@/components/dna" could not resolve it.
+export { DnaErrorState } from "./DnaFeedbackStates";
+export type { DnaErrorStateProps } from "./DnaFeedbackStates";
+
 // ── RADIX / SHADCN PRIMITIVES RE-EXPORTS PER ADR-007 ──
 export * from "./DnaFieldCompat";
 

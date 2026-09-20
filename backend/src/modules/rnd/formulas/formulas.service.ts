@@ -251,6 +251,11 @@ export class FormulasService {
     // 1. [Hukum Mutlak 100%] — BUS-RULE-108
     const totalDosage = compositionTotal(dto.phases.flatMap((p) => p.items));
 
+    // NOTE (P08): the comparison runs on the binary-double sum, so a legally exact
+    // ±0.001 deviation is refused — 20 + 79.999 and 20 + 80.001 both store a value
+    // 0.0010000000000048 from 100. Rounding the deviation before comparing would
+    // accept both, but the frozen sf3 suite pins 80.001 as COMPOSITION_TOTAL_INVALID,
+    // so the semantics stay as they are and the edge is recorded, not redefined.
     const tolerance = 0.001;
     if (Math.abs(totalDosage - 100) > tolerance) {
       throw new BadRequestException({
@@ -475,17 +480,50 @@ export class FormulasService {
     });
   }
 
-  async requestApproval(id: string) {
-    const updated = await this.prisma.formula.update({
+  /**
+   * Submit a draft for approval.
+   *
+   * [BUS-RULE-109] This is a mutation of the formula row, so it goes through the
+   * same immutability guard as every other mutation: without it, submitting a
+   * SAMPLE_LOCKED formula walked the row back to WAITING_APPROVAL and reopened
+   * the edit path that `assertMutable` exists to close.
+   *
+   * [BUS-RULE-113] The submit is recorded with the acting user, exactly like the
+   * approve and lock transitions.
+   */
+  async requestApproval(id: string, actorId?: string) {
+    const existing = await this.prisma.formula.findUnique({
       where: { id },
-      data: { status: 'WAITING_APPROVAL' },
+      select: { formulaCode: true, status: true },
     });
+    this.assertMutable(existing);
+
+    const updated = await this.prisma.$transaction((tx) =>
+      this.audit.withAudit<any>(
+        tx,
+        {
+          actorUserId: actorId ?? null,
+          source: 'rnd.formulas',
+          entityType: 'Formula',
+          entityId: id,
+          action: 'SUBMIT_FORMULA_APPROVAL',
+          beforeSnapshot: { status: existing!.status },
+          afterSnapshot: { status: FormulaStatus.WAITING_APPROVAL, submitted_by: actorId ?? null },
+        },
+        async () =>
+          tx.formula.update({
+            where: { id },
+            data: { status: 'WAITING_APPROVAL' },
+          }),
+      ),
+    );
 
     this.eventEmitter.emit('state.transition', {
       entityType: 'FORMULA',
       entityId: id,
-      fromState: 'DRAFT',
+      fromState: existing!.status,
       toState: 'WAITING_APPROVAL',
+      changedById: actorId ?? null,
       reason: 'Formula submitted for approval',
     });
 

@@ -1093,7 +1093,8 @@ tests:
   - {id: TEST-271, type: unit, desc: 'p08-sf3: a revision copies rather than rewrites its parent and rework of a locked parent leaves the parent intact', refs: [REQ-041,BUS-RULE-114]}
   - {id: TEST-272, type: unit, desc: 'p08-sf3: the lock commits with its audit row and one rnd.formulation.locked outbox event; a repeated lock adds no second effect', refs: [REQ-041,BUS-RULE-109,BUS-RULE-113]}
   # S4 — backend/test/unit/p08/p08-sf4-design-legal.unit-spec.ts,
-  # `npm --prefix backend run test:p08:design-legal`
+  # `npm --prefix backend run test:p08` (the unit inner loop over p08-sf2|sf3|sf4)
+  # and `npm --prefix backend run test:p08:creative-legal` (the HTTP-level S3 suite)
   - {id: TEST-273, type: unit, desc: 'p08-sf4: a design decision without a version, or naming a version older than the latest, is rejected with DESIGN_VERSION_REQUIRED and writes nothing', refs: [REQ-039,BUS-RULE-110]}
   - {id: TEST-274, type: unit, desc: 'p08-sf4: each revision round consumes one unit of the allowance through the real state chain, the bound of 3 hard-locks, and a spent task refuses both upload and further revision', refs: [REQ-039,BUS-RULE-111]}
   - {id: TEST-275, type: unit, desc: 'p08-sf4: a non-supervisor reopen is refused with DESIGN_REOPEN_UNAUTHORIZED and leaves the design locked; a supervisor reopen records its reason in the design history and resets the allowance to zero, and that reset survives the next upload', refs: [REQ-039,BUS-RULE-111,BUS-RULE-113]}

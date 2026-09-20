@@ -17,6 +17,8 @@
     "test:perf": "playwright test tests/e2e/PERFORMANCE_INTEGRITY_AUDIT.spec.ts",
     "test": "vitest run",
     "test:p07": "vitest run --reporter=default src/app/(dashboard)/marketing/omnicrm/__tests__/p07-crm-kpi-tiles.behavior.test.tsx",
+    "test:p08": "vitest run --reporter=default src/app/(dashboard)/creative/finalized/__tests__/p08-live-flow.behavior.test.tsx",
+    "lint:p08": "eslint \"src/app/(dashboard)/creative/finalized/page.tsx\" \"src/app/(dashboard)/creative/finalized/__tests__/p08-live-flow.behavior.test.tsx\" \"src/app/(dashboard)/legality/permits/page.tsx\" \"src/app/(dashboard)/inventory/formula-adjustment-rnd/page.tsx\" \"src/app/(dashboard)/finance/bayar-sample/page.tsx\" \"src/app/(dashboard)/approvals/sales-sample/page.tsx\" \"src/components/dna/index.ts\"",
     "typecheck:marketing": "tsc --noEmit -p tsconfig.marketing.json",
     "test:watch": "vitest",
     "sync-api": "openapi-typescript ../backend/swagger-spec.json -o ./src/types/api-schema.d.ts",

@@ -56,10 +56,12 @@ export class FormulasController {
     return this.formulasService.createRevision(id, req?.user?.id);
   }
 
+  // The submit actor comes from the verified JWT, never from the request body:
+  // the body could name someone else and forge the audit trail.
   @Post(':id/request-approval')
   @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
-  requestApproval(@Param('id') id: string) {
-    return this.formulasService.requestApproval(id);
+  requestApproval(@Param('id') id: string, @Req() req: any) {
+    return this.formulasService.requestApproval(id, req?.user?.id);
   }
 
   // The lock actor comes from the verified JWT, never from the request body: the

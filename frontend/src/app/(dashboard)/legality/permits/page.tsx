@@ -21,7 +21,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaDataTableCard, DnaStatCard, DnaCard, DnaBadge, DnaButton, DnaInput, DnaCell } from "@/components/dna";
+import { DnaDataTableCard, DnaStatCard, DnaCard, DnaBadge, DnaButton, DnaErrorState, DnaInput } from "@/components/dna";
 
 export default function LegalityHub() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,13 +29,22 @@ export default function LegalityHub() {
   const [advanceNotes, setAdvanceNotes] = useState("");
   const queryClient = useQueryClient();
 
-  const { data: permits = [], isLoading } = useQuery({
+  const { data: permits = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["permits"],
     queryFn: async () => {
       const resp = await api.get("/legality/permits");
       return resp.data;
     }
   });
+
+  // P08 acceptance 5: the denied and error states are visible on the page, not
+  // collapsed into the empty state. Everything on this page comes from the API —
+  // there is no static array, no browser storage and no fallback.
+  const errStatus = (error as { response?: { status?: number } })?.response?.status;
+  const denied = errStatus === 401 || errStatus === 403;
+  const errorMessage =
+    (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+    "Gagal memuat daftar perizinan.";
 
   const advanceMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
@@ -166,6 +175,20 @@ export default function LegalityHub() {
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       Syncing regulatory registry...
+                    </td>
+                  </tr>
+                ) : isError ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-6">
+                      <DnaErrorState
+                        title={denied ? "Akses ditolak" : "Gagal memuat data"}
+                        message={
+                          denied
+                            ? "Anda tidak memiliki akses ke registry perizinan."
+                            : errorMessage
+                        }
+                        onRetry={() => refetch()}
+                      />
                     </td>
                   </tr>
                 ) : filteredPermits.length === 0 ? (

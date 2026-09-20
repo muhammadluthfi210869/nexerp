@@ -35,6 +35,7 @@ import {
   DnaBadge,
   DnaModal,
   DnaTabNav,
+  DnaErrorState,
   useDnaToast
 } from "@/components/dna";
 
@@ -59,69 +60,6 @@ interface FormulaAdjustment {
   statusLabel: string;
 }
 
-const MOCK_ADJUSTMENTS: FormulaAdjustment[] = [
-  {
-    id: "adj-f-01",
-    adjustmentCode: "ADJ-FORM-202603-001",
-    adjustmentDate: "2026-03-08",
-    formulaCode: "FORM-202603-001",
-    productName: "Brightening Glow Serum 10% Niacinamide",
-    revisionVersion: "Rev 2.0",
-    nettoPerPcs: 30,
-    clientName: "PT Cantika Glow Nusantara",
-    brandName: "GlowAura Skin",
-    busdevPic: "Sari Dewi (BusDev)",
-    formulatorPic: "Apt. Dedi Kurniawan, S.Farm",
-    targetProductionQtyPcs: 5000,
-    baseResultKg: 150.0,
-    upscalePercent: 10.0,
-    upscaleResultKg: 165.0,
-    adjustmentReason: "Upscaling produksi batch 5.000 botol dengan buffer 10% untuk kompensasi dead volume mesin filling.",
-    status: "APPROVED",
-    statusLabel: "Disetujui Formulator & Produksi"
-  },
-  {
-    id: "adj-f-02",
-    adjustmentCode: "ADJ-FORM-202603-002",
-    adjustmentDate: "2026-03-07",
-    formulaCode: "FORM-202603-002",
-    productName: "Ceramide 5X Barrier Repair Moisturizer",
-    revisionVersion: "Rev 1.1",
-    nettoPerPcs: 50,
-    clientName: "PT Miracle Beauty Lab",
-    brandName: "MiracleSkin",
-    busdevPic: "Rian Hendra",
-    formulatorPic: "Dr. Maya Sp.KK",
-    targetProductionQtyPcs: 3000,
-    baseResultKg: 150.0,
-    upscalePercent: 8.0,
-    upscaleResultKg: 162.0,
-    adjustmentReason: "Penyesuaian konsentrasi pengental (Sepimax ZEN dikurangi 0.2%) untuk mengoptimalkan flowability di nozzle pot cream.",
-    status: "PENDING_APPROVAL",
-    statusLabel: "Menunggu Review Formulator"
-  },
-  {
-    id: "adj-f-03",
-    adjustmentCode: "ADJ-FORM-202603-003",
-    adjustmentDate: "2026-03-05",
-    formulaCode: "FORM-202603-003",
-    productName: "AHA BHA PHA Exfoliating Toner 100ml",
-    revisionVersion: "Rev 1.0",
-    nettoPerPcs: 100,
-    clientName: "CV Derma Estetika Mandiri",
-    brandName: "DermaPure",
-    busdevPic: "Sari Dewi (BusDev)",
-    formulatorPic: "Apt. Siska Handayani, M.Farm",
-    targetProductionQtyPcs: 2000,
-    baseResultKg: 200.0,
-    upscalePercent: 5.0,
-    upscaleResultKg: 210.0,
-    adjustmentReason: "Upscaling standar batch 2.000 botol dengan buffer evaporasi 5% pada suhu mixing 45°C.",
-    status: "APPROVED",
-    statusLabel: "Disetujui Formulator & Produksi"
-  }
-];
-
 export default function FormulaAdjustmentPage() {
   const toast = useDnaToast();
   const queryClient = useQueryClient();
@@ -145,25 +83,27 @@ export default function FormulaAdjustmentPage() {
     return calculatedBaseKg + (calculatedBaseKg * Number(calcUpscalePct)) / 100;
   }, [calculatedBaseKg, calcUpscalePct]);
 
-  // Queries
-  const { data: rawAdjustments, isLoading } = useQuery({
+  // Queries — the list is the live API or nothing. A swallowed error used to fall
+  // back to an in-file MOCK_ADJUSTMENTS array, so the screen rendered fabricated
+  // adjustments whenever the API was slow, empty, or broken.
+  const { data: rawAdjustments, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["rnd-formula-adjustments"],
     queryFn: async () => {
-      try {
-        const res = await api.get("/rnd/formulas/adjustments");
-        return unwrapResponse(res.data) as FormulaAdjustment[];
-      } catch (e) {
-        return null;
-      }
+      const res = await api.get("/rnd/formulas/adjustments");
+      return unwrapResponse(res.data) as FormulaAdjustment[];
     }
   });
 
-  const adjustments: FormulaAdjustment[] = useMemo(() => {
-    if (rawAdjustments && Array.isArray(rawAdjustments) && rawAdjustments.length > 0) {
-      return rawAdjustments;
-    }
-    return MOCK_ADJUSTMENTS;
-  }, [rawAdjustments]);
+  const adjustments: FormulaAdjustment[] = useMemo(
+    () => (Array.isArray(rawAdjustments) ? rawAdjustments : []),
+    [rawAdjustments]
+  );
+
+  const errStatus = (error as { response?: { status?: number } })?.response?.status;
+  const denied = errStatus === 401 || errStatus === 403;
+  const errorMessage =
+    (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+    "Gagal memuat data penyesuaian formulasi.";
 
   // Filtering
   const filteredAdjustments = useMemo(() => {
@@ -305,7 +245,27 @@ export default function FormulaAdjustmentPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredAdjustments.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={10} className="py-12 text-center text-slate-400">
+                    Memuat data penyesuaian formulasi...
+                  </td>
+                </tr>
+              ) : isError ? (
+                <tr>
+                  <td colSpan={10} className="py-6 px-4">
+                    <DnaErrorState
+                      title={denied ? "Akses ditolak" : "Gagal memuat data"}
+                      message={
+                        denied
+                          ? "Anda tidak memiliki akses ke data penyesuaian formulasi."
+                          : errorMessage
+                      }
+                      onRetry={() => refetch()}
+                    />
+                  </td>
+                </tr>
+              ) : filteredAdjustments.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="py-12 text-center text-slate-400">
                     <Scale className="w-10 h-10 mx-auto mb-2 text-slate-300" />
