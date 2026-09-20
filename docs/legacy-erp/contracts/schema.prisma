@@ -2348,5 +2348,190 @@ model Notification {
 }
 
 // =============================================================================
+// SECTION 11 — CREATIVE / DESIGN AND LEGALITAS PERMITS
+// =============================================================================
+// Canonical owner established by DEC-2026-09-20-051 (design/artwork approval) and
+// DEC-2026-09-20-053 (permit record + expiry monitoring). Both subjects previously
+// had no canonical owner: `artwork_status`, `design_locked` and
+// `legal_artwork_approved` were used only as precondition predicates in
+// 03_WORKFLOW_STATE_MACHINE.yaml, with no entity, state machine or API behind them.
+//
+// Scope boundary: permits are RECORDED and EXPIRY-MONITORED only. Permit
+// submission, regulatory filing and product stability testing are out of scope.
+// `RegulatoryPipeline`, `ArtworkReview` and `PNBPRequest` (live-only, no canonical
+// owner) implement that deferred submission flow and are deliberately NOT modelled
+// here — see DEC-2026-09-20-058.
+// =============================================================================
+
+// --- Permit records (one logical subject, three typed variants) --------------
+// The three records share identity + issue date + expiry date + lifecycle stage +
+// compliance status + audit risk. Field-name drift is preserved verbatim from the
+// running schema so the contract describes reality; the shared shape is what
+// 04_BUSINESS_RULES.md BUS-RULE-112 (single expiry policy) operates on.
+
+model LegalStaff {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  role      String   @default("LEGAL_OFFICER")
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  @@map("legal_staffs")
+}
+
+model HkiRecord {
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @db.Uuid
+  hkiId           String    @unique
+  brandName       String
+  type            String
+  clientName      String
+  picId           String    @db.Uuid // FK LegalStaff
+  applicationDate DateTime  @db.Timestamptz
+  expiryDate      DateTime? @db.Timestamptz
+  stage           String // DRAFT | SUBMITTED | EVALUATION | REVISION | PUBLISHED
+  status          String // IN_PROGRESS | DONE | REJECTED
+  auditRisk       String // OK | DELAY_AUDIT | CRITICAL
+  createdAt       DateTime  @default(now()) @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @db.Timestamptz
+  deletedAt       DateTime? @db.Timestamptz
+
+  @@index([organizationId, expiryDate])
+  @@index([picId])
+  @@map("hki_records")
+}
+
+model BpomRecord {
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @db.Uuid
+  bpomId          String    @unique
+  productName     String
+  category        String
+  clientName      String
+  picId           String    @db.Uuid // FK LegalStaff
+  applicationDate DateTime  @db.Timestamptz
+  expiryDate      DateTime? @db.Timestamptz
+  stage           String // DRAFT | SUBMITTED | EVALUATION | REVISION | PUBLISHED
+  status          String // IN_PROGRESS | DONE | REJECTED
+  auditRisk       String // OK | DELAY_AUDIT | CRITICAL
+  createdAt       DateTime  @default(now()) @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @db.Timestamptz
+  deletedAt       DateTime? @db.Timestamptz
+
+  @@index([organizationId, expiryDate])
+  @@index([picId])
+  @@map("bpom_records")
+}
+
+model HalalRecord {
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @db.Uuid
+  halalId         String    @unique
+  productName     String
+  manufacturer    String
+  category        String
+  picId           String    @db.Uuid // FK LegalStaff
+  applicationDate DateTime  @db.Timestamptz
+  expiryDate      DateTime? @db.Timestamptz
+  stage           String    @default("DRAFT")
+  status          String    @default("IN_PROGRESS") // IN_PROGRESS | DONE | REJECTED
+  auditRisk       String    @default("OK") // OK | DELAY_AUDIT | CRITICAL
+  createdAt       DateTime  @default(now()) @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @db.Timestamptz
+  deletedAt       DateTime? @db.Timestamptz
+
+  @@index([organizationId, expiryDate])
+  @@index([picId])
+  @@map("halal_records")
+}
+
+// Append-only permit history. Polymorphic by (recordId, recordType) string rather
+// than FK — preserved from the running schema; BUS-RULE-112 owns the referential
+// expectation, and the audit trail is also carried by AuditLog.
+model LegalTimelineLog {
+  id            String   @id @default(uuid())
+  recordId      String
+  recordType    String // HKI | BPOM | HALAL
+  action        String
+  previousStage String?
+  newStage      String?
+  notes         String?
+  staffName     String
+  createdAt     DateTime @default(now()) @db.Timestamptz
+
+  @@index([recordId, recordType])
+  @@map("legal_timeline_logs")
+}
+
+// --- Design / artwork approval ----------------------------------------------
+// Owner decision 2026-09-20: a client-approved artwork is NOT hard-locked.
+// Revisions remain allowed up to a bounded limit of 3; the task locks only past
+// that limit, and a supervisor may reopen it, restarting the allowance.
+// See BUS-RULE-111 and the `creative_pipeline` state machine.
+
+model DesignTask {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  leadId         String    @db.Uuid // FK Lead
+  soId           String?   @db.Uuid // FK SalesOrder
+  brief          String
+  taskType       String?
+  kanbanState    String    @default("INBOX") // INBOX | IN_PROGRESS | WAITING_APJ | WAITING_CLIENT | REVISION | LOCKED
+
+  // Revision bound and finalization interlocks
+  revisionCount Int     @default(0) // Revisions used in the current allowance
+  isLocked      Boolean @default(false) // True only once revisionCount reaches the bound
+  isFinal       Boolean @default(false) // Client-approved; drives the finalized-designs page
+
+  slaDeadline     DateTime? @db.Timestamptz
+  finalArtworkUrl String?
+  finalMockupUrl  String?
+
+  createdAt DateTime  @default(now()) @db.Timestamptz
+  updatedAt DateTime  @updatedAt @db.Timestamptz
+  deletedAt DateTime? @db.Timestamptz
+
+  @@index([organizationId, kanbanState])
+  @@index([leadId, kanbanState])
+  @@index([isFinal])
+  @@map("design_tasks")
+}
+
+model DesignVersion {
+  id            String  @id @default(uuid()) @db.Uuid
+  taskId        String  @db.Uuid // FK DesignTask
+  versionNumber Int
+  artworkUrl    String? // High-res master file
+  mockupUrl     String? // Visual preview
+  printSpecs    Json? // Finishing, paper type, etc.
+  uploadedBy    String? @db.Uuid // FK User
+  createdAt     DateTime @default(now()) @db.Timestamptz
+
+  @@unique([taskId, versionNumber])
+  @@map("design_versions")
+}
+
+// Approval decision. `versionId` ties the decision to the exact artwork version it
+// approved — this fact must not be inferred from timestamps, so it is a stored
+// column. `approvalStatus` is the decision; `signatureHash`/`ipAddress` are the
+// e-signature evidence.
+model DesignFeedback {
+  id             String  @id @default(uuid()) @db.Uuid
+  taskId         String  @db.Uuid // FK DesignTask
+  versionId      String? @db.Uuid // FK DesignVersion — the version this decision is about
+  fromDivision   String // BD | RND | FINANCE | SCM | LEGAL | WAREHOUSE | PRODUCTION | QC | MANAGEMENT | SYSTEM | CREATIVE
+  authorId       String  @db.Uuid // FK User
+  content        String?
+  approvalStatus String? // WAITING | APPROVED | REJECTED
+  signatureHash  String?
+  ipAddress      String?
+  createdAt      DateTime @default(now()) @db.Timestamptz
+
+  @@index([taskId])
+  @@index([versionId])
+  @@map("design_feedbacks")
+}
+
+// =============================================================================
 // END OF SCHEMA
 // =============================================================================

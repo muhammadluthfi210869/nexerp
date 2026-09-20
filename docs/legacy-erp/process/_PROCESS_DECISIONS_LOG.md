@@ -616,6 +616,108 @@ Plus `AGENTS.md` at root as **AI CLI entry point** with:
 
 ---
 
+# P08 — Owner Business Decisions (2026-09-20)
+
+> Decisions 051–057 are the owner's answers about **business flow**, given in business language
+> on 2026-09-20. Decisions 058–060 are the technical consequences recorded for auditability.
+> These are additive: no DEC-001..050 entry is amended or superseded. They resolve the
+> previously unowned **design/artwork** and **legality permit** subjects and close the sample-fee
+> gate that `RndService.acceptSample` was bypassing.
+
+### DEC-2026-09-20-051 — Sample Fee: Finance Must Verify Before Formulation
+
+**Topik**: Gerbang verifikasi pembayaran sample
+**Keputusan**: Formulasi tidak boleh dimulai sebelum Finance memverifikasi bahwa biaya sample benar-benar sudah diterima. Auto-approval pada saat R&D menerima sample **dihapus**, bukan ditandai atau dibiarkan sebagai mode dev. Finance adalah satu-satunya penulis `paymentApprovedAt` dan `paymentApprovedById`, dan verifikatornya harus tercatat. Transisi `WAITING_FINANCE → IN_PROGRESS` menjadi gerbang keras; transisi langsung `SUBMITTED → IN_PROGRESS` dilarang.
+**Rationale**: Implementasi berjalan menandai "biaya sample sudah dibayar" secara otomatis begitu R&D menerima sample, tanpa ada yang mengecek uangnya masuk, dan meninggalkan `paymentApprovedById` kosong sehingga jejak auditnya hilang. Gate `G1_SAMPLE` sudah dideklarasikan di kode tetapi tidak pernah ditegakkan. Ini jalur uang pada ERP produksi.
+**Implikasi ke code**: `rnd.service.ts` blok auto-approve dihapus; `SampleRequest.paymentApprovedById` wajib terisi; `advanceSampleStage` melewati jalur gate, bukan menambah pemeriksaan kedua di tempat lain.
+**Spec doc affected**: `contracts/03_WORKFLOW_STATE_MACHINE.yaml`, `contracts/04_BUSINESS_RULES.md` (BUS-RULE-107), `contracts/05_API_CONTRACT.yaml`, `contracts/06_SCREEN_CONTRACT.json` (SCR-182), `contracts/07_RBAC_MATRIX.yaml`, `contracts/08_INTEGRATION_EVENT_CONTRACT.yaml`
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-052 — A Client-Approved Artwork Is Not Hard-Locked
+
+**Topik**: Penguncian desain setelah approval klien
+**Keputusan**: Desain yang sudah disetujui klien **tidak** terkunci permanen. Revisi masih boleh diminta, dibatasi sampai batas tertentu; desain baru terkunci setelah batas itu terlampaui.
+**Rationale**: Jawaban owner atas pilihan antara kunci permanen dan kunci terbatas. Klien di lapangan sering meminta perubahan kecil setelah approval; mengunci permanen memaksa membuat desain baru dari nol untuk perubahan sepele.
+**Implikasi ke code**: `DesignTask.isFinal` (disetujui klien) dipisahkan dari `DesignTask.isLocked` (kunci keras). Keadaan `LOCKED` berarti "final/disetujui", bukan "tidak bisa diubah".
+**Spec doc affected**: `contracts/03_WORKFLOW_STATE_MACHINE.yaml` (`creative_pipeline`), `contracts/04_BUSINESS_RULES.md` (BUS-RULE-111)
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-053 — Permits: Record and Monitor Expiry Only
+
+**Topik**: Cakupan modul legalitas dalam P08
+**Keputusan**: Izin BPOM, HKI-Merek, dan Halal **dicatat** dan **kadaluarsanya dipantau**. Alur pengajuan izin, pendaftaran regulasi, dan uji stabilitas produk **di luar cakupan P08**.
+**Rationale**: Jawaban owner. Pencatatan + pengingat kadaluarsa sudah memberi nilai operasional penuh tanpa menyeret alur regulasi yang panjang dan berisiko.
+**Implikasi ke code**: `HkiRecord`/`BpomRecord`/`HalalRecord` menjadi subjek kanonik dengan fokus tanggal terbit dan tanggal kadaluarsa. Empat tabel alur pengajuan (`RegulatoryPipeline`, `ArtworkReview`, `PNBPRequest`, dan status `pnbp_*`) tetap tanpa pemilik kanonik dan tidak didokumentasikan — lihat DEC-2026-09-20-058.
+**Spec doc affected**: `contracts/01_DOMAIN_MODEL.md`, `contracts/schema.prisma` (SECTION 11), `contracts/04_BUSINESS_RULES.md` (BUS-RULE-112), `contracts/05_API_CONTRACT.yaml`, `contracts/06_SCREEN_CONTRACT.json` (SCR-183, SCR-184)
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-054 — Exactly One Dedicated Design Page
+
+**Topik**: Halaman khusus untuk pekerjaan approval desain
+**Keputusan**: Dibuat **satu** halaman tersendiri yang menampilkan **riwayat revisi dan desain yang sudah difinalisasi saja**. Halaman ini tidak menampilkan pekerjaan yang masih berjalan. Halaman P08 lainnya mengikuti pola rumah yang sudah ada (checklist progress, checklist tracking), tanpa merancang ulang.
+**Rationale**: Permintaan eksplisit owner: "aku ingin rancang 1 page tersendiri untuk ada history dan design yang di finalisasi aja, itu aja".
+**Implikasi ke code**: Route baru `/creative/finalized`; halaman `/samples/design` tetap menjadi daftar permintaan desain dan kehilangan data karangannya.
+**Spec doc affected**: `contracts/06_SCREEN_CONTRACT.json` (SCR-180), `contracts/05_API_CONTRACT.yaml` (`GET /creative/finalized`)
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-055 — Design Revision Bound Is Three
+
+**Topik**: Batas jumlah revisi desain
+**Keputusan**: Klien boleh meminta revisi maksimal **3 kali** per jatah. Revisi ke-4 dalam jatah yang sama ditolak dan desain terkunci.
+**Rationale**: Jawaban owner atas pilihan 2/3/5/konfigurabel. Angka 3 juga sudah menjadi `REVISION_LIMIT` di `creative.service.ts`, jadi keputusan ini menyelaraskan aturan dengan implementasi alih-alih mengubah keduanya.
+**Implikasi ke code**: Batas menjadi aturan kanonik, bukan sekadar konstanta kelas. Percobaan revisi ke-4 mengembalikan `DESIGN_REVISION_BOUND_REACHED`.
+**Spec doc affected**: `contracts/04_BUSINESS_RULES.md` (BUS-RULE-111), `contracts/03_WORKFLOW_STATE_MACHINE.yaml`
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-056 — A Supervisor Reopen Restarts the Revision Allowance
+
+**Topik**: Jalan keluar setelah desain terkunci
+**Keputusan**: Setelah batas tercapai dan desain terkunci, atasan (Director/Admin) boleh membukanya kembali, **dan jatah revisi dihitung ulang dari nol**. Pembukaan itu wajib beralasan dan tercatat di riwayat desain.
+**Rationale**: Jawaban owner: kunci permanen terlalu kaku, tetapi membuka tanpa aturan menghapus gunanya batas. Menghitung ulang jatah membuat override tetap terukur dan terlihat.
+**Implikasi ke code**: `CreativeService.unlockTask` saat ini membersihkan `isLocked` tetapi **tidak** mengembalikan `revisionCount` — diperbaiki. Reopen hanya berlaku saat `isLocked == true`; revisi biasa di dalam jatah memakai jalur berbeda yang **menghabiskan** jatah, bukan mengembalikannya.
+**Spec doc affected**: `contracts/03_WORKFLOW_STATE_MACHINE.yaml` (`supervisor.reopen`), `contracts/04_BUSINESS_RULES.md` (BUS-RULE-111), `contracts/07_RBAC_MATRIX.yaml`
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-057 — Broad Read Scope for the Finalized-Design Page
+
+**Topik**: Siapa yang boleh membuka halaman desain final
+**Keputusan**: Semua pihak yang muncul sebagai PIC pada milestone **checklist progress dan checklist tracking** boleh membaca halaman riwayat + desain final. Penulisan dan approval tetap sempit.
+**Rationale**: Jawaban owner: "semua yang ada di milestone checklist progress dan tracking, banyak PIC kan" — pekerjaan desain menyentuh banyak divisi, jadi membaca tidak perlu dibatasi per peran.
+**Implikasi ke code**: Matriks RBAC `creative.read` mencakup BusDev, R&D, Desain, Legalitas, APJ, Executive, Auditor, Viewer, Administrator. `create`/`update` hanya Director; `approve` hanya Director/APJ/BusDev sesuai tahap.
+**Spec doc affected**: `contracts/07_RBAC_MATRIX.yaml` (matrix `creative`), `contracts/06_SCREEN_CONTRACT.json` (SCR-180)
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-058 — Design/Artwork and Permit Subjects Are Canonicalized; the Submission Stack Is Not
+
+**Topik**: Kepemilikan kanonik subjek P08
+**Keputusan**: Subjek **design/artwork** dan **permit record** mendapat pemilik kanonik lengkap di seluruh kontrak (`01`, `schema.prisma`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `10`). Tumpukan alur **pengajuan** izin (`RegulatoryPipeline`, `ArtworkReview`, `PNBPRequest`) **sengaja dibiarkan tanpa pemilik kanonik dan tanpa dokumentasi**, karena DEC-2026-09-20-053 menaruhnya di luar cakupan P08. Endpoint live-nya tetap ada tetapi tidak diklaim sebagai perilaku kanonik.
+**Rationale**: Sebelum keputusan ini, `artwork_status`, `design_locked` dan `legal_artwork_approved` dipakai sebagai predikat precondition di `03` tanpa entity, state machine, API, atau screen di belakangnya — implementasi berjalan tanpa kontrak. Aturan `00_MASTER_SPEC.md §9.1`/`§9.3` mengharuskan perubahan perilaku dimulai dari kontrak pemilik subjek.
+**Implikasi ke code**: 8 model baru di `schema.prisma` SECTION 11; 5 screen baru (SCR-180..184); 8 aturan baru (BUS-RULE-107..114); `creative_pipeline` baru di `03`; 17 operasi API baru; 5 slug izin baru.
+**Spec doc affected**: seluruh `contracts/`, terutama `01_DOMAIN_MODEL.md` §12A dan `schema.prisma` SECTION 11
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-059 — Canonical Schema Is a Projection; Tenant Column Gap Recorded
+
+**Topik**: Jarak antara skema kanonik dan database berjalan
+**Keputusan**: `contracts/schema.prisma` tetap merupakan **proyeksi sebagian** dari database berjalan (100 model kanonik vs 203 model live). P08 mengkanonikalisasi hanya model yang dibutuhkan acceptance-nya. Rekonsiliasi penuh dicatat sebagai backlog repo-wide dan tidak dibebankan ke satu fase. Selain itu, tabel P08 (`design_tasks`, `hki_records`, `bpom_records`, `halal_records`) belum memiliki kolom `organizationId` di database berjalan; kolom itu ditetapkan di kontrak sebagai target dan dicatat sebagai backlog isolasi tenant — **tidak** diklaim sudah diperbaiki.
+**Rationale**: Menarik seluruh 203 model ke dalam kontrak adalah pekerjaan lintas fase yang tidak mengubah perilaku bisnis P08. Menyembunyikan jaraknya akan membuat kontrak tampak lengkap padahal tidak.
+**Implikasi ke code**: Scope tenant untuk P08 dibaca melalui parent `Lead`/`organizationId` (pola yang sama dengan slice P07). Kolom per-tabel ditambahkan saat backlog isolasi tenant dikerjakan.
+**Spec doc affected**: `contracts/01_DOMAIN_MODEL.md` §1.1, `contracts/schema.prisma` SECTION 11, `contracts/02_DATA_OWNERSHIP.yaml` §11
+**Status**: ✅ LOCKED
+
+### DEC-2026-09-20-060 — Naming Divergence and Traceability Drift Recorded
+
+**Topik**: Nama konsep dan integritas katalog bukti
+**Keputusan**: Dua divergensi dicatat apa adanya dan **tidak** diselesaikan di dalam paket kepemilikan subjek P08:
+1. Konsep sample dan formula dinamai berbeda antara kontrak (`SalesSample`, `Formulation`) dan kode berjalan (`SampleRequest`, `Formula`). Arah penyelesaiannya adalah **mengikuti nama kode berjalan**, karena mengganti nama tabel di ERP produksi tidak memberi nilai bisnis dan berisiko data. Penggantian nama dikerjakan sebagai perubahan tersendiri.
+2. `10_TRACEABILITY_MATRIX.yaml` mengalami drift: blok sales-nya bergeser satu slot dan memuat ID yang tidak ada di `06_SCREEN_CONTRACT.json` (SCR-186, SCR-189, SCR-190..197). Baris yang bersinggungan dengan P08 dan seluruh ID phantom pada blok sales sudah dikoreksi; sisa drift modul lain dicatat sebagai backlog. `06_SCREEN_CONTRACT.json` selalu menang karena `10` hanya bukti cakupan (`00_MASTER_SPEC.md §9.1`).
+**Rationale**: Keduanya nyata dan berisiko membingungkan pembaca berikutnya. Menyelesaikannya sekaligus akan memperbesar diff P08 ke wilayah yang bukan miliknya; mendiamkannya akan membuat kontrak menyesatkan.
+**Implikasi ke code**: Tidak ada perubahan perilaku. Perubahan nama model Prisma dan endpoint `/sales/samples` vs `/rnd/sample` menunggu keputusan tersendiri.
+**Spec doc affected**: `contracts/01_DOMAIN_MODEL.md` §1.1, `contracts/10_TRACEABILITY_MATRIX.yaml`
+**Status**: ✅ LOCKED
+
+---
+
 ## Pending Decisions (Open)
 
 *Semua keputusan bisnis terbuka telah diselesaikan pada 2026-09-17 (DEC-2026-09-17-045). Saat ini ada 0 keputusan terbuka (zero open decisions).*

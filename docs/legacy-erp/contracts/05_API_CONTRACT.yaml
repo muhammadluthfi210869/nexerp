@@ -59,6 +59,8 @@ tags:
   - { name: hr, description: Employee and contract administration }
   - { name: kpi, description: Event-derived employee KPI scorecards and evidence }
   - { name: files, description: File upload (presigned URLs) }
+  - { name: creative, description: Design/artwork tasks, versions, approvals and finalized designs }
+  - { name: legalitas, description: Permit records (BPOM / HKI-Merek / Halal) and expiry monitoring }
 
 paths:
   # ============================================================
@@ -5765,6 +5767,295 @@ paths:
       operationId: listPendingApprovals
       responses:
         '200': { description: ACL-scoped pending approvals }
+
+  # ============================================================
+  # SAMPLE FEE VERIFICATION (3 endpoints)
+  # ============================================================
+  # Owner decision 2026-09-20 (DEC-2026-09-20-051, BUS-RULE-107): Finance must
+  # verify the sample fee actually arrived before formulation starts. These are
+  # additive operations; the existing /sales/samples/{id}/submit and
+  # /sales/samples/{id}/payments are unchanged.
+
+  /sales/samples/{id}/request-payment:
+    post:
+      tags: [sales]
+      operationId: requestSamplePayment
+      summary: R&D hands the sample fee to Finance for verification
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200': { description: Sample moved to WAITING_FINANCE }
+        '409': { description: Sample is not in a state that may request payment }
+
+  /sales/samples/{id}/verify-payment:
+    post:
+      tags: [sales]
+      operationId: verifySamplePayment
+      summary: Finance confirms the sample fee was received (the only writer of the verification timestamp)
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [received]
+              properties:
+                received: { type: boolean }
+                payment_proof_url: { type: string }
+                note: { type: string, maxLength: 500 }
+      responses:
+        '200': { description: 'Verified — sample moves to IN_PROGRESS and formulation may start' }
+        '403': { description: Actor lacks the Finance verification permission }
+        '409': { description: Sample is not in WAITING_FINANCE }
+
+  /sales/samples/{id}/reject-payment:
+    post:
+      tags: [sales]
+      operationId: rejectSamplePayment
+      summary: Finance records that the sample fee was not received
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 10, maxLength: 500 }
+      responses:
+        '200': { description: Sample rejected }
+        '409': { description: Sample is not in WAITING_FINANCE }
+
+  # ============================================================
+  # CREATIVE / DESIGN APPROVAL (6 endpoints)
+  # ============================================================
+  # Canonical owner established by DEC-2026-09-20-051. Approval decisions bind to an
+  # exact DesignVersion (BUS-RULE-110). Revision behaviour is BUS-RULE-111.
+
+  /creative/board:
+    get:
+      tags: [creative]
+      operationId: getCreativeBoard
+      summary: Design tasks grouped by kanban state
+      responses:
+        '200': { description: Kanban board for the design approval pipeline }
+
+  /creative/finalized:
+    get:
+      tags: [creative]
+      operationId: getFinalizedDesigns
+      summary: Finalized designs only, with their revision history (the dedicated design page)
+      parameters:
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, default: 25 } }
+        - { name: q, in: query, schema: { type: string }, description: Search by design code, brief or lead }
+      responses:
+        '200':
+          description: |
+            Finalized designs only (`isFinal = true`), each carrying its revision
+            history. Readable by every PIC who appears on the milestone checklist
+            progress/tracking (owner decision 2026-09-20).
+        '403': { description: Actor is not an internal PIC role }
+
+  /creative/tasks/{id}/history:
+    get:
+      tags: [creative]
+      operationId: getDesignHistory
+      summary: Append-only version and approval history for one design task
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200': { description: Ordered DesignVersion list with the approval decision bound to each version }
+        '404': { description: Design task not found }
+
+  /creative/task/{id}/apj-review:
+    patch:
+      tags: [creative]
+      operationId: apjReviewDesign
+      summary: APJ approves or requests revision of the submitted artwork
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision, version_id]
+              properties:
+                decision: { type: string, enum: [APPROVED, REJECTED] }
+                version_id: { type: string, format: uuid, description: The artwork version this decision is about }
+                note: { type: string, maxLength: 500 }
+      responses:
+        '200': { description: Decision recorded and bound to the version }
+        '409': { description: 'DESIGN_VERSION_REQUIRED — the decision does not name the current version' }
+
+  /creative/task/{id}/client-review:
+    patch:
+      tags: [creative]
+      operationId: clientReviewDesign
+      summary: Record the client decision; approval finalizes the design without hard-locking it
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision, version_id]
+              properties:
+                decision: { type: string, enum: [APPROVED, REJECTED] }
+                version_id: { type: string, format: uuid }
+                note: { type: string, maxLength: 500 }
+      responses:
+        '200': { description: 'Finalized (isFinal = true). Revisions remain allowed until the bound of 3' }
+        '409': { description: 'DESIGN_REVISION_BOUND_REACHED — the at-bound lock requires a supervisor reopen' }
+
+  /creative/task/{id}/unlock:
+    patch:
+      tags: [creative]
+      operationId: reopenDesignTask
+      summary: Supervisor reopens a locked design and restarts the revision allowance
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 10, maxLength: 500 }
+                pin: { type: string, description: Supervisor e-signature PIN }
+      responses:
+        '200': { description: 'Reopened — revisionCount reset to 0, isLocked cleared, reopen recorded in history' }
+        '403': { description: Actor is not a supervisor }
+        '409': { description: Design is not currently locked }
+
+  # ============================================================
+  # LEGALITAS PERMITS (7 endpoints)
+  # ============================================================
+  # Permits are RECORDED and EXPIRY-MONITORED only (DEC-2026-09-20-053).
+  # Permit submission, regulatory filing and stability testing are out of scope.
+  # One expiry policy for all three record types (BUS-RULE-112).
+
+  /legality/permits:
+    get:
+      tags: [legalitas]
+      operationId: getPermits
+      summary: Unified permit list across BPOM, HKI-Merek and Halal
+      parameters:
+        - { name: type, in: query, schema: { type: string, enum: [HKI, BPOM, HALAL] } }
+        - { name: status, in: query, schema: { type: string, enum: [EXPIRED, CRITICAL, WARNING, SAFE, NO_EXPIRY] } }
+      responses:
+        '200': { description: 'One consistent shape for all three types; no fabricated expiry fallback' }
+
+  /legality/expiry:
+    get:
+      tags: [legalitas]
+      operationId: getPermitExpiry
+      summary: Permit expiry buckets under the single BUS-RULE-112 threshold set
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, default: 50 } }
+      responses:
+        '200': { description: 'Buckets EXPIRED / CRITICAL / WARNING / SAFE / NO_EXPIRY — identical thresholds for all types' }
+
+  /legality/hki:
+    get:
+      tags: [legalitas]
+      operationId: listHkiRecords
+      responses:
+        '200': { description: HKI / Merek permit records }
+    post:
+      tags: [legalitas]
+      operationId: createHkiRecord
+      summary: Record an HKI permit (no submission workflow)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hki_id, brand_name, type, client_name, pic_id, application_date]
+              properties:
+                hki_id: { type: string }
+                brand_name: { type: string }
+                type: { type: string }
+                client_name: { type: string }
+                pic_id: { type: string, format: uuid }
+                application_date: { type: string, format: date }
+                expiry_date: { type: string, format: date, nullable: true }
+      responses:
+        '201': { description: 'Recorded with stage DRAFT; audit risk derived, never hardcoded' }
+        '422': { description: Validation error }
+
+  /legality/bpom:
+    get:
+      tags: [legalitas]
+      operationId: listBpomRecords
+      responses:
+        '200': { description: BPOM permit records }
+    post:
+      tags: [legalitas]
+      operationId: createBpomRecord
+      summary: Record a BPOM permit (no submission workflow)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bpom_id, product_name, category, client_name, pic_id, application_date]
+              properties:
+                bpom_id: { type: string }
+                product_name: { type: string }
+                category: { type: string }
+                client_name: { type: string }
+                pic_id: { type: string, format: uuid }
+                application_date: { type: string, format: date }
+                expiry_date: { type: string, format: date, nullable: true }
+      responses:
+        '201': { description: 'Recorded with stage DRAFT; audit risk derived, never hardcoded' }
+        '422': { description: Validation error }
+
+  /legality/halal:
+    get:
+      tags: [legalitas]
+      operationId: listHalalRecords
+      responses:
+        '200': { description: Halal permit records }
+    post:
+      tags: [legalitas]
+      operationId: createHalalRecord
+      summary: Record a Halal permit (no submission workflow)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [halal_id, product_name, manufacturer, category, pic_id, application_date]
+              properties:
+                halal_id: { type: string }
+                product_name: { type: string }
+                manufacturer: { type: string }
+                category: { type: string }
+                pic_id: { type: string, format: uuid }
+                application_date: { type: string, format: date }
+                expiry_date: { type: string, format: date, nullable: true }
+      responses:
+        '201': { description: 'Recorded with stage DRAFT; audit risk derived, never hardcoded' }
+        '422': { description: Validation error }
+
+  /legality/records/{id}/logs:
+    get:
+      tags: [legalitas]
+      operationId: listPermitLogs
+      summary: Append-only history for one permit record
+      parameters:
+        - { $ref: '#/components/parameters/IdPath' }
+        - { name: type, in: query, schema: { type: string, enum: [HKI, BPOM, HALAL] } }
+      responses:
+        '200': { description: Ordered permit history }
 
 # ============================================================
 # COMMON COMPONENTS

@@ -143,7 +143,7 @@ result.counts.business_rules = ruleIds.length;
 gate('business_rule_ids', dupes(ruleIds).length === 0, { duplicates: dupes(ruleIds) });
 
 const wf = data['03_WORKFLOW_STATE_MACHINE.yaml'] || {};
-const wfSections = ['sales_pipeline', 'purchase_pipeline', 'production_pipeline', 'rnd_pipeline', 'warehouse_pipeline', 'finance_pipeline', 'hr_pipeline'];
+const wfSections = ['sales_pipeline', 'purchase_pipeline', 'production_pipeline', 'rnd_pipeline', 'warehouse_pipeline', 'finance_pipeline', 'hr_pipeline', 'creative_pipeline'];
 const workflows = wfSections.flatMap(k => Array.isArray(wf[k]) ? wf[k] : []).concat(wf.checklist_pipeline?.entity ? [wf.checklist_pipeline] : []);
 const workflowEntities = workflows.map(w => w.entity);
 const modelSet = new Set(models);
@@ -171,7 +171,7 @@ gate('workflow_rule_refs', danglingWorkflowRules.length === 0, { checked: workfl
 gate('event_ids', dupes(eventNames).length === 0, { duplicates: dupes(eventNames) });
 
 const ownership = data['02_DATA_OWNERSHIP.yaml'] || {};
-const ownershipSections = ['master_data', 'sales_pipeline', 'purchase_pipeline', 'production', 'inventory', 'finance', 'auth', 'hr', 'checklist', 'communication'];
+const ownershipSections = ['master_data', 'sales_pipeline', 'purchase_pipeline', 'production', 'inventory', 'finance', 'auth', 'hr', 'checklist', 'communication', 'creative_design', 'legalitas_permits'];
 const ownershipRows = ownershipSections.flatMap(k => ownership[k] || []);
 const ownershipText = ownershipRows.map(x => x.entity).join(' | ');
 const missingOwnership = models.filter(m => !new RegExp(`\\b${m}\\b`).test(ownershipText));

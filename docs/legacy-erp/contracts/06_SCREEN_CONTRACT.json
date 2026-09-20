@@ -2,7 +2,7 @@
   "version": "1.0",
   "effective_date": "2026-09-16",
   "status": "PROVISIONAL",
-  "total_screens": 179,
+  "total_screens": 184,
   "currency_default": "IDR",
   "locale_default": "id-ID",
   "timezone_default": "Asia/Jakarta",
@@ -81,7 +81,8 @@
       "SCR-046",
       "SCR-047",
       "SCR-048",
-      "SCR-049"
+      "SCR-049",
+      "SCR-182"
     ],
     "purchase": [
       "SCR-050",
@@ -233,6 +234,14 @@
       "SCR-148",
       "SCR-149",
       "SCR-150"
+    ],
+    "creative": [
+      "SCR-180",
+      "SCR-181"
+    ],
+    "legalitas": [
+      "SCR-183",
+      "SCR-184"
     ]
   },
   "screens": [
@@ -14133,6 +14142,308 @@
         "setting.update"
       ],
       "notes": "Operator-only. Use sparingly — clearing all may spike load."
+    },
+    {
+      "screen_id": "SCR-180",
+      "module": "creative",
+      "title": "Desain Final & Riwayat",
+      "route": "/creative/finalized",
+      "type": "list",
+      "data_source": "GET /api/v1/creative/finalized",
+      "columns": [
+        {
+          "key": "designCode",
+          "label": "Kode Desain"
+        },
+        {
+          "key": "lead.customerName",
+          "label": "Klien"
+        },
+        {
+          "key": "brief",
+          "label": "Brief"
+        },
+        {
+          "key": "finalizedAt",
+          "label": "Difinalisasi",
+          "type": "date"
+        },
+        {
+          "key": "revisionCount",
+          "label": "Revisi Terpakai",
+          "type": "number"
+        },
+        {
+          "key": "versionCount",
+          "label": "Jumlah Versi",
+          "type": "number"
+        },
+        {
+          "key": "actions",
+          "label": "",
+          "type": "action",
+          "buttons": [
+            "history"
+          ]
+        }
+      ],
+      "filters": [
+        {
+          "key": "q",
+          "label": "Cari",
+          "type": "text"
+        }
+      ],
+      "actions": [
+        {
+          "text": "Lihat Riwayat",
+          "api": "GET /api/v1/creative/tasks/{id}/history",
+          "permission": "creative-finalized-read"
+        }
+      ],
+      "permissions_required": [
+        "creative-finalized-read"
+      ],
+      "notes": "The ONE dedicated design page required by owner decision 2026-09-20 (DEC-2026-09-20-054): revision history plus finalized designs ONLY. Shows isFinal = true tasks only; never shows in-flight work. Read scope is every PIC on the milestone checklist progress/tracking (DEC-2026-09-20-057). Composed from @/components/dna per 09_NON_FUNCTIONAL_CONTRACT.md §11A."
+    },
+    {
+      "screen_id": "SCR-181",
+      "module": "creative",
+      "title": "Papan Approval Desain",
+      "route": "/creative/board",
+      "type": "kanban",
+      "data_source": "GET /api/v1/creative/board",
+      "columns": [],
+      "actions": [
+        {
+          "text": "Review APJ",
+          "api": "PATCH /api/v1/creative/task/{id}/apj-review",
+          "permission": "creative-task-approve"
+        },
+        {
+          "text": "Review Klien",
+          "api": "PATCH /api/v1/creative/task/{id}/client-review",
+          "permission": "creative-task-approve"
+        },
+        {
+          "text": "Buka Kunci",
+          "api": "PATCH /api/v1/creative/task/{id}/unlock",
+          "permission": "creative-task-approve"
+        }
+      ],
+      "permissions_required": [
+        "creative-task-manage"
+      ],
+      "notes": "Approval pipeline: INBOX → IN_PROGRESS → WAITING_APJ → WAITING_CLIENT → LOCKED. Every approval decision must name the artwork version it decided on (BUS-RULE-110). Client approval finalizes WITHOUT hard-locking; the design locks only past 3 revisions and a supervisor reopen restarts the allowance (BUS-RULE-111)."
+    },
+    {
+      "screen_id": "SCR-182",
+      "module": "sales",
+      "title": "Verifikasi Pembayaran Sample",
+      "route": "/samples/payment-verification",
+      "type": "list",
+      "data_source": "GET /api/v1/sales/samples?stage=WAITING_FINANCE",
+      "columns": [
+        {
+          "key": "sampleCode",
+          "label": "Kode Sample"
+        },
+        {
+          "key": "lead.customerName",
+          "label": "Klien"
+        },
+        {
+          "key": "productName",
+          "label": "Produk"
+        },
+        {
+          "key": "targetHpp",
+          "label": "Biaya Sample",
+          "type": "currency"
+        },
+        {
+          "key": "paymentProofUrl",
+          "label": "Bukti Bayar",
+          "type": "link"
+        },
+        {
+          "key": "requestedAt",
+          "label": "Diminta",
+          "type": "date"
+        },
+        {
+          "key": "actions",
+          "label": "",
+          "type": "action",
+          "buttons": [
+            "verify",
+            "reject"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "text": "Verifikasi Diterima",
+          "api": "POST /api/v1/sales/samples/{id}/verify-payment",
+          "permission": "sample-payment-verify"
+        },
+        {
+          "text": "Tolak",
+          "api": "POST /api/v1/sales/samples/{id}/reject-payment",
+          "permission": "sample-payment-verify"
+        }
+      ],
+      "permissions_required": [
+        "sample-payment-verify"
+      ],
+      "notes": "The Finance gate required by owner decision 2026-09-20 (DEC-2026-09-20-051, BUS-RULE-107). Only FinanceStaff/FinanceAdmin may verify, and verification is the only writer of paymentApprovedAt/paymentApprovedById. There is no auto-approve path — formulation cannot start until this screen's action succeeds."
+    },
+    {
+      "screen_id": "SCR-183",
+      "module": "legalitas",
+      "title": "Daftar Izin (BPOM/HKI/Halal)",
+      "route": "/legality/permits",
+      "type": "list",
+      "data_source": "GET /api/v1/legality/permits",
+      "columns": [
+        {
+          "key": "certificateNumber",
+          "label": "Nomor Izin"
+        },
+        {
+          "key": "name",
+          "label": "Nama"
+        },
+        {
+          "key": "type",
+          "label": "Jenis",
+          "type": "badge",
+          "colorMap": {
+            "BPOM": "emerald",
+            "HKI": "blue",
+            "HALAL": "amber"
+          }
+        },
+        {
+          "key": "issuer",
+          "label": "Penerbit"
+        },
+        {
+          "key": "expiry",
+          "label": "Kadaluarsa",
+          "type": "date"
+        },
+        {
+          "key": "status",
+          "label": "Status",
+          "type": "badge",
+          "colorMap": {
+            "EXPIRED": "red",
+            "CRITICAL": "amber",
+            "WARNING": "yellow",
+            "SAFE": "emerald",
+            "NO_EXPIRY": "slate"
+          }
+        }
+      ],
+      "filters": [
+        {
+          "key": "type",
+          "label": "Jenis Izin",
+          "type": "select",
+          "options": [
+            "HKI",
+            "BPOM",
+            "HALAL"
+          ]
+        },
+        {
+          "key": "status",
+          "label": "Status",
+          "type": "select",
+          "options": [
+            "EXPIRED",
+            "CRITICAL",
+            "WARNING",
+            "SAFE",
+            "NO_EXPIRY"
+          ]
+        }
+      ],
+      "permissions_required": [
+        "legality-permit-manage"
+      ],
+      "notes": "Record + expiry monitoring only (DEC-2026-09-20-053). One consistent shape for all three permit types, and one expiry policy (BUS-RULE-112) — the running service currently uses two different thresholds and three response shapes. A permit with no expiryDate shows NO_EXPIRY, never EXPIRED."
+    },
+    {
+      "screen_id": "SCR-184",
+      "module": "legalitas",
+      "title": "Riwayat & Kadaluarsa Izin",
+      "route": "/legality/expiry",
+      "type": "list",
+      "data_source": "GET /api/v1/legality/expiry",
+      "columns": [
+        {
+          "key": "certificateNumber",
+          "label": "Nomor Izin"
+        },
+        {
+          "key": "name",
+          "label": "Nama"
+        },
+        {
+          "key": "type",
+          "label": "Jenis",
+          "type": "badge"
+        },
+        {
+          "key": "expiry",
+          "label": "Kadaluarsa",
+          "type": "date"
+        },
+        {
+          "key": "daysLeft",
+          "label": "Sisa Hari",
+          "type": "number"
+        },
+        {
+          "key": "bucket",
+          "label": "Status",
+          "type": "badge",
+          "colorMap": {
+            "EXPIRED": "red",
+            "CRITICAL": "amber",
+            "WARNING": "yellow",
+            "SAFE": "emerald",
+            "NO_EXPIRY": "slate"
+          }
+        }
+      ],
+      "filters": [
+        {
+          "key": "bucket",
+          "label": "Status",
+          "type": "select",
+          "options": [
+            "EXPIRED",
+            "CRITICAL",
+            "WARNING",
+            "SAFE",
+            "NO_EXPIRY"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "text": "Lihat Riwayat",
+          "api": "GET /api/v1/legality/records/{id}/logs",
+          "permission": "legality-permit-manage"
+        }
+      ],
+      "permissions_required": [
+        "legality-permit-manage"
+      ],
+      "notes": "Buckets: EXPIRED (daysLeft <= 0), CRITICAL (<= 30), WARNING (<= 90), SAFE, NO_EXPIRY. The threshold set is identical for BPOM, HKI and Halal (BUS-RULE-112) — consumers never branch on permit type."
     }
   ]
 }

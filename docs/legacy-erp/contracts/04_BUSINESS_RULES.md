@@ -1731,6 +1731,153 @@ Tidak ada precedence chain lokal. Gunakan satu peta otoritas berbasis subjek di 
 
 ---
 
+## 15. Sample / R&D / Creative / Legalitas Rules (P08)
+
+> Canonical owner established by DEC-2026-09-20-051 (design/artwork approval) and
+> DEC-2026-09-20-053 (permit record + expiry monitoring). Rules 107–114 encode the
+> owner's business decisions of 2026-09-20. Rules 107 and 111 replace behaviour that
+> the running implementation got wrong: `RndService.acceptSample` auto-approved the
+> sample fee, and `CreativeService.unlockTask` cleared the revision lock without
+> recounting the allowance.
+
+### BUS-RULE-107 — Sample Fee: Finance Verification Gate
+**Deskripsi**: Formulasi tidak boleh dimulai sebelum Finance memverifikasi bahwa biaya sample benar-benar sudah diterima. Tidak ada auto-approval.
+**Konteks**: Entity `SalesSample` (live: `SampleRequest`), transisi `WAITING_FINANCE → IN_PROGRESS`, field `paymentApprovedAt` / `paymentApprovedById`.
+**Logika**:
+```
+IF sample.payment_verified_at IS NULL THEN reject START_FORMULATION
+IF sample.payment_verified_by IS NULL THEN reject START_FORMULATION
+IF actor.role NOT IN ('FinanceStaff','FinanceAdmin') THEN reject VERIFY_SAMPLE_PAYMENT
+ON VERIFY: set payment_verified_at = now(), payment_verified_by = actor.id
+NEVER auto-set payment_verified_at implicitly on any other action
+```
+**Pesan Error**: `Pembayaran sample belum diverifikasi Finance.` / `SAMPLE_FEE_NOT_VERIFIED`
+**Sumber Spec**: `03_WORKFLOW_STATE_MACHINE.yaml` sales_pipeline SalesSample; `state-transition.service.ts` gate `G1_SAMPLE`; DEC-2026-09-20-051
+**Siapa Terlibat**: Finance, R&D
+**Test Case**: Sample pada status WAITING_FINANCE → mulai formulasi ditolak `SAMPLE_FEE_NOT_VERIFIED`; setelah Finance memverifikasi → formulasi dimulai dan `paymentApprovedById` terisi.
+
+### BUS-RULE-108 — Formulation Composition and Deterministic Conversion
+**Deskripsi**: Total komposisi wajib tepat 100%; konversi persen→gram dan HPP wajib deterministik dan dapat direproduksi.
+**Konteks**: Entity `Formulation` (live: `Formula`), `FormulaPhase`, `FormulaItem`.
+**Logika**:
+```
+IF abs(sum(item.percentage) - 100) > 0.001 THEN reject SAVE
+gram(item) = round(percentage / 100 * targetYieldGram, 3)
+hpp = sum(gram(item) * item.unitCostSnapshot) / batch_yield
+SAME input MUST produce SAME gram and SAME hpp on every run
+```
+**Pesan Error**: `Total komposisi harus 100%.` / `COMPOSITION_TOTAL_INVALID`
+**Sumber Spec**: REQUIREMENT Poin 11; `raw/r&d.md`; `formulas.service.ts:48-63`
+**Siapa Terlibat**: RnD Chemist, RnD Manager
+**Test Case**: Komposisi 99.5% ditolak; komposisi 100% menghasilkan gram dan HPP identik pada dua eksekusi berturut-turut.
+
+### BUS-RULE-109 — Approved and Locked Revision Immutability
+**Deskripsi**: Formula yang sudah `APPROVED` atau `LOCKED` menolak setiap perubahan. Perubahan wajib lewat revisi baru, bukan penulisan ulang.
+**Konteks**: Entity `Formulation.status` ∈ {APPROVED, LOCKED}, `FormulaRevision`.
+**Logika**:
+```
+IF formulation.status IN ('APPROVED','LOCKED','PRODUCTION_LOCKED','SAMPLE_LOCKED')
+   THEN reject UPDATE | DELETE of phases, items, targetYieldGram
+ALLOWED only: createRevision (new row, version++)
+IF formulation.status == 'LOCKED' THEN reject createRevision without authorized unlock
+```
+**Pesan Error**: `Formula terkunci tidak dapat diubah.` / `FORMULA_LOCKED`
+**Sumber Spec**: `03_WORKFLOW_STATE_MACHINE.yaml` rnd_pipeline Formulation; `formulas.service.ts:376`
+**Siapa Terlibat**: RnD Chemist, RnD Manager, Head Ops
+**Test Case**: Mutasi item pada formula `LOCKED` ditolak `FORMULA_LOCKED`; nomor versi induk tidak berubah.
+
+### BUS-RULE-110 — Artwork Approval Binds to an Exact Version
+**Deskripsi**: Setiap keputusan approval desain wajib menunjuk versi artwork yang disetujui. Fakta ini disimpan, tidak disimpulkan dari urutan waktu.
+**Konteks**: Entity `DesignFeedback.versionId` → `DesignVersion`, `DesignTask.kanbanState`.
+**Logika**:
+```
+IF feedback.approvalStatus IN ('APPROVED','REJECTED') AND feedback.versionId IS NULL
+   THEN reject SAVE
+IF feedback.versionId != designTask.latestVersion.id THEN reject APPROVE
+```
+**Pesan Error**: `Keputusan desain harus menunjuk versi artwork.` / `DESIGN_VERSION_REQUIRED`
+**Sumber Spec**: `01_DOMAIN_MODEL.md` DesignFeedback; DEC-2026-09-20-051
+**Siapa Terlibat**: Desain, APJ, BusDev
+**Test Case**: Approval tanpa `versionId` ditolak; approval yang menunjuk versi lama saat versi baru sudah ada ditolak.
+
+### BUS-RULE-111 — Design Revision Bound, Lock, and Supervisor Reopen
+**Deskripsi**: Desain yang sudah disetujui klien TIDAK terkunci permanen. Revisi masih boleh sampai batas 3 kali; desain terkunci hanya setelah batas itu. Setelah terkunci, supervisor boleh membuka dan jatah revisi dihitung ulang dari nol.
+**Konteks**: Entity `DesignTask.revisionCount`, `DesignTask.isLocked`, `DesignTask.isFinal`.
+**Logika**:
+```
+REVISION_BOUND = 3
+ON client.request_revision:
+   IF designTask.isLocked == true THEN reject BOUND_REACHED
+   IF designTask.revisionCount >= REVISION_BOUND THEN reject BOUND_REACHED
+   revisionCount += 1
+   IF revisionCount >= REVISION_BOUND THEN isLocked = true
+ON supervisor.reopen:
+   IF actor.role NOT IN ('Director','SuperAdmin') THEN reject UNAUTHORIZED
+   IF designTask.isLocked != true THEN reject NOT_LOCKED
+   IF reopen_reason IS NULL THEN reject REASON_REQUIRED
+   revisionCount = 0          # jatah dihitung ulang
+   isLocked = false
+   record the reopen in DesignFeedback history
+```
+**Pesan Error**: `Batas revisi desain sudah tercapai.` / `DESIGN_REVISION_BOUND_REACHED`
+**Sumber Spec**: `creative.service.ts:29,127-152,384-437`; DEC-2026-09-20-052/055/056
+**Siapa Terlibat**: BusDev (klien), Desain, Direktur
+**Test Case**: Revisi ke-4 ditolak `DESIGN_REVISION_BOUND_REACHED`; reopen oleh non-Director ditolak; reopen oleh Director mengembalikan `revisionCount` ke 0 dan revisi berikutnya diterima.
+
+### BUS-RULE-112 — Permit Record and Single Expiry Policy
+**Deskripsi**: Izin (BPOM / HKI-Merek / Halal) dicatat dan dipantau kadaluarsanya. Tidak ada alur pengajuan izin di dalam P08. Satu kebijakan kadaluarsa berlaku untuk ketiga jenis izin.
+**Konteks**: Entity `BpomRecord`, `HkiRecord`, `HalalRecord`, field `expiryDate`.
+**Logika**:
+```
+daysLeft = ceil((expiryDate - today) / 1 day)
+IF expiryDate IS NULL THEN status = NO_EXPIRY        # jangan dianggap hari ini
+IF daysLeft <= 0  THEN status = EXPIRED
+IF daysLeft <= 30 THEN status = CRITICAL
+IF daysLeft <= 90 THEN status = WARNING
+ELSE                   status = SAFE
+Threshold set is identical for BPOM, HKI and Halal.
+```
+**Pesan Error**: `Izin sudah kadaluarsa.` / `PERMIT_EXPIRED`
+**Sumber Spec**: `legality.service.ts:26-27,594-672,1113-1215`; DEC-2026-09-20-053
+**Siapa Terlibat**: Legalitas, APJ
+**Test Case**: Izin tanpa `expiryDate` berstatus `NO_EXPIRY` (bukan EXPIRED); izin dengan sisa 20 hari berstatus `CRITICAL` pada ketiga jenis izin.
+
+### BUS-RULE-113 — Audit and Outbox Atomicity for Governed Writes
+**Deskripsi**: Setiap penulisan terpantau P08, catatan auditnya, dan event outbox wajib commit bersama tepat sekali, atau gagal bersama.
+**Konteks**: `platform/audit/audit.service.ts`, `platform/outbox/outbox.service.ts`.
+**Logika**:
+```
+WITHIN one prisma.$transaction:
+   businessWrite
+   AND auditLog.create
+   AND outboxEvent.create
+IF audit deferred outside the transaction THEN reject AUDIT_NOT_ATOMIC
+IF outbox opens its own transaction THEN reject OUTBOX_NOT_ATOMIC
+Same idempotency key twice MUST produce exactly one business effect.
+```
+**Pesan Error**: `Penulisan tidak atomik dengan audit/outbox.` / `AUDIT_NOT_ATOMIC`
+**Sumber Spec**: `_SSOT_AUTH.md`; DEC-029/DEC-031; `p07-negative-audit-outbox.unit-spec.ts`
+**Siapa Terlibat**: semua modul P08
+**Test Case**: Kegagalan antara penulisan bisnis dan audit menggulung keduanya; idempotency key yang sama dua kali hanya menghasilkan satu efek.
+
+### BUS-RULE-114 — Adjustment Lineage Never Rewrites the Parent
+**Deskripsi**: Penyesuaian atau rework membuat garis keturunan sendiri dan tidak pernah menulis ulang revisi yang sudah disetujui atau terkunci.
+**Konteks**: Entity `FormulationAdjustment`, `FormulaRevision`.
+**Logika**:
+```
+ON adjustment.create:
+   adjustment.formulationId = parent.id
+   parent.revisionNumber MUST remain unchanged
+   IF parent.status IN ('APPROVED','LOCKED') THEN adjustment.requiresApproval = true
+Adjustment MUST NOT mutate any parent phase or item row.
+```
+**Pesan Error**: `Penyesuaian tidak boleh mengubah revisi induk.` / `ADJUSTMENT_PARENT_IMMUTABLE`
+**Sumber Spec**: `03_WORKFLOW_STATE_MACHINE.yaml` rnd_pipeline FormulationAdjustment; `formulas.service.ts:240`
+**Siapa Terlibat**: RnD Chemist, RnD Manager
+**Test Case**: Membuat penyesuaian pada formula `APPROVED` tidak mengubah nomor revisi induk dan tidak mengubah baris item induk.
+
+---
+
 ## Lampiran A — Coverage Matrix
 
 ### A.1 REQUIREMENT.md Coverage (34 Poin)
@@ -1842,7 +1989,8 @@ Tidak ada precedence chain lokal. Gunakan satu peta otoritas berbasis subjek di 
 - **5 Orphan inputs/outputs covered**: 5/5 (100%)
 - **Broken lineage fixed**: 1/1 (100%)
 - **DEC-001 to DEC-034 translated**: 23/34 (67% — sisanya proses/migration/NFR yang tidak butuh rule bisnis)
-- **Total rules defined**: 106 (BUS-RULE-001 to BUS-RULE-106)
+- **Total rules defined**: 114 (BUS-RULE-001 to BUS-RULE-114)
+- **Owner decisions 2026-09-20 (long form `DEC-2026-09-20-051..059`)** translated: 8/8 — see §15 and `process/_PROCESS_DECISIONS_LOG.md`. These are additive and do not amend any DEC-001..034 entry.
 
 ---
 

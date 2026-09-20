@@ -174,12 +174,18 @@ sales_pipeline:
 
   # ---- 2.2 SalesSample (sample request) -------------------------
   - entity: SalesSample
-    states: [DRAFT, SUBMITTED, IN_PROGRESS, APPROVED, REJECTED, CONVERTED]
+    states: [DRAFT, SUBMITTED, WAITING_FINANCE, IN_PROGRESS, APPROVED, REJECTED, CONVERTED]
     initial_state: DRAFT
     source_of_truth: schema.prisma:SalesSample.status
     notes: |
       Status strings are uppercase per Prisma model comment.
       "IN_PROGRESS" covers both formulation (R&D) and lab sample prep.
+
+      WAITING_FINANCE is the sample-fee gate. Owner decision 2026-09-20
+      (DEC-2026-09-20-051): Finance MUST verify that the sample fee actually
+      arrived before R&D may start formulation. There is no auto-approval and no
+      "dev mode" bypass — BUS-RULE-107. This state mirrors `SampleStage.WAITING_FINANCE`
+      in the running schema, where the gate was declared but never enforced.
     transitions:
       - from: DRAFT
         to: SUBMITTED
@@ -198,17 +204,45 @@ sales_pipeline:
           - notification.send_to(role=BusDevManager, RnDManager)
           - status_transition.record
       - from: SUBMITTED
-        to: IN_PROGRESS
-        trigger: rnd.accept_brief
+        to: WAITING_FINANCE
+        trigger: rnd.request_sample_payment
         authorized_actor:
           role: RnDChemist
         preconditions:
           - formulation_brief_validated
+          - sample_fee_amount > 0
+          - payment_proof_uploaded
         side_effects:
           - audit_log.create
-          - notification.send_to(role=BusDevStaff=owner)
+          - notification.send_to(role=FinanceStaff, FinanceAdmin)
+          - outbox.enqueue(sample.payment_requested)
+      - from: WAITING_FINANCE
+        to: IN_PROGRESS
+        trigger: finance.verify_sample_payment
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - sample_payment_received == true          # BUS-RULE-107
+          - payment_verified_by != null              # named verifier, never system
+          - formulation_start_blocked_until_verified == true
+        side_effects:
+          - audit_log.create(action=verify_sample_payment, actor=FinanceStaff)
+          - sample.payment_verified_at = now()
+          - sample.payment_verified_by = actor.id
           - downstream.create(Formulation rev=0 draft)
+          - notification.send_to(role=RnDChemist, BusDevStaff=owner)
+          - outbox.enqueue(sample.payment_verified)
           - dashboard.refresh(D.Sample)
+      - from: WAITING_FINANCE
+        to: REJECTED
+        trigger: finance.reject_sample_payment
+        authorized_actor:
+          role: FinanceStaff
+        preconditions:
+          - rejection_reason != null
+        side_effects:
+          - audit_log.create(action=reject_sample_payment)
+          - notification.send_to(role=BusDevStaff=owner, RnDChemist)
       - from: IN_PROGRESS
         to: APPROVED
         trigger: rnd.manager_approve
@@ -250,6 +284,11 @@ sales_pipeline:
         to: APPROVED                # must go through SUBMITTED → IN_PROGRESS
       - from: DRAFT
         to: CONVERTED               # cannot convert un-submitted sample
+      - from: SUBMITTED
+        to: IN_PROGRESS             # BUS-RULE-107: formulation cannot start before
+                                    # Finance verifies the sample fee. No bypass.
+      - from: WAITING_FINANCE
+        to: APPROVED                # must be verified and formulated first
       - from: REJECTED
         to: APPROVED                # must create new sample record
       - from: CONVERTED
@@ -1681,6 +1720,177 @@ rnd_formulation_revisions:
   max_revisions_per_sample: 3
   after_max_revisions: auto_lock_then_create_new_formulation
   reference: raw/05_master_business_process_blueprint.md exception table
+
+# ===============================================================
+# 5A. CREATIVE / DESIGN PIPELINE (artwork approval)
+# ===============================================================
+# Canonical owner established by DEC-2026-09-20-051. Before that, `artwork_status`,
+# `design_locked` and `legal_artwork_approved` were consumed only as bare precondition
+# predicates by production_pipeline (see `artwork_status == APPROVED` on
+# ScheduleFilling PLANNED→IN_PROGRESS and SchedulePackaging PLANNED→IN_PROGRESS, and
+# BUS-RULE-034) with no entity or state machine behind them.
+#
+# Owner decisions 2026-09-20 encoded here:
+#   - a client-approved artwork is NOT hard-locked; revisions remain allowed up to a
+#     bounded limit (DEC-2026-09-20-052);
+#   - the bound is 3 revisions; the design locks only past it (DEC-2026-09-20-055);
+#   - past the bound a supervisor may reopen it and the allowance RESTARTS
+#     (DEC-2026-09-20-056).
+#   - reading the finalized list is broad: every PIC who appears on the milestone
+#     checklist progress/tracking may read it (DEC-2026-09-20-057).
+#
+# Two distinct ways to leave LOCKED, deliberately kept apart:
+#   in-bound  — the client asks for another revision; the allowance is CONSUMED.
+#   at-bound  — a supervisor reopens; the allowance RESTARTS from zero.
+
+creative_pipeline:
+
+  - entity: DesignTask
+    states: [INBOX, IN_PROGRESS, WAITING_APJ, WAITING_CLIENT, REVISION, LOCKED]
+    initial_state: INBOX
+    source_of_truth: schema.prisma:DesignTask.kanbanState
+    notes: |
+      `LOCKED` means "client-approved / finalized" and is what makes a design appear
+      on the finalized-designs page (`isFinal = true`). It is NOT the hard revision
+      lock. The hard lock is the separate `DesignTask.isLocked` flag, set only once
+      `revisionCount` reaches the bound of 3 — see BUS-RULE-111. While
+      `isLocked == false`, further revisions are permitted from LOCKED.
+
+      Every transition that consumes a revision writes an immutable DesignVersion and
+      a DesignFeedback row carrying the `versionId` it decided on — a stored fact,
+      never inferred from timestamps (BUS-RULE-110).
+    transitions:
+      - from: INBOX
+        to: IN_PROGRESS
+        trigger: designer.start
+        authorized_actor:
+          role: Director
+        preconditions:
+          - brief != null
+          - lead_id_linked != null
+        side_effects:
+          - audit_log.create
+          - outbox.enqueue(design.task_started)
+          - notification.send_to(role=BusDevStaff=requester)
+      - from: IN_PROGRESS
+        to: WAITING_APJ
+        trigger: designer.submit_for_apj
+        authorized_actor:
+          role: Director
+        preconditions:
+          - DesignVersion.latest != null
+          - artwork_url_uploaded
+        side_effects:
+          - audit_log.create
+          - outbox.enqueue(design.submitted_to_apj)
+          - notification.send_to(role=ApotekerPenanggungJawab)
+      - from: WAITING_APJ
+        to: WAITING_CLIENT
+        trigger: apj.approve
+        authorized_actor:
+          role: ApotekerPenanggungJawab
+        preconditions:
+          - DesignFeedback.versionId == DesignVersion.latest.versionNumber
+          - regulatory_artwork_requirements_met
+        side_effects:
+          - audit_log.create(action=apj_approve)
+          - DesignFeedback.create(approvalStatus=APPROVED, versionId=latest)
+          - outbox.enqueue(design.apj_approved)
+          - notification.send_to(role=BusDevStaff=owner)
+      - from: WAITING_APJ
+        to: REVISION
+        trigger: apj.request_revision
+        authorized_actor:
+          role: ApotekerPenanggungJawab
+        preconditions:
+          - revision_reason != null
+          - revisionCount < 3                       # BUS-RULE-111
+        side_effects:
+          - audit_log.create(action=apj_reject)
+          - DesignFeedback.create(approvalStatus=REJECTED, versionId=latest)
+          - revisionCount.increment
+          - notification.send_to(role=Director)
+      - from: WAITING_CLIENT
+        to: LOCKED
+        trigger: client.approve
+        authorized_actor:
+          role: BusDevStaff
+          scope: own_only
+        preconditions:
+          - client_approval_recorded == true
+          - DesignFeedback.versionId == DesignVersion.latest.versionNumber
+        side_effects:
+          - audit_log.create(action=client_approve)
+          - DesignFeedback.create(approvalStatus=APPROVED, versionId=latest)
+          - DesignTask.isFinal = true               # drives the finalized-designs page
+          - DesignTask.isLocked = (revisionCount >= 3)
+          - DesignTask.finalArtworkUrl = latest.artworkUrl
+          - outbox.enqueue(design.finalized)
+          - notification.send_to(role=BusDevStaff=owner, RnDManager, LegalitasAdmin)
+      - from: LOCKED
+        to: REVISION
+        trigger: client.request_revision
+        authorized_actor:
+          role: BusDevStaff
+          scope: own_only
+        preconditions:
+          - isLocked == false                       # BUS-RULE-111: in-bound only
+          - revisionCount < 3
+          - revision_reason != null
+        side_effects:
+          - audit_log.create(action=client_revision_request)
+          - DesignFeedback.create(approvalStatus=REJECTED, versionId=latest)
+          - revisionCount.increment                 # consumes the allowance
+          - DesignTask.isFinal = false
+          - outbox.enqueue(design.revision_requested)
+          - notification.send_to(role=Director)
+      - from: REVISION
+        to: IN_PROGRESS
+        trigger: designer.resume
+        authorized_actor:
+          role: Director
+        preconditions:
+          - revisionCount <= 3
+        side_effects:
+          - audit_log.create
+          - outbox.enqueue(design.revision_started)
+      # Supervisor reopen — the ONLY transition allowed to RESET the allowance.
+      # Owner decision 2026-09-20 (DEC-2026-09-20-056): past the bound the design locks,
+      # but a supervisor may reopen it and the revision allowance is recounted from zero.
+      # The reopen is itself recorded in the design history so the override is auditable.
+      # Live counterpart: `CreativeService.unlockTask`, which today clears `isLocked` but
+      # never resets `revisionCount` — repaired under BUS-RULE-111.
+      - from: LOCKED
+        to: REVISION
+        trigger: supervisor.reopen
+        authorized_actor:
+          role: Director
+        preconditions:
+          - isLocked == true                        # only the at-bound lock is reopenable
+          - reopen_reason != null
+        side_effects:
+          - audit_log.create(action=supervisor_reopen, after.reason)
+          - DesignFeedback.create(content=reopen_reason, versionId=latest)
+          - DesignTask.revisionCount = 0            # allowance restarts
+          - DesignTask.isLocked = false
+          - outbox.enqueue(design.reopened)
+          - notification.send_to(role=Director, BusDevStaff=owner)
+    forbidden:
+      - from: LOCKED
+        to: IN_PROGRESS             # must pass through REVISION, which records the reason
+      - from: LOCKED
+        to: WAITING_CLIENT          # cannot skip re-approval after a revision
+      - from: WAITING_APJ
+        to: LOCKED                  # client approval is mandatory
+      - from: LOCKED
+        to: REVISION
+        when: isLocked == false AND trigger == supervisor.reopen
+                                    # nothing to reopen; use client.request_revision
+      - from: LOCKED
+        to: REVISION
+        when: isLocked == true AND trigger == client.request_revision
+                                    # BUS-RULE-111: at-bound revisions require the
+                                    # supervisor reopen path. Ordinary requests refused.
 
 # ===============================================================
 # 6. CHECKLIST PIPELINE (17-stage QC + Closing)

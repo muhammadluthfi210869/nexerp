@@ -40,7 +40,7 @@ This document defines **all persistent entities** in NEX ERP, their fields, rela
 
 ### 1.1 Total entity count
 
-**92 Prisma models** are currently defined in `schema.prisma`, grouped into **10 generated physical sections**. The count is validated by `scripts/ssot/validate_ssot.js`; new entities require contract-first change governance.
+**100 Prisma models** are currently defined in `schema.prisma`, grouped into **11 generated physical sections**. The count is validated by `scripts/ssot/validate_ssot.js`; new entities require contract-first change governance.
 
 | Section | Entity count | Purpose |
 |---|---|---|
@@ -54,7 +54,19 @@ This document defines **all persistent entities** in NEX ERP, their fields, rela
 | 8. Checklist | 4 | 17-stage template + tracking |
 | 9. HR & KPI | 6 | Employee, Contract, Performance, effective-dated role assignment, KPI definition/result |
 | 10. Communication | 6 | Note, StatusTransition, Tag, Comment, Attachment, Notification |
-| **Total** | **92** | Generated from the physical schema |
+| 11. Creative / Design & Legalitas Permits | 8 | DesignTask, DesignVersion, DesignFeedback, LegalStaff, HkiRecord, BpomRecord, HalalRecord, LegalTimelineLog |
+| **Total** | **100** | Generated from the physical schema |
+
+> **Known gap (not a P08 blocker).** The canonical `schema.prisma` is a **subset projection** of
+> the running database: it holds 100 models against 203 in `backend/prisma/schema/`. P08
+> canonicalized only the models its acceptance checks depend on. The remainder is recorded as
+> backlog per `DEC-2026-09-20-059`; a full canonical↔live reconciliation is a repo-wide job and
+> is not owned by any single phase.
+>
+> **Naming divergence.** The running schema also names two P08 concepts differently from this
+> contract: `SampleRequest`/`Formula` (live) vs `SalesSample`/`Formulation` (canonical here).
+> `DEC-2026-09-20-060` records the divergence and its resolution direction; the rename is
+> deliberately a separate change from the P08 subject-ownership work above.
 
 ### 1.2 Naming conventions
 
@@ -1500,6 +1512,130 @@ Per NFR-Finance §2.6. 3-tier approval (Staff → Head → Accounting → Direct
 | body | String? | | |
 | readAt | DateTime? | | Never deleted (NFR §5 exception) |
 | createdAt | DateTime | default now | |
+
+---
+
+### 12A. Creative / Design and Legalitas Permits
+
+> Canonical owner established by `DEC-2026-09-20-051` (design/artwork approval) and
+> `DEC-2026-09-20-053` (permit record + expiry monitoring). Before that, neither subject had
+> an entity: `artwork_status`, `design_locked` and `legal_artwork_approved` were consumed only
+> as bare precondition predicates in `03_WORKFLOW_STATE_MACHINE.yaml`, with no domain model,
+> state machine, API or screen behind them. Physical persistence is `schema.prisma` SECTION 11.
+>
+> Scope boundary: permits are **recorded and expiry-monitored only**. Permit submission,
+> regulatory filing and product stability testing are out of scope. The live-only
+> `RegulatoryPipeline` / `ArtworkReview` / `PNBPRequest` tables implement that deferred
+> submission flow and are deliberately **not** modelled here — see `DEC-2026-09-20-058`.
+
+#### 12A.1 `DesignTask`
+
+| Field | Type | Constraints | Notes |
+|---|---|---|---|
+| id | UUID | PK | |
+| organizationId | UUID | FK | |
+| leadId | UUID | FK Lead | |
+| soId | UUID? | FK SalesOrder | Set once the sample converts |
+| brief | String | | |
+| taskType | String? | | |
+| kanbanState | String | default `INBOX` | `INBOX`/`IN_PROGRESS`/`WAITING_APJ`/`WAITING_CLIENT`/`REVISION`/`LOCKED` |
+| revisionCount | Int | default 0 | Revisions used in the **current** allowance |
+| isLocked | Boolean | default false | True only once `revisionCount` reaches the bound of 3 |
+| isFinal | Boolean | default false | Client-approved; drives the finalized-designs page |
+| slaDeadline | DateTime? | | |
+| finalArtworkUrl, finalMockupUrl | String? | | |
+| createdAt, updatedAt, deletedAt | | | |
+
+`LOCKED` means "client-approved / finalized" — it is **not** the hard revision lock. The hard
+lock is `isLocked`, set only at the bound (`BUS-RULE-111`). Read scope is deliberately broad:
+every PIC who appears on the milestone checklist progress/tracking may read
+(`DEC-2026-09-20-057`).
+
+#### 12A.2 `DesignVersion`
+
+| Field | Type | Constraints | Notes |
+|---|---|---|---|
+| id | UUID | PK | |
+| taskId | UUID | FK DesignTask, CASCADE | |
+| versionNumber | Int | unique per task | |
+| artworkUrl | String? | | High-res master file |
+| mockupUrl | String? | | Visual preview |
+| printSpecs | JSON? | | Finishing, paper type (Tab A/B) |
+| uploadedBy | UUID? | FK User | |
+| createdAt | DateTime | default now | |
+
+Append-only. A reopen raises the allowance rather than rewriting a version.
+
+#### 12A.3 `DesignFeedback`
+
+| Field | Type | Constraints | Notes |
+|---|---|---|---|
+| id | UUID | PK | |
+| taskId | UUID | FK DesignTask, CASCADE | |
+| versionId | UUID? | FK DesignVersion | **The version this decision is about** |
+| fromDivision | String | | Whose gate: APJ / client / internal |
+| authorId | UUID | FK User | |
+| content | String? | | |
+| approvalStatus | String? | | `WAITING`/`APPROVED`/`REJECTED` |
+| signatureHash | String? | | E-signature evidence |
+| ipAddress | String? | | |
+| createdAt | DateTime | default now | |
+
+`versionId` is a stored fact, never inferred from timestamps — an approval that cannot name the
+version it approved is rejected (`BUS-RULE-110`).
+
+#### 12A.4 `LegalStaff`
+
+| Field | Type | Constraints | Notes |
+|---|---|---|---|
+| id | UUID | PK | |
+| name | String | | |
+| role | String | default `LEGAL_OFFICER` | |
+| createdAt, updatedAt | | | |
+
+PIC master referenced by all three permit record types.
+
+#### 12A.5 `HkiRecord`, 12A.6 `BpomRecord`, 12A.7 `HalalRecord`
+
+One logical subject — **permit record** — in three typed variants. They share identity, issue
+date, expiry date, lifecycle stage, compliance status and audit risk; field-name drift
+(`brandName` vs `productName`, `HalalRecord.stage` as free text) is preserved verbatim from the
+running schema so the contract describes reality. `BUS-RULE-112` operates on the shared shape,
+not on the drift.
+
+| Field | Type | Constraints | Notes |
+|---|---|---|---|
+| id | UUID | PK | |
+| organizationId | UUID | FK | |
+| hkiId / bpomId / halalId | String | unique | Certificate identity |
+| brandName / productName | String | | |
+| type / category | String | | |
+| clientName | String | | HKI and BPOM |
+| manufacturer | String | | Halal only |
+| picId | UUID | FK LegalStaff | |
+| applicationDate | DateTime | | Issue/application date |
+| expiryDate | DateTime? | | **Single expiry input for `BUS-RULE-112`** |
+| stage | String | | `DRAFT`/`SUBMITTED`/`EVALUATION`/`REVISION`/`PUBLISHED` |
+| status | String | | `IN_PROGRESS`/`DONE`/`REJECTED` |
+| auditRisk | String | | `OK`/`DELAY_AUDIT`/`CRITICAL` — **derived, never hardcoded at insert** |
+| createdAt, updatedAt, deletedAt | | | |
+
+`expiryDate` is nullable and a null expiry resolves to `NO_EXPIRY`, never to "expires today".
+
+#### 12A.8 `LegalTimelineLog`
+
+| Field | Type | Constraints | Notes |
+|---|---|---|---|
+| id | UUID | PK | |
+| recordId | String | | Polymorphic — not a FK |
+| recordType | String | | `HKI`/`BPOM`/`HALAL` |
+| action | String | | |
+| previousStage, newStage | String? | | |
+| notes | String? | | |
+| staffName | String | | |
+| createdAt | DateTime | default now | |
+
+Append-only permit history. The authoritative audit trail additionally lives in `AuditLog`.
 
 ---
 
