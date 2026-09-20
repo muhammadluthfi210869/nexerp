@@ -1,8 +1,8 @@
 {
   "phase": "P06",
-  "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+  "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
   "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-  "timestamp": "2026-09-19T21:34:05.544Z",
+  "timestamp": "2026-09-20T00:00:02.794Z",
   "verdict": "PASS",
   "checks": [
     {
@@ -11,12 +11,12 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 120,
+      "duration_ms": 209,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
-          "command": "git merge-base f93132c5ee77ca5698fa952e52d3ed88f3bb744b 4203cef51def3a63621e1e716422d35ca8f39634",
+          "command": "git merge-base f93132c5ee77ca5698fa952e52d3ed88f3bb744b 57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
           "exit_code": 0
         },
         {
@@ -37,9 +37,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 5,
+      "duration_ms": 10,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "analyzeCanonicalMasterInventory",
@@ -87,9 +87,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 7,
+      "duration_ms": 11,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "analyzeSchemaAliases",
@@ -133,9 +133,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 2,
+      "duration_ms": 3,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "verify system_configs table rows",
@@ -172,7 +172,7 @@
       "skipped": false,
       "duration_ms": 2,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "verify active master_units rows in DB",
@@ -209,7 +209,7 @@
       "skipped": false,
       "duration_ms": 0,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "verify supplier controller strongly typed DTOs",
@@ -234,7 +234,7 @@
       "skipped": false,
       "duration_ms": 1,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "verify warehouse_coa_formulation_ownership",
@@ -251,7 +251,7 @@
       "skipped": false,
       "duration_ms": 1,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "analyzeDirectPrismaInControllers",
@@ -267,9 +267,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 2,
+      "duration_ms": 1,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "analyzeCodeGeneration",
@@ -292,7 +292,7 @@
       "skipped": false,
       "duration_ms": 1,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "verify active master units count in DB",
@@ -313,9 +313,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 9,
+      "duration_ms": 63,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "verify ImportExportService file present",
@@ -344,9 +344,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 1,
+      "duration_ms": 3,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "analyzePaginationAndFilters",
@@ -365,7 +365,7 @@
       "skipped": false,
       "duration_ms": 0,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "execute PolicyService.decide for SuperAdmin",
@@ -399,9 +399,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 5,
+      "duration_ms": 8,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "verify audit_logs table presence and queryability",
@@ -429,9 +429,9 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 6,
+      "duration_ms": 11,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
           "command": "analyzeProductionMockFallbacks",
@@ -453,20 +453,56 @@
       "executed": true,
       "synthetic": false,
       "skipped": false,
-      "duration_ms": 0,
+      "duration_ms": 41900,
       "phase_base_sha": "f93132c5ee77ca5698fa952e52d3ed88f3bb744b",
-      "candidate_sha": "4203cef51def3a63621e1e716422d35ca8f39634",
+      "candidate_sha": "57e94429b4dd6e72b0bc2df99cd9a3b32eeb528f",
       "commands": [
         {
-          "command": "verify subphase_seam_and_regression",
+          "command": "node scripts/ssot/validate_ssot.js",
+          "exit_code": 0
+        },
+        {
+          "command": "node scripts/ssot/audit_lifecycle_reconciliation.js",
+          "exit_code": 0
+        },
+        {
+          "command": "npx tsc --noEmit -p backend/tsconfig.build.json",
+          "exit_code": 0
+        },
+        {
+          "command": "npx tsc --noEmit -p frontend/tsconfig.json",
           "exit_code": 0
         }
       ],
-      "target_count": 12,
-      "subphase_test_coverage_percent": 100,
-      "seam_test_coverage_percent": 100,
-      "unexpected_skips": 0,
-      "unowned_requirements_or_seams": 0,
+      "target_count": 4,
+      "regressions_measured": [
+        {
+          "label": "p01_ssot_validation",
+          "exit_code": 0,
+          "target_count": null,
+          "passed": null
+        },
+        {
+          "label": "p02_lifecycle_reconciliation",
+          "exit_code": 0,
+          "target_count": null,
+          "passed": null
+        },
+        {
+          "label": "backend_tsc",
+          "exit_code": 0,
+          "target_count": null,
+          "passed": null
+        },
+        {
+          "label": "frontend_tsc",
+          "exit_code": 0,
+          "target_count": null,
+          "passed": null
+        }
+      ],
+      "measured_exit_codes": "ALL_ZERO",
+      "any_nonzero_exit": false,
       "changed_max_cyclomatic_complexity": 6,
       "changed_duplication_percent": 0
     }
@@ -485,8 +521,8 @@
       "expected_reason_code": "UNMAPPED_MASTER",
       "observed_reason_code": "UNMAPPED_MASTER",
       "rejection_reason": "[canonical_master_inventory] UNMAPPED_MASTER: Found 1 unmapped canonical master entities: [{\"entity\":\"UnmappedMasterDummy\",\"physicalModel\":\"NonExistentTable99\"}]",
-      "duration_ms": 6,
-      "occurred_at": "2026-09-19T21:34:04.830Z"
+      "duration_ms": 10,
+      "occurred_at": "2026-09-20T00:00:01.291Z"
     },
     {
       "id": "P06-DUPLICATE-SOURCE-OF-TRUTH",
@@ -501,8 +537,8 @@
       "expected_reason_code": "DUPLICATE_SOURCE_OF_TRUTH",
       "observed_reason_code": "DUPLICATE_SOURCE_OF_TRUTH",
       "rejection_reason": "[schema_alias_and_referential_integrity] DUPLICATE_SOURCE_OF_TRUTH: Duplicate physical writers detected for semantic masters: [{\"file\":\"__duplicate_customer.controller.ts\",\"reason\":\"Duplicate physical writer for semantic master without adapter\"}]",
-      "duration_ms": 4,
-      "occurred_at": "2026-09-19T21:34:04.834Z"
+      "duration_ms": 12,
+      "occurred_at": "2026-09-20T00:00:01.303Z"
     },
     {
       "id": "P06-DIRECT-PRISMA-CONTROLLER",
@@ -517,8 +553,8 @@
       "expected_reason_code": "DIRECT_PRISMA_ACCESS",
       "observed_reason_code": "DIRECT_PRISMA_ACCESS",
       "rejection_reason": "[master_crud] DIRECT_PRISMA_ACCESS: Direct Prisma access in controllers prohibited: [{\"file\":\"backend/src/modules/master/controllers/__temp_prisma_leak.controller.ts\",\"importsPrisma\":true,\"injectsPrisma\":true,\"callsPrisma\":true}]",
-      "duration_ms": 5,
-      "occurred_at": "2026-09-19T21:34:04.839Z"
+      "duration_ms": 12,
+      "occurred_at": "2026-09-20T00:00:01.315Z"
     },
     {
       "id": "P06-PRODUCTION-MOCK-FALLBACK",
@@ -533,8 +569,8 @@
       "expected_reason_code": "PRODUCTION_MOCK_FALLBACK",
       "observed_reason_code": "PRODUCTION_MOCK_FALLBACK",
       "rejection_reason": "[frontend_live_data_and_dna] PRODUCTION_MOCK_FALLBACK: Production mock fallbacks detected: [{\"file\":\"frontend/src/app/(dashboard)/master/personnel/__temp_mock_leak.tsx\",\"hasFallbackConst\":true,\"hasInitialArray\":false,\"usesFallbackOnCatch\":false,\"stateInitializedWithMock\":false}]",
-      "duration_ms": 10,
-      "occurred_at": "2026-09-19T21:34:04.849Z"
+      "duration_ms": 28,
+      "occurred_at": "2026-09-20T00:00:01.343Z"
     },
     {
       "id": "P06-DUPLICATE-CODE",
@@ -548,9 +584,9 @@
       "reason_code": "DUPLICATE_CODE",
       "expected_reason_code": "DUPLICATE_CODE",
       "observed_reason_code": "DUPLICATE_CODE",
-      "rejection_reason": "[uniqueness_and_code_generation] DUPLICATE_CODE: Unique constraint violated on duplicate code: DUP-4850",
-      "duration_ms": 7,
-      "occurred_at": "2026-09-19T21:34:04.856Z"
+      "rejection_reason": "[uniqueness_and_code_generation] DUPLICATE_CODE: Unique constraint violated on duplicate code: DUP-1344",
+      "duration_ms": 8,
+      "occurred_at": "2026-09-20T00:00:01.351Z"
     },
     {
       "id": "P06-NONDETERMINISTIC-CODE",
@@ -565,8 +601,8 @@
       "expected_reason_code": "NONDETERMINISTIC_CODE",
       "observed_reason_code": "NONDETERMINISTIC_CODE",
       "rejection_reason": "[uniqueness_and_code_generation] NONDETERMINISTIC_CODE: Nondeterministic code generation found: [{\"file\":\"backend/src/modules/master/services/__temp_random.service.ts\",\"type\":\"MATH_RANDOM\",\"description\":\"Math.random() used in code generation\"}]",
-      "duration_ms": 4,
-      "occurred_at": "2026-09-19T21:34:04.860Z"
+      "duration_ms": 10,
+      "occurred_at": "2026-09-20T00:00:01.361Z"
     },
     {
       "id": "P06-HARD-DELETE-REFERENCED",
@@ -581,8 +617,8 @@
       "expected_reason_code": "HARD_DELETE_PROHIBITED",
       "observed_reason_code": "HARD_DELETE_PROHIBITED",
       "rejection_reason": "[soft_delete_and_reference_policy] HARD_DELETE_PROHIBITED: Hard deletion of referenced master data is prohibited; foreign key constraint enforced",
-      "duration_ms": 43,
-      "occurred_at": "2026-09-19T21:34:04.903Z"
+      "duration_ms": 94,
+      "occurred_at": "2026-09-20T00:00:01.455Z"
     },
     {
       "id": "P06-SOFT-DELETED-VISIBLE",
@@ -597,8 +633,8 @@
       "expected_reason_code": "SOFT_DELETED_LEAK",
       "observed_reason_code": "SOFT_DELETED_LEAK",
       "rejection_reason": "[soft_delete_and_reference_policy] SOFT_DELETED_LEAK: Default master query leaks soft-deleted/inactive rows without explicit filter",
-      "duration_ms": 2,
-      "occurred_at": "2026-09-19T21:34:04.905Z"
+      "duration_ms": 1,
+      "occurred_at": "2026-09-20T00:00:01.457Z"
     },
     {
       "id": "P06-ORPHAN-REFERENCE",
@@ -613,8 +649,8 @@
       "expected_reason_code": "ORPHAN_REFERENCE",
       "observed_reason_code": "ORPHAN_REFERENCE",
       "rejection_reason": "[schema_alias_and_referential_integrity] ORPHAN_REFERENCE: Foreign key constraint rejected orphan reference: 00000000-0000-0000-0000-000000000099",
-      "duration_ms": 44,
-      "occurred_at": "2026-09-19T21:34:04.949Z"
+      "duration_ms": 72,
+      "occurred_at": "2026-09-20T00:00:01.529Z"
     },
     {
       "id": "P06-UNBOUNDED-PAGINATION",
@@ -629,8 +665,8 @@
       "expected_reason_code": "PAGINATION_UNBOUNDED",
       "observed_reason_code": "PAGINATION_UNBOUNDED",
       "rejection_reason": "[pagination_filter_and_search] PAGINATION_UNBOUNDED: Default page size 999 exceeds threshold",
-      "duration_ms": 3,
-      "occurred_at": "2026-09-19T21:34:04.952Z"
+      "duration_ms": 4,
+      "occurred_at": "2026-09-20T00:00:01.533Z"
     },
     {
       "id": "P06-FILTER-COUNT-MISMATCH",
@@ -645,8 +681,8 @@
       "expected_reason_code": "FILTER_COUNT_MISMATCH",
       "observed_reason_code": "FILTER_COUNT_MISMATCH",
       "rejection_reason": "[pagination_filter_and_search] FILTER_COUNT_MISMATCH: Reported total count does not match applied filter criteria",
-      "duration_ms": 2,
-      "occurred_at": "2026-09-19T21:34:04.954Z"
+      "duration_ms": 3,
+      "occurred_at": "2026-09-20T00:00:01.537Z"
     },
     {
       "id": "P06-IMPORT-PARTIAL-COMMIT",
@@ -660,9 +696,9 @@
       "reason_code": "IMPORT_PARTIAL_COMMIT",
       "expected_reason_code": "IMPORT_PARTIAL_COMMIT",
       "observed_reason_code": "IMPORT_PARTIAL_COMMIT",
-      "rejection_reason": "[import_export] IMPORT_PARTIAL_COMMIT: Batch import with row errors partially committed; transaction must rollback all rows",
-      "duration_ms": 55,
-      "occurred_at": "2026-09-19T21:34:05.009Z"
+      "rejection_reason": "[import_export] IMPORT_PARTIAL_COMMIT: Batch import with row errors atomically rejected (validation guard) — partial-commit guarded",
+      "duration_ms": 119,
+      "occurred_at": "2026-09-20T00:00:01.656Z"
     },
     {
       "id": "P06-IMPORT-NONIDEMPOTENT",
@@ -677,8 +713,8 @@
       "expected_reason_code": "IMPORT_NONIDEMPOTENT",
       "observed_reason_code": "IMPORT_NONIDEMPOTENT",
       "rejection_reason": "[import_export] IMPORT_NONIDEMPOTENT: Replaying import with same idempotency key created duplicate records instead of returning original result",
-      "duration_ms": 10,
-      "occurred_at": "2026-09-19T21:34:05.019Z"
+      "duration_ms": 26,
+      "occurred_at": "2026-09-20T00:00:01.682Z"
     },
     {
       "id": "P06-IMPORT-FORMULA-INJECTION",
@@ -693,8 +729,8 @@
       "expected_reason_code": "FORMULA_INJECTION_DETECTED",
       "observed_reason_code": "FORMULA_INJECTION_DETECTED",
       "rejection_reason": "[import_export] FORMULA_INJECTION_DETECTED: Export cell formula injection detected: raw formula starting with \"=\" not neutralized",
-      "duration_ms": 9,
-      "occurred_at": "2026-09-19T21:34:05.028Z"
+      "duration_ms": 31,
+      "occurred_at": "2026-09-20T00:00:01.713Z"
     },
     {
       "id": "P06-EXPORT-SCOPE-BYPASS",
@@ -709,8 +745,8 @@
       "expected_reason_code": "EXPORT_SCOPE_BYPASS",
       "observed_reason_code": "EXPORT_SCOPE_BYPASS",
       "rejection_reason": "[role_tenant_field_scope] EXPORT_SCOPE_BYPASS: Export returned records outside actor data scope",
-      "duration_ms": 0,
-      "occurred_at": "2026-09-19T21:34:05.028Z"
+      "duration_ms": 2,
+      "occurred_at": "2026-09-20T00:00:01.716Z"
     },
     {
       "id": "P06-CROSS-TENANT-ACCESS",
@@ -725,8 +761,8 @@
       "expected_reason_code": "CROSS_TENANT_FORBIDDEN",
       "observed_reason_code": "CROSS_TENANT_FORBIDDEN",
       "rejection_reason": "[role_tenant_field_scope] CROSS_TENANT_FORBIDDEN: Access to cross-tenant master entity is strictly forbidden",
-      "duration_ms": 0,
-      "occurred_at": "2026-09-19T21:34:05.029Z"
+      "duration_ms": 2,
+      "occurred_at": "2026-09-20T00:00:01.718Z"
     },
     {
       "id": "P06-UNAUTHORIZED-MUTATION",
@@ -741,8 +777,8 @@
       "expected_reason_code": "FORBIDDEN_ACTION",
       "observed_reason_code": "FORBIDDEN_ACTION",
       "rejection_reason": "[role_tenant_field_scope] FORBIDDEN_ACTION: Actor lacks required permission for master mutation",
-      "duration_ms": 1,
-      "occurred_at": "2026-09-19T21:34:05.030Z"
+      "duration_ms": 2,
+      "occurred_at": "2026-09-20T00:00:01.720Z"
     },
     {
       "id": "P06-FIELD-SCOPE-LEAK",
@@ -757,8 +793,8 @@
       "expected_reason_code": "FIELD_SCOPE_LEAK",
       "observed_reason_code": "FIELD_SCOPE_LEAK",
       "rejection_reason": "[role_tenant_field_scope] FIELD_SCOPE_LEAK: Restricted fields leaked to unauthorized role: creditLimit",
-      "duration_ms": 1,
-      "occurred_at": "2026-09-19T21:34:05.031Z"
+      "duration_ms": 2,
+      "occurred_at": "2026-09-20T00:00:01.722Z"
     },
     {
       "id": "P06-AUDIT-NONATOMIC",
@@ -773,8 +809,8 @@
       "expected_reason_code": "AUDIT_NONATOMIC",
       "observed_reason_code": "AUDIT_NONATOMIC",
       "rejection_reason": "[audit_outbox_atomicity] AUDIT_NONATOMIC: Master entity mutation committed without corresponding audit log in the same transaction",
-      "duration_ms": 11,
-      "occurred_at": "2026-09-19T21:34:05.042Z"
+      "duration_ms": 10,
+      "occurred_at": "2026-09-20T00:00:01.732Z"
     },
     {
       "id": "P06-UI-DNA-BYPASS",
@@ -790,7 +826,7 @@
       "observed_reason_code": "UI_DNA_BYPASS",
       "rejection_reason": "[frontend_live_data_and_dna] UI_DNA_BYPASS: UI DNA compliance violations detected: [{\"file\":\"frontend/src/app/(dashboard)/master/personnel/__temp_dna_leak.tsx\",\"reason\":\"DIRECT_RADIX_IMPORT\",\"message\":\"Direct Radix UI import is forbidden outside DNA\"}]",
       "duration_ms": 11,
-      "occurred_at": "2026-09-19T21:34:05.053Z"
+      "occurred_at": "2026-09-20T00:00:01.743Z"
     }
   ],
   "metrics": {

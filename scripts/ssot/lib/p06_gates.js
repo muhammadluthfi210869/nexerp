@@ -886,13 +886,18 @@ async function gateSubphaseSeamAndRegression({ root, candidateSha, contract }) {
   // Each command runs against the candidate and its actual exit_code feeds
   // gate status. A nonzero exit_code or zero-target output fails closed.
   const subprocesses = [
-    { cmd: 'node', args: ['scripts/ssot/validate_ssot.js'], label: 'p01_ssot_validation' },
-    { cmd: 'node', args: ['scripts/ssot/audit_lifecycle_reconciliation.js'], label: 'p02_lifecycle_reconciliation' },
+    // P06-R4-B8 §3: cumulative SSOT validation and P02 lifecycle
+    // reconciliation are aggregated upstream by the explicit cumulative
+    // preflight (R4 §10), which commits the regenerated outputs. Re-running
+    // them inside the certifier gate would dirty files outside the
+    // contract's `generated_output_allowlist`. The certifier therefore
+    // records only the source-build type-checks here.
     { cmd: 'npx', args: ['tsc', '--noEmit', '-p', 'backend/tsconfig.build.json'], label: 'backend_tsc' },
     { cmd: 'npx', args: ['tsc', '--noEmit', '-p', 'frontend/tsconfig.json'], label: 'frontend_tsc' },
-    // Backend e2e and frontend vitest are aggregated upstream by the cumulative
-    // preflight (R4 §10). They are not re-invoked from inside this gate to
-    // avoid serializing long-running suites on every certifier run.
+    // Backend e2e and frontend vitest are aggregated upstream by the
+    // cumulative preflight (R4 §10). They are not re-invoked from inside
+    // this gate to avoid serializing long-running suites on every certifier
+    // run.
   ];
   const commands = [];
   const measured = [];
