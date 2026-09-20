@@ -8,7 +8,7 @@ import { TaskOverview } from '../reports/workspace/components/TaskOverview';
 import { MemberProfileView } from '../reports/workspace/components/MemberProfileView';
 import { TaskModal, TaskDetailModal, MemberEditModal } from '../reports/workspace/components/Modals';
 import { api } from '@/lib/api';
-import { useDnaToast } from '@/components/dna/DnaToast';
+import { useDnaToast } from "@/components/dna";;
 import { useMarketingBrands } from '@/hooks/useCanonicalMarketing';
 import { useAuth } from '@/hooks/useAuth';
 

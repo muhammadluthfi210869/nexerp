@@ -2,7 +2,7 @@
 
 import { ArrowUpRight, ChevronRight, Search } from 'lucide-react';
 import { useEffect } from 'react';
-import { DashboardCard } from '@/components/dna/DashboardCard';
+import { DashboardCard } from "@/components/dna";;
 import { formatDate } from '../lib/format';
 import type { Client } from '@/types/marketing-overview';
 

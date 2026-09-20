@@ -198,7 +198,7 @@ export class CanonicalMarketingController {
   async addAttachment(
     @Req() req: any,
     @Param('taskId') taskId: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: any,
   ): Promise<unknown> {
     if (!file) {
       throw new BadRequestException({

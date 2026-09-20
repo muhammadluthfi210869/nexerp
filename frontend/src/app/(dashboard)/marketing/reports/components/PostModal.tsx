@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles, X, Upload } from "lucide-react";
 import { DnaButton, DnaDrawer, DnaInput, DnaSelect, DnaTextarea } from "@/components/dna";
-import { useDnaToast } from "@/components/dna/DnaToast";
+import { useDnaToast } from "@/components/dna";;
 import { marketingService, mockViewer } from "@/lib/services/marketing-service";
 import type { PostPlatform, PostFormat, PostStatus, MarketingBrand, SocialPost } from "@/types/marketing-api";
 

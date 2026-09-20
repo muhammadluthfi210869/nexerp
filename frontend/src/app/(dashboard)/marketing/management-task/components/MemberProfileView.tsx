@@ -15,13 +15,13 @@ import {
 import {
   DnaButton,
 } from "@/components/dna";
-import { DnaEmptyState } from "@/components/dna/DnaEmptyState";
-import { DnaDaysLeftChip, DnaPriorityBadge } from "@/components/dna/DnaExtras";
+import { DnaEmptyState } from "@/components/dna";;
+import { DnaDaysLeftChip, DnaPriorityBadge } from "@/components/dna";;
 import TaskDetailModal from "./TaskDetailModal";
 import CreateTaskModal from "./CreateTaskModal";
 import MemberEditModal from "./MemberEditModal";
 import { marketingService } from "@/lib/services/marketing-service";
-import { useDnaToast } from "@/components/dna/DnaToast";
+import { useDnaToast } from "@/components/dna";;
 import type { MarketingTask, MarketingTeamMember, MarketingViewer, TaskStatus } from "@/types/marketing-api";
 
 const NEXT_STATUSES: Partial<Record<TaskStatus, TaskStatus[]>> = {

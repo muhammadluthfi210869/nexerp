@@ -10,7 +10,7 @@ import {
   History,
 } from "lucide-react";
 import { MarketingLogManager } from "@/components/marketing/marketing-log-manager";
-import { StatCard } from "@/components/dna/StatCard";
+import { StatCard } from "@/components/dna";;
 import { TableShell } from "@/components/layout/TableShell";
 
 export default function MarketingLogsPage() {

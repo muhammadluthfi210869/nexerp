@@ -1,0 +1,102 @@
+{
+  "contract_version": "P07-v1",
+  "phase": "P07",
+  "level": "PHASE_GATE",
+  "phase_base_sha": "5542855667ca47b2e9a55c0e2c897db697b3929d",
+  "predecessor_phase": "P06",
+  "predecessor_candidate_sha": "6a860d85d4b3c8e9f1a0b2c3d4e5f60718293a4b",
+  "predecessor_token_pattern": "P06:6a860d85:PHASE_PASS",
+  "authoritative_command": "node scripts/ssot/certify_p07_phase.js",
+  "diagnostic_command": "node scripts/ssot/diagnose_p07_phase.js",
+  "expected_runtime_minutes": { "min": 5, "max": 20 },
+  "required_subphases": [
+    "P07-SF1-contract-inventory",
+    "P07-SF2-intake-identity",
+    "P07-SF3-pipeline-ownership",
+    "P07-SF4-activity-reporting",
+    "P07-SF5-frontend-ui",
+    "P07-SF6-golden-thread"
+  ],
+  "required_seams": [
+    "P07-SEAM-INTAKE-LEAD",
+    "P07-SEAM-LEAD-OWNER-SLA",
+    "P07-SEAM-LIFECYCLE-HANDOFF",
+    "P07-SEAM-MUTATION-POLICY-AUDIT",
+    "P07-SEAM-SOURCE-DASHBOARD",
+    "P07-SEAM-BACKEND-UI"
+  ],
+  "required_checks": [
+    "predecessor_and_scope",
+    "contract_inventory",
+    "lead_intake_dedup_consent_attribution",
+    "ownership_reassignment_visibility",
+    "lifecycle_sla_idempotency_concurrency",
+    "guestbook_marketing_activity",
+    "audit_outbox_atomicity",
+    "dashboard_reconciliation",
+    "frontend_live_data_dna_states",
+    "golden_thread",
+    "changed_scope_quality",
+    "cleanup_and_evidence"
+  ],
+  "required_mutations": [
+    "P07-NORMALIZED-DUPLICATE-INTAKE",
+    "P07-CONCURRENT-DUPLICATE",
+    "P07-WITHDRAWN-CONSENT",
+    "P07-CROSS-TENANT-OWNER-ACCESS",
+    "P07-ILLEGAL-STAGE-TRANSITION",
+    "P07-IDEMPOTENCY-CONFLICT",
+    "P07-AUDIT-OUTBOX-NONATOMIC",
+    "P07-DASHBOARD-SOURCE-DIVERGENCE"
+  ],
+  "exact_thresholds": {
+    "duplicate_canonical_leads": 0,
+    "production_mock_fallbacks": 0,
+    "consent_required_violations": 0,
+    "cross_tenant_disclosure_count": 0,
+    "unauthorized_or_cross_tenant_mutation_count": 0,
+    "illegal_stage_transition_count": 0,
+    "audit_outbox_orphan_rows": 0,
+    "dashboard_reconciliation_deltas": 0,
+    "unexpected_skipped_or_pending_or_todo": 0,
+    "frontend_dna_subpath_violations": 0,
+    "production_fallback_success_count": 0,
+    "unowned_requirements_or_seams": 0
+  },
+  "maximum_thresholds": {
+    "default_page_size": 50,
+    "maximum_page_size": 200,
+    "changed_max_cyclomatic_complexity": 12,
+    "changed_duplication_percent": 3.0
+  },
+  "minimum_thresholds": {
+    "canonical_inventory_coverage_percent": 100,
+    "subphase_test_coverage_percent": 100,
+    "seam_test_coverage_percent": 100,
+    "golden_thread_canonical_lead_count": 1,
+    "golden_thread_current_owner_count": 1,
+    "golden_thread_qualification_effect_count": 1,
+    "golden_thread_audit_chain_count": 1,
+    "golden_thread_outbox_event_count": 1
+  },
+  "generated_output_allowlist": [
+    "docs/legacy-erp/verification/_p07_test_results.json",
+    "docs/legacy-erp/verification/evidence/P07_PHASE_CERTIFICATION_RESULT.json",
+    "docs/legacy-erp/verification/evidence/P07_CANONICAL_INVENTORY.json",
+    "docs/legacy-erp/verification/evidence/P07_SUBPHASE_RESULT.json",
+    "docs/legacy-erp/verification/evidence/P07_SEAM_MATRIX.json",
+    "docs/legacy-erp/verification/evidence/P07_CHANGE_SCOPE_MANIFEST.json"
+  ],
+  "deferred_checks": [
+    "full_legacy_bulk_migration",
+    "docker_runtime",
+    "remote_deployment",
+    "full_browser_visual_matrix",
+    "load_and_soak",
+    "backup_restore_dr",
+    "release_clean_room",
+    "P08_sample_formulation_artwork_legal",
+    "P09_quotation_so_dp_delivery_invoice",
+    "P17_external_provider_webhook_outage"
+  ]
+}

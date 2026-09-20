@@ -2,7 +2,7 @@
 
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
-import { DashboardCard } from '@/components/dna/DashboardCard';
+import { DashboardCard } from "@/components/dna";;
 import { FreshnessDot } from '../components/FreshnessDot';
 import { formatCurrency, formatInteger } from '../lib/format';
 import type { Connection, Freshness, MetaCampaign } from '@/types/marketing-overview';

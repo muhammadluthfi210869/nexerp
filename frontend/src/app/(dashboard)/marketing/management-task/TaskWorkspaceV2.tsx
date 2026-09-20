@@ -26,15 +26,15 @@ import {
   DnaPageContainer,
   DnaPageHeader,
 } from "@/components/dna";
-import { DnaEmptyState } from "@/components/dna/DnaEmptyState";
-import { DnaAvatar, DnaDaysLeftChip, DnaKanban, DnaPriorityBadge } from "@/components/dna/DnaExtras";
+import { DnaEmptyState } from "@/components/dna";;
+import { DnaAvatar, DnaDaysLeftChip, DnaKanban, DnaPriorityBadge } from "@/components/dna";;
 import { useMarketingTasks, useMarketingMembers, useTaskStatusMutation } from "@/hooks/useCanonicalMarketing";
 import { useAuth } from "@/hooks/useAuth";
 import TaskDetailModal from "./components/TaskDetailModal";
 import CreateTaskModal from "./components/CreateTaskModal";
 import MemberCardsGrid from "./components/MemberCardsGrid";
 import MemberProfileView from "./components/MemberProfileView";
-import { useDnaToast } from "@/components/dna/DnaToast";
+import { useDnaToast } from "@/components/dna";;
 import type { MarketingTask, MarketingTeamMember, MarketingViewer, TaskStatus, TaskType } from "@/types/marketing-api";
 
 type ViewMode = "table" | "kanban" | "calendar";

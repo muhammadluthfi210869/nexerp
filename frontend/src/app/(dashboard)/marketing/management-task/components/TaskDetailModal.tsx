@@ -6,8 +6,8 @@
 import { useEffect, useState } from "react";
 import { MessageSquare, Paperclip, Send, Trash2, History, ExternalLink, Edit3 } from "lucide-react";
 import { DnaButton, DnaDrawer, DnaTextarea } from "@/components/dna";
-import { useDnaToast } from "@/components/dna/DnaToast";
-import { DnaPriorityBadge, DnaDaysLeftChip, DnaAvatar, DnaAttachmentList } from "@/components/dna/DnaExtras";
+import { useDnaToast } from "@/components/dna";;
+import { DnaPriorityBadge, DnaDaysLeftChip, DnaAvatar, DnaAttachmentList } from "@/components/dna";;
 import { marketingService } from "@/lib/services/marketing-service";
 import type { MarketingTask, MarketingViewer, TaskComment, TaskAttachment, TaskStatus } from "@/types/marketing-api";
 

@@ -67,7 +67,7 @@ import {
 } from 'lucide-react';
 import { Instagram, Youtube } from './utils/socialIcons';
 import { getPreviousMonth, parsePeriodDates, getWeekDates } from './utils/helpers';
-import { useDnaToast } from '@/components/dna/DnaToast';
+import { useDnaToast } from "@/components/dna";;
 import { api } from '@/lib/api';
 import { useMarketingBrands } from '@/hooks/useCanonicalMarketing';
 

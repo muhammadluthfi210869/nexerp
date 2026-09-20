@@ -12,7 +12,7 @@ import { useGranularData } from "@/hooks/use-granular-data";
 import { usePerformanceAudit } from "@/hooks/usePerformanceAudit";
 import { BusDevActivityStream } from "@/components/dashboard/BusDevActivityStream";
 import { SectionLabel } from "@/components/dna";
-import { TableWrapper } from "@/components/dna/TableWrapper";
+import { TableWrapper } from "@/components/dna";;
 import { CalendarDays } from "lucide-react";
 
 function getCurrentMonthValue() {

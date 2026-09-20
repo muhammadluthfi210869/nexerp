@@ -2,7 +2,7 @@
 
 import { BarChart3 } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { DashboardCard } from '@/components/dna/DashboardCard';
+import { DashboardCard } from "@/components/dna";;
 import { formatDate, formatInteger } from '../lib/format';
 
 export function LeadTrendChart({ data }: { data: Array<{ date: string; leads: number }> }) {

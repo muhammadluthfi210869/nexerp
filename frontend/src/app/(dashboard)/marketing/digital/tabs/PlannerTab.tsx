@@ -3,7 +3,7 @@
 import { CalendarDays, Columns3, GalleryVerticalEnd, List, Search, TableProperties } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { DashboardCard } from '@/components/dna/DashboardCard';
+import { DashboardCard } from "@/components/dna";;
 import { api } from '@/lib/api';
 
 type PlannerView = 'table' | 'board' | 'calendar' | 'gallery' | 'list';

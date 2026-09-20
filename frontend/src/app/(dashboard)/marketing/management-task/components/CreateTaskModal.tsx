@@ -3,9 +3,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { Plus, Check, Link2, Sparkles } from "lucide-react";
 import { DnaModal, DnaButton } from "@/components/dna";
-import { DnaDaysLeftChip } from "@/components/dna/DnaExtras";
+import { DnaDaysLeftChip } from "@/components/dna";;
 import { marketingService } from "@/lib/services/marketing-service";
-import { useDnaToast } from "@/components/dna/DnaToast";
+import { useDnaToast } from "@/components/dna";;
 import type { CreateTaskInput, UpdateTaskInput, TaskType, TaskPriority, MarketingBrand, MarketingProject, MarketingTask, MarketingTeamMember, MarketingViewer } from "@/types/marketing-api";
 
 interface CreateTaskModalProps {

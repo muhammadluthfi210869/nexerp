@@ -1,7 +1,7 @@
 'use client';
 
 import { Users } from 'lucide-react';
-import { DashboardCard } from '@/components/dna/DashboardCard';
+import { DashboardCard } from "@/components/dna";;
 import { formatInteger } from '../lib/format';
 
 export function CrmFunnel({ funnel }: { funnel: Array<{ key: string; label: string; value: number }> }) {

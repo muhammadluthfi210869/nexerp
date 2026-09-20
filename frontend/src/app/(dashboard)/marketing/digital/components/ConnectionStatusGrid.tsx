@@ -2,7 +2,7 @@
 
 import { ChevronRight, Eye } from 'lucide-react';
 import { Bar, BarChart, ResponsiveContainer, Tooltip } from 'recharts';
-import { DashboardCard } from '@/components/dna/DashboardCard';
+import { DashboardCard } from "@/components/dna";;
 import type { Connection, Freshness } from '@/types/marketing-overview';
 import { formatInteger, formatPercent } from '../lib/format';
 import { FreshnessDot } from './FreshnessDot';

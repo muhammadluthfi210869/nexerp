@@ -1,6 +1,6 @@
 import React from "react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DnaLoadingSkeleton } from "@/components/dna";
 
 export default function BussdevLoading() {
   return (
@@ -13,14 +13,14 @@ export default function BussdevLoading() {
         {/* Cards Skeleton */}
         <div className="grid grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-40 bg-slate-100 rounded-2xl" />
+            <DnaLoadingSkeleton key={i} className="h-40 bg-slate-100 rounded-2xl" />
           ))}
         </div>
 
         {/* Table Skeleton */}
         <div className="space-y-4">
-          <Skeleton className="h-8 w-64 bg-slate-100" />
-          <Skeleton className="h-[400px] w-full bg-slate-100 rounded-2xl" />
+          <DnaLoadingSkeleton className="h-8 w-64 bg-slate-100" />
+          <DnaLoadingSkeleton className="h-[400px] w-full bg-slate-100 rounded-2xl" />
         </div>
 
         {/* Grid Skeleton */}

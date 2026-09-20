@@ -1,7 +1,7 @@
 'use client';
 
 import { Activity, CheckCircle2, DollarSign, TrendingUp, Users } from 'lucide-react';
-import { DashboardCard } from '@/components/dna/DashboardCard';
+import { DashboardCard } from "@/components/dna";;
 import { formatCurrency, formatInteger, formatPercent } from '../lib/format';
 import type { MarketingOverview } from '@/types/marketing-overview';
 

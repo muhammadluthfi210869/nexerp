@@ -191,3 +191,6 @@ export type {
   DnaWorkflowBarProps,
   DnaStickyFooterProps,
 } from "./DnaInteractiveElements";
+
+// ── ADDITIONAL EXTRAS ──
+export * from "./DnaExtras";

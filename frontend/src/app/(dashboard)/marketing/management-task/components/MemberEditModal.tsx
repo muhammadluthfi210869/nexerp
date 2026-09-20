@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { DnaModal, DnaButton, DnaInput } from "@/components/dna";
 import type { MarketingTeamMember } from "@/types/marketing-api";
-import { useDnaToast } from "@/components/dna/DnaToast";
+import { useDnaToast } from "@/components/dna";;
 
 interface MemberEditModalProps {
   isOpen: boolean;

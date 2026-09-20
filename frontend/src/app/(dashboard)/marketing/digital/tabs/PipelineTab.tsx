@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
-import { DashboardCard } from '@/components/dna/DashboardCard';
+import { DashboardCard } from "@/components/dna";;
 import type { Client } from '@/types/marketing-overview';
 
 export function PipelineTab({ clients, onSelect }: { clients: Client[]; onSelect: (client: Client) => void }) {

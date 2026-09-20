@@ -16,7 +16,7 @@ import {
   Zap
 } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { DashboardCard } from '@/components/dna/DashboardCard';
+import { DashboardCard } from "@/components/dna";;
 import type { MarketingOverview } from '@/types/marketing-overview';
 import { formatInteger, formatPercent } from '../lib/format';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { DollarSign, Eye, Search } from 'lucide-react';
-import { DashboardCard } from '@/components/dna/DashboardCard';
+import { DashboardCard } from "@/components/dna";;
 import { FreshnessDot } from '../components/FreshnessDot';
 import { formatDate } from '../lib/format';
 import type { Connection, Freshness } from '@/types/marketing-overview';

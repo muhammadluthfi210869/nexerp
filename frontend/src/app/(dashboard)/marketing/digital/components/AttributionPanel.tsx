@@ -1,7 +1,7 @@
 'use client';
 
 import { Database } from 'lucide-react';
-import { DashboardCard } from '@/components/dna/DashboardCard';
+import { DashboardCard } from "@/components/dna";;
 import { formatInteger, formatPercent } from '../lib/format';
 import type { Attribution, SourceBreakdown } from '@/types/marketing-overview';
 

@@ -69,11 +69,40 @@ export class RolesGuard implements CanActivate {
     return hasRole;
   }
 
+  private extractResourceType(context: ExecutionContext): string {
+    try {
+      const cls: unknown = context.getClass();
+      if (typeof cls === 'function') {
+        const fnName = (cls as { name?: unknown }).name;
+        if (typeof fnName === 'string' && fnName.length > 0) {
+          return fnName.toLowerCase();
+        }
+      }
+      if (cls && typeof cls === 'object') {
+        const obj = cls as { constructor?: { name?: unknown }; name?: unknown };
+        const ctorName = obj.constructor && obj.constructor.name;
+        if (typeof ctorName === 'string' && ctorName.length > 0) {
+          return ctorName.toLowerCase();
+        }
+        if (typeof obj.name === 'string' && obj.name.length > 0) {
+          return obj.name.toLowerCase();
+        }
+      }
+      if (typeof cls === 'string' && cls.length > 0) {
+        return cls.toLowerCase();
+      }
+    } catch {
+      // fall through
+    }
+    return 'anonymous';
+  }
+
   private evaluatePermissionPolicy(context: ExecutionContext, requireMeta: { permission: string; dataScope?: string }): boolean {
     const req = context.switchToHttp().getRequest();
     const actor = req.user || { id: 'anonymous', roles: [] };
     const resId = req.params?.id;
-    const resource = resId ? { type: context.getClass().name.toLowerCase(), id: resId } : { type: context.getClass().name.toLowerCase() };
+    const resourceType = this.extractResourceType(context);
+    const resource = resId ? { type: resourceType, id: resId } : { type: resourceType };
     const decision = {
       actor,
       action: context.getHandler().name,
