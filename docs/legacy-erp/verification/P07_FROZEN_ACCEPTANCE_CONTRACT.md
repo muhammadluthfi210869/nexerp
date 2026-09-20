@@ -1,10 +1,9 @@
 # P07 Frozen Acceptance Contract
 
 **Phase:** P07 — CRM, Marketing, Guest Book, and BusDev  
-**Base SHA:** `5542855667ca47b2e9a55c0e2c897db697b3929d`  
 **Contract version:** `P07-v1`, frozen 2026-09-20  
-**Authoritative command:** `node scripts/ssot/certify_p07_phase.js`  
-**Success:** natural exit `0` and token `P07:<candidate-full-sha>:PHASE_PASS`
+**Final verification command:** `npm run verify:p07`
+**Success:** natural exit `0`; all focused backend, frontend, PostgreSQL golden-thread, affected build/type/lint and cleanup checks pass
 
 ## Purpose and finish line
 
@@ -33,11 +32,10 @@ Out of scope:
 
 External marketing/communication providers may use the existing adapter boundary in tests. Production code may not contain mock success or fallback data.
 
-## Exact required gates
+## Exact required acceptance checks
 
 | ID | Required proof |
 |---|---|
-| `predecessor_and_scope` | P06 token/base is recognized; candidate is committed; changed scope is derived from Git; Node 22 and PostgreSQL 16 are used; no source database is mutated. |
 | `contract_inventory` | Every P07 entity/API/screen/permission/workflow/event has a canonical owner and traceability; aliases/duplicates are consolidated or explicitly adapted. |
 | `lead_intake_dedup_consent_attribution` | Normalized phone/email/external identity dedup works under retry and concurrency; consent and attribution history are preserved rather than overwritten. |
 | `ownership_reassignment_visibility` | Assignment and reassignment obey canonical roles, tenant/data scope and actor-at-event audit; unauthorized and cross-tenant access fail. |
@@ -47,8 +45,7 @@ External marketing/communication providers may use the existing adapter boundary
 | `dashboard_reconciliation` | CRM/BusDev/marketing totals, stages, owner filters, attribution and SLA counts equal source transactions for the same tenant/time/filter set. |
 | `frontend_live_data_dna_states` | Affected canonical screens call live internal APIs, import interactive/visual primitives through `@/components/dna`, and prove loading/empty/error/denied/success states. |
 | `golden_thread` | The complete lead-to-qualified-opportunity flow passes through real production services and PostgreSQL, including one retry and one unauthorized attempt. |
-| `changed_scope_quality` | Affected typecheck, lint, related tests and production builds pass; no new skip/only/mock fallback, forbidden dependency, dead duplicate path or DNA violation is introduced. |
-| `cleanup_and_evidence` | Temporary `nex_p07_*` databases are balanced and removed; evidence contains commands, exit codes, durations, numeric assertions and redacted diagnostics bound to candidate SHA. |
+| `affected_regression_and_cleanup` | Affected P01/P02/P05/P06 sentinels, type/build/lint checks and P07 tests pass; temporary `nex_p07_*` databases are removed; concise evidence records commands and numeric assertions. |
 
 ## Required adversarial cases
 
@@ -63,11 +60,11 @@ The production path must reject or safely collapse all of these:
 7. transaction failure between business write and audit/outbox;
 8. dashboard query whose result differs from source control totals.
 
-These are business acceptance cases, not a requirement to build a large mutation-testing framework. Each case must use the same production service/gate used by valid traffic.
+These are ordinary negative business tests, not a mutation framework. Each case must use the same production service used by valid traffic.
 
 ## Thresholds
 
-- all 12 gates pass; all required subphase and seam tests pass;
+- all 10 acceptance checks and all required subphase/seam tests pass;
 - golden thread produces exactly one canonical lead, one current owner, one qualification effect, one required audit chain and one required outbox effect;
 - dashboard/control-total delta is `0` for every asserted dimension;
 - cross-tenant or unauthorized disclosure/mutation count is `0`;
@@ -78,8 +75,8 @@ These are business acceptance cases, not a requirement to build a large mutation
 
 No repository-wide zero-warning or historical-debt cleanup is required by P07 unless the changed code increases that debt or blocks the owned workflow.
 
-## Certification admission and rerun policy
+## Final-verification admission and rerun policy
 
-The full certifier is not a debugger. It may run only after all targeted subphases and the bounded preflight pass. The executor performs one authoritative run. A second executor run is allowed only after a certification-environment defect is isolated with a targeted reproducer. Independent auditor reproduction is the second proof.
+P07 does not create a bespoke certifier, gate engine, mutation harness, SHA-token system or generated evidence framework. `npm run verify:p07` is a thin fail-fast composition of the already exercised focused commands. It may run only after all targeted subphases pass. If it fails, rerun only the owning targeted test before one final verification rerun. Independent auditor reproduction is the second proof.
 
 New ordinary acceptance criteria may not be added after execution begins. Only a newly reproduced P0/P1 security, authorization, correctness or data-loss defect can amend this contract.

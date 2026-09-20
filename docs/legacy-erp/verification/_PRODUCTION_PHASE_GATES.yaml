@@ -1,11 +1,11 @@
-# Execution/certification registry. Not runtime business authority.
+# Phase execution registry. Not runtime business authority. Workflow authority: _FAST_DELIVERY_EXECUTION_STANDARD.md.
 version: 1.1
 effective_date: 2026-09-17
 target: FULL_ERP_READY_FOR_UAT
 policy:
   sequencing: strict
   allow_deadline_waiver: false
-  pass_rule: all_required_gates_must_pass
+  pass_rule: scoped_acceptance_passes_and_zero_open_p0_p1
   on_failure: REMEDIATION_THEN_RETEST_SAME_PHASE
   allowed_statuses: [NOT_STARTED, IN_PROGRESS, TESTING, FAIL, PASS]
   defect_threshold:
@@ -14,17 +14,21 @@ policy:
   tests:
     unexpected_skips: 0
     flaky_or_quarantined: 0
-  evidence_pack_required: true
+  concise_result_ledger_required: true
+  fast_delivery_execution_standard: _FAST_DELIVERY_EXECUTION_STANDARD.md
   one_pass_execution_standard: _ONE_PASS_PHASE_EXECUTION_STANDARD.md
   cumulative_regression_standard: _CUMULATIVE_REGRESSION_AND_CERTIFICATE_VALIDITY_STANDARD.md
-  current_sha_integration_health_required: true
-  historical_certificate_is_not_current_health: true
   one_prompt_per_phase_required: true
   frozen_acceptance_contract_required_before_execution: true
-  authoritative_certification_command_required_per_phase: true
-  sha_bound_certification_token_required: true
-  independent_same_sha_reproduction_required: true
+  bespoke_certifier_required_per_phase: false
+  lightweight_phase_verification_command_required: true
+  generic_diagnose_runner_prohibited: true
+  sha_bound_acceptance_prohibited: true
+  mutation_framework_prohibited_for_normal_phases: true
+  independent_focused_reproduction_required: true
   no_post_hoc_noncritical_acceptance_criteria: true
+  maximum_normal_correction_cycles_per_phase: 1
+  p2_p3_are_non_blocking_backlog: true
 
 verification_cadence:
   plan: _BATCH_VERIFICATION_PLAN.md
@@ -34,15 +38,13 @@ verification_cadence:
   maximum_phases_per_batch: 5
   split_larger_ranges_automatically: true
   per_phase_self_verification_required: true
-  independent_batch_audit_required: true
-  certification_order: strict_ascending
-  stop_certification_at_first_failed_phase: true
-  allow_downstream_diagnostic_inspection_after_failure: true
+  independent_batch_audit_required: false
+  progression_order: strict_ascending_for_p0_p1_and_primary_flow
+  stop_progression_at_first_p0_p1_or_primary_flow_failure: true
   full_global_suite_each_phase: false
-  full_global_suite_required_for: [P20, P21, P22]
-  integration_checkpoints: [P05, P10, P15, P19, P22]
-  permanent_foundation_sentinels_from_phase: P03
-  rerun_historical_full_certifier_only_on_invalidation: true
+  full_global_suite_required_for: [P22]
+  integration_checkpoints: [P10, P15, P19, P22]
+  rerun_historical_phase_certifiers: never
   dedicated_depth_phases: [P15, P19, P20, P21, P22]
   preferred_batches:
     - [P00, P03]
@@ -230,10 +232,7 @@ phases:
     name: Reproducible build architecture gates and CI
     status: PASS
     depends_on: [P02]
-    candidate_sha: cf8b725d9fec4c808937c50217a3bc45050d271a
-    certification_token: P03:cf8b725d9fec4c808937c50217a3bc45050d271a:PHASE_PASS
-    certification_command: node scripts/ssot/certify_p03_phase.js
-    certification_success: exit code 0 plus PHASE_PASS and a token bound to the committed candidate SHA
+    legacy_certification_record: historical_only_do_not_rerun_or_copy
     required_gates:
       - lockfile reproducibility and production build pass for backend and frontend
       - typecheck and lint pass
@@ -249,10 +248,8 @@ phases:
     name: Canonical database and migration chain
     status: PASS
     depends_on: [P03]
-    candidate_sha: 5195fa2aaa838ebb7faea2a3b207f27689b7ed4a
     acceptance_contract: P04_FROZEN_ACCEPTANCE_CONTRACT.md
-    certification_command: node scripts/ssot/certify_p04_phase.js
-    certification_success: exit code 0 plus PHASE_PASS and P04 candidate SHA-bound token
+    legacy_certification_record: historical_only_do_not_rerun_or_copy
     required_gates:
       - one canonical physical schema
       - no unapproved schema drift
@@ -265,10 +262,8 @@ phases:
     name: Platform architecture maintainability and controls
     status: PASS
     depends_on: [P04]
-    candidate_sha: c7cb59ebed247cce3d947ecb6454a45d92c32ca8
     acceptance_contract: P05_FROZEN_ACCEPTANCE_CONTRACT.md
-    certification_command: node scripts/ssot/certify_p05_phase.js
-    certification_success: exit 0 and token P05:<candidate-full-sha>:PHASE_PASS
+    legacy_certification_record: historical_only_do_not_rerun_or_copy
     required_gates:
       - auth session MFA RBAC tenant scope audit and maker-checker verified
       - communication mention notification outbox and idempotency verified
@@ -283,9 +278,7 @@ phases:
     status: PASS
     depends_on: [P05]
     acceptance_contract: P06_FROZEN_ACCEPTANCE_CONTRACT.md
-    certification_command: node scripts/ssot/certify_p06_phase.js
-    diagnostic_command: node scripts/ssot/diagnose_p06_phase.js
-    certification_success: exit 0 and token P06:<candidate-full-sha>:PHASE_PASS
+    legacy_certification_record: historical_only_do_not_rerun_or_copy
     required_gates:
       - all canonical master capabilities are live-data backed with no production mock or fallback
       - canonical master aliases and ownership are explicit with zero duplicate source of truth
@@ -299,9 +292,8 @@ phases:
     status: NOT_STARTED
     depends_on: [P06]
     acceptance_contract: P07_FROZEN_ACCEPTANCE_CONTRACT.md
-    certification_command: node scripts/ssot/certify_p07_phase.js
-    diagnostic_command: node scripts/ssot/diagnose_p07_phase.js
-    certification_success: exit 0 and token P07:<candidate-full-sha>:PHASE_PASS
+    verification_command: npm run verify:p07
+    verification_success: exit 0 with all P07 targeted backend frontend golden-thread and affected-build checks green
     required_gates:
       - canonical P07 inventory and ownership reconcile to contracts without parallel lead authority
       - lead capture dedup consent attribution ownership reassignment and follow-up SLA are production-ready
@@ -309,7 +301,7 @@ phases:
       - guest book marketing activity and BusDev dashboards reconcile to source transactions
       - affected frontend screens use live APIs canonical DNA and complete UI states
       - lead-to-qualified-opportunity golden thread passes
-    required_tests: [predecessor_and_scope, contract_inventory, lead_intake_dedup_consent_attribution, ownership_reassignment_visibility, lifecycle_sla_idempotency_concurrency, guestbook_marketing_activity, audit_outbox_atomicity, dashboard_reconciliation, frontend_live_data_dna_states, golden_thread, changed_scope_quality, cleanup_and_evidence]
+    required_tests: [contract_inventory, lead_intake_dedup_consent_attribution, ownership_reassignment_visibility, lifecycle_sla_idempotency_concurrency, guestbook_marketing_activity, audit_outbox_atomicity, dashboard_reconciliation, frontend_live_data_dna_states, golden_thread, affected_regression_and_cleanup]
   - {id: P08, name: Sample RnD formulation creative and legality, status: NOT_STARTED, depends_on: [P07], required_gates: [sample-to-approved-release golden thread passes], required_tests: [revision_immutability, adjustment_lineage, approval_rework, attachment_version, stability_expiry, segregation_of_duties]}
   - {id: P09, name: Sales DP delivery AR and returns, status: NOT_STARTED, depends_on: [P08], required_gates: [sales golden thread passes with exact journals and stock effects], required_tests: [pricing_discount, credit_limit, dp_amend_cancel, delivery_proof, invoice_receipt_allocation, return_credit_note, reversal, concurrency]}
   - {id: P10, name: SCM MRP procurement AP and matching, status: NOT_STARTED, depends_on: [P09], required_gates: [procurement golden thread passes with exact reconciliation], required_tests: [mrp_shortage, pr_po_approval, partial_receipt, four_leg_zero_tolerance_match, debit_note, duplicate_invoice, ap_payment_reversal]}
@@ -322,6 +314,6 @@ phases:
   - {id: P17, name: Documents communication integrations and automation, status: NOT_STARTED, depends_on: [P16], required_gates: [no silent loss or duplicate side effect, documents reproducible, integrations degrade safely], required_tests: [upload_security, signed_access, document_snapshot, retry_dlq, webhook_signature, duplicate_out_of_order_event, scheduler_overlap, provider_outage]}
   - {id: P18, name: Reporting executive analytics and KPI governance, status: NOT_STARTED, depends_on: [P17], required_gates: [every published metric reconciles to transactional truth], required_tests: [report_reconciliation, filter_timezone, drilldown, export_parity, row_level_access, cache_freshness, large_data_performance]}
   - {id: P19, name: Strict DNA migration UI UX frontend consolidation and accessibility, status: NOT_STARTED, depends_on: [P18], required_gates: [100 percent canonical and approved extension screens have DNA evidence, all UI primitives import only from @/components/dna, canonical visual and golden routes render real DNA exports, all DNA static and rendered thresholds pass, WCAG AA met, lint zero errors and warnings, no unexplained orphan duplicate primitive or production mock fallback], required_tests: [route_component_store_inventory, dna_import_boundary_ast, dna_native_interactive_scan, dna_primitive_duplication_scan, dna_hardcoded_visual_scan, dna_barrel_integrity, dna_reference_route_and_composition, dna_screen_coverage_manifest, dna_exception_registry_validation, frontend_unused_orphan_scan, api_client_duplication_scan, visual_regression, axe, keyboard_focus, screen_reader_sample, responsive_matrix, browser_matrix, ui_state_matrix]}
-  - {id: P20, name: System-wide maintainability verification and resilience, status: NOT_STARTED, depends_on: [P19], required_gates: [all required suites pass, all architecture maintainability and UI DNA thresholds pass, security and performance thresholds met, zero P0 or P1], required_tests: [full_unit, full_integration, full_contract, full_e2e, golden_threads, full_architecture_fitness, full_dependency_graph, full_unused_orphan_duplicate_scan, full_dna_compliance_scan, full_dna_rendered_matrix, changed_complexity_check, critical_logic_mutation_sample, sast, dependency_scan, container_scan, dast, load_soak, chaos_retry, memory_leak]}
+  - {id: P20, name: System-wide maintainability verification and resilience, status: NOT_STARTED, depends_on: [P19], required_gates: [all required suites pass, all architecture maintainability and UI DNA thresholds pass, security and performance thresholds met, zero P0 or P1], required_tests: [full_unit, full_integration, full_contract, full_e2e, golden_threads, full_architecture_fitness, full_dependency_graph, full_unused_orphan_duplicate_scan, full_dna_compliance_scan, full_dna_rendered_matrix, changed_complexity_check, focused_negative_business_tests, sast, dependency_scan, container_scan, dast, load_soak, chaos_retry, memory_leak]}
   - {id: P21, name: Migration change delivery operations cutover and DR rehearsal, status: NOT_STARTED, depends_on: [P20], required_gates: [two identical clean migration rehearsals, all five change archetypes pass without unexplained unrelated-domain edits, zero unexplained data delta, backward compatibility and deploy reversal proven, RPO and RTO met], required_tests: [migration_rehearsal_1, migration_rehearsal_2, persisted_field_change_rehearsal, business_rule_workflow_change_rehearsal, ui_api_change_rehearsal, report_kpi_change_rehearsal, integration_event_change_rehearsal, old_new_version_coexistence, control_totals, file_transfer, backup_restore, rollback_rollforward, alert_drill, deploy_smoke, runbook_simulation]}
-  - {id: P22, name: Independent pre-UAT DNA and maintainability certification, status: NOT_STARTED, depends_on: [P21], required_gates: [fresh clean-room pass of every permanent threshold, independent architecture lifecycle and DNA source/render audit, 100 percent per-screen DNA evidence accepted, change rehearsal evidence accepted, immutable release candidate, complete UAT pack, technical READY_FOR_UAT certificate], required_tests: [clean_room_full_gate, independent_dependency_graph_audit, lifecycle_registry_sampling, architecture_exception_audit, independent_dna_source_sampling, independent_dna_rendered_sampling, dna_exception_audit, change_rehearsal_evidence_audit, traceability_sampling, evidence_audit, uat_role_data_script_validation, go_no_go_review]}
+  - {id: P22, name: Independent pre-UAT readiness review, status: NOT_STARTED, depends_on: [P21], required_gates: [fresh clean-room release tests pass, independent architecture lifecycle and DNA source/render audit, per-screen DNA evidence accepted, change rehearsal evidence accepted, complete UAT pack, technical READY_FOR_UAT decision], required_tests: [clean_room_release_tests, independent_dependency_graph_audit, lifecycle_registry_sampling, architecture_exception_audit, independent_dna_source_sampling, independent_dna_rendered_sampling, dna_exception_audit, change_rehearsal_evidence_audit, traceability_sampling, evidence_audit, uat_role_data_script_validation, go_no_go_review]}

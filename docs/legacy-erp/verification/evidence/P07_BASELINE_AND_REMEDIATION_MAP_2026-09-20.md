@@ -32,8 +32,8 @@ This baseline replaces the stale 2026-09-17 P07 dependency-blocked verdict. Upst
 
 ## Efficiency constraints
 
-- Do not build a generic mutation framework or duplicate P03–P06 infrastructure.
+- Do not build any bespoke certifier, gate engine, mutation framework, SHA-token system or duplicate P03–P06 infrastructure.
 - Reuse P05 policy/audit/outbox/idempotency and P06 safe disposable-database patterns.
 - Do not run Docker, deploy, call real WhatsApp/Kommo/Supabase/cloud services or implement P08/P09/P17 behavior.
-- Diagnose every blocker before editing; do not alternate one small fix with the full certifier.
+- Diagnose every blocker before editing; do not alternate one small fix with the complete final verification.
 - Ordinary P2/P3 cleanup outside changed P07 paths is recorded, not repaired in this phase.

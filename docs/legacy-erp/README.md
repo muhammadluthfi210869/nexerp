@@ -11,6 +11,10 @@
 
 **Untuk AI CLI agent**: Baca [`AGENTS.md`](AGENTS.md) — entry point dengan task lookup table.
 
+**Aturan delivery aktif**: Baca [`verification/_FAST_DELIVERY_EXECUTION_STANDARD.md`](verification/_FAST_DELIVERY_EXECUTION_STANDARD.md). Mulai P07 tidak ada bespoke certifier, diagnose CLI, SHA token, mutation framework, atau evidence engine per fase. Hanya P0/P1 yang memblokir; P2/P3 masuk backlog.
+
+Alasan dan keputusan permanen dicatat di [`process/_DELIVERY_PROCESS_POSTMORTEM_AND_DECISION_2026-09-20.md`](process/_DELIVERY_PROCESS_POSTMORTEM_AND_DECISION_2026-09-20.md).
+
 ---
 
 ## 📁 Struktur Direktori
@@ -125,17 +129,18 @@ Roadmap production penuh (bukan MVP) sekarang menjadi acuan eksekusi:
 
 - `process/_FULL_ERP_PRODUCTION_READINESS_ROADMAP.md` — 23 fase berurutan sampai `READY FOR UAT`.
 - `verification/_PRODUCTION_PHASE_GATES.yaml` — gate, parameter, dan test machine-readable per fase.
+- `verification/_FAST_DELIVERY_EXECUTION_STANDARD.md` — workflow utama: focused tests, `verify:pXX` tipis, tanpa certifier/diagnose/SHA, maksimum satu correction cycle.
 - `verification/_ARCHITECTURE_MAINTAINABILITY_STANDARD.md` — standar wajib agar backend, frontend, database, workflow, report, dan integrasi aman menerima 8–15 perubahan per bulan.
 - `verification/_UI_DNA_COMPLIANCE_STANDARD.md` — aturan blocking agar setiap UI memakai public barrel `@/components/dna`, tanpa primitive atau visual token hardcoded.
 - `verification/_BATCH_VERIFICATION_PLAN.md` — protokol shorthand `verifikasi fase X-Y`, audit maksimum 5 fase per batch, evidence, verdict, dan stop rule.
 - `verification/_FULL_ERP_GAP_ASSESSMENT.md` — baseline gap dan metode persentase.
 - `verification/_IMPLEMENTATION_READINESS_BASELINE.json` — hasil inventory/alignment yang dapat diregenerasi.
 
-Tidak ada fase yang boleh dilompati karena deadline; kegagalan mengembalikan fase ke remediation dan retest.
+Fase berurutan berdasarkan kapabilitas bisnis. Hanya kegagalan primary flow atau P0/P1 yang menahan progres; P2/P3 dicatat untuk backlog/hardening.
 
 Eksekusi dimulai dari **P00 — Stop-the-line containment**, bukan langsung menambah fitur. P00 harus menutup credential/environment/dependency blockers sebelum P01 dan seterusnya.
 
 ---
 
-**Last updated**: 2026-09-17 — full production-readiness baseline and gated roadmap
+**Last updated**: 2026-09-20 — fast-delivery workflow active from P07 onward
 **Maintainer**: NEX ERP team

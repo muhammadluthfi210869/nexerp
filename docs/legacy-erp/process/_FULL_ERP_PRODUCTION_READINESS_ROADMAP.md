@@ -1,10 +1,10 @@
 # NEX ERP — Full ERP Production-Readiness Roadmap
 
 **Objective:** deliver the complete ERP—not an MVP—with polished UI, verified business behavior, production operations, a final handoff that is ready for business UAT, and an architecture that can safely absorb an expected **8–15 cross-stack changes per month** after go-live.  
-**Schedule policy:** no deadline-based waivers. Quality gates determine progress.  
-**Phase count:** 23 sequential certification phases (`P00`–`P22`). Work inside a phase may run in parallel, but the next phase cannot be certified until the current phase is green.
+**Schedule policy:** prioritize usable business delivery; only P0/P1 defects block normal phase progression.
+**Phase count:** 23 sequential implementation phases (`P00`–`P22`). Work inside a phase may run in parallel where files and resources are isolated.
 
-This is an execution and certification plan, not runtime business authority. Canonical behavior remains owned by `contracts/00_MASTER_SPEC.md §9.1`.
+This is an execution plan, not runtime business authority. Canonical behavior remains owned by `contracts/00_MASTER_SPEC.md §9.1`. Execution and verification workflow is governed by `verification/_FAST_DELIVERY_EXECUTION_STANDARD.md`, which overrides older certifier/SHA/evidence procedures.
 
 ## Non-negotiable phase protocol
 
@@ -14,28 +14,27 @@ Every phase follows the same state machine:
 
 Rules:
 
-1. Entry requires the preceding phase to be `PASS` and its evidence pack committed.
-2. A failing required test makes the phase `FAIL`; failure cannot be relabeled “known issue” to advance.
+1. Entry requires the preceding phase's scoped business acceptance to be `PASS`.
+2. A reproducible P0/P1 or failed primary-flow acceptance test makes the phase `FAIL`; P2/P3 is recorded and does not block.
 3. Fixes must add or update regression tests before retest.
-4. No unexplained skipped, flaky, quarantined, or `only` tests are allowed.
+4. No unexplained skipped, flaky, quarantined, or `only` test is allowed inside the current phase's required focused suites.
 5. A waiver is allowed only for a capability explicitly removed from scope through a canonical decision; it must remove/update its requirement, contract, UI, API, permission, and tests together.
-6. Every phase reruns all earlier fast gates. Every domain phase reruns affected golden threads. `P20`–`P22` rerun the complete suite.
+6. Every phase runs only directly affected predecessor smoke tests and its own golden thread. Cumulative suites run after P10, P15, P19 and at P22.
 7. A phase is green only when machine evidence and human review agree.
-8. Every change must preserve or improve changeability: no new unexplained dead code, duplicate implementation, forbidden dependency, circular dependency, or undocumented architectural exception.
-9. Every phase uses the one-pass package in `verification/_ONE_PASS_PHASE_EXECUTION_STANDARD.md`: one complete prompt, one frozen acceptance contract, one authoritative command, adversarial proof, pre-certification checklist, and independent rerun.
-10. A phase executor continues through remediation and retest until the authoritative command passes, except for an explicit decision/authority/external-system/destructive-action blocker; partial green results are not a handoff condition.
-11. Inner-loop remediation follows `verification/_LAYERED_CERTIFICATION_ACCELERATION_STANDARD.md`: inventory once, repair by root-cause group, targeted production-path tests, cumulative preflight, then one authoritative certification and one independent reproduction.
-12. Cumulative regression follows `verification/_CUMULATIVE_REGRESSION_AND_CERTIFICATE_VALIDITY_STANDARD.md`: every later phase runs source-impact-selected permanent predecessor sentinels, records current-SHA integration health, and reruns an earlier full certifier only when its owned invariant is invalidated or at a declared checkpoint.
+8. Changed code must not introduce a P0/P1 architecture, security, data or authorization defect. Non-critical maintainability improvement is backlog.
+9. Every phase follows `verification/_FAST_DELIVERY_EXECUTION_STANDARD.md`: concise scope, focused subphases, native tests and one thin final verification—never a bespoke certifier/diagnose/SHA system.
+10. The executor continues until focused acceptance passes or a real decision/external/destructive-action blocker exists. Maximum normal correction cycle is one.
+11. Inner-loop remediation follows `verification/_LAYERED_CERTIFICATION_ACCELERATION_STANDARD.md`: inventory once, repair by root-cause group and run the smallest owning test.
+12. Cumulative regression follows `verification/_CUMULATIVE_REGRESSION_AND_CERTIFICATE_VALIDITY_STANDARD.md` only at impact points and declared checkpoints; earlier phases are not routinely reopened.
 
 ### Verification cadence
 
-- Every phase performs scoped self-verification against its own required gates/tests before progression.
-- Independent deep audit is grouped into an inclusive batch of at most five phases using `verification/_BATCH_VERIFICATION_PLAN.md`.
-- A batch does not weaken sequential certification: the first failed phase prevents certification of later phases, even if later diagnostics happen to pass.
-- Prefer audit milestones `P00–P03`, `P04–P06`, `P07–P10`, `P11–P14`, `P15`, `P16–P18`, `P19`, and `P20–P22`. P15 and P19–P22 receive dedicated depth due to financial, UI, system, migration/DR, and pre-UAT risk.
+- Every phase performs focused self-verification of its scoped behavior before progression.
+- Independent audit is severity-based using `verification/_BATCH_VERIFICATION_PLAN.md`; only P0/P1 blocks.
+- Preferred cumulative checkpoints are after P10, P15, P19 and at P22. P15 and P19–P22 receive appropriate domain depth.
 - The shorthand `verifikasi fase X-Y` is sufficient to invoke the complete batch protocol; ranges above five phases are split automatically.
-- Per-phase commands are bounded `PHASE_GATE` checks and should normally finish in roughly 10–25 minutes on a prepared workspace. Clean-room installs, Docker/runtime, cumulative E2E, load/browser matrices, deployment and DR belong to integration checkpoints or P20–P22 unless a phase explicitly owns them.
-- The 10–25 minute command is not used after every edit. Targeted groups should normally finish in 10–120 seconds and cumulative preflight in 5–8 minutes; only a green preflight admits the full phase certifier.
+- Per-phase `verify:pXX` is a thin native-test composition and should normally finish in 5–10 minutes. Clean-room, Docker/runtime, load/browser matrices, deployment and DR belong to their late owning phases.
+- Targeted groups should normally finish in 10–120 seconds. There is no per-phase certifier, generic diagnose runner, SHA token or evidence engine.
 
 ## Universal Definition of Done
 
@@ -44,21 +43,23 @@ Applied to every phase:
 - Contract first: owning contract, dependencies, traceability, and decision log updated.
 - Implementation complete: backend, database, UI, RBAC/data scope, audit, notes/@mention, errors, and events where applicable.
 - Data complete: migration/seed/backfill is idempotent and rollback-safe.
-- Tests complete: happy, validation, authorization, negative, idempotency, concurrency, rollback, audit, empty/loading/error UI states.
-- Quality complete: production builds pass; no new lint/type errors or vulnerability regressions.
-- Maintainability complete: affected code has an explicit owner and boundary; dead/duplicate/deprecated paths are classified; dependency direction, complexity, unused-code, and duplication checks pass; material architecture decisions are recorded.
+- Tests complete: scoped happy, validation, authorization and primary negative/integration paths appropriate to the capability.
+- Quality complete: affected build/type/lint checks have no new phase-owned error.
+- Maintainability complete: no new P0/P1 coupling or unsafe duplicate authority; non-critical cleanup is backlog.
 - Change safety complete: database/API/event changes use backward-compatible evolution where required, include rollback or roll-forward proof, and do not require unrelated domain edits merely to complete the requested capability.
 - UI DNA complete: every affected application UI imports visual/interactive primitives through `@/components/dna`; no direct UI-kit/DNA-subpath import, raw primitive reimplementation, or unregistered hardcoded visual value remains; canonical reference and per-screen evidence pass.
-- Evidence complete: commands, results, coverage, defects fixed, screenshots where visual, and reconciliation totals stored in the phase evidence pack.
+- Evidence complete: concise commands, numeric results, P0/P1 closure and P2/P3 backlog are recorded.
 - Zero unresolved P0/P1 defects in phase scope.
 
-## Permanent release thresholds
+## Final release thresholds
+
+These are final P20–P22/UAT targets, not blocking requirements repeated in every normal domain phase.
 
 | Area | Required threshold |
 |---|---|
 | SSOT | 19/19 deterministic gates PASS; zero blocking decisions |
 | Canonical alignment | 100% of models, API operations, screens, permissions, workflows, events, and tests mapped and verified |
-| Build/type/lint | Backend and frontend production builds PASS; 0 type errors; final lint 0 errors and 0 warnings |
+| Build/type/lint | Backend and frontend production builds PASS; 0 type errors; final release lint has no release-blocking error |
 | Unit coverage | ≥70% for business logic per NFR; ≥90% branches for finance, inventory, authorization, state transitions, and idempotency |
 | Automated suites | 100% required tests pass; 0 unexpected skip/flaky/quarantine/worker errors |
 | Security | 0 critical/high production vulnerabilities; no active leaked/default credentials; threat-model controls verified |
@@ -69,7 +70,7 @@ Applied to every phase:
 | DR | Encrypted backup and restore drill proves RPO ≤24h and RTO ≤4h |
 | Architecture/changeability | 100% modules have owners and declared boundaries; 0 forbidden circular dependencies; 0 unexplained orphan routes/screens/models/services; 0 unused production dependencies; all dead/duplicate/deprecated code classified; changed code passes complexity and duplication policy in `verification/_ARCHITECTURE_MAINTAINABILITY_STANDARD.md` |
 | Change rehearsal | Representative database, business-workflow, UI/API, reporting, and integration changes pass impact analysis, implementation, automated regression, deploy, and rollback/roll-forward rehearsal without unrelated-domain modification |
-| Defects | 0 open P0/P1; P2 only if explicitly accepted for post-UAT and not correctness/security/accessibility/data-loss related |
+| Defects | 0 open P0/P1; documented P2/P3 may proceed to UAT unless stakeholders explicitly promote severity |
 
 ## Phase map
 
@@ -104,14 +105,14 @@ Applied to every phase:
 
 Every domain phase (`P06`–`P18`) also applies a mandatory **changeability and DNA ratchet** to its touched scope: remove or consolidate items already classified `DUPLICATE`, `DEPRECATED`, or `DEAD_CODE`; keep business logic outside controllers/UI; preserve domain boundaries; add architecture and regression tests; update owner/traceability/ADR data; and leave no new mock, fallback, orphan, unused dependency/export, forbidden import, unexplained compatibility path, direct UI-kit/DNA-subpath import, raw interactive primitive, duplicate DNA component, or hardcoded visual value. A domain phase cannot pass when its golden thread is green but its touched architecture or UI DNA compliance fails.
 
-### Product polish and production certification
+### Product polish and production readiness
 
 | Phase | Outcome | Required tests / evidence | Exit gate |
 |---|---|---|---|
 | **P19 — Strict DNA migration, UI/UX polish, frontend consolidation, and accessibility** | Every application screen is migrated to the canonical DNA barrel and approved routes share coherent visual DNA, complete states, and no parallel primitive implementation | 100% screen-to-DNA manifest; AST import/native-interactive/hardcoded-token scans; barrel and golden-reference integrity; unused/orphan scan; visual regression; axe; keyboard/focus; responsive/browser and UI-state matrices | Every canonical and approved-extension screen has evidence; 0 unregistered DNA violations; `/visual-dna*` references pass; lint 0/0; no critical visual/a11y defect, orphan, duplicate primitive, or production mock/fallback |
-| **P20 — System-wide verification, maintainability, and resilience** | Complete release candidate survives full regression plus global architecture, change-impact, security, performance, concurrency, and failure testing | All unit/integration/contract/E2E; golden threads; dependency graph and architecture tests; unused/orphan/duplicate/complexity scan; mutation sampling; SAST/dependency/container/DAST; load/soak; chaos/retry; memory/leak; browser matrix | 100% required tests pass; architecture/changeability thresholds pass; vulnerability and NFR thresholds pass; zero P0/P1 |
+| **P20 — System-wide verification, maintainability, and resilience** | Complete release candidate survives full regression plus global architecture, change-impact, security, performance, concurrency, and failure testing | All unit/integration/contract/E2E; golden threads; dependency graph and architecture tests; unused/orphan/duplicate/complexity scan; focused negative business tests; SAST/dependency/container/DAST; load/soak; chaos/retry; memory/leak; browser matrix | 100% required tests pass; architecture/changeability thresholds pass; vulnerability and NFR thresholds pass; zero P0/P1 |
 | **P21 — Migration, change delivery, operations, cutover, and DR rehearsal** | Production-like data and operations can be moved, changed, deployed, reconciled, monitored, restored, and rolled back | Two migration rehearsals; five representative cross-stack change rehearsals; control totals; backward-compatibility window; feature-flag/expand-contract where applicable; backup/restore; rollback/roll-forward; alert/deploy/support runbook simulation | Two identical clean migrations and every change rehearsal pass; zero unexplained delta; no unrelated-domain edits; RPO/RTO and rollback/roll-forward proven |
-| **P22 — Independent pre-UAT, DNA, and maintainability certification** | A frozen release candidate, complete UAT pack, and independently verified sustainable-change/UI baseline are ready | Fresh clean-room execution of every permanent threshold; independent source sampling of DNA imports and rendered screens; architecture and change-rehearsal audit; traceability; UAT scripts; go/no-go | Signed `READY FOR UAT`; immutable release; no P0/P1; no unexplained dead/duplicate/orphan path; 100% DNA evidence accepted; architecture supports 8–15 monthly changes |
+| **P22 — Independent pre-UAT readiness review** | A complete UAT pack and independently verified sustainable-change/UI baseline are ready | Fresh clean-room execution of release tests; independent source sampling of DNA imports and rendered screens; architecture/change audit; traceability; UAT scripts; go/no-go | Signed `READY FOR UAT`; no P0/P1; accepted UI evidence; architecture supports 8–15 monthly changes |
 
 ## Sustainable change model after go-live
 

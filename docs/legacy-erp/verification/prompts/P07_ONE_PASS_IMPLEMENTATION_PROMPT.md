@@ -17,9 +17,7 @@ Read completely before editing:
 9. `docs/legacy-erp/verification/_LAYERED_CERTIFICATION_ACCELERATION_STANDARD.md`
 10. `docs/legacy-erp/verification/_CUMULATIVE_REGRESSION_AND_CERTIFICATE_VALIDITY_STANDARD.md`
 
-Frozen base SHA: `5542855667ca47b2e9a55c0e2c897db697b3929d`.
-
-Do not weaken the acceptance contract, thresholds, required IDs or evidence validation. Do not change the base SHA. A contract ambiguity must be resolved using `00_MASTER_SPEC.md §9.1`, recorded in a decision/ledger, and implemented consistently—not guessed differently in code and tests.
+Do not weaken the acceptance checklist or required behavior. A contract ambiguity must be resolved using `00_MASTER_SPEC.md §9.1`, recorded in a decision/ledger, and implemented consistently—not guessed differently in code and tests.
 
 ## Required operating method
 
@@ -28,12 +26,12 @@ Do not weaken the acceptance contract, thresholds, required IDs or evidence vali
 2. Run one complete read-only inventory before implementation. Map every P07 requirement to current contracts, schema, module/service/controller, permission, event, screen and test. Include lead-capture, CRM, guests, BusDev and marketing; identify parallel authorities and fallback/mock paths.
 3. Reproduce all measured baseline failures from the remediation map. Search for additional failures across all six subphases before editing.
 4. Create one work ledger containing blocker ID, severity, reproducer, root cause, files, repair method, owning subphase, dependent seams and completion evidence.
-5. Repair all blockers by root-cause cluster and dependency order. Do not run the full certifier after individual edits.
-6. Build a small shared production-path diagnostic registry for the exact frozen gates. Do not build a generic framework. `diagnose_p07_phase.js` must support `--list`, `--changed`, `--subphase <id>`, `--seam <id>`, `--gate <id>` and `--preflight`.
+5. Repair all blockers by root-cause cluster and dependency order. Do not run complete final verification after individual edits.
+6. Add only focused npm scripts for the six targeted subphase suites and one thin root `verify:p07` composition. Do not build a custom certifier, gate engine, mutation framework, SHA-token system or generated evidence framework.
 7. Run only the owning targeted subphase after each repair group. Run dependent seams only when an interface changes.
-8. After all subphases/seams pass, run bounded preflight once. Fix any failure with its smallest targeted command, then rerun preflight once.
-9. Commit the complete candidate. Only then run the authoritative certifier once.
-10. Return only after natural exit `0` and a SHA-bound `P07:<candidate-full-sha>:PHASE_PASS` token, or after an actual owner/external-authority blocker with an exact reproducer. Partial green is not completion.
+8. After all subphases/seams pass, run `npm run verify:p07` once. Fix any failure with its smallest targeted command, then rerun final verification once.
+9. Commit the complete candidate and hand it off with concise command/result evidence.
+10. Return only after `npm run verify:p07` exits naturally with code `0`, or after an actual owner/external-authority blocker with an exact reproducer. Partial green is not completion.
 
 ## Implementation requirements
 
@@ -80,7 +78,7 @@ Do not weaken the acceptance contract, thresholds, required IDs or evidence vali
 
 ### SF6 — Golden thread and platform seams
 
-- Use a uniquely named disposable loopback PostgreSQL database `nex_p07_<sha>_<pid>_<purpose>` provisioned with `prisma migrate deploy`.
+- Use a uniquely named disposable loopback PostgreSQL database `nex_p07_<runid>_<pid>_<purpose>` provisioned with `prisma migrate deploy`.
 - Never mutate, clone secrets from or run destructive commands against the source database.
 - Prove business write + audit + outbox atomicity and exactly-once behavior through the production P05 services.
 - Execute the complete golden thread, one retry/concurrency case, one unauthorized case and dashboard reconciliation.
@@ -90,8 +88,7 @@ Do not weaken the acceptance contract, thresholds, required IDs or evidence vali
 
 - Targeted static/unit tests: 10–60 seconds.
 - Targeted PostgreSQL integration test: normally 30–180 seconds.
-- Preflight: target 5–8 minutes.
-- Full certification: target 10–15 minutes and run only after green preflight.
+- Final `verify:p07`: target 5–10 minutes and run only after all targeted groups are green.
 - Use related test paths/configs, not the complete repository suite after each edit.
 - Run independent groups in parallel only when they do not share a database, port, generated output or edited file. Use unique database names per worker.
 - Do not use sleeps for concurrency/SLA tests; use barriers, controllable clocks and observable completion.
@@ -107,33 +104,29 @@ Minimum targeted test artifacts:
 - exact eight adversarial cases from the frozen contract;
 - no skipped/todo/only cases.
 
-## Certifier requirements
+## Final verification requirements
 
-Create `scripts/ssot/certify_p07_phase.js` as a thin admission-controlled orchestrator over the same diagnostic/test registry. It must:
+Add a root `npm run verify:p07` script as a thin fail-fast composition of commands already exercised during the six subphases. It must:
 
 - fail before heavy work when candidate/source scope/environment is unsafe;
-- execute, not merely label, all 12 gates and required adversarial cases;
-- record command, exit code, duration, target/test count and parseable summaries;
-- reject missing/zero-target/substituted/cached PASS results;
-- verify candidate SHA and frozen base;
+- execute the 10 acceptance checks and eight ordinary adversarial business tests rather than label them;
+- preserve normal command output and natural exit codes;
 - recursively redact secrets and connection URLs;
 - balance created/dropped temporary databases and assert zero residue;
-- write candidate-bound evidence under `docs/legacy-erp/verification/evidence/`;
-- emit the token only after every gate passes.
+- exit nonzero on the first failed component and zero only when every component passes.
 
-Do not make the runner rewrite source, commit files, weaken tests, use `skipSubprocess`, treat warnings/exceptions as PASS, or require a pristine tree after its own declared evidence outputs are written.
+Do not make the script rewrite source/evidence, commit files, weaken tests, use cached/substituted PASS, or treat warnings/exceptions as PASS. Do not introduce `scripts/ssot/certify_p07_phase.js` or `scripts/ssot/diagnose_p07_phase.js`.
 
 ## Final handoff
 
 Report:
 
-- base and candidate SHA plus token;
 - changed paths grouped by contract/database/backend/frontend/tests/evidence;
 - closure of `P07-B1` through `P07-B7`;
-- results and durations for six subphases, six seams, 12 gates and eight adversarial cases;
+- results and durations for six subphases, six seams, 10 acceptance checks and eight adversarial cases;
 - exact golden-thread counts and dashboard reconciliation deltas;
 - two targeted resource-clean runs where required, source fingerprint and temporary DB cleanup;
 - affected predecessor sentinel results;
 - any non-blocking P2/P3 observations deferred without changing the P07 verdict.
 
-Do not claim PASS from prose, a manually edited JSON file or a previous SHA.
+Do not claim PASS from prose, a manually edited JSON file or a previous candidate.

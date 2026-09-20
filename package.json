@@ -12,7 +12,10 @@
     "test:marketing-prototype": "npx playwright test --config playwright.e2e.config.ts tests/e2e/marketing-prototype.qa.spec.ts",
     "test:go-live": "npm run test:backend:unit && npm --prefix backend run test:e2e -- --runInBand test/contract/api-contract.e2e-spec.ts && npx playwright test --config playwright.config.ts tests/e2e/role-based-access.spec.ts tests/e2e/communication-protocol.spec.ts tests/e2e/error-paths.spec.ts tests/e2e/edge-cases.spec.ts tests/e2e/golden-thread/01-lead-to-deal.spec.ts tests/e2e/golden-thread/02-dp-to-qc.spec.ts tests/e2e/golden-thread/03-delivery-to-ro.spec.ts",
     "sync:types": "npx openapi-typescript ./backend/swagger-spec.json --output ./frontend/src/types/api.ts",
-    "prebuild": "npm run sync:types"
+    "prebuild": "npm run sync:types",
+    "verify:p07:contracts": "node scripts/ssot/p07_verify.js",
+    "verify:p07:clean-db": "node scripts/ssot/p07_clean_db.js",
+    "verify:p07": "npm run verify:p07:contracts && npm --prefix backend run test:p07 && npm run verify:p07:clean-db"
   },
   "keywords": [],
   "author": "",

@@ -1,109 +1,64 @@
-# Prompt Template — NEX ERP Phase {{PHASE_ID}} One-Pass Execution
+# Prompt Template — NEX ERP Phase {{PHASE_ID}} Fast One-Pass Execution
 
-You own implementation and remediation for **{{PHASE_ID}} — {{PHASE_NAME}}**. Continue autonomously until the single authoritative certification command produces the declared SHA-bound PASS. Do not stop after planning, partial implementation, or a subset of green tests.
+Implement **{{PHASE_ID}} — {{PHASE_NAME}}** until its focused acceptance passes. This is an execution task; do not stop for plan approval or partial-green reporting.
 
-## Mandatory sources
+## Read first
 
-Read completely before editing:
+1. `docs/legacy-erp/verification/_FAST_DELIVERY_EXECUTION_STANDARD.md`
+2. `docs/legacy-erp/AGENTS.md`
+3. the `{{PHASE_ID}}` row in the roadmap and registry
+4. `{{ACCEPTANCE_CHECKLIST_PATH}}`
+5. `{{REMEDIATION_MAP_PATH}}`
+6. only the canonical contracts traced to this phase
 
-1. `docs/legacy-erp/AGENTS.md`
-2. `docs/legacy-erp/verification/_ONE_PASS_PHASE_EXECUTION_STANDARD.md`
-3. `docs/legacy-erp/verification/_LAYERED_CERTIFICATION_ACCELERATION_STANDARD.md`
-4. `docs/legacy-erp/verification/_PRODUCTION_PHASE_GATES.yaml` — `{{PHASE_ID}}` and predecessor
-5. `docs/legacy-erp/process/_FULL_ERP_PRODUCTION_READINESS_ROADMAP.md` — `{{PHASE_ID}}`
-6. `{{PHASE_AUDIT_EVIDENCE_PATH}}`
-7. `{{PHASE_REMEDIATION_MAP_PATH}}`
-8. `{{PHASE_SPECIFIC_CONTRACTS_AND_STANDARDS}}`
-9. existing implementation, tests, migrations, evidence, CI and operational files in scope
+## Scope
 
-## Frozen acceptance contract
+- Objective: `{{BUSINESS_OBJECTIVE}}`
+- In scope: `{{IN_SCOPE}}`
+- Out of scope: `{{OUT_OF_SCOPE}}`
+- Known P0/P1: `{{KNOWN_BLOCKERS}}`
+- P2/P3 backlog is non-blocking.
 
-- Phase: `{{PHASE_ID}}`
-- Predecessor and required status: `{{PREDECESSOR_ID}} = PASS`
-- Reviewed base SHA: `{{BASE_SHA_OR_RESOLUTION_RULE}}`
-- Contract version/path: `{{ACCEPTANCE_CONTRACT_PATH_OR_VERSION}}`
-- Authoritative command: `{{CERTIFICATION_COMMAND}}`
-- Verification level: `{{PHASE_GATE_OR_CHECKPOINT_OR_RELEASE}}`
-- Required success: exit `0`, `{{EXPECTED_PASS_VERDICT}}`, token `{{EXPECTED_SHA_BOUND_TOKEN}}`
-- Required tests/gates: `{{REQUIRED_TEST_AND_GATE_IDS}}`
-- Required adversarial IDs: `{{REQUIRED_ADVERSARIAL_IDS}}`
-- Required environment/services: `{{REQUIRED_ENVIRONMENT}}`
-- Non-certifying diagnostic command: `{{DIAGNOSTIC_COMMAND}}`
-- Cumulative preflight command: `{{PREFLIGHT_COMMAND}}`
-- Gate/mutation groups and expected budgets: `{{LAYERED_GROUP_MAP_AND_BUDGETS}}`
+## Required method
 
-Do not modify or weaken this contract to obtain PASS. If the contract itself is demonstrably defective, record the reproduction and proposed correction; do not silently change it.
+1. Preserve unrelated work.
+2. Inventory all phase failures once before editing.
+3. Repair by root-cause group and dependency order.
+4. Run the smallest related test while editing.
+5. Complete each business subphase and its focused test:
 
-## Objective baseline and verdict
+`{{SUBPHASES_AND_TARGETED_COMMANDS}}`
 
-- Current verdict: `{{CURRENT_VERDICT}}`
-- First failed gate: `{{FIRST_FAILED_GATE}}`
-- Verified passing areas: `{{VERIFIED_PASSING_AREAS}}`
-- Environment limitations: `{{ENVIRONMENT_LIMITATIONS}}`
-- Delivery/scope state: `{{DELIVERY_STATE}}`
+6. After every subphase is green, run exactly one thin final command: `{{FINAL_VERIFY_COMMAND}}`.
+7. If it fails, isolate and fix the owning subphase, rerun that focused test, then allow one final-command rerun.
+8. Finish when scoped acceptance passes and no P0/P1 remains.
 
-## Complete remediation ledger
+## Prohibited
 
-Resolve every entry; none may be deferred without an allowed canonical decision:
+- do not create/run `certify_pXX_phase.*` or `diagnose_pXX_phase.*`;
+- do not create SHA/base/candidate validation, PASS tokens, evidence digests, gate engines, mutation frameworks or generated evidence systems;
+- do not rerun historical phase certifiers or every old phase suite;
+- do not use full final verification as a debugger;
+- do not run Docker/deploy/load/browser/DR work outside its owning phase;
+- do not perform repo-wide cleanup or block on P2/P3 perfection;
+- do not weaken/delete/skip frozen acceptance behavior;
+- do not overwrite unrelated user changes.
 
-`{{ROOT_CAUSE_AND_REMEDIATION_TABLE}}`
+## Time budget
 
-For every item include reproduction, root cause, blast radius, concrete method, owning files, positive test, adversarial test, regression test, deploy/reversal, and evidence.
+- related test: normally under 60 seconds;
+- subphase suite: normally under 120 seconds;
+- database golden thread: normally under 240 seconds;
+- final verification: normally 5–10 minutes;
+- maximum normal correction cycle: one.
 
-## Mandatory cross-cutting disposition
+## Handoff
 
-Mark each lens `REQUIRED` or `NOT_APPLICABLE` with evidence-backed rationale, then implement every required item:
+Return concise results only:
 
-`{{CONTRACT_DATA_BACKEND_API_RBAC_AUDIT_COMMUNICATION_EVENT_UI_DNA_REPORTING_ARCHITECTURE_SECURITY_PERFORMANCE_OPERATIONS_MATRIX}}`
-
-## One-pass execution order
-
-1. Preserve current state; record HEAD/base/status and create a path-level impact ledger.
-2. Run one baseline inventory and enumerate all reproducible failures before editing; cluster them by root cause and owning gate group.
-3. Resolve contract/decision ambiguity first; update canonical owners and traceability before behavior.
-4. Repair shared foundations and root causes before dependent symptoms.
-5. Implement database/backfill/backend/API/RBAC/audit/events/frontend/UI DNA/reports/operations in dependency order.
-6. Add positive, negative, mutation, authorization, idempotency, concurrency, rollback, regression and failure tests required by the phase.
-7. After each root-cause cluster, run only its production-path gate, mapped mutations, and affected regressions. Target 10–120 seconds per feedback group.
-8. Once every group is green, run cumulative preflight. Do not invoke the full certifier while preflight is red or scope changed afterward.
-9. Run the authoritative certifier once, repair any certification-only failure through its smallest owning group, rerun preflight, and only then rerun certification when justified.
-10. Generate evidence from raw outputs, bind it to the candidate SHA, and complete the pre-certification checklist.
-
-Phase-specific ordered details:
-
-`{{PHASE_SPECIFIC_EXECUTION_STEPS}}`
-
-## Prohibited shortcuts
-
-- no test/gate/threshold weakening, synthetic PASS, stale artifacts, trusted summary metrics, fabricated evidence, skipped failures, broad exception, mock/fallback production path, or install fallback;
-- no direct UI-kit/DNA-subpath import or manual primitive when UI is affected;
-- no contract change solely to match an incorrect implementation;
-- no unrelated-domain edits without an explicit dependency and impact explanation;
-- no reset/delete/overwrite of unrelated user work;
-- no PASS claim from a non-certifying diagnostic mode.
-- no repeated full-certifier execution for a failure reproducible by a smaller gate/group command;
-- no independent duplicate implementation of rules or thresholds in the diagnostic runner;
-- no deploy, image push, Docker runtime, full browser/load/DR, or release-depth suite during a normal phase unless explicitly required by that phase's frozen contract.
-
-## Pre-certification checklist
-
-Complete every applicable item in `_ONE_PASS_PHASE_EXECUTION_STANDARD.md`, plus:
-
-`{{PHASE_SPECIFIC_PRECERT_CHECKLIST}}`
-
-## Required handoff
-
-Return only after the authoritative command passes, with:
-
-1. candidate/base SHA and complete changed-path scope ledger;
-2. root-cause/remediation closure table;
-3. cross-cutting disposition matrix;
-4. raw commands, exit codes, durations and numeric results;
-5. positive/adversarial/regression results;
-6. data reconciliation and migration/reversal proof where applicable;
-7. RBAC/audit/communication/event evidence where applicable;
-8. UI DNA/a11y/responsive/visual evidence where applicable;
-9. architecture/security/performance/operational deltas;
-10. evidence paths and SHA-bound certification token.
-
-If a permitted external blocker remains, do not claim completion. Return its exact reproduction, preserved state, and shortest user action required, then resume until PASS when the blocker is removed.
+- business capabilities completed;
+- changed paths grouped by area;
+- targeted commands with numeric results and durations;
+- final verification result;
+- P0/P1 remaining: must be zero;
+- P2/P3 backlog: record without blocking.
