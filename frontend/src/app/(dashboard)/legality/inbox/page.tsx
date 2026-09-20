@@ -329,31 +329,13 @@ export default function ComplianceInboxPage() {
                           </a>
                         </div>
                       </DnaCard>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <DnaCard>
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="w-2 h-2 rounded-full bg-blue-500" />
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">REGULATORY CHECKLIST</h3>
-                          </div>
-                          <div className="space-y-2">
-                            {["Batch Number", "Composition", "Net Weight", "Manufacturer"].map((check) => (
-                              <div key={check} className="flex items-center gap-2 py-0.5">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                                <span className="text-[11px] font-bold text-slate-600 uppercase">{check}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </DnaCard>
-                        <DnaCard>
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="w-2 h-2 rounded-full bg-amber-500" />
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">DESIGNER NOTES</h3>
-                          </div>
-                          <p className="text-[11px] font-bold text-slate-500 italic leading-relaxed uppercase">
-                            "Updated version based on revision #3. Adjusted font size to meet requirements."
-                          </p>
-                        </DnaCard>
-                      </div>
+                      {/* The REGULATORY CHECKLIST and DESIGNER NOTES cards that stood here
+                          were removed: the checklist asserted four regulatory checks that
+                          never ran (a false compliance claim on the screen whose purpose is
+                          regulatory truth), and the note was a hardcoded string presented as
+                          the designer's own. `GET /legality/inbox/tasks` carries neither, and
+                          this cycle may not invent an endpoint for them — so the surface
+                          states nothing it has no data for. */}
                       </>
                       )}
                     </div>

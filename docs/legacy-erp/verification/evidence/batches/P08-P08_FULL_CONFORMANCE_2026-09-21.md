@@ -87,6 +87,123 @@ changes no other surface; that is reasoning from the call sites, not an observat
 
 ---
 
+## Bounded correction cycle 2 — fabricated content on the P08 review surfaces
+
+`prompts/P08_STATIC_CONTENT_SWEEP_PROMPT.md`. An independent audit of the revision above found
+one further scoped P1 of the same class as the placeholder artwork, plus "the same class in
+possibly more places". Everything else in that revision stands and was not redone.
+
+### The P1 — a false compliance claim on the artwork-review workspace
+
+`frontend/src/app/(dashboard)/legality/inbox/page.tsx`, inside the `ARTWORK_REVIEW` workspace —
+the compliance officer's decision surface. Two fabricated blocks stood side by side:
+
+1. a `REGULATORY CHECKLIST` card rendering a static array
+   `["Batch Number", "Composition", "Net Weight", "Manufacturer"]`, each row beside a green
+   `CheckCircle2`. Nothing read any data: the panel asserted that four regulatory checks had
+   passed when no check ran, on the one screen whose whole purpose is regulatory truth;
+2. a `DESIGNER NOTES` card quoting the hardcoded string
+   `"Updated version based on revision #3. Adjusted font size to meet requirements."` as the
+   designer's actual note for the version under review.
+
+**Disclosure history.** The previous executor disclosed both items in its handoff but graded them
+backlog and did not record them here. This file therefore carried only the `placehold.co` item,
+and the audit had to re-find them. The owner ruled: remove them.
+
+**Fix.** Both cards and their shared grid wrapper are deleted. `GET /legality/inbox/tasks` carries
+`artworkUrl` / `artworkPreviewUrl` / `artworkVersion` and nothing else — no checklist and no
+designer note — so the surface now states nothing it has no data for. No "coming soon" graphic, no
+replacement string, no new endpoint, no new field. The workspace still renders the governed
+artwork, the exact version under review, and the real `Pass Artwork` / `Fail & Revise` writes.
+
+### The sweep — every P08 UI surface, class by class
+
+The class: *a rendered static array or hardcoded string that presents business data, status, or a
+claim, rather than UI chrome.* Coverage was the 13 surfaces the prompt names, every `.tsx` in each
+directory, scanned for inline mapped arrays, module-level data literals, `useState` array literals,
+literal `value=` attributes, hardcoded ISO dates, JSX text nodes, and numeric literals in JSX.
+
+**Instances fixed (3):**
+
+| Path | Instance | Fix |
+|---|---|---|
+| `legality/inbox/page.tsx` | the static `REGULATORY CHECKLIST` array (4 green "checks" that never ran) and the hardcoded `DESIGNER NOTES` quote | both cards removed; API carries neither field, so nothing is claimed |
+| `inventory/formula-adjustment-rnd/page.tsx:206` | the KPI tile `RATA-RATA UPSCALE BUFFER` printed the fixed literal `"8.5%"` — a business metric nobody measured, on a tile beside three that are computed | derived from the rows on file (`upscalePercent`); with no rows the tile reads `—` |
+| `penjualan/sample-fee/page.tsx` | a 100% in-file `SAMPLE_FEES` array of four invented records — client names, amounts, dates, a `RECEIVED/OFFSET/EXPIRED` status with a 30-day validity, job-order refs, notes — plus KPI totals and a create form that only mutated React state | wired to the live `GET /finance/sample-fees` and `POST /finance/sample-fees`; only fields the API actually returns are rendered, the invented `EXPIRED`/job-order dimensions are dropped, and the create form sends exactly the DTO's `{customerId, amount, feeDate, notes}` |
+
+**Borderline instances deliberately left (4), with reasons:**
+
+- `inventory/formula-adjustment-rnd/page.tsx:366–368` — three hardcoded `<option>` values naming
+  master formulas (`FORM-202603-001 - Brightening Glow Serum 10% Niacinamide`, …). Select
+  `options`/enums are named out of class by the sweep rule. The formulas are in-file choices for a
+  calculator input, not a rendered record.
+- `inventory/formula-adjustment-rnd/page.tsx:401` — `Standar buffer susut: 5% - 10% (sesuai
+  viskositas formula).` This is a static hint under the `Upscale Buffer Percentage (%)` input,
+  in the same family as the explicitly-excluded labels and input placeholder attributes. It states
+  a standing guideline for the field, not a record, count, status or verdict about any entity.
+- `legality/inbox/page.tsx:465` — `All ingredients within regulatory limits.` Not static: it
+  renders only under `validationResult && validationResult.violations?.length === 0`, i.e. from
+  the API's own verdict, so it is the API's claim and not the bundle's.
+- `legality/dashboard`, `legality/records`, `legality/permits`, `legality/ckpb-audit`,
+  `legality/input`, `creative/board`, `creative/finalized`, `approvals/sales-sample`,
+  `finance/bayar-sample`, `penjualan/pipeline-rnd` — every remaining array literal and long JSX
+  text node on these surfaces is UI chrome: breadcrumbs, tab ids/labels, select options, react-query
+  keys, form field definitions (labels + placeholder attributes), column definitions,
+  `STATUS_FLOW` / `STAGE_TRANSITIONS` state-transition maps, section headings, and dialog copy. The
+  remaining numeric literals in JSX are `rows`/`colSpan`/`cols`/`width`/`height` props. No
+  `MOCK_`/`INITIAL_`/`FALLBACK_`/`DEMO_`/`DUMMY_` constant survives on any of them.
+
+`penjualan/sample-fee` was previously recorded in the closure as deliberately out of P08 scope
+(Deviation below). That reasoning is kept — its subject matter is the P09 sales/AR slice — but it
+is overridden on this point: a rendered registry of invented business records is the class the
+owner ruled must be removed, whatever phase owns the concept, and removing it requires neither a
+new endpoint nor a new field nor a schema change. The page's remaining P09-shaped chrome (title,
+breadcrumbs, offset-to-DP column) is left as it is.
+
+### Regression test, failing first
+
+`frontend/src/app/(dashboard)/creative/finalized/__tests__/p08-live-flow.behavior.test.tsx`, a new
+`describe` — `no fabricated business content is rendered on a P08 surface` — 9 cases:
+
+- `legality/inbox artwork review renders no fabricated compliance claim and no hardcoded note` —
+  render-level: with an `ARTWORK_REVIEW` task whose payload carries no checklist and no note, none
+  of the four checklist labels and neither half of the quoted note may appear in the DOM, while
+  the governed artwork still renders;
+- `legality/inbox` / `inventory/formula-adjustment-rnd` / `penjualan/sample-fee` —
+  `carries no in-file business record literal` (source guard, comments stripped so the record of a
+  removed value is not mistaken for the value);
+- `inventory/formula-adjustment-rnd` / `penjualan/sample-fee` —
+  `reads its records from the production API client`;
+- `penjualan/sample-fee renders the API registry, never the invented one` and
+  `… shows an honest empty state when the API has no fees` — render-level;
+- `inventory/formula-adjustment-rnd derives the upscale buffer from the API, and claims nothing
+  without it`.
+
+- Before the fix: **8 failed / 19 passed (27)**. No pre-existing case changed.
+- After the fix: **27 passed / 27**, 6.3s. Was 18/18.
+
+### New `verify:p08` result
+
+`npm run verify:p08` → **exit 0** (step results: sample 6/6, formulation 5/5, creative-legal 7/7,
+frontend `test:p08` 27/27, `lint:p08` 0 errors / 90 warnings — the recorded baseline, backend build
+0, frontend build `✓ Compiled successfully`, golden thread 7/7, `clean-db` `test-DB residue: 0` /
+`server residue: 0 nex_p08_* databases`). No step was added, removed or reordered; `lint:p08`'s
+file list was not changed.
+
+`npx tsc --noEmit -p frontend/tsconfig.json` → exit 0, 0 errors.
+`npx tsc --noEmit -p backend/tsconfig.json` → exit 0, 0 errors (no backend file changed).
+
+### Still not proved
+
+`penjualan/sample-fee` is proven at the render and source boundary only: jsdom does not call a
+server, so no run against a live `GET /finance/sample-fees` with real rows was performed, and the
+`POST` path is asserted by its payload shape, not by a persisted row. The page shows a raw
+`customerId` UUID because `SampleFee` declares no relation to a customer master
+(`backend/prisma/schema/finance.prisma`); that is honest but is not a name, and no cycle has
+resolved it.
+
+---
+
 Environment preflight, before any edit:
 
 - `backend/.env` `DATABASE_URL` → `localhost` / `erp_db_test` / user `postgres`.
@@ -254,7 +371,8 @@ Root `package.json`:
 
 `frontend/src/app/(dashboard)/creative/finalized/__tests__/p08-live-flow.behavior.test.tsx`
 — `npm --prefix frontend run test:p08`, exit 0, **15/15**, 6.3s. (Correction cycle: the same suite
-now covers `legality/inbox/page.tsx` as well — **18/18**.)
+now covers `legality/inbox/page.tsx` as well — **18/18**. Cycle 2: it also guards the four fabricated
+literals and the sample-fee registry — **27/27**.)
 
 The production API client (`@/lib/api`) is what runs: the axios instance keeps its `baseURL` and
 its interceptors, and only the socket beneath it is replaced, because the network is the one
@@ -375,7 +493,10 @@ Root: `scripts/ssot/p08_clean_db.js`.
   validity period nor a job-order reference exists. Wiring it would either display raw UUIDs or
   require a schema change to a P09-owned concept, both of which are worse than recording it. The
   P08 sample-fee gate itself lives on `finance/bayar-sample` (Finance verification), which is wired
-  to the live API.
+  to the live API. **Corrected 2026-09-21 (cycle 2):** the reasoning above is kept, but the page's
+  in-file `SAMPLE_FEES` registry was removed anyway — a rendered registry of invented business
+  records is the class the owner ruled must go, regardless of which phase owns the concept. It is
+  now wired to the live API on the fields the API actually returns; see the cycle-2 section above.
 - **The ±0.001 composition boundary is refused at exactly 0.001.** `20 + 79.999` and
   `20 + 80.001` both store a double whose distance from 100 is 0.0010000000000048, so the rule
   `|total − 100| > 0.001` refuses both. Rounding the deviation would admit them, but the frozen
@@ -389,6 +510,18 @@ Root: `scripts/ssot/p08_clean_db.js`.
 
 ## P2/P3 backlog (recorded, non-blocking)
 
+- **P2 — `ARTWORK_NOT_ON_FILE` has no contract home.** The error code is declared at
+  `backend/src/modules/legality/legality.service.ts:29` and used by exactly one P08 refusal
+  (`submitArtworkReview` answers `400 ARTWORK_NOT_ON_FILE` when the lead has no governed artwork —
+  both sites in that one file). It appears in **no** canonical contract and in **no** entry of
+  `docs/legacy-erp/contracts/10_TRACEABILITY_MATRIX.yaml`: unlike `SAMPLE_FEE_NOT_VERIFIED`,
+  `FORMULA_LOCKED` and `DESIGN_VERSION_REQUIRED`, it has no `BUS-RULE-*` row and no `err:` field
+  naming it. A refusal a P08 acceptance check relies on is therefore not traceable. It needs
+  either a contract home (a rule row plus the traceability `err:` reference) or a rename onto an
+  existing registered code. Recording it, not repairing it: both remedies touch the frozen
+  contract surface and are outside a bounded correction cycle. Verified by
+  `grep -rn ARTWORK_NOT_ON_FILE` over `backend/src` (2 hits, both in that file) and over `docs/`
+  (0 hits outside this evidence file and the prompt).
 - **P2 — P08 tenancy.** Per `DEC-2026-09-20-059`, a cross-tenant role-holder is not refused on the
   P08 write path (no per-table `organizationId`). Needs the column, an actor-scoped parent-lead
   lookup on `createSample`/`verifySamplePayment`/`rejectSamplePayment`, and a decision on whether
@@ -443,7 +576,7 @@ Root: `scripts/ssot/p08_clean_db.js`.
 | `audit_outbox_atomicity` | PASS | `p08-s3` rollback describe; 500 leaves 0 audit + 0 outbox + no state change |
 | `golden_thread` | PASS | 7/7 on a disposable `nex_p08_golden_*` database, dropped in `finally` |
 | `design_artwork_review_live` | PASS (correction cycle) | `p08-s3` test 6 over HTTP: `artworkUrl`/`artworkPreviewUrl`/`artworkVersion` on the task, `null` when there is none, review row bound to the same URL; `p08-live-flow` artwork case renders the API's URLs with no placeholder host |
-| `frontend_live_data_dna_states` | PASS | `p08-live-flow.behavior.test.tsx` 15/15 at closure, **18/18** after the correction; production client, `@/components/dna`, all five states |
+| `frontend_live_data_dna_states` | PASS | `p08-live-flow.behavior.test.tsx` 15/15 at closure, **18/18** after the correction, **27/27** after cycle 2; production client, `@/components/dna`, all five states |
 | `affected_regression_and_cleanup` | PASS | unit inner loop 27/27 unchanged; backend + frontend build 0; residue 0; `test:p07:http-closure` 8/8 exit 0 after the error-filter change |
 | `contract_ownership` | PASS (carried) | canonical contracts already carry the P08 owners (`DEC-051..060`); the one stale command name in the traceability block was corrected |
 

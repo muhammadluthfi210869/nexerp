@@ -131,6 +131,15 @@ export default function FormulaAdjustmentPage() {
   const pendingCount = adjustments.filter(a => a.status === "PENDING_APPROVAL").length;
   const approvedCount = adjustments.filter(a => a.status === "APPROVED").length;
 
+  // The average buffer of the adjustments actually on file. This tile used to
+  // print a fixed "8.5%" — a business metric nobody measured. With no rows on
+  // file there is nothing to average, and the tile says so instead of guessing.
+  const avgUpscaleBuffer = useMemo(() => {
+    if (adjustments.length === 0) return "—";
+    const sum = adjustments.reduce((acc, a) => acc + (Number(a.upscalePercent) || 0), 0);
+    return `${(sum / adjustments.length).toFixed(1)}%`;
+  }, [adjustments]);
+
   const handleSaveUpscale = () => {
     toast.success(
       "Penyesuaian Formulasi Disimpan",
@@ -203,7 +212,7 @@ export default function FormulaAdjustmentPage() {
         />
         <DnaStatCard
           label="RATA-RATA UPSCALE BUFFER"
-          value="8.5%"
+          value={avgUpscaleBuffer}
           subValue="Safety Margin Loss Bejana"
           icon={<Percent className="w-5 h-5 text-indigo-600" />}
         />

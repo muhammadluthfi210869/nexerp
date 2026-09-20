@@ -1,6 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+/**
+ * Pembayaran & Komitmen Sample Fee — the sample-fee registry.
+ *
+ * Every record on this page comes from the production `GET /finance/sample-fees`,
+ * and a new fee is written through `POST /finance/sample-fees`. The previous
+ * revision rendered an in-file `SAMPLE_FEES` array of four invented records —
+ * client names, amounts, dates, a `RECEIVED/OFFSET/EXPIRED` status carrying a
+ * 30-day validity, job-order references and notes — and its create form only
+ * mutated React state, so an operator could "file" a fee that was never
+ * persisted. None of that remains: there is no static array, no browser storage
+ * and no fallback here, and the page states nothing the API did not return.
+ */
+
+import React, { useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { api } from "@/lib/api";
 import {
   DnaPageContainer,
   DnaPageHeader,
@@ -9,115 +25,130 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
-  DnaCell,
   DnaModal,
   DnaInput,
+  DnaEmptyState,
+  DnaErrorState,
+  DnaLoadingSkeleton,
   formatRupiah,
 } from "@/components/dna";
 import { DnaTable } from "@/components/dna";
-import { Plus, Eye, CheckCircle2, Clock, XCircle, Search, DollarSign } from "lucide-react";
+import { Plus, Eye, CheckCircle2, Clock, Search, DollarSign } from "lucide-react";
+
+const EMPTY = "—";
+
+/** Exactly what `GET /finance/sample-fees` returns — nothing more. */
+interface ApiSampleFee {
+  id: string;
+  feeNumber: string;
+  customerId: string;
+  amount: string | number;
+  feeDate: string;
+  notes?: string | null;
+  offsetToDPId?: string | null;
+}
 
 interface SampleFeeRecord {
   id: string;
   feeNo: string;
-  clientName: string;
+  customerId: string;
   date: string;
   amount: number;
-  status: "RECEIVED" | "OFFSET" | "EXPIRED";
+  offset: boolean;
   offsetTo: string;
-  jobOrderRef: string;
-  notes?: string;
+  notes: string;
 }
 
-const SAMPLE_FEES: SampleFeeRecord[] = [
-  {
-    id: "sf-1",
-    feeNo: "SF-202609-001",
-    clientName: "PT Cantika Jelita Nusantara",
-    date: "2026-09-01",
-    amount: 1500000,
-    status: "OFFSET",
-    offsetTo: "DP-PRD-2026-088",
-    jobOrderRef: "JO-SMP-001",
-    notes: "Offset ke DP PO Produksi Batch 1"
-  },
-  {
-    id: "sf-2",
-    feeNo: "SF-202609-002",
-    clientName: "M. Setyo (Anasera)",
-    date: "2026-09-03",
-    amount: 750000,
-    status: "RECEIVED",
-    offsetTo: "—",
-    jobOrderRef: "JO-SMP-002",
-    notes: "Biaya riset 2 varian massage cream"
-  },
-  {
-    id: "sf-3",
-    feeNo: "SF-202609-003",
-    clientName: "Rizka (Skin Haven)",
-    date: "2026-09-05",
-    amount: 500000,
-    status: "RECEIVED",
-    offsetTo: "—",
-    jobOrderRef: "JO-SMP-003",
-    notes: "Biaya sample soothing gel aloe"
-  },
-  {
-    id: "sf-4",
-    feeNo: "SF-202608-012",
-    clientName: "Bapak Tommy Lee",
-    date: "2026-08-10",
-    amount: 500000,
-    status: "EXPIRED",
-    offsetTo: "—",
-    jobOrderRef: "JO-SMP-091",
-    notes: "Klien tidak lanjut PO melebihi masa validitas 30 hari"
-  }
-];
+const toRecord = (fee: ApiSampleFee): SampleFeeRecord => ({
+  id: fee.id,
+  feeNo: fee.feeNumber,
+  customerId: fee.customerId,
+  date: fee.feeDate,
+  amount: Number(fee.amount) || 0,
+  // `offsetToDPId` is the only offset signal the model carries: set means the
+  // fee was compensated against a Down Payment, null means it is still open.
+  offset: !!fee.offsetToDPId,
+  offsetTo: fee.offsetToDPId || EMPTY,
+  notes: fee.notes || "",
+});
 
 export default function SampleFeePaymentPage() {
-  const [data, setData] = useState<SampleFeeRecord[]>(SAMPLE_FEES);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<SampleFeeRecord | null>(null);
 
   // Form State
-  const [formClient, setFormClient] = useState("");
+  const [formCustomerId, setFormCustomerId] = useState("");
   const [formDate, setFormDate] = useState(new Date().toISOString().split("T")[0]);
   const [formAmount, setFormAmount] = useState("500000");
-  const [formBank, setFormBank] = useState("BCA Operasional (029-1122-334)");
-  const [formJobRef, setFormJobRef] = useState("");
   const [formNotes, setFormNotes] = useState("");
 
-  const filtered = data.filter(
-    (d) =>
-      d.feeNo.toLowerCase().includes(search.toLowerCase()) ||
-      d.clientName.toLowerCase().includes(search.toLowerCase()) ||
-      d.jobOrderRef.toLowerCase().includes(search.toLowerCase())
+  const { data: rawFees, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["finance-sample-fees"],
+    queryFn: async () => {
+      const resp = await api.get("/finance/sample-fees");
+      const body = resp.data;
+      return Array.isArray(body) ? body : (body?.data ?? []);
+    },
+  });
+
+  const data: SampleFeeRecord[] = useMemo(
+    () => (Array.isArray(rawFees) ? rawFees.map(toRecord) : []),
+    [rawFees],
   );
 
-  const totalReceived = data.filter((d) => d.status === "RECEIVED").reduce((acc, c) => acc + c.amount, 0);
-  const totalOffset = data.filter((d) => d.status === "OFFSET").reduce((acc, c) => acc + c.amount, 0);
-  const totalExpired = data.filter((d) => d.status === "EXPIRED").reduce((acc, c) => acc + c.amount, 0);
+  const errStatus = (error as { response?: { status?: number } })?.response?.status;
+  const denied = errStatus === 401 || errStatus === 403;
+  const errorMessage =
+    (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+    "Gagal memuat data sample fee.";
+
+  const createMutation = useMutation({
+    mutationFn: async (payload: {
+      customerId: string;
+      amount: number;
+      feeDate: string;
+      notes?: string;
+    }) => {
+      const resp = await api.post("/finance/sample-fees", payload);
+      return resp.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["finance-sample-fees"] });
+      toast.success("Sample fee tercatat");
+      setIsModalOpen(false);
+      setFormCustomerId("");
+      setFormNotes("");
+    },
+    onError: (err: unknown) => {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        "Sample fee gagal dicatat";
+      toast.error(message);
+    },
+  });
+
+  const filtered = data.filter((d) => {
+    const q = search.toLowerCase();
+    return (
+      d.feeNo.toLowerCase().includes(q) ||
+      d.customerId.toLowerCase().includes(q) ||
+      d.notes.toLowerCase().includes(q)
+    );
+  });
+
+  const totalOpen = data.filter((d) => !d.offset).reduce((acc, c) => acc + c.amount, 0);
+  const totalOffset = data.filter((d) => d.offset).reduce((acc, c) => acc + c.amount, 0);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    const newRecord: SampleFeeRecord = {
-      id: `sf-${Date.now()}`,
-      feeNo: `SF-202609-${String(data.length + 1).padStart(3, "0")}`,
-      clientName: formClient,
-      date: formDate,
+    createMutation.mutate({
+      customerId: formCustomerId.trim(),
       amount: parseFloat(formAmount) || 0,
-      status: "RECEIVED",
-      offsetTo: "—",
-      jobOrderRef: formJobRef || `JO-SMP-${String(data.length + 1).padStart(3, "0")}`,
-      notes: formNotes,
-    };
-    setData([newRecord, ...data]);
-    setIsModalOpen(false);
-    setFormClient("");
-    setFormNotes("");
+      feeDate: formDate,
+      notes: formNotes || undefined,
+    });
   };
 
   return (
@@ -133,12 +164,12 @@ export default function SampleFeePaymentPage() {
         }
       />
 
-      <DnaKpiGrid cols={4}>
+      <DnaKpiGrid cols={3}>
         <DnaStatCard
           label="Total Sample Fee Aktif"
-          value={formatRupiah(totalReceived)}
+          value={formatRupiah(totalOpen)}
           icon={<DollarSign className="w-4 h-4" />}
-          delta={{ value: `${data.filter((d) => d.status === "RECEIVED").length} Sample Belum Offset`, isPositive: true }}
+          delta={{ value: `${data.filter((d) => !d.offset).length} Sample Belum Offset`, isPositive: true }}
           variant="info"
         />
         <DnaStatCard
@@ -147,13 +178,6 @@ export default function SampleFeePaymentPage() {
           icon={<CheckCircle2 className="w-4 h-4" />}
           delta={{ value: "Kompensasi ke Kontrak Produksi", isPositive: true }}
           variant="success"
-        />
-        <DnaStatCard
-          label="Sample Fee Expired"
-          value={formatRupiah(totalExpired)}
-          icon={<XCircle className="w-4 h-4" />}
-          delta={{ value: "Hangus / Diakui Pendapatan Non-Refund", isPositive: false }}
-          variant="danger"
         />
         <DnaStatCard
           label="Total Transaksi Fee"
@@ -171,7 +195,7 @@ export default function SampleFeePaymentPage() {
         actions={
           <div className="w-64">
             <DnaInput
-              placeholder="Cari no fee, klien, job order..."
+              placeholder="Cari no fee atau customer id..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               icon={<Search className="w-4 h-4 text-slate-400" />}
@@ -179,17 +203,42 @@ export default function SampleFeePaymentPage() {
           </div>
         }
       >
+        {isLoading ? (
+          <DnaLoadingSkeleton rows={5} />
+        ) : isError ? (
+          <DnaErrorState
+            title={denied ? "Akses ditolak" : "Gagal memuat data"}
+            message={
+              denied
+                ? "Anda tidak memiliki akses ke daftar sample fee."
+                : errorMessage
+            }
+            onRetry={() => refetch()}
+          />
+        ) : filtered.length === 0 ? (
+          <DnaEmptyState
+            title={
+              data.length === 0
+                ? "Belum ada sample fee tercatat"
+                : "Tidak ada sample fee yang cocok"
+            }
+            description={
+              data.length === 0
+                ? "Belum ada biaya sample yang dicatat. Catat satu lewat tombol Buat Sample Fee."
+                : "Ubah kata kunci pencarian."
+            }
+          />
+        ) : (
         <div className="overflow-x-auto">
           <DnaTable className="w-full text-left text-[12px]">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
               <tr>
                 <th className="px-4 py-3">Sample Fee No</th>
-                <th className="px-4 py-3">Prospective Client / Customer</th>
+                <th className="px-4 py-3">Customer (ID)</th>
                 <th className="px-4 py-3">Date</th>
                 <th className="px-4 py-3 text-right">Amount</th>
                 <th className="px-4 py-3 text-center">Status</th>
                 <th className="px-4 py-3">Offset To</th>
-                <th className="px-4 py-3">Job Order Ref</th>
                 <th className="px-4 py-3 text-right">#</th>
               </tr>
             </thead>
@@ -197,26 +246,17 @@ export default function SampleFeePaymentPage() {
               {filtered.map((item) => (
                 <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
                   <td className="px-4 py-3 font-mono font-semibold text-blue-600">{item.feeNo}</td>
-                  <td className="px-4 py-3 font-medium text-slate-900">{item.clientName}</td>
+                  <td className="px-4 py-3 font-mono text-slate-900">{item.customerId}</td>
                   <td className="px-4 py-3 text-slate-600">{item.date}</td>
                   <td className="px-4 py-3 text-right font-mono font-bold text-slate-900">
                     {formatRupiah(item.amount)}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <DnaBadge
-                      variant={
-                        item.status === "OFFSET"
-                          ? "emerald"
-                          : item.status === "RECEIVED"
-                          ? "blue"
-                          : "neutral"
-                      }
-                    >
-                      {item.status}
+                    <DnaBadge variant={item.offset ? "emerald" : "blue"}>
+                      {item.offset ? "OFFSET" : "RECEIVED"}
                     </DnaBadge>
                   </td>
                   <td className="px-4 py-3 font-mono text-slate-700">{item.offsetTo}</td>
-                  <td className="px-4 py-3 font-mono text-slate-600">{item.jobOrderRef}</td>
                   <td className="px-4 py-3 text-right">
                     <DnaButton
                       variant="ghost"
@@ -232,6 +272,7 @@ export default function SampleFeePaymentPage() {
             </tbody>
           </DnaTable>
         </div>
+        )}
       </DnaDataTableCard>
 
       {/* Modal Detail */}
@@ -253,29 +294,17 @@ export default function SampleFeePaymentPage() {
                 <span className="font-medium text-slate-800">{selectedRecord.date}</span>
               </div>
               <div>
-                <span className="text-xs text-slate-400 block font-medium">Klien / Prospek</span>
-                <span className="font-semibold text-slate-900">{selectedRecord.clientName}</span>
+                <span className="text-xs text-slate-400 block font-medium">Customer (ID)</span>
+                <span className="font-mono text-slate-900 break-all">{selectedRecord.customerId}</span>
               </div>
               <div>
                 <span className="text-xs text-slate-400 block font-medium">Nominal Komitmen</span>
                 <span className="font-mono font-bold text-blue-600">{formatRupiah(selectedRecord.amount)}</span>
               </div>
               <div>
-                <span className="text-xs text-slate-400 block font-medium">Referensi Job Order</span>
-                <span className="font-mono text-slate-700">{selectedRecord.jobOrderRef}</span>
-              </div>
-              <div>
                 <span className="text-xs text-slate-400 block font-medium">Status Penggunaan</span>
-                <DnaBadge
-                  variant={
-                    selectedRecord.status === "OFFSET"
-                      ? "emerald"
-                      : selectedRecord.status === "RECEIVED"
-                      ? "blue"
-                      : "neutral"
-                  }
-                >
-                  {selectedRecord.status}
+                <DnaBadge variant={selectedRecord.offset ? "emerald" : "blue"}>
+                  {selectedRecord.offset ? "OFFSET" : "RECEIVED"}
                 </DnaBadge>
               </div>
             </div>
@@ -306,14 +335,18 @@ export default function SampleFeePaymentPage() {
         <form onSubmit={handleCreate} className="space-y-4 text-sm">
           <div>
             <label className="text-xs font-semibold text-slate-700 mb-1 block">
-              Prospective Client / Customer *
+              Customer ID (UUID) *
             </label>
             <DnaInput
-              placeholder="Ketik nama klien atau calon brand..."
-              value={formClient}
-              onChange={(e) => setFormClient(e.target.value)}
+              placeholder="11111111-2222-3333-4444-555555555555"
+              value={formCustomerId}
+              onChange={(e) => setFormCustomerId(e.target.value)}
               required
             />
+            <p className="text-[11px] text-slate-400 mt-1">
+              SampleFee menyimpan customer sebagai UUID; nama customer tidak tersedia dari
+              endpoint ini.
+            </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -336,26 +369,6 @@ export default function SampleFeePaymentPage() {
             </div>
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-700 mb-1 block">Rekening Bank Tujuan *</label>
-            <select
-              value={formBank}
-              onChange={(e) => setFormBank(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800"
-            >
-              <option value="BCA Operasional (029-1122-334)">BCA Operasional (029-1122-334)</option>
-              <option value="Mandiri Bisnis (137-00-9821-44)">Mandiri Bisnis (137-00-9821-44)</option>
-              <option value="BNI Maklon (088-234-5678)">BNI Maklon (088-234-5678)</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-slate-700 mb-1 block">Referensi Job Order Sample</label>
-            <DnaInput
-              placeholder="Contoh: JO-SMP-004"
-              value={formJobRef}
-              onChange={(e) => setFormJobRef(e.target.value)}
-            />
-          </div>
-          <div>
             <label className="text-xs font-semibold text-slate-700 mb-1 block">Catatan Tambahan</label>
             <textarea
               value={formNotes}
@@ -369,8 +382,8 @@ export default function SampleFeePaymentPage() {
             <DnaButton type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton type="submit" variant="primary">
-              Simpan Data
+            <DnaButton type="submit" variant="primary" disabled={createMutation.isPending}>
+              {createMutation.isPending ? "Menyimpan..." : "Simpan Data"}
             </DnaButton>
           </div>
         </form>

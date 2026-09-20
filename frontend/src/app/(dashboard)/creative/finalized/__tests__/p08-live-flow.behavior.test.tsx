@@ -39,14 +39,36 @@ import { api } from "@/lib/api";
 import FinalizedDesignsPage from "@/app/(dashboard)/creative/finalized/page";
 import PermitsPage from "@/app/(dashboard)/legality/permits/page";
 import ComplianceInboxPage from "@/app/(dashboard)/legality/inbox/page";
+import FormulaAdjustmentPage from "@/app/(dashboard)/inventory/formula-adjustment-rnd/page";
+import SampleFeePage from "@/app/(dashboard)/penjualan/sample-fee/page";
 
 const FINALIZED_PATH = "/creative/finalized";
 const PERMITS_PATH = "/legality/permits";
 const INBOX_PATH = "/legality/inbox/tasks";
+const ADJUSTMENTS_PATH = "/rnd/formulas/adjustments";
+const SAMPLE_FEES_PATH = "/finance/sample-fees";
 
 const FINALIZED_SRC = path.resolve(__dirname, "..", "page.tsx");
 const PERMITS_SRC = path.resolve(__dirname, "..", "..", "..", "legality", "permits", "page.tsx");
 const INBOX_SRC = path.resolve(__dirname, "..", "..", "..", "legality", "inbox", "page.tsx");
+const ADJUSTMENTS_SRC = path.resolve(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "inventory",
+  "formula-adjustment-rnd",
+  "page.tsx",
+);
+const SAMPLE_FEE_SRC = path.resolve(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "penjualan",
+  "sample-fee",
+  "page.tsx",
+);
 
 type Reply = { status: number; body: unknown };
 
@@ -234,6 +256,200 @@ describe("P08 Acceptance 5 — live P08 UI", () => {
       expect(html).not.toMatch(/dummyimage/i);
       expect(html).not.toMatch(/example\.com/i);
       expect(calls).toEqual([INBOX_PATH]);
+    });
+  });
+
+  // ── 1b. no rendered static array or hardcoded string presents business data ─
+  //
+  // The class under guard: a rendered static array or hardcoded string that
+  // presents business data, status or a claim, rather than UI chrome. The
+  // artwork-review workspace used to assert four regulatory checks that never
+  // ran and quote a designer note that was never written; the sample-fee and
+  // formula-adjustment screens used to render in-file registries and a fixed
+  // metric. UI chrome (breadcrumbs, tabs, select options, state-transition
+  // maps, labels, input placeholders) is deliberately out of this class.
+  describe("no fabricated business content is rendered on a P08 surface", () => {
+    it("legality/inbox artwork review renders no fabricated compliance claim and no hardcoded note", async () => {
+      // The API carries the governed artwork and nothing else — no checklist and
+      // no designer note. None of that may be invented on the surface.
+      const ARTWORK = "/uploads/creative_assets/nex-artwork-v2.png";
+
+      reply = async (url) => {
+        if (url !== INBOX_PATH) throw new Error(`unexpected call: ${url}`);
+        return {
+          status: 200,
+          body: [
+            {
+              id: "artwork-pipeline-1",
+              type: "ARTWORK_REVIEW",
+              priority: "MEDIUM",
+              title: "Review Artwork: Kirana Glow",
+              pipelineId: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+              formulaId: null,
+              createdAt: "2026-09-20T00:00:00.000Z",
+              artworkUrl: ARTWORK,
+              artworkPreviewUrl: null,
+              artworkVersion: 2,
+            },
+          ],
+        };
+      };
+
+      const { container } = renderWithClient(<ComplianceInboxPage />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText("Review Artwork: Kirana Glow").length).toBeGreaterThan(0);
+      });
+
+      const text = container.textContent ?? "";
+
+      // the four checks asserted nothing, and no check runs on this surface
+      for (const check of ["Batch Number", "Composition", "Net Weight", "Manufacturer"]) {
+        expect(text).not.toContain(check);
+      }
+      expect(text).not.toContain("REGULATORY CHECKLIST");
+
+      // and no note is quoted on the designer's behalf
+      expect(text).not.toContain("Updated version based on revision #3");
+      expect(text).not.toContain("Adjusted font size to meet requirements");
+      expect(text).not.toContain("DESIGNER NOTES");
+
+      // the governed artwork is still the thing under review
+      expect(container.querySelector("img")?.getAttribute("src")).toBe(ARTWORK);
+      expect(calls).toEqual([INBOX_PATH]);
+    });
+
+    it.each([
+      ["legality/inbox", INBOX_SRC],
+      ["inventory/formula-adjustment-rnd", ADJUSTMENTS_SRC],
+      ["penjualan/sample-fee", SAMPLE_FEE_SRC],
+    ])("%s carries no in-file business record literal", (_label, file) => {
+      // Comments are stripped: a comment recording the value that was removed is
+      // the record, not the fabrication. A rendered literal is code.
+      const src = fs
+        .readFileSync(file, "utf8")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/^\s*\/\/.*$/gm, "")
+        .replace(/\/\/.*$/gm, "");
+
+      // the specific fabricated values that were found on these surfaces
+      expect(src).not.toMatch(/"Batch Number"/);
+      expect(src).not.toMatch(/"Net Weight"/);
+      expect(src).not.toMatch(/Updated version based on revision #3/);
+      expect(src).not.toMatch(/"8\.5%"/);
+      expect(src).not.toMatch(/\bconst\s+SAMPLE_FEES\b/);
+      expect(src).not.toMatch(/Cantika Jelita Nusantara/);
+    });
+
+    it.each([
+      ["inventory/formula-adjustment-rnd", ADJUSTMENTS_SRC],
+      ["penjualan/sample-fee", SAMPLE_FEE_SRC],
+    ])("%s reads its records from the production API client", (_label, file) => {
+      const src = fs.readFileSync(file, "utf8");
+
+      expect(src).toMatch(/from "@\/lib\/api"/);
+      expect(src).toMatch(/api\.get\(/);
+      expect(src).not.toMatch(/localStorage/);
+      expect(src).not.toMatch(/\bconst\s+(INITIAL_|MOCK_|FALLBACK_|DEMO_|DUMMY_)/);
+    });
+
+    it("penjualan/sample-fee renders the API registry, never the invented one", async () => {
+      reply = async (url) => {
+        if (url !== SAMPLE_FEES_PATH) throw new Error(`unexpected call: ${url}`);
+        return {
+          status: 200,
+          body: [
+            {
+              id: "fee-real-1",
+              feeNumber: "SF-2609-00007",
+              customerId: "11111111-2222-3333-4444-555555555555",
+              amount: "1250000.00",
+              feeDate: "2026-09-08T00:00:00.000Z",
+              notes: "Fee riset varian barrier cream",
+              offsetToDPId: null,
+            },
+          ],
+        };
+      };
+
+      const { container } = renderWithClient(<SampleFeePage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SF-2609-00007")).toBeInTheDocument();
+      });
+
+      const text = container.textContent ?? "";
+      // none of the four invented records survives into the DOM
+      expect(text).not.toContain("SF-202609-001");
+      expect(text).not.toContain("Cantika Jelita Nusantara");
+      expect(text).not.toContain("M. Setyo (Anasera)");
+      expect(text).not.toContain("JO-SMP-001");
+      expect(calls).toEqual([SAMPLE_FEES_PATH]);
+    });
+
+    it("penjualan/sample-fee shows an honest empty state when the API has no fees", async () => {
+      reply = async (url) => {
+        if (url !== SAMPLE_FEES_PATH) throw new Error(`unexpected call: ${url}`);
+        return { status: 200, body: [] };
+      };
+
+      const { container } = renderWithClient(<SampleFeePage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Belum ada sample fee tercatat")).toBeInTheDocument();
+      });
+      expect(container.textContent ?? "").not.toContain("SF-202609-001");
+    });
+
+    it("inventory/formula-adjustment-rnd derives the upscale buffer from the API, and claims nothing without it", async () => {
+      reply = async (url) => {
+        if (url !== ADJUSTMENTS_PATH) throw new Error(`unexpected call: ${url}`);
+        return {
+          status: 200,
+          body: [
+            {
+              id: "adj-1",
+              adjustmentCode: "ADJ-1",
+              adjustmentDate: "2026-09-08T00:00:00.000Z",
+              formulaCode: "FORM-202603-001",
+              productName: "Brightening Glow Serum",
+              revisionVersion: "V1",
+              nettoPerPcs: 30,
+              clientName: "PT Kirana",
+              brandName: "Kirana Glow",
+              busdevPic: "Rina",
+              formulatorPic: "Dewi",
+              targetProductionQtyPcs: 5000,
+              baseResultKg: 150,
+              upscalePercent: 12.5,
+              upscaleResultKg: 168.75,
+              adjustmentReason: "Buffer susut",
+              status: "PENDING_APPROVAL",
+              statusLabel: "Menunggu Approval",
+            },
+          ],
+        };
+      };
+
+      const first = renderWithClient(<FormulaAdjustmentPage />);
+      await waitFor(() => {
+        expect(screen.getByText("ADJ-1")).toBeInTheDocument();
+      });
+      // the tile reports the real average of the rows on the screen
+      expect(first.container.textContent).toContain("12.5%");
+      expect(first.container.textContent).not.toContain("8.5%");
+      first.unmount();
+
+      reply = async (url) => {
+        if (url !== ADJUSTMENTS_PATH) throw new Error(`unexpected call: ${url}`);
+        return { status: 200, body: [] };
+      };
+      const second = renderWithClient(<FormulaAdjustmentPage />);
+      await waitFor(() => {
+        expect(calls[calls.length - 1]).toBe(ADJUSTMENTS_PATH);
+      });
+      // with no rows on file there is no buffer to average, and none is claimed
+      expect(second.container.textContent).not.toContain("8.5%");
     });
   });
 
