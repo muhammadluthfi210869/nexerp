@@ -211,7 +211,11 @@ a cleanup failure fails the run, so a leftover can never pass silently.
 
 | Command | Exit | Result | Duration |
 |---|---:|---|---:|
-| `npm run verify:p08` | **0** | natural exit; 6+5+6 backend HTTP + 15 frontend + 7 golden thread; `test-DB residue: 0`, `server residue: 0 nex_p08_* databases` | 206s |
+| `npm run verify:p08` | **0** | natural exit; 6+5+6 backend HTTP + 15 frontend + 7 golden thread; `test-DB residue: 0`, `server residue: 0 nex_p08_* databases` | 214s |
+
+Run once on the final committed revision (`01f1048d`). An earlier run on `6ffa0a37`
+also exited 0 in 206s; the only later change was the S3 upload sweep's cleanup, whose
+owning suite was re-run green (6/6, 41.6s) before this final composition.
 
 `npm run verify:p08:clean-db` → `[P08] test-DB residue: 0`, `[P08] server residue: 0 nex_p08_* databases`.
 
@@ -295,6 +299,15 @@ Root: `scripts/ssot/p08_clean_db.js`.
   `backend/test/rnd-business-process.e2e-spec.ts` still cannot build (`DEC-2026-09-20-061`).
   Unchanged by P08. Note: `rnd-business-process` calls `formulasService.requestApproval(id)`, which
   still type-checks because the new `actorId` is optional.
+- **P2 — the creative flow's activity-stream write fails silently.** Running the S3 suite emits
+  ~31 logged `Argument 'eventType' is missing` errors. `CreativeService` emits
+  `activity.logged` with only `senderDivision`/`notes`/`loggedBy`
+  (`src/modules/creative/creative.service.ts`), while
+  `ActivityStreamService.createLog` requires `leadId` and `eventType`
+  (`src/modules/activity-stream/activity-stream.service.ts:18`). The listener's rejection is logged
+  and swallowed, so the design activity stream loses rows without anyone noticing. Pre-existing,
+  outside the files this phase changed, and it does not block the acceptance — recorded, not
+  repaired here. It is also why every P08 backend run prints that error.
 - **P3 — composition tolerance representation.** The `±0.001` invariant is compared on the binary
   double sum, so a mathematically exact 0.001 deviation is refused. Fixing it means either an
   epsilon (which also admits `100.001`, contradicting the frozen sf3 expectation) or a
