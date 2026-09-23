@@ -2036,6 +2036,91 @@ Worker reclaim lease (30s) — duplicate key ditolak unique constraint
 Lihat `08_INTEGRATION_EVENT_CONTRACT.yaml`, `09_NON_FUNCTIONAL_CONTRACT.md §8`,
 dan `backend/src/platform/outbox/outbox.service.ts`.
 
+## BUS-RULE-115 — Rekrutmen: Pipeline Tahapan, Evaluasi CV & Reminder Kelolosan
+**Deskripsi**: Setiap pelamar/kandidat dicatat dalam pipeline bertingkat (Screening CV -> Interview HR -> User Interview -> Offering -> DONE / REJECT). Berkas CV dan hasil evaluasi dapat diunggah. Setiap perubahan status lolos ke tahap berikutnya secara otomatis memicu notifikasi/reminder sistem. Data historis kandidat lolos dan tidak lolos disimpan permanen tanpa penghapusan fisik.
+**Konteks**: Entity `Candidate`, screen `/master/hr-recruitment`.
+**Logika**:
+```
+stages = ['SCREENING', 'HR_INTERVIEW', 'USER_INTERVIEW', 'OFFERING', 'DONE', 'REJECTED']
+on stage_advance(candidate, nextStage):
+  IF nextStage == 'REJECTED':
+    candidate.status = 'REJECTED'
+    log_history(candidate.id, 'REJECTED')
+  ELSE:
+    candidate.stage = nextStage
+    send_notification(candidate.email, 'Selamat, Anda lolos ke tahap ' + nextStage)
+    log_history(candidate.id, nextStage)
+```
+**Pesan Error**: `Tahap rekrutmen tidak valid.` / `INVALID_RECRUITMENT_STAGE`
+**Sumber Spec**: REQUIREMENT.md §16.1 (Owner Requirement 2026-09-22)
+**Siapa Terlibat**: HR Recruitment, Department User
+
 ---
 
-**Dokumen ini FINAL untuk dirujuk. Update WAJIB lewat DEC baru di `_PROCESS_DECISIONS_LOG.md`. | Versi: 1.1 | Tanggal: 2026-09-18**
+## BUS-RULE-116 — Karyawan: Onboarding 3 Hari & Training Log (Jam, Goal, Sertifikat)
+**Deskripsi**: Karyawan baru menjalani masa onboarding standar 3 hari dengan tracking kesiapan kerja. Setiap pelatihan yang diikuti wajib mencatat jenis training, jumlah jam durasi, sasaran/goal pelatihan (teks bebas), tanggal pelaksanaan, dan lampiran berkas sertifikat kelulusan.
+**Konteks**: Entity `Employee`, `EmployeeTraining`.
+**Logika**:
+```
+IF employee.joinedAt <= today AND today <= employee.joinedAt + 3 days:
+  employee.onboardingStatus = 'IN_PROGRESS'
+ELSE:
+  employee.onboardingStatus = 'COMPLETED'
+
+on add_training(employeeId, trainingType, hours, goal, date, certUrl):
+  IF hours <= 0 THEN error
+  create EmployeeTraining(employeeId, trainingType, hours, goal, date, certUrl)
+  update employee.totalTrainingHours = sum(hours)
+```
+**Pesan Error**: `Durasi jam training harus lebih besar dari 0.` / `TRAINING_HOURS_INVALID`
+**Sumber Spec**: REQUIREMENT.md §16.2 (Owner Requirement 2026-09-22)
+**Siapa Terlibat**: HR Training & Development, Employee
+
+---
+
+## BUS-RULE-117 — Payroll Komprehensif: Upah Tetap, Transport 2 Kolom, Kasbon, BPJS, PPh 21 & Slip Gaji
+**Deskripsi**: Komponen gaji bulanan tersusun atas:
+1. **Upah Tetap**: Gaji Pokok + Tunjangan Jabatan.
+2. **Tunjangan Transport**: 2 kolom terpisah:
+   - Transport Flat (tetap per bulan).
+   - Transport Tentatif (dihitung proporsional: `transportTentatifPerHari * kehadiranAktual`).
+3. **Overtime (Lembur)**: Terintegrasi dari presensi & Form Lembur disetujui (`SPL`).
+4. **Kasbon Karyawan (*Employee Loan*)**: Pemotongan cicilan per bulan langsung dari gaji + tracking & reminder sisa hutang (`sisaPinjaman = sisaPinjaman - cicilanBulanIni`).
+5. **BPJS**: Kolom BPJS Kesehatan dan Ketenagakerjaan wajib ada di slip gaji walaupun nominalnya nol/kosong.
+6. **PPh 21**: Penghasilan bruto di atas batas UMR/PTKP dipotong pajak PPh 21; di bawah batas UMR tidak dipotong (Rp 0).
+7. **Deskripsi/Catatan**: Opsional, boleh dikosongkan.
+8. **Slip Gaji (*Salary Slip*)**: Rincian nama, NIP, jabatan, pendapatan, potongan, dan net salary siap cetak/unduh.
+9. **Reminder Pelaporan**: Notifikasi pengingat cut-off dan pelaporan gaji bulanan.
+**Konteks**: Entity `Payroll`, `PayrollItem`, `EmployeeLoan`.
+**Logika**:
+```
+grossSalary = baseSalary + positionAllowance + transportFlat + (transportTentativeDaily * actualDays) + overtimePay
+loanDeduction = min(loan.installment, loan.remainingBalance)
+loan.remainingBalance = loan.remainingBalance - loanDeduction
+taxable = (grossSalary > UMR_THRESHOLD) ? (grossSalary - UMR_THRESHOLD) : 0
+pph21 = taxable * PPH21_RATE
+totalDeduction = bpjsHealth + bpjsEmployment + loanDeduction + pph21 + lateDeductions
+netSalary = grossSalary - totalDeduction
+```
+**Pesan Error**: `Pemotongan kasbon melebihi sisa pinjaman.` / `LOAN_DEDUCTION_EXCEEDED`
+**Sumber Spec**: REQUIREMENT.md §16.3 (Owner Requirement 2026-09-22)
+**Siapa Terlibat**: HR Payroll, Finance, Employee
+
+---
+
+## BUS-RULE-118 — KPI: Tren Bulanan & Leaderboard Karyawan Terbaik
+**Deskripsi**: Hasil penilaian performa KPI diagregasikan per periode bulan kalender untuk membentuk grafik tren historis per departemen dan per karyawan. Sistem menyediakan papan peringkat (*Leaderboard Top Performers*) secara otomatis berdasarkan skor akhir terbobot.
+**Konteks**: Entity `KpiScore`, `KpiPointLog`, dashboard HR & KPI.
+**Logika**:
+```
+monthlyScores = aggregate KpiScore by (employeeId, period)
+rankings = sort employees by kpiScore.finalScore descending
+trend = array of { period, avgScore, employeeScore } for last 6 months
+```
+**Pesan Error**: (Indicator & reporting only)
+**Sumber Spec**: REQUIREMENT.md §16.4 (Owner Requirement 2026-09-22)
+**Siapa Terlibat**: HR Manager, Executive, Division Heads
+
+---
+
+**Dokumen ini FINAL untuk dirujuk. Update WAJIB lewat DEC baru di `_PROCESS_DECISIONS_LOG.md`. | Versi: 1.2 | Tanggal: 2026-09-22**

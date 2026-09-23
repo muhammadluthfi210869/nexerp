@@ -31,6 +31,7 @@ import {
   DnaButton,
   DnaInput,
   DnaModal,
+  DnaDetailDrawer,
   DnaCell,
   useDnaToast,
 } from "@/components/dna";
@@ -144,6 +145,7 @@ const REASON_LABELS: Record<string, { label: string; status: string }> = {
 
 function LostContent() {
   const toast = useDnaToast();
+  const [activeTab, setActiveTab] = useState<string>("prospects");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProspect, setSelectedProspect] = useState<LostProspectItem | null>(null);
   const [selectedChurn, setSelectedChurn] = useState<ChurnedClientItem | null>(null);
@@ -189,181 +191,184 @@ function LostContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20 text-slate-900 font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 space-y-6">
       <DnaPageHeader
-        title="Client Lost & Churn Analysis"
-        description="Pusat Analisis & Evaluasi Prospek Batal (Sebelum Deal) dan Klien Churn (Setelah Delivery)"
-        backLink={{ href: "/bussdev/client-manager", label: "Client Manager" }}
-        badge={
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-            <TrendingDown className="w-3.5 h-3.5" />
-            LOST INTELLIGENCE
-          </span>
-        }
+        title="CLIENT LOST & CHURN ANALYSIS"
+        description="Pusat Analisis & Evaluasi Prospek Batal (Sebelum Deal) dan Klien Churn (Setelah Delivery) untuk penyesuaian strategi komersial."
+        tabs={[
+          { key: "prospects", label: "Prospek Batal (Lost Deal)", count: totalLostCount },
+          { key: "churned", label: "Klien Churn (Dormant)", count: totalChurnCount },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pt-6">
-        {/* 4 KPI Cards */}
-        <DnaKpiGrid
-          columns={4}
-          items={[
-            {
-              label: "PROSPEK BATAL (LOST DEAL)",
-              value: `${totalLostCount} Prospek`,
-              subtext: "Gagal pada tahap negosiasi / sample",
-              icon: XCircle,
-              status: "critical",
-            },
-            {
-              label: "KLIEN CHURN (PASCA DELIVERY)",
-              value: `${totalChurnCount} Klien`,
-              subtext: "Tidak ada order > 6 bulan",
-              icon: Users,
-              status: "warning",
-            },
-            {
-              label: "ESTIMASI OMSET HILANG",
-              value: formatCurrency(totalLostValue),
-              subtext: "Potensi revenue gagal konversi",
-              icon: DollarSign,
-              status: "neutral",
-            },
-            {
-              label: "ALASAN UTAMA PEMBATALAN",
-              value: "HPP & MOQ",
-              subtext: "Sensitivitas harga & kuantiti",
-              icon: AlertTriangle,
-              status: "purple",
-            },
-          ]}
-        />
+      {/* 4 KPI Cards */}
+      <DnaKpiGrid
+        items={[
+          {
+            label: "Prospek Batal (Lost Deal)",
+            value: `${totalLostCount} Prospek`,
+            subtitle: "Gagal pada tahap negosiasi / sample",
+            trend: "Fase Pipeline",
+            icon: XCircle,
+            variant: "critical",
+          },
+          {
+            label: "Klien Churn (Pasca Delivery)",
+            value: `${totalChurnCount} Klien`,
+            subtitle: "Tidak ada repeat order > 6 bulan",
+            trend: "Dormant",
+            icon: Users,
+            variant: "amber",
+          },
+          {
+            label: "Estimasi Omset Hilang",
+            value: formatCurrency(totalLostValue),
+            subtitle: "Potensi revenue gagal konversi",
+            trend: "Opportunity Loss",
+            icon: DollarSign,
+            variant: "blue",
+          },
+          {
+            label: "Alasan Utama Pembatalan",
+            value: "HPP & MOQ",
+            subtitle: "Sensitivitas harga & kuantiti batch",
+            trend: "Evaluasi R&D",
+            icon: AlertTriangle,
+            variant: "purple",
+          },
+        ]}
+      />
 
-        {/* Toolbar Search */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3">
-          <div className="w-80">
-            <DnaInput
-              placeholder="Cari brand, nama klien, produk..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              icon={<Search className="w-4 h-4 text-slate-400" />}
-            />
-          </div>
-          <div className="text-xs font-bold text-slate-400">
-            Menganalisis data kegagalan deal untuk evaluasi strategi BusDev
-          </div>
-        </div>
-
-        {/* SECTION A: Lost Sebelum Deal (Prospect Gagal) */}
-        <DnaDataTableCard
-          title="Section A: Prospek Batal Sebelum Deal (Pipeline Fail)"
-          count={filteredProspects.length}
-        >
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                <th className="p-3 w-10 text-center">NO</th>
-                <th className="p-3">BRAND & PRODUK</th>
-                <th className="p-3">PELANGGAN</th>
-                <th className="p-3">PIC BD</th>
-                <th className="p-3 text-right">EST. VALUE DEAL</th>
-                <th className="p-3">TGL SAMPLE</th>
-                <th className="p-3 text-center">STATUS SAMPLE</th>
-                <th className="p-3 text-center">STATUS LOST</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProspects.map((item, idx) => {
-                const reason = REASON_LABELS[item.lostReason] || {
-                  label: item.lostReason,
-                  status: "neutral",
-                };
-                return (
-                  <tr
-                    key={item.id}
-                    onClick={() => setSelectedProspect(item)}
-                    className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 cursor-pointer group text-xs"
-                  >
-                    <td className="p-3 text-center text-slate-400 font-mono">{idx + 1}</td>
-                    <td className="p-3 font-semibold text-slate-900 whitespace-nowrap">{item.brandName}</td>
-                    <td className="p-3 text-slate-800 whitespace-nowrap">{item.clientName}</td>
-                    <td className="p-3 text-slate-700 whitespace-nowrap">{item.bdName}</td>
-                    <td className="p-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
-                      {formatCurrency(item.estimatedValue)}
+      {/* Unified Table Card */}
+      <DnaDataTableCard
+        count={activeTab === "prospects" ? filteredProspects.length : filteredChurn.length}
+        totalItems={activeTab === "prospects" ? totalLostCount : totalChurnCount}
+        toolbarProps={{
+          searchPlaceholder: "Cari brand, nama klien, atau produk...",
+          searchValue: searchQuery,
+          onSearchChange: setSearchQuery,
+        }}
+      >
+        <div className="w-full">
+          {activeTab === "prospects" ? (
+            <table className="w-full text-left border-collapse text-xs table-fixed">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="py-3 px-3 w-[24%]">Brand & Produk</th>
+                  <th className="py-3 px-3 w-[22%]">Pelanggan & Kontak</th>
+                  <th className="py-3 px-3 w-[18%]">PIC BD & Tgl Sample</th>
+                  <th className="py-3 px-3 w-[16%] text-right">Est. Value Deal</th>
+                  <th className="py-3 px-3 w-[10%] text-center">Alasan Lost</th>
+                  <th className="py-3 px-3 w-[10%] text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredProspects.map((item) => {
+                  const reason = REASON_LABELS[item.lostReason] || {
+                    label: item.lostReason,
+                    status: "neutral",
+                  };
+                  return (
+                    <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-3">
+                        <p className="font-semibold text-slate-900 truncate">{item.brandName}</p>
+                        <p className="text-[11px] text-slate-400 truncate">{item.productName}</p>
+                      </td>
+                      <td className="py-3 px-3">
+                        <p className="font-medium text-slate-800 truncate">{item.clientName}</p>
+                        <p className="font-mono text-[11px] text-slate-400 truncate">{item.phoneNo || "—"}</p>
+                      </td>
+                      <td className="py-3 px-3">
+                        <p className="text-slate-800 truncate">{item.bdName}</p>
+                        <p className="font-mono text-[10px] text-slate-400">Sample: {item.sampleDate}</p>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <p className="font-mono font-bold text-slate-900">{formatCurrency(item.estimatedValue)}</p>
+                        <p className="text-[10px] text-slate-400 truncate">{item.sampleStatus}</p>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <DnaCell.Badge label={reason.label} status={reason.status} />
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <div className="flex justify-end gap-1">
+                          <DnaButton variant="ghost" size="sm" onClick={() => setSelectedProspect(item)}>
+                            Detail
+                          </DnaButton>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <table className="w-full text-left border-collapse text-xs table-fixed">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="py-3 px-3 w-[25%]">Pelanggan & Brand</th>
+                  <th className="py-3 px-3 w-[20%]">Total Order & Jeda</th>
+                  <th className="py-3 px-3 w-[22%]">Order Terakhir & Produk</th>
+                  <th className="py-3 px-3 w-[15%] text-right">Lifetime Value</th>
+                  <th className="py-3 px-3 w-[8%] text-center">Status</th>
+                  <th className="py-3 px-3 w-[10%] text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredChurn.map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3 px-3">
+                      <p className="font-semibold text-slate-900 truncate">{item.clientName}</p>
+                      <p className="text-[11px] text-slate-400 truncate">{item.brandName} • {item.phoneNo}</p>
                     </td>
-                    <td className="p-3 text-slate-600 whitespace-nowrap font-mono">{item.sampleDate}</td>
-                    <td className="p-3 text-center whitespace-nowrap">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                        {item.sampleStatus}
-                      </span>
+                    <td className="py-3 px-3">
+                      <p className="font-semibold text-slate-800">{item.totalOrders}x Order</p>
+                      <p className="text-[10px] text-rose-600 font-bold">{item.inactivityMonths} Bulan Dormant</p>
                     </td>
-                    <td className="p-3 text-center whitespace-nowrap">
-                      <DnaCell.Badge label={reason.label} status={reason.status} />
+                    <td className="py-3 px-3">
+                      <p className="font-mono text-slate-700">{item.lastOrderDate}</p>
+                      <p className="text-[11px] text-slate-400 truncate">{item.lastProductOrdered}</p>
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <p className="font-mono font-bold text-emerald-600">{formatCurrency(item.lifetimeValue)}</p>
+                      <p className="text-[10px] text-slate-400">Total Omset</p>
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <DnaCell.Badge label="Dormant" status="critical" />
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <div className="flex justify-end gap-1">
+                        <DnaButton variant="ghost" size="sm" onClick={() => setSelectedChurn(item)}>
+                          Detail
+                        </DnaButton>
+                      </div>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </DnaDataTableCard>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </DnaDataTableCard>
 
-        {/* SECTION B: Klien Churn (Setelah Delivery) */}
-        <DnaDataTableCard
-          title="Section B: Klien Churn Pasca Delivery (Dormant > 6 Bulan)"
-          count={filteredChurn.length}
-        >
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                <th className="p-3 w-10 text-center">NO</th>
-                <th className="p-3">NAMA PELANGGAN</th>
-                <th className="p-3 text-right">LIFETIME VALUE</th>
-                <th className="p-3 text-center">TOTAL TRANSAKSI</th>
-                <th className="p-3">TGL TERAKHIR ORDER</th>
-                <th className="p-3 text-center">JEDA TIDAK ORDER</th>
-                <th className="p-3 text-center">STATUS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredChurn.map((item, idx) => (
-                <tr
-                  key={item.id}
-                  onClick={() => setSelectedChurn(item)}
-                  className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 cursor-pointer group text-xs"
-                >
-                  <td className="p-3 text-center text-slate-400 font-mono">{idx + 1}</td>
-                  <td className="p-3 font-semibold text-slate-900 whitespace-nowrap">{item.clientName}</td>
-                  <td className="p-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
-                    {formatCurrency(item.lifetimeValue)}
-                  </td>
-                  <td className="p-3 text-center font-bold text-slate-800 text-xs whitespace-nowrap">
-                    {item.totalOrders}x Order
-                  </td>
-                  <td className="p-3 text-slate-600 whitespace-nowrap font-mono">{item.lastOrderDate}</td>
-                  <td className="p-3 text-center whitespace-nowrap">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 font-mono">
-                      {item.inactivityMonths} Bulan
-                    </span>
-                  </td>
-                  <td className="p-3 text-center whitespace-nowrap">
-                    <DnaCell.Badge label="Dormant" status="danger" />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </DnaDataTableCard>
-      </div>
-
-      {/* Modal Detail Lost Prospect */}
-      {selectedProspect && (
-        <DnaModal
-          isOpen={true}
-          onClose={() => setSelectedProspect(null)}
-          title={`Detail Pembatalan — ${selectedProspect.brandName}`}
-          subtitle={`Klien: ${selectedProspect.clientName} • PIC: ${selectedProspect.bdName}`}
-          size="md"
-          footer={
-            <div className="flex justify-between items-center w-full">
+      {/* Drawer Detail Lost Prospect */}
+      <DnaDetailDrawer
+        isOpen={!!selectedProspect}
+        onClose={() => setSelectedProspect(null)}
+        title={selectedProspect?.brandName || "Detail Pembatalan"}
+        subtitle={selectedProspect ? `Klien: ${selectedProspect.clientName} • PIC: ${selectedProspect.bdName}` : undefined}
+        badge={
+          selectedProspect ? (
+            <DnaCell.Badge
+              label={REASON_LABELS[selectedProspect.lostReason]?.label || selectedProspect.lostReason}
+              status={REASON_LABELS[selectedProspect.lostReason]?.status || "neutral"}
+            />
+          ) : undefined
+        }
+        actions={
+          selectedProspect ? (
+            <div className="flex items-center justify-between w-full">
               <DnaButton
                 variant="outline"
                 size="sm"
@@ -373,56 +378,62 @@ function LostContent() {
                 <Phone className="w-3.5 h-3.5" />
                 Chat Re-Engagement WA
               </DnaButton>
-              <DnaButton variant="ghost" size="sm" onClick={() => setSelectedProspect(null)}>
+              <DnaButton variant="secondary" onClick={() => setSelectedProspect(null)}>
                 Tutup
               </DnaButton>
             </div>
-          }
-        >
+          ) : undefined
+        }
+      >
+        {selectedProspect && (
           <div className="space-y-4 text-xs">
-            <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Produk Target:</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Produk Target:</span>
                 <p className="font-bold text-slate-800">{selectedProspect.productName}</p>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Potensi Omset:</span>
-                <p className="font-bold text-rose-600">{formatCurrency(selectedProspect.estimatedValue)}</p>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Potensi Omset:</span>
+                <p className="font-bold text-rose-600 font-mono">{formatCurrency(selectedProspect.estimatedValue)}</p>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Status Terakhir:</span>
-                <p className="font-bold text-slate-800">{selectedProspect.sampleStatus}</p>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Status Terakhir:</span>
+                <p className="font-semibold text-slate-800">{selectedProspect.sampleStatus}</p>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Kategori Alasan:</span>
-                <p className="font-bold text-slate-800">{selectedProspect.lostReason}</p>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Tanggal Sample:</span>
+                <p className="font-mono text-slate-700">{selectedProspect.sampleDate}</p>
               </div>
             </div>
 
             {selectedProspect.lostNotes && (
               <div className="space-y-1">
-                <h4 className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                   Catatan Evaluasi BusDev
-                </h4>
-                <p className="p-3 bg-rose-50/50 rounded-xl border border-rose-100 text-slate-800 leading-relaxed">
+                </span>
+                <p className="p-3 bg-rose-50/60 rounded-xl border border-rose-200/60 text-slate-800 leading-relaxed">
                   {selectedProspect.lostNotes}
                 </p>
               </div>
             )}
           </div>
-        </DnaModal>
-      )}
+        )}
+      </DnaDetailDrawer>
 
-      {/* Modal Detail Churned Client */}
-      {selectedChurn && (
-        <DnaModal
-          isOpen={true}
-          onClose={() => setSelectedChurn(null)}
-          title={`Profil Klien Churn — ${selectedChurn.clientName}`}
-          subtitle={`Brand: ${selectedChurn.brandName} • Dormant: ${selectedChurn.inactivityMonths} Bulan`}
-          size="md"
-          footer={
-            <div className="flex justify-between items-center w-full">
+      {/* Drawer Detail Churned Client */}
+      <DnaDetailDrawer
+        isOpen={!!selectedChurn}
+        onClose={() => setSelectedChurn(null)}
+        title={selectedChurn?.clientName || "Profil Klien Churn"}
+        subtitle={selectedChurn ? `Brand: ${selectedChurn.brandName} • Dormant: ${selectedChurn.inactivityMonths} Bulan` : undefined}
+        badge={
+          selectedChurn ? (
+            <DnaCell.Badge label={`${selectedChurn.inactivityMonths} Bulan Dormant`} status="critical" />
+          ) : undefined
+        }
+        actions={
+          selectedChurn ? (
+            <div className="flex items-center justify-between w-full">
               <DnaButton
                 variant="outline"
                 size="sm"
@@ -432,43 +443,45 @@ function LostContent() {
                 <Phone className="w-3.5 h-3.5" />
                 Kirim Promo Re-Aktivasi WA
               </DnaButton>
-              <DnaButton variant="ghost" size="sm" onClick={() => setSelectedChurn(null)}>
+              <DnaButton variant="secondary" onClick={() => setSelectedChurn(null)}>
                 Tutup
               </DnaButton>
             </div>
-          }
-        >
+          ) : undefined
+        }
+      >
+        {selectedChurn && (
           <div className="space-y-4 text-xs">
-            <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Total Lifetime Value:</span>
-                <p className="font-bold text-emerald-600">{formatCurrency(selectedChurn.lifetimeValue)}</p>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Lifetime Value:</span>
+                <p className="font-bold text-emerald-600 font-mono">{formatCurrency(selectedChurn.lifetimeValue)}</p>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Total Batch Dipesan:</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Batch Dipesan:</span>
                 <p className="font-bold text-slate-800">{selectedChurn.totalOrders}x Order</p>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Order Terakhir:</span>
-                <p className="font-bold text-slate-800">{selectedChurn.lastOrderDate}</p>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Order Terakhir:</span>
+                <p className="font-mono text-slate-800">{selectedChurn.lastOrderDate}</p>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Produk Terakhir:</span>
-                <p className="font-bold text-slate-800">{selectedChurn.lastProductOrdered}</p>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Produk Terakhir:</span>
+                <p className="font-semibold text-slate-800">{selectedChurn.lastProductOrdered}</p>
               </div>
             </div>
 
             <div className="space-y-1">
-              <h4 className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                 Indikasi Penyebab Dormancy
-              </h4>
+              </span>
               <p className="p-3 bg-amber-50/60 rounded-xl border border-amber-200/60 text-slate-800 leading-relaxed">
                 {selectedChurn.churnReason}
               </p>
             </div>
           </div>
-        </DnaModal>
-      )}
+        )}
+      </DnaDetailDrawer>
     </div>
   );
 }

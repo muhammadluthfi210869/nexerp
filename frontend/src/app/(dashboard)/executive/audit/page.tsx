@@ -41,23 +41,23 @@ export default function AuditTrailPage() {
     queryFn: async () => {
       try {
         const res = await api.get("/executive/audit-logs");
-        return res.data;
+        return Array.isArray(res.data) ? res.data : (res.data?.data || []);
       } catch (e) {
-        return [
-          { id: "1", createdAt: new Date().toISOString(), user: { name: "Ahmad Finance", role: "CONTROLLER" }, action: "AUTHORIZE_PAYMENT", type: "AUTHORIZE", entityType: "SALES_ORDER", entityId: "SO-2024-001", hash: "a8f23b9d0e1c2d3e4f5a6b7c8d9e0f1a" },
-          { id: "2", createdAt: new Date(Date.now() - 3600000).toISOString(), user: { name: "Budi Warehouse", role: "WH_MANAGER" }, action: "STOCK_ADJUSTMENT", type: "UPDATE", entityType: "INVENTORY", entityId: "SKU-RM-042", hash: "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7" },
-          { id: "3", createdAt: new Date(Date.now() - 7200000).toISOString(), user: { name: "Citra Sales", role: "SALES_LEAD" }, action: "NEW_CONTRACT", type: "CREATE", entityType: "CLIENT", entityId: "CL-992", hash: "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8" },
-          { id: "4", createdAt: new Date(Date.now() - 10800000).toISOString(), user: { name: "Dedi Admin", role: "SUPER_ADMIN" }, action: "SENSITIVE_OVERRIDE", type: "OVERRIDE", entityType: "USER_PERMISSIONS", entityId: "USR-08", hash: "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9" },
-        ];
+        return [];
       }
     },
   });
 
-  const filteredLogs = logs?.filter((log: any) =>
-    log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.entityId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredLogs = logs?.filter((log: any) => {
+    const action = log.action || "";
+    const userName = typeof log.user === "object" ? log.user?.name || "" : log.user || "";
+    const entityId = log.entityId || "";
+    return (
+      action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entityId.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   return (
     <DashboardShell
@@ -115,26 +115,32 @@ export default function AuditTrailPage() {
                       </div>
                     </TableCell>
                     <TableCell className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-black text-slate-400">
-                          {log.user?.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-[11px] font-bold text-slate-800">{log.user?.name}</p>
-                          <p className="text-[9px] font-black text-blue-600 uppercase">{log.user?.role}</p>
-                        </div>
-                      </div>
+                      {(() => {
+                        const userName = typeof log.user === 'object' ? log.user?.name || 'System' : log.user || 'System';
+                        const userRole = typeof log.user === 'object' ? log.user?.role || 'STAFF' : 'STAFF';
+                        return (
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-black text-slate-400">
+                              {userName.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-bold text-slate-800">{userName}</p>
+                              <p className="text-[9px] font-black text-blue-600 uppercase">{userRole}</p>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <ActionIcon type={log.type} />
+                        <ActionIcon type={log.type || log.action || 'UPDATE'} />
                         <p className="text-[11px] font-black uppercase text-slate-700">{log.action}</p>
                       </div>
                     </TableCell>
                     <TableCell className="px-6 py-4">
                       <div className="space-y-1">
                         <DnaBadge>
-                          {log.entityType}
+                          {log.entityType || log.entity || 'General'}
                         </DnaBadge>
                         <p className="text-[10px] font-bold text-slate-400">#{log.entityId}</p>
                       </div>
@@ -143,7 +149,7 @@ export default function AuditTrailPage() {
                       <div className="flex flex-col items-end gap-1">
                         <Fingerprint className="h-4 w-4 text-slate-200" />
                         <p className="text-[8px] font-mono text-slate-300 uppercase break-all max-w-[120px]">
-                          {log.hash.substring(0, 16)}...
+                          {(log.hash || log.id || '0000000000000000').substring(0, 16)}...
                         </p>
                       </div>
                     </TableCell>

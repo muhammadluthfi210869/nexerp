@@ -93,9 +93,11 @@ export class CommunicationProtocolService {
     items: any[];
   }) {
     console.log(`[COMM_PROT] Handling inbound approval: ${payload.inboundId}`);
+    if (!payload.items || !Array.isArray(payload.items) || payload.items.length === 0) {
+      return;
+    }
 
     await this.prisma.$transaction(async (tx: any) => {
-      // 1. Record stock movement for each item
       for (const item of payload.items) {
         // Create a new batch for this inbound
         const inventory = await tx.materialInventory.create({

@@ -16,6 +16,12 @@ import {
   DnaModal,
   DnaConfirmDialog,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
 } from "@/components/dna";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -172,66 +178,73 @@ export default function FinancePeriodsPage() {
         />
       </DnaKpiGrid>
 
-      <DnaDataTableCard
-        title="Daftar Periode"
-        badge={<DnaBadge variant="rose">{periods.length} Periode</DnaBadge>}
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">Periode</th>
-                <th className="px-3.5 py-3 text-center">Status</th>
-                <th className="px-3.5 py-3">Locked By</th>
-                <th className="px-3.5 py-3">Locked At</th>
-                <th className="px-3.5 py-3">Catatan</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {isLoading ? (
-                <tr><td colSpan={6} className="text-center py-8 text-slate-400">Memuat...</td></tr>
-              ) : periods.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-8 text-slate-400">Belum ada data periode</td></tr>
-              ) : periods.map((p: PeriodLock) => (
-                <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 font-mono font-bold text-slate-900">
-                    {new Date(p.period).toISOString().slice(0, 7)}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    {p.isLocked ? (
-                      <DnaBadge variant="danger"><Lock className="w-3 h-3 mr-1 inline" />LOCKED</DnaBadge>
-                    ) : (
-                      <DnaBadge variant="success"><Unlock className="w-3 h-3 mr-1 inline" />OPEN</DnaBadge>
-                    )}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-slate-700">{p.lockedBy ?? "—"}</td>
-                  <td className="px-3.5 py-2.5 text-slate-500 text-[11px]">{p.lockedAt ? new Date(p.lockedAt).toLocaleString("id-ID") : "—"}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 max-w-xs truncate">{p.notes ?? "—"}</td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
+      <DnaDataTableCard>
+        <DnaTable>
+          <DnaTableHead>
+            <tr>
+              <DnaTh className="w-[120px]">Periode</DnaTh>
+              <DnaTh align="center" className="w-[120px]">Status</DnaTh>
+              <DnaTh className="w-[180px]">Locked By</DnaTh>
+              <DnaTh className="w-[180px]">Locked At</DnaTh>
+              <DnaTh>Catatan</DnaTh>
+              <DnaTh align="center" className="w-[100px]">Aksi</DnaTh>
+            </tr>
+          </DnaTableHead>
+          <DnaTableBody>
+            {isLoading ? (
+              <DnaTableRow>
+                <DnaTd colSpan={6} className="text-center py-8 text-slate-400">Memuat...</DnaTd>
+              </DnaTableRow>
+            ) : periods.length === 0 ? (
+              <DnaTableRow>
+                <DnaTd colSpan={6} className="text-center py-8 text-slate-400">Belum ada data periode</DnaTd>
+              </DnaTableRow>
+            ) : periods.map((p: PeriodLock) => (
+              <DnaTableRow key={p.id}>
+                <DnaTd className="font-semibold tabular-nums text-slate-900">
+                  {new Date(p.period).toISOString().slice(0, 7)}
+                </DnaTd>
+                <DnaTd align="center">
+                  {p.isLocked ? (
+                    <DnaBadge variant="danger"><Lock className="w-3 h-3 mr-1 inline" />LOCKED</DnaBadge>
+                  ) : (
+                    <DnaBadge variant="success"><Unlock className="w-3 h-3 mr-1 inline" />OPEN</DnaBadge>
+                  )}
+                </DnaTd>
+                <DnaTd className="text-slate-700">{p.lockedBy ?? "—"}</DnaTd>
+                <DnaTd className="text-slate-500 text-[11px] whitespace-nowrap">
+                  {p.lockedAt ? new Date(p.lockedAt).toLocaleString("id-ID") : "—"}
+                </DnaTd>
+                <DnaTd className="text-slate-600 max-w-xs truncate">{p.notes ?? "—"}</DnaTd>
+                <DnaTd align="center">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <DnaButton
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        setTrialPeriod(new Date(p.period).toISOString().slice(0, 7));
+                        trialMut.mutate(new Date(p.period).toISOString().slice(0, 10));
+                      }}
+                      title="Lihat Trial Balance"
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                    </DnaButton>
+                    {p.isLocked && (
                       <DnaButton
-                        variant="secondary"
+                        variant="danger"
                         size="sm"
-                        onClick={() => {
-                          setTrialPeriod(new Date(p.period).toISOString().slice(0, 7));
-                          trialMut.mutate(new Date(p.period).toISOString().slice(0, 10));
-                        }}
+                        onClick={() => setUnlockingId(p.id)}
+                        title="Buka Kunci Periode"
                       >
-                        <FileSpreadsheet className="w-3.5 h-3.5" />
+                        <Unlock className="w-3.5 h-3.5" />
                       </DnaButton>
-                      {p.isLocked && (
-                        <DnaButton variant="danger" size="sm" onClick={() => setUnlockingId(p.id)}>
-                          <Unlock className="w-3.5 h-3.5" />
-                        </DnaButton>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    )}
+                  </div>
+                </DnaTd>
+              </DnaTableRow>
+            ))}
+          </DnaTableBody>
+        </DnaTable>
       </DnaDataTableCard>
 
       {/* Lock Period Modal */}
@@ -300,29 +313,31 @@ export default function FinancePeriodsPage() {
           {trialMut.isPending ? (
             <p className="text-slate-500 py-4 text-center">Memuat neraca saldo...</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-semibold uppercase text-[10px]">
-                    <th className="px-2.5 py-2">Akun</th>
-                    <th className="px-2.5 py-2 text-right">Debit</th>
-                    <th className="px-2.5 py-2 text-right">Kredit</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {trialBalance.map((r, i) => (
-                    <tr key={i}>
-                      <td className="px-2.5 py-1.5">
-                        <span className="font-mono text-[10px] text-slate-500 mr-2">{r.accountCode}</span>
-                        <span className="text-slate-800">{r.accountName}</span>
-                      </td>
-                      <td className="px-2.5 py-1.5 text-right font-mono">{(r.debit ?? 0).toLocaleString("id-ID")}</td>
-                      <td className="px-2.5 py-1.5 text-right font-mono">{(r.credit ?? 0).toLocaleString("id-ID")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DnaTable>
+              <DnaTableHead>
+                <tr>
+                  <DnaTh>Akun</DnaTh>
+                  <DnaTh align="right" className="w-[160px]">Debit</DnaTh>
+                  <DnaTh align="right" className="w-[160px]">Kredit</DnaTh>
+                </tr>
+              </DnaTableHead>
+              <DnaTableBody>
+                {trialBalance.map((r, i) => (
+                  <DnaTableRow key={i}>
+                    <DnaTd>
+                      <span className="text-xs font-semibold tabular-nums text-slate-600 mr-2">{r.accountCode}</span>
+                      <span className="text-slate-800">{r.accountName}</span>
+                    </DnaTd>
+                    <DnaTd align="right" className="tabular-nums font-semibold text-emerald-700">
+                      {(r.debit ?? 0).toLocaleString("id-ID")}
+                    </DnaTd>
+                    <DnaTd align="right" className="tabular-nums font-semibold text-rose-700">
+                      {(r.credit ?? 0).toLocaleString("id-ID")}
+                    </DnaTd>
+                  </DnaTableRow>
+                ))}
+              </DnaTableBody>
+            </DnaTable>
           )}
         </div>
       </DnaModal>

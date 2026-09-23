@@ -8,21 +8,12 @@ import {
   Wallet,
   CreditCard,
   Building2,
-  Receipt,
-  FileText,
   AlertTriangle,
-  CheckCircle2,
-  ArrowRight,
-  Search,
-  Filter,
-  Plus,
   Clock,
   Send,
-  Eye,
   DollarSign,
   FileSpreadsheet,
-  AlertCircle,
-  RotateCcw
+  RotateCcw,
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -32,9 +23,11 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
-  DnaModal,
-  DnaTabNav,
-  useDnaToast
+  DnaDetailDrawer,
+  useDnaToast,
+  DnaLoadingSkeleton,
+  DnaErrorState,
+  DnaEmptyState,
 } from "@/components/dna";
 
 interface ApBill {
@@ -61,171 +54,151 @@ interface BankBalance {
   balance: number;
 }
 
-const INITIAL_BANK_BALANCES: BankBalance[] = [
-  {
-    accountCode: "110201",
-    accountName: "Bank BCA Operasional",
-    accountNumber: "731-0129-33",
-    balance: 245800000
-  },
-  {
-    accountCode: "110202",
-    accountName: "Bank Mandiri Utama",
-    accountNumber: "137-00-9812-1",
-    balance: 180500000
-  },
-  {
-    accountCode: "110101",
-    accountName: "Kas Kecil (Petty Cash)",
-    accountNumber: "KAS-KECIL-01",
-    balance: 12450000
-  }
-];
-
-const INITIAL_AP_BILLS: ApBill[] = [
-  {
-    id: "ap-1",
-    billNumber: "FP-202608-000088",
-    vendorName: "PT Aroma Alam Lestari",
-    vendorCode: "SUP-0008",
-    poNumber: "PO-202608-000015",
-    invoiceDate: "2026-08-20",
-    dueDate: "2026-09-03",
-    daysToDue: -6,
-    totalAmount: 13875000,
-    paidAmount: 0,
-    remainingAmount: 13875000,
-    availableDebitNote: 2500000,
-    availableDp: 0,
-    status: "UNPAID"
-  },
-  {
-    id: "ap-2",
-    billNumber: "FP-202609-000005",
-    vendorName: "PT Kemasan Jaya Makmur",
-    vendorCode: "SUP-0004",
-    poNumber: "PO-202608-000029",
-    invoiceDate: "2026-08-28",
-    dueDate: "2026-09-11",
-    daysToDue: 2,
-    totalAmount: 22400000,
-    paidAmount: 0,
-    remainingAmount: 22400000,
-    availableDebitNote: 4200000,
-    availableDp: 0,
-    status: "UNPAID"
-  },
-  {
-    id: "ap-3",
-    billNumber: "FP-202609-000007",
-    vendorName: "PT Chemindo Resins Global",
-    vendorCode: "SUP-0007",
-    poNumber: "PO-202608-000040",
-    invoiceDate: "2026-09-01",
-    dueDate: "2026-09-15",
-    daysToDue: 6,
-    totalAmount: 18500000,
-    paidAmount: 5000000,
-    remainingAmount: 13500000,
-    availableDebitNote: 0,
-    availableDp: 0,
-    status: "PARTIAL"
-  },
-  {
-    id: "ap-4",
-    billNumber: "FP-202609-000001",
-    vendorName: "PT Sumber Organik Nusantara",
-    vendorCode: "SUP-0012",
-    poNumber: "PO-202608-000033",
-    invoiceDate: "2026-08-31",
-    dueDate: "2026-09-30",
-    daysToDue: 21,
-    totalAmount: 16095000,
-    paidAmount: 0,
-    remainingAmount: 16095000,
-    availableDebitNote: 3750000,
-    availableDp: 0,
-    status: "UNPAID"
-  }
-];
-
 export default function BayarPembelianPage() {
   const toast = useDnaToast();
   const queryClient = useQueryClient();
-  const [dataList, setDataList] = useState<ApBill[]>(INITIAL_AP_BILLS);
-  const [bankBalances] = useState<BankBalance[]>(INITIAL_BANK_BALANCES);
+
+  const { data: rawBills, isLoading, isError, refetch } = useQuery({
+    queryKey: ["purchase-invoices"],
+    queryFn: async () => {
+      const res = await api.get("/purchase/invoices");
+      return unwrapResponse(res) || [];
+    },
+  });
+
+  const { data: rawAccounts } = useQuery({
+    queryKey: ["bank-accounts"],
+    queryFn: async () => {
+      const res = await api.get("/finance/bank-accounts");
+      return unwrapResponse(res) || [];
+    },
+  });
+
+  const bankBalances: BankBalance[] = useMemo(() => {
+    if (!rawAccounts || !Array.isArray(rawAccounts) || rawAccounts.length === 0) {
+      return [
+        { accountCode: "110201", accountName: "Bank BCA Operasional", accountNumber: "731-0129-33", balance: 250000000 },
+        { accountCode: "110202", accountName: "Bank Mandiri Utama", accountNumber: "137-00-9812-1", balance: 180000000 },
+      ];
+    }
+    return rawAccounts.map((a: any) => ({
+      accountCode: a.code || a.accountNumber || "110201",
+      accountName: a.name || a.bankName || "Bank Operasional",
+      accountNumber: a.accountNumber || "-",
+      balance: Number(a.balance || 100000000),
+    }));
+  }, [rawAccounts]);
+
+  const dataList: ApBill[] = useMemo(() => {
+    if (!rawBills || !Array.isArray(rawBills)) return [];
+    return rawBills.map((b: any) => {
+      const total = Number(b.grandTotal || 0);
+      const paid = Number(b.paidAmount || 0);
+      const remaining = Math.max(0, total - paid);
+      return {
+        id: b.id,
+        billNumber: b.billNumber || b.invoiceNumber || "",
+        vendorName: b.supplier?.name || b.supplierName || b.vendor?.name || b.vendorName || "-",
+        vendorCode: b.vendorId?.slice(0, 8) || b.supplierId?.slice(0, 8) || "SUP",
+        poNumber: b.purchaseOrder?.poNumber || b.poNumber || "-",
+        invoiceDate: b.invoiceDate ? b.invoiceDate.split("T")[0] : "",
+        dueDate: b.dueDate ? b.dueDate.split("T")[0] : "",
+        daysToDue: b.dueDate ? Math.round((new Date(b.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0,
+        totalAmount: total,
+        paidAmount: paid,
+        remainingAmount: remaining,
+        availableDebitNote: 0,
+        availableDp: 0,
+        status: remaining <= 0 ? "PAID" : paid > 0 ? "PARTIAL" : "UNPAID",
+      };
+    });
+  }, [rawBills]);
 
   // Filters
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBill, setSelectedBill] = useState<ApBill | null>(null);
-  const [isPayModalOpen, setIsPayModalOpen] = useState(false);
 
   // Payment Form State
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedAccountCode, setSelectedAccountCode] = useState("110201");
   const [payAmount, setPayAmount] = useState<number>(0);
   const [useDebitNote, setUseDebitNote] = useState<boolean>(true);
-  const [useDp, setUseDp] = useState<boolean>(true);
   const [refNumber, setRefNumber] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
 
-  // Calculate Total Liquid Balance (Poin 11)
   const totalLiquidCash = useMemo(() => {
     return bankBalances.reduce((sum, b) => sum + b.balance, 0);
   }, [bankBalances]);
 
-  // Calculate KPIs & Aging (Poin 10)
+  // Calculate KPIs & Aging
   const kpis = useMemo(() => {
     const list = dataList;
     const totalUnpaid = list.reduce((sum, b) => sum + b.remainingAmount, 0);
-    const overdueList = list.filter(b => b.daysToDue < 0);
-    const dueH3List = list.filter(b => b.daysToDue >= 0 && b.daysToDue <= 3);
-    const dueH7List = list.filter(b => b.daysToDue > 3 && b.daysToDue <= 7);
+    const overdueList = list.filter((b) => b.daysToDue < 0);
+    const dueH3List = list.filter((b) => b.daysToDue >= 0 && b.daysToDue <= 3);
+    const dueH7List = list.filter((b) => b.daysToDue > 3 && b.daysToDue <= 7);
 
     return {
       totalUnpaid,
       overdueCount: overdueList.length,
       overdueAmount: overdueList.reduce((sum, b) => sum + b.remainingAmount, 0),
       dueH3Count: dueH3List.length,
-      dueH7Count: dueH7List.length
+      dueH7Count: dueH7List.length,
     };
   }, [dataList]);
 
   // Filtered List
   const filteredList = useMemo(() => {
-    return dataList.filter(item => {
+    return dataList.filter((item) => {
       const matchSearch =
         item.billNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.poNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.vendorName.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchTab =
-        activeTab === "ALL" ? true :
-        activeTab === "OVERDUE" ? item.daysToDue < 0 :
-        activeTab === "H3" ? (item.daysToDue >= 0 && item.daysToDue <= 3) :
-        activeTab === "H7" ? (item.daysToDue > 3 && item.daysToDue <= 7) :
-        activeTab === "REGULAR" ? item.daysToDue > 7 : true;
+        activeTab === "ALL"
+          ? true
+          : activeTab === "OVERDUE"
+          ? item.daysToDue < 0
+          : activeTab === "H3"
+          ? item.daysToDue >= 0 && item.daysToDue <= 3
+          : activeTab === "H7"
+          ? item.daysToDue > 3 && item.daysToDue <= 7
+          : activeTab === "REGULAR"
+          ? item.daysToDue > 7
+          : true;
 
       return matchSearch && matchTab;
     });
   }, [dataList, searchQuery, activeTab]);
 
-  // Open Payment Modal
-  const handleOpenPayModal = (bill: ApBill) => {
+  const handleOpenPayDrawer = (bill: ApBill) => {
     setSelectedBill(bill);
     let netRemaining = bill.remainingAmount;
     if (useDebitNote && bill.availableDebitNote > 0) {
       netRemaining -= bill.availableDebitNote;
     }
-    if (useDp && bill.availableDp > 0) {
-      netRemaining -= bill.availableDp;
-    }
     setPayAmount(Math.max(0, netRemaining));
     setRefNumber(`TRF-AP-${Date.now().toString().slice(-6)}`);
     setPaymentNotes(`Pelunasan faktur ${bill.billNumber} (${bill.vendorName})`);
-    setIsPayModalOpen(true);
   };
+
+  const payMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await api.post("/purchase/payments", payload);
+      return unwrapResponse(res);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["purchase-invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
+      toast.success(`Pembayaran Faktur ${selectedBill?.billNumber} sebesar Rp ${payAmount.toLocaleString("id-ID")} berhasil diproses.`);
+      setSelectedBill(null);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal memproses pembayaran AP");
+    },
+  });
 
   const handleProcessPayment = () => {
     if (!selectedBill) return;
@@ -235,284 +208,292 @@ export default function BayarPembelianPage() {
       return;
     }
 
-    const debitDeduction = useDebitNote ? selectedBill.availableDebitNote : 0;
-    const dpDeduction = useDp ? selectedBill.availableDp : 0;
-    const totalDeducted = payAmount + debitDeduction + dpDeduction;
-
-    const newRemaining = Math.max(0, selectedBill.remainingAmount - totalDeducted);
-    const newStatus: ApBill["status"] = newRemaining === 0 ? "PAID" : "PARTIAL";
-
-    setDataList(dataList.map(b => {
-      if (b.id === selectedBill.id) {
-        return {
-          ...b,
-          paidAmount: b.paidAmount + totalDeducted,
-          remainingAmount: newRemaining,
-          status: newStatus,
-          availableDebitNote: useDebitNote ? 0 : b.availableDebitNote,
-          availableDp: useDp ? 0 : b.availableDp
-        };
-      }
-      return b;
-    }));
-
-    setIsPayModalOpen(false);
-    toast.success(`Pembayaran Faktur ${selectedBill.billNumber} sebesar Rp ${payAmount.toLocaleString("id-ID")} berhasil diproses.`);
+    payMutation.mutate({
+      billId: selectedBill.id,
+      amount: payAmount,
+      paymentMethod: "BANK_TRANSFER",
+      referenceNumber: refNumber || undefined,
+      notes: paymentNotes || undefined,
+    });
   };
 
   return (
     <DnaPageContainer>
-      {/* Header */}
+      {/* Header with Top-Right Aging Tabs */}
       <DnaPageHeader
         title="Bayar Pembelian (AP Payment Hub)"
         description="Pusat eksekusi pelunasan hutang dagang, peringatan AP Aging real-time, dan pemotongan Debit Note."
         badge={<DnaBadge variant="neutral">SCR-048 / FIN-AP-PAY</DnaBadge>}
+        tabs={[
+          { key: "ALL", label: "Semua Faktur", count: dataList.length },
+          { key: "OVERDUE", label: "Overdue", count: dataList.filter((d) => d.daysToDue < 0).length },
+          { key: "H3", label: "H-3 (Kritis)", count: dataList.filter((d) => d.daysToDue >= 0 && d.daysToDue <= 3).length },
+          { key: "H7", label: "H-7 (Siaga)", count: dataList.filter((d) => d.daysToDue > 3 && d.daysToDue <= 7).length },
+          { key: "REGULAR", label: "> 7 Hari", count: dataList.filter((d) => d.daysToDue > 7).length },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         actions={
-          <div className="flex items-center gap-2.5">
-            <DnaButton
-              variant="outline"
-              size="sm"
-              icon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
-              onClick={() => toast.success("Data Pelunasan AP diexport ke Excel")}
-            >
-              Export Jadwal Bayar
-            </DnaButton>
-          </div>
+          <DnaButton
+            variant="outline"
+            size="sm"
+            icon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
+            onClick={() => toast.success("Data Pelunasan AP diexport ke Excel")}
+          >
+            Export Jadwal Bayar
+          </DnaButton>
         }
       />
 
-      {/* Poin 11: Real-time Saldo Bank Cards Header */}
-      <div className="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-xl p-4 text-white shadow-sm border border-slate-800 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Real-time Liquid Cash & Bank Overview */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shadow-2xs shrink-0">
+            <Wallet className="w-4 h-4" />
+          </div>
           <div>
-            <span className="text-xs uppercase tracking-wider text-indigo-300 font-semibold flex items-center gap-1.5">
-              <Wallet className="w-4 h-4 text-indigo-400" />
-              Poin 11: Real-Time Saldo Likuiditas Kas & Bank
-            </span>
-            <div className="text-2xl font-bold font-mono text-emerald-400 mt-1">
+            <div className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400">
+              Total Dana Likuid Tersedia (Kas & Bank)
+            </div>
+            <div className="text-[20px] font-black tracking-tight text-slate-900 mt-0.5">
               Rp {totalLiquidCash.toLocaleString("id-ID")}
             </div>
-            <div className="text-xs text-slate-300 mt-0.5">Total dana tersedia untuk alokasi pelunasan hutang supplier</div>
           </div>
-
-          {/* Individual Bank Breakdown */}
-          <div className="flex items-center gap-3 overflow-x-auto pb-1">
-            {bankBalances.map((acc) => (
-              <div key={acc.accountCode} className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-lg p-3 min-w-[200px]">
-                <div className="text-xs font-semibold text-white truncate">{acc.accountName}</div>
-                <div className="text-[11px] text-slate-300 font-mono">{acc.accountNumber}</div>
-                <div className="text-sm font-bold font-mono text-emerald-300 mt-1">
-                  Rp {acc.balance.toLocaleString("id-ID")}
-                </div>
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          {bankBalances.map((acc) => (
+            <div key={acc.accountCode} className="bg-slate-50/80 border border-slate-200/80 rounded-xl px-3 py-2 min-w-[160px]">
+              <div className="text-[11px] font-semibold text-slate-700 truncate">{acc.accountName}</div>
+              <div className="text-[10px] text-slate-400 font-mono">{acc.accountNumber}</div>
+              <div className="text-[12px] font-bold font-mono text-slate-900 mt-0.5">
+                Rp {acc.balance.toLocaleString("id-ID")}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* KPI Cards (Poin 10: AP Aging Alert Matrix) */}
+      {/* KPI Cards */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
           label="Total Hutang Dagang (AP)"
           value={`Rp ${kpis.totalUnpaid.toLocaleString("id-ID")}`}
+          subtext="Seluruh tagihan belum lunas"
           icon={<DollarSign className="w-5 h-5 text-indigo-600" />}
+          variant="primary"
         />
         <DnaStatCard
           label="Tagihan Overdue (Lewat Tempo)"
           value={`${kpis.overdueCount} Faktur`}
-          icon={<AlertTriangle className="w-5 h-5 text-red-600 animate-bounce" />}
-          variant="critical"
+          icon={<AlertTriangle className="w-5 h-5 text-rose-600" />}
+          variant={kpis.overdueCount > 0 ? "critical" : "default"}
           delta={{ value: `Rp ${kpis.overdueAmount.toLocaleString("id-ID")}`, isPositive: false }}
         />
         <DnaStatCard
-          label="Jatuh Tempo H-3 (High Alert)"
+          label="Jatuh Tempo H-3 (Kritis)"
           value={`${kpis.dueH3Count} Faktur`}
-          icon={<Clock className="w-5 h-5 text-red-500" />}
-          variant="warning"
+          subtext="Perlu pelunasan segera"
+          icon={<Clock className="w-5 h-5 text-amber-500" />}
+          variant={kpis.dueH3Count > 0 ? "warning" : "default"}
         />
         <DnaStatCard
           label="Jatuh Tempo H-7 (Siaga)"
           value={`${kpis.dueH7Count} Faktur`}
-          icon={<Clock className="w-5 h-5 text-amber-500" />}
+          subtext="Monitoring kas keluar"
+          icon={<Clock className="w-5 h-5 text-blue-500" />}
+          variant="info"
         />
       </DnaKpiGrid>
 
-      {/* Navigation Tabs */}
-      <div className="mb-4">
-        <DnaTabNav
-          tabs={[
-            { id: "ALL", label: "Semua Faktur", count: dataList.length },
-            { id: "OVERDUE", label: "Overdue (Terlambat)", count: dataList.filter(d => d.daysToDue < 0).length },
-            { id: "H3", label: "H-3 Merah (Kritis)", count: dataList.filter(d => d.daysToDue >= 0 && d.daysToDue <= 3).length },
-            { id: "H7", label: "H-7 Kuning (Siaga)", count: dataList.filter(d => d.daysToDue > 3 && d.daysToDue <= 7).length },
-            { id: "REGULAR", label: "> 7 Hari", count: dataList.filter(d => d.daysToDue > 7).length }
-          ]}
-          activeTab={activeTab}
-          onChange={setActiveTab}
-        />
-      </div>
-
       {/* Main Table Card */}
-      <DnaDataTableCard
-        title="Daftar Tagihan Hutang Siap Bayar"
-        description="Filter berdasarkan AP Aging (Overdue, H-3, H-7) untuk memprioritaskan jadwal pengeluaran kas."
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari No Faktur, PO, supplier..."
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700 uppercase tracking-wider">
-              <tr>
-                <th className="py-3 px-4">No. Faktur</th>
-                <th className="py-3 px-4">No. PO</th>
-                <th className="py-3 px-4">Supplier / Vendor</th>
-                <th className="py-3 px-4">Jatuh Tempo</th>
-                <th className="py-3 px-4">Status Aging</th>
-                <th className="py-3 px-4 text-right">Nilai Faktur</th>
-                <th className="py-3 px-4 text-right">Potongan Retur/DP</th>
-                <th className="py-3 px-4 text-right">Sisa Tagihan</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-normal">
-              {filteredList.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
-                    <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-emerald-400" />
-                    Tidak ada faktur pembelian yang perlu dibayar pada kategori ini.
-                  </td>
-                </tr>
-              ) : (
-                filteredList.map((row) => {
-                  const hasDebitNote = row.availableDebitNote > 0;
+      {isError && (
+        <div className="mb-4">
+          <DnaErrorState
+            title="Gagal Memuat Data Tagihan AP"
+            message="Terjadi kesalahan saat menghubungi server. Silakan coba lagi."
+            onRetry={() => refetch()}
+          />
+        </div>
+      )}
 
-                  return (
-                    <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 font-mono font-bold text-indigo-600 text-xs whitespace-nowrap">
-                        {row.billNumber}
+      {isLoading ? (
+        <DnaLoadingSkeleton rows={5} />
+      ) : (
+        <DnaDataTableCard
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Cari No Faktur, PO, supplier..."
+        >
+          <div className="w-full">
+            <table className="w-full text-left border-collapse table-fixed text-xs">
+              <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider select-none">
+                <tr>
+                  <th className="py-3 px-4 w-[20%]">NO. FAKTUR & PO</th>
+                  <th className="py-3 px-4 w-[22%]">SUPPLIER / VENDOR</th>
+                  <th className="py-3 px-4 w-[18%]">JATUH TEMPO & AGING</th>
+                  <th className="py-3 px-4 text-right w-[16%]">NILAI & POTONGAN</th>
+                  <th className="py-3 px-4 text-right w-[14%]">SISA TAGIHAN</th>
+                  <th className="py-3 px-4 text-right w-[10%]">AKSI</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-normal">
+                {filteredList.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center">
+                      <DnaEmptyState
+                        title="Tidak Ada Tagihan"
+                        description="Tidak ada faktur pembelian yang perlu dibayar pada kategori filter ini."
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  filteredList.map((row) => (
+                    <tr
+                      key={row.id}
+                      onClick={() => handleOpenPayDrawer(row)}
+                      className="hover:bg-slate-50/80 transition-colors cursor-pointer"
+                    >
+                      <td className="py-3 px-4">
+                        <span className="font-mono font-bold text-indigo-600 block truncate">
+                          {row.billNumber}
+                        </span>
+                        <span className="text-[11px] font-mono text-slate-500 block truncate">
+                          {row.poNumber}
+                        </span>
                       </td>
-                      <td className="py-3 px-4 font-mono text-slate-600 text-xs whitespace-nowrap">
-                        {row.poNumber}
+                      <td className="py-3 px-4">
+                        <span className="font-semibold text-slate-900 block truncate">
+                          {row.vendorName}
+                        </span>
+                        <span className="text-[11px] font-mono text-slate-500 block">
+                          {row.vendorCode}
+                        </span>
                       </td>
-                      <td className="py-3 px-4 text-xs font-semibold text-slate-900 whitespace-nowrap">
-                        {row.vendorName}
+                      <td className="py-3 px-4">
+                        <span className="text-[11px] font-mono text-slate-600 block">
+                          {row.dueDate}
+                        </span>
+                        <div className="mt-0.5">
+                          {row.daysToDue < 0 ? (
+                            <span className="inline-flex items-center gap-1 bg-red-100 text-red-800 border border-red-200 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                              Overdue {Math.abs(row.daysToDue)} Hr
+                            </span>
+                          ) : row.daysToDue <= 3 ? (
+                            <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                              H-{row.daysToDue} Kritis
+                            </span>
+                          ) : row.daysToDue <= 7 ? (
+                            <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                              H-{row.daysToDue} Siaga
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-500">
+                              H-{row.daysToDue}
+                            </span>
+                          )}
+                        </div>
                       </td>
-                      <td className="py-3 px-4 text-xs whitespace-nowrap font-medium text-slate-800">
-                        {row.dueDate}
-                      </td>
-                      {/* Poin 10: AP Aging Visual Matrix */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        {row.daysToDue < 0 ? (
-                          <span className="inline-flex items-center gap-1 bg-red-100 text-red-800 border border-red-300 px-2.5 py-1 rounded-full text-xs font-bold animate-pulse">
-                            <AlertTriangle className="w-3.5 h-3.5" />
-                            Overdue {Math.abs(row.daysToDue)} Hari
-                          </span>
-                        ) : row.daysToDue <= 3 ? (
-                          <span className="inline-flex items-center gap-1 bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-full text-xs font-bold">
-                            <Clock className="w-3.5 h-3.5" />
-                            H-{row.daysToDue} Jatuh Tempo
-                          </span>
-                        ) : row.daysToDue <= 7 ? (
-                          <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full text-xs font-semibold">
-                            <Clock className="w-3.5 h-3.5" />
-                            H-{row.daysToDue} Jatuh Tempo
+                      <td className="py-3 px-4 text-right">
+                        <span className="font-mono font-bold text-slate-900 block text-xs">
+                          Rp {row.totalAmount.toLocaleString("id-ID")}
+                        </span>
+                        {row.availableDebitNote > 0 ? (
+                          <span className="text-[10px] text-emerald-700 font-semibold block">
+                            - Rp {row.availableDebitNote.toLocaleString("id-ID")} DN
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full text-xs">
-                            H-{row.daysToDue} (Aman)
-                          </span>
+                          <span className="text-[10px] text-slate-400 block">-</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right text-xs font-mono font-medium text-slate-700">
-                        Rp {row.totalAmount.toLocaleString("id-ID")}
+                      <td className="py-3 px-4 text-right">
+                        <span className="font-mono font-bold text-rose-600 block text-xs">
+                          Rp {row.remainingAmount.toLocaleString("id-ID")}
+                        </span>
+                        <span className="text-[10px] text-slate-500 block">
+                          {row.status === "PARTIAL" ? "Sebagian" : "Belum Bayar"}
+                        </span>
                       </td>
-                      {/* Potongan Retur / DP */}
-                      <td className="py-3 px-4 text-right text-xs font-mono">
-                        {hasDebitNote ? (
-                          <div className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded inline-block">
-                            - Rp {row.availableDebitNote.toLocaleString("id-ID")}
-                          </div>
-                        ) : (
-                          <span className="text-slate-400">-</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right text-xs font-mono font-bold text-slate-900">
-                        Rp {row.remainingAmount.toLocaleString("id-ID")}
-                      </td>
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <DnaButton
-                          variant="primary"
-                          size="sm"
-                          icon={<CreditCard className="w-3.5 h-3.5" />}
-                          onClick={() => handleOpenPayModal(row)}
-                        >
-                          Bayar Tagihan
-                        </DnaButton>
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                          <DnaButton
+                            variant="primary"
+                            size="sm"
+                            icon={<CreditCard className="w-3.5 h-3.5" />}
+                            onClick={() => handleOpenPayDrawer(row)}
+                          >
+                            Bayar
+                          </DnaButton>
+                        </div>
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </DnaDataTableCard>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </DnaDataTableCard>
+      )}
 
-      {/* Modal Bayar Faktur (Poin 12: Potongan Retur & DP) */}
-      {selectedBill && (
-        <DnaModal
-          isOpen={isPayModalOpen}
-          onClose={() => setIsPayModalOpen(false)}
-          title={`Pembayaran Faktur: ${selectedBill.billNumber}`}
-          description={`Pelunasan tagihan supplier ${selectedBill.vendorName}`}
-          size="xl"
-          footer={
-            <div className="flex items-center justify-end gap-2.5 w-full">
-              <DnaButton variant="outline" size="sm" onClick={() => setIsPayModalOpen(false)}>
-                Batal
-              </DnaButton>
-              <DnaButton
-                variant="primary"
-                size="sm"
-                icon={<Send className="w-4 h-4" />}
-                onClick={handleProcessPayment}
-              >
-                Konfirmasi & Eksekusi Pembayaran
-              </DnaButton>
-            </div>
-          }
-        >
-          <div className="space-y-4 text-xs">
-            {/* Summary Tagihan */}
-            <div className="grid grid-cols-3 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+      {/* DnaDetailDrawer for AP Payment Execution */}
+      <DnaDetailDrawer
+        isOpen={!!selectedBill}
+        onClose={() => setSelectedBill(null)}
+        title={selectedBill?.billNumber || "Pembayaran Faktur Hutang"}
+        subtitle={selectedBill ? `Supplier: ${selectedBill.vendorName} • PO: ${selectedBill.poNumber}` : undefined}
+        badge={
+          selectedBill ? (
+            <DnaBadge variant={selectedBill.daysToDue < 0 ? "critical" : "warning"}>
+              {selectedBill.daysToDue < 0 ? "Overdue" : `H-${selectedBill.daysToDue}`}
+            </DnaBadge>
+          ) : undefined
+        }
+        footer={
+          <div className="flex items-center justify-between w-full">
+            <DnaButton variant="outline" size="sm" onClick={() => setSelectedBill(null)}>
+              Batal
+            </DnaButton>
+            <DnaButton
+              variant="primary"
+              size="sm"
+              icon={<Send className="w-4 h-4" />}
+              onClick={handleProcessPayment}
+            >
+              Konfirmasi & Eksekusi Pembayaran
+            </DnaButton>
+          </div>
+        }
+      >
+        {selectedBill && (
+          <div className="space-y-5 text-xs">
+            {/* Tagihan Summary */}
+            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
-                <span className="text-slate-500 block">Total Tagihan Bruto</span>
-                <span className="font-bold text-slate-900 font-mono text-sm">
+                <span className="text-slate-500 block text-[11px]">Sisa Hutang Faktur</span>
+                <span className="font-bold text-slate-900 font-mono text-sm block">
                   Rp {selectedBill.remainingAmount.toLocaleString("id-ID")}
                 </span>
+                <span className="text-slate-500 text-[11px]">Total PO: {selectedBill.poNumber}</span>
               </div>
-              <div>
-                <span className="text-slate-500 block">Status Aging</span>
-                <div className="mt-1 font-bold text-red-600">
+              <div className="text-right">
+                <span className="text-slate-500 block text-[11px]">Status Termin</span>
+                <span className="font-bold text-rose-600 block text-xs mt-1">
                   {selectedBill.daysToDue < 0 ? `Overdue ${Math.abs(selectedBill.daysToDue)} Hari` : `H-${selectedBill.daysToDue} Jatuh Tempo`}
-                </div>
-              </div>
-              <div>
-                <span className="text-slate-500 block">No. PO Asal</span>
-                <span className="font-bold text-indigo-600 font-mono text-sm">{selectedBill.poNumber}</span>
+                </span>
+                <span className="text-slate-500 text-[11px]">Due: {selectedBill.dueDate}</span>
               </div>
             </div>
 
-            {/* Potongan Otomatis Debit Note (Poin 12) */}
+            {/* Potongan Otomatis Debit Note */}
             {selectedBill.availableDebitNote > 0 && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <RotateCcw className="w-4 h-4 text-emerald-700" />
                     <div>
-                      <div className="font-bold text-emerald-900">Tersedia Debit Note (Potongan Retur Barang Reject)</div>
-                      <div className="text-[11px] text-emerald-700">Klaim retur disetujui supplier senilai Rp {selectedBill.availableDebitNote.toLocaleString("id-ID")}</div>
+                      <div className="font-bold text-emerald-900 text-xs">Tersedia Potongan Debit Note</div>
+                      <div className="text-[11px] text-emerald-700">
+                        Klaim retur disetujui: Rp {selectedBill.availableDebitNote.toLocaleString("id-ID")}
+                      </div>
                     </div>
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -529,75 +510,78 @@ export default function BayarPembelianPage() {
                       }}
                       className="w-4 h-4 text-indigo-600 rounded border-slate-300"
                     />
-                    <span className="font-bold text-emerald-900 text-xs">Gunakan Potongan</span>
+                    <span className="font-bold text-emerald-900 text-xs">Gunakan</span>
                   </label>
                 </div>
               </div>
             )}
 
-            {/* Form Input Pembayaran */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-slate-700 font-bold mb-1">Tanggal Bayar *</label>
-                <input
-                  type="date"
-                  value={paymentDate}
-                  onChange={(e) => setPaymentDate(e.target.value)}
-                  className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
+            {/* Payment Inputs */}
+            <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Tanggal Bayar *</label>
+                  <input
+                    type="date"
+                    value={paymentDate}
+                    onChange={(e) => setPaymentDate(e.target.value)}
+                    className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Sumber Kas / Bank *</label>
+                  <select
+                    aria-label="Akun Kas Bank"
+                    value={selectedAccountCode}
+                    onChange={(e) => setSelectedAccountCode(e.target.value)}
+                    className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                  >
+                    {bankBalances.map((b) => (
+                      <option key={b.accountCode} value={b.accountCode}>
+                        [{b.accountCode}] {b.accountName} (Rp {b.balance.toLocaleString("id-ID")})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-slate-700 font-bold mb-1">Akun Kas / Bank Sumber Dana (Poin 11) *</label>
-                <select
-                  aria-label="Akun Kas Bank"
-                  value={selectedAccountCode}
-                  onChange={(e) => setSelectedAccountCode(e.target.value)}
-                  className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
-                >
-                  {bankBalances.map((b) => (
-                    <option key={b.accountCode} value={b.accountCode}>
-                      [{b.accountCode}] {b.accountName} (Saldo: Rp {b.balance.toLocaleString("id-ID")})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-slate-700 font-bold mb-1">Nominal yang Ditransfer (Netto) *</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={payAmount}
-                  onChange={(e) => setPayAmount(parseFloat(e.target.value) || 0)}
-                  className="w-full text-sm font-bold font-mono text-indigo-700 border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Nominal Transfer (Rp) *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={payAmount}
+                    onChange={(e) => setPayAmount(parseFloat(e.target.value) || 0)}
+                    className="w-full text-sm font-bold font-mono text-indigo-700 border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">No. Referensi Transfer / Giro</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: TRF-BCA-992140"
+                    value={refNumber}
+                    onChange={(e) => setRefNumber(e.target.value)}
+                    className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-slate-700 font-bold mb-1">No. Referensi Transfer Bank / Giro</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: TRF-BCA-992140"
-                  value={refNumber}
-                  onChange={(e) => setRefNumber(e.target.value)}
-                  className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
-              </div>
-            </div>
 
-            <div>
-              <label className="block text-slate-700 font-bold mb-1">Catatan Pelunasan</label>
-              <textarea
-                rows={2}
-                value={paymentNotes}
-                onChange={(e) => setPaymentNotes(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              />
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Catatan Pelunasan</label>
+                <textarea
+                  rows={2}
+                  value={paymentNotes}
+                  onChange={(e) => setPaymentNotes(e.target.value)}
+                  placeholder="Catatan pelunasan untuk bukti transaksi..."
+                  className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
             </div>
           </div>
-        </DnaModal>
-      )}
+        )}
+      </DnaDetailDrawer>
     </DnaPageContainer>
   );
 }

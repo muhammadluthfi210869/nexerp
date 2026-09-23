@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaDataTableCard, DnaCard, DnaStatCard, DnaBadge, DnaButton, DnaCell } from "@/components/dna";
 
 export default function LegalityDashboard() {
   const { data: metrics, isLoading } = useQuery({

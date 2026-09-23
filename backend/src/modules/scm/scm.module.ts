@@ -14,7 +14,9 @@ import { PurchaseInvoicesService } from './services/purchase-invoices.service';
 import { PurchaseInvoicesController } from './controllers/purchase-invoices.controller';
 import { PurchasePaymentsService } from './services/purchase-payments.service';
 import { SupplierScoreService } from './services/supplier-score.service';
-import { PurchasePaymentsController } from './controllers/purchase-payments.controller';
+import { PurchasePaymentsController, PurchaseDownPaymentsController } from './controllers/purchase-payments.controller';
+import { PurchaseRequestsService } from './services/purchase-requests.service';
+import { PurchaseRequestsController, MrpShortageController } from './controllers/purchase-requests.controller';
 
 import { LegalityModule } from '../legality/legality.module';
 
@@ -22,6 +24,7 @@ import { LegalityModule } from '../legality/legality.module';
   imports: [PrismaModule, forwardRef(() => LegalityModule)],
   providers: [
     PurchaseOrdersService,
+    PurchaseRequestsService,
     InboundsService,
     MaterialsService,
     ScmService,
@@ -32,13 +35,16 @@ import { LegalityModule } from '../legality/legality.module';
   ],
   controllers: [
     PurchaseOrdersController,
+    PurchaseRequestsController,
+    MrpShortageController,
     InboundsController,
     MaterialsController,
     ScmController,
     PurchaseReturnsController,
     PurchaseInvoicesController,
     PurchasePaymentsController,
+    PurchaseDownPaymentsController,
   ],
-  exports: [ScmService, SupplierScoreService],
+  exports: [ScmService, SupplierScoreService, PurchaseRequestsService, PurchaseOrdersService, PurchasePaymentsService],
 })
 export class ScmModule {}

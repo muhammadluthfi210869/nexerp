@@ -26,8 +26,8 @@ import {
   DialogTitle, 
   DialogTrigger,
   DialogDescription 
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+} from "@/components/dna";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/dna";
 import { FormShell } from "@/components/layout/FormShell";
 import { formatCurrency } from "@/lib/utils";
 

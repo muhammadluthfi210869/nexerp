@@ -26,8 +26,12 @@ import {
   DnaDataTableCard,
   DnaCell,
   DnaModal,
+  DnaDetailDrawer,
   DnaButton,
   DnaInput,
+  DnaLoadingSkeleton,
+  DnaErrorState,
+  DnaEmptyState,
   useDnaToast,
 } from "@/components/dna";
 
@@ -48,73 +52,6 @@ interface ReceivablePayment {
   notes?: string;
 }
 
-const INITIAL_RECEIVABLE_PAYMENTS: ReceivablePayment[] = [
-  {
-    id: "pay-1",
-    invoiceNumber: "INV-202603-0001",
-    customerName: "PT Cantika Jelita Nusantara",
-    brandName: "C-Jelita Herbal",
-    paymentDate: "2026-03-06",
-    totalAmount: 73750000,
-    paidAmount: 0,
-    remainingAmount: 73750000,
-    pph23Deduction: 1475000, // 2%
-    pph21Deduction: 0,
-    netCashReceived: 72275000,
-    bankAccount: "BCA Maklon (264-035-1589)",
-    status: "UNPAID",
-    notes: "Menunggu transfer termin ke-2 sebelum DO delivery released.",
-  },
-  {
-    id: "pay-2",
-    invoiceNumber: "INV-202603-0002",
-    customerName: "CV Aura Natural Skincare",
-    brandName: "AuraGlow Botanical",
-    paymentDate: "2026-03-02",
-    totalAmount: 49030000,
-    paidAmount: 49030000,
-    remainingAmount: 0,
-    pph23Deduction: 980600,
-    pph21Deduction: 0,
-    netCashReceived: 48049400,
-    bankAccount: "Mandiri Corp (137-00-9821-44)",
-    status: "PAID",
-    notes: "Lunas transfer Mandiri Corp. Bukti potong PPh 23 telah diunggah.",
-  },
-  {
-    id: "pay-3",
-    invoiceNumber: "INV-202602-0014",
-    customerName: "PT Derma Estetika Utama",
-    brandName: "DermaGleam Pro",
-    paymentDate: "2026-02-28",
-    totalAmount: 165900000,
-    paidAmount: 80000000,
-    remainingAmount: 85900000,
-    pph23Deduction: 1600000,
-    pph21Deduction: 0,
-    netCashReceived: 78400000,
-    bankAccount: "BCA Maklon (264-035-1589)",
-    status: "PARTIAL",
-    notes: "Pembayaran termin 1 50% via BCA.",
-  },
-  {
-    id: "pay-4",
-    invoiceNumber: "INV-202602-0008",
-    customerName: "UD Berkah Ayu Sejahtera",
-    brandName: "AyuAura",
-    paymentDate: "2026-02-15",
-    totalAmount: 25000000,
-    paidAmount: 25000000,
-    remainingAmount: 0,
-    pph23Deduction: 500000,
-    pph21Deduction: 250000,
-    netCashReceived: 24250000,
-    bankAccount: "BCA Maklon (264-035-1589)",
-    status: "PAID",
-    notes: "Lunas include potongan PPh 21 fee konsultan maklon.",
-  },
-];
-
 const statusBadgeConfig: Record<string, { status: "success" | "warning" | "critical" | "default"; label: string }> = {
   PAID: { status: "success", label: "Lunas" },
   PARTIAL: { status: "warning", label: "Sebagian" },
@@ -126,7 +63,6 @@ export default function BayarPenjualanPage() {
   const toast = useDnaToast();
   const queryClient = useQueryClient();
 
-  const [payments, setPayments] = useState<ReceivablePayment[]>(INITIAL_RECEIVABLE_PAYMENTS);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedPayment, setSelectedPayment] = useState<ReceivablePayment | null>(null);
@@ -139,6 +75,70 @@ export default function BayarPenjualanPage() {
   const [formBank, setFormBank] = useState("BCA Maklon (264-035-1589)");
   const [formDate, setFormDate] = useState(new Date().toISOString().split("T")[0]);
   const [formNotes, setFormNotes] = useState("");
+
+  // Live Query Invoices as Receivables
+  const {
+    data: payments = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery<ReceivablePayment[]>({
+    queryKey: ["commercial-payments"],
+    queryFn: async () => {
+      const resp = await api.get("/commercial/invoices");
+      return (resp.data || []).map((inv: any) => {
+        const total = Number(inv.amountDue) || 0;
+        const paid = Number(inv.paidAmount) || 0;
+        const remaining = Math.max(0, total - paid);
+        const pph23 = Math.round(paid * 0.02);
+        return {
+          id: inv.id,
+          invoiceNumber: inv.invoiceNumber || inv.id,
+          customerName: inv.salesOrder?.lead?.clientName || inv.customerName || "Customer",
+          brandName: inv.salesOrder?.brandName || inv.brandName || "Brand",
+          paymentDate: inv.invoiceDate
+            ? new Date(inv.invoiceDate).toISOString().split("T")[0]
+            : inv.createdAt
+            ? new Date(inv.createdAt).toISOString().split("T")[0]
+            : new Date().toISOString().split("T")[0],
+          totalAmount: total,
+          paidAmount: paid,
+          remainingAmount: remaining,
+          pph23Deduction: pph23,
+          pph21Deduction: 0,
+          netCashReceived: Math.max(0, paid - pph23),
+          bankAccount: "BCA Maklon (264-035-1589)",
+          status: (inv.status === "PAID"
+            ? "PAID"
+            : remaining < total && remaining > 0
+            ? "PARTIAL"
+            : "UNPAID") as ReceivablePayment["status"],
+          notes: inv.notes || "",
+        };
+      });
+    },
+  });
+
+  const createPaymentMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      return api.post("/commercial/payments", payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["commercial-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["commercial-invoices"] });
+      toast.success(
+        "Pembayaran Berhasil Dicatat",
+        "Penerimaan pembayaran dan potongan withholding PPh berhasil divalidasi."
+      );
+      setIsPaymentModalOpen(false);
+      setSelectedPayment(null);
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || err.message || "Gagal memproses pembayaran";
+      toast.error("Validasi Gagal", msg);
+    },
+  });
 
   const filteredPayments = payments.filter((p) => {
     const q = searchTerm.toLowerCase();
@@ -173,52 +173,42 @@ export default function BayarPenjualanPage() {
 
     const payAmt = Number(formPayAmount) || 0;
     const pph23Amt = Number(formPph23) || 0;
-    const pph21Amt = Number(formPph21) || 0;
-    const netReceived = Math.max(0, payAmt - pph23Amt - pph21Amt);
 
     if (payAmt <= 0) {
       toast.error("Validasi Gagal", "Jumlah pembayaran harus lebih besar dari 0.");
       return;
     }
 
-    setPayments((prev) =>
-      prev.map((item) => {
-        if (item.id === selectedPayment.id) {
-          const newPaid = item.paidAmount + payAmt;
-          const newRemaining = Math.max(0, item.totalAmount - newPaid);
-          const newStatus = newRemaining === 0 ? "PAID" : "PARTIAL";
-
-          return {
-            ...item,
-            paidAmount: newPaid,
-            remainingAmount: newRemaining,
-            pph23Deduction: item.pph23Deduction + pph23Amt,
-            pph21Deduction: item.pph21Deduction + pph21Amt,
-            netCashReceived: item.netCashReceived + netReceived,
-            bankAccount: formBank,
-            paymentDate: formDate,
-            status: newStatus,
-            notes: formNotes || item.notes,
-          };
-        }
-        return item;
-      })
-    );
-
-    toast.success(
-      "Pembayaran Berhasil Dicatat",
-      `Penerimaan kas Rp ${netReceived.toLocaleString("id-ID")} (setelah potongan PPh) untuk ${selectedPayment.invoiceNumber} berhasil divalidasi.`
-    );
-    setIsPaymentModalOpen(false);
-    setSelectedPayment(null);
+    createPaymentMutation.mutate({
+      invoiceId: selectedPayment.id,
+      amount: payAmt,
+      paymentMethod: "BANK_TRANSFER",
+      bankAccount: formBank,
+      pph23Deduction: pph23Amt,
+      notes: formNotes,
+    });
   };
+
+  // Calculate counts for header tabs
+  const countAll = payments.length;
+  const countPaid = payments.filter((p) => p.status === "PAID").length;
+  const countPartial = payments.filter((p) => p.status === "PARTIAL").length;
+  const countUnpaid = payments.filter((p) => p.status === "UNPAID").length;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 space-y-6">
-      {/* Top Header per Requirement Poin 15 & 16 */}
+      {/* Top Header with Unified Tabs */}
       <DnaPageHeader
-        title="REPORT PENJUALAN (PEMBAYARAN PENJUALAN)"
+        title="REPORT PEMBAYARAN PENJUALAN"
         description="Laporan rekapitulasi penerimaan pembayaran piutang maklon kosmetik, mutasi kas/bank, rekonsiliasi bukti potong pajak PPh 21 & PPh 23, serta settlement pelunasan faktur."
+        tabs={[
+          { key: "ALL", label: "Semua", count: countAll },
+          { key: "PAID", label: "Lunas", count: countPaid },
+          { key: "PARTIAL", label: "Sebagian", count: countPartial },
+          { key: "UNPAID", label: "Belum Bayar", count: countUnpaid },
+        ]}
+        activeTab={statusFilter}
+        onTabChange={setStatusFilter}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton
@@ -271,143 +261,165 @@ export default function BayarPenjualanPage() {
       />
 
       {/* Main Table Card */}
-      <DnaDataTableCard
-        title="Daftar Realisasi Pembayaran & Pemotongan Pajak Faktur"
-        count={filteredPayments.length}
-        totalItems={payments.length}
+      {isLoading ? (
+        <DnaLoadingSkeleton rows={5} />
+      ) : isError ? (
+        <DnaErrorState
+          title="Gagal Memuat Pembayaran Penjualan"
+          message={(error as any)?.message || "Terjadi kesalahan saat menghubungi server."}
+          onRetry={() => refetch()}
+        />
+      ) : (
+        <DnaDataTableCard
+          toolbarProps={{
+            searchPlaceholder: "Cari nomor kwitansi, faktur, pelanggan, atau brand...",
+            searchValue: searchTerm,
+            onSearchChange: setSearchTerm,
+          }}
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[1250px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <th className="px-4 py-2.5 w-[150px]">No. Kwitansi</th>
+                  <th className="px-4 py-2.5 w-[150px]">No. Faktur</th>
+                  <th className="px-4 py-2.5 w-[110px]">Tgl Bayar</th>
+                  <th className="px-4 py-2.5 min-w-[180px]">Pelanggan & Brand</th>
+                  <th className="px-4 py-2.5 w-[140px] text-right">Total Tagihan</th>
+                  <th className="px-4 py-2.5 w-[140px] text-right">Kas Masuk Net</th>
+                  <th className="px-4 py-2.5 w-[130px] text-right">Potongan PPh</th>
+                  <th className="px-4 py-2.5 w-[120px] text-center">Status</th>
+                  <th className="pr-4 py-2.5 w-[110px] text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredPayments.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="text-center py-12 text-slate-400">
+                      <Receipt className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
+                      <p className="font-semibold text-slate-600">Tidak ada data pembayaran</p>
+                      <p className="text-xs text-slate-400">Coba sesuaikan kata kunci pencarian atau filter status.</p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredPayments.map((p) => (
+                    <tr key={p.id} className="h-[48px] hover:bg-slate-50/60 transition-colors">
+                      <td className="px-4 py-2.5">
+                        <DnaCell.Code code={`REC-${p.invoiceNumber.replace("INV-", "")}`} />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <DnaCell.Code code={p.invoiceNumber} />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <DnaCell.Text text={p.paymentDate} />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div>
+                          <div className="text-[12px] font-medium text-slate-900 line-clamp-1">{p.customerName}</div>
+                          <div className="text-[10.5px] text-slate-400 font-normal mt-0.5 line-clamp-1">{p.brandName || "Maklon"}</div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <DnaCell.Numeric value={p.totalAmount} prefix="Rp " />
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-mono tabular-nums">
+                        <span className="text-[12px] font-semibold text-emerald-600">
+                          Rp {p.netCashReceived.toLocaleString("id-ID")}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-mono tabular-nums">
+                        <span className="text-[12px] font-medium text-purple-700">
+                          Rp {(p.pph23Deduction + p.pph21Deduction).toLocaleString("id-ID")}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-center">
+                        <DnaBadge
+                          status={statusBadgeConfig[p.status]?.status || "default"}
+                        >
+                          {statusBadgeConfig[p.status]?.label || p.status}
+                        </DnaBadge>
+                      </td>
+                      <td className="pr-4 py-2.5 text-right">
+                        <div className="flex justify-end gap-1">
+                          {p.remainingAmount > 0 ? (
+                            <DnaButton
+                              variant="primary"
+                              className="h-7 px-2.5 text-[11px]"
+                              onClick={() => openPaymentDialog(p)}
+                            >
+                              <CircleDollarSign className="w-3 h-3 mr-1" /> Bayar
+                            </DnaButton>
+                          ) : (
+                            <DnaButton
+                              variant="ghost"
+                              className="h-7 px-2 text-[11px] text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                              onClick={() => {
+                                toast.info("Bukti Pembayaran", `Faktur ${p.invoiceNumber} telah lunas.`);
+                              }}
+                            >
+                              <FileCheck2 className="w-3.5 h-3.5 mr-1" /> Lunas
+                            </DnaButton>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </DnaDataTableCard>
+      )}
+
+      {/* Drawer Terima Pembayaran & Potongan PPh 21/23 */}
+      <DnaDetailDrawer
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        title="Pencatatan Pembayaran & Withholding Pajak"
+        subtitle={selectedPayment ? `${selectedPayment.customerName} • Faktur ${selectedPayment.invoiceNumber}` : undefined}
+        badge={
+          selectedPayment ? (
+            <DnaCell.Badge
+              status={statusBadgeConfig[selectedPayment.status]?.status || "default"}
+              label={statusBadgeConfig[selectedPayment.status]?.label || selectedPayment.status}
+            />
+          ) : undefined
+        }
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="w-64">
-              <DnaInput
-                placeholder="Cari faktur, klien, brand..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                icon={<Search className="w-4 h-4 text-slate-400" />}
-              />
-            </div>
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-              {["ALL", "PAID", "PARTIAL", "UNPAID"].map((st) => (
-                <button
-                  key={st}
-                  onClick={() => setStatusFilter(st)}
-                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
-                    statusFilter === st
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  {st === "ALL" ? "Semua" : statusBadgeConfig[st]?.label || st}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center justify-between w-full">
+            <DnaButton type="button" variant="secondary" onClick={() => setIsPaymentModalOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton
+              type="button"
+              variant="primary"
+              icon={<ShieldCheck className="w-4 h-4" />}
+              onClick={handlePaymentSubmit as any}
+            >
+              Validasi & Catat Kas Masuk
+            </DnaButton>
           </div>
         }
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-3">Receipt No</th>
-                <th className="py-3 px-3">Customer</th>
-                <th className="py-3 px-3">Date</th>
-                <th className="py-3 px-3 text-right">Total Amount</th>
-                <th className="py-3 px-3">Allocated Invoices</th>
-                <th className="py-3 px-3 text-right">PPh 21 & 23 Terhitung</th>
-                <th className="py-3 px-3 text-right">Unallocated Balance</th>
-                <th className="py-3 px-3 text-center">Status</th>
-                <th className="py-3 px-3 text-right">#</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredPayments.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="text-center py-12 text-slate-400">
-                    <Receipt className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
-                    <p className="font-semibold text-slate-600">Tidak ada data pembayaran</p>
-                    <p className="text-xs text-slate-400">Coba sesuaikan kata kunci pencarian atau filter status.</p>
-                  </td>
-                </tr>
-              ) : (
-                filteredPayments.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-3 font-mono font-semibold text-blue-600 whitespace-nowrap">
-                      {`REC-${p.invoiceNumber.replace("INV-", "")}`}
-                    </td>
-                    <td className="py-3 px-3 font-semibold text-slate-900 whitespace-nowrap">
-                      {p.customerName}
-                    </td>
-                    <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
-                      {p.paymentDate}
-                    </td>
-                    <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
-                      Rp {p.totalAmount.toLocaleString("id-ID")}
-                    </td>
-                    <td className="py-3 px-3 font-mono text-xs text-slate-700 whitespace-nowrap">
-                      {p.invoiceNumber}
-                    </td>
-                    <td className="py-3 px-3 text-right font-mono text-purple-700 whitespace-nowrap">
-                      Rp {(p.pph23Deduction + p.pph21Deduction).toLocaleString("id-ID")}
-                    </td>
-                    <td className="py-3 px-3 text-right font-mono font-bold text-rose-600 whitespace-nowrap">
-                      Rp {p.remainingAmount.toLocaleString("id-ID")}
-                    </td>
-                    <td className="py-3 px-3 text-center whitespace-nowrap">
-                      <DnaCell.Badge
-                        status={statusBadgeConfig[p.status]?.status || "default"}
-                        label={statusBadgeConfig[p.status]?.label || p.status}
-                      />
-                    </td>
-                    <td className="py-3 px-3 text-right whitespace-nowrap">
-                      <div className="flex justify-end gap-1">
-                        {p.remainingAmount > 0 ? (
-                          <DnaButton
-                            variant="primary"
-                            size="sm"
-                            icon={<CircleDollarSign className="w-3.5 h-3.5" />}
-                            onClick={() => openPaymentDialog(p)}
-                          >
-                            Bayar
-                          </DnaButton>
-                        ) : (
-                          <DnaButton
-                            variant="outline"
-                            size="sm"
-                            icon={<FileCheck2 className="w-3.5 h-3.5 text-emerald-600" />}
-                            onClick={() => {
-                              toast.info("Bukti Pembayaran", `Faktur ${p.invoiceNumber} telah lunas.`);
-                            }}
-                          >
-                            Bukti
-                          </DnaButton>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </DnaDataTableCard>
-
-      {/* Modal Terima Pembayaran & Potongan PPh 21/23 */}
-      <DnaModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        title="Validasi & Terima Pembayaran Penjualan"
-        size="md"
-      >
         {selectedPayment && (
-          <form onSubmit={handlePaymentSubmit} className="space-y-4 text-sm">
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Faktur Tagihan
-              </span>
-              <h3 className="text-base font-bold text-slate-900">{selectedPayment.invoiceNumber}</h3>
-              <p className="text-xs text-slate-600">Klien: {selectedPayment.customerName}</p>
-              <div className="flex justify-between items-center pt-2 text-xs">
-                <span className="text-slate-500">Sisa Tagihan:</span>
-                <span className="font-bold text-rose-600 text-sm">
+          <form onSubmit={handlePaymentSubmit} className="space-y-5 text-xs">
+            {/* Summary Box */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Faktur Penjualan
+                </span>
+                <span className="font-mono font-bold text-blue-600 text-xs">{selectedPayment.invoiceNumber}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Total Nilai Faktur:</span>
+                <span className="font-mono font-bold text-slate-800">
+                  Rp {selectedPayment.totalAmount.toLocaleString("id-ID")}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs border-t border-slate-200 pt-1.5">
+                <span className="text-slate-500 font-semibold">Sisa Tagihan Tertunggak:</span>
+                <span className="font-bold text-rose-600 font-mono text-sm">
                   Rp {selectedPayment.remainingAmount.toLocaleString("id-ID")}
                 </span>
               </div>
@@ -451,7 +463,7 @@ export default function BayarPenjualanPage() {
               />
             </div>
 
-            {/* Withholding Tax PPh 21 & PPh 23 per Poin 15 & 16 */}
+            {/* Withholding Tax PPh 21 & PPh 23 */}
             <div className="bg-purple-50/60 p-4 rounded-xl border border-purple-100 space-y-3">
               <div className="flex items-center gap-2">
                 <Percent className="w-4 h-4 text-purple-600" />
@@ -481,9 +493,9 @@ export default function BayarPenjualanPage() {
                   />
                 </div>
               </div>
-              <div className="flex justify-between items-center text-xs pt-1 border-t border-purple-100">
-                <span className="font-semibold text-purple-900">Estimasi Kas Bersih Masuk:</span>
-                <span className="font-bold text-emerald-700 text-sm">
+              <div className="flex justify-between items-center text-xs pt-2 border-t border-purple-100">
+                <span className="font-semibold text-purple-900">Estimasi Kas Bersih Masuk Bank:</span>
+                <span className="font-bold text-emerald-700 font-mono text-sm">
                   Rp{" "}
                   {Math.max(
                     0,
@@ -503,18 +515,9 @@ export default function BayarPenjualanPage() {
                 onChange={(e) => setFormNotes(e.target.value)}
               />
             </div>
-
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-              <DnaButton type="button" variant="secondary" onClick={() => setIsPaymentModalOpen(false)}>
-                Batal
-              </DnaButton>
-              <DnaButton type="submit" variant="primary" icon={<ShieldCheck className="w-4 h-4" />}>
-                Validasi & Catat Kas Masuk
-              </DnaButton>
-            </div>
           </form>
         )}
-      </DnaModal>
+      </DnaDetailDrawer>
     </div>
   );
 }

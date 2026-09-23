@@ -1,4 +1,4 @@
-﻿import {
+import {
   Injectable,
   BadRequestException,
   NotFoundException,
@@ -173,17 +173,27 @@ export class FinanceService {
 
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
       throw new BadRequestException(
-        `Journal is not balanced. Debit: ${totalDebit}, Credit: ${totalCredit}`,
+        `Journal is not balanced. Debit: ${totalDebit}, Credit: ${totalCredit} [JOURNAL_UNBALANCED]`,
       );
     }
 
-    // MANDATORY PROOF VALIDATION (POINT 2)
-    // Rule: For Expense (6xxx) or Fixed Asset (15xx), proof is mandatory.
+    // BUS-RULE-068: Control accounts block manual posting
     const accountIds = [...new Set(dto.lines.map((l) => l.accountId))];
     const accounts = await this.prisma.account.findMany({
       where: { id: { in: accountIds } },
     });
     const accountMap = new Map(accounts.map((a) => [a.id, a]));
+
+    if (!dto.sourceDocumentType || (dto.sourceDocumentType as string) === 'MANUAL') {
+      for (const l of dto.lines) {
+        const acc = accountMap.get(l.accountId);
+        if (acc && acc.allowManualJournal === false) {
+          throw new BadRequestException(
+            `Akun ${acc.code} (${acc.name}) tidak boleh diposting manual. Gunakan Adjustment Journal. [MANUAL_JOURNAL_BLOCKED]`,
+          );
+        }
+      }
+    }
     const expenseLines = dto.lines.map((l) => {
       const acc = accountMap.get(l.accountId);
       return (
@@ -248,11 +258,26 @@ export class FinanceService {
       throw new BadRequestException('Cannot reverse a reversal journal');
     }
 
+    const entryDate = new Date();
+    const lockedPeriod = await this.prisma.financialPeriod.findFirst({
+      where: {
+        startDate: { lte: entryDate },
+        endDate: { gte: entryDate },
+        status: { in: [PeriodStatus.SOFT_LOCKED, PeriodStatus.CLOSED] },
+      },
+    });
+    if (lockedPeriod) {
+      throw new BadRequestException(
+        `Transaksi ditolak: Periode ${lockedPeriod.name} sudah dikunci atau ditutup. [PERIOD_HARD_LOCKED]`,
+      );
+    }
+
     return this.prisma.journalEntry.create({
       data: {
-        date: new Date(),
+        date: entryDate,
         reference: `REV-${original.reference || original.id}`,
         description: `REVERSAL of: ${original.description}`,
+        sourceDocumentType: 'ADJUSTMENT' as any,
         lines: {
           create: original.lines.map((l) => ({
             accountId: l.accountId,
@@ -399,17 +424,32 @@ export class FinanceService {
     totalLossValue: number;
     notes: string;
   }) {
-    const inventoryAcc = await this.prisma.account.findFirst({
+    let inventoryAcc = await this.prisma.account.findFirst({
       where: { OR: [{ code: '1151' }, { code: '1300' }] },
     });
-    const lossAcc = await this.prisma.account.findFirst({
+    if (!inventoryAcc) {
+      inventoryAcc = await this.prisma.account.create({
+        data: {
+          code: '1151',
+          name: 'Persediaan Barang',
+          type: 'ASSET' as any,
+          normalBalance: 'DEBIT' as any,
+        },
+      });
+    }
+
+    let lossAcc = await this.prisma.account.findFirst({
       where: { OR: [{ code: '1157' }, { code: '6232' }, { code: '6102' }] },
     });
-
-    if (!inventoryAcc || !lossAcc) {
-      throw new BadRequestException(
-        'Finance Accounts (1151/1157/6232) not configured for inventory adjustment.',
-      );
+    if (!lossAcc) {
+      lossAcc = await this.prisma.account.create({
+        data: {
+          code: '6232',
+          name: 'Beban Selisih Stok Opname',
+          type: 'EXPENSE' as any,
+          normalBalance: 'DEBIT' as any,
+        },
+      });
     }
 
     return this.prisma.journalEntry.create({
@@ -1268,6 +1308,13 @@ export class FinanceService {
   }
 
   async approveFundRequest(id: string, dto: ApproveFundRequestDto) {
+    const req = await this.prisma.fundRequest.findUnique({ where: { id } });
+    if (!req) throw new NotFoundException('Fund Request not found');
+    if (req.requesterId === dto.approvedById) {
+      throw new BadRequestException(
+        'Maker-checker violation: requester cannot approve their own fund request. [SOD_VIOLATION]',
+      );
+    }
     return this.prisma.fundRequest.update({
       where: { id },
       data: {
@@ -1281,6 +1328,13 @@ export class FinanceService {
     id: string,
     dto: DirectorApproveFundRequestDto,
   ) {
+    const req = await this.prisma.fundRequest.findUnique({ where: { id } });
+    if (!req) throw new NotFoundException('Fund Request not found');
+    if (req.requesterId === dto.approvedById) {
+      throw new BadRequestException(
+        'Maker-checker violation: requester cannot approve their own fund request. [SOD_VIOLATION]',
+      );
+    }
     return this.prisma.fundRequest.update({
       where: { id },
       data: {
@@ -1308,6 +1362,11 @@ export class FinanceService {
       });
 
       if (!req) throw new NotFoundException('Fund Request not found');
+      if (req.requesterId === dto.disbursedById) {
+        throw new BadRequestException(
+          'Maker-checker violation: requester cannot disburse their own fund request. [SOD_VIOLATION]',
+        );
+      }
 
       // Create Journal Entry automatically
       const cashAcc = await tx.account.findUnique({
@@ -1331,7 +1390,14 @@ export class FinanceService {
       // Fallback: if no specific expense account found, use general expense account
       if (!expenseAcc) {
         const generalExpense = await tx.account.findFirst({
-          where: { code: { startsWith: '6' }, name: { contains: 'General' } },
+          where: {
+            code: { startsWith: '6' },
+            OR: [
+              { name: { contains: 'General', mode: 'insensitive' } },
+              { name: { contains: 'Umum', mode: 'insensitive' } },
+              { name: { contains: 'Operasional', mode: 'insensitive' } },
+            ],
+          },
         });
         if (generalExpense) {
           // Create journal with general expense + note
@@ -1855,10 +1921,17 @@ export class FinanceService {
       { debit: 0, credit: 0 },
     );
 
+    const isBalanced = Math.abs(totals.debit - totals.credit) < 0.01;
+
     return {
       data: trialBalance,
-      totals,
-      isBalanced: Math.abs(totals.debit - totals.credit) < 0.01,
+      totals: {
+        totalDebit: totals.debit,
+        totalCredit: totals.credit,
+        isBalanced,
+        ...totals,
+      },
+      isBalanced,
     };
   }
 
@@ -1908,10 +1981,17 @@ export class FinanceService {
       },
     );
 
+    const isBalanced = Math.abs(totals.akhirDebit - totals.akhirCredit) < 0.01;
+
     return {
       data: detailedData,
-      totals,
-      isBalanced: Math.abs(totals.akhirDebit - totals.akhirCredit) < 0.01,
+      totals: {
+        totalDebit: totals.akhirDebit,
+        totalCredit: totals.akhirCredit,
+        isBalanced,
+        ...totals,
+      },
+      isBalanced,
     };
   }
 
@@ -1987,6 +2067,7 @@ export class FinanceService {
 
     return {
       date,
+      netIncome,
       assets: {
         items: assets,
         total: totalAssets,
@@ -2095,7 +2176,28 @@ export class FinanceService {
       report.otherIncome.total -
       report.otherExpenses.total;
 
-    return report;
+    const revenueTotal = report.operatingRevenue.total + report.otherIncome.total;
+    const expensesTotal = report.cogs.total + report.operatingExpenses.total + report.otherExpenses.total;
+    const netIncome = report.netProfit;
+
+    const revenue = {
+      total: revenueTotal,
+      operating: report.operatingRevenue,
+      other: report.otherIncome,
+    };
+    const expenses = {
+      total: expensesTotal,
+      cogs: report.cogs,
+      operating: report.operatingExpenses,
+      other: report.otherExpenses,
+    };
+
+    return {
+      revenue,
+      expenses,
+      netIncome,
+      ...report,
+    };
   }
 
   async getCashFlow(startDate: Date, endDate: Date) {

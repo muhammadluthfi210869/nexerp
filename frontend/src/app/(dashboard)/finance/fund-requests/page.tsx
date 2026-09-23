@@ -31,6 +31,7 @@ import {
   DnaButton,
   DnaBadge,
   DnaModal,
+  DnaDetailDrawer,
   formatRupiah,
   useDnaToast,
   DnaInput,
@@ -148,6 +149,15 @@ function FundRequestsContent() {
             <span>Poin 22-24: Pengganti Google Form & Multi-tier Approval</span>
           </div>
         }
+        tabs={[
+          { id: "ALL", label: "Semua Pengajuan" },
+          { id: "PENDING_APPROVAL", label: "Menunggu Approval" },
+          { id: "APPROVED", label: "Disetujui" },
+          { id: "DISBURSED", label: "Dicairkan" },
+          { id: "REJECTED", label: "Ditolak" }
+        ]}
+        activeTab={statusFilter}
+        onTabChange={setStatusFilter}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton variant="primary" size="md" onClick={() => setIsCreateModalOpen(true)}>
@@ -188,14 +198,17 @@ function FundRequestsContent() {
 
       {/* TABLE LIST (SCR-111) */}
       <DnaDataTableCard
-        title="Daftar Pengajuan Dana Operasional"
-        badge={<DnaBadge variant="default">{filteredRequests.length} Pengajuan</DnaBadge>}
-        customToolbar={
-          <div className="flex flex-wrap items-center gap-2">
-<DnaSelect 
+        toolbarProps={{
+          searchProps: {
+            value: searchQuery,
+            onChange: setSearchQuery,
+            placeholder: "Cari pemohon / keperluan...",
+          },
+          filterElement: (
+            <DnaSelect 
               value={departmentFilter}
               onChange={setDepartmentFilter}
-              className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
+              className="px-2.5 py-1 text-xs border border-slate-200 rounded-lg bg-white font-medium"
             >
               <option value="ALL">Semua Departemen</option>
               <option value="Produksi Manufaktur">Produksi Manufaktur</option>
@@ -203,70 +216,61 @@ function FundRequestsContent() {
               <option value="R&D Formulasi">R&D Formulasi</option>
               <option value="Business Development">Business Development</option>
             </DnaSelect>
-<DnaSelect 
-              value={statusFilter}
-              onChange={setStatusFilter}
-              className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
-            >
-              <option value="ALL">Semua Status</option>
-              <option value="PENDING_APPROVAL">Menunggu Approval</option>
-              <option value="APPROVED">Disetujui</option>
-              <option value="DISBURSED">Sudah Dicairkan</option>
-              <option value="REJECTED">Ditolak</option>
-            </DnaSelect>
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <DnaInput
-                type="text"
-                placeholder="Cari pemohon / keperluan..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-52 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-        }
+          ),
+        }}
       >
         <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left border-collapse text-xs">
+          <DnaTable className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">No. Pengajuan</th>
-                <th className="px-3.5 py-3">Pemohon</th>
-                <th className="px-3.5 py-3">Departemen</th>
-                <th className="px-3.5 py-3">Tujuan / Keperluan</th>
-                <th className="px-3.5 py-3 text-right">Amount (Rp)</th>
-                <th className="px-3.5 py-3 text-center">Level Approval</th>
-                <th className="px-3.5 py-3 text-center">Status</th>
-                <th className="px-3.5 py-3">Tgl Pengajuan</th>
-                <th className="px-3.5 py-3 text-center">#</th>
+              <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                <th className="px-4 py-2.5 w-[140px]">No. Pengajuan</th>
+                <th className="px-4 py-2.5 w-[110px]">Tgl Pengajuan</th>
+                <th className="px-4 py-2.5 w-[160px]">Pemohon</th>
+                <th className="px-4 py-2.5 w-[160px]">Departemen</th>
+                <th className="px-4 py-2.5 min-w-[200px]">Keperluan</th>
+                <th className="px-4 py-2.5 w-[140px] text-center">Tahap Gate</th>
+                <th className="px-4 py-2.5 w-[140px] text-right">Nominal (Rp)</th>
+                <th className="px-4 py-2.5 w-[130px] text-center">Status</th>
+                <th className="pr-4 py-2.5 w-[70px] text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredRequests.map((r) => (
-                <tr key={r.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 font-mono text-blue-700 font-bold">{r.requestNo}</td>
-                  <td className="px-3.5 py-2.5">
-                    <div className="font-bold text-slate-900">{r.applicant}</div>
-                    <span className="text-[10px] text-slate-500 font-medium">
-                      {r.level === "STAFF" ? "Staff" : "Head Divisi"}
-                    </span>
+                <tr
+                  key={r.id}
+                  onClick={() => setSelectedRequest(r)}
+                  className="h-[48px] hover:bg-slate-50/60 transition-colors cursor-pointer"
+                >
+                  <td className="px-4 py-2.5">
+                    <DnaCell.Code code={r.requestNo} />
                   </td>
-                  <td className="px-3.5 py-2.5 text-slate-700">{r.department}</td>
-                  <td className="px-3.5 py-2.5 text-slate-800 font-medium max-w-xs truncate">{r.purpose}</td>
-                  <td className="px-3.5 py-2.5 text-right font-extrabold text-slate-900">{formatRupiah(r.amount)}</td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+                  <td className="px-4 py-2.5">
+                    <DnaCell.Text text={r.requestDate} />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <DnaCell.Text text={r.applicant} />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <DnaCell.Text text={r.department} />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <span className="text-[12px] font-medium text-slate-800 line-clamp-1">{r.purpose}</span>
+                  </td>
+                  <td className="px-4 py-2.5 text-center">
+                    <span className="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">
                       {r.currentApprovalLevel}
                     </span>
                   </td>
-                  <td className="px-3.5 py-2.5 text-center">
+                  <td className="px-4 py-2.5 text-right">
+                    <DnaCell.Numeric value={r.amount} prefix="Rp " />
+                  </td>
+                  <td className="px-4 py-2.5 text-center">
                     <DnaBadge
-                      variant={
+                      status={
                         r.status === "DISBURSED"
                           ? "success"
                           : r.status === "APPROVED"
-                          ? "purple"
+                          ? "info"
                           : r.status === "PENDING_APPROVAL"
                           ? "warning"
                           : "critical"
@@ -275,14 +279,10 @@ function FundRequestsContent() {
                       {r.status.replace(/_/g, " ")}
                     </DnaBadge>
                   </td>
-                  <td className="px-3.5 py-2.5 text-slate-500 whitespace-nowrap">{r.requestDate}</td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <DnaButton variant="secondary" size="sm" onClick={() => setSelectedRequest(r)}>
-                        <Eye className="w-3.5 h-3.5 mr-1" />
-                        Lihat
-                      </DnaButton>
-                    </div>
+                  <td className="pr-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                    <DnaButton variant="ghost" className="h-7 w-7 p-0 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600" onClick={() => setSelectedRequest(r)} title="Lihat">
+                      <Eye className="w-3.5 h-3.5" />
+                    </DnaButton>
                   </td>
                 </tr>
               ))}
@@ -391,47 +391,143 @@ function FundRequestsContent() {
         </div>
       </DnaModal>
 
-      {/* DETAIL & APPROVAL MODAL (SCR-111) */}
-      <DnaModal
+      {/* DETAIL & APPROVAL DRAWER (QUICK PEEK) */}
+      <DnaDetailDrawer
         isOpen={!!selectedRequest}
         onClose={() => setSelectedRequest(null)}
-        title={`Detail Pengajuan Dana: ${selectedRequest?.requestNo}`}
-        size="md"
-      >
-        <div className="space-y-3.5 text-xs">
-          <div className="bg-slate-50 p-3 rounded-lg space-y-2 border border-slate-200">
-            <div className="flex justify-between">
-              <span className="text-slate-500">Pemohon / Jabatan:</span>
-              <strong className="text-slate-800">{selectedRequest?.applicant} ({selectedRequest?.level})</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Departemen:</span>
-              <strong className="text-slate-800">{selectedRequest?.department}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Tgl Pengajuan / Dibutuhkan:</span>
-              <strong className="text-slate-800">{selectedRequest?.requestDate} s/d {selectedRequest?.requiredDate}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Status Saat Ini:</span>
-              <DnaBadge variant="warning">{selectedRequest?.status}</DnaBadge>
-            </div>
-            <div className="border-t border-slate-200 pt-2">
-              <span className="text-slate-500 block mb-1 font-semibold">Keperluan:</span>
-              <p className="text-slate-800 bg-white p-2 rounded border border-slate-100 font-medium">
-                {selectedRequest?.purpose}
-              </p>
-            </div>
-            <div className="flex justify-between border-t border-slate-200 pt-2">
-              <span className="text-slate-900 font-bold">Total Nominal Diajukan:</span>
-              <strong className="text-blue-700 font-black text-sm">
-                {selectedRequest ? formatRupiah(selectedRequest.amount) : "0"}
-              </strong>
-            </div>
-          </div>
+        title={`Pengajuan Dana: ${selectedRequest?.requestNo}`}
+        subtitle={selectedRequest?.purpose}
+        badge={
+          selectedRequest && (
+            <DnaBadge
+              variant={
+                selectedRequest.status === "DISBURSED"
+                  ? "success"
+                  : selectedRequest.status === "APPROVED"
+                  ? "purple"
+                  : selectedRequest.status === "PENDING_APPROVAL"
+                  ? "warning"
+                  : "critical"
+              }
+            >
+              {selectedRequest.status.replace(/_/g, " ")}
+            </DnaBadge>
+          )
+        }
+        tabs={[
+          {
+            id: "info",
+            label: "Rincian Permintaan",
+            content: (
+              <div className="space-y-4 p-4 text-xs">
+                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                  <div>
+                    <div className="text-[11px] text-slate-500">Nomor Pengajuan</div>
+                    <div className="font-mono font-bold text-blue-700 text-sm">{selectedRequest?.requestNo}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Tanggal Diajukan</div>
+                    <div className="font-medium text-slate-800">{selectedRequest?.requestDate}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Pemohon & Jabatan</div>
+                    <div className="font-semibold text-slate-900">{selectedRequest?.applicant} ({selectedRequest?.level})</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Departemen</div>
+                    <div className="font-semibold text-slate-800">{selectedRequest?.department}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Target Tanggal Dibutuhkan</div>
+                    <div className="font-medium text-amber-700 font-semibold">{selectedRequest?.requiredDate}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Gerbang Approval Aktif</div>
+                    <div className="font-semibold text-blue-800">{selectedRequest?.currentApprovalLevel}</div>
+                  </div>
+                </div>
 
-          {/* APPROVAL ACTIONS */}
-          <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                  <div className="text-[11px] text-slate-500 font-semibold mb-1">Tujuan / Keperluan Pengeluaran:</div>
+                  <p className="text-slate-800 font-medium leading-relaxed bg-white p-2.5 rounded border border-slate-200">
+                    {selectedRequest?.purpose}
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-blue-50 rounded-lg border border-blue-200 flex justify-between items-center">
+                  <div>
+                    <div className="text-[11px] text-blue-700 font-bold uppercase">Total Nominal Diajukan</div>
+                    <div className="text-xl font-black text-blue-900">
+                      {selectedRequest ? formatRupiah(selectedRequest.amount) : "0"}
+                    </div>
+                  </div>
+                  <DnaBadge variant="info">4-TIER GOVERNANCE</DnaBadge>
+                </div>
+              </div>
+            )
+          },
+          {
+            id: "workflow",
+            label: "Jalur Persetujuan (Workflow)",
+            content: (
+              <div className="p-4 space-y-3 text-xs">
+                <div className="text-slate-500 font-medium">Matriks Approval Bertingkat Sesuai SOP Finansial:</div>
+                <div className="space-y-2.5">
+                  <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200 flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-emerald-900">1. Verifikasi Head Divisi</div>
+                      <div className="text-[11px] text-emerald-700">Validasi urgensi pengadaan operasional</div>
+                    </div>
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div className={`p-3 rounded-lg border flex items-center justify-between ${
+                    selectedRequest?.currentApprovalLevel === "ACCOUNTING" ? "bg-amber-50 border-amber-200" : "bg-emerald-50 border-emerald-200"
+                  }`}>
+                    <div>
+                      <div className="font-bold text-slate-900">2. Review Accounting & Anggaran</div>
+                      <div className="text-[11px] text-slate-600">Pengecekan budget COA dan alokasi dana</div>
+                    </div>
+                    {selectedRequest?.currentApprovalLevel === "ACCOUNTING" ? (
+                      <Clock className="w-5 h-5 text-amber-600" />
+                    ) : (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    )}
+                  </div>
+                  <div className={`p-3 rounded-lg border flex items-center justify-between ${
+                    selectedRequest?.currentApprovalLevel === "DIREKTUR" ? "bg-amber-50 border-amber-200" : "bg-slate-50 border-slate-200"
+                  }`}>
+                    <div>
+                      <div className="font-bold text-slate-900">3. Persetujuan Direktur Keuangan</div>
+                      <div className="text-[11px] text-slate-600">Sign-off otorisasi pengeluaran dana &gt; Rp 10 Juta</div>
+                    </div>
+                    {selectedRequest?.currentApprovalLevel === "DIREKTUR" ? (
+                      <Clock className="w-5 h-5 text-amber-600" />
+                    ) : selectedRequest?.status === "DISBURSED" ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    ) : (
+                      <div className="text-[10px] text-slate-400 font-mono">MENUNGGU</div>
+                    )}
+                  </div>
+                  <div className={`p-3 rounded-lg border flex items-center justify-between ${
+                    selectedRequest?.status === "DISBURSED" ? "bg-emerald-50 border-emerald-200" : "bg-slate-50 border-slate-200"
+                  }`}>
+                    <div>
+                      <div className="font-bold text-slate-900">4. Pencairan Kas Keluar (Disbursement)</div>
+                      <div className="text-[11px] text-slate-600">Posting otomatis bukti kas keluar & transfer bank</div>
+                    </div>
+                    {selectedRequest?.status === "DISBURSED" ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    ) : (
+                      <div className="text-[10px] text-slate-400 font-mono">STANDBY</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          }
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
             <DnaButton variant="secondary" size="md" onClick={() => setSelectedRequest(null)}>
               Tutup
             </DnaButton>
@@ -446,7 +542,7 @@ function FundRequestsContent() {
                       setSelectedRequest(null);
                     }}
                   >
-                    Tolak Pengajuan
+                    Tolak
                   </DnaButton>
                   <DnaButton variant="primary" size="md" onClick={() => selectedRequest && handleApprove(selectedRequest)}>
                     <CheckCircle2 className="w-4 h-4 mr-1.5" />
@@ -462,8 +558,8 @@ function FundRequestsContent() {
               )}
             </div>
           </div>
-        </div>
-      </DnaModal>
+        }
+      />
     </DnaPageContainer>
   );
 }

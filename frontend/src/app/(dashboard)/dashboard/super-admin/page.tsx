@@ -15,10 +15,10 @@ import {
   Server
 } from "lucide-react";
 import { KpiCard } from "@/components/dna/KpiCard";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/dna";
+import { Card } from "@/components/dna";
+import { Badge } from "@/components/dna";
+import { Button } from "@/components/dna";
 
 // Import Departmental Views (We will use the actual page components or variants)
 import { DashboardShell } from "@/components/layout/DashboardShell";

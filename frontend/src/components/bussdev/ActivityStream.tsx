@@ -5,10 +5,10 @@ import { api } from "@/lib/api";
 import {
   RefreshCw, ShieldAlert, Share2, Zap, CheckCircle2, Clock, AlertTriangle,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/dna";
 import { cn } from "@/lib/utils";
-import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
+import { EmptyState } from "@/components/dna";
+import { LoadingSkeleton } from "@/components/dna";
 
 interface ActivityStreamProps {
   leadId: string;

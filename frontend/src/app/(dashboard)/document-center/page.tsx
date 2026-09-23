@@ -28,7 +28,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/dna";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +36,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from "@/components/ui/dialog";
+} from "@/components/dna";
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   SALES_ORDER: "Sales Order",

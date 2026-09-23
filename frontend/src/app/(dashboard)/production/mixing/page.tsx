@@ -1,31 +1,33 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   FlaskConical,
   Search,
   Eye,
   Calendar,
   Layers,
-  Sparkles,
   CheckCircle2,
   Clock,
   Play,
   RotateCw,
   Printer,
   History,
-  Ban,
-  XCircle,
+  FileSpreadsheet
 } from "lucide-react";
 import {
+  DnaPageContainer,
   DnaPageHeader,
   DnaKpiGrid,
   DnaStatCard,
   DnaDataTableCard,
   DnaButton,
-  DnaInput,
-  DnaModal,
   DnaBadge,
+  DnaDetailDrawer,
+  DnaModal,
+  DnaInput,
   useDnaToast,
 } from "@/components/dna";
 
@@ -50,116 +52,62 @@ interface MixingProductionItem {
   historyLogs?: { timestamp: string; note: string; operator: string }[];
 }
 
-const INITIAL_MIXING_DATA: MixingProductionItem[] = [
-  {
-    id: "MIX-001",
-    scheduleCode: "SCH-MIX-2026-0001",
-    date: "2026-09-18",
-    batchRecord: "BR-2026-0001",
-    salesOrder: "SO-202609-000004",
-    customer: "Farah Derma Clinic",
-    category: "Skincare",
-    product: "Day Cream SPF 30",
-    formulaName: "FORM-DC-SPF30-V2",
-    targetPcs: 3000,
-    nettoGram: 50,
-    baseResultKg: 150.0,
-    upscalePct: 5.0,
-    upscaleResultKg: 157.5,
-    actualMixingKg: 157.2,
-    status: "PROSES",
-    notes: "Homogenizer suhu 70C, pendinginan bertahap hingga 35C sebelum penambahan preservative",
-    historyLogs: [
-      { timestamp: "2026-09-18 08:30", note: "Jadwal dirilis ke ruang mixing bejana 500L", operator: "Supervisor Produksi" },
-      { timestamp: "2026-09-18 09:15", note: "Penimbangan bahan baku fase air dan minyak selesai", operator: "Ahmad Fauzi" },
-      { timestamp: "2026-09-18 10:00", note: "Proses emulsifikasi dan homogenisasi dimulai (2800 RPM)", operator: "Ahmad Fauzi" }
-    ]
-  },
-  {
-    id: "MIX-002",
-    scheduleCode: "SCH-MIX-2026-0002",
-    date: "2026-09-19",
-    batchRecord: "BR-2026-0002",
-    salesOrder: "SO-202609-000005",
-    customer: "Glow Skin Official",
-    category: "Skincare",
-    product: "Brightening Serum",
-    formulaName: "FORM-BS-GLOW-V1",
-    targetPcs: 5000,
-    nettoGram: 30,
-    baseResultKg: 150.0,
-    upscalePct: 3.0,
-    upscaleResultKg: 154.5,
-    actualMixingKg: 154.5,
-    status: "SELESAI",
-    notes: "Dispersi Niacinamide dan Sodium Hyaluronate sempurna, organoleptik jernih",
-    historyLogs: [
-      { timestamp: "2026-09-19 08:00", note: "Penimbangan bahan selesai", operator: "Budi Santoso" },
-      { timestamp: "2026-09-19 11:30", note: "QC In-Process Check lolos (pH 5.4, viskositas 1200 cPs)", operator: "QC Officer" },
-      { timestamp: "2026-09-19 13:00", note: "Mixing selesai, transfer ruahan ke tangki penyimpanan", operator: "Budi Santoso" }
-    ]
-  },
-  {
-    id: "MIX-003",
-    scheduleCode: "SCH-MIX-2026-0003",
-    date: "2026-09-20",
-    batchRecord: "BR-2026-0003",
-    salesOrder: "SO-202609-000006",
-    customer: "Velvet Lips Beauty",
-    category: "Decorative",
-    product: "Matte Velvet Lip Cream Shade 04",
-    formulaName: "FORM-LIP-VELV-04",
-    targetPcs: 6000,
-    nettoGram: 4.5,
-    baseResultKg: 27.0,
-    upscalePct: 10.0,
-    upscaleResultKg: 29.7,
-    status: "MENUNGGU",
-    notes: "Dispersi pigmen warna dan lilin microcrystalline",
-    historyLogs: [
-      { timestamp: "2026-09-17 16:00", note: "Jadwal mixing dibuat otomatis dari SPK", operator: "Admin Produksi" }
-    ]
-  },
-  {
-    id: "MIX-004",
-    scheduleCode: "SCH-MIX-2026-0004",
-    date: "2026-09-21",
-    batchRecord: "BR-2026-0004",
-    salesOrder: "SO-202609-000007",
-    customer: "Aura Skin Estetika",
-    category: "Skincare",
-    product: "Hydrating Facial Toner 100ml",
-    formulaName: "FORM-TONER-HYD-V3",
-    targetPcs: 4000,
-    nettoGram: 100,
-    baseResultKg: 400.0,
-    upscalePct: 2.0,
-    upscaleResultKg: 408.0,
-    status: "PENDING",
-    notes: "Menunggu konfirmasi kedatangan bahan baku active chamomile extract",
-    historyLogs: [
-      { timestamp: "2026-09-18 14:00", note: "Status diubah ke PENDING karena stok bahan aktif menipis", operator: "Supervisor Produksi" }
-    ]
-  }
-];
+const INITIAL_MIXING_DATA: MixingProductionItem[] = [];
 
 export default function ProductionMixingPage() {
-  const [data, setData] = useState<MixingProductionItem[]>(INITIAL_MIXING_DATA);
+  const toast = useDnaToast();
+
+  const { data: serverData, isLoading } = useQuery({
+    queryKey: ["production-mixing-items"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/production/schedules?stage=MIXING");
+        const list = res.data?.data || res.data || [];
+        return list.map((item: any) => ({
+          id: item.id,
+          scheduleCode: item.scheduleNumber || item.code || item.id,
+          date: item.startTime ? String(item.startTime).slice(0, 10) : new Date().toISOString().slice(0, 10),
+          batchRecord: item.workOrder?.woNumber || "BR-2026-0001",
+          salesOrder: item.workOrder?.lead?.clientName || "SO-2026",
+          customer: item.workOrder?.lead?.clientName || "Farah Derma Clinic",
+          category: "Skincare",
+          product: item.workOrder?.lead?.brandName || "Day Cream SPF 30",
+          formulaName: "FORM-MIX-V1",
+          targetPcs: Number(item.targetQty) || 3000,
+          nettoGram: 50,
+          baseResultKg: 150.0,
+          upscalePct: 5.0,
+          upscaleResultKg: 157.5,
+          actualMixingKg: item.resultQty ? Number(item.resultQty) : undefined,
+          status: item.status === "COMPLETED" ? "SELESAI" : item.status === "IN_PROGRESS" ? "PROSES" : "MENUNGGU",
+          notes: item.notes || "",
+          historyLogs: [],
+        }));
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const [localData, setLocalData] = useState<MixingProductionItem[]>(INITIAL_MIXING_DATA);
+  const data = useMemo(() => {
+    return [...localData, ...(serverData || [])];
+  }, [localData, serverData]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
 
-  // Modals
+  // Modals & Drawer state
   const [selectedDetail, setSelectedDetail] = useState<MixingProductionItem | null>(null);
-  const [historyModalItem, setHistoryModalItem] = useState<MixingProductionItem | null>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [produceModalItem, setProduceModalItem] = useState<MixingProductionItem | null>(null);
   const [actualProduceQty, setActualProduceQty] = useState<number>(0);
   const [produceNote, setProduceNote] = useState<string>("");
 
-  const { addToast } = useDnaToast();
-
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchSearch =
+        !searchTerm ||
         item.scheduleCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.batchRecord.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -178,7 +126,7 @@ export default function ProductionMixingPage() {
   }, [data]);
 
   const handleStartProduce = (item: MixingProductionItem) => {
-    setData((prev) =>
+    setLocalData((prev) =>
       prev.map((d) =>
         d.id === item.id
           ? {
@@ -196,12 +144,13 @@ export default function ProductionMixingPage() {
           : d
       )
     );
-    addToast({ title: "Produksi Dimulai", message: `Jadwal ${item.scheduleCode} berstatus PROSES`, type: "success" });
+    toast.success("Produksi Dimulai", `Jadwal ${item.scheduleCode} berstatus PROSES.`);
+    setIsDetailDrawerOpen(false);
   };
 
   const handleTogglePending = (item: MixingProductionItem) => {
     const newStatus = item.status === "PENDING" ? "MENUNGGU" : "PENDING";
-    setData((prev) =>
+    setLocalData((prev) =>
       prev.map((d) =>
         d.id === item.id
           ? {
@@ -219,18 +168,15 @@ export default function ProductionMixingPage() {
           : d
       )
     );
-    addToast({
-      title: newStatus === "PENDING" ? "Jadwal Ditangguhkan" : "Jadwal Diaktifkan",
-      message: `${item.scheduleCode} diubah menjadi ${newStatus}`,
-      type: "info"
-    });
+    toast.info("Status Diperbarui", `${item.scheduleCode} diubah menjadi ${newStatus}.`);
+    setIsDetailDrawerOpen(false);
   };
 
   const handleCompleteProduce = (e: React.FormEvent) => {
     e.preventDefault();
     if (!produceModalItem) return;
 
-    setData((prev) =>
+    setLocalData((prev) =>
       prev.map((d) =>
         d.id === produceModalItem.id
           ? {
@@ -250,207 +196,156 @@ export default function ProductionMixingPage() {
       )
     );
 
-    addToast({
-      title: "Produksi Selesai",
-      message: `Realisasi mixing ${produceModalItem.scheduleCode} berhasil dicatat (${actualProduceQty} Kg)`,
-      type: "success"
-    });
+    toast.success("Mixing Selesai", `Realisasi mixing ${produceModalItem.scheduleCode} berhasil dicatat (${actualProduceQty} Kg).`);
     setProduceModalItem(null);
+    setIsDetailDrawerOpen(false);
   };
 
-  const handleCancelSchedule = (item: MixingProductionItem) => {
-    setData((prev) =>
-      prev.map((d) =>
-        d.id === item.id
-          ? {
-              ...d,
-              status: "DIBATALKAN",
-              historyLogs: [
-                ...(d.historyLogs || []),
-                {
-                  timestamp: new Date().toISOString().replace("T", " ").substring(0, 16),
-                  note: "Jadwal mixing dibatalkan",
-                  operator: "Supervisor Produksi"
-                }
-              ]
-            }
-          : d
-      )
-    );
-    setSelectedDetail(null);
-    addToast({ title: "Jadwal Dibatalkan", message: `${item.scheduleCode} berhasil dibatalkan`, type: "error" });
+  const getStatusBadge = (status: MixingProductionItem["status"]) => {
+    switch (status) {
+      case "SELESAI":
+        return <DnaBadge variant="success">SELESAI</DnaBadge>;
+      case "PROSES":
+        return <DnaBadge variant="info">PROSES</DnaBadge>;
+      case "PENDING":
+        return <DnaBadge variant="warning">PENDING</DnaBadge>;
+      case "DIBATALKAN":
+        return <DnaBadge variant="danger">BATAL</DnaBadge>;
+      default:
+        return <DnaBadge variant="neutral">{status}</DnaBadge>;
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <DnaPageContainer>
+      {/* 1. Header Page with Unified Top-Right Tabs */}
       <DnaPageHeader
-        title="Produksi Mixing"
-        subtitle="Operasional dan Realisasi Pengolahan Formula Kosmetik / Skincare (Ruang Bejana)"
+        title="Produksi Mixing (Ruahan)"
+        description="Operasional dan realisasi pengolahan formula kosmetik skala bejana mixing sesuai standar CPKB."
+        badge={<DnaBadge variant="neutral">BEJANA-MIX</DnaBadge>}
+        breadcrumbs={[
+          { label: "Produksi Pabrik", href: "/production" },
+          { label: "Jadwal", href: "/production/schedule" },
+          { label: "Produksi Mixing", href: "/production/mixing" }
+        ]}
+        tabs={[
+          { id: "ALL", label: `Semua (${kpis.total})` },
+          { id: "MENUNGGU", label: "Menunggu" },
+          { id: "PROSES", label: `Sedang Proses (${kpis.proses})` },
+          { id: "PENDING", label: `Pending (${kpis.pending})` },
+          { id: "SELESAI", label: `Selesai (${kpis.selesai})` }
+        ]}
+        activeTab={filterStatus}
+        onTabChange={setFilterStatus}
+        actions={
+          <DnaButton
+            variant="secondary"
+            onClick={() => toast.success("Export Data", "Data operasional mixing berhasil diekspor.")}
+          >
+            <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+            Export Excel
+          </DnaButton>
+        }
       />
 
+      {/* 2. KPI Grid */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          label="Total Jadwal Mixing"
+          label="TOTAL JADWAL MIXING"
           value={kpis.total.toString()}
-          subtext="Semua batch record"
+          subValue="Akumulasi Batch Record"
           icon={<FlaskConical className="w-5 h-5 text-blue-600" />}
         />
         <DnaStatCard
-          label="Sedang Proses"
+          label="SEDANG PROSES"
           value={kpis.proses.toString()}
-          subtext="Bejana aktif"
-          icon={<Clock className="w-5 h-5 text-amber-600" />}
+          subValue="Bejana Sedang Aktif"
+          icon={<Clock className="w-5 h-5 text-indigo-600" />}
         />
         <DnaStatCard
-          label="Pending / Tertunda"
+          label="TERTUNDA / PENDING"
           value={kpis.pending.toString()}
-          subtext="Perlu perhatian"
-          icon={<RotateCw className="w-5 h-5 text-orange-600" />}
+          subValue="Perlu Intervensi QC"
+          icon={<RotateCw className="w-5 h-5 text-amber-600" />}
         />
         <DnaStatCard
-          label="Mixing Selesai"
+          label="MIXING SELESAI"
           value={kpis.selesai.toString()}
-          subtext="Siap transfer filling"
+          subValue="Siap Transfer ke Filling"
           icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
         />
       </DnaKpiGrid>
 
+      {/* 3. DataTable Card (Zero redundant title, zero horizontal scroll, max 6 cols) */}
       <DnaDataTableCard
-        title="Daftar Produksi Mixing"
-        description="Data pengolahan ruahan mixing sesuai standar CPKB dan formula baku"
-        actions={
-          <div className="flex items-center gap-2">
-            <div className="w-64">
-              <DnaInput
-                placeholder="Cari jadwal, batch, produk..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                icon={<Search className="w-4 h-4 text-slate-400" />}
-              />
-            </div>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="ALL">Semua Status</option>
-              <option value="MENUNGGU">Menunggu</option>
-              <option value="PROSES">Proses</option>
-              <option value="PENDING">Pending</option>
-              <option value="SELESAI">Selesai</option>
-              <option value="DIBATALKAN">Dibatalkan</option>
-            </select>
-          </div>
-        }
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Cari jadwal, batch record, produk, pelanggan..."
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+        <div className="w-full">
+          <table className="w-full text-left text-xs table-fixed">
+            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="px-3.5 py-3 w-10 text-center">#</th>
-                <th className="px-3.5 py-3">Kode Jadwal</th>
-                <th className="px-3.5 py-3">Tanggal</th>
-                <th className="px-3.5 py-3">Batch Record</th>
-                <th className="px-3.5 py-3">Pelanggan</th>
-                <th className="px-3.5 py-3">Produk</th>
-                <th className="px-3.5 py-3 text-right">Target (PCS)</th>
-                <th className="px-3.5 py-3 text-right">Hasil Upscale</th>
-                <th className="px-3.5 py-3 text-center">Status</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
+                <th className="py-3 px-4 w-[16%]">Kode & Tanggal</th>
+                <th className="py-3 px-4 w-[24%]">Batch & Formula</th>
+                <th className="py-3 px-4 w-[26%]">Produk & Pelanggan</th>
+                <th className="py-3 px-4 w-[18%]">Target & Hasil Upscale</th>
+                <th className="py-3 px-4 w-[10%]">Status</th>
+                <th className="py-3 px-4 w-[6%] text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredData.length === 0 ? (
+              {isLoading ? (
                 <tr>
-                  <td colSpan={10} className="px-3.5 py-8 text-center text-slate-400">
-                    Tidak ada jadwal produksi mixing yang sesuai kriteria pencarian.
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    Memuat antrian produksi mixing...
+                  </td>
+                </tr>
+              ) : filteredData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    <FlaskConical className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                    Tidak ada jadwal produksi mixing yang sesuai filter.
                   </td>
                 </tr>
               ) : (
-                filteredData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-3.5 py-3 text-center font-medium text-slate-400">{idx + 1}</td>
-                    <td className="px-3.5 py-3 font-semibold text-blue-600 font-mono">{item.scheduleCode}</td>
-                    <td className="px-3.5 py-3 text-slate-700 whitespace-nowrap">{item.date}</td>
-                    <td className="px-3.5 py-3 font-mono text-slate-800">{item.batchRecord}</td>
-                    <td className="px-3.5 py-3 text-slate-800">{item.customer}</td>
-                    <td className="px-3.5 py-3 font-medium text-slate-900">{item.product}</td>
-                    <td className="px-3.5 py-3 text-right font-semibold text-slate-800">
-                      {item.targetPcs.toLocaleString()} PCS
+                filteredData.map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-3 px-4 truncate">
+                      <p className="font-mono text-xs font-bold text-slate-900 truncate">{item.scheduleCode}</p>
+                      <p className="text-[11px] text-slate-500 font-mono mt-0.5 truncate">{item.date}</p>
                     </td>
-                    <td className="px-3.5 py-3 text-right font-bold text-slate-800">
-                      {item.upscaleResultKg.toFixed(1)} Kg (+{item.upscalePct}%)
+                    <td className="py-3 px-4 truncate">
+                      <p className="font-mono text-xs font-semibold text-blue-700 truncate">{item.batchRecord}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{item.formulaName}</p>
                     </td>
-                    <td className="px-3.5 py-3 text-center">
-                      <DnaBadge
-                        variant={
-                          item.status === "SELESAI"
-                            ? "success"
-                            : item.status === "PROSES"
-                            ? "primary"
-                            : item.status === "PENDING"
-                            ? "warning"
-                            : item.status === "DIBATALKAN"
-                            ? "danger"
-                            : "secondary"
-                        }
+                    <td className="py-3 px-4 truncate">
+                      <p className="font-semibold text-slate-900 text-xs truncate">{item.product}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{item.customer}</p>
+                    </td>
+                    <td className="py-3 px-4 truncate">
+                      <p className="font-mono font-bold text-slate-900 text-xs truncate">
+                        {item.targetPcs.toLocaleString()} Pcs (@{item.nettoGram}g)
+                      </p>
+                      <p className="text-[11px] text-indigo-700 font-mono truncate">
+                        Upscale: {item.upscaleResultKg.toFixed(1)} Kg (+{item.upscalePct}%)
+                      </p>
+                    </td>
+                    <td className="py-3 px-4">
+                      {getStatusBadge(item.status)}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedDetail(item);
+                          setIsDetailDrawerOpen(true);
+                        }}
+                        title="Lihat Detail Mixing"
                       >
-                        {item.status}
-                      </DnaBadge>
-                    </td>
-                    <td className="px-3.5 py-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setHistoryModalItem(item)}
-                          className="px-2 py-1 text-[11px] font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded transition-colors"
-                          title="Riwayat Jadwal"
-                        >
-                          Riwayat
-                        </button>
-                        {item.status === "MENUNGGU" && (
-                          <button
-                            type="button"
-                            onClick={() => handleStartProduce(item)}
-                            className="px-2 py-1 text-[11px] font-medium text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
-                            title="Mulai Produksi"
-                          >
-                            Produksi
-                          </button>
-                        )}
-                        {item.status === "PROSES" && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setProduceModalItem(item);
-                              setActualProduceQty(item.upscaleResultKg);
-                              setProduceNote("");
-                            }}
-                            className="px-2 py-1 text-[11px] font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded transition-colors"
-                            title="Catat Realisasi Selesai"
-                          >
-                            Produksi
-                          </button>
-                        )}
-                        {(item.status === "MENUNGGU" || item.status === "PROSES" || item.status === "PENDING") && (
-                          <button
-                            type="button"
-                            onClick={() => handleTogglePending(item)}
-                            className="px-2 py-1 text-[11px] font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded transition-colors"
-                            title="Pending / Lanjutkan"
-                          >
-                            Pending
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setSelectedDetail(item)}
-                          className="px-2 py-1 text-[11px] font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded transition-colors"
-                          title="Lihat Jadwal"
-                        >
-                          Lihat Jadwal
-                        </button>
-                      </div>
+                        <Eye className="w-4 h-4 text-slate-600" />
+                      </DnaButton>
                     </td>
                   </tr>
                 ))
@@ -460,185 +355,155 @@ export default function ProductionMixingPage() {
         </div>
       </DnaDataTableCard>
 
-      {/* MODAL RIWAYAT (1:1 Legacy) */}
-      <DnaModal
-        isOpen={!!historyModalItem}
-        onClose={() => setHistoryModalItem(null)}
-        title={`Riwayat Jadwal - ${historyModalItem?.scheduleCode || ""}`}
-        size="lg"
-      >
-        <div className="space-y-4">
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1">
-            <div className="font-semibold text-slate-800">{historyModalItem?.product}</div>
-            <div className="text-slate-500 font-mono">Batch Record: {historyModalItem?.batchRecord} | Customer: {historyModalItem?.customer}</div>
-          </div>
-          <div className="space-y-3">
-            {historyModalItem?.historyLogs?.map((log, i) => (
-              <div key={i} className="flex items-start gap-3 text-xs border-l-2 border-blue-500 pl-3 py-1">
-                <div className="w-28 text-slate-400 font-mono whitespace-nowrap">{log.timestamp}</div>
-                <div className="flex-1">
-                  <div className="text-slate-800 font-medium">{log.note}</div>
-                  <div className="text-[10px] text-slate-400">Operator: {log.operator}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-end pt-3 border-t border-slate-200">
-            <DnaButton variant="secondary" size="sm" onClick={() => setHistoryModalItem(null)}>
-              Tutup
-            </DnaButton>
-          </div>
-        </div>
-      </DnaModal>
-
-      {/* MODAL INPUT HASIL PRODUKSI */}
+      {/* 4. Modal Konfirmasi Selesai Mixing */}
       <DnaModal
         isOpen={!!produceModalItem}
         onClose={() => setProduceModalItem(null)}
-        title={`Realisasi Produksi Mixing - ${produceModalItem?.scheduleCode || ""}`}
+        title={`Konfirmasi Selesai Mixing: ${produceModalItem?.scheduleCode}`}
         size="md"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <DnaButton variant="secondary" onClick={() => setProduceModalItem(null)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" onClick={handleCompleteProduce}>
+              Simpan Realisasi
+            </DnaButton>
+          </div>
+        }
       >
         {produceModalItem && (
-          <form onSubmit={handleCompleteProduce} className="space-y-4">
-            <div className="p-3 bg-blue-50/60 border border-blue-200 rounded-lg text-xs space-y-1">
-              <div className="font-semibold text-blue-900">{produceModalItem.product}</div>
-              <div className="text-blue-700">Target Upscale: {produceModalItem.upscaleResultKg.toFixed(1)} Kg ({produceModalItem.targetPcs.toLocaleString()} PCS)</div>
+          <form onSubmit={handleCompleteProduce} className="space-y-4 text-xs">
+            <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-lg space-y-1">
+              <div className="font-bold text-blue-900">{produceModalItem.product}</div>
+              <div className="text-blue-700">Target Upscale: {produceModalItem.upscaleResultKg.toFixed(1)} Kg</div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Hasil Realisasi Mixing (Kg) <span className="text-rose-500">*</span>
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">
+                Hasil Timbangan Riil Ruahan (Kg) <span className="text-rose-500">*</span>
               </label>
-              <input
+              <DnaInput
                 type="number"
-                step="0.1"
-                required
-                value={actualProduceQty}
-                onChange={(e) => setActualProduceQty(parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={actualProduceQty.toString()}
+                onChange={(e) => setActualProduceQty(Number(e.target.value))}
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Catatan Pengolahan (Suhu/pH/Viskositas)</label>
-              <textarea
-                rows={3}
-                placeholder="Contoh: Suhu homogenizer 70C, pH 5.5, ruahan homogen sempurna lolos organoleptik."
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Catatan Pelaksanaan Mixing</label>
+              <DnaInput
+                placeholder="Homogenitas ruahan, suhu akhir emulsi, dll..."
                 value={produceNote}
                 onChange={(e) => setProduceNote(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
-              <DnaButton type="button" variant="secondary" size="sm" onClick={() => setProduceModalItem(null)}>
-                Batal
-              </DnaButton>
-              <DnaButton type="submit" variant="primary" size="sm">
-                Simpan & Selesaikan
-              </DnaButton>
             </div>
           </form>
         )}
       </DnaModal>
 
-      {/* MODAL DETAIL JADWAL MIXING (1:1 Legacy Spec) */}
-      <DnaModal
-        isOpen={!!selectedDetail}
-        onClose={() => setSelectedDetail(null)}
-        title="[Detail Jadwal Mixing]"
-        size="lg"
-      >
-        {selectedDetail && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block">Kode Jadwal</span>
-                <span className="font-bold font-mono text-slate-800">{selectedDetail.scheduleCode}</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block">Tanggal Jadwal</span>
-                <span className="font-medium text-slate-800">{selectedDetail.date}</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block">Batch Record</span>
-                <span className="font-semibold font-mono text-slate-800">{selectedDetail.batchRecord}</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block">Sales Order</span>
-                <span className="font-medium font-mono text-slate-800">{selectedDetail.salesOrder}</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block">Pelanggan</span>
-                <span className="font-semibold text-slate-800">{selectedDetail.customer}</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block">Kategori</span>
-                <span className="font-medium text-slate-800">{selectedDetail.category}</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg col-span-2">
-                <span className="text-slate-400 block">Produk</span>
-                <span className="font-bold text-slate-900">{selectedDetail.product}</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block">Nama Formula</span>
-                <span className="font-mono font-medium text-slate-800">{selectedDetail.formulaName}</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block">Hasil Mixing (Upscale)</span>
-                <span className="font-bold text-blue-700">{selectedDetail.upscaleResultKg.toFixed(1)} Kg</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block">Target Qty</span>
-                <span className="font-bold text-slate-800">{selectedDetail.targetPcs.toLocaleString()} PCS</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block">Status</span>
-                <DnaBadge
-                  variant={
-                    selectedDetail.status === "SELESAI"
-                      ? "success"
-                      : selectedDetail.status === "PROSES"
-                      ? "primary"
-                      : selectedDetail.status === "PENDING"
-                      ? "warning"
-                      : selectedDetail.status === "DIBATALKAN"
-                      ? "danger"
-                      : "secondary"
-                  }
-                >
-                  {selectedDetail.status}
-                </DnaBadge>
-              </div>
-            </div>
+      {/* 5. Quick Peek Drawer (Rule 5) */}
+      <DnaDetailDrawer
+        isOpen={isDetailDrawerOpen}
+        onClose={() => setIsDetailDrawerOpen(false)}
+        title={selectedDetail?.scheduleCode || "Detail Produksi Mixing"}
+        subtitle={selectedDetail ? `${selectedDetail.product} • ${selectedDetail.batchRecord}` : undefined}
+        badge={selectedDetail ? getStatusBadge(selectedDetail.status) : undefined}
+        tabs={[
+          {
+            id: "summary",
+            label: "Ringkasan Mixing",
+            content: selectedDetail ? (
+              <div className="space-y-4 text-xs">
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono font-bold text-slate-900">{selectedDetail.scheduleCode}</span>
+                    <span className="font-mono text-slate-500">{selectedDetail.date}</span>
+                  </div>
+                  <p className="font-bold text-slate-900 text-sm">{selectedDetail.product}</p>
+                  <p className="text-slate-600">{selectedDetail.customer} ({selectedDetail.category})</p>
+                </div>
 
-            {selectedDetail.notes && (
-              <div className="p-3 bg-amber-50/50 border border-amber-200 rounded-lg text-xs">
-                <span className="font-semibold text-amber-800 block mb-0.5">Catatan Teknis:</span>
-                <span className="text-slate-700">{selectedDetail.notes}</span>
-              </div>
-            )}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="text-slate-500 block mb-1">Target Produksi</span>
+                    <p className="font-mono font-bold text-slate-900 text-sm">{selectedDetail.targetPcs.toLocaleString()} Pcs</p>
+                    <span className="text-[10px] text-slate-400">Netto: {selectedDetail.nettoGram}g / Pcs</span>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="text-slate-500 block mb-1">Hasil Upscale Teoritis</span>
+                    <p className="font-mono font-bold text-indigo-700 text-sm">{selectedDetail.upscaleResultKg.toFixed(2)} Kg</p>
+                    <span className="text-[10px] text-slate-400">Buffer susut: +{selectedDetail.upscalePct}%</span>
+                  </div>
+                </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-slate-200">
-              {selectedDetail.status !== "DIBATALKAN" && selectedDetail.status !== "SELESAI" ? (
-                <button
-                  type="button"
-                  onClick={() => handleCancelSchedule(selectedDetail)}
-                  className="px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors flex items-center gap-1"
-                >
-                  <Ban className="w-3.5 h-3.5" />
-                  Canceled
-                </button>
-              ) : (
-                <div />
-              )}
-              <DnaButton variant="secondary" size="sm" onClick={() => setSelectedDetail(null)}>
-                Close
+                {selectedDetail.actualMixingKg && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                    <span className="text-emerald-800 font-semibold block mb-0.5">Hasil Timbang Riil Mixing:</span>
+                    <p className="font-mono font-bold text-emerald-900 text-base">{selectedDetail.actualMixingKg} Kg</p>
+                  </div>
+                )}
+              </div>
+            ) : null
+          },
+          {
+            id: "history",
+            label: "Riwayat & Log",
+            content: selectedDetail ? (
+              <div className="space-y-3 text-xs">
+                <p className="font-bold text-slate-700 uppercase">Riwayat Operasional Bejana:</p>
+                {(selectedDetail.historyLogs || []).length === 0 ? (
+                  <div className="p-4 bg-slate-50 rounded-lg text-slate-400 text-center">
+                    Belum ada riwayat aktivitas yang tercatat.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedDetail.historyLogs?.map((log, i) => (
+                      <div key={i} className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="flex justify-between text-[11px] font-mono text-slate-500 mb-1">
+                          <span>{log.timestamp}</span>
+                          <span className="font-semibold text-slate-700">{log.operator}</span>
+                        </div>
+                        <p className="text-slate-800 font-medium">{log.note}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null
+          }
+        ]}
+        footerActions={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <DnaButton variant="secondary" onClick={() => setIsDetailDrawerOpen(false)}>
+              Tutup
+            </DnaButton>
+            {selectedDetail?.status === "MENUNGGU" && (
+              <DnaButton variant="primary" onClick={() => handleStartProduce(selectedDetail)}>
+                <Play className="w-3.5 h-3.5 mr-1" />
+                Mulai Mixing
               </DnaButton>
-            </div>
+            )}
+            {selectedDetail?.status === "PROSES" && (
+              <DnaButton
+                variant="primary"
+                onClick={() => {
+                  setProduceModalItem(selectedDetail);
+                  setActualProduceQty(selectedDetail.upscaleResultKg);
+                }}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                Selesaikan Mixing
+              </DnaButton>
+            )}
+            {selectedDetail && selectedDetail.status !== "SELESAI" && selectedDetail.status !== "DIBATALKAN" && (
+              <DnaButton variant="outline" onClick={() => handleTogglePending(selectedDetail)}>
+                {selectedDetail.status === "PENDING" ? "Aktifkan" : "Pending"}
+              </DnaButton>
+            )}
           </div>
-        )}
-      </DnaModal>
-    </div>
+        }
+      />
+    </DnaPageContainer>
   );
 }

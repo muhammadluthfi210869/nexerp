@@ -1,243 +1,340 @@
 "use client";
 
-import React, { useState, useMemo, Suspense } from "react";
-import {
-  FlaskConical,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  TrendingUp,
-  FileSpreadsheet,
-  Search,
-  Filter,
-  ArrowUpRight,
-  Layers,
-  Palette,
-  FileText,
-  DollarSign
+import React from "react";
+import { DashboardShell } from "@/components/layout/DashboardShell";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { 
+  FlaskConical, 
+  Clock, 
+  CheckCircle2, 
+  AlertTriangle, 
+  TrendingUp, 
+  Activity, 
+  Layers, 
+  Sparkles,
+  ArrowRight
 } from "lucide-react";
-import {
-  DnaPageContainer,
-  DnaPageHeader,
-  DnaKpiGrid,
-  DnaStatCard,
-  DnaDataTableCard,
-  DnaButton,
-  DnaBadge,
-  useDnaToast
-} from "@/components/dna";
-import Link from "next/link";
 
-interface FormulatorWorkload {
-  id: string;
-  name: string;
-  specialty: string;
-  sampleMasuk: number;
-  sampleDisetujui: number;
-  approvalRate: number;
-}
-
-const INITIAL_FORMULATORS: FormulatorWorkload[] = [
-  {
-    id: "f-1",
-    name: "Apt. Dedi Kurniawan, S.Farm",
-    specialty: "Serum & Active Treatments",
-    sampleMasuk: 6,
-    sampleDisetujui: 4,
-    approvalRate: 66.7
-  },
-  {
-    id: "f-2",
-    name: "Dr. Maya Sp.KK",
-    specialty: "Barrier Repair & Creams",
-    sampleMasuk: 4,
-    sampleDisetujui: 3,
-    approvalRate: 75.0
-  },
-  {
-    id: "f-3",
-    name: "Aisyah Putri, S.Si",
-    specialty: "Bodycare & Cleansers",
-    sampleMasuk: 3,
-    sampleDisetujui: 2,
-    approvalRate: 66.7
-  },
-  {
-    id: "f-4",
-    name: "Budi Prakoso, S.Farm",
-    specialty: "Lip & Decorative Cosmetics",
-    sampleMasuk: 1,
-    sampleDisetujui: 1,
-    approvalRate: 100.0
-  }
-];
-
-function RndDashboardContent() {
-  const [formulators] = useState<FormulatorWorkload[]>(INITIAL_FORMULATORS);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [periodFilter, setPeriodFilter] = useState("THIS_MONTH");
-  const toast = useDnaToast();
-
-  const filteredFormulators = useMemo(() => {
-    return formulators.filter((f) =>
-      f.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [formulators, searchQuery]);
+const PipelineFlow: React.FC<{ stage: string }> = ({ stage }) => {
+  const steps = ["NOT START", "REV 1", "REV 2", "EXTRA", "DEAL"];
+  const stageMap: Record<string, number> = {
+    REQUEST: 0,
+    DEVELOPMENT: 1,
+    TESTING: 2,
+    REVISION: 3,
+    SAMPLE: 3,
+    APPROVED: 4,
+  };
+  const current = stageMap[stage] ?? 0;
 
   return (
-    <DnaPageContainer>
-      {/* 1. Header Page */}
-      <DnaPageHeader
-        title="Dasbor R&D & Formulasi"
-        description="Monitoring beban kerja formulator lab, approval rate sampel maklon, dan throughput formulasi (G-SERP Parity)."
-        breadcrumbs={[
-          { label: "Operasional", href: "/dashboard-rnd" },
-          { label: "Dasbor R&D", href: "/dashboard-rnd" }
-        ]}
-        actions={
-          <div className="flex items-center gap-2">
-            <Link href="/formulation">
-              <DnaButton variant="secondary">
-                <Layers className="w-4 h-4 mr-1.5" />
-                Kelola Formula
-              </DnaButton>
-            </Link>
-            <Link href="/design-manage">
-              <DnaButton variant="secondary">
-                <Palette className="w-4 h-4 mr-1.5" />
-                Desain Kemasan
-              </DnaButton>
-            </Link>
-            <Link href="/batch-record">
-              <DnaButton variant="primary">
-                <FileText className="w-4 h-4 mr-1.5" />
-                Batch Record
-              </DnaButton>
-            </Link>
-          </div>
-        }
-      />
-
-      {/* 2. 7 KPI Cards (1:1 G-SERP Row 22) */}
-      <DnaKpiGrid cols={4}>
-        <DnaStatCard
-          label="TOTAL BARANG / FORMULA"
-          value="6.116 Item"
-          subValue="INCI & Master Formula"
-          icon={<FlaskConical className="w-5 h-5 text-blue-600" />}
-        />
-        <DnaStatCard
-          label="PERMINTAAN SAMPLE (PENDING)"
-          value="0 Permintaan"
-          subValue="Antrian Uji Formulasi"
-          icon={<Clock className="w-5 h-5 text-amber-600" />}
-        />
-        <DnaStatCard
-          label="SAMPLE DIPROSES (APPROVED)"
-          value="261 Sample"
-          subValue="Dalam Trial Lab"
-          icon={<TrendingUp className="w-5 h-5 text-indigo-600" />}
-        />
-        <DnaStatCard
-          label="SAMPLE SELESAI"
-          value="474 Sample"
-          subValue="Terkirim ke Klien"
-          icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
-        />
-      </DnaKpiGrid>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sampel Masuk Bulan Ini</p>
-            <p className="text-xl font-bold text-slate-800 mt-1">14 Sample</p>
-          </div>
-          <span className="p-2.5 rounded-xl bg-blue-50 text-blue-600">
-            <FlaskConical className="w-5 h-5" />
-          </span>
+    <div style={{ display: "flex", gap: "3px", justifyContent: "center", alignItems: "center" }}>
+      {steps.map((step, i) => (
+        <div key={step} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+          <div
+            style={{
+              width: "32px",
+              height: "6px",
+              borderRadius: "3px",
+              background: i <= current ? (i === current ? "#2563EB" : "#93C5FD") : "#F1F5F9",
+              border: i === current ? "1px solid #1D4ED8" : "none",
+            }}
+          />
+          <span style={{ fontSize: "7px", fontWeight: 950, color: i === current ? "#1E293B" : "#94A3B8" }}>{step}</span>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Disetujui Klien (Done)</p>
-            <p className="text-xl font-bold text-emerald-600 mt-1">10 Sample</p>
+      ))}
+    </div>
+  );
+};
+
+export default function RndDashboardPage() {
+  const { data: metrics } = useQuery({
+    queryKey: ["rnd-dashboard-metrics"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/rnd/stats");
+        return res.data;
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 30000,
+  });
+
+  const pipelineRows = [
+    { id: "RD-24-041", brand: "DERMA GLOW", prod: "Brightening Serum V3", bd: "Andi P.", pic: "Dr. Sarah", stage: "DEVELOPMENT", days: "2 Days", total: "2 Days", rev: "0", first: true, status: "ONGOING", onTime: true, delay: 0 },
+    { id: "RD-24-038", brand: "PURE SKIN", prod: "Moisturizer Gel", bd: "Citra K.", pic: "Irfan J.", stage: "TESTING", days: "12 Days", total: "12 Days", rev: "2", first: false, status: "ONGOING", onTime: false, delay: 4 },
+    { id: "RD-24-035", brand: "AUREON BEAUTY", prod: "Sunscreen SPF 50", bd: "Andi P.", pic: "Dr. Sarah", stage: "APPROVED", days: "-", total: "10 Days", rev: "1", first: false, status: "APPROVED", onTime: true, delay: 0 },
+    { id: "RD-24-032", brand: "ZEN LABS", prod: "Acne Toner", bd: "Budi S.", pic: "Maya T.", stage: "REVISION", days: "22 Days", total: "22 Days", rev: "3", first: false, status: "ONGOING", onTime: false, delay: 12 },
+  ];
+
+  const staffRows = [
+    { name: "Dr. Sarah", comp: "12 / 10", speed: "3.5d", ot: "92%", first: "85%", util: "95%" },
+    { name: "Irfan J.", comp: "8 / 6", speed: "5.2d", ot: "75%", first: "68%", util: "88%" },
+    { name: "Maya T.", comp: "10 / 9", speed: "4.1d", ot: "88%", first: "75%", util: "92%" },
+  ];
+
+  const rejectRows = [
+    { prod: "Aqua Serum", stage: "TESTING", reason: "Instability", pic: "Irfan" },
+    { prod: "Cleanser Gel", stage: "APPROVAL", reason: "Color Change", pic: "Maya" },
+    { prod: "Lip Balm V2", stage: "DEVELOPMENT", reason: "Odor Issue", pic: "Irfan" },
+  ];
+
+  return (
+    <DashboardShell
+      title="DIVISI R&D"
+      titleAccent="(Product Innovation Lab)"
+      subtitle="Pusat Kendali Formula, Sampel & Flow Velocity"
+    >
+      {/* 🚀 OVERVIEW GRID: R&D VITALITY */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem", marginBottom: "3rem" }}>
+        
+        {/* 🔴 A. TIMELINESS */}
+        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+            <div style={{ width: "8px", height: "8px", background: "#EF4444", borderRadius: "50%" }} />
+            <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>🔴 A. TIMELINESS</p>
           </div>
-          <span className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
-            <CheckCircle2 className="w-5 h-5" />
-          </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ background: "#F8FAFC", padding: "12px", borderRadius: "16px" }}>
+              <p style={{ fontSize: "9px", fontWeight: 900, color: "#64748B", margin: 0 }}>ON-TIME SAMPLE RATE</p>
+              <p style={{ fontSize: "20px", fontWeight: 950, color: "#10B981", margin: "4px 0" }}>85.4%</p>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
+              <div>
+                <p style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", margin: 0 }}>AVG CYCLE</p>
+                <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>4.2 <span style={{ fontSize: "9px" }}>DAYS</span></p>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", margin: 0 }}>OVERDUE</p>
+                <p style={{ fontSize: "14px", fontWeight: 950, color: "#EF4444", margin: 0 }}>3 <span style={{ fontSize: "9px" }}>SAMPLES</span></p>
+              </div>
+            </div>
+          </div>
+          <p style={{ fontSize: "9px", fontWeight: 800, color: "#94A3B8", marginTop: "1rem", borderTop: "1px solid #F1F5F9", paddingTop: "8px", marginBottom: 0 }}>
+            Insight: <span style={{ color: "#1E293B" }}>Cepat atau lambat?</span>
+          </p>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Approval Rate Formulasi</p>
-            <p className="text-xl font-bold text-purple-600 mt-1">71.4%</p>
+
+        {/* 🟠 B. ACCURACY */}
+        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+            <div style={{ width: "8px", height: "8px", background: "#F59E0B", borderRadius: "50%" }} />
+            <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>🟠 B. ACCURACY</p>
           </div>
-          <span className="p-2.5 rounded-xl bg-purple-50 text-purple-600">
-            <TrendingUp className="w-5 h-5" />
-          </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ background: "#F8FAFC", padding: "12px", borderRadius: "16px" }}>
+              <p style={{ fontSize: "9px", fontWeight: 900, color: "#64748B", margin: 0 }}>FIRST-TIME APPROVAL</p>
+              <p style={{ fontSize: "20px", fontWeight: 950, color: "#2563EB", margin: "4px 0" }}>72.1%</p>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
+              <div>
+                <p style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", margin: 0 }}>AVG REVISION</p>
+                <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>1.4 <span style={{ fontSize: "9px" }}>X</span></p>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", margin: 0 }}>FAILED</p>
+                <p style={{ fontSize: "14px", fontWeight: 950, color: "#EF4444", margin: 0 }}>5 <span style={{ fontSize: "9px" }}>ITEMS</span></p>
+              </div>
+            </div>
+          </div>
+          <p style={{ fontSize: "9px", fontWeight: 800, color: "#94A3B8", marginTop: "1rem", borderTop: "1px solid #F1F5F9", paddingTop: "8px", marginBottom: 0 }}>
+            Insight: <span style={{ color: "#1E293B" }}>Banyak revisi atau tidak?</span>
+          </p>
+        </div>
+
+        {/* 🟡 C. APPROVAL PERFORMANCE */}
+        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+            <div style={{ width: "8px", height: "8px", background: "#EAB308", borderRadius: "50%" }} />
+            <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>🟡 C. APPROVAL PERFORMANCE</p>
+          </div>
+          <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+            <p style={{ fontSize: "28px", fontWeight: 950, color: "#1E293B", margin: 0 }}>84.4%</p>
+            <p style={{ fontSize: "9px", fontWeight: 850, color: "#64748B", margin: 0 }}>OVERALL APPROVAL RATE</p>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", background: "#FFFBEB", padding: "10px", borderRadius: "12px" }}>
+            <div style={{ textAlign: "center", flex: 1 }}>
+              <p style={{ fontSize: "8px", fontWeight: 800, color: "#B45309", margin: 0 }}>SUBMITTED</p>
+              <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>45</p>
+            </div>
+            <div style={{ width: "1px", background: "#FEF3C7" }} />
+            <div style={{ textAlign: "center", flex: 1 }}>
+              <p style={{ fontSize: "8px", fontWeight: 800, color: "#B45309", margin: 0 }}>APPROVED</p>
+              <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>38</p>
+            </div>
+          </div>
+          <p style={{ fontSize: "9px", fontWeight: 800, color: "#94A3B8", marginTop: "1rem", borderTop: "1px solid #F1F5F9", paddingTop: "8px", marginBottom: 0 }}>
+            Insight: <span style={{ color: "#1E293B" }}>Diterima market atau tidak?</span>
+          </p>
+        </div>
+
+        {/* 🔵 D. R&D PERFORMANCE */}
+        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+            <div style={{ width: "8px", height: "8px", background: "#3B82F6", borderRadius: "50%" }} />
+            <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>🔵 D. R&D PERFORMANCE</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <div style={{ background: "#EFF6FF", padding: "10px", borderRadius: "12px" }}>
+              <p style={{ fontSize: "8px", fontWeight: 800, color: "#1D4ED8", margin: 0 }}>ACTIVE PJKT</p>
+              <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>12</p>
+            </div>
+            <div style={{ background: "#F0FDF4", padding: "10px", borderRadius: "12px" }}>
+              <p style={{ fontSize: "8px", fontWeight: 800, color: "#166534", margin: 0 }}>COMPLETED</p>
+              <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>28</p>
+            </div>
+          </div>
+          <div style={{ marginTop: "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+              <span style={{ fontSize: "9px", fontWeight: 850, color: "#64748B" }}>UTILIZATION RATE</span>
+              <span style={{ fontSize: "10px", fontWeight: 950, color: "#1E293B" }}>92%</span>
+            </div>
+            <div style={{ height: "6px", background: "#F1F5F9", borderRadius: "3px", overflow: "hidden" }}>
+              <div style={{ width: "92%", height: "100%", background: "#3B82F6" }} />
+            </div>
+          </div>
+          <p style={{ fontSize: "9px", fontWeight: 800, color: "#94A3B8", marginTop: "1rem", borderTop: "1px solid #F1F5F9", paddingTop: "8px", marginBottom: 0 }}>
+            Insight: <span style={{ color: "#1E293B" }}>Tim produktif atau tidak?</span>
+          </p>
+        </div>
+
+      </div>
+
+      {/* 🔴 1. RND PIPELINE TABLE */}
+      <div style={{ marginBottom: "3.5rem" }}>
+        <h3 style={{ margin: "0 0 1.25rem 0", fontSize: "12px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>🔴 1. R&D PIPELINE MASTER (FLOW VELOCITY)</h3>
+        <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", minWidth: "1200px", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>RND ID / BRAND</th>
+                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>PRODUCT NAME</th>
+                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>TEAM (BD / PIC)</th>
+                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>CURRENT STAGE</th>
+                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>TIME AUDIT</th>
+                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>QUALITY (REV)</th>
+                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>STATUS</th>
+                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>TIMELINESS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pipelineRows.map((row, i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid #F1F5F9", background: !row.onTime ? "#FFF1F2" : "transparent" }}>
+                    <td style={{ padding: "1.25rem 1.5rem" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 900, color: "#64748B" }}>#{row.id}</div>
+                      <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.brand}</div>
+                    </td>
+                    <td style={{ padding: "1.25rem 1.5rem", fontSize: "13px", fontWeight: 900, color: "#1E293B" }}>{row.prod}</td>
+                    <td style={{ padding: "1.25rem 1.5rem" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 800, color: "#1E293B" }}>{row.pic}</div>
+                      <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748B" }}>BD: {row.bd}</div>
+                    </td>
+                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                      <PipelineFlow stage={row.stage} />
+                    </td>
+                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 900, color: "#1E293B" }}>In Stage: {row.days}</div>
+                      <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748B" }}>Total: {row.total}</div>
+                    </td>
+                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                      <div style={{ fontSize: "14px", fontWeight: 950, color: row.rev === "0" ? "#10B981" : "#F59E0B" }}>{row.rev} <span style={{ fontSize: "9px" }}>X</span></div>
+                      {row.first && <div style={{ fontSize: "8px", fontWeight: 900, color: "#10B981" }}>FIRST-TIME</div>}
+                    </td>
+                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                      <span style={{ 
+                        background: row.status === "APPROVED" ? "#10B981" : (row.status === "REJECTED" ? "#EF4444" : "#64748B"),
+                        color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950
+                      }}>{row.status}</span>
+                    </td>
+                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                      {row.onTime ? (
+                        <span style={{ color: "#10B981", fontWeight: 950, fontSize: "10px" }}>ON-TIME</span>
+                      ) : (
+                        <div style={{ color: "#E11D48" }}>
+                          <span style={{ fontWeight: 950, fontSize: "10px" }}>DELAY</span>
+                          <div style={{ fontSize: "9px", fontWeight: 800 }}>+{row.delay} DAYS</div>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      {/* 3. Filter & Formulator Table (1:1 G-SERP Exact 3 Columns) */}
-      <DnaDataTableCard
-        title="Distribusi Beban Kerja Formulator Lab"
-        description="Pelacakan jumlah sampel masuk dan persetujuan deal formula per person in charge (PIC)."
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari nama formulator..."
-        actions={
-          <div className="flex items-center gap-2">
-            <select
-              value={periodFilter}
-              onChange={(e) => setPeriodFilter(e.target.value)}
-              className="text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 font-bold text-slate-700 focus:outline-none"
-            >
-              <option value="THIS_MONTH">Periode: Bulan Ini</option>
-              <option value="LAST_MONTH">Periode: Bulan Lalu</option>
-              <option value="YTD">Periode: Year-to-Date</option>
-            </select>
-          </div>
-        }
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200 font-bold text-slate-600 uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-4">Nama Formulator</th>
-                <th className="py-3 px-4 text-center">Sampel Masuk</th>
-                <th className="py-3 px-4 text-center">Disetujui</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredFormulators.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="py-8 text-center text-slate-400">
-                    Tidak ada data formulator.
-                  </td>
+      {/* 🟠 2 & 🟡 3. RND EVALUATION & REJECT LOG */}
+      <div style={{ display: "grid", gridTemplateColumns: "7fr 3fr", gap: "2rem" }}>
+        
+        {/* 🟠 2. RND PERFORMANCE TABLE */}
+        <div>
+          <h3 style={{ margin: "0 0 1.25rem 0", fontSize: "12px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>🟠 2. R&D PERFORMANCE EVALUATION (PER PERSON)</h3>
+          <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>PIC NAME / PERIOD</th>
+                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>OUTPUT (COMP/APP)</th>
+                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>EFFICIENCY</th>
+                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>QUALITY</th>
+                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "right", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>UTILIZATION</th>
                 </tr>
-              ) : (
-                filteredFormulators.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-slate-900">{row.name}</td>
-                    <td className="py-3.5 px-4 text-center font-bold text-slate-700">{row.sampleMasuk}</td>
-                    <td className="py-3.5 px-4 text-center font-bold text-emerald-600">
-                      <span className="bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                        {row.sampleDisetujui}
-                      </span>
+              </thead>
+              <tbody>
+                {staffRows.map((row, i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                    <td style={{ padding: "1.25rem 1.5rem", fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.name}</td>
+                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{row.comp}</td>
+                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 800, color: "#10B981" }}>{row.ot} OT</div>
+                      <div style={{ fontSize: "9px", color: "#64748B" }}>Avg: {row.speed}</div>
+                    </td>
+                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 950, color: "#2563EB" }}>{row.first}</div>
+                      <div style={{ fontSize: "8px", color: "#64748B" }}>FIRST-TIME</div>
+                    </td>
+                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "right", fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.util}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* 🟡 3. RND FAILURE / REJECT TABLE */}
+        <div>
+          <h3 style={{ margin: "0 0 1.25rem 0", fontSize: "12px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>🟡 3. FAILURE / REJECT LOG</h3>
+          <div style={{ background: "#FFF1F2", borderRadius: "32px", border: "1px solid #FECDD3", overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "#FFF1F2", borderBottom: "1px solid #FECDD3" }}>
+                  <th style={{ padding: "1rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#9F1239" }}>PRODUCT / STAGE</th>
+                  <th style={{ padding: "1rem", textAlign: "right", fontSize: "10px", fontWeight: 950, color: "#9F1239" }}>REASON</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rejectRows.map((row, i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid rgba(225, 29, 72, 0.1)" }}>
+                    <td style={{ padding: "1rem" }}>
+                      <p style={{ margin: 0, fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.prod}</p>
+                      <p style={{ margin: 0, fontSize: "8px", fontWeight: 700, color: "#64748B" }}>STAGE: {row.stage}</p>
+                    </td>
+                    <td style={{ padding: "1rem", textAlign: "right" }}>
+                      <p style={{ margin: 0, fontSize: "10px", fontWeight: 900, color: "#E11D48" }}>{row.reason}</p>
+                      <p style={{ margin: 0, fontSize: "8px", fontWeight: 700, color: "#94A3B8" }}>PIC: {row.pic}</p>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </DnaDataTableCard>
-    </DnaPageContainer>
-  );
-}
 
-export default function RndDashboardPage() {
-  return (
-    <Suspense fallback={<div className="p-8 text-slate-400">Memuat Dasbor R&D...</div>}>
-      <RndDashboardContent />
-    </Suspense>
+      </div>
+    </DashboardShell>
   );
 }

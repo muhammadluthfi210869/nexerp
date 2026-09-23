@@ -8,15 +8,15 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
+} from "@/components/dna";
 import { 
   Dialog,
   DialogContent,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/components/dna";
+import { Button } from "@/components/dna";
+import { Input } from "@/components/dna";
+import { Label } from "@/components/dna";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";

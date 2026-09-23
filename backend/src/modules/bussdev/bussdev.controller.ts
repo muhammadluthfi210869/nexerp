@@ -24,25 +24,49 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 
 import { BussdevService } from './bussdev.service';
+import { LeadService, P07ActorContext } from './services/lead.service';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { AdvanceLeadDto } from './dto/advance-lead.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { UserRole, SOStatus } from '@prisma/client';
+import { UserRole, SOStatus, WorkflowStatus } from '@prisma/client';
+import { randomUUID } from 'crypto';
 
 @ApiTags('bussdev')
 @ApiBearerAuth()
 @Controller('bussdev')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class BussdevController {
-  constructor(private readonly bussdevService: BussdevService) {}
+  constructor(
+    private readonly bussdevService: BussdevService,
+    private readonly leadService: LeadService,
+  ) {}
+
+  // P07: the ONLY source of the trusted actor context. Tenant, roles,
+  // correlation and idempotency all come from the verified request, never
+  // from the request payload/query.
+  private trustedActor(req: any): P07ActorContext {
+    const user = req?.user ?? {};
+    const header = (name: string): string | undefined => {
+      const raw = req?.headers?.[name];
+      const value = Array.isArray(raw) ? raw[0] : raw;
+      return typeof value === 'string' && value.length > 0 ? value : undefined;
+    };
+    return {
+      userId: user.id,
+      organizationId: user.organizationId || user.tenantId,
+      roles: Array.isArray(user.roles) ? user.roles : [],
+      correlationId: req?.correlationId || randomUUID(),
+      idempotencyKey: header('idempotency-key') || header('x-idempotency-key'),
+    };
+  }
 
   @Post('lead')
   @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: 'Create a new business lead' })
-  createLead(@Body() dto: CreateLeadDto) {
-    return this.bussdevService.createLead(dto);
+  createLead(@Req() req: any, @Body() dto: CreateLeadDto) {
+    return this.leadService.createLead(dto, this.trustedActor(req));
   }
 
   @Patch('lead/:id/advance')
@@ -71,24 +95,41 @@ export class BussdevController {
     ),
   )
   @ApiOperation({ summary: 'Advance a lead to the next stage' })
-  advanceLead(
-    @Param('id') id: string,
-    @Body() dto: AdvanceLeadDto,
-    @UploadedFiles()
-    files: {
-      paymentProof?: Express.Multer.File[];
-      spkFile?: Express.Multer.File[];
-      pnfFile?: Express.Multer.File[];
-      quotationFile?: Express.Multer.File[];
-    },
-  ) {
-    return this.bussdevService.advanceLeadStage(id, dto, files);
+  advanceLead(@Param('id') id: string, @Body() dto: AdvanceLeadDto, @Req() req: any) {
+    // The governed path owns tenant scope, consent, idempotency and the atomic
+    // audit + outbox effects. The legacy `advanceLeadStage` is not tenant-aware.
+    return this.leadService.advanceLeadStageGoverned(
+      id,
+      dto,
+      this.trustedActor(req),
+    );
   }
 
   @Get('dashboard')
   @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
-  getDashboard() {
-    return this.bussdevService.getPageAnalytics('dashboard');
+  @ApiOperation({ summary: 'Tenant-scoped sales dashboard' })
+  getDashboard(
+    @Req() req: any,
+    @Query()
+    query: {
+      dateFrom?: string;
+      dateTo?: string;
+      owner?: string;
+      source?: string;
+      stage?: string;
+      sla?: string;
+    },
+  ) {
+    const actor = this.trustedActor(req);
+    return this.leadService.getLeadDashboardScoped({
+      organizationId: actor.organizationId,
+      dateFrom: query?.dateFrom,
+      dateTo: query?.dateTo,
+      ownerId: query?.owner,
+      source: query?.source,
+      stage: query?.stage as WorkflowStatus | undefined,
+      sla: query?.sla as any,
+    });
   }
 
   // --- STATIS ANALYTICS ROUTES (MUST BE ABOVE :group) ---
@@ -134,23 +175,27 @@ export class BussdevController {
   @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: 'Get all leads' })
   getLeads(@Req() req: any, @Query('mine') mine?: string) {
-    return this.bussdevService.getLeads(
-      mine === 'true' ? req.user.id : undefined,
-    );
+    const actor = this.trustedActor(req);
+    return this.leadService.listLeadsScoped(actor, {
+      bdId: mine === 'true' ? actor.userId : undefined,
+    });
   }
 
   @Get('leads/stuck')
   @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
-  getStuckLeads() {
-    return this.bussdevService.getStuckLeads();
+  getStuckLeads(@Req() req: any) {
+    return this.bussdevService.getStuckLeads(
+      this.trustedActor(req).organizationId,
+    );
   }
 
   @Get('leads/group/:group')
   @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
-  getLeadsByGroup(
-    @Param('group') group: 'guest' | 'sample' | 'production' | 'ro' | 'lost',
-  ) {
-    return this.bussdevService.getLeadsByGroup(group);
+  getLeadsByGroup(@Req() req: any, @Param('group') group: string) {
+    return this.bussdevService.getLeadsByGroup(
+      group as 'guest' | 'sample' | 'production' | 'ro' | 'lost',
+      this.trustedActor(req).organizationId,
+    );
   }
 
   @Get('staffs')
@@ -272,15 +317,15 @@ export class BussdevController {
     UserRole.FINANCE,
   )
   @ApiOperation({ summary: 'Get single lead detail' })
-  getLead(@Param('id') id: string) {
-    return this.bussdevService.getLeadById(id);
+  getLead(@Req() req: any, @Param('id') id: string) {
+    return this.leadService.getLeadByIdScoped(id, this.trustedActor(req));
   }
 
   @Put('lead/:id')
   @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Update a lead' })
-  updateLead(@Param('id') id: string, @Body() dto: any) {
-    return this.bussdevService.updateLead(id, dto);
+  @ApiOperation({ summary: 'Update (or reassign) a lead' })
+  updateLead(@Req() req: any, @Param('id') id: string, @Body() dto: any) {
+    return this.leadService.updateLeadScoped(id, dto, this.trustedActor(req));
   }
 
   @Delete('lead/:id')

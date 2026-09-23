@@ -33,7 +33,7 @@ import {
   DnaBadge,
   useDnaToast
 } from "@/components/dna";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/dna";
 
 interface PackagingDesign {
   id: string;

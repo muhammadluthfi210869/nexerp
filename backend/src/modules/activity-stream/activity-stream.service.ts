@@ -7,6 +7,10 @@ export class ActivityStreamService {
   constructor(private prisma: PrismaService) {}
 
   async createLog(event: ActivityLoggedEvent) {
+    if (!event.leadId) {
+      return null;
+    }
+
     const deadlineAt = event.expectedDuration
       ? new Date(Date.now() + event.expectedDuration * 60 * 1000)
       : null;
@@ -15,7 +19,7 @@ export class ActivityStreamService {
       data: {
         leadId: event.leadId,
         senderDivision: event.senderDivision,
-        eventType: event.eventType,
+        eventType: (event.eventType || 'STATE_CHANGE') as any,
         notes: event.notes,
         payload: event.payload,
         loggedBy: event.loggedBy,

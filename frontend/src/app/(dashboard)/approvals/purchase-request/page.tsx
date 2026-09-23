@@ -169,7 +169,7 @@ export default function PurchaseRequestApprovalPage() {
       header: "No. PR",
       accessor: "code",
       sortable: true,
-      render: (item) => <DnaCell.code>{item.code}</DnaCell.code>,
+      render: (item) => <DnaCell.Code value={item.code} />,
     },
     {
       header: "Departemen",
@@ -217,11 +217,7 @@ export default function PurchaseRequestApprovalPage() {
       accessor: "estimatedTotal",
       align: "right",
       sortable: true,
-      render: (item) => (
-        <span className="font-mono font-bold text-slate-900">
-          {formatRupiah(item.estimatedTotal)}
-        </span>
-      ),
+      render: (item) => <DnaCell.Currency value={item.estimatedTotal} />,
     },
     {
       header: "Status",

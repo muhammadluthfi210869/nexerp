@@ -122,17 +122,14 @@ export default function SalesReturnApprovalPage() {
       header: "No. Retur",
       accessor: "code",
       sortable: true,
-      render: (item) => <DnaCell.code>{item.code}</DnaCell.code>,
+      render: (item) => <DnaCell.Code value={item.code} />,
     },
     {
       header: "Ref Invoice & Klien",
       accessor: "customer",
       sortable: true,
       render: (item) => (
-        <div>
-          <p className="font-semibold text-slate-800">{item.customer}</p>
-          <p className="text-[11px] text-blue-600 font-mono font-medium">Ref: {item.refInvoice}</p>
-        </div>
+        <DnaCell.Text primary={item.customer} secondary={`Ref: ${item.refInvoice}`} />
       ),
     },
     {
@@ -146,10 +143,7 @@ export default function SalesReturnApprovalPage() {
       header: "Petugas & Tanggal",
       accessor: "requesterName",
       render: (item) => (
-        <div>
-          <p className="font-medium text-slate-700">{item.requesterName}</p>
-          <p className="text-[11px] text-slate-500">Tgl: {item.date}</p>
-        </div>
+        <DnaCell.Text primary={item.requesterName} secondary={`Tgl: ${item.date}`} />
       ),
     },
     {
@@ -157,11 +151,7 @@ export default function SalesReturnApprovalPage() {
       accessor: "totalAmount",
       align: "right",
       sortable: true,
-      render: (item) => (
-        <span className="font-mono font-bold text-slate-900">
-          {formatRupiah(item.totalAmount)}
-        </span>
-      ),
+      render: (item) => <DnaCell.Currency value={item.totalAmount} />,
     },
     {
       header: "Status",

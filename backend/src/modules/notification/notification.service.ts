@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
+import { ResourceNotFoundException } from '../../common/exceptions/api-exception';
 
 export interface NotificationMessage {
   title: string;
@@ -15,11 +16,42 @@ export interface NotificationMessage {
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+  ) {}
+
+  private readonly preferencesMap = new Map<string, any>();
 
   // --- IN-APP NOTIFICATION (DB) ---
 
   async sendInApp(userId: string, message: NotificationMessage): Promise<void> {
+    // BUS-RULE-092: 1-hour notification deduplication / aggregation
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    if (message.referenceId) {
+      const existing = await this.prisma.notification.findFirst({
+        where: {
+          userId,
+          type: message.type,
+          referenceId: message.referenceId,
+          createdAt: { gte: oneHourAgo },
+        },
+      });
+
+      if (existing) {
+        await this.prisma.notification.update({
+          where: { id: existing.id },
+          data: {
+            title: message.title,
+            body: `${message.body} (agregat)`,
+            createdAt: new Date(),
+          },
+        });
+        this.logger.log(`[IN-APP DEDUP] Aggregated notification for User ${userId}: ${message.title}`);
+        return;
+      }
+    }
+
     await this.prisma.notification.create({
       data: {
         userId,
@@ -296,7 +328,13 @@ export class NotificationService {
     });
   }
 
-  async markAsRead(notificationId: string) {
+  async markAsRead(notificationId: string, userId?: string) {
+    if (userId) {
+      return this.prisma.notification.updateMany({
+        where: { id: notificationId, userId },
+        data: { isRead: true },
+      });
+    }
     return this.prisma.notification.update({
       where: { id: notificationId },
       data: { isRead: true },
@@ -308,5 +346,108 @@ export class NotificationService {
       where: { userId, isRead: false },
       data: { isRead: true },
     });
+  }
+
+  async getUnreadCount(userId: string): Promise<number> {
+    return this.prisma.notification.count({
+      where: { userId, isRead: false },
+    });
+  }
+
+  async getNotification(id: string, userId: string) {
+    const notif = await this.prisma.notification.findUnique({
+      where: { id },
+    });
+    if (!notif || notif.userId !== userId) {
+      throw new ResourceNotFoundException('Notification', id);
+    }
+    return notif;
+  }
+
+  async listNotifications(
+    userId: string,
+    filter: { read?: boolean; type?: string; page?: number; limit?: number },
+  ) {
+    const page = filter.page && filter.page > 0 ? filter.page : 1;
+    const limit = filter.limit && filter.limit > 0 ? Math.min(filter.limit, 100) : 50;
+    const skip = (page - 1) * limit;
+
+    const where: any = { userId };
+    if (filter.read !== undefined) {
+      where.isRead = filter.read;
+    }
+    if (filter.type) {
+      where.type = filter.type;
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.notification.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.notification.count({ where }),
+    ]);
+
+    return {
+      data: items,
+      meta: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getNotificationPreferences(userId: string) {
+    return (
+      this.preferencesMap.get(userId) || {
+        in_app: true,
+        email_digest: true,
+        whatsapp_alerts: true,
+        sla_warnings: true,
+        quiet_hours_enabled: false,
+      }
+    );
+  }
+
+  async replaceNotificationPreferences(userId: string, prefs: any) {
+    this.preferencesMap.set(userId, prefs);
+    return prefs;
+  }
+
+  // --- BUS-RULE-093: SLA TIMER & ESCALATION ---
+
+  async scanSlaPendingApprovals() {
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const pending = await this.prisma.approval.findMany({
+      where: {
+        decision: null,
+        requestedAt: { lte: cutoff },
+      },
+    });
+
+    for (const app of pending) {
+      this.logger.warn(`[SLA ESCALATION] Approval ${app.id} pending >24h`);
+      this.eventEmitter.emit('notification.sla.escalate', {
+        approvalId: app.id,
+        governedEntityType: app.governedEntityType,
+        governedEntityId: app.governedEntityId,
+        requestedAt: app.requestedAt,
+        escalationLevel: 1,
+      });
+
+      await this.sendToRole('DIRECTOR', {
+        title: `🚨 Eskalasi SLA: Approval ${app.governedEntityType} Pending >24 Jam`,
+        body: `Persetujuan ${app.governedEntityType} (${app.governedEntityId}) belum diproses lebih dari 24 jam. Mohon ditindaklanjuti.`,
+        type: 'SLA_BREACH',
+        referenceType: app.governedEntityType,
+        referenceId: app.governedEntityId,
+      });
+    }
+
+    return { scanned: pending.length, escalated: pending.length };
   }
 }

@@ -8,9 +8,9 @@ import {
   DialogContent,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/dna";
+import { Button } from "@/components/dna";
+import { Textarea } from "@/components/dna";
 import { toast } from "sonner";
 import { ArrowRight, Send, Loader2, Upload, FileText, X } from "lucide-react";
 import { STAGES } from "./pipeline-constants";

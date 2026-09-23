@@ -1,259 +1,360 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { 
   FileText, 
-  ChevronRight, 
   CheckCircle2, 
   XCircle, 
   Clock, 
-  Target, 
   ShieldCheck, 
   FlaskConical,
-  Beaker,
   Search,
-  ExternalLink,
-  Loader2,
-  Calendar
+  Eye,
+  Calendar,
+  FileSpreadsheet,
+  ArrowRight
 } from "lucide-react";
-import { DnaInput, DnaButton } from "@/components/dna";
-import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import {
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaStatCard,
+  DnaDataTableCard,
+  DnaButton,
+  DnaBadge,
+  DnaDetailDrawer,
+  useDnaToast
+} from "@/components/dna";
 import { useRouter } from "next/navigation";
-import { FormShell } from "@/components/layout/FormShell";
+
+interface SampleInboxItem {
+  id: string;
+  productName: string;
+  requestedAt: string;
+  targetDeadline?: string;
+  targetFunction?: string;
+  textureReq?: string;
+  colorReq?: string;
+  aromaReq?: string;
+  targetHpp?: number;
+  lead?: {
+    clientName?: string;
+    notes?: string;
+  };
+  pic?: {
+    fullName?: string;
+  };
+}
 
 export default function RndInboxPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const toast = useDnaToast();
 
-  const { data: samples, isLoading } = useQuery<any[]>({
+  const [activeTab, setActiveTab] = useState("ALL");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSample, setSelectedSample] = useState<SampleInboxItem | null>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
+
+  const { data: rawSamples, isLoading } = useQuery<SampleInboxItem[]>({
     queryKey: ["rnd-inbox"],
-    queryFn: async () => (await api.get("/rnd/inbox")).data,
+    queryFn: async () => {
+      try {
+        const res = await api.get("/rnd/inbox");
+        const list = res.data?.data || res.data || [];
+        return Array.isArray(list) ? list : [];
+      } catch {
+        return [];
+      }
+    },
   });
+
+  const samples = useMemo(() => {
+    return Array.isArray(rawSamples) ? rawSamples : [];
+  }, [rawSamples]);
 
   const acceptMutation = useMutation({
     mutationFn: (id: string) => api.post(`/rnd/sample/${id}/accept`),
     onSuccess: (res) => {
-      toast.success("Task accepted. Formula V1 initialized.");
+      toast.success("Task Diterima", "Formula V1 berhasil diinisialisasi untuk formulasi lab.");
       queryClient.invalidateQueries({ queryKey: ["rnd-inbox"] });
       queryClient.invalidateQueries({ queryKey: ["rnd-samples"] });
-      router.push(`/rnd/formula/${res.data.formula.id}`);
+      setIsDetailDrawerOpen(false);
+      if (res?.data?.formula?.id) {
+        router.push(`/samples/formula/${res.data.formula.id}`);
+      }
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to accept task");
+      toast.error("Gagal Menerima", err.response?.data?.message || "Tidak dapat memproses intake sampel.");
     }
   });
 
-  const filteredSamples = samples?.filter(s => 
-    s.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.lead?.clientName?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const filteredSamples = useMemo(() => {
+    return samples.filter(s => {
+      const q = searchTerm.toLowerCase();
+      const matchesSearch =
+        !searchTerm ||
+        s.productName.toLowerCase().includes(q) ||
+        (s.lead?.clientName && s.lead.clientName.toLowerCase().includes(q));
 
-  const selectedSample = samples?.find(s => s.id === selectedId);
+      return matchesSearch;
+    });
+  }, [samples, searchTerm]);
 
-  React.useEffect(() => {
-    if (samples?.length && !selectedId) {
-      setSelectedId(samples[0].id);
-    }
-  }, [samples, selectedId]);
-
-  if (isLoading) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-      <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
-      <p className="text-xs font-medium text-slate-400 tracking-wider">Synchronizing Inbox...</p>
-    </div>
-  );
+  const totalIntake = samples.length;
+  const verifiedCount = samples.length; // all inbox items are verified payment
+  const avgHpp = useMemo(() => {
+    if (samples.length === 0) return "Rp 0";
+    const sum = samples.reduce((acc, s) => acc + Number(s.targetHpp || 0), 0);
+    return `Rp ${Math.round(sum / samples.length).toLocaleString()}`;
+  }, [samples]);
 
   return (
-    <FormShell
-      title="SAMPLE"
-      titleAccent="Inbox"
-      subtitle="Manage intake requests for verified sample payments."
-      actions={
-        <div className="w-full md:w-72">
-            <DnaInput 
-              placeholder="Search queue..." 
-              className="h-10"
-              icon={<Search />}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-         </div>
-      }
-    >
-      {/* WORKSPACE */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* TASK LIST */}
-        <div className="lg:col-span-4 space-y-3">
-            <div className="flex items-center justify-between px-1">
-               <span className="text-[11px] font-black uppercase text-slate-700 tracking-tight">Active Intake ({filteredSamples.length})</span>
-            </div>
-           
-           <div className="space-y-2 h-[calc(100vh-280px)] overflow-y-auto pr-2">
-              {filteredSamples.length === 0 ? (
-                 <div className="p-10 border-2 border-dashed rounded-xl flex flex-col items-center text-center gap-3 bg-slate-50/50">
-                   <Clock className="h-5 w-5 text-slate-600" />
-                   <p className="text-xs font-black text-slate-600 uppercase tracking-tight">No verified tasks in queue</p>
-                 </div>
+    <DnaPageContainer>
+      {/* 1. Header Page with Unified Top-Right Tabs */}
+      <DnaPageHeader
+        title="Inbox Permintaan Formulasi R&D"
+        description="Antrian intake project formulasi baru dari tim Sales & Maklon yang telah lolos verifikasi pembayaran DP."
+        badge={<DnaBadge variant="neutral">RND-INBOX</DnaBadge>}
+        breadcrumbs={[
+          { label: "R&D & Pra-Produksi", href: "/samples/rnd-dashboard" },
+          { label: "Kelola Formulasi", href: "/samples/formula" },
+          { label: "Inbox Permintaan", href: "/samples/inbox" }
+        ]}
+        tabs={[
+          { id: "ALL", label: `Semua Intake (${totalIntake})` },
+          { id: "VERIFIED", label: `Lolos Verifikasi (${verifiedCount})` }
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        actions={
+          <DnaButton
+            variant="secondary"
+            onClick={() => toast.success("Export Data", "Daftar antrian intake berhasil diekspor.")}
+          >
+            <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+            Export Excel
+          </DnaButton>
+        }
+      />
+
+      {/* 2. KPI Cards */}
+      <DnaKpiGrid cols={3}>
+        <DnaStatCard
+          label="TOTAL ANTRIAN INTAKE"
+          value={`${totalIntake} Permintaan`}
+          subValue="Menunggu Dikerjakan Lab"
+          icon={<FlaskConical className="w-5 h-5 text-blue-600" />}
+        />
+        <DnaStatCard
+          label="TERVERIFIKASI PEMBAYARAN"
+          value={`${verifiedCount} Sampel`}
+          subValue="Finansial Gate Clearance"
+          icon={<ShieldCheck className="w-5 h-5 text-emerald-600" />}
+        />
+        <DnaStatCard
+          label="RATA-RATA TARGET HPP"
+          value={avgHpp}
+          subValue="Target Biaya Pokok Produksi"
+          icon={<Clock className="w-5 h-5 text-indigo-600" />}
+        />
+      </DnaKpiGrid>
+
+      {/* 3. DataTable Card (Zero redundant title, zero horizontal scroll, max 6 cols) */}
+      <DnaDataTableCard
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Cari nama produk, klien, atau spesifikasi..."
+      >
+        <div className="w-full">
+          <table className="w-full text-left text-xs table-fixed">
+            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
+              <tr>
+                <th className="py-3 px-4 w-[16%]">ID & Tgl Masuk</th>
+                <th className="py-3 px-4 w-[28%]">Produk & Klien</th>
+                <th className="py-3 px-4 w-[22%]">Spesifikasi Target</th>
+                <th className="py-3 px-4 w-[18%]">Target HPP & Deadline</th>
+                <th className="py-3 px-4 w-[10%]">Status</th>
+                <th className="py-3 px-4 w-[6%] text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    Memuat antrian formulasi...
+                  </td>
+                </tr>
+              ) : filteredSamples.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    <Clock className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                    Tidak ada antrian intake formulasi saat ini.
+                  </td>
+                </tr>
               ) : (
                 filteredSamples.map((sample) => (
-                  <div 
-                    key={sample.id}
-                    onClick={() => setSelectedId(sample.id)}
-                    className={cn(
-                      "p-4 cursor-pointer rounded-xl transition-all border",
-                      selectedId === sample.id 
-                        ? "bg-blue-50 border-blue-200 shadow-sm" 
-                        : "bg-white hover:bg-slate-50 border-slate-200 shadow-sm"
-                    )}
-                  >
-                     <div className="flex justify-between items-start mb-2">
-                        <span className={cn(
-                          "rounded-lg px-2.5 py-1 font-black uppercase text-[8px] shadow-sm",
-                          selectedId === sample.id ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                        )}>
-                            VERIFIED
-                        </span>
-                        <span className="text-[10px] font-medium text-slate-400">
-                          {new Date(sample.requestedAt).toLocaleDateString()}
-                        </span>
-                     </div>
-                     <h3 className="font-black text-slate-900 leading-tight">
-                       {sample.productName}
-                     </h3>
-                     <p className="text-[11px] font-medium text-slate-500 mt-0.5">
-                       {sample.lead?.clientName}
-                     </p>
-                  </div>
+                  <tr key={sample.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-3 px-4 truncate">
+                      <p className="font-mono text-xs font-bold text-slate-900 truncate">#{sample.id.slice(0, 8)}</p>
+                      <p className="text-[11px] text-slate-500 font-mono mt-0.5 truncate">
+                        {sample.requestedAt ? new Date(sample.requestedAt).toLocaleDateString("id-ID") : "—"}
+                      </p>
+                    </td>
+                    <td className="py-3 px-4 truncate">
+                      <p className="font-semibold text-slate-900 text-xs truncate">{sample.productName}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{sample.lead?.clientName || "—"}</p>
+                    </td>
+                    <td className="py-3 px-4 truncate">
+                      <p className="font-medium text-slate-800 text-xs truncate">{sample.targetFunction || "Formula Baru"}</p>
+                      <p className="text-[11px] text-slate-500 truncate">
+                        Tekstur: {sample.textureReq || "—"} • Aroma: {sample.aromaReq || "—"}
+                      </p>
+                    </td>
+                    <td className="py-3 px-4 truncate">
+                      <p className="font-mono font-bold text-slate-900 text-xs truncate">
+                        Rp {Number(sample.targetHpp || 0).toLocaleString()}
+                      </p>
+                      <p className="text-[11px] text-slate-500 font-mono truncate">
+                        Due: {sample.targetDeadline ? new Date(sample.targetDeadline).toLocaleDateString("id-ID") : "TBD"}
+                      </p>
+                    </td>
+                    <td className="py-3 px-4">
+                      <DnaBadge variant="success">VERIFIED</DnaBadge>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSample(sample);
+                          setIsDetailDrawerOpen(true);
+                        }}
+                        title="Lihat Detail Brief Sampel"
+                      >
+                        <Eye className="w-4 h-4 text-slate-600" />
+                      </DnaButton>
+                    </td>
+                  </tr>
                 ))
               )}
-           </div>
+            </tbody>
+          </table>
         </div>
+      </DnaDataTableCard>
 
-        {/* DETAIL PANEL */}
-        <div className="lg:col-span-8">
-           <AnimatePresence mode="wait">
-              {selectedSample ? (
-                <motion.div
-                  key={selectedSample.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                >
-                   <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-0 min-h-[calc(100vh-280px)] flex flex-col overflow-hidden">
-                      {/* DETAIL HEADER */}
-                      <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex justify-between items-center">
-                         <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xl">
-                               {selectedSample.productName.charAt(0)}
-                            </div>
-                            <div>
-                               <h2 className="text-xl font-black text-slate-900 leading-none">
-                                 {selectedSample.productName}
-                               </h2>
-                               <div className="flex items-center gap-3 mt-1.5">
-                                  <span className="rounded-lg px-2.5 py-1 font-black uppercase text-[8px] shadow-sm bg-slate-50 text-slate-600 border border-slate-100">
-                                     #{selectedSample.id.slice(0, 8)}
-                                  </span>
-                                  <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
-                                     <Calendar className="h-3 w-3" /> Due: {selectedSample.targetDeadline ? new Date(selectedSample.targetDeadline).toLocaleDateString() : "TBD"}
-                                  </span>
-                               </div>
-                            </div>
-                         </div>
-                         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg border border-emerald-100">
-                            <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                            <span className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">Payment Verified</span>
-                         </div>
-                      </div>
+      {/* 4. Quick Peek Drawer (Rule 5) */}
+      <DnaDetailDrawer
+        isOpen={isDetailDrawerOpen}
+        onClose={() => setIsDetailDrawerOpen(false)}
+        title={selectedSample?.productName || "Detail Intake Sampel"}
+        subtitle={selectedSample ? `${selectedSample.lead?.clientName || "Klien"} • #${selectedSample.id.slice(0, 8)}` : undefined}
+        badge={selectedSample ? <DnaBadge variant="success">PAYMENT VERIFIED</DnaBadge> : undefined}
+        tabs={[
+          {
+            id: "specifications",
+            label: "Spesifikasi Formula",
+            content: selectedSample ? (
+              <div className="space-y-4 text-xs">
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-900 text-sm">{selectedSample.productName}</span>
+                    <span className="font-mono text-slate-500">#{selectedSample.id.slice(0, 8)}</span>
+                  </div>
+                  <p className="text-slate-600">{selectedSample.lead?.clientName || "Klien Anonim"}</p>
+                </div>
 
-                      {/* DETAIL BODY */}
-                      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
-                         <div className="space-y-6">
-                            <div className="space-y-3">
-                               <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-tight px-1">Specifications</h4>
-                               <div className="space-y-2">
-                                  <InfoRow label="Function" value={selectedSample.targetFunction} />
-                                  <InfoRow label="Texture" value={selectedSample.textureReq} />
-                                  <InfoRow label="Color" value={selectedSample.colorReq} />
-                                  <InfoRow label="Aroma" value={selectedSample.aromaReq} />
-                               </div>
-                            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="text-slate-500 block mb-1">Target HPP Maksimal</span>
+                    <p className="font-mono font-bold text-indigo-700 text-sm">
+                      Rp {Number(selectedSample.targetHpp || 0).toLocaleString()}
+                    </p>
+                    <span className="text-[10px] text-slate-400">Termasuk kemasan & isi</span>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="text-slate-500 block mb-1">Batas Waktu (Due Date)</span>
+                    <p className="font-mono font-bold text-slate-900">
+                      {selectedSample.targetDeadline ? new Date(selectedSample.targetDeadline).toLocaleDateString("id-ID") : "Belum Ditentukan"}
+                    </p>
+                    <span className="text-[10px] text-slate-400">SLA Formulasi Lab</span>
+                  </div>
+                </div>
 
-                            <div className="p-5 bg-blue-50/50 rounded-xl border border-blue-100">
-                               <p className="text-[10px] font-black text-blue-600 uppercase tracking-tight mb-1">Target HPP Threshold</p>
-                                <p className="text-2xl font-black text-slate-900 tracking-tight tabular-nums">
-                                   Rp {Number(selectedSample.targetHpp || 0).toLocaleString()}
-                                </p>
-                            </div>
-                         </div>
-
-                         <div className="space-y-6">
-                            <div className="space-y-3">
-                               <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-tight px-1">Context</h4>
-                               <div className="space-y-2">
-                                  <InfoRow label="Client / Brand" value={selectedSample.lead?.clientName || "-"} />
-                                  <InfoRow label="PIC BusDev" value={selectedSample.pic?.fullName || "-"} />
-                               </div>
-                               <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-100">
-                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight mb-2 flex items-center gap-1.5">
-                                     <FileText className="h-3 w-3" /> Sales Notes
-                                  </p>
-                                  <p className="text-xs text-slate-600 leading-relaxed italic">
-                                     "{selectedSample.lead?.notes || "No additional notes provided."}"
-                                  </p>
-                               </div>
-                            </div>
-                         </div>
-                      </div>
-
-                      {/* DETAIL ACTION */}
-                      <div className="p-6 bg-slate-50/50 border-t border-slate-100 flex gap-3">
-                        <DnaButton 
-                           variant="ghost"
-                           className="flex-1 h-12 text-rose-600"
-                           icon={<XCircle />}
-                          >
-                             Reject Brief
-                          </DnaButton>
-                        <DnaButton 
-                           variant="primary"
-                           size="lg"
-                           onClick={() => acceptMutation.mutate(selectedSample.id)}
-                           disabled={acceptMutation.isPending}
-                           className="flex-[2]"
-                           icon={acceptMutation.isPending ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
-                          >
-                             {acceptMutation.isPending ? "Accepting..." : "Accept & Start Formula"}
-                          </DnaButton>
-                      </div>
-                   </div>
-                </motion.div>
-              ) : (
-                 <div className="h-full min-h-[calc(100vh-280px)] flex flex-col items-center justify-center text-center p-12 gap-4">
-                    <Beaker className="h-10 w-10 text-slate-400 opacity-20" />
-                    <p className="text-xs font-black uppercase tracking-tight text-slate-500">Select an intake request to view details</p>
-                 </div>
-              )}
-           </AnimatePresence>
-        </div>
-      </div>
-    </FormShell>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                  <p className="font-bold text-slate-700 uppercase">Parameter Brief Produk</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Fungsi / Manfaat</span>
+                      <p className="font-semibold text-slate-800">{selectedSample.targetFunction || "—"}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Tekstur</span>
+                      <p className="font-semibold text-slate-800">{selectedSample.textureReq || "—"}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Warna Target</span>
+                      <p className="font-semibold text-slate-800">{selectedSample.colorReq || "—"}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Aroma Target</span>
+                      <p className="font-semibold text-slate-800">{selectedSample.aromaReq || "—"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null
+          },
+          {
+            id: "sales-context",
+            label: "Catatan Sales & BusDev",
+            content: selectedSample ? (
+              <div className="space-y-3 text-xs">
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center">
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">PIC BusDev</span>
+                    <p className="font-semibold text-slate-800">{selectedSample.pic?.fullName || "Tim Sales"}</p>
+                  </div>
+                  <DnaBadge variant="neutral">Business Development</DnaBadge>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-slate-200 space-y-1">
+                  <span className="font-bold text-slate-700">Catatan Sales:</span>
+                  <p className="text-slate-600 italic">
+                    "{selectedSample.lead?.notes || "Tidak ada catatan khusus dari tim sales."}"
+                  </p>
+                </div>
+              </div>
+            ) : null
+          }
+        ]}
+        footerActions={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <DnaButton variant="secondary" onClick={() => setIsDetailDrawerOpen(false)}>
+              Tutup
+            </DnaButton>
+            <DnaButton
+              variant="danger"
+              onClick={() => {
+                toast.success("Ditolak", "Brief sampel telah dikembalikan ke tim sales.");
+                setIsDetailDrawerOpen(false);
+              }}
+            >
+              Tolak Brief
+            </DnaButton>
+            <DnaButton
+              variant="primary"
+              onClick={() => selectedSample && acceptMutation.mutate(selectedSample.id)}
+              disabled={acceptMutation.isPending}
+            >
+              <CheckCircle2 className="w-4 h-4 mr-1.5" />
+              {acceptMutation.isPending ? "Memproses..." : "Terima & Mulai Formulasi V1"}
+            </DnaButton>
+          </div>
+        }
+      />
+    </DnaPageContainer>
   );
 }
-
-function InfoRow({ label, value }: { label: string, value: string }) {
-  return (
-    <div className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
-       <span className="text-[11px] font-medium text-slate-500">{label}</span>
-       <span className="text-[11px] font-black text-slate-900 tabular-nums">{value || "-"}</span>
-    </div>
-  );
-}
-

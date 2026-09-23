@@ -16,6 +16,13 @@ import {
   DnaModal,
   DnaConfirmDialog,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -184,60 +191,70 @@ export default function FinanceCurrenciesPage() {
         />
       </DnaKpiGrid>
 
-      <DnaDataTableCard
-        title="Daftar Mata Uang"
-        badge={<DnaBadge variant="amber">{currencies.length} Entri</DnaBadge>}
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">Kode</th>
-                <th className="px-3.5 py-3 text-center">Simbol</th>
-                <th className="px-3.5 py-3 text-right">Kurs (per IDR)</th>
-                <th className="px-3.5 py-3 text-center">Tipe</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {isLoading ? (
-                <tr><td colSpan={5} className="text-center py-8 text-slate-400">Memuat...</td></tr>
-              ) : currencies.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-8 text-slate-400">Belum ada data mata uang</td></tr>
-              ) : currencies.map((c: Currency) => (
-                <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 font-bold text-slate-900 font-mono">{c.code}</td>
-                  <td className="px-3.5 py-2.5 text-center text-lg">{c.symbol ?? "—"}</td>
-                  <td className="px-3.5 py-2.5 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="font-mono font-bold text-slate-800">{c.exchangeRate.toLocaleString("id-ID")}</span>
-                      <DnaButton variant="secondary" size="sm" onClick={() => { setRateEditing(c); setNewRate(String(c.exchangeRate)); }}>
-                        <ArrowRightLeft className="w-3.5 h-3.5" />
-                      </DnaButton>
-                    </div>
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    {c.isMain ? (
-                      <DnaBadge variant="success"><Star className="w-3 h-3 mr-1 inline" />Base</DnaBadge>
-                    ) : (
-                      <DnaBadge variant="secondary">Secondary</DnaBadge>
-                    )}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <DnaButton variant="secondary" size="sm" onClick={() => openEdit(c)}>
-                        <Pencil className="w-3.5 h-3.5" />
-                      </DnaButton>
-                      <DnaButton variant="danger" size="sm" onClick={() => setDeletingId(c.id)} disabled={!!c.isMain}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </DnaButton>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <DnaDataTableCard>
+        <DnaTable>
+          <DnaTableHead>
+            <tr>
+              <DnaTh className="w-[120px]">Kode</DnaTh>
+              <DnaTh align="center" className="w-[100px]">Simbol</DnaTh>
+              <DnaTh align="right" className="w-[200px]">Kurs (per IDR)</DnaTh>
+              <DnaTh align="center" className="w-[120px]">Tipe</DnaTh>
+              <DnaTh align="center" className="w-[120px]">Aksi</DnaTh>
+            </tr>
+          </DnaTableHead>
+          <DnaTableBody>
+            {isLoading ? (
+              <DnaTableRow>
+                <DnaTd colSpan={5} className="text-center py-8 text-slate-400">Memuat...</DnaTd>
+              </DnaTableRow>
+            ) : currencies.length === 0 ? (
+              <DnaTableRow>
+                <DnaTd colSpan={5} className="text-center py-8 text-slate-400">Belum ada data mata uang</DnaTd>
+              </DnaTableRow>
+            ) : currencies.map((c: Currency) => (
+              <DnaTableRow key={c.id}>
+                <DnaTd>
+                  <DnaCell.Code value={c.code} />
+                </DnaTd>
+                <DnaTd align="center" className="text-base font-semibold text-slate-800">
+                  {c.symbol ?? "—"}
+                </DnaTd>
+                <DnaTd align="right">
+                  <div className="flex items-center justify-end gap-2">
+                    <span className="font-semibold tabular-nums text-slate-800">
+                      {c.exchangeRate.toLocaleString("id-ID")}
+                    </span>
+                    <DnaButton
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => { setRateEditing(c); setNewRate(String(c.exchangeRate)); }}
+                      title="Ubah Nilai Kurs"
+                    >
+                      <ArrowRightLeft className="w-3.5 h-3.5" />
+                    </DnaButton>
+                  </div>
+                </DnaTd>
+                <DnaTd align="center">
+                  {c.isMain ? (
+                    <DnaBadge variant="success"><Star className="w-3 h-3 mr-1 inline" />Base</DnaBadge>
+                  ) : (
+                    <DnaBadge variant="secondary">Secondary</DnaBadge>
+                  )}
+                </DnaTd>
+                <DnaTd align="center">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <DnaButton variant="secondary" size="sm" onClick={() => openEdit(c)} title="Edit">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </DnaButton>
+                    <DnaButton variant="danger" size="sm" onClick={() => setDeletingId(c.id)} disabled={!!c.isMain} title="Hapus">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </DnaButton>
+                  </div>
+                </DnaTd>
+              </DnaTableRow>
+            ))}
+          </DnaTableBody>
+        </DnaTable>
       </DnaDataTableCard>
 
       {/* CRUD Modal */}

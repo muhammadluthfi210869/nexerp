@@ -8,12 +8,12 @@ import { ArrowUpCircle, ArrowDownCircle, Wallet, Search, Plus } from "lucide-rea
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaTabNav } from "@/components/dna";
 import {
-  DnaTable as Table,
-  DnaTableBody as TableBody,
-  DnaTd as TableCell,
-  DnaTh as TableHead,
-  DnaTableHead as TableHeader,
-  DnaTableRow as TableRow,
+  DnaTable,
+  DnaTableBody,
+  DnaTd,
+  DnaTh,
+  DnaTableHead,
+  DnaTableRow,
 } from "@/components/dna";
 import { QueryLoading, QueryError } from "@/components/query-states";
 import { cn } from "@/lib/utils";
@@ -117,31 +117,31 @@ export default function KasPage() {
                   </div>
                 }
               >
-                <Table className="table-dense">
-                  <TableHeader className="bg-slate-50/70">
-                    <TableRow className="hover:bg-transparent border-slate-100">
-                      <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">ID</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Tanggal</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Keterangan</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-right">Jumlah</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <DnaTable className="table-dense">
+                  <DnaTableHead className="bg-slate-50/70">
+                    <DnaTableRow className="hover:bg-transparent border-slate-100">
+                      <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">ID</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Tanggal</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Keterangan</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-right">Jumlah</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {filteredIn.map((t: any) => (
-                      <TableRow key={t.id} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50">
-                        <TableCell className="py-3 pl-6 font-black text-slate-900 text-xs uppercase italic">{t.id}</TableCell>
-                        <TableCell className="py-3 text-[10px] font-medium text-slate-500">{t.date}</TableCell>
-                        <TableCell className="py-3 text-xs text-slate-700">{t.description}</TableCell>
-                        <TableCell className="py-3 text-right font-mono tabular-nums font-black text-xs text-emerald-600">+ Rp {t.amount.toLocaleString()}</TableCell>
-                      </TableRow>
+                      <DnaTableRow key={t.id} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50">
+                        <DnaTd className="py-3 pl-6 font-black text-slate-900 text-xs uppercase italic">{t.id}</DnaTd>
+                        <DnaTd className="py-3 text-[10px] font-medium text-slate-500">{t.date}</DnaTd>
+                        <DnaTd className="py-3 text-xs text-slate-700">{t.description}</DnaTd>
+                        <DnaTd className="py-3 text-right tabular-nums font-semibold text-xs text-emerald-600">+ Rp {t.amount.toLocaleString()}</DnaTd>
+                      </DnaTableRow>
                     ))}
                     {filteredIn.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="py-16 text-center text-[10px] text-slate-400">Belum ada transaksi kas masuk.</TableCell>
-                      </TableRow>
+                      <DnaTableRow>
+                        <DnaTd colSpan={4} className="py-16 text-center text-[10px] text-slate-400">Belum ada transaksi kas masuk.</DnaTd>
+                      </DnaTableRow>
                     )}
-                  </TableBody>
-                </Table>
+                  </DnaTableBody>
+                </DnaTable>
               </DnaDataTableCard>
             </div>
 
@@ -166,31 +166,31 @@ export default function KasPage() {
                   </div>
                 }
               >
-                <Table className="table-dense">
-                  <TableHeader className="bg-slate-50/70">
-                    <TableRow className="hover:bg-transparent border-slate-100">
-                      <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">ID</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Tanggal</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Keterangan</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-right">Jumlah</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <DnaTable className="table-dense">
+                  <DnaTableHead className="bg-slate-50/70">
+                    <DnaTableRow className="hover:bg-transparent border-slate-100">
+                      <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">ID</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Tanggal</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Keterangan</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-right">Jumlah</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {filteredOut.map((t: any) => (
-                      <TableRow key={t.id} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50">
-                        <TableCell className="py-3 pl-6 font-black text-slate-900 text-xs uppercase italic">{t.id}</TableCell>
-                        <TableCell className="py-3 text-[10px] font-medium text-slate-500">{t.date}</TableCell>
-                        <TableCell className="py-3 text-xs text-slate-700">{t.description}</TableCell>
-                        <TableCell className="py-3 text-right font-mono tabular-nums font-black text-xs text-rose-600">- Rp {t.amount.toLocaleString()}</TableCell>
-                      </TableRow>
+                      <DnaTableRow key={t.id} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50">
+                        <DnaTd className="py-3 pl-6 font-black text-slate-900 text-xs uppercase italic">{t.id}</DnaTd>
+                        <DnaTd className="py-3 text-[10px] font-medium text-slate-500">{t.date}</DnaTd>
+                        <DnaTd className="py-3 text-xs text-slate-700">{t.description}</DnaTd>
+                        <DnaTd className="py-3 text-right tabular-nums font-semibold text-xs text-rose-600">- Rp {t.amount.toLocaleString()}</DnaTd>
+                      </DnaTableRow>
                     ))}
                     {filteredOut.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="py-16 text-center text-[10px] text-slate-400">Belum ada transaksi kas keluar.</TableCell>
-                      </TableRow>
+                      <DnaTableRow>
+                        <DnaTd colSpan={4} className="py-16 text-center text-[10px] text-slate-400">Belum ada transaksi kas keluar.</DnaTd>
+                      </DnaTableRow>
                     )}
-                  </TableBody>
-                </Table>
+                  </DnaTableBody>
+                </DnaTable>
               </DnaDataTableCard>
             </div>
           </div>

@@ -3,7 +3,9 @@ import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { LifecycleStatus, Prisma } from '@prisma/client';
 
@@ -1543,7 +1545,63 @@ export class ProductionService {
         const machine = await tx.machine.findUnique({
           where: { id: dto.machineId },
         });
-        if (!machine) throw new BadRequestException('Machine not found');
+        if (!machine) throw new NotFoundException('Machine not found');
+
+        // P12 Capacity Check
+        if (Number(machine.capacityPerBatch) > 0 && dto.targetQty > Number(machine.capacityPerBatch)) {
+          throw new BadRequestException(
+            `MACHINE_CAPACITY_EXCEEDED: Target quantity (${dto.targetQty}) exceeds machine capacity (${machine.capacityPerBatch})`,
+          );
+        }
+
+        const newStart = new Date(dto.startTime);
+        const newEnd = new Date(dto.endTime);
+        if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime())) {
+          throw new BadRequestException('Invalid startTime or endTime format');
+        }
+        if (newStart >= newEnd) {
+          throw new BadRequestException('Schedule startTime must be before endTime');
+        }
+
+        // P12 Collision Interlock (Reject overlapping time slots on same active machine)
+        const overlapping = await tx.productionSchedule.findFirst({
+          where: {
+            machineId: dto.machineId,
+            status: { not: 'CANCELLED' },
+            startTime: { lt: newEnd },
+            endTime: { gt: newStart },
+          },
+        });
+        if (overlapping) {
+          throw new ConflictException(
+            `SCHEDULE_COLLISION: Machine is already booked from ${overlapping.startTime.toISOString()} to ${overlapping.endTime.toISOString()} (Schedule ${overlapping.scheduleNumber})`,
+          );
+        }
+
+        // P12 Stage Precedence Enforcement (MIXING -> FILLING -> PACKAGING)
+        const stageOrder = ['MIXING', 'FILLING', 'PACKAGING'];
+        const currentStageIndex = stageOrder.indexOf(dto.stage);
+        if (currentStageIndex > 0) {
+          const immediatePrevStage = stageOrder[currentStageIndex - 1];
+          const prevSchedule = await tx.productionSchedule.findFirst({
+            where: {
+              workOrderId: dto.workOrderId,
+              stage: immediatePrevStage as any,
+              status: { not: 'CANCELLED' },
+            },
+            orderBy: { endTime: 'desc' },
+          });
+          if (!prevSchedule) {
+            throw new BadRequestException(
+              `STAGE_ORDER_VIOLATION: Cannot schedule ${dto.stage} before ${immediatePrevStage} schedule exists.`,
+            );
+          }
+          if (new Date(prevSchedule.endTime) > newStart) {
+            throw new BadRequestException(
+              `STAGE_ORDER_VIOLATION: ${dto.stage} cannot start before ${immediatePrevStage} finishes (${prevSchedule.endTime.toISOString()}).`,
+            );
+          }
+        }
 
         const scheduleNumber = await this.idGenerator.generateId('SCH');
 
@@ -1559,8 +1617,8 @@ export class ProductionService {
             workOrder: rel(dto.workOrderId),
             machine: rel(dto.machineId),
             stage: dto.stage as any,
-            startTime: new Date(dto.startTime),
-            endTime: new Date(dto.endTime),
+            startTime: newStart,
+            endTime: newEnd,
             targetQty: dto.targetQty,
             upscalePercent: dto.upscalePercent,
             upscaleResult,
@@ -1618,6 +1676,352 @@ export class ProductionService {
       });
   }
 
+  async rescheduleBatchSchedule(
+    scheduleId: string,
+    dto: { startTime: string; endTime: string; reason: string; machineId?: string },
+    user?: any,
+  ) {
+    if (!dto.reason || dto.reason.trim() === '') {
+      throw new BadRequestException('Reschedule reason is mandatory');
+    }
+    const newStart = new Date(dto.startTime);
+    const newEnd = new Date(dto.endTime);
+    if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime())) {
+      throw new BadRequestException('Invalid startTime or endTime format');
+    }
+    if (newStart >= newEnd) {
+      throw new BadRequestException('Schedule startTime must be before endTime');
+    }
+
+    return this.prisma
+      .$transaction(async (tx: any) => {
+        const existing = await tx.productionSchedule.findUnique({
+          where: { id: scheduleId },
+          include: { machine: true },
+        });
+        if (!existing) throw new NotFoundException('Schedule not found');
+        const targetMachineId = dto.machineId || existing.machineId;
+
+        // Check collision excluding current schedule
+        const collision = await tx.productionSchedule.findFirst({
+          where: {
+            id: { not: scheduleId },
+            machineId: targetMachineId,
+            status: { not: 'CANCELLED' },
+            startTime: { lt: newEnd },
+            endTime: { gt: newStart },
+          },
+        });
+        if (collision) {
+          throw new ConflictException(
+            `SCHEDULE_COLLISION: Machine is already booked during requested window (Schedule ${collision.scheduleNumber})`,
+          );
+        }
+
+        const updated = await tx.productionSchedule.update({
+          where: { id: scheduleId },
+          data: {
+            startTime: newStart,
+            endTime: newEnd,
+            machineId: targetMachineId,
+            notes: existing.notes
+              ? `${existing.notes} | Rescheduled: ${dto.reason}`
+              : `Rescheduled: ${dto.reason}`,
+          },
+          include: { machine: true, workOrder: true },
+        });
+
+        return updated;
+      })
+      .then((result) => {
+        this.eventEmitter.emit('production.schedule.rescheduled', {
+          scheduleId: result.id,
+          scheduleNumber: result.scheduleNumber,
+          newStart,
+          newEnd,
+          reason: dto.reason,
+          actorId: user?.id || 'SYSTEM',
+        });
+        this.eventEmitter.emit('activity.logged', {
+          senderDivision: 'PRODUCTION',
+          notes: `Schedule ${result.scheduleNumber} rescheduled: ${dto.reason}`,
+          loggedBy: user?.fullName || 'SYSTEM:PRODUCTION',
+        });
+        return result;
+      });
+  }
+
+  async dispatchWorkOrder(workOrderId: string, user?: any) {
+    return this.prisma
+      .$transaction(async (tx: any) => {
+        const wo = await tx.workOrder.findUnique({
+          where: { id: workOrderId },
+          include: { requisitions: true, schedules: true },
+        });
+        if (!wo) throw new NotFoundException('Work Order not found');
+
+        // Check if already dispatched (Idempotent response)
+        if (
+          wo.stage === 'READY_TO_PRODUCE' ||
+          wo.stage === 'MIXING' ||
+          wo.stage === 'FILLING' ||
+          wo.stage === 'PACKING'
+        ) {
+          return {
+            workOrderId: wo.id,
+            woNumber: wo.woNumber,
+            stage: wo.stage,
+            dispatched: true,
+            message: 'Work order already dispatched (idempotent)',
+            requisitionsCount: wo.requisitions.length,
+          };
+        }
+
+        // Transition WorkOrder stage to READY_TO_PRODUCE
+        const updated = await tx.workOrder.update({
+          where: { id: workOrderId },
+          data: {
+            stage: 'READY_TO_PRODUCE',
+          },
+        });
+
+        return {
+          workOrderId: updated.id,
+          woNumber: updated.woNumber,
+          stage: updated.stage,
+          dispatched: true,
+          message: 'Work order successfully dispatched to production floor',
+          requisitionsCount: wo.requisitions.length,
+        };
+      })
+      .then((res) => {
+        this.eventEmitter.emit('production.workorder.dispatched', {
+          workOrderId: res.workOrderId,
+          woNumber: res.woNumber,
+          dispatchedBy: user?.id || 'SYSTEM',
+        });
+        return res;
+      });
+  }
+
+  async checkMaterialReadiness(workOrderId: string) {
+    const wo = await this.prisma.workOrder.findUnique({
+      where: { id: workOrderId },
+      include: {
+        requisitions: {
+          include: {
+            material: true,
+          },
+        },
+        schedules: {
+          include: {
+            stepDetails: {
+              include: {
+                material: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!wo) throw new NotFoundException('Work Order not found');
+
+    const shortages: Array<{
+      materialId: string;
+      materialCode: string;
+      materialName: string;
+      qtyRequired: number;
+      qtyAvailable: number;
+      deficit: number;
+    }> = [];
+
+    let totalRequired = 0;
+    let totalAvailableSatisfied = 0;
+
+    const requirementsMap = new Map<
+      string,
+      { code: string; name: string; qty: number; stock: number }
+    >();
+
+    for (const req of wo.requisitions) {
+      const matId = req.materialId;
+      const code = req.material?.code || 'UNKNOWN';
+      const name = req.material?.name || 'UNKNOWN';
+      const stock = Number(req.material?.stockQty || 0);
+      const qty = Number(req.qtyRequested);
+      const current = requirementsMap.get(matId) || { code, name, qty: 0, stock };
+      current.qty += qty;
+      requirementsMap.set(matId, current);
+    }
+
+    for (const sched of wo.schedules) {
+      for (const detail of sched.stepDetails) {
+        const matId = detail.materialId;
+        const code = detail.materialCode || detail.material?.code || 'UNKNOWN';
+        const name = detail.material?.name || 'UNKNOWN';
+        const stock = Number(detail.material?.stockQty || 0);
+        const qty = Number(detail.qtyTheoretical);
+        const current = requirementsMap.get(matId) || { code, name, qty: 0, stock };
+        if (!wo.requisitions.some((r: any) => r.materialId === matId)) {
+          current.qty += qty;
+        }
+        requirementsMap.set(matId, current);
+      }
+    }
+
+    for (const [matId, data] of requirementsMap.entries()) {
+      totalRequired += data.qty;
+      if (data.stock < data.qty) {
+        const deficit = data.qty - data.stock;
+        shortages.push({
+          materialId: matId,
+          materialCode: data.code,
+          materialName: data.name,
+          qtyRequired: data.qty,
+          qtyAvailable: data.stock,
+          deficit,
+        });
+        totalAvailableSatisfied += Math.max(0, data.stock);
+      } else {
+        totalAvailableSatisfied += data.qty;
+      }
+    }
+
+    const readinessPercent =
+      totalRequired > 0
+        ? Math.round((totalAvailableSatisfied / totalRequired) * 100)
+        : 100;
+    const isReady = shortages.length === 0;
+
+    return {
+      workOrderId: wo.id,
+      woNumber: wo.woNumber,
+      readinessPercent,
+      isReady,
+      totalItems: requirementsMap.size,
+      shortagesCount: shortages.length,
+      shortages,
+    };
+  }
+
+  async createWorkOrderFromSO(
+    dto: { salesOrderId: string; targetCompletion?: string },
+    user?: any,
+  ) {
+    return this.prisma.$transaction(async (tx: any) => {
+      const so = await tx.salesOrder.findUnique({
+        where: { id: dto.salesOrderId },
+        include: {
+          sample: {
+            include: {
+              formulas: {
+                where: {
+                  status: {
+                    in: ['PRODUCTION_LOCKED', 'SAMPLE_LOCKED'],
+                  },
+                },
+                include: {
+                  phases: {
+                    include: { items: true },
+                  },
+                },
+              },
+            },
+          },
+          lead: true,
+        },
+      });
+      if (!so) throw new NotFoundException('Sales Order not found');
+
+      const validStatuses = [
+        'ACTIVE',
+        'READY_TO_PRODUCE',
+        'LOCKED_ACTIVE',
+        'IN_PRODUCTION',
+        'DP_PAID',
+        'READY_PROD',
+        'APPROVED',
+      ];
+      if (!validStatuses.includes(so.status as string)) {
+        throw new BadRequestException(
+          `Cannot create Work Order for SO with status ${so.status}. DP must be paid.`,
+        );
+      }
+
+      const formula = so.sample?.formulas?.[0];
+      const now = new Date();
+      const period = `${now.getFullYear().toString().slice(-2)}${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+      const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const woNumber = `WO-${period}-${suffix}`;
+      const targetQty = Number(so.quantity || 1000);
+      const targetCompletion = dto.targetCompletion
+        ? new Date(dto.targetCompletion)
+        : new Date(Date.now() + 7 * 24 * 3600 * 1000);
+
+      const workOrder = await tx.workOrder.create({
+        data: {
+          woNumber,
+          leadId: so.leadId || so.lead?.id,
+          targetQty,
+          targetCompletion,
+          stage: 'WAITING_MATERIAL',
+        },
+      });
+
+      let adminUserId = user?.id;
+      if (!adminUserId) {
+        const anyUser = await tx.user.findFirst();
+        adminUserId = anyUser?.id;
+      }
+
+      const batchNo = `BMR-${period}-${suffix}`;
+      const plan = await tx.productionPlan.create({
+        data: {
+          soId: so.id,
+          adminId: adminUserId,
+          batchNo,
+          status: 'PLANNING',
+        },
+      });
+
+      await tx.workOrder.update({
+        where: { id: workOrder.id },
+        data: { planId: plan.id },
+      });
+
+      if (formula?.phases) {
+        const allItems = formula.phases.flatMap((p: any) => p.items);
+        let reqIdx = 1;
+        for (const item of allItems) {
+          if (!item.materialId) continue;
+          const dosagePercent = Number(item.dosagePercentage || 0);
+          const weightPerUnit = Number(formula.targetYieldGram || 100);
+          const totalReq = (dosagePercent / 100) * weightPerUnit * targetQty;
+
+          await tx.materialRequisition.create({
+            data: {
+              reqNumber: `REQ-${period}-${suffix}-${String(reqIdx++).padStart(3, '0')}`,
+              workOrderId: workOrder.id,
+              woId: plan.id,
+              materialId: item.materialId,
+              qtyRequested: totalReq,
+              status: 'PENDING',
+            },
+          });
+        }
+      }
+
+      return tx.workOrder.findUnique({
+        where: { id: workOrder.id },
+        include: {
+          requisitions: { include: { material: true } },
+          lead: true,
+          plan: true,
+        },
+      });
+    });
+  }
+
   async getSchedulesByStage(stage?: string) {
     return this.prisma.productionSchedule.findMany({
       where: stage ? { stage: stage as any } : {},
@@ -1638,18 +2042,44 @@ export class ProductionService {
     downtimeMinutes?: number,
   ) {
     return this.prisma.$transaction(async (tx: any) => {
-      const schedule = await tx.productionSchedule.update({
+      const schedule = await tx.productionSchedule.findUnique({
         where: { id: scheduleId },
-        data: {
-          resultQty,
-          status: 'COMPLETED',
-          notes: notes || `COMPLETED: Yield ${resultQty} pcs`,
-        },
         include: {
           stepDetails: true,
           machine: true,
         },
       });
+
+      if (!schedule) throw new NotFoundException('Schedule not found');
+
+      // PHASE 3 & P13: Sequential Stage Order Enforcement (BUS-RULE-029)
+      if (schedule.stage === 'FILLING') {
+        const mixingSchedule = await tx.productionSchedule.findFirst({
+          where: {
+            workOrderId: schedule.workOrderId,
+            stage: 'MIXING',
+          },
+        });
+        if (mixingSchedule && mixingSchedule.status !== 'COMPLETED') {
+          throw new BadRequestException({
+            code: 'STAGE_ORDER_VIOLATION',
+            message: `Tidak bisa menyelesaikan Filling sebelum Mixing selesai. Progresi harus sequential (BUS-RULE-029).`,
+          });
+        }
+      } else if (schedule.stage === 'PACKAGING' || schedule.stage === 'PACKING') {
+        const fillingSchedule = await tx.productionSchedule.findFirst({
+          where: {
+            workOrderId: schedule.workOrderId,
+            stage: 'FILLING',
+          },
+        });
+        if (fillingSchedule && fillingSchedule.status !== 'COMPLETED') {
+          throw new BadRequestException({
+            code: 'STAGE_ORDER_VIOLATION',
+            message: `Tidak bisa menyelesaikan Packaging sebelum Filling selesai. Progresi harus sequential (BUS-RULE-029).`,
+          });
+        }
+      }
 
       // Synchronize accurate duration from terminal to calculate precise overhead cost
       const actualDurationMinutes = elapsedSeconds
@@ -1659,7 +2089,7 @@ export class ProductionService {
       const machineRate = schedule.machine?.costPerHour || 50000;
       const laborRate = 25000; // Standard operator rate
 
-      // PHASE 3: QC Interlock (Filling Stage)
+      // PHASE 3: QC Interlock (Filling Stage) - BUS-RULE-032
       // Prevent FILLING if Mixing QC has not passed.
       if (schedule.stage === 'FILLING') {
         const mixingLog = await tx.productionLog.findFirst({
@@ -1691,12 +2121,12 @@ export class ProductionService {
           });
           throw new BadRequestException({
             code: 'QC_BULK_NOT_PASSED',
-            message: `Layar Merah: AKSES DITOLAK. Curah (Mixing) belum lulus uji lab atau status belum PASS. Dilarang melakukan pengisian!`,
+            message: `[AKSES DITOLAK: CURAH BELUM LULUS UJI LAB] Curah (Mixing) belum lulus uji lab atau status belum PASS. Dilarang melakukan pengisian! (BUS-RULE-032)`,
           });
         }
       }
 
-      // PHASE 3b: Physical Law Validation (All Stages)
+      // PHASE 3b: Physical Law Validation (All Stages) - BUS-RULE-033
       // Prevent Good Output (pcs) from exceeding the logic limit of Actual Bulk (kg) consumed.
       if (schedule.stage === 'FILLING' || schedule.stage === 'MIXING') {
         const bulkComponent = schedule.stepDetails.find(
@@ -1715,37 +2145,97 @@ export class ProductionService {
           // Tolerance of 1% for scaling/rounding in machine filling
           if (resultQty > maxPhysicalLimit * 1.01) {
             throw new BadRequestException({
-              code: 'PHYSICAL_LIMIT_EXCEEDED',
-              message: `Hukum Fisika: Output (${resultQty} pcs) melebihi batas maksimal dari cairan curah yang dikonsumsi (${maxPhysicalLimit.toFixed(0)} pcs). Indikasi under-fill atau manipulasi volume.`,
+              code: 'OUTPUT_EXCEEDS_PHYSICAL_LIMIT',
+              message: `Hukum Fisika: Output (${resultQty} pcs) melebihi batas maksimal dari cairan curah yang dikonsumsi (${maxPhysicalLimit.toFixed(0)} pcs). Indikasi under-fill atau manipulasi volume (BUS-RULE-033).`,
               limit: maxPhysicalLimit.toFixed(0),
             });
           }
         }
       }
 
-      // PHASE 3: Artwork Interlock (Packing Stage)
+      // PHASE 3: Artwork Interlock (Packing Stage) - BUS-RULE-034
       // Ensure that final packaging is blocked if Artwork has not been approved by Legal.
-      if (schedule.stage === 'PACKING') {
+      if (schedule.stage === 'PACKING' || schedule.stage === 'PACKAGING') {
         const wo = await tx.workOrder.findUnique({
           where: { id: schedule.workOrderId },
           include: {
             lead: {
               include: {
-                regulatoryPipelines: { include: { artworkReviews: true } },
+                registrations: { include: { artworkReviews: true } },
+                designTasks: true,
               },
             },
           },
         });
 
-        const hasApprovedArtwork = wo?.lead?.regulatoryPipelines?.some(
-          (p: any) => p.artworkReviews?.some((a: any) => a.isApproved),
-        );
+        const hasApprovedArtwork =
+          wo?.lead?.registrations?.some((p: any) =>
+            p.artworkReviews?.some((a: any) => a.isApproved),
+          ) ||
+          wo?.lead?.designTasks?.some(
+            (t: any) =>
+              t.isFinal ||
+              t.kanbanState === 'LOCKED' ||
+              t.status === 'APPROVED',
+          );
 
         if (!hasApprovedArtwork) {
           throw new BadRequestException({
             code: 'ARTWORK_NOT_APPROVED',
-            message: `Gerbang Legal: Artwork untuk produk ini belum disetujui (APPROVED). Packing ditangguhkan demi mencegah recall produk masif.`,
+            message: `Artwork belum APPROVED. Packaging terkunci demi mencegah recall produk masif (BUS-RULE-034).`,
           });
+        }
+      }
+
+      const updatedSchedule = await tx.productionSchedule.update({
+        where: { id: scheduleId },
+        data: {
+          resultQty,
+          status: 'COMPLETED',
+          notes: notes || `COMPLETED: Yield ${resultQty} pcs`,
+        },
+        include: {
+          stepDetails: true,
+          machine: true,
+        },
+      });
+
+      // BUS-RULE-035 & BUS-RULE-037: Packaging creates Quarantined Finished Goods & Traceability Data
+      let qrCodeData: any = null;
+      if (schedule.stage === 'PACKING' || schedule.stage === 'PACKAGING') {
+        qrCodeData = {
+          batchRecordNumber: schedule.scheduleNumber,
+          workOrderId: schedule.workOrderId,
+          goodFGOutput: resultQty,
+          status: 'QUARANTINE',
+          availableQty: 0,
+          operator: schedule.machine?.name || 'OPERATOR_PACKAGING',
+          finishedAt: new Date().toISOString(),
+          traceability: {
+            stage: 'PACKAGING',
+            components: schedule.stepDetails.map((d: any) => ({
+              materialId: d.materialId,
+              materialCode: d.materialCode,
+              qtyActual: d.qtyActual,
+            })),
+          },
+        };
+
+        const existingFg = await tx.finishedGood.findFirst({
+          where: { woId: schedule.workOrderId },
+        });
+        if (existingFg) {
+          await tx.finishedGood.update({
+            where: { id: existingFg.id },
+            data: { stockQty: resultQty },
+          });
+        } else {
+          await tx.finishedGood.create({
+            data: {
+              woId: schedule.workOrderId,
+              stockQty: resultQty,
+            },
+          }).catch(() => {});
         }
       }
 
@@ -1794,17 +2284,19 @@ export class ProductionService {
           materialId: d.materialId,
           qty: Number(d.qtyActual || d.qtyTheoretical),
         })),
+        qrCodeData,
       });
 
       return {
-        scheduleId: schedule.id,
-        scheduleNumber: schedule.scheduleNumber,
-        workOrderId: schedule.workOrderId,
-        stage: schedule.stage,
-        resultQty: schedule.resultQty,
-        status: schedule.status,
-        machine: schedule.machine,
-        stepDetails: schedule.stepDetails,
+        scheduleId: updatedSchedule.id,
+        scheduleNumber: updatedSchedule.scheduleNumber,
+        workOrderId: updatedSchedule.workOrderId,
+        stage: updatedSchedule.stage,
+        resultQty: updatedSchedule.resultQty,
+        status: updatedSchedule.status,
+        machine: updatedSchedule.machine,
+        stepDetails: updatedSchedule.stepDetails,
+        qrCodeData,
         costing: {
           laborCost: Number(laborCost),
           overheadCost: Number(overheadCost),
@@ -1870,7 +2362,30 @@ export class ProductionService {
             );
           }
 
-          // 1. FEFO Validation against SCM Allocation
+          // 1. FEFO Validation against older available unexpired stock (BUS-RULE-031)
+          if (inventory.expDate) {
+            const olderBatch = await tx.materialInventory.findFirst({
+              where: {
+                materialId: inventory.materialId,
+                expDate: { not: null, lt: inventory.expDate },
+                currentStock: { gt: 0 },
+                qcStatus: 'GOOD',
+                id: { not: item.inventoryId },
+              },
+              orderBy: { expDate: 'asc' },
+            });
+            if (olderBatch) {
+              const expStr = olderBatch.expDate
+                ? olderBatch.expDate.toISOString().split('T')[0]
+                : 'N/A';
+              throw new BadRequestException({
+                code: 'FEFO_VIOLATION',
+                message: `FEFO Violation: Batch ${olderBatch.batchNumber} (exp: ${expStr}) masih tersedia dan lebih tua dari batch yang dipilih ${inventory.batchNumber}. Gunakan batch tertua terlebih dahulu (BUS-RULE-031).`,
+              });
+            }
+          }
+
+          // 1b. FEFO Validation against SCM Allocation
           const fulfillment = await tx.requisitionFulfillment.findFirst({
             where: {
               requisition: {
@@ -1882,10 +2397,20 @@ export class ProductionService {
           });
 
           if (!fulfillment && detail.category !== 'BULK') {
-            throw new BadRequestException({
-              code: 'FEFO_MISMATCH',
-              message: `The scanned batch (${inventory.batchNumber}) for ${detail.material.name} does not match the Warehouse SCM FEFO allocation. Please use the exact material batch issued.`,
+            const anyFulfillment = await tx.requisitionFulfillment.findFirst({
+              where: {
+                requisition: {
+                  workOrderId: schedule.workOrderId,
+                  materialId: detail.materialId,
+                },
+              },
             });
+            if (anyFulfillment) {
+              throw new BadRequestException({
+                code: 'FEFO_MISMATCH',
+                message: `The scanned batch (${inventory.batchNumber}) for ${detail.material.name} does not match the Warehouse SCM FEFO allocation. Please use the exact material batch issued.`,
+              });
+            }
           }
 
           // 2. QC Status Validation
@@ -1984,7 +2509,296 @@ export class ProductionService {
       },
     });
     if (!plan) throw new NotFoundException(`Batch record ${batchNo} not found`);
-    return plan;
+    return {
+      ...plan,
+      status: plan.apjSignatureUrl || plan.status,
+    };
+  }
+
+  async createBatchRecord(dto: any, user: any) {
+    const salesOrderId = dto.salesOrderId || dto.sales_order_id || dto.soId;
+    if (!salesOrderId) {
+      throw new BadRequestException({
+        code: 'SALES_ORDER_REQUIRED',
+        message: 'sales_order_id bridge is required (BUS-RULE-028)',
+      });
+    }
+
+    const so = await this.prisma.salesOrder.findUnique({
+      where: { id: salesOrderId },
+      include: { lead: true },
+    });
+    if (!so) {
+      throw new BadRequestException(`Sales order ${salesOrderId} not found`);
+    }
+
+    const batchNo =
+      dto.batchNo ||
+      `BMR-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${randomUUID().slice(0, 4).toUpperCase()}`;
+
+    const formulaId =
+      dto.formulaId || dto.formulationId || dto.formulation_id || null;
+
+    let adminId = user?.id;
+    if (!adminId) {
+      const defaultUser = await this.prisma.user.findFirst();
+      adminId = defaultUser?.id;
+    }
+
+    const plan = await this.prisma.productionPlan.create({
+      data: {
+        batchNo,
+        soId: salesOrderId,
+        adminId,
+        formulaId,
+        status: 'PLANNING' as any,
+        apjSignatureUrl: 'PLANNING',
+        apjNotes: dto.note || dto.notes || null,
+      },
+      include: {
+        so: { include: { lead: true } },
+        formula: true,
+        workOrders: true,
+      },
+    });
+
+    const workOrderId = dto.workOrderId || dto.work_order_id;
+    if (workOrderId) {
+      await this.prisma.workOrder
+        .update({
+          where: { id: workOrderId },
+          data: { planId: plan.id },
+        })
+        .catch(() => {});
+    }
+
+    this.eventEmitter.emit('production.batch_record.created', {
+      batchRecordId: plan.id,
+      batchNo: plan.batchNo,
+      salesOrderId,
+      actorId: user?.id,
+    });
+
+    return {
+      data: {
+        ...plan,
+        status: plan.apjSignatureUrl || plan.status,
+      },
+    };
+  }
+
+  async getBatchRecord(id: string) {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      );
+    const plan = await this.prisma.productionPlan.findFirst({
+      where: isUuid ? { OR: [{ id }, { batchNo: id }] } : { batchNo: id },
+      include: {
+        so: { include: { lead: true } },
+        formula: true,
+        workOrders: {
+          include: {
+            schedules: {
+              include: {
+                stepDetails: { include: { material: true } },
+                machine: true,
+              },
+            },
+            logs: { orderBy: { loggedAt: 'desc' } },
+            requisitions: { include: { material: true } },
+          },
+        },
+        logs: { orderBy: { loggedAt: 'desc' } },
+      },
+    });
+    if (!plan) throw new NotFoundException(`Batch record ${id} not found`);
+    return {
+      data: {
+        ...plan,
+        status: plan.apjSignatureUrl || plan.status,
+      },
+    };
+  }
+
+  async updateBatchRecord(id: string, dto: any, user: any) {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      );
+    const plan = await this.prisma.productionPlan.findFirst({
+      where: isUuid ? { OR: [{ id }, { batchNo: id }] } : { batchNo: id },
+    });
+    if (!plan) throw new NotFoundException(`Batch record ${id} not found`);
+
+    const updated = await this.prisma.productionPlan.update({
+      where: { id: plan.id },
+      data: {
+        apjNotes:
+          dto.note !== undefined
+            ? dto.note
+            : dto.notes !== undefined
+              ? dto.notes
+              : plan.apjNotes,
+        formulaId: dto.formulaId || dto.formulationId || plan.formulaId,
+      },
+      include: { so: true, formula: true, workOrders: true },
+    });
+    return {
+      data: {
+        ...updated,
+        status: updated.apjSignatureUrl || updated.status,
+      },
+    };
+  }
+
+  async deleteBatchRecord(id: string, user: any) {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      );
+    const plan = await this.prisma.productionPlan.findFirst({
+      where: isUuid ? { OR: [{ id }, { batchNo: id }] } : { batchNo: id },
+    });
+    if (!plan) throw new NotFoundException(`Batch record ${id} not found`);
+
+    await this.prisma.productionPlan.delete({ where: { id: plan.id } });
+    return { success: true };
+  }
+
+  async transitionBatchRecord(
+    id: string,
+    toStatus: string,
+    user: any,
+    notes?: string,
+  ) {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      );
+    const plan = await this.prisma.productionPlan.findFirst({
+      where: isUuid ? { OR: [{ id }, { batchNo: id }] } : { batchNo: id },
+      include: {
+        formula: true,
+        workOrders: {
+          include: {
+            schedules: true,
+          },
+        },
+      },
+    });
+
+    if (!plan) throw new NotFoundException(`Batch record ${id} not found`);
+
+    const currentStatus =
+      plan.apjSignatureUrl || (plan.status as string) || 'PLANNING';
+    const normalizedTarget = toStatus?.toUpperCase();
+
+    // Map allowable transitions per 03_WORKFLOW_STATE_MACHINE.yaml:
+    // DRAFT (PLANNING) -> APPROVED -> LOCKED -> IN_PROGRESS -> COMPLETED
+    const validTransitions: Record<string, string[]> = {
+      PLANNING: ['APPROVED'],
+      DRAFT: ['APPROVED'],
+      APPROVED: ['LOCKED'],
+      LOCKED: ['IN_PROGRESS'],
+      IN_PROGRESS: ['COMPLETED'],
+      COMPLETED: [],
+    };
+
+    const allowed = validTransitions[currentStatus] || [];
+    if (!allowed.includes(normalizedTarget)) {
+      throw new BadRequestException({
+        code: 'INVALID_TRANSITION',
+        message: `Tidak bisa transisi status dari ${currentStatus} ke ${normalizedTarget}. Harus berurutan: DRAFT -> APPROVED -> LOCKED -> IN_PROGRESS -> COMPLETED.`,
+      });
+    }
+
+    // Preconditions
+    if (normalizedTarget === 'APPROVED') {
+      if (!plan.formulaId && !plan.formula) {
+        throw new BadRequestException({
+          code: 'FORMULA_REQUIRED',
+          message:
+            'Batch Record wajib terhubung dengan formula sebelum di-approve.',
+        });
+      }
+    } else if (normalizedTarget === 'LOCKED') {
+      const totalSchedules = plan.workOrders.reduce(
+        (sum, wo) => sum + wo.schedules.length,
+        0,
+      );
+      if (totalSchedules === 0) {
+        throw new BadRequestException({
+          code: 'SCHEDULES_REQUIRED',
+          message:
+            'Seluruh jadwal (Mixing/Filling/Packaging) wajib dibuat sebelum batch di-lock.',
+        });
+      }
+    } else if (normalizedTarget === 'COMPLETED') {
+      const allSchedules = plan.workOrders.flatMap((wo) => wo.schedules);
+      const packagingSchedule = allSchedules.find(
+        (s) =>
+          (s.stage as string) === 'PACKAGING' ||
+          (s.stage as string) === 'PACKING',
+      );
+      if (!packagingSchedule || packagingSchedule.status !== 'COMPLETED') {
+        throw new BadRequestException({
+          code: 'PACKAGING_NOT_COMPLETED',
+          message:
+            'Tahap Packaging wajib berstatus COMPLETED sebelum Batch Record dapat diselesaikan.',
+        });
+      }
+    }
+
+    let dbLifecycleStatus: LifecycleStatus = plan.status;
+    let dbApjStatus = plan.apjStatus;
+
+    if (normalizedTarget === 'APPROVED') {
+      dbApjStatus = 'APPROVED' as any;
+      dbLifecycleStatus = 'READY_TO_PRODUCE' as any;
+    } else if (normalizedTarget === 'LOCKED') {
+      dbLifecycleStatus = 'READY_TO_PRODUCE' as any;
+    } else if (normalizedTarget === 'IN_PROGRESS') {
+      dbLifecycleStatus = 'MIXING' as any;
+    } else if (normalizedTarget === 'COMPLETED') {
+      dbLifecycleStatus = 'FINISHED_GOODS' as any;
+    } else if (normalizedTarget === 'PLANNING' || normalizedTarget === 'DRAFT') {
+      dbLifecycleStatus = 'PLANNING' as any;
+    }
+
+    try {
+      const updated = await this.prisma.productionPlan.update({
+        where: { id: plan.id },
+        data: {
+          status: dbLifecycleStatus,
+          apjStatus: dbApjStatus,
+          apjSignatureUrl: normalizedTarget,
+          apjNotes: notes || plan.apjNotes,
+        },
+        include: {
+          so: { include: { lead: true } },
+          formula: true,
+          workOrders: { include: { schedules: true } },
+        },
+      });
+
+      this.eventEmitter.emit('production.batch_record.transitioned', {
+        batchRecordId: plan.id,
+        fromStatus: currentStatus,
+        toStatus: normalizedTarget,
+        actorId: user?.id,
+      });
+
+      return {
+        data: {
+          ...updated,
+          status: normalizedTarget,
+        },
+      };
+    } catch (err: any) {
+      console.error('transitionBatchRecord update failed:', err);
+      throw err;
+    }
   }
 
   async getBatchRecords() {
@@ -2039,58 +2853,67 @@ export class ProductionService {
 
   async verifyStageQC(userId: string, dto: any) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || !user.roles.includes('QC_LAB' as any)) {
+    if (
+      !user ||
+      (!user.roles.includes('QC_LAB' as any) &&
+        !user.roles.includes('SUPER_ADMIN' as any))
+    ) {
       throw new ForbiddenException(
-        'Hanya QC_OFFICER yang diizinkan melakukan verifikasi kualitas.',
+        'Hanya QC_OFFICER atau SUPER_ADMIN yang diizinkan melakukan verifikasi kualitas.',
       );
     }
 
     const { stepLogId, status, notes, ...metrics } = dto;
 
-    const audit = await this.prisma.$transaction(async (tx: any) => {
-      const log = await tx.productionLog.findFirst({
-        where: { id: stepLogId },
-        include: { workOrder: true },
+    try {
+      const audit = await this.prisma.$transaction(async (tx: any) => {
+        const log = await tx.productionLog.findFirst({
+          where: { id: stepLogId },
+          include: { workOrder: true },
+        });
+
+        if (!log) throw new BadRequestException('Log produksi tidak ditemukan.');
+
+        const audit = await tx.qCAudit.create({
+          data: {
+            stepLogId,
+            qcId: userId,
+            status,
+            notes,
+            ...metrics,
+          },
+        });
+
+        // Update Production Log notes to reflect QC sign-off
+        await tx.productionLog.update({
+          where: { id: stepLogId },
+          data: {
+            notes: `${log.notes} | QC_VERIFIED BY ${user.fullName} [${status}]`,
+          },
+        });
+
+        return audit;
       });
 
-      if (!log) throw new BadRequestException('Log produksi tidak ditemukan.');
-
-      const audit = await tx.qCAudit.create({
-        data: {
-          stepLogId,
-          qcId: userId,
-          status,
-          notes,
-          ...metrics,
-        },
+      this.eventEmitter.emit('production.qc_verified', {
+        auditId: audit.id,
+        stepLogId,
+        status,
+        notes,
+        loggedBy: userId,
       });
 
-      // Update Production Log notes to reflect QC sign-off
-      await tx.productionLog.update({
-        where: { id: stepLogId },
-        data: {
-          notes: `${log.notes} | QC_VERIFIED BY ${user.fullName} [${status}]`,
-        },
+      this.eventEmitter.emit('activity.logged', {
+        senderDivision: 'PRODUCTION',
+        notes: `QC verified stage log ${stepLogId} as ${status}`,
+        loggedBy: `SYSTEM:PRODUCTION`,
       });
 
       return audit;
-    });
-
-    this.eventEmitter.emit('production.qc_verified', {
-      auditId: audit.id,
-      stepLogId,
-      status,
-      notes,
-      loggedBy: userId,
-    });
-
-    this.eventEmitter.emit('activity.logged', {
-      senderDivision: 'PRODUCTION',
-      notes: `QC verified stage log ${stepLogId} as ${status}`,
-      loggedBy: `SYSTEM:PRODUCTION`,
-    });
-
-    return audit;
+    } catch (err: any) {
+      console.error('verifyStageQC ERROR DETAILS:', err);
+      throw err;
+    }
   }
 
   async returnMaterial(userId: string, dto: any) {

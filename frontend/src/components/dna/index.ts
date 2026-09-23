@@ -25,6 +25,8 @@ export { DnaPageHeader } from "./layout/DnaPageHeader";
 export type { DnaPageHeaderProps, DnaPageTabItem } from "./layout/DnaPageHeader";
 export { DnaKpiGrid, DnaKpiCard } from "./layout/DnaKpiGrid";
 export type { DnaKpiGridProps, DnaKpiCardItem } from "./layout/DnaKpiGrid";
+export { DnaStandardPageShell } from "./layout/DnaStandardPageShell";
+export type { DnaStandardPageShellProps } from "./layout/DnaStandardPageShell";
 
 // Table & Toolbar
 export { DnaDataTableCard } from "./table/DnaDataTableCard";
@@ -55,6 +57,8 @@ export { formatRupiah } from "@/lib/utils";
 export { DnaPageContainer } from "./DnaPageContainer";
 export { DnaModal } from "./DnaModal";
 export { DnaDrawer } from "./DnaDrawer";
+export { DnaDetailDrawer } from "./DnaDetailDrawer";
+export type { DnaDetailDrawerProps } from "./DnaDetailDrawer";
 export { DnaTabNav } from "./DnaTabNav";
 export type { DnaTabNavProps } from "./DnaTabNav";
 export { DnaToolbar } from "./DnaToolbar";

@@ -1,15 +1,13 @@
 "use client";
-export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Inbox, 
-  ShieldAlert, 
-  CheckCircle2, 
-  Search, 
+import {
+  Inbox,
+  ShieldAlert,
+  CheckCircle2,
+  Search,
   MessageSquare,
   Beaker,
   ImageIcon,
@@ -17,542 +15,432 @@ import {
   ChevronRight,
   AlertTriangle,
   Download,
-  Maximize2,
   PlusCircle,
   RefreshCcw,
-  Sparkles
+  Sparkles,
+  Eye,
+  FileSpreadsheet,
+  XCircle,
+  Layers,
+  FileCheck,
 } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import Link from "next/link";
 import Image from "next/image";
-import { DashboardShell } from "@/components/layout/DashboardShell";
 import {
+  DnaPageHeader,
+  DnaKpiGrid,
   DnaDataTableCard,
-  DnaCard,
+  DnaTable,
   DnaBadge,
   DnaButton,
+  DnaDetailDrawer,
   DnaInput,
   DnaTextarea,
-  DnaCell,
-  DnaEmptyState,
-  DnaErrorState,
-  DnaLoadingSkeleton,
+  useDnaToast,
 } from "@/components/dna";
 
-/** A design version's master file is often .ai/.pdf/.cdr/.tif — not displayable. */
 const DISPLAYABLE_RENDITION = /\.(png|jpe?g|webp|gif|avif|svg)$/i;
 
 const isDisplayable = (url?: string | null) =>
   !!url && DISPLAYABLE_RENDITION.test(url.split("?")[0]);
 
-const fileNameOf = (url: string) => url.split("/").pop() || url;
-
 export default function ComplianceInboxPage() {
   const queryClient = useQueryClient();
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const { success, error: toastError } = useDnaToast();
+  const [activeTab, setActiveTab] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
+  const [reviewNotes, setReviewNotes] = useState("");
 
-  const { data: tasks, isLoading, isError, error, refetch } = useQuery({
+  const { data: tasks = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["compliance-tasks"],
     queryFn: async () => {
       const resp = await api.get("/legality/inbox/tasks");
       return resp.data || [];
-    }
+    },
   });
 
   const submitReviewMutation = useMutation({
-    mutationFn: ({ pipelineId, isApproved, notes }: any) =>
+    mutationFn: ({ pipelineId, isApproved, notes }: { pipelineId: string; isApproved: boolean; notes: string }) =>
       api.post(`/legality/pipeline/${pipelineId}/artwork-review`, { isApproved, notes }),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["compliance-tasks"] });
-      toast.success("Review finalized");
-      setSelectedTaskId(null);
+      queryClient.invalidateQueries({ queryKey: ["legality-dashboard"] });
+      success(variables.isApproved ? "Review kepatuhan disetujui resmi." : "Catatan revisi berhasil dikirim.");
+      setIsDetailDrawerOpen(false);
+      setReviewNotes("");
+      setSelectedTask(null);
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.error?.message || "Review could not be recorded");
-    }
-  });
-
-  // Derive activeTask from tasks + selectedTaskId during render (no useEffect needed).
-  // Auto-select first task when no selection and tasks available.
-  const effectiveSelectedId =
-    selectedTaskId ?? tasks?.[0]?.id ?? null;
-  const activeTask =
-    tasks?.find((t: any) => t.id === effectiveSelectedId) ?? null;
-
-  // The artwork under review, as the API returned it. The master file is what the
-  // review is bound to; a displayable rendition (the version's mockup) is shown
-  // when the master itself is not a browser-renderable file.
-  const artworkUrl: string | null = activeTask?.artworkUrl ?? null;
-  const artworkPreviewUrl: string | null = activeTask?.artworkPreviewUrl ?? null;
-  const artworkSrc: string | null = isDisplayable(artworkUrl)
-    ? artworkUrl
-    : isDisplayable(artworkPreviewUrl)
-      ? artworkPreviewUrl
-      : null;
-
-  const errorStatus = (error as any)?.response?.status;
-  const denied = errorStatus === 403;
-  const errorMessage =
-    (error as any)?.response?.data?.error?.message ||
-    (error as any)?.response?.data?.message ||
-    "Gagal memuat tugas kepatuhan.";
-
-  const { data: validationResult, isLoading: isValidating } = useQuery({
-    queryKey: ["formula-validation", activeTask?.formulaId],
-    queryFn: async () => {
-      const resp = await api.get(`/legality/formula/${activeTask.formulaId}/validate`);
-      return resp.data;
+      toastError(err?.response?.data?.error?.message || err?.response?.data?.message || "Gagal memproses review");
     },
-    enabled: !!activeTask && activeTask.type === "FORMULA_VALIDATION" && !!activeTask.formulaId,
   });
 
-  const getDnaPriority = (priority: string) => {
-    switch (priority) {
-      case "HIGH": return <DnaBadge status="critical">HIGH</DnaBadge>;
-      case "MEDIUM": return <DnaBadge status="warning">MEDIUM</DnaBadge>;
-      default: return <DnaBadge status="default">LOW</DnaBadge>;
-    }
-  };
+  const totalTasks = tasks.length;
+  const highPriorityTasks = tasks.filter((t: any) => t.priority === "HIGH").length;
+  const artworkTasks = tasks.filter((t: any) => t.type === "ARTWORK_REVIEW").length;
+  const formulaTasks = tasks.filter((t: any) => t.type === "FORMULA_VALIDATION").length;
+
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((t: any) => {
+      if (activeTab !== "all" && t.type !== activeTab) {
+        return false;
+      }
+      if (searchTerm.trim()) {
+        const q = searchTerm.toLowerCase();
+        const matchTitle = t.title?.toLowerCase().includes(q);
+        const matchId = t.pipelineId?.toLowerCase().includes(q);
+        const matchType = t.type?.toLowerCase().includes(q);
+        if (!matchTitle && !matchId && !matchType) return false;
+      }
+      return true;
+    });
+  }, [tasks, activeTab, searchTerm]);
 
   return (
-    <DashboardShell
-      title="COMPLIANCE"
-      titleAccent="INBOX"
-      subtitle="Regulatory curation task inbox and AI verification center"
-    >
-      <div className="flex h-[calc(100vh-180px)] rounded-2xl border border-slate-200 shadow-sm bg-white">
-        {/* Left Sidebar: Task List */}
-        <aside className="w-[360px] border-r border-slate-100 flex flex-col bg-slate-50/30 shrink-0">
-          <div className="p-5 pb-3">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/10">
-                  <Inbox className="w-4.5 h-4.5 text-white" />
-                </div>
-                <h1 className="text-sm font-black tracking-tight italic uppercase text-slate-900">
-                  COMPLIANCE <span className="text-blue-600">INBOX</span>
-                </h1>
-              </div>
-              <button 
-                onClick={() => refetch()} 
-                className="h-8 w-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
-              >
-                <RefreshCcw className={cn("w-3.5 h-3.5 text-slate-400", isLoading && "animate-spin")} />
-              </button>
-            </div>
-            <div className="relative">
-              <DnaInput
-                icon={<Search className="w-4 h-4 text-slate-400" />}
-                placeholder="FILTER TASKS..."
-                className="text-[10px] font-bold uppercase"
-              />
-            </div>
-          </div>
+    <div className="space-y-6 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
+      {/* ── 01. PAGE HEADER DENGAN TABS TERPADU (Golden Rule 2) ── */}
+      <DnaPageHeader
+        backLink={{ href: "/legality/dashboard", label: "Kembali ke Dashboard Legal" }}
+        title="COMPLIANCE INBOX & ARTWORK REVIEW"
+        badge={<DnaBadge variant="info">REGULATORY INBOX</DnaBadge>}
+        subtitle="Pusat kurasi berkas kepatuhan, review etiket & klaim kemasan BPOM, serta otorisasi formula"
+        tabs={[
+          {
+            key: "all",
+            label: "Semua Tugas",
+            count: totalTasks,
+            icon: <Inbox className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "ARTWORK_REVIEW",
+            label: "Review Artwork & Etiket",
+            count: artworkTasks,
+            icon: <ImageIcon className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "FORMULA_VALIDATION",
+            label: "Validasi Formula BPOM",
+            count: formulaTasks,
+            icon: <Beaker className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "PNBP_FILING",
+            label: "Billing & PNBP",
+            count: tasks.filter((t: any) => t.type === "PNBP_FILING").length,
+            icon: <CreditCard className="w-3.5 h-3.5" />,
+          },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        actions={
+          <DnaButton
+            variant="outline"
+            icon={<RefreshCcw className="w-3.5 h-3.5" />}
+            onClick={() => refetch()}
+          >
+            Sinkronisasi Antrean
+          </DnaButton>
+        }
+      />
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-1.5 border-t border-slate-100">
-            {isLoading && (
-              <div className="p-10 flex flex-col items-center justify-center gap-3">
-                <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Synchronizing Hub...</p>
-              </div>
-            )}
+      {/* ── 02. MODULAR 4 KPI METRIC CARDS ── */}
+      <DnaKpiGrid
+        cards={[
+          {
+            key: "TOTAL",
+            title: "TOTAL ANTREAN TUGAS",
+            value: totalTasks.toLocaleString("id-ID"),
+            deltaText: "Menunggu kurasi & verifikasi",
+            isDeltaPositive: true,
+            icon: <Inbox className="w-4 h-4" />,
+            iconBg: "bg-blue-50",
+            iconColor: "text-blue-600",
+            isSelected: false,
+          },
+          {
+            key: "HIGH",
+            title: "PRIORITAS TINGGI (URGENT)",
+            value: `${highPriorityTasks} Tugas`,
+            deltaText: "Perlu tindakan segera (< 24 jam)",
+            isDeltaPositive: false,
+            icon: <ShieldAlert className="w-4 h-4" />,
+            iconBg: "bg-rose-50",
+            iconColor: "text-rose-600",
+            isSelected: false,
+          },
+          {
+            key: "ARTWORK",
+            title: "REVIEW ARTWORK KEMASAN",
+            value: `${artworkTasks} Desain`,
+            deltaText: "Pemeriksaan tata letak etiket BPOM",
+            isDeltaPositive: true,
+            icon: <ImageIcon className="w-4 h-4" />,
+            iconBg: "bg-purple-50",
+            iconColor: "text-purple-600",
+            isSelected: activeTab === "ARTWORK_REVIEW",
+            onClick: () => setActiveTab(activeTab === "ARTWORK_REVIEW" ? "all" : "ARTWORK_REVIEW"),
+          },
+          {
+            key: "FORMULA",
+            title: "VALIDASI FORMULA BPOM",
+            value: `${formulaTasks} Formula`,
+            deltaText: "Cek kepatuhan batas konsentrasi",
+            isDeltaPositive: true,
+            icon: <Beaker className="w-4 h-4" />,
+            iconBg: "bg-emerald-50",
+            iconColor: "text-emerald-600",
+            isSelected: activeTab === "FORMULA_VALIDATION",
+            onClick: () => setActiveTab(activeTab === "FORMULA_VALIDATION" ? "all" : "FORMULA_VALIDATION"),
+          },
+        ]}
+      />
 
-            {isError && (
-              <div className="p-10 text-center space-y-3">
-                <ShieldAlert className="w-8 h-8 text-rose-500 mx-auto opacity-40 animate-pulse" />
-                <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest leading-none">Connection Interrupted</p>
-                <DnaButton variant="outline" size="sm" onClick={() => refetch()}>Try Again</DnaButton>
-              </div>
-            )}
-            
-            {!isLoading && !isError && (!tasks || tasks.length === 0) && (
-              <div className="p-8 text-center space-y-4">
-                <div className="h-14 w-14 rounded-2xl border border-slate-200 shadow-sm bg-white flex items-center justify-center mx-auto">
-                  <Sparkles className="w-7 h-7 text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-900 uppercase italic tracking-wider">System is Clean</p>
-                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wide mt-1">No pending regulatory tasks detected.</p>
-                </div>
-                <Link href="/legality/pipeline">
-                  <DnaButton variant="primary" className="w-full">
-                    <PlusCircle className="w-4 h-4 mr-1" /> Start Pipeline
-                  </DnaButton>
-                </Link>
-              </div>
-            )}
-
-            {tasks?.map((task: any) => (
-              <button
-                key={task.id}
-                onClick={() => { setSelectedTaskId(task.id); }}
-                className={cn(
-                  "w-full text-left p-4 rounded-xl transition-all border relative overflow-hidden group cursor-pointer",
-                  selectedTaskId === task.id 
-                    ? "bg-white border-blue-600/20 shadow-md ring-1 ring-blue-600/5" 
-                    : "bg-transparent border-transparent hover:bg-white/60 hover:border-slate-100"
-                )}
-              >
-                {selectedTaskId === task.id && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600" />
-                )}
-                <div className="flex justify-between items-center mb-2">
-                  {getDnaPriority(task.priority)}
-                  <span className="text-[8px] font-bold text-slate-400 uppercase italic leading-none">{new Date(task.createdAt).toLocaleTimeString()}</span>
-                </div>
-                <h3 className={cn("text-[11px] font-black uppercase tracking-tight italic mb-2 transition-colors", selectedTaskId === task.id ? "text-blue-600" : "text-slate-600 group-hover:text-slate-900")}>
-                  {task.title}
-                </h3>
-                <div className="flex items-center gap-2">
-                  {task.type === "FORMULA_VALIDATION" && <Beaker className="w-3.5 h-3.5 text-indigo-500" />}
-                  {task.type === "ARTWORK_REVIEW" && <ImageIcon className="w-3.5 h-3.5 text-blue-500" />}
-                  {task.type === "PNBP_FILING" && <CreditCard className="w-3.5 h-3.5 text-emerald-500" />}
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider">{task.type.replace('_', ' ')}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </aside>
-
-        {/* Right Content: Workspace */}
-        <main className="flex-1 flex flex-col bg-white overflow-hidden">
-          {isLoading ? (
-            <div className="flex-1 p-6">
-              <DnaLoadingSkeleton rows={6} />
-            </div>
-          ) : isError ? (
-            <div className="flex-1 p-6">
-              <DnaErrorState
-                title={denied ? "Akses ditolak" : "Gagal memuat data"}
-                message={
-                  denied
-                    ? "Anda tidak memiliki akses ke inbox kepatuhan."
-                    : errorMessage
-                }
-                onRetry={() => refetch()}
-              />
-            </div>
-          ) : (
-          <AnimatePresence mode="wait">
-            {activeTask ? (
-              <motion.div 
-                key={activeTask.id}
-                initial={{ opacity: 0, x: 15 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -15 }}
-                transition={{ duration: 0.25, ease: "easeInOut" }}
-                className="flex-1 flex flex-col h-full overflow-hidden"
-              >
-              <header className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/10">
-                <div>
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-[8px] font-black uppercase tracking-wider text-slate-400">Workspace / {activeTask.type}</span>
-                    <ChevronRight className="w-2.5 h-2.5 text-slate-300" />
-                    <span className="text-[8px] font-black uppercase tracking-wider text-blue-600">ID: {activeTask.pipelineId.substring(0,8)}</span>
+      {/* ── 03. MODULAR DATA TABLE CARD (Golden Rule 1 & 4) ── */}
+      <DnaDataTableCard
+        toolbarProps={{
+          searchQuery: searchTerm,
+          onSearchChange: setSearchTerm,
+          searchPlaceholder: "Cari judul tugas, kode proyek, atau tipe kepatuhan...",
+        }}
+      >
+        <DnaTable className="table-fixed w-full">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+              <th className="p-3 w-10 text-slate-400">#</th>
+              <th className="p-3 w-[30%]">JUDUL TUGAS & ID PIPELINE</th>
+              <th className="p-3 w-[22%]">TIPE KEPATUHAN & PRIORITAS</th>
+              <th className="p-3 w-[20%]">WAKTU PENGAJUAN</th>
+              <th className="p-3 w-[16%] text-center">STATUS</th>
+              <th className="p-3 text-center w-[12%] whitespace-nowrap">AKSI</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {isLoading ? (
+              <tr>
+                <td colSpan={6} className="p-8 text-center text-xs text-slate-400">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <span>Memuat antrean tugas kepatuhan...</span>
                   </div>
-                  <h2 className="text-xl font-black tracking-tighter italic uppercase text-slate-900 leading-none">{activeTask.title}</h2>
-                </div>
-                <div className="flex gap-2">
-                  <DnaButton 
-                    variant="outline"
-                    icon={<MessageSquare />}
-                    onClick={() => toast.info("Rejection log window initiated.")}
-                  >
-                    Reject
-                  </DnaButton>
-                  <DnaButton 
-                    variant="primary"
-                    icon={<CheckCircle2 />}
-                    onClick={() => submitReviewMutation.mutate({ pipelineId: activeTask.pipelineId, isApproved: true, notes: "Approved directly from workspace header" })}
-                  >
-                    Approve
-                  </DnaButton>
-                </div>
-              </header>
+                </td>
+              </tr>
+            ) : isError ? (
+              <tr>
+                <td colSpan={6} className="p-8 text-center text-xs text-rose-500">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <span>Gagal memuat inbox kepatuhan: {(error as any)?.message || "Terjadi kesalahan"}</span>
+                    <button
+                      type="button"
+                      onClick={() => refetch()}
+                      className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors"
+                    >
+                      Coba Lagi
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ) : filteredTasks.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="p-8 text-center text-xs text-slate-400">
+                  Antrean bersih! Tidak ada tugas kepatuhan yang pending saat ini.
+                </td>
+              </tr>
+            ) : (
+              filteredTasks.map((task: any, idx: number) => (
+                <tr
+                  key={task.id || idx}
+                  className="hover:bg-slate-50/80 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setSelectedTask(task);
+                    setReviewNotes("");
+                    setIsDetailDrawerOpen(true);
+                  }}
+                >
+                  <td className="p-3 text-slate-400 font-mono text-[11px] tabular-nums">
+                    {idx + 1}
+                  </td>
+                  <td className="p-3">
+                    <div className="font-bold text-slate-900 truncate uppercase">{task.title}</div>
+                    <div className="font-mono text-[11px] text-blue-600 font-semibold truncate">
+                      ID: {task.pipelineId ? task.pipelineId.substring(0, 12) : task.id}
+                    </div>
+                  </td>
+                  <td className="p-3">
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                      <DnaBadge
+                        variant={
+                          task.priority === "HIGH"
+                            ? "critical"
+                            : task.priority === "MEDIUM"
+                            ? "warning"
+                            : "neutral"
+                        }
+                      >
+                        {task.priority || "NORMAL"}
+                      </DnaBadge>
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-mono">
+                      {task.type?.replace("_", " ")}
+                    </div>
+                  </td>
+                  <td className="p-3">
+                    <div className="font-medium text-slate-800 text-xs">
+                      {task.createdAt ? new Date(task.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      {task.createdAt ? new Date(task.createdAt).toLocaleTimeString("id-ID") : ""}
+                    </div>
+                  </td>
+                  <td className="p-3 text-center">
+                    <DnaBadge variant="warning">Menunggu Review</DnaBadge>
+                  </td>
+                  <td className="p-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <DnaButton
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
+                      onClick={() => {
+                        setSelectedTask(task);
+                        setReviewNotes("");
+                        setIsDetailDrawerOpen(true);
+                      }}
+                      title="Review Tugas"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </DnaButton>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </DnaTable>
+      </DnaDataTableCard>
 
-              <div className="flex-1 p-6 overflow-y-auto">
-                {activeTask.type === "ARTWORK_REVIEW" && (
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
-                    <div className="col-span-12 lg:col-span-8 space-y-6">
-                      {!artworkUrl ? (
-                        <DnaEmptyState
-                          title="Belum ada artwork pada versi ini"
-                          description="Creative belum mengunggah berkas artwork untuk versi desain ini, jadi belum ada yang bisa direview."
-                        />
-                      ) : (
-                      <>
-                      <div className="aspect-video rounded-2xl border border-slate-200 shadow-sm bg-white relative overflow-hidden group flex items-center justify-center">
-                        {artworkSrc ? (
+      {/* ── 04. DETAIL DRAWER QUICK PEEK (Golden Rule 5) ── */}
+      <DnaDetailDrawer
+        isOpen={isDetailDrawerOpen}
+        onClose={() => setIsDetailDrawerOpen(false)}
+        title={selectedTask?.title || "Review Kepatuhan"}
+        subtitle={`Tipe: ${selectedTask?.type?.replace("_", " ") || "-"} • Pipeline: ${selectedTask?.pipelineId?.substring(0, 10) || "-"}`}
+        badge={
+          selectedTask?.priority === "HIGH" ? (
+            <DnaBadge variant="critical">PRIORITAS TINGGI</DnaBadge>
+          ) : (
+            <DnaBadge variant="info">ANTREAN REVIEW</DnaBadge>
+          )
+        }
+        tabs={[
+          {
+            id: "specs",
+            label: "Rincian Berkas & Etiket",
+            content: selectedTask ? (
+              <div className="space-y-4 text-xs">
+                <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Judul Tugas</span>
+                    <span className="font-bold text-slate-900 text-sm uppercase">{selectedTask.title}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Tipe Kepatuhan</span>
+                    <span className="font-mono font-bold text-blue-600 text-sm">{selectedTask.type}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Prioritas Antrean</span>
+                    <span className="font-semibold text-slate-800">{selectedTask.priority || "NORMAL"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">ID Pipeline Proyek</span>
+                    <span className="font-mono text-slate-600">{selectedTask.pipelineId}</span>
+                  </div>
+                </div>
+
+                {/* Preview Artwork jika ada */}
+                {(selectedTask.artworkUrl || selectedTask.artworkPreviewUrl) && (
+                  <div className="space-y-2">
+                    <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px] block">
+                      Preview Artwork / Etiket Kemasan:
+                    </span>
+                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center justify-center min-h-[200px]">
+                      {isDisplayable(selectedTask.artworkUrl || selectedTask.artworkPreviewUrl) ? (
+                        <div className="relative w-full h-48">
                           <Image
-                            src={artworkSrc}
-                            alt={`Artwork V${activeTask.artworkVersion ?? "-"}`}
-                            width={1200}
-                            height={800}
-                            className="w-full h-full object-contain"
-                            unoptimized
+                            src={selectedTask.artworkUrl || selectedTask.artworkPreviewUrl}
+                            alt="Artwork Preview"
+                            fill
+                            className="object-contain rounded-lg"
                           />
-                        ) : (
-                          <div className="text-center space-y-2 px-8">
-                            <ImageIcon className="w-12 h-12 text-slate-300 mx-auto" />
-                            <p className="text-[11px] font-black uppercase italic text-slate-600 break-all">
-                              {fileNameOf(artworkUrl)}
-                            </p>
-                            <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400">
-                              Master artwork bukan berkas gambar — buka berkasnya untuk meninjau
-                            </p>
-                          </div>
-                        )}
-                        <div className="absolute bottom-4 right-4 flex gap-2">
-                          <a href={artworkUrl} target="_blank" rel="noreferrer" title="Buka artwork" className="h-9 w-9 rounded-lg bg-white/90 border border-slate-200 text-slate-600 shadow-sm hover:bg-white flex items-center justify-center cursor-pointer transition-colors"><Maximize2 className="w-4 h-4" /></a>
-                          <a href={artworkUrl} download title="Unduh artwork" className="h-9 w-9 rounded-lg bg-white/90 border border-slate-200 text-slate-600 shadow-sm hover:bg-white flex items-center justify-center cursor-pointer transition-colors"><Download className="w-4 h-4" /></a>
                         </div>
-                      </div>
-                      <DnaCard>
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">ARTWORK UNDER REVIEW</h3>
+                      ) : (
+                        <div className="text-center space-y-2">
+                          <FileCheck className="w-10 h-10 text-slate-400 mx-auto" />
+                          <p className="font-bold text-slate-700">Berkas Master Grafis Terlampir</p>
+                          <p className="text-[11px] text-slate-400 font-mono">
+                            {selectedTask.artworkUrl?.split("/").pop() || "master-artwork.pdf"}
+                          </p>
                         </div>
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-black uppercase italic text-slate-700 break-all">
-                              {fileNameOf(artworkUrl)}
-                            </p>
-                            <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400 mt-1">
-                              Versi desain V{activeTask.artworkVersion ?? "-"}
-                            </p>
-                          </div>
-                          <a href={artworkUrl} target="_blank" rel="noreferrer" className="shrink-0">
-                            <DnaButton variant="outline" size="sm" icon={<Maximize2 />}>
-                              Buka Master
-                            </DnaButton>
-                          </a>
-                        </div>
-                      </DnaCard>
-                      {/* The REGULATORY CHECKLIST and DESIGNER NOTES cards that stood here
-                          were removed: the checklist asserted four regulatory checks that
-                          never ran (a false compliance claim on the screen whose purpose is
-                          regulatory truth), and the note was a hardcoded string presented as
-                          the designer's own. `GET /legality/inbox/tasks` carries neither, and
-                          this cycle may not invent an endpoint for them — so the surface
-                          states nothing it has no data for. */}
-                      </>
                       )}
                     </div>
-
-                    <div className="col-span-12 lg:col-span-4">
-                      <DnaCard>
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="w-2 h-2 rounded-full bg-blue-600" />
-                          <h3 className="text-sm font-bold uppercase tracking-wider text-blue-600">FINAL VERDICT</h3>
-                        </div>
-                        <div className="flex flex-col gap-2 mt-2">
-                          <DnaButton 
-                            variant="primary"
-                            onClick={() => submitReviewMutation.mutate({ pipelineId: activeTask.pipelineId, isApproved: true, notes: "Approved via Pass Artwork button" })}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                          >
-                            Pass Artwork
-                          </DnaButton>
-                          <DnaButton 
-                            variant="danger"
-                            onClick={() => submitReviewMutation.mutate({ pipelineId: activeTask.pipelineId, isApproved: false, notes: "Rejected artwork review" })}
-                          >
-                            Fail & Revise
-                          </DnaButton>
-                        </div>
-                        <div className="space-y-1.5 mt-4">
-                          <DnaTextarea
-                            label="Comments"
-                            className="text-xs font-bold italic"
-                            rows={3}
-                          />
-                        </div>
-                      </DnaCard>
-                    </div>
                   </div>
                 )}
 
-                {activeTask.type === "FORMULA_VALIDATION" && (
-                  <div className="space-y-6">
-                    <DnaCard>
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="w-2 h-2 rounded-full bg-indigo-500" />
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-500">AI SCREENING HUB</h3>
-                      </div>
-                      <div className="flex justify-between items-end mb-6">
-                        <div>
-                          <h3 className="text-xl font-black italic tracking-tighter uppercase text-slate-900 leading-none">Formula Shield V4</h3>
-                        </div>
-                        {isValidating ? (
-                          <div className="animate-pulse bg-slate-100 h-6 w-24 rounded-lg" />
-                        ) : (
-                          <DnaBadge
-                            status={
-                              validationResult?.riskScore === "LOW" ? "success" :
-                              validationResult?.riskScore === "MEDIUM" ? "warning" :
-                              "critical"
-                            }
-                          >
-                            {validationResult?.riskScore} RISK
-                          </DnaBadge>
-                        )}
-                      </div>
-
-                      <DnaDataTableCard>
-                        <table className="w-full border-collapse text-[12px]">
-                          <thead>
-                            <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                              <th className="px-4 py-3 text-left">Ingredient</th>
-                              <th className="px-4 py-3 text-center">Conc (%)</th>
-                              <th className="px-4 py-3 text-center">Limit</th>
-                              <th className="px-4 py-3 text-right">Violation</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {validationResult?.violations?.length > 0 ? (
-                              validationResult.violations.map((v: any) => (
-                                <tr key={v.ingredient} className="hover:bg-slate-50/80">
-                                  <td className="px-4 py-2.5 font-bold italic text-slate-700 uppercase text-xs">{v.ingredient}</td>
-                                  <td className="px-4 py-2.5 text-center font-sans text-slate-600 text-xs">{v.actual}%</td>
-                                  <td className="px-4 py-2.5 text-center text-[10px] font-bold text-slate-400 uppercase italic">{v.limit}%</td>
-                                  <td className="px-4 py-2.5 text-right">
-                                    <DnaBadge status="critical">
-                                      {v.type}
-                                    </DnaBadge>
-                                  </td>
-                                </tr>
-                              ))
-                            ) : (
-                              <tr>
-                                <td colSpan={4} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase italic">
-                                  {isValidating ? "Validating..." : "No violations detected. Formula is clean."}
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </DnaDataTableCard>
-                    </DnaCard>
-
-                    {validationResult?.violations?.length > 0 && (
-                      <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 p-5 bg-rose-50 border border-rose-100 rounded-2xl flex gap-3 items-center">
-                          <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0" />
-                          <div>
-                            <h4 className="text-xs font-black uppercase italic text-rose-600 leading-none">Critical Breach Detected</h4>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase mt-1 leading-tight">
-                              {validationResult.violations[0].message}
-                            </p>
-                          </div>
-                        </div>
-                        <DnaButton 
-                          variant="danger"
-                          onClick={() => submitReviewMutation.mutate({ pipelineId: activeTask.pipelineId, isApproved: false, notes: "Formula violation detected." })}
-                          className="bg-indigo-600 border-indigo-700 text-white font-black italic hover:bg-indigo-750 flex flex-col gap-1.5 h-16 w-56 rounded-2xl"
-                        >
-                          <span className="text-xs leading-none">Re-work Order</span>
-                          <span className="text-[7px] opacity-60 uppercase tracking-widest leading-none">To R&D Lab</span>
-                        </DnaButton>
-                      </div>
-                    )}
-                    {validationResult && validationResult.violations?.length === 0 && (
-                      <div className="p-5 bg-emerald-50 border border-emerald-100 rounded-2xl flex justify-between items-center">
-                        <div className="flex gap-3 items-center">
-                          <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                          <div>
-                            <h4 className="text-xs font-black uppercase italic text-emerald-600 leading-none">Formula Verified Safe</h4>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase mt-1 leading-none">All ingredients within regulatory limits.</p>
-                          </div>
-                        </div>
-                        <DnaButton 
-                          variant="primary" 
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                          onClick={() => submitReviewMutation.mutate({ pipelineId: activeTask.pipelineId, isApproved: true, notes: "Formula verified." })}
-                        >
-                          Approve Formula
-                        </DnaButton>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {activeTask.type === "PNBP_FILING" && (
-                  <div className="max-w-2xl mx-auto space-y-6">
-                    <DnaCard>
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">PNBP FILING PORTAL</h3>
-                      </div>
-                      <div className="flex items-center gap-3.5 mb-6">
-                        <div className="h-11 w-11 bg-emerald-50 rounded-xl flex items-center justify-center border border-emerald-100 shrink-0">
-                          <CreditCard className="w-5 h-5 text-emerald-600" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-black italic tracking-tighter uppercase text-slate-900 leading-none">PNBP Filing Portal</h3>
-                          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mt-1">Generate billing request for Finance</p>
-                        </div>
-                      </div>
-
-                      <form
-                        onSubmit={(e: any) => {
-                          e.preventDefault();
-                          const amount = e.target.amount.value;
-                          const billingCode = e.target.billingCode.value;
-                          const description = e.target.description.value;
-                          api.post(`/legality/pipeline/${activeTask.pipelineId}/pnbp-request`, { amount, description: billingCode + " - " + description })
-                            .then(() => {
-                              toast.success("PNBP Request filed to Finance");
-                              refetch();
-                            });
-                        }}
-                        className="space-y-4"
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <DnaInput label="Total Amount (IDR)" name="amount" type="number" defaultValue="500000" />
-                          <DnaInput label="Billing Code / SPS" name="billingCode" placeholder="E.g. 82739182" />
-                        </div>
-                        <DnaTextarea
-                          label="Context / Description"
-                          name="description"
-                          rows={3}
-                          defaultValue={`PNBP Registration for ${activeTask.title}`}
-                        />
-                        <DnaButton type="submit" variant="primary" className="w-full h-12">
-                          Submit Billing to Finance
-                        </DnaButton>
-                      </form>
-                    </DnaCard>
-
-                    <div className="p-5 bg-amber-50 border border-amber-100 rounded-2xl flex gap-3 items-center">
-                      <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-                      <div>
-                        <h4 className="text-xs font-black uppercase italic text-amber-600 leading-none">Finance Gate Interlock</h4>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase mt-1 leading-tight">
-                          Pipeline will remain in SUBMITTED stage until Finance verifies the payment.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Input Catatan Evaluasi */}
+                <div className="space-y-1.5 pt-2">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Catatan Kepatuhan / Evaluasi Regulasi:
+                  </label>
+                  <DnaTextarea
+                    value={reviewNotes}
+                    onChange={(e) => setReviewNotes(e.target.value)}
+                    placeholder="Masukkan alasan persetujuan atau poin revisi etiket (klaim, komposisi, font size)..."
+                    rows={3}
+                  />
+                </div>
               </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex-1 flex flex-col items-center justify-center opacity-40 text-center p-10"
+            ) : null,
+          },
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              icon={<XCircle className="w-3.5 h-3.5 text-rose-600" />}
+              disabled={submitReviewMutation.isPending}
+              onClick={() => {
+                if (!reviewNotes.trim()) {
+                  toastError("Harap cantumkan alasan revisi pada catatan!");
+                  return;
+                }
+                submitReviewMutation.mutate({
+                  pipelineId: selectedTask.pipelineId,
+                  isApproved: false,
+                  notes: reviewNotes,
+                });
+              }}
             >
-              <Inbox className="w-10 h-10 text-slate-200 mb-4" />
-              <h3 className="text-sm font-black italic uppercase text-slate-300">Select a curation task</h3>
-            </motion.div>
-          )}
-        </AnimatePresence>
-          )}
-      </main>
-      </div>
-    </DashboardShell>
+              Minta Revisi
+            </DnaButton>
+            <div className="flex items-center gap-2">
+              <DnaButton
+                variant="primary"
+                size="sm"
+                icon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                disabled={submitReviewMutation.isPending}
+                onClick={() => {
+                  submitReviewMutation.mutate({
+                    pipelineId: selectedTask.pipelineId,
+                    isApproved: true,
+                    notes: reviewNotes || "Kepatuhan etiket dan formula disetujui resmi",
+                  });
+                }}
+              >
+                Setujui (Approve)
+              </DnaButton>
+            </div>
+          </div>
+        }
+      />
+    </div>
   );
 }

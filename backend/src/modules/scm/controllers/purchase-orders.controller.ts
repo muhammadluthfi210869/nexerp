@@ -1,10 +1,11 @@
-﻿import {
+import {
   Controller,
   Get,
   Post,
   Body,
   Param,
   Patch,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -21,15 +22,15 @@ import { UserRole, User } from '@prisma/client';
 import { PurchaseOrdersService } from '../services/purchase-orders.service';
 import { CreatePurchaseOrderDto } from '../dto/create-po.dto';
 
-@ApiTags('scm')
+@ApiTags('purchase')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('scm/purchase-orders')
+@Controller(['purchase/orders', 'scm/purchase-orders'])
 export class PurchaseOrdersController {
   constructor(private readonly poService: PurchaseOrdersService) {}
 
   @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.SCM)
   @ApiOperation({ summary: 'Create a new Purchase Order' })
   @ApiResponse({ status: 201, description: 'PO created successfully' })
   create(@Request() req: { user: User }, @Body() dto: CreatePurchaseOrderDto) {
@@ -37,17 +38,46 @@ export class PurchaseOrdersController {
   }
 
   @Get()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.FINANCE)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.SCM, UserRole.FINANCE, UserRole.DIRECTOR)
   @ApiOperation({ summary: 'Get all Purchase Orders' })
-  findAll() {
-    return this.poService.findAll();
+  findAll(
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.poService.findAll({ status, search });
   }
 
   @Get(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.FINANCE)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.SCM, UserRole.FINANCE, UserRole.DIRECTOR)
   @ApiOperation({ summary: 'Get a single Purchase Order by ID' })
   findOne(@Param('id') id: string) {
     return this.poService.findOne(id);
+  }
+
+  @Post(':id/approve')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.PURCHASING,
+    UserRole.SCM,
+    UserRole.DIRECTOR,
+  )
+  @ApiOperation({ summary: 'Approve PO with digital signature' })
+  approve(
+    @Request() req: { user: User },
+    @Param('id') id: string,
+    @Body('signatureUrl') signatureUrl?: string,
+  ) {
+    return this.poService.approve(id, req.user, signatureUrl);
+  }
+
+  @Post(':id/reject')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.DIRECTOR)
+  @ApiOperation({ summary: 'Reject PO' })
+  reject(
+    @Param('id') id: string,
+    @Body('reason') reason?: string,
+  ) {
+    return this.poService.updateStatus(id, 'REJECTED', reason);
   }
 
   @Patch(':id/status')

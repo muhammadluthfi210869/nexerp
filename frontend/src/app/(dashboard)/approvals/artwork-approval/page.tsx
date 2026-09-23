@@ -763,7 +763,7 @@ export default function ArtworkApprovalPage() {
                           <DnaBadge status={bpomStat === "Approved" ? "success" : bpomStat === "Rejected" ? "critical" : "info"}>
                             {bpomStat ? bpomStatusLabel[bpomStat] : "Registered"}
                           </DnaBadge>
-                          <span className="font-mono text-[9px] font-bold text-blue-700">{bpomNum}</span>
+                          <span className="font-sans tabular-nums text-[9px] font-bold text-blue-700">{bpomNum}</span>
                           {bpomStat && (
                             <span className="text-[8px] text-slate-400">{bpomStat}</span>
                           )}
@@ -901,8 +901,8 @@ export default function ArtworkApprovalPage() {
               </div>
               <div className="pt-2 border-t border-slate-200/70 flex flex-wrap items-center justify-between text-xs text-slate-600 gap-2">
                 <span>Kemasan: <strong>{selectedProject.packagingType}</strong></span>
-                <span>No. Batch: <strong className="font-mono text-purple-700 dark:text-purple-300">{selectedProject.batchNumber || "BATCH-202609-01"}</strong></span>
-                <span>Exp Date: <strong className="font-mono text-amber-700 dark:text-amber-300">{selectedProject.expiredDate || "2028-12-31"}</strong></span>
+                <span>No. Batch: <strong className="font-sans tabular-nums text-purple-700 dark:text-purple-300">{selectedProject.batchNumber || "BATCH-202609-01"}</strong></span>
+                <span>Exp Date: <strong className="font-sans tabular-nums text-amber-700 dark:text-amber-300">{selectedProject.expiredDate || "2028-12-31"}</strong></span>
                 <span>Desainer: <strong>{selectedProject.assignedDesigner}</strong></span>
               </div>
             </div>
@@ -1191,19 +1191,19 @@ export default function ArtworkApprovalPage() {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-slate-600">No. Registrasi:</span>
-                            <span className="text-xs font-mono font-bold text-slate-900">
+                            <span className="text-xs font-sans tabular-nums font-bold text-slate-900">
                               {selectedProject.bpomNumber || matchedLegality?.bpomRegNumber || "—"}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-slate-600">No. Aplikasi:</span>
-                            <span className="text-xs font-mono text-slate-700">
+                            <span className="text-xs font-sans tabular-nums text-slate-700">
                               {matchedLegality?.applicationNumber || "—"}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-slate-600">Tanggal Terbit:</span>
-                            <span className="text-xs font-mono text-slate-700">
+                            <span className="text-xs font-sans tabular-nums text-slate-700">
                               {matchedLegality?.issuedDate || "—"}
                             </span>
                           </div>

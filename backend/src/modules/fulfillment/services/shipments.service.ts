@@ -1,23 +1,57 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import {
   CreateShipmentDto,
   UpdateShipmentStatusDto,
 } from '../dto/shipment.dto';
-import { ShipStatus } from '@prisma/client';
+import { ShipStatus, SOStatus } from '@prisma/client';
 
 @Injectable()
 export class ShipmentsService {
+  private readonly logger = new Logger(ShipmentsService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateShipmentDto) {
-    const id = `SJ-${Date.now().toString().slice(-6)}`; // Simple generated ID
-    return this.prisma.shipment.create({
+    const so = await this.prisma.salesOrder.findUnique({
+      where: { id: dto.soId },
+    });
+
+    if (!so) {
+      throw new NotFoundException(`Sales Order ${dto.soId} not found`);
+    }
+
+    // BUS-RULE-006: AR Delivery Gatekeeper (HELD vs RELEASED)
+    if (so.deliveryGateStatus === 'HELD') {
+      throw new BadRequestException(
+        'DELIVERY_GATE_HELD: Surat Jalan belum bisa dicetak. Finance masih menahan faktur (status HELD — pelunasan belum masuk).',
+      );
+    }
+
+    const shipment = await this.prisma.shipment.create({
       data: {
-        id,
         ...dto,
+        status: ShipStatus.SHIPPED,
+        shippedAt: new Date(),
       },
     });
+
+    // Advance SO to SHIPPED
+    await this.prisma.salesOrder.update({
+      where: { id: so.id },
+      data: { status: SOStatus.SHIPPED },
+    });
+
+    this.logger.log(
+      `[SHIPMENT DISPATCHED] Surat Jalan ${shipment.id} created for SO ${so.id}. SO marked SHIPPED.`,
+    );
+
+    return shipment;
   }
 
   async updateStatus(id: string, dto: UpdateShipmentStatusDto) {
@@ -38,35 +72,11 @@ export class ShipmentsService {
         },
       });
 
-      // [INVENTORY TRIGGER: DECREASE Finished Goods stock]
-      // [RETENTION TRIGGER: Predict Repeat Order]
-      if (dto.status === ShipStatus.DELIVERED) {
-        // Find related Finished Good from the SO (SalesOrder -> BaseDesign/NPF -> WorkOrder)
-        const workOrders = await tx.productionPlan.findMany({
-          where: { soId: shipment.soId },
-        });
-
-        for (const wo of workOrders) {
-          // Decrease stock for the related finished good
-          await tx.finishedGood.updateMany({
-            where: { woId: wo.id },
-            data: {
-              stockQty: { decrement: 1 },
-            },
-          });
-        }
-
-        // RETENTION ENGINE: estDepletionDate = deliveredAt + 60 days
-        const sixtyDaysLater = new Date();
-        sixtyDaysLater.setDate(sixtyDaysLater.getDate() + 60);
-
-        await tx.retentionEngine.upsert({
-          where: { leadId: shipment.so.leadId },
-          update: { estDepletionDate: sixtyDaysLater },
-          create: {
-            leadId: shipment.so.leadId,
-            estDepletionDate: sixtyDaysLater,
-          },
+      // When confirmed delivered, advance SO to COMPLETED if all fulfilled
+      if (dto.status === ShipStatus.DELIVERED && shipment.soId) {
+        await tx.salesOrder.update({
+          where: { id: shipment.soId },
+          data: { status: SOStatus.COMPLETED },
         });
       }
 
@@ -77,9 +87,20 @@ export class ShipmentsService {
   async findAll() {
     return this.prisma.shipment.findMany({
       include: {
-        so: { include: { lead: true } },
-        logistics: { select: { fullName: true } },
+        so: {
+          select: {
+            orderNumber: true,
+            deliveryGateStatus: true,
+            lead: { select: { clientName: true } },
+          },
+        },
+        items: {
+          include: {
+            material: { select: { name: true } },
+          },
+        },
       },
+      orderBy: { id: 'desc' },
     });
   }
 }

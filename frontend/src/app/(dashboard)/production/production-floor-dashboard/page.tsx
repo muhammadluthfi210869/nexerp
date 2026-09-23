@@ -2,9 +2,9 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Card, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardTitle, CardDescription } from "@/components/dna";
+import { Badge } from "@/components/dna";
+import { Button } from "@/components/dna";
 import { 
   Activity, 
   CheckCircle2, 
@@ -20,9 +20,9 @@ import {
 import { KpiCard } from "@/components/dna/KpiCard";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent } from "@/components/dna";
+import { Input } from "@/components/dna";
+import { Label } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 // --- Constants ---
@@ -31,10 +31,11 @@ const STAGES = ["BATCHING", "MIXING", "FILLING", "PACKING"];
 // --- Types ---
 interface ProductionPlan {
   id: string;
-  batch_no: string;
+  batch_no?: string;
+  batchNo?: string;
   status: string;
-  so: { lead: { client_name: string } };
-  stepLogs: {
+  so?: { lead?: { client_name?: string; brandName?: string } };
+  stepLogs?: {
     id: string;
     stage: string;
     qty_result: number;
@@ -92,9 +93,9 @@ export default function ProductionFloor() {
 
   // --- Helpers ---
   const getStageStatus = (plan: ProductionPlan, stage: string) => {
-    const log = plan.stepLogs.find(l => l.stage === stage);
+    const log = (plan.stepLogs || []).find(l => l.stage === stage);
     if (!log) return "PENDING";
-    const pass = log.qcAudits.some(a => a.status === "PASS");
+    const pass = (log.qcAudits || []).some(a => a.status === "PASS");
     if (pass) return "PASS";
     return "WAITING_QC";
   };
@@ -113,18 +114,20 @@ export default function ProductionFloor() {
       titleAccent="Alpha"
       subtitle="Terminal Lantai Produksi - Tablet Optimized"
       actions={
-        <div className="bg-gray-50 p-4 border border-gray-200 rounded-xl flex items-center gap-6">
-          <div className="text-right">
-            <p className="text-[10px] text-zinc-500 font-bold uppercase">System Time</p>
-            <p className="text-xl font-sans text-gray-900">{new Date().toLocaleTimeString()}</p>
+        <div className="hidden md:flex items-center gap-3">
+          <div className="bg-gray-50 p-4 border border-gray-200 rounded-xl flex items-center gap-6">
+            <div className="text-right">
+              <p className="text-[10px] text-zinc-500 font-bold uppercase">System Time</p>
+              <p className="text-xl font-sans text-gray-900">18.52.10</p>
+            </div>
           </div>
         </div>
       }
     >
       {(() => {
-        const mixingCount = plans?.filter(p => p.stepLogs.some(l => l.stage === "MIXING")).length || 0;
-        const fillingCount = plans?.filter(p => p.stepLogs.some(l => l.stage === "FILLING")).length || 0;
-        const packingCount = plans?.filter(p => p.stepLogs.some(l => l.stage === "PACKING")).length || 0;
+        const mixingCount = plans?.filter(p => (p.stepLogs || []).some(l => l.stage === "MIXING")).length || 0;
+        const fillingCount = plans?.filter(p => (p.stepLogs || []).some(l => l.stage === "FILLING")).length || 0;
+        const packingCount = plans?.filter(p => (p.stepLogs || []).some(l => l.stage === "PACKING")).length || 0;
         return (
           <div className="grid grid-cols-4 gap-8 mb-6">
             <KpiCard label="Active Batches" value={String(plans?.length || 0)} targetPct={50} icon={<Layers />} />
@@ -140,8 +143,8 @@ export default function ProductionFloor() {
              <div className="bg-white px-8 py-6 flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-200">
                 <div>
                    <Badge className="bg-emerald-500 text-black font-black text-[10px] uppercase rounded-none mb-2">RUNNING BATCH</Badge>
-                    <CardTitle className="text-4xl font-black text-gray-900 tracking-tight uppercase italic">{plan.batch_no}</CardTitle>
-                   <CardDescription className="text-zinc-500 uppercase font-bold text-xs mt-1">Client: {plan.so?.lead?.client_name}</CardDescription>
+                    <CardTitle className="text-4xl font-black text-gray-900 tracking-tight uppercase italic">{plan.batch_no || plan.batchNo}</CardTitle>
+                   <CardDescription className="text-zinc-500 uppercase font-bold text-xs mt-1">Client: {plan.so?.lead?.client_name || plan.so?.lead?.brandName || "N/A"}</CardDescription>
                 </div>
                 <div className="flex gap-4 mt-4 md:mt-0">
                    <Button variant="outline" className="border-gray-200 bg-white text-gray-500 hover:text-gray-900 h-16 w-16 p-0 group">

@@ -33,11 +33,15 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Eye,
+  Edit2,
+  FileSpreadsheet,
 } from "lucide-react";
 import {
   DnaPageHeader,
   DnaKpiGrid,
   DnaDataTableCard,
+  DnaBadge,
   DnaButton,
   DnaInput,
   DnaSelect,
@@ -45,6 +49,8 @@ import {
   DnaModal,
   DnaConfirmDialog,
   DnaCell,
+  DnaDetailDrawer,
+  DnaTable,
   useDnaToast,
 } from "@/components/dna";
 import { api } from "@/lib/api";
@@ -154,6 +160,10 @@ function MasterWarehousesContent() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+
+  // Detail Drawer
+  const [selectedWarehouse, setSelectedWarehouse] = useState<MasterWarehouseItem | null>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
 
   // Modals
   const [isWarehouseModalOpen, setIsWarehouseModalOpen] = useState(false);
@@ -491,101 +501,140 @@ function MasterWarehousesContent() {
               onPageChange: setCurrentPage,
             }}
           >
-            <table className="w-full text-left border-collapse text-[12px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                  <th className="p-3.5 w-12 text-slate-400">#</th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[220px]"
-                    onClick={() => handleHeaderSortToggle("namaGudang")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>GUDANG</span>
-                      {sortColumn === "namaGudang" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th className="p-3.5 min-w-[140px]">TELEPON</th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[140px]"
-                    onClick={() => handleHeaderSortToggle("lokasi")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>LOKASI</span>
-                      {sortColumn === "lokasi" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th className="p-3.5 text-center font-bold w-24 whitespace-nowrap">#</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {isLoadingWarehouses ? (
-                  <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-500">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                        <span>Memuat data gudang...</span>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[1150px]">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
+                    <th className="px-3.5 py-2.5 w-10 text-slate-400">#</th>
+                    <th className="px-3.5 py-2.5 w-[110px]">Kode Gudang</th>
+                    <th
+                      className="px-3.5 py-2.5 cursor-pointer hover:bg-slate-100/60"
+                      onClick={() => handleHeaderSortToggle("namaGudang")}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span>Nama Gudang</span>
+                        {sortColumn === "namaGudang" ? (
+                          sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                        )}
                       </div>
-                    </td>
+                    </th>
+                    <th className="px-3.5 py-2.5">Tipe Penyimpanan</th>
+                    <th className="px-3.5 py-2.5 text-right w-[110px]">Kapasitas Bin</th>
+                    <th
+                      className="px-3.5 py-2.5 cursor-pointer hover:bg-slate-100/60"
+                      onClick={() => handleHeaderSortToggle("lokasi")}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span>Lokasi & Wilayah</span>
+                        {sortColumn === "lokasi" ? (
+                          sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                        )}
+                      </div>
+                    </th>
+                    <th className="px-3.5 py-2.5">PIC Gudang</th>
+                    <th className="px-3.5 py-2.5">Kontak Telepon</th>
+                    <th className="px-3.5 py-2.5 text-center w-[100px] whitespace-nowrap">Aksi</th>
                   </tr>
-                ) : isErrorWarehouses ? (
-                  <tr>
-                    <td colSpan={5} className="p-8 text-center text-rose-500">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <span>Gagal memuat data gudang: {(warehousesError as any)?.message || "Terjadi kesalahan"}</span>
-                        <button
-                          onClick={() => refetchWarehouses()}
-                          className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors"
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {isLoadingWarehouses ? (
+                    <tr>
+                      <td colSpan={9} className="p-8 text-center text-slate-500">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                          <span>Memuat data gudang...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : isErrorWarehouses ? (
+                    <tr>
+                      <td colSpan={9} className="p-8 text-center text-rose-500">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <span>Gagal memuat data gudang: {(warehousesError as any)?.message || "Terjadi kesalahan"}</span>
+                          <button
+                            onClick={() => refetchWarehouses()}
+                            className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors"
+                          >
+                            Coba Lagi
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : paginatedWarehouses.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="p-8 text-center text-slate-400">
+                        Tidak ada data gudang yang sesuai filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedWarehouses.map((w, idx) => {
+                      return (
+                        <tr
+                          key={w.id}
+                          className="h-[48px] hover:bg-slate-50/80 transition-colors cursor-pointer"
+                          onClick={() => {
+                            setSelectedWarehouse(w);
+                            setIsDetailDrawerOpen(true);
+                          }}
                         >
-                          Coba Lagi
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ) : paginatedWarehouses.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-400">
-                      Tidak ada data gudang yang sesuai filter.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedWarehouses.map((w, idx) => {
-                    return (
-                      <tr
-                        key={w.id}
-                        className="hover:bg-slate-50/80 transition-colors cursor-default"
-                      >
-                        <td className="p-3.5 text-slate-400 tabular-nums">
-                          {(currentPage - 1) * pageSize + idx + 1}
-                        </td>
-                        <td className="p-3.5 font-bold text-slate-900 whitespace-nowrap">
-                          {w.namaGudang}
-                        </td>
-                        <td className="p-3.5 font-mono text-[11px] text-slate-600 whitespace-nowrap">
-                          {w.telepon || "-"}
-                        </td>
-                        <td className="p-3.5 text-slate-600 font-medium whitespace-nowrap">
-                          {w.lokasi}
-                        </td>
-                        <td className="p-3.5 text-center whitespace-nowrap">
-                          <DnaCell.Actions
-                            onEdit={() => handleOpenEditWarehouse(w)}
-                            onDelete={() => setWarehouseToDelete(w)}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                          <td className="px-3.5 py-2.5 text-slate-400 tabular-nums">
+                            {(currentPage - 1) * pageSize + idx + 1}
+                          </td>
+                          <td className="px-3.5 py-2.5">
+                            <DnaCell.Code>{w.kodeGudang}</DnaCell.Code>
+                          </td>
+                          <td className="px-3.5 py-2.5">
+                            <DnaCell.Text className="font-semibold text-slate-900">{w.namaGudang}</DnaCell.Text>
+                          </td>
+                          <td className="px-3.5 py-2.5">
+                            <DnaCell.Text className="text-slate-800">{w.tipePenyimpanan}</DnaCell.Text>
+                          </td>
+                          <td className="px-3.5 py-2.5 text-right">
+                            <DnaCell.Numeric value={w.totalBinLocations} suffix=" Slot" />
+                          </td>
+                          <td className="px-3.5 py-2.5">
+                            <DnaCell.NaturalPair
+                              primary={w.lokasi}
+                              secondary={w.provinsi}
+                            />
+                          </td>
+                          <td className="px-3.5 py-2.5">
+                            <DnaCell.Text className="font-semibold text-slate-800">{w.picName}</DnaCell.Text>
+                          </td>
+                          <td className="px-3.5 py-2.5">
+                            <DnaCell.Text className="font-mono text-[11.5px] text-slate-600">{w.telepon || "-"}</DnaCell.Text>
+                          </td>
+                          <td className="px-3.5 py-2.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-center gap-1">
+                              <DnaButton
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
+                                onClick={() => {
+                                  setSelectedWarehouse(w);
+                                  setIsDetailDrawerOpen(true);
+                                }}
+                                title="Lihat Detail Fasilitas"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </DnaButton>
+                              <DnaCell.Actions
+                                onEdit={() => handleOpenEditWarehouse(w)}
+                                onDelete={() => setWarehouseToDelete(w)}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </DnaDataTableCard>
         </div>
       )}
@@ -598,64 +647,71 @@ function MasterWarehousesContent() {
               searchPlaceholder: "Cari staf gudang & wewenang...",
             }}
           >
-            <table className="w-full text-left border-collapse text-[12px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                  <th className="p-3.5 w-12 text-slate-400">#</th>
-                  <th className="p-3.5 min-w-[200px]">NAMA PERSONEL</th>
-                  <th className="p-3.5 min-w-[200px]">EMAIL & WHATSAPP</th>
-                  <th className="p-3.5 min-w-[180px]">HAK AKSES / JABATAN</th>
-                  <th className="p-3.5 min-w-[320px]">GUDANG TEROTORISASI</th>
-                  <th className="p-3.5 text-center w-28">OTORISASI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {accessList.map((acc, idx) => (
-                  <tr key={acc.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3.5 text-slate-400 tabular-nums">{idx + 1}</td>
-                    <td className="p-3.5">
-                      <DnaCell.Avatar
-                        name={acc.namaPersonel}
-                        subtext={acc.hakAkses}
-                      />
-                    </td>
-                    <td className="p-3.5">
-                      <div className="text-slate-700 font-medium">{acc.email}</div>
-                      <div className="font-mono text-[11px] text-slate-500">{acc.phone}</div>
-                    </td>
-                    <td className="p-3.5">
-                      <DnaCell.Badge label={acc.hakAkses} status="info" />
-                    </td>
-                    <td className="p-3.5">
-                      <div className="flex flex-wrap gap-1">
-                        {acc.gudangAkses.map((g, i) => (
-                          <span
-                            key={i}
-                            className="text-[10.5px] font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200"
-                          >
-                            {g}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="p-3.5 text-center">
-                      <DnaButton
-                        variant="outline"
-                        size="sm"
-                        icon={<Lock className="w-3 h-3" />}
-                        onClick={() => {
-                          setEditingAccess(acc);
-                          setSelectedGudangsForUser([...acc.gudangAkses]);
-                          setIsAccessModalOpen(true);
-                        }}
-                      >
-                        Atur Akses
-                      </DnaButton>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[1000px]">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold tracking-wider uppercase select-none">
+                    <th className="px-3.5 py-2.5 w-10 text-slate-400">#</th>
+                    <th className="px-3.5 py-2.5 w-[110px]">ID Personel</th>
+                    <th className="px-3.5 py-2.5">Nama Personel</th>
+                    <th className="px-3.5 py-2.5">Email Staf</th>
+                    <th className="px-3.5 py-2.5">Kontak HP</th>
+                    <th className="px-3.5 py-2.5">Hak Akses / Jabatan</th>
+                    <th className="px-3.5 py-2.5">Gudang Terotorisasi</th>
+                    <th className="px-3.5 py-2.5 text-center w-[110px]">Aksi</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {accessList.map((acc, idx) => (
+                    <tr key={acc.id} className="h-[48px] hover:bg-slate-50/80 transition-colors">
+                      <td className="px-3.5 py-2.5 text-slate-400 tabular-nums">{idx + 1}</td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Code>{acc.userId}</DnaCell.Code>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text className="font-semibold text-slate-900">{acc.namaPersonel}</DnaCell.Text>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text className="text-slate-700">{acc.email}</DnaCell.Text>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text className="font-mono text-[11.5px] text-slate-600">{acc.phone}</DnaCell.Text>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Badge label={acc.hakAkses} status="info" />
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <div className="flex flex-wrap gap-1">
+                          {acc.gudangAkses.map((g, i) => (
+                            <span
+                              key={i}
+                              className="text-[10.5px] font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200"
+                            >
+                              {g}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center">
+                        <DnaButton
+                          variant="outline"
+                          size="sm"
+                          icon={<Lock className="w-3 h-3" />}
+                          onClick={() => {
+                            setEditingAccess(acc);
+                            setSelectedGudangsForUser([...acc.gudangAkses]);
+                            setIsAccessModalOpen(true);
+                          }}
+                          className="h-7 text-[11px] px-2"
+                        >
+                          Atur Akses
+                        </DnaButton>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </DnaDataTableCard>
         </div>
       )}
@@ -806,6 +862,153 @@ function MasterWarehousesContent() {
           </div>
         </div>
       </DnaModal>
+
+      {/* ── DETAIL DRAWER GUDANG (Golden Rule 5) ── */}
+      <DnaDetailDrawer
+        isOpen={isDetailDrawerOpen}
+        onClose={() => setIsDetailDrawerOpen(false)}
+        title={selectedWarehouse?.namaGudang || "Detail Fasilitas Gudang"}
+        subtitle={`Kode: ${selectedWarehouse?.kodeGudang || "-"} • PIC: ${selectedWarehouse?.picName || "-"}`}
+        badge={
+          selectedWarehouse?.status === "ACTIVE" ? (
+            <DnaBadge variant="success">FASILITAS AKTIF</DnaBadge>
+          ) : (
+            <DnaBadge variant="neutral">NON-AKTIF</DnaBadge>
+          )
+        }
+        tabs={[
+          {
+            id: "specs",
+            label: "Spesifikasi & Suhu",
+            content: selectedWarehouse ? (
+              <div className="space-y-4 text-xs">
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Tipe Penyimpanan & Suhu</span>
+                    <span className="font-semibold text-slate-800">{selectedWarehouse.tipePenyimpanan}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Total Bin / Slot Rak</span>
+                    <span className="font-bold text-blue-600">{selectedWarehouse.totalBinLocations} Bins</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Wilayah / Kota</span>
+                    <span className="font-medium text-slate-800">{selectedWarehouse.lokasi}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Provinsi</span>
+                    <span className="font-medium text-slate-800">{selectedWarehouse.provinsi}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="font-bold text-slate-700 uppercase tracking-wider text-[11px]">
+                    Alamat Lengkap Fasilitas:
+                  </span>
+                  <div className="p-3 bg-white rounded-lg border border-slate-200 text-slate-700 leading-relaxed">
+                    {selectedWarehouse.alamatLengkap || "-"}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 flex items-center justify-between">
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">PIC Penanggung Jawab Gudang</span>
+                    <span className="font-bold text-slate-900">{selectedWarehouse.picName}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-slate-500 block text-[11px]">Telepon / WhatsApp</span>
+                    <span className="font-mono font-medium text-slate-800">{selectedWarehouse.telepon || "-"}</span>
+                  </div>
+                </div>
+              </div>
+            ) : null,
+          },
+          {
+            id: "bins_access",
+            label: "Bin Slot & Hak Akses",
+            content: selectedWarehouse ? (
+              <div className="space-y-4 text-xs">
+                <div>
+                  <span className="font-bold text-slate-700 uppercase tracking-wider text-[11px] block mb-2">
+                    Distribusi Blok Rak:
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2.5 bg-slate-50 rounded border border-slate-200">
+                      <div className="font-bold text-slate-900">Blok A (Incoming / Karantina)</div>
+                      <div className="text-[11px] text-slate-500">6 Bin Slots • Fast Moving</div>
+                    </div>
+                    <div className="p-2.5 bg-slate-50 rounded border border-slate-200">
+                      <div className="font-bold text-slate-900">Blok B (Bahan Baku / Ruang Suhu)</div>
+                      <div className="text-[11px] text-slate-500">10 Bin Slots • Humidity Controlled</div>
+                    </div>
+                    <div className="p-2.5 bg-slate-50 rounded border border-slate-200">
+                      <div className="font-bold text-slate-900">Blok C (Packaging / Karton)</div>
+                      <div className="text-[11px] text-slate-500">8 Bin Slots • Dry Ambient</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="font-bold text-slate-700 uppercase tracking-wider text-[11px] block mb-2">
+                    Personel Berwenang untuk Gudang Ini:
+                  </span>
+                  <div className="space-y-1.5">
+                    {accessList
+                      .filter((acc) => acc.gudangAkses.includes(selectedWarehouse.namaGudang))
+                      .map((acc) => (
+                        <div
+                          key={acc.id}
+                          className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200"
+                        >
+                          <div>
+                            <div className="font-semibold text-slate-900">{acc.namaPersonel}</div>
+                            <div className="text-[11px] text-slate-500">{acc.hakAkses}</div>
+                          </div>
+                          <DnaBadge variant="success">Diizinkan</DnaBadge>
+                        </div>
+                      ))}
+                    {accessList.filter((acc) => acc.gudangAkses.includes(selectedWarehouse.namaGudang)).length === 0 && (
+                      <div className="text-slate-400 p-2 text-center">Belum ada otorisasi personel khusus</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : null,
+          },
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              icon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
+              onClick={() => {
+                toast.success(`Daftar slot bin ${selectedWarehouse?.namaGudang} diekspor.`);
+              }}
+            >
+              Export Layout Rak
+            </DnaButton>
+            <div className="flex items-center gap-2">
+              <DnaButton
+                variant="secondary"
+                size="sm"
+                icon={<Edit2 className="w-3.5 h-3.5" />}
+                onClick={() => {
+                  if (selectedWarehouse) {
+                    setIsDetailDrawerOpen(false);
+                    handleOpenEditWarehouse(selectedWarehouse);
+                  }
+                }}
+              >
+                Sunting Gudang
+              </DnaButton>
+              <DnaButton variant="primary" size="sm" onClick={() => setIsDetailDrawerOpen(false)}>
+                Selesai
+              </DnaButton>
+            </div>
+          </div>
+        }
+      />
 
       {/* Confirmation Dialog Delete */}
       <DnaConfirmDialog

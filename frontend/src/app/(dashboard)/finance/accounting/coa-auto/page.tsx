@@ -30,6 +30,12 @@ import {
   DnaSelect,
   DnaModal,
   DnaCell,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
   useDnaToast,
 } from "@/components/dna";
 
@@ -225,23 +231,15 @@ function CoaAutoContent() {
       />
 
       <DnaDataTableCard
-        title="Daftar Aturan Jurnal Otomatis (GL Auto-Posting Matrix)"
-        count={filteredRules.length}
-        totalItems={rules.length}
-        actions={
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="w-64">
-              <DnaInput
-                placeholder="Cari nama rule, akun..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                icon={<Search className="w-4 h-4 text-slate-400" />}
-              />
-            </div>
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari nama rule, akun...",
+          extraActions: (
             <select
               value={selectedDocFilter}
               onChange={(e) => setSelectedDocFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-purple-500"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-purple-500"
             >
               <option value="ALL">Semua Jenis Dokumen</option>
               <option value="Faktur Pembelian">Faktur Pembelian</option>
@@ -250,73 +248,71 @@ function CoaAutoContent() {
               <option value="DP Pembelian">DP Pembelian</option>
               <option value="Konsumsi BOM Mixing">Konsumsi BOM Mixing</option>
             </select>
-          </div>
-        }
+          ),
+        }}
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                <th className="p-3.5">RULE NAME</th>
-                <th className="p-3.5">DOCUMENT TYPE</th>
-                <th className="p-3.5">CONDITION</th>
-                <th className="p-3.5">DEBIT ACCOUNT</th>
-                <th className="p-3.5">CREDIT ACCOUNT</th>
-                <th className="p-3.5 text-center">ACTIVE</th>
-                <th className="p-3.5 text-right">#</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredRules.map((r) => (
-                <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="p-3.5 font-semibold text-slate-800">
-                    {r.ruleName}
-                  </td>
-                  <td className="p-3.5">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
-                      {r.documentType}
-                    </span>
-                  </td>
-                  <td className="p-3.5 text-slate-600">
-                    {r.condition}
-                  </td>
-                  <td className="p-3.5 font-mono text-[11px] text-slate-700">
-                    {r.debitAccount}
-                  </td>
-                  <td className="p-3.5 font-mono text-[11px] text-slate-700">
-                    {r.creditAccount}
-                  </td>
-                  <td className="p-3.5 text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleActive(r.id)}
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
-                        r.isActive
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-300"
-                          : "bg-slate-100 text-slate-500 border border-slate-200"
-                      }`}
-                    >
-                      {r.isActive ? "Aktif" : "Nonaktif"}
-                    </button>
-                  </td>
-                  <td className="p-3.5 text-right">
-                    <DnaCell.Actions
-                      onEdit={() => {
-                        setEditingRule(r);
-                        setFormName(r.ruleName);
-                        setFormDocType(r.documentType);
-                        setFormCondition(r.condition);
-                        setFormDebit(r.debitAccount);
-                        setFormCredit(r.creditAccount);
-                        setIsModalOpen(true);
-                      }}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DnaTable>
+          <DnaTableHead>
+            <tr>
+              <DnaTh>RULE NAME</DnaTh>
+              <DnaTh className="w-[150px]">DOCUMENT TYPE</DnaTh>
+              <DnaTh className="w-[150px]">CONDITION</DnaTh>
+              <DnaTh className="w-[200px]">DEBIT ACCOUNT</DnaTh>
+              <DnaTh className="w-[200px]">CREDIT ACCOUNT</DnaTh>
+              <DnaTh align="center" className="w-[100px]">ACTIVE</DnaTh>
+              <DnaTh align="right" className="w-[80px]">#</DnaTh>
+            </tr>
+          </DnaTableHead>
+          <DnaTableBody>
+            {filteredRules.map((r) => (
+              <DnaTableRow key={r.id}>
+                <DnaTd className="font-semibold text-slate-800">
+                  {r.ruleName}
+                </DnaTd>
+                <DnaTd>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                    {r.documentType}
+                  </span>
+                </DnaTd>
+                <DnaTd className="text-slate-600">
+                  {r.condition}
+                </DnaTd>
+                <DnaTd className="text-xs font-medium tabular-nums text-slate-700">
+                  {r.debitAccount}
+                </DnaTd>
+                <DnaTd className="text-xs font-medium tabular-nums text-slate-700">
+                  {r.creditAccount}
+                </DnaTd>
+                <DnaTd align="center">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleActive(r.id)}
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                      r.isActive
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-300"
+                        : "bg-slate-100 text-slate-500 border border-slate-200"
+                    }`}
+                  >
+                    {r.isActive ? "Aktif" : "Nonaktif"}
+                  </button>
+                </DnaTd>
+                <DnaTd align="right">
+                  <DnaCell.Actions
+                    onEdit={() => {
+                      setEditingRule(r);
+                      setFormName(r.ruleName);
+                      setFormDocType(r.documentType);
+                      setFormCondition(r.condition);
+                      setFormDebit(r.debitAccount);
+                      setFormCredit(r.creditAccount);
+                      setIsModalOpen(true);
+                    }}
+                  />
+                </DnaTd>
+              </DnaTableRow>
+            ))}
+          </DnaTableBody>
+        </DnaTable>
       </DnaDataTableCard>
 
       {/* MODAL BUAT / EDIT RULE */}

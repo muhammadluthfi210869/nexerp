@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ErrorFallback } from "@/components/ui/empty-state";
+import { ErrorFallback } from "@/components/dna";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;

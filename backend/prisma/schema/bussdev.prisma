@@ -1,5 +1,9 @@
 model SalesLead {
   id                  String               @id @default(uuid()) @db.Uuid
+  organizationId      String?              @db.Uuid
+  // Canonical capture-to-commercial link. Nullable + unique so the expand
+  // migration never destroys or guesses legacy links.
+  leadCaptureId       String?              @unique @db.Uuid
   clientName          String
   brandName           String?
   brandCode           String?              @unique
@@ -64,6 +68,7 @@ model SalesLead {
   retention           RetentionEngine?
   bd                  User?                @relation("BDLeads", fields: [bdId], references: [id])
   category            MasterCategory?      @relation("CustomerToCategory", fields: [categoryId], references: [id])
+  leadCapture         LeadCapture?         @relation(fields: [leadCaptureId], references: [id])
   pic                 BussdevStaff         @relation(fields: [picId], references: [id])
   salesOrders         SalesOrder[]
   sampleRequests      SampleRequest[]
@@ -110,6 +115,7 @@ model LostDeal {
 
 model BussdevStaff {
   id             String      @id @default(uuid()) @db.Uuid
+  organizationId String?     @db.Uuid
   name           String
   targetRevenue  Decimal     @default(0) @db.Decimal(15, 2)
   isActive       Boolean     @default(true)
@@ -126,6 +132,7 @@ model BussdevStaff {
 
 model GuestLog {
   id              String        @id @default(uuid()) @db.Uuid
+  organizationId  String?       @db.Uuid
   visitDate       DateTime      @default(now())
   clientName      String
   bdId            String        @db.Uuid
@@ -171,8 +178,11 @@ model SalesOrder {
   brandName       String?
   taxId           String?          @db.Uuid
   currencyId      String?          @db.Uuid
-  netto           Decimal?         @db.Decimal(10, 2)
-  deletedAt       DateTime?
+  organizationId     String?          @db.Uuid
+  deliveryGateStatus String           @default("HELD")
+  amendmentReason    String?
+  isAmendmentHeld    Boolean          @default(false)
+  deletedAt          DateTime?
   createdAt       DateTime         @default(now())
   stockStatus     StockStatus      @default(PENDING_CHECK)
   designTasks     DesignTask[]

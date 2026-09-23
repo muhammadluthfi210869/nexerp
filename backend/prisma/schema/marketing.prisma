@@ -3,6 +3,7 @@
 
 model LeadCapture {
   id           String @id @default(uuid()) @db.Uuid
+  organizationId String? @db.Uuid
   trackingCode String @unique @db.VarChar(20)
 
   // ── Website Tracking (invisible, captured before WA redirect) ──
@@ -105,6 +106,9 @@ model LeadCapture {
 
   // ── Log percakapan (Fase 2.2) ──
   messages LeadMessage[]
+
+  // ── Kanonik: satu capture boleh menjadi asal satu SalesLead komersial ──
+  salesLeads SalesLead[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

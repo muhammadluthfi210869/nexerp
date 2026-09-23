@@ -2,8 +2,8 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/dna";
+import { Badge } from "@/components/dna";
 import { Box, Palette, Zap, Plus, Check, Clock, UploadCloud } from "lucide-react";
 import { useGranularData } from "@/hooks/use-granular-data";
 import { toast } from "sonner";

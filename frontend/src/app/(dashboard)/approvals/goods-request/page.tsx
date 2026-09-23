@@ -232,27 +232,21 @@ export default function GoodsRequestApprovalPage() {
       header: "No. Bon Permintaan",
       accessor: "code",
       sortable: true,
-      render: (item) => <DnaCell.code>{item.code}</DnaCell.code>,
+      render: (item) => <DnaCell.Code value={item.code} />,
     },
     {
       header: "Gudang Asal & Tujuan",
       accessor: "originWarehouse",
       sortable: true,
       render: (item) => (
-        <div>
-          <p className="font-semibold text-slate-800">{item.originWarehouse}</p>
-          <p className="text-[11px] text-blue-600 font-medium">➔ {item.destWarehouse}</p>
-        </div>
+        <DnaCell.Text primary={item.originWarehouse} secondary={`➔ ${item.destWarehouse}`} />
       ),
     },
     {
       header: "Ref SPK / Batch",
       accessor: "batchWoRef",
       render: (item) => (
-        <div>
-          <span className="font-mono text-xs font-bold text-slate-700">{item.batchWoRef}</span>
-          <p className="text-[11px] text-slate-500">{item.itemsCount} Item Material</p>
-        </div>
+        <DnaCell.Text primary={item.batchWoRef} secondary={`${item.itemsCount} Item Material`} />
       ),
     },
     {

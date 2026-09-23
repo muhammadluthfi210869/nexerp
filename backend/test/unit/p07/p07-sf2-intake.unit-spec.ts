@@ -16,6 +16,11 @@ import { randomUUID } from 'crypto';
 import { LeadCaptureService } from '../../../src/modules/lead-capture/lead-capture.service';
 import { OutboundCounterService } from '../../../src/modules/lead-capture/outbound-counter.service';
 import { PrismaService } from '../../../src/prisma/prisma/prisma.service';
+import { LeadService } from '../../../src/modules/bussdev/services/lead.service';
+import { AuditService } from '../../../src/platform/audit/audit.service';
+import { OutboxService } from '../../../src/platform/outbox/outbox.service';
+import { IdGeneratorService } from '../../../src/modules/system/id-generator.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 const RUN_ID = randomUUID().slice(0, 8);
 const TAG = `nex_p07_sf2_${RUN_ID}`;
@@ -34,15 +39,26 @@ function normalizePhone(phone: string): string {
 
 describe('P07-SF2 lead intake dedup consent attribution (real LeadCaptureService)', () => {
   let leadCapture: LeadCaptureService;
+  let leadService: LeadService;
   let prisma: PrismaService;
   const moduleRef = { current: null as any };
 
   beforeEach(async () => {
     const mod = await Test.createTestingModule({
-      providers: [LeadCaptureService, OutboundCounterService, PrismaService],
+      providers: [
+        LeadCaptureService,
+        LeadService,
+        OutboundCounterService,
+        PrismaService,
+        { provide: AuditService, useFactory: (p: PrismaService) => new AuditService(p as any), inject: [PrismaService] },
+        { provide: OutboxService, useFactory: (p: PrismaService) => new OutboxService(p as any), inject: [PrismaService] },
+        EventEmitter2,
+        { provide: IdGeneratorService, useValue: { generateId: async (prefix: string) => `${prefix}-${randomUUID().slice(0, 6)}` } },
+      ],
     }).compile();
     moduleRef.current = mod;
     leadCapture = mod.get(LeadCaptureService);
+    leadService = mod.get(LeadService);
     prisma = mod.get(PrismaService);
 
     // Pre-clean any rows tagged with this run id.
@@ -120,6 +136,21 @@ describe('P07-SF2 lead intake dedup consent attribution (real LeadCaptureService
     const withdrawn = attrs.find((a: any) => a.key === 'consent_withdrawn' && a.confirmed === true);
     expect(withdrawn).toBeDefined();
     expect(withdrawn?.value).toBe('true');
+
+    // Now exercise the production consent-required path: appendAttribution
+    // (which the production LeadService uses for snapshot history) MUST
+    // reject with zero side effects when a confirmed withdrawn consent
+    // exists.
+    const before = await prisma.leadAttribute.count({
+      where: { leadId: lead.id, key: 'attribution' },
+    });
+    await expect(
+      leadService.appendAttribution(lead.id, { channel: 'instagram' }, `${TAG}-source`),
+    ).rejects.toThrow(/consent telah dicabut|LEAD_CONSENT_WITHDRAWN/);
+    const after = await prisma.leadAttribute.count({
+      where: { leadId: lead.id, key: 'attribution' },
+    });
+    expect(after).toBe(before);
   });
 
   test('attribution history is preserved (leadAttribute rows are append-only)', async () => {

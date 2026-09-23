@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Users,
   Briefcase,
   UserPlus,
   Search,
-  Filter,
   Eye,
   Mail,
   Phone,
@@ -21,7 +20,8 @@ import {
   Award,
   ChevronRight,
   UserCheck,
-  FileText
+  FileText,
+  DollarSign
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -29,12 +29,16 @@ import {
   DnaKpiGrid,
   DnaStatCard,
   DnaDataTableCard,
-  DnaTabNav,
   DnaButton,
   DnaBadge,
   DnaModal,
+  DnaDetailDrawer,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaInput,
+  DnaSelect,
+  DnaTable,
+  DnaCell
 } from "@/components/dna";
 
 interface Employee {
@@ -101,7 +105,7 @@ const INITIAL_OPENINGS: JobOpening[] = [
 
 export default function HrRecruitmentPage() {
   const toast = useDnaToast();
-  const [activeTab, setActiveTab] = useState<"employees" | "pipeline" | "openings">("employees");
+  const [activeTab, setActiveTab] = useState<string>("employees");
   const [searchQuery, setSearchQuery] = useState("");
   const [deptFilter, setDeptFilter] = useState("ALL");
 
@@ -122,17 +126,21 @@ export default function HrRecruitmentPage() {
     basicSalary: 5000000
   });
 
-  const filteredEmployees = INITIAL_EMPLOYEES.filter(e => {
-    const matchSearch = e.name.toLowerCase().includes(searchQuery.toLowerCase()) || e.nik.toLowerCase().includes(searchQuery.toLowerCase()) || e.role.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchDept = deptFilter === "ALL" || e.department.includes(deptFilter);
-    return matchSearch && matchDept;
-  });
+  const filteredEmployees = useMemo(() => {
+    return INITIAL_EMPLOYEES.filter(e => {
+      const matchSearch = e.name.toLowerCase().includes(searchQuery.toLowerCase()) || e.nik.toLowerCase().includes(searchQuery.toLowerCase()) || e.role.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchDept = deptFilter === "ALL" || e.department.includes(deptFilter);
+      return matchSearch && matchDept;
+    });
+  }, [searchQuery, deptFilter]);
 
-  const filteredCandidates = INITIAL_CANDIDATES.filter(c => {
-    const matchSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.position.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchDept = deptFilter === "ALL" || c.department.includes(deptFilter);
-    return matchSearch && matchDept;
-  });
+  const filteredCandidates = useMemo(() => {
+    return INITIAL_CANDIDATES.filter(c => {
+      const matchSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.position.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchDept = deptFilter === "ALL" || c.department.includes(deptFilter);
+      return matchSearch && matchDept;
+    });
+  }, [searchQuery, deptFilter]);
 
   const handleAddEmployee = (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,12 +158,13 @@ export default function HrRecruitmentPage() {
       <DnaPageHeader
         title="Pegawai & Rekrutmen (Talent Acquisition & Employees)"
         description="Master database pegawai aktif pabrik manufaktur, manajemen pipeline seleksi kandidat pelamar, dan pembukaan lowongan kerja."
-        badge={
-          <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 font-semibold">
-            <Users className="w-3.5 h-3.5" />
-            <span>Total 124 Pegawai Terdaftar</span>
-          </div>
-        }
+        tabs={[
+          { id: "employees", label: "Database Pegawai Aktif", count: INITIAL_EMPLOYEES.length },
+          { id: "pipeline", label: "Pipeline Seleksi Pelamar", count: INITIAL_CANDIDATES.length },
+          { id: "openings", label: "Lowongan Kerja Buka", count: INITIAL_OPENINGS.length }
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
@@ -224,252 +233,287 @@ export default function HrRecruitmentPage() {
         />
       </DnaKpiGrid>
 
-      {/* TAB NAVIGATION */}
-      <DnaTabNav
-        tabs={[
-          { id: "employees", label: "Database Pegawai Aktif", icon: Users, count: INITIAL_EMPLOYEES.length },
-          { id: "pipeline", label: "Pipeline Seleksi Pelamar", icon: Briefcase, count: INITIAL_CANDIDATES.length },
-          { id: "openings", label: "Lowongan Kerja Buka", icon: Building2, count: INITIAL_OPENINGS.length }
-        ]}
-        activeTab={activeTab}
-        onChange={(tab) => setActiveTab(tab as any)}
-      />
-
-      {/* FILTER & SEARCH BAR */}
-      <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 flex-1 min-w-[280px]">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Cari berdasarkan nama, NIK, jabatan, atau skill..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-            />
-          </div>
-          <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
-            <Filter className="w-3.5 h-3.5 text-slate-500 ml-1" />
-            <select
-              value={deptFilter}
-              onChange={(e) => setDeptFilter(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer pr-2"
-            >
-              <option value="ALL">Semua Departemen</option>
-              <option value="Produksi">Produksi & Manufaktur</option>
-              <option value="R&D">R&D Formulasi</option>
-              <option value="QC">Quality Control / QA</option>
-              <option value="BusDev">BusDev & Sales</option>
-              <option value="Gudang">Warehouse & Logistik</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* TAB 1: EMPLOYEES TABLE */}
-      {activeTab === "employees" && (
-        <DnaDataTableCard
-          title="Daftar Master Pegawai Aktif"
-          badge={<DnaBadge variant="info">{filteredEmployees.length} Pegawai</DnaBadge>}
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider">
-                <tr>
-                  <th className="px-3.5 py-3">NIK & Profil</th>
-                  <th className="px-3.5 py-3">Departemen & Jabatan</th>
-                  <th className="px-3.5 py-3">Tipe Kontrak</th>
-                  <th className="px-3.5 py-3">Tgl Bergabung</th>
-                  <th className="px-3.5 py-3">Kontak & Email</th>
-                  <th className="px-3.5 py-3 text-right">Gaji Pokok</th>
-                  <th className="px-3.5 py-3 text-center">Status</th>
-                  <th className="px-3.5 py-3 text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredEmployees.map((emp) => (
-                  <tr key={emp.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="px-3.5 py-3">
-                      <div className="font-bold text-slate-900">{emp.name}</div>
-                      <div className="text-[11px] font-mono text-slate-500">{emp.nik}</div>
-                    </td>
-                    <td className="px-3.5 py-3">
-                      <div className="font-semibold text-slate-800">{emp.role}</div>
-                      <div className="text-[11px] text-slate-500">{emp.department}</div>
-                    </td>
-                    <td className="px-3.5 py-3">
-                      <DnaBadge variant={emp.contractType.includes("Tetap") ? "success" : "purple"}>
-                        {emp.contractType}
-                      </DnaBadge>
-                    </td>
-                    <td className="px-3.5 py-3 font-medium text-slate-700">
-                      {emp.joinDate}
-                    </td>
-                    <td className="px-3.5 py-3 text-slate-600">
-                      <div>{emp.phone}</div>
-                      <div className="text-[11px] text-slate-400">{emp.email}</div>
-                    </td>
-                    <td className="px-3.5 py-3 text-right font-mono font-bold text-slate-900">
-                      {formatRupiah(emp.basicSalary)}
-                    </td>
-                    <td className="px-3.5 py-3 text-center">
-                      <DnaBadge variant="success">{emp.status}</DnaBadge>
-                    </td>
-                    <td className="px-3.5 py-3 text-center">
-                      <DnaButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedEmployee(emp)}
-                      >
-                        <Eye className="w-3.5 h-3.5 mr-1" />
-                        Profil
-                      </DnaButton>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </DnaDataTableCard>
-      )}
-
-      {/* TAB 2: CANDIDATE PIPELINE */}
-      {activeTab === "pipeline" && (
-        <DnaDataTableCard
-          title="Pipeline Seleksi Calon Karyawan"
-          badge={<DnaBadge variant="purple">{filteredCandidates.length} Pelamar</DnaBadge>}
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider">
-                <tr>
-                  <th className="px-3.5 py-3">Nama Pelamar</th>
-                  <th className="px-3.5 py-3">Posisi Dilamar</th>
-                  <th className="px-3.5 py-3">Pengalaman & Edukasi</th>
-                  <th className="px-3.5 py-3">Tgl Melamar</th>
-                  <th className="px-3.5 py-3 text-center">Match Score</th>
-                  <th className="px-3.5 py-3 text-center">Tahapan Seleksi</th>
-                  <th className="px-3.5 py-3 text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredCandidates.map((cnd) => (
-                  <tr key={cnd.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="px-3.5 py-3">
-                      <div className="font-bold text-slate-900">{cnd.name}</div>
-                      <div className="text-[11px] text-slate-500">{cnd.phone} • {cnd.email}</div>
-                    </td>
-                    <td className="px-3.5 py-3">
-                      <div className="font-semibold text-slate-800">{cnd.position}</div>
-                      <div className="text-[11px] text-slate-500">{cnd.department}</div>
-                    </td>
-                    <td className="px-3.5 py-3 text-slate-700">
-                      <div>{cnd.experience}</div>
-                      <div className="text-[11px] text-slate-400">{cnd.education}</div>
-                    </td>
-                    <td className="px-3.5 py-3 text-slate-600 font-medium">
-                      {cnd.appliedDate}
-                    </td>
-                    <td className="px-3.5 py-3 text-center">
-                      <span className="font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                        {cnd.matchScore}%
-                      </span>
-                    </td>
-                    <td className="px-3.5 py-3 text-center">
-                      <DnaBadge
-                        variant={
-                          cnd.stage === "OFFERING" ? "success" :
-                          cnd.stage === "INTERVIEW_USER" ? "purple" :
-                          cnd.stage === "INTERVIEW_HR" ? "info" : "default"
-                        }
-                      >
-                        {cnd.stage}
-                      </DnaBadge>
-                    </td>
-                    <td className="px-3.5 py-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <DnaButton
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => toast.success("Maju ke tahap berikutnya: " + cnd.name)}
-                        >
-                          <ChevronRight className="w-3.5 h-3.5 mr-1" />
-                          Update
-                        </DnaButton>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </DnaDataTableCard>
-      )}
-
-      {/* TAB 3: JOB OPENINGS */}
-      {activeTab === "openings" && (
-        <DnaDataTableCard
-          title="Daftar Kebutuhan Formasi & Lowongan Terbuka"
-          badge={<DnaBadge variant="info">{INITIAL_OPENINGS.length} Lowongan</DnaBadge>}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-            {INITIAL_OPENINGS.map((job) => (
-              <div key={job.id} className="p-4 bg-white border border-slate-200 rounded-xl shadow-xs hover:border-blue-400 transition-all">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-                      {job.department}
-                    </span>
-                    <h4 className="font-bold text-sm text-slate-900 mt-1">{job.title}</h4>
-                  </div>
-                  <DnaBadge variant="success">{job.status}</DnaBadge>
-                </div>
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-                  <div>
-                    <span>Kebutuhan: </span>
-                    <strong className="text-slate-900">{job.openings} Formasi</strong>
-                  </div>
-                  <div>
-                    <span>Pelamar: </span>
-                    <strong className="text-purple-700">{job.applicantsCount} Orang</strong>
-                  </div>
-                  <div>
-                    <span>Deadline: </span>
-                    <strong className="text-slate-700">{job.deadline}</strong>
-                  </div>
-                </div>
+      {/* DATA TABLE WRAPPER */}
+      <DnaDataTableCard
+        customToolbar={
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2.5">
+              <div className="relative w-80">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+                <DnaInput
+                  type="text"
+                  placeholder="Cari nama, NIK, jabatan, atau posisi..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
-            ))}
+              <DnaSelect
+                value={deptFilter}
+                onChange={setDeptFilter}
+                className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
+              >
+                <option value="ALL">Semua Departemen</option>
+                <option value="Produksi">Produksi & Manufaktur</option>
+                <option value="R&D">R&D Formulasi</option>
+                <option value="QC">Quality Control / QA</option>
+                <option value="BusDev">BusDev & Sales</option>
+                <option value="Gudang">Warehouse & Logistik</option>
+              </DnaSelect>
+            </div>
+            <div className="text-xs text-slate-500 font-medium">
+              {activeTab === "employees" && `${filteredEmployees.length} Pegawai Terdaftar`}
+              {activeTab === "pipeline" && `${filteredCandidates.length} Pelamar Aktif`}
+              {activeTab === "openings" && `${INITIAL_OPENINGS.length} Formasi Buka`}
+            </div>
           </div>
-        </DnaDataTableCard>
-      )}
+        }
+      >
+        {/* TAB 1: EMPLOYEES TABLE */}
+        {activeTab === "employees" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[1100px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <th className="px-3.5 py-2.5 w-[110px]">NIK</th>
+                  <th className="px-3.5 py-2.5">Nama Pegawai</th>
+                  <th className="px-3.5 py-2.5">Jabatan & Departemen</th>
+                  <th className="px-3.5 py-2.5 text-center w-[130px]">Tipe Kontrak</th>
+                  <th className="px-3.5 py-2.5 w-[110px]">Tgl Masuk</th>
+                  <th className="px-3.5 py-2.5 w-[130px]">No. Telepon</th>
+                  <th className="px-3.5 py-2.5">Email</th>
+                  <th className="px-3.5 py-2.5 text-right w-[130px]">Gaji Pokok</th>
+                  <th className="px-3.5 py-2.5 text-center w-[90px]">Status</th>
+                  <th className="px-3.5 py-2.5 text-center w-[70px]">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredEmployees.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="px-3.5 py-8 text-center text-xs text-slate-400">
+                      Tidak ada pegawai yang cocok dengan kriteria pencarian.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredEmployees.map((emp) => (
+                    <tr key={emp.id} className="h-[48px] hover:bg-slate-50/80 transition-colors">
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Code>{emp.nik}</DnaCell.Code>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text className="font-semibold text-slate-900">{emp.name}</DnaCell.Text>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.NaturalPair
+                          primary={emp.role}
+                          secondary={emp.department}
+                        />
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center">
+                        <DnaBadge variant={emp.contractType.includes("Tetap") ? "success" : "purple"}>
+                          {emp.contractType}
+                        </DnaBadge>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text className="font-mono text-[11.5px] text-slate-600">{emp.joinDate}</DnaCell.Text>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text className="font-mono text-[11.5px] text-slate-700">{emp.phone}</DnaCell.Text>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text className="text-slate-600">{emp.email}</DnaCell.Text>
+                      </td>
+                      <td className="px-3.5 py-2.5 text-right">
+                        <DnaCell.Numeric value={emp.basicSalary} prefix="Rp " />
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center">
+                        <DnaBadge variant={emp.status === "AKTIF" ? "success" : "neutral"}>
+                          {emp.status}
+                        </DnaBadge>
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedEmployee(emp)}
+                          title="Lihat Profil Pegawai"
+                          className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-blue-600" />
+                        </DnaButton>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* TAB 2: CANDIDATE PIPELINE */}
+        {activeTab === "pipeline" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[1100px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <th className="px-3.5 py-2.5">Nama Pelamar</th>
+                  <th className="px-3.5 py-2.5">Posisi & Departemen</th>
+                  <th className="px-3.5 py-2.5 w-[130px]">No. Telepon</th>
+                  <th className="px-3.5 py-2.5">Email</th>
+                  <th className="px-3.5 py-2.5">Pengalaman Kerja</th>
+                  <th className="px-3.5 py-2.5">Pendidikan</th>
+                  <th className="px-3.5 py-2.5 w-[110px]">Tgl Melamar</th>
+                  <th className="px-3.5 py-2.5 text-right w-[100px]">Match</th>
+                  <th className="px-3.5 py-2.5 text-center w-[130px]">Tahapan Seleksi</th>
+                  <th className="px-3.5 py-2.5 text-center w-[70px]">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredCandidates.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="px-3.5 py-8 text-center text-xs text-slate-400">
+                      Tidak ada pelamar yang cocok dengan kriteria pencarian.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredCandidates.map((cnd) => (
+                    <tr key={cnd.id} className="h-[48px] hover:bg-slate-50/80 transition-colors">
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text className="font-semibold text-slate-900">{cnd.name}</DnaCell.Text>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.NaturalPair
+                          primary={cnd.position}
+                          secondary={cnd.department}
+                        />
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text className="font-mono text-[11.5px] text-slate-700">{cnd.phone}</DnaCell.Text>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text className="text-slate-600">{cnd.email}</DnaCell.Text>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text className="text-slate-800">{cnd.experience}</DnaCell.Text>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text className="text-slate-600">{cnd.education}</DnaCell.Text>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text className="font-mono text-[11.5px] text-slate-600">{cnd.appliedDate}</DnaCell.Text>
+                      </td>
+                      <td className="px-3.5 py-2.5 text-right">
+                        <DnaCell.Numeric
+                          value={cnd.matchScore}
+                          suffix="%"
+                          className="font-bold text-emerald-700"
+                        />
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center">
+                        <DnaBadge
+                          variant={
+                            cnd.stage === "OFFERING" ? "success" :
+                            cnd.stage === "INTERVIEW_USER" ? "purple" :
+                            cnd.stage === "INTERVIEW_HR" ? "info" : "default"
+                          }
+                        >
+                          {cnd.stage}
+                        </DnaBadge>
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toast.success("Maju ke tahap seleksi berikutnya: " + cnd.name)}
+                          title="Update Tahap Seleksi"
+                          className="h-7 w-7 p-0 text-slate-500 hover:text-purple-600"
+                        >
+                          <ChevronRight className="w-3.5 h-3.5 text-purple-600" />
+                        </DnaButton>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* TAB 3: JOB OPENINGS */}
+        {activeTab === "openings" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[900px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <th className="px-3.5 py-2.5">Posisi Lowongan</th>
+                  <th className="px-3.5 py-2.5">Divisi / Departemen</th>
+                  <th className="px-3.5 py-2.5 text-center w-[130px]">Tipe Kontrak</th>
+                  <th className="px-3.5 py-2.5 text-right w-[140px]">Kebutuhan Formasi</th>
+                  <th className="px-3.5 py-2.5 text-right w-[140px]">Pelamar Masuk</th>
+                  <th className="px-3.5 py-2.5 w-[130px]">Batas Deadline</th>
+                  <th className="px-3.5 py-2.5 text-center w-[100px]">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {INITIAL_OPENINGS.map((job) => (
+                  <tr key={job.id} className="h-[48px] hover:bg-slate-50/80 transition-colors">
+                    <td className="px-3.5 py-2.5">
+                      <DnaCell.Text className="font-semibold text-slate-900">{job.title}</DnaCell.Text>
+                    </td>
+                    <td className="px-3.5 py-2.5">
+                      <DnaCell.Text className="text-slate-700">{job.department}</DnaCell.Text>
+                    </td>
+                    <td className="px-3.5 py-2.5 text-center">
+                      <DnaBadge variant={job.type === "Full-Time" ? "info" : "secondary"}>
+                        {job.type}
+                      </DnaBadge>
+                    </td>
+                    <td className="px-3.5 py-2.5 text-right">
+                      <DnaCell.Numeric value={job.openings} suffix=" Orang" />
+                    </td>
+                    <td className="px-3.5 py-2.5 text-right">
+                      <DnaCell.Numeric value={job.applicantsCount} suffix=" Pelamar" className="font-semibold text-purple-700" />
+                    </td>
+                    <td className="px-3.5 py-2.5">
+                      <DnaCell.Text className="font-mono text-[11.5px] text-slate-600">{job.deadline}</DnaCell.Text>
+                    </td>
+                    <td className="px-3.5 py-2.5 text-center">
+                      <DnaBadge variant="success">{job.status}</DnaBadge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </DnaDataTableCard>
 
       {/* MODAL: TAMBAH PEGAWAI BARU */}
       <DnaModal
         isOpen={isEmployeeModalOpen}
         onClose={() => setIsEmployeeModalOpen(false)}
         title="Registrasi Karyawan Baru (Master HR)"
-        maxWidth="max-w-xl"
+        size="md"
       >
-        <form onSubmit={handleAddEmployee} className="space-y-4">
+        <form onSubmit={handleAddEmployee} className="space-y-3.5 text-xs">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap & Gelar *</label>
-              <input
+              <DnaInput
                 type="text"
                 required
                 placeholder="cth: Rian Saputra, S.Farm"
                 value={newEmp.name}
                 onChange={(e) => setNewEmp({ ...newEmp, name: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Departemen *</label>
-              <select
+              <DnaSelect
                 value={newEmp.department}
-                onChange={(e) => setNewEmp({ ...newEmp, department: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                onChange={(val) => setNewEmp({ ...newEmp, department: val })}
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white"
               >
                 <option value="Produksi Mixing">Produksi Mixing (Ruahan)</option>
                 <option value="Produksi Filling">Produksi Filling (Primer)</option>
@@ -478,54 +522,54 @@ export default function HrRecruitmentPage() {
                 <option value="QC Mikrobiologi">QC & QA</option>
                 <option value="BusDev Maklon">BusDev & Marketing</option>
                 <option value="Warehouse Material">Warehouse & Logistik</option>
-              </select>
+              </DnaSelect>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Jabatan / Role *</label>
-              <input
+              <DnaInput
                 type="text"
                 required
                 placeholder="cth: Formulator Skincare"
                 value={newEmp.role}
                 onChange={(e) => setNewEmp({ ...newEmp, role: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Tipe Kontrak *</label>
-              <select
+              <DnaSelect
                 value={newEmp.contractType}
-                onChange={(e) => setNewEmp({ ...newEmp, contractType: e.target.value as any })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                onChange={(val) => setNewEmp({ ...newEmp, contractType: val as any })}
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white"
               >
                 <option value="PKWT (Kontrak)">PKWT (Kontrak 1 Tahun)</option>
                 <option value="PKWTT (Tetap)">PKWTT (Karyawan Tetap)</option>
                 <option value="Probation">Probation (Percobaan 3 Bulan)</option>
-              </select>
+              </DnaSelect>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Nomor WhatsApp / HP</label>
-              <input
+              <DnaInput
                 type="text"
                 placeholder="0812-xxxx-xxxx"
                 value={newEmp.phone}
                 onChange={(e) => setNewEmp({ ...newEmp, phone: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Gaji Pokok Awal (IDR)</label>
-              <input
+              <DnaInput
                 type="number"
                 value={newEmp.basicSalary}
                 onChange={(e) => setNewEmp({ ...newEmp, basicSalary: Number(e.target.value) })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg font-bold text-emerald-700"
               />
             </div>
           </div>
@@ -541,61 +585,100 @@ export default function HrRecruitmentPage() {
         </form>
       </DnaModal>
 
-      {/* MODAL: DETAIL PROFIL PEGAWAI */}
-      <DnaModal
+      {/* QUICK PEEK DRAWER: PROFIL PEGAWAI */}
+      <DnaDetailDrawer
         isOpen={!!selectedEmployee}
         onClose={() => setSelectedEmployee(null)}
-        title={"Profil Karyawan: " + (selectedEmployee?.name || "")}
-        maxWidth="max-w-lg"
-      >
-        {selectedEmployee && (
-          <div className="space-y-4 text-xs">
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-700 text-base">
-                {selectedEmployee.name.charAt(0)}
-              </div>
-              <div>
-                <h4 className="font-bold text-sm text-slate-900">{selectedEmployee.name}</h4>
-                <div className="text-slate-500 font-mono">{selectedEmployee.nik} • {selectedEmployee.role}</div>
-                <div className="mt-1">
-                  <DnaBadge variant="success">{selectedEmployee.status}</DnaBadge>
+        title={selectedEmployee?.name || "Profil Karyawan"}
+        subtitle={`${selectedEmployee?.nik} • ${selectedEmployee?.role}`}
+        badge={
+          selectedEmployee ? (
+            <DnaBadge variant={selectedEmployee.contractType.includes("Tetap") ? "success" : "purple"}>
+              {selectedEmployee.contractType}
+            </DnaBadge>
+          ) : undefined
+        }
+        tabs={[
+          {
+            id: "overview",
+            label: "Informasi Karyawan",
+            content: selectedEmployee && (
+              <div className="space-y-4 text-xs">
+                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Departemen Divisi</span>
+                    <span className="font-semibold text-slate-900">{selectedEmployee.department}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Status Karyawan</span>
+                    <span className="font-bold text-emerald-700">{selectedEmployee.status}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Tanggal Masuk (Join)</span>
+                    <span className="font-mono text-slate-800">{selectedEmployee.joinDate}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Gaji Pokok Tercatat</span>
+                    <span className="font-bold text-slate-900 font-mono">{formatRupiah(selectedEmployee.basicSalary)}</span>
+                  </div>
+                </div>
+
+                <div className="border border-slate-200 rounded-xl p-4 space-y-2">
+                  <h4 className="font-bold text-slate-900">Kontak & Saluran Komunikasi</h4>
+                  <div className="space-y-1.5 text-slate-700">
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-3.5 h-3.5 text-blue-600" />
+                      <span>{selectedEmployee.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-3.5 h-3.5 text-blue-600" />
+                      <span className="font-mono text-[11px]">{selectedEmployee.email}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5 pt-2">
-              <div className="p-2.5 border border-slate-100 rounded-lg bg-white">
-                <span className="text-slate-400 block text-[11px]">Departemen</span>
-                <span className="font-semibold text-slate-800">{selectedEmployee.department}</span>
+            )
+          },
+          {
+            id: "docs",
+            label: "Kompensasi & Hak Kerja",
+            content: selectedEmployee && (
+              <div className="space-y-3 text-xs">
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2">
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                    <span className="text-slate-600">Hak Cuti Tahunan:</span>
+                    <span className="font-bold text-slate-900">12 Hari / Tahun</span>
+                  </div>
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                    <span className="text-slate-600">Fasilitas BPJS Kesehatan:</span>
+                    <span className="font-semibold text-emerald-700">Terdaftar Aktif</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600">BPJS Ketenagakerjaan (JKK/JKM):</span>
+                    <span className="font-semibold text-emerald-700">Terdaftar Aktif</span>
+                  </div>
+                </div>
               </div>
-              <div className="p-2.5 border border-slate-100 rounded-lg bg-white">
-                <span className="text-slate-400 block text-[11px]">Status Ikatan Kerja</span>
-                <span className="font-semibold text-slate-800">{selectedEmployee.contractType}</span>
-              </div>
-              <div className="p-2.5 border border-slate-100 rounded-lg bg-white">
-                <span className="text-slate-400 block text-[11px]">Tanggal Masuk</span>
-                <span className="font-semibold text-slate-800">{selectedEmployee.joinDate}</span>
-              </div>
-              <div className="p-2.5 border border-slate-100 rounded-lg bg-white">
-                <span className="text-slate-400 block text-[11px]">Gaji Pokok Terdaftar</span>
-                <span className="font-mono font-bold text-slate-900">{formatRupiah(selectedEmployee.basicSalary)}</span>
-              </div>
-            </div>
-
-            <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 text-slate-700">
-              <div className="font-semibold text-blue-900 mb-1">Kontak & Jalur Komunikasi</div>
-              <div>Telepon / WA: {selectedEmployee.phone}</div>
-              <div>Email Perusahaan: {selectedEmployee.email}</div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <DnaButton variant="secondary" size="md" onClick={() => setSelectedEmployee(null)}>
-                Tutup
+            )
+          }
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
+            <DnaButton variant="secondary" size="md" onClick={() => setSelectedEmployee(null)}>
+              Tutup
+            </DnaButton>
+            <div className="flex gap-2">
+              <DnaButton variant="secondary" size="md" onClick={() => toast.success("Mencetak Kartu ID Pegawai...")}>
+                <Printer className="w-4 h-4 mr-1.5" />
+                Cetak ID Card
+              </DnaButton>
+              <DnaButton variant="primary" size="md" onClick={() => toast.success("Membuka form edit data pegawai...")}>
+                Edit Data
               </DnaButton>
             </div>
           </div>
-        )}
-      </DnaModal>
+        }
+      />
     </DnaPageContainer>
   );
 }

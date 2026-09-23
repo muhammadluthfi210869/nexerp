@@ -23,8 +23,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/dna";
+import { Badge } from "@/components/dna";
 import { DashboardCard } from "@/components/dna/DashboardCard";
 import { 
   Table, 
@@ -33,13 +33,13 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
+} from "@/components/dna";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/dna";
 import { TableShell } from "@/components/layout/TableShell";
 
 // Static Data from Plan

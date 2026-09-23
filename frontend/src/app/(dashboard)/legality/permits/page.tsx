@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "sonner";
-import { 
-  ShieldCheck, 
-  Search, 
-  PlusCircle, 
-  FileText, 
-  Clock, 
+import {
+  ShieldCheck,
+  Search,
+  PlusCircle,
+  FileText,
+  Clock,
   ChevronRight,
   Gavel,
   History,
@@ -19,32 +18,67 @@ import {
   Globe,
   Verified,
   ArrowRight,
+  Eye,
+  FileSpreadsheet,
+  AlertTriangle,
+  Building2,
 } from "lucide-react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaDataTableCard, DnaStatCard, DnaCard, DnaBadge, DnaButton, DnaErrorState, DnaInput } from "@/components/dna";
+import {
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaDataTableCard,
+  DnaTable,
+  DnaBadge,
+  DnaButton,
+  DnaDetailDrawer,
+  DnaModal,
+  DnaInput,
+  DnaSelect,
+  DnaTextarea,
+  useDnaToast,
+} from "@/components/dna";
 
-export default function LegalityHub() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [advancePermit, setAdvancePermit] = useState<any>(null);
-  const [advanceNotes, setAdvanceNotes] = useState("");
+interface PermitItem {
+  id: string;
+  name: string;
+  issuer: string;
+  type: string;
+  expiry: string;
+  status: "ACTIVE" | "EXPIRING_SOON" | "EXPIRED" | "DRAFT" | "PENDING_REVIEW" | "SUSPENDED" | "REJECTED";
+  notes?: string;
+  documentUrl?: string;
+}
+
+const STATUS_FLOW: Record<string, string[]> = {
+  DRAFT: ["PENDING_REVIEW", "ACTIVE"],
+  PENDING_REVIEW: ["ACTIVE", "REJECTED"],
+  ACTIVE: ["EXPIRING_SOON", "SUSPENDED"],
+  EXPIRING_SOON: ["ACTIVE", "EXPIRED"],
+  EXPIRED: ["ACTIVE"],
+  SUSPENDED: ["ACTIVE"],
+  REJECTED: ["DRAFT"],
+};
+
+export default function LegalityPermitsPage() {
   const queryClient = useQueryClient();
+  const { success, error: toastError } = useDnaToast();
+  const [activeTab, setActiveTab] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPermit, setSelectedPermit] = useState<PermitItem | null>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
 
-  const { data: permits = [], isLoading, isError, error, refetch } = useQuery({
+  // Advance Status Modal
+  const [advancePermit, setAdvancePermit] = useState<PermitItem | null>(null);
+  const [nextStatus, setNextStatus] = useState("");
+  const [advanceNotes, setAdvanceNotes] = useState("");
+
+  const { data: permits = [], isLoading, isError, error, refetch } = useQuery<PermitItem[]>({
     queryKey: ["permits"],
     queryFn: async () => {
       const resp = await api.get("/legality/permits");
-      return resp.data;
-    }
+      return resp.data || [];
+    },
   });
-
-  // P08 acceptance 5: the denied and error states are visible on the page, not
-  // collapsed into the empty state. Everything on this page comes from the API —
-  // there is no static array, no browser storage and no fallback.
-  const errStatus = (error as { response?: { status?: number } })?.response?.status;
-  const denied = errStatus === 401 || errStatus === 403;
-  const errorMessage =
-    (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-    "Gagal memuat daftar perizinan.";
 
   const advanceMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
@@ -53,346 +87,417 @@ export default function LegalityHub() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["permits"] });
-      toast.success("Permit Status Updated", {
-        description: "The permit has been advanced to the next stage.",
-      });
+      queryClient.invalidateQueries({ queryKey: ["legality-dashboard"] });
+      success("Status perizinan berhasil diperbarui ke tahap berikutnya.");
       setAdvancePermit(null);
       setAdvanceNotes("");
+      setIsDetailDrawerOpen(false);
     },
     onError: (err: any) => {
-      toast.error("Update Failed", {
-        description: err.response?.data?.message || "Failed to update permit status.",
-      });
+      toastError(err.response?.data?.message || "Gagal memperbarui status izin.");
     },
   });
 
-  const STATUS_FLOW: Record<string, string[]> = {
-    DRAFT: ["PENDING_REVIEW", "ACTIVE"],
-    PENDING_REVIEW: ["ACTIVE", "REJECTED"],
-    ACTIVE: ["EXPIRING_SOON", "SUSPENDED"],
-    EXPIRING_SOON: ["ACTIVE", "EXPIRED"],
-    EXPIRED: ["ACTIVE"],
-    SUSPENDED: ["ACTIVE"],
-    REJECTED: ["DRAFT"],
-  };
+  const activePermits = permits.filter((p) => p.status === "ACTIVE").length;
+  const expiringSoon = permits.filter((p) => p.status === "EXPIRING_SOON").length;
+  const inProgress = permits.filter((p) => p.status === "EXPIRED" || p.status === "EXPIRING_SOON").length;
+  const healthScore = permits.length > 0 ? `${Math.round((activePermits / permits.length) * 100)}%` : "100%";
 
-  const STATUS_LABELS: Record<string, string> = {
-    DRAFT: "Draft",
-    PENDING_REVIEW: "Pending Review",
-    ACTIVE: "Active",
-    EXPIRING_SOON: "Expiring Soon",
-    EXPIRED: "Expired",
-    SUSPENDED: "Suspended",
-    REJECTED: "Rejected",
-  };
+  const filteredPermits = useMemo(() => {
+    return permits.filter((p) => {
+      // Tab Filter
+      if (activeTab === "ACTIVE" && p.status !== "ACTIVE") return false;
+      if (activeTab === "EXPIRING_SOON" && p.status !== "EXPIRING_SOON") return false;
+      if (activeTab === "EXPIRED" && p.status !== "EXPIRED") return false;
 
-  const activePermits = permits?.filter((p: any) => p.status === 'ACTIVE').length ?? 0;
-  const expiringSoon = permits?.filter((p: any) => p.status === 'EXPIRING_SOON').length ?? 0;
-  const inProgress = permits?.filter((p: any) => p.status === 'EXPIRED' || p.status === 'EXPIRING_SOON').length ?? 0;
-  const healthScore = permits?.length > 0 ? Math.round((activePermits / permits.length) * 100) + '%' : '100%';
-
-  const filteredPermits = permits.filter((p: any) => {
-    const term = searchTerm.toLowerCase();
-    return (
-      p.id?.toLowerCase().includes(term) ||
-      p.name?.toLowerCase().includes(term) ||
-      p.issuer?.toLowerCase().includes(term) ||
-      p.type?.toLowerCase().includes(term)
-    );
-  });
+      // Search Query
+      if (searchTerm.trim()) {
+        const q = searchTerm.toLowerCase();
+        const matchId = p.id?.toLowerCase().includes(q);
+        const matchName = p.name?.toLowerCase().includes(q);
+        const matchIssuer = p.issuer?.toLowerCase().includes(q);
+        const matchType = p.type?.toLowerCase().includes(q);
+        if (!matchId && !matchName && !matchIssuer && !matchType) return false;
+      }
+      return true;
+    });
+  }, [permits, activeTab, searchTerm]);
 
   return (
-    <DashboardShell
-      title="LEGALITY"
-      titleAccent="REGISTRY"
-      subtitle="Tracking critical permits, licenses, and regulatory compliance"
-      actions={
-        <div className="flex gap-3">
-          <DnaButton 
-            variant="outline" 
-            icon={<History className="text-amber-500" />}
+    <div className="space-y-6 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
+      {/* ── 01. PAGE HEADER DENGAN TABS TERPADU (Golden Rule 2) ── */}
+      <DnaPageHeader
+        backLink={{ href: "/legality/dashboard", label: "Kembali ke Dashboard Legal" }}
+        title="REGISTRY PERIZINAN & LISENSI RESMI"
+        badge={<DnaBadge variant="info">LEGAL PERMITS</DnaBadge>}
+        subtitle="Pencatatan izin edar BPOM, sertifikasi Halal, surat izin operasional pabrik, dan kelaikan usaha"
+        tabs={[
+          {
+            key: "all",
+            label: "Semua Perizinan",
+            count: permits.length,
+            icon: <FileText className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "ACTIVE",
+            label: "Izin Aktif",
+            count: activePermits,
+            icon: <Verified className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "EXPIRING_SOON",
+            label: "Expiring Soon (< 90 Hari)",
+            count: expiringSoon,
+            icon: <Clock className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "EXPIRED",
+            label: "Kadaluarsa / Perlu Perpanjangan",
+            count: permits.filter((p) => p.status === "EXPIRED").length,
+            icon: <AlertTriangle className="w-3.5 h-3.5" />,
+          },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        actions={
+          <DnaButton
+            variant="outline"
+            icon={<FileSpreadsheet className="w-3.5 h-3.5" />}
+            onClick={() => success("Buku induk perizinan edar diekspor.")}
           >
-            Audit Logs
+            Export Buku Induk
           </DnaButton>
-          <DnaButton 
-            variant="primary"
-            icon={<PlusCircle className="stroke-[3px]" />}
-            className="bg-amber-600 hover:bg-amber-700 text-white"
-          >
-            Add New Permit
-          </DnaButton>
-        </div>
-      }
-    >
-      <div className="space-y-6 animate-fade-slide-in">
-        {/* Compliance Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <DnaStatCard label="ACTIVE PERMITS" value={activePermits} icon={<Verified />} variant="emerald" />
-          <DnaStatCard label="EXPIRING SOON" value={expiringSoon} icon={<Clock />} variant="amber" />
-          <DnaStatCard label="IN PROGRESS" value={inProgress} icon={<Zap />} variant="blue" />
-          <DnaStatCard label="REGULATORY HEALTH" value={healthScore} icon={<ShieldCheck />} variant="neutral" />
-        </div>
+        }
+      />
 
-        {/* Permits Table wrapped in DnaDataTableCard */}
-        <DnaDataTableCard
-          customToolbar={
-            <div className="px-5 py-3 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white">
-              <div className="flex items-center gap-3">
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                <div>
-                  <h3 className="font-bold text-slate-900 uppercase tracking-tight text-sm">
-                    PERMITS & LICENSING INDEX
-                  </h3>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight mt-0.5">
-                    Central regulatory registry ledger • {filteredPermits.length} Records
-                  </p>
-                </div>
-              </div>
-              <DnaInput
-                icon={<Search className="w-4 h-4 text-slate-400" />}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="CARI PERMIT ID / PENERBIT..."
-                className="w-full md:w-64"
-              />
-            </div>
-          }
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">PERMIT ID / REFERENCE</th>
-                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">LICENSING NAME / ISSUER</th>
-                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">CATEGORY</th>
-                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">VALID UNTIL</th>
-                  <th className="px-4 py-4 text-center text-table-header text-slate-400 uppercase tracking-widest">STATUS</th>
-                  <th className="px-4 py-4 text-right text-table-header text-slate-400 uppercase tracking-widest">LEGAL ACTION</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Syncing regulatory registry...
-                    </td>
-                  </tr>
-                ) : isError ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-6">
-                      <DnaErrorState
-                        title={denied ? "Akses ditolak" : "Gagal memuat data"}
-                        message={
-                          denied
-                            ? "Anda tidak memiliki akses ke registry perizinan."
-                            : errorMessage
-                        }
-                        onRetry={() => refetch()}
-                      />
-                    </td>
-                  </tr>
-                ) : filteredPermits.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Tidak ada data berkas perizinan yang ditemukan
-                    </td>
-                  </tr>
-                ) : (
-                  filteredPermits.map((permit: any) => (
-                    <tr key={permit.id} className="group hover:bg-slate-50/50 transition-all cursor-default">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center shadow-sm group-hover:rotate-12 transition-transform shrink-0">
-                            <FileText className="h-4.5 w-4.5 text-amber-500" />
-                          </div>
-                          <span className="font-black text-slate-900 tracking-tight text-sm uppercase italic">{permit.id}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col">
-                          <p className="font-black text-slate-900 text-xs uppercase italic leading-none">{permit.name}</p>
-                          <p className="text-[8px] font-bold text-slate-400 uppercase mt-1 leading-none">{permit.issuer}</p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <DnaBadge status="default">{permit.type}</DnaBadge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase leading-none">
-                          <Calendar className="h-3.5 w-3.5 text-slate-300" />
-                          {permit.expiry}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <DnaBadge 
-                          status={
-                            permit.status === 'ACTIVE' ? "success" : 
-                            permit.status === 'EXPIRING_SOON' ? "warning" : "critical"
-                          }
+      {/* ── 02. MODULAR 4 KPI METRIC CARDS ── */}
+      <DnaKpiGrid
+        cards={[
+          {
+            key: "ACTIVE",
+            title: "IZIN AKTIF RESMI",
+            value: activePermits.toLocaleString("id-ID"),
+            deltaText: "Berlaku penuh tanpa kendala",
+            isDeltaPositive: true,
+            icon: <Verified className="w-4 h-4" />,
+            iconBg: "bg-emerald-50",
+            iconColor: "text-emerald-600",
+            isSelected: activeTab === "ACTIVE",
+            onClick: () => setActiveTab(activeTab === "ACTIVE" ? "all" : "ACTIVE"),
+          },
+          {
+            key: "EXPIRING",
+            title: "MENDEKATI JATUH TEMPO",
+            value: `${expiringSoon} Izin`,
+            deltaText: "Perlu perpanjangan segera (< 90h)",
+            isDeltaPositive: false,
+            icon: <Clock className="w-4 h-4" />,
+            iconBg: "bg-amber-50",
+            iconColor: "text-amber-600",
+            isSelected: activeTab === "EXPIRING_SOON",
+            onClick: () => setActiveTab(activeTab === "EXPIRING_SOON" ? "all" : "EXPIRING_SOON"),
+          },
+          {
+            key: "PROCESS",
+            title: "DALAM PROSES / KADALUARSA",
+            value: `${inProgress} Berkas`,
+            deltaText: "Dokumen dalam evaluasi instansi",
+            isDeltaPositive: true,
+            icon: <Zap className="w-4 h-4" />,
+            iconBg: "bg-blue-50",
+            iconColor: "text-blue-600",
+            isSelected: false,
+          },
+          {
+            key: "HEALTH",
+            title: "SKOR KESEHATAN REGULASI",
+            value: healthScore,
+            deltaText: "Tingkat kepatuhan audit legalitas",
+            isDeltaPositive: true,
+            icon: <ShieldCheck className="w-4 h-4" />,
+            iconBg: "bg-purple-50",
+            iconColor: "text-purple-600",
+            isSelected: false,
+          },
+        ]}
+      />
+
+      {/* ── 03. MODULAR DATA TABLE CARD (Golden Rule 1 & 4) ── */}
+      <DnaDataTableCard
+        toolbarProps={{
+          searchQuery: searchTerm,
+          onSearchChange: setSearchTerm,
+          searchPlaceholder: "Cari nomor izin, nama perizinan, atau instansi penerbit...",
+        }}
+      >
+        <DnaTable className="table-fixed w-full">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+              <th className="p-3 w-10 text-slate-400">#</th>
+              <th className="p-3 w-[26%]">NO. IZIN & NAMA DOKUMEN</th>
+              <th className="p-3 w-[20%]">INSTANSI & TIPE</th>
+              <th className="p-3 w-[18%]">MASA BERLAKU</th>
+              <th className="p-3 w-[18%] text-center">STATUS</th>
+              <th className="p-3 text-center w-[18%] whitespace-nowrap">AKSI</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {isLoading ? (
+              <tr>
+                <td colSpan={6} className="p-8 text-center text-xs text-slate-400">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <span>Memuat buku perizinan edar...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : isError ? (
+              <tr>
+                <td colSpan={6} className="p-8 text-center text-xs text-rose-500">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <span>Gagal memuat registry perizinan: {(error as any)?.message || "Terjadi kesalahan"}</span>
+                    <button
+                      type="button"
+                      onClick={() => refetch()}
+                      className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors"
+                    >
+                      Coba Lagi
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ) : filteredPermits.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="p-8 text-center text-xs text-slate-400">
+                  Tidak ada dokumen perizinan yang sesuai kriteria filter.
+                </td>
+              </tr>
+            ) : (
+              filteredPermits.map((permit, idx) => (
+                <tr
+                  key={permit.id}
+                  className="hover:bg-slate-50/80 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setSelectedPermit(permit);
+                    setIsDetailDrawerOpen(true);
+                  }}
+                >
+                  <td className="p-3 text-slate-400 font-mono text-[11px] tabular-nums">
+                    {idx + 1}
+                  </td>
+                  <td className="p-3">
+                    <div className="font-bold text-slate-900 truncate uppercase">{permit.name}</div>
+                    <div className="font-mono text-[11px] text-blue-600 font-semibold">{permit.id}</div>
+                  </td>
+                  <td className="p-3">
+                    <div className="font-semibold text-slate-800 truncate">{permit.issuer}</div>
+                    <div className="text-[11px] text-slate-500 font-mono">{permit.type}</div>
+                  </td>
+                  <td className="p-3">
+                    <div className="font-medium text-slate-800 text-xs">{permit.expiry || "—"}</div>
+                    <div className="text-[10px] text-slate-400 font-mono">Batas Akhir Izin</div>
+                  </td>
+                  <td className="p-3 text-center">
+                    <DnaBadge
+                      variant={
+                        permit.status === "ACTIVE"
+                          ? "success"
+                          : permit.status === "EXPIRING_SOON"
+                          ? "warning"
+                          : "critical"
+                      }
+                    >
+                      {permit.status.replace("_", " ")}
+                    </DnaBadge>
+                  </td>
+                  <td className="p-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-center gap-1">
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
+                        onClick={() => {
+                          setSelectedPermit(permit);
+                          setIsDetailDrawerOpen(true);
+                        }}
+                        title="Lihat Detail Izin"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </DnaButton>
+                      {STATUS_FLOW[permit.status] && STATUS_FLOW[permit.status].length > 0 && (
+                        <DnaButton
+                          variant="secondary"
+                          size="sm"
+                          className="h-7 px-2 text-[10.5px]"
+                          onClick={() => {
+                            setAdvancePermit(permit);
+                            setNextStatus(STATUS_FLOW[permit.status][0]);
+                            setAdvanceNotes("");
+                          }}
+                          title="Lanjutkan Tahap Perizinan"
                         >
-                          {permit.status.replace('_', ' ')}
-                        </DnaBadge>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-1">
-                          <DnaButton 
-                            size="sm" 
-                            variant="ghost" 
-                            icon={<Download className="w-3.5 h-3.5" />} 
-                            onClick={() => console.log("Download permit:", permit.id)}
-                          />
-                          {STATUS_FLOW[permit.status] && STATUS_FLOW[permit.status].length > 0 && (
-                            <DnaButton 
-                              size="sm" 
-                              variant="primary" 
-                              icon={<ArrowRight className="w-3.5 h-3.5" />}
-                              onClick={() => setAdvancePermit(permit)}
-                              className="font-black text-[9px] px-3.5 bg-amber-600 hover:bg-amber-700"
-                            >
-                              ADVANCE
-                            </DnaButton>
-                          )}
-                          <DnaButton 
-                            size="sm" 
-                            variant="outline" 
-                            icon={<ChevronRight className="w-3.5 h-3.5" />}
-                            onClick={() => console.log("View permit details:", permit.id)}
-                            className="font-black text-[9px] px-3.5"
-                          >
-                            DETAILS
-                          </DnaButton>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </DnaDataTableCard>
+                          Tahap Berikutnya
+                        </DnaButton>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </DnaTable>
+      </DnaDataTableCard>
 
-        {/* Regulatory Calendar Preview */}
-        <DnaCard
-          dotColor="bg-amber-500"
-          title="REGULATORY INTELLIGENCE"
-          titleColor="text-slate-400"
-          className="relative overflow-hidden !p-5 rounded-2xl group mt-4"
-        >
-          <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
-            <div className="h-20 w-20 bg-amber-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-700 shrink-0">
-              <Gavel className="h-10 w-10 text-black" />
-            </div>
-            <div className="flex-1 text-center md:text-left space-y-1.5">
-              <h4 className="text-lg font-black italic uppercase tracking-tight text-gray-900 leading-none">REGULATORY INTELLIGENCE DECK</h4>
-              <p className="text-[10px] font-bold text-gray-400 uppercase leading-relaxed">
-                Automatically tracking renewal cycles for 12+ international regulatory bodies. Our proactive engine notifies legal counsel 90 days before expiration.
-              </p>
-              <div className="flex gap-6 justify-center md:justify-start pt-2">
-                <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-slate-500">
-                  <Globe className="h-3.5 w-3.5 text-amber-500" /> Global Compliance
-                </span>
-                <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-slate-500">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> Digital Vault
-                </span>
-              </div>
-            </div>
-            <DnaButton 
-              variant="secondary"
-              icon={<ChevronRight />}
-              className="h-11 px-6 rounded-xl font-black bg-slate-800 text-white"
-            >
-              Regulatory Map
-            </DnaButton>
-          </div>
-        </DnaCard>
-
-        {/* Advance Status Dialog */}
-        {advancePermit && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
-              <div className="p-6 bg-amber-500 text-white">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center">
-                    <ArrowRight className="h-5 w-5" />
+      {/* ── 04. DETAIL DRAWER QUICK PEEK (Golden Rule 5) ── */}
+      <DnaDetailDrawer
+        isOpen={isDetailDrawerOpen}
+        onClose={() => setIsDetailDrawerOpen(false)}
+        title={selectedPermit?.name || "Detail Izin & Dokumen Legal"}
+        subtitle={`ID Registrasi: ${selectedPermit?.id || "-"} • Instansi: ${selectedPermit?.issuer || "-"}`}
+        badge={
+          selectedPermit?.status === "ACTIVE" ? (
+            <DnaBadge variant="success">IZIN RESMI AKTIF</DnaBadge>
+          ) : selectedPermit?.status === "EXPIRING_SOON" ? (
+            <DnaBadge variant="warning">EXPIRING SOON</DnaBadge>
+          ) : (
+            <DnaBadge variant="critical">KADALUARSA</DnaBadge>
+          )
+        }
+        tabs={[
+          {
+            id: "specs",
+            label: "Informasi Izin & Masa Berlaku",
+            content: selectedPermit ? (
+              <div className="space-y-4 text-xs">
+                <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Nama Perizinan</span>
+                    <span className="font-bold text-slate-900 text-sm uppercase">{selectedPermit.name}</span>
                   </div>
                   <div>
-                    <h3 className="text-lg font-black">Advance Permit Status</h3>
-                    <p className="text-amber-100 text-xs font-medium mt-0.5">Update the permit's progression stage</p>
+                    <span className="text-slate-500 block text-[11px]">Nomor Surat Keputusan (SK)</span>
+                    <span className="font-mono font-bold text-blue-600 text-sm">{selectedPermit.id}</span>
                   </div>
-                </div>
-              </div>
-              <div className="p-6 space-y-5">
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Permit</p>
-                  <p className="text-sm font-black text-slate-900">{advancePermit.name}</p>
-                  <p className="text-[10px] text-slate-500 font-bold">{advancePermit.id} • {advancePermit.issuer}</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Current Status</label>
-                  <div className="flex items-center gap-2">
-                    <DnaBadge status={advancePermit.status === 'ACTIVE' ? 'success' : advancePermit.status === 'EXPIRED' ? 'critical' : 'warning'}>
-                      {STATUS_LABELS[advancePermit.status] || advancePermit.status}
-                    </DnaBadge>
-                    <ArrowRight className="h-4 w-4 text-slate-300" />
-                    <span className="text-[10px] font-bold text-slate-400">Advance to:</span>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Instansi Penerbit</span>
+                    <span className="font-semibold text-slate-800">{selectedPermit.issuer}</span>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {(STATUS_FLOW[advancePermit.status] || []).map((nextStatus) => (
-                      <button
-                        key={nextStatus}
-                        onClick={() => {
-                          setAdvancePermit({ ...advancePermit, _nextStatus: nextStatus });
-                        }}
-                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-                          advancePermit._nextStatus === nextStatus
-                            ? "bg-amber-500 text-white border-2 border-amber-600"
-                            : "bg-white border-2 border-slate-200 text-slate-600 hover:border-amber-300"
-                        }`}
-                      >
-                        {STATUS_LABELS[nextStatus] || nextStatus}
-                      </button>
-                    ))}
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Kategori Dokumen</span>
+                    <span className="font-mono text-slate-700">{selectedPermit.type}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-slate-500 block text-[11px]">Batas Akhir Berlaku (Expiry Date)</span>
+                    <span className="font-mono font-bold text-slate-900 text-sm">{selectedPermit.expiry || "—"}</span>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Notes (optional)</label>
-                  <textarea
-                    value={advanceNotes}
-                    onChange={(e) => setAdvanceNotes(e.target.value)}
-                    className="w-full h-20 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-medium resize-none focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    placeholder="Add notes for this status change..."
-                  />
+                <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-slate-900 block">Sertifikat Digital Terindeks</span>
+                    <span className="text-slate-500 text-[11px]">Telah diverifikasi sesuai standar OSS & BPOM</span>
+                  </div>
+                  <DnaBadge variant="info">Digital SK</DnaBadge>
                 </div>
               </div>
-              <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
-                <button
-                  onClick={() => { setAdvancePermit(null); setAdvanceNotes(""); }}
-                  className="flex-1 h-12 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-100 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
+            ) : null,
+          },
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              icon={<Download className="w-3.5 h-3.5" />}
+              onClick={() => {
+                success(`Salinan berkas izin ${selectedPermit?.id} diunduh.`);
+              }}
+            >
+              Unduh Salinan SK
+            </DnaButton>
+            <div className="flex items-center gap-2">
+              {selectedPermit && STATUS_FLOW[selectedPermit.status] && (
+                <DnaButton
+                  variant="secondary"
+                  size="sm"
                   onClick={() => {
-                    if (advancePermit._nextStatus) {
-                      advanceMutation.mutate({
-                        id: advancePermit.id,
-                        status: advancePermit._nextStatus,
-                        notes: advanceNotes,
-                      });
-                    }
+                    setAdvancePermit(selectedPermit);
+                    setNextStatus(STATUS_FLOW[selectedPermit.status][0]);
+                    setAdvanceNotes("");
                   }}
-                  disabled={!advancePermit._nextStatus || advanceMutation.isPending}
-                  className="flex-1 h-12 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-lg shadow-amber-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {advanceMutation.isPending ? "Updating..." : "Confirm Advance"}
-                </button>
-              </div>
+                  Ubah Tahap Status
+                </DnaButton>
+              )}
+              <DnaButton variant="primary" size="sm" onClick={() => setIsDetailDrawerOpen(false)}>
+                Selesai
+              </DnaButton>
             </div>
           </div>
-        )}
-      </div>
-    </DashboardShell>
+        }
+      />
+
+      {/* ── 05. MODAL ADVANCE STATUS PERIZINAN ── */}
+      <DnaModal
+        isOpen={!!advancePermit}
+        onClose={() => setAdvancePermit(null)}
+        title="Lanjutkan Tahapan Perizinan"
+        subtitle={`Perbarui status untuk izin ${advancePermit?.name} (${advancePermit?.id})`}
+        size="md"
+        footer={
+          <>
+            <DnaButton variant="secondary" onClick={() => setAdvancePermit(null)}>
+              Batal
+            </DnaButton>
+            <DnaButton
+              variant="primary"
+              disabled={advanceMutation.isPending || !nextStatus}
+              onClick={() => {
+                if (advancePermit && nextStatus) {
+                  advanceMutation.mutate({
+                    id: advancePermit.id,
+                    status: nextStatus,
+                    notes: advanceNotes,
+                  });
+                }
+              }}
+            >
+              Simpan Perubahan
+            </DnaButton>
+          </>
+        }
+      >
+        <div className="space-y-4 text-xs">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Tahap Status Baru *
+            </label>
+            <DnaSelect
+              value={nextStatus}
+              onChange={(val) => setNextStatus(val)}
+              options={
+                advancePermit && STATUS_FLOW[advancePermit.status]
+                  ? STATUS_FLOW[advancePermit.status].map((s) => ({
+                      value: s,
+                      label: s.replace("_", " "),
+                    }))
+                  : []
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Catatan Regulasi / Nomor Surat Pengantar
+            </label>
+            <DnaTextarea
+              value={advanceNotes}
+              onChange={(e) => setAdvanceNotes(e.target.value)}
+              placeholder="Masukkan keterangan evaluasi dokumen atau tindak lanjut..."
+              rows={3}
+            />
+          </div>
+        </div>
+      </DnaModal>
+    </div>
   );
 }

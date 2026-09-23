@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -16,8 +16,13 @@ import {
   DnaCurrencyInput,
   CoaSelect,
   formatRupiah,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
 } from "@/components/dna";
-import { DnaTable } from "@/components/dna";
 import { Plus, Building2, CreditCard, Wallet, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 interface BankAccount {
@@ -173,59 +178,79 @@ export default function BankAccountsPage() {
         />
       </DnaKpiGrid>
 
+      {/* Main Table Card (Rule 1: No title prop, Rule 4: Clean responsive columns) */}
       <DnaDataTableCard
-        searchPlaceholder="Cari nama bank, nomor rekening, atau pemegang rekening..."
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari nama bank, nomor rekening, atau pemegang rekening...",
+        }}
       >
         <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left text-[12px]">
-            <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
+          <DnaTable>
+            <DnaTableHead>
               <tr>
-                <th className="px-4 py-3">Nama Bank / Kas</th>
-                <th className="px-4 py-3">Nomor Rekening</th>
-                <th className="px-4 py-3">Atas Nama</th>
-                <th className="px-4 py-3">Tipe Rekening</th>
-                <th className="px-4 py-3">Mapping Akun COA</th>
-                <th className="px-4 py-3 text-right">Saldo Berjalan</th>
-                <th className="px-4 py-3 text-center">Status</th>
-                <th className="px-4 py-3 text-center">Aksi</th>
+                <DnaTh>Nama Bank / Kas</DnaTh>
+                <DnaTh className="w-[140px]">Nomor Rekening</DnaTh>
+                <DnaTh>Atas Nama</DnaTh>
+                <DnaTh align="center" className="w-[120px]">Tipe Rekening</DnaTh>
+                <DnaTh className="w-[120px]">Mapping COA</DnaTh>
+                <DnaTh align="right" className="w-[150px]">Saldo Berjalan</DnaTh>
+                <DnaTh align="center" className="w-[110px]">Status</DnaTh>
+                <DnaTh align="center" className="w-[110px]">Aksi</DnaTh>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            </DnaTableHead>
+            <DnaTableBody>
               {filtered.map((acc) => (
-                <tr key={acc.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-slate-900">{acc.bankName}</div>
-                    <div className="text-[11px] text-slate-400">{acc.currency} (Indonesian Rupiah)</div>
-                  </td>
-                  <td className="px-4 py-3">
+                <DnaTableRow key={acc.id} className="group">
+                  {/* Kolom 1: Nama Bank / Kas (1 Natural Pair) */}
+                  <DnaTd>
+                    <DnaCell.Text
+                      primary={acc.bankName}
+                      secondary={`${acc.currency} (Indonesian Rupiah)`}
+                    />
+                  </DnaTd>
+
+                  {/* Kolom 2: Nomor Rekening */}
+                  <DnaTd>
                     <DnaCell.Code value={acc.accountNumber} />
-                  </td>
-                  <td className="px-4 py-3 text-slate-700 font-medium">{acc.accountName}</td>
-                  <td className="px-4 py-3">
+                  </DnaTd>
+
+                  {/* Kolom 3: Atas Nama */}
+                  <DnaTd isPrimary className="truncate max-w-[200px]">
+                    {acc.accountName}
+                  </DnaTd>
+
+                  {/* Kolom 4: Tipe Rekening */}
+                  <DnaTd align="center">
                     <DnaBadge
                       variant={
-                        acc.accountType === "BANK" ? "blue" : acc.accountType === "CASH" ? "amber" : "purple"
+                        acc.accountType === "BANK" ? "info" : acc.accountType === "CASH" ? "warning" : "purple"
                       }
                     >
                       {acc.accountType}
                     </DnaBadge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md text-[11px]">
-                      {acc.glAccountCode}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-slate-900">
-                    {formatRupiah(acc.currentBalance)}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <DnaBadge variant={acc.isActive ? "emerald" : "slate"}>
+                  </DnaTd>
+
+                  {/* Kolom 5: Mapping Akun COA */}
+                  <DnaTd>
+                    <DnaCell.Code value={acc.glAccountCode} />
+                  </DnaTd>
+
+                  {/* Kolom 6: Saldo Berjalan */}
+                  <DnaTd align="right">
+                    <DnaCell.Currency value={acc.currentBalance} className="font-semibold text-slate-900" />
+                  </DnaTd>
+
+                  {/* Kolom 7: Status */}
+                  <DnaTd align="center">
+                    <DnaBadge variant={acc.isActive ? "success" : "default"}>
                       {acc.isActive ? "Aktif" : "Non-Aktif"}
                     </DnaBadge>
-                  </td>
-                  <td className="px-4 py-3 text-center">
+                  </DnaTd>
+
+                  {/* Kolom 8: Aksi */}
+                  <DnaTd align="center">
                     <DnaButton
                       variant="secondary"
                       size="sm"
@@ -237,10 +262,10 @@ export default function BankAccountsPage() {
                     >
                       {acc.isActive ? "Nonaktifkan" : "Aktifkan"}
                     </DnaButton>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-            </tbody>
+            </DnaTableBody>
           </DnaTable>
         </div>
       </DnaDataTableCard>

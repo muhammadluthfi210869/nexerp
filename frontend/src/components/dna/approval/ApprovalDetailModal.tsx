@@ -292,7 +292,7 @@ export function ApprovalDetailModal({
                       <tbody className="divide-y divide-slate-100">
                         {data.lineItems.map((item, idx) => (
                           <tr key={idx} className="hover:bg-slate-50/50">
-                            <td className="px-3 py-2 text-center text-slate-400 font-mono text-[11px]">
+                            <td className="px-3 py-2 text-center text-slate-400 tabular-nums text-[11px]">
                               {idx + 1}
                             </td>
                             <td className="px-3 py-2">
@@ -300,7 +300,7 @@ export function ApprovalDetailModal({
                                 {item.itemName}
                               </div>
                               {item.itemCode && (
-                                <span className="font-mono text-[10.5px] text-slate-400">
+                                <span className="text-[10.5px] text-slate-400 tabular-nums">
                                   {item.itemCode}
                                 </span>
                               )}
@@ -309,12 +309,12 @@ export function ApprovalDetailModal({
                               {item.qty.toLocaleString("id-ID")} {item.unit || ""}
                             </td>
                             {item.unitPrice !== undefined && (
-                              <td className="px-3 py-2 text-right font-mono text-slate-700 tabular-nums">
+                              <td className="px-3 py-2 text-right font-medium text-slate-700 tabular-nums">
                                 {formatRupiah(item.unitPrice)}
                               </td>
                             )}
                             {item.total !== undefined && (
-                              <td className="px-3 py-2 text-right font-bold text-slate-900 font-mono tabular-nums">
+                              <td className="px-3 py-2 text-right font-bold text-slate-900 tabular-nums">
                                 {formatRupiah(item.total)}
                               </td>
                             )}

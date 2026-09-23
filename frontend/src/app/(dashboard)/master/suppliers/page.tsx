@@ -32,11 +32,15 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Eye,
+  Edit2,
+  FileSpreadsheet,
 } from "lucide-react";
 import {
   DnaPageHeader,
   DnaKpiGrid,
   DnaDataTableCard,
+  DnaBadge,
   DnaButton,
   DnaInput,
   DnaSelect,
@@ -44,6 +48,8 @@ import {
   DnaModal,
   DnaConfirmDialog,
   DnaCell,
+  DnaDetailDrawer,
+  DnaTable,
   useDnaToast,
 } from "@/components/dna";
 import { api } from "@/lib/api";
@@ -599,77 +605,34 @@ function MasterSuppliersContent() {
               onPageChange: setCurrentPage,
             }}
           >
-            <table className="w-full text-left border-collapse text-[12px]">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[1200px]">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                  <th className="p-3.5 w-12 text-slate-400">#</th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[220px]"
-                    onClick={() => handleHeaderSortToggle("nama")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>SUPPLIER</span>
-                      {sortColumn === "nama" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[140px]"
-                    onClick={() => handleHeaderSortToggle("pic")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>PIC</span>
-                      {sortColumn === "pic" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th className="p-3.5 min-w-[130px]">TELEPON</th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[130px]"
-                    onClick={() => handleHeaderSortToggle("kota")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>KOTA</span>
-                      {sortColumn === "kota" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[130px]"
-                    onClick={() => handleHeaderSortToggle("kategoriBahan")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>KATEGORI</span>
-                      {sortColumn === "kategoriBahan" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th className="p-3.5 text-center min-w-[80px]">PAJAK</th>
-                  <th className="p-3.5 text-center font-bold w-24 whitespace-nowrap">#</th>
+                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 font-bold uppercase tracking-wider text-[11px] select-none">
+                  <th className="px-4 py-2.5 w-[140px]">Kode Vendor</th>
+                  <th className="px-4 py-2.5 min-w-[180px]">Nama Perusahaan</th>
+                  <th className="px-4 py-2.5 w-[140px]">PIC Vendor</th>
+                  <th className="px-4 py-2.5 w-[140px]">No. WhatsApp</th>
+                  <th className="px-4 py-2.5 w-[130px]">Kota Domisili</th>
+                  <th className="px-4 py-2.5 w-[150px]">Kategori Bahan</th>
+                  <th className="px-4 py-2.5 w-[120px] text-center">Status Pajak</th>
+                  <th className="px-4 py-2.5 w-[120px] text-center">Termin Bayar</th>
+                  <th className="pr-4 py-2.5 w-[80px] text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {isLoadingSuppliers ? (
                   <tr>
-                    <td colSpan={8} className="p-12 text-center text-slate-400 font-medium">
-                      Memuat data supplier...
+                    <td colSpan={9} className="p-12 text-center text-slate-400 font-medium">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <span>Memuat data supplier...</span>
+                      </div>
                     </td>
                   </tr>
                 ) : isErrorSuppliers ? (
                   <tr>
-                    <td colSpan={8} className="p-12 text-center text-rose-500 font-medium">
+                    <td colSpan={9} className="p-12 text-center text-rose-500 font-medium">
                       <div className="flex flex-col items-center gap-2">
                         <span>{(suppliersError as any)?.message || "Gagal memuat data supplier dari server"}</span>
                         <DnaButton size="sm" variant="secondary" onClick={() => refetchSuppliers()}>
@@ -680,80 +643,71 @@ function MasterSuppliersContent() {
                   </tr>
                 ) : paginatedSuppliers.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-slate-400">
+                    <td colSpan={9} className="p-8 text-center text-slate-400">
                       Tidak ada data supplier yang sesuai filter.
                     </td>
                   </tr>
                 ) : (
-                  paginatedSuppliers.map((sup, idx) => {
+                  paginatedSuppliers.map((sup) => {
                     return (
                       <tr
                         key={sup.id}
-                        className="hover:bg-slate-50/80 transition-colors cursor-default"
+                        className="h-[48px] hover:bg-slate-50/60 transition-colors cursor-pointer group"
+                        onClick={() => {
+                          setSelectedSupplier(sup);
+                          setIsDetailModalOpen(true);
+                        }}
                       >
-                        <td className="p-3.5 text-slate-400 tabular-nums">
-                          {(currentPage - 1) * pageSize + idx + 1}
+                        <td className="px-4 py-2.5">
+                          <DnaCell.Code code={sup.vendorCode} />
                         </td>
-                        <td className="p-3.5 font-bold text-slate-900 whitespace-nowrap">
-                          <button
-                            onClick={() => {
-                              setSelectedSupplier(sup);
-                              setIsDetailModalOpen(true);
-                            }}
-                            className="hover:text-blue-600 hover:underline text-left"
-                          >
-                            {sup.nama}
-                          </button>
+                        <td className="px-4 py-2.5">
+                          <span className="text-[12px] font-medium text-slate-900 line-clamp-1">{sup.nama}</span>
                         </td>
-                        <td className="p-3.5 font-medium text-slate-700 whitespace-nowrap">
-                          {sup.pic}
+                        <td className="px-4 py-2.5">
+                          <span className="text-[12px] font-medium text-slate-700 line-clamp-1">{sup.pic}</span>
                         </td>
-                        <td className="p-3.5 whitespace-nowrap">
-                          <a
-                            href={`https://wa.me/${sup.phone.replace(/^0/, "62")}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 font-mono text-emerald-600 hover:text-emerald-700 hover:underline font-medium text-[11px]"
-                          >
-                            <Phone className="w-3 h-3 text-emerald-500" />
-                            {sup.phone}
-                          </a>
+                        <td className="px-4 py-2.5 font-mono text-[11.5px] text-emerald-700">
+                          {sup.phone}
                         </td>
-                        <td className="p-3.5 text-slate-600 font-medium whitespace-nowrap">
-                          {sup.kota}
+                        <td className="px-4 py-2.5">
+                          <DnaCell.Text text={sup.kota} />
                         </td>
-                        <td className="p-3.5 whitespace-nowrap">
-                          <DnaCell.Badge
-                            label={sup.kategoriBahan}
-                            status={
-                              sup.kategoriBahan === "Bahan Baku"
-                                ? "info"
-                                : sup.kategoriBahan === "Kemasan Primer"
-                                ? "purple"
-                                : "default"
-                            }
-                          />
-                        </td>
-                        <td className="p-3.5 text-center whitespace-nowrap">
-                          <span
-                            className={`font-mono font-bold px-2 py-0.5 rounded text-[11px] ${
-                              sup.pajakPersen === 11
-                                ? "bg-blue-50 text-blue-700 border border-blue-200"
-                                : "bg-slate-100 text-slate-500"
-                            }`}
-                          >
-                            {sup.pajakPersen}%
+                        <td className="px-4 py-2.5">
+                          <span className="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                            {sup.kategoriBahan}
                           </span>
                         </td>
-                        <td className="p-3.5 text-center whitespace-nowrap">
-                          <DnaCell.Actions
-                            onView={() => {
-                              setSelectedSupplier(sup);
-                              setIsDetailModalOpen(true);
-                            }}
-                            onEdit={() => handleOpenEditSupplier(sup)}
-                            onDelete={() => setSupplierToDelete(sup)}
-                          />
+                        <td className="px-4 py-2.5 text-center">
+                          <DnaBadge variant={sup.isPkp ? "success" : "neutral"}>
+                            {sup.isPkp ? "PKP 11%" : "NON-PKP"}
+                          </DnaBadge>
+                        </td>
+                        <td className="px-4 py-2.5 text-center font-mono text-[11.5px] text-blue-700 font-semibold">
+                          {sup.paymentTerm}
+                        </td>
+                        <td className="pr-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1">
+                            <DnaButton
+                              variant="ghost"
+                              className="h-7 w-7 p-0 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                              onClick={() => {
+                                setSelectedSupplier(sup);
+                                setIsDetailModalOpen(true);
+                              }}
+                              title="Lihat Detail"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </DnaButton>
+                            <DnaButton
+                              variant="ghost"
+                              className="h-7 w-7 p-0 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                              onClick={() => handleOpenEditSupplier(sup)}
+                              title="Edit Supplier"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </DnaButton>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -761,6 +715,7 @@ function MasterSuppliersContent() {
                 )}
               </tbody>
             </table>
+          </div>
           </DnaDataTableCard>
         </div>
       )}
@@ -964,89 +919,150 @@ function MasterSuppliersContent() {
         </div>
       </DnaModal>
 
-      {/* ── MODAL DETAIL SUPPLIER ── */}
-      <DnaModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        title={`Profil Supplier: ${selectedSupplier?.nama}`}
-        description="Detail kontak, status pajak, termin pembayaran, dan histori pengadaan"
-        size="lg"
-      >
-        {selectedSupplier && (
-          <div className="space-y-4 py-2 text-xs">
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <DnaCell.Code value={selectedSupplier.vendorCode} />
-                  <h3 className="text-base font-bold text-slate-900 uppercase mt-1">
-                    {selectedSupplier.nama}
-                  </h3>
-                  <p className="text-slate-500 text-[11px]">
-                    Kategori: <strong className="text-slate-700">{selectedSupplier.kategoriBahan}</strong> • Wilayah:{" "}
-                    <strong className="text-slate-700">{selectedSupplier.kota}, {selectedSupplier.provinsi}</strong>
+      {/* ── QUICK PEEK DRAWER: DETAIL SUPPLIER ── */}
+      <DnaDetailDrawer
+        isOpen={isDetailModalOpen && !!selectedSupplier}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedSupplier(null);
+        }}
+        title={selectedSupplier?.nama || "Detail Profil Supplier"}
+        subtitle={`${selectedSupplier?.vendorCode} • ${selectedSupplier?.kategoriBahan}`}
+        badge={
+          selectedSupplier ? (
+            <DnaBadge variant={selectedSupplier.isPkp ? "success" : "default"}>
+              {selectedSupplier.isPkp ? "PKP 11%" : "NON-PKP"}
+            </DnaBadge>
+          ) : undefined
+        }
+        tabs={[
+          {
+            id: "profile",
+            label: "Profil & Kontak Rekening",
+            content: selectedSupplier && (
+              <div className="space-y-4 text-xs">
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-slate-400 block text-[11px]">Kode Vendor:</span>
+                      <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                        {selectedSupplier.vendorCode}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[11px]">Nama Perusahaan:</span>
+                      <strong className="text-slate-900">{selectedSupplier.nama}</strong>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 border-t border-slate-200 pt-3">
+                    <div>
+                      <span className="text-slate-400 block text-[11px]">Kontak PIC Resmi:</span>
+                      <strong className="text-slate-900 block mt-0.5">{selectedSupplier.pic}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[11px]">WhatsApp / Telp:</span>
+                      <a
+                        href={`https://wa.me/${selectedSupplier.phone.replace(/^0/, "62")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-mono font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 mt-0.5"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-emerald-500" />
+                        {selectedSupplier.phone}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                  <span className="text-slate-400 block text-[11px]">Alamat Pengiriman & Gudang:</span>
+                  <p className="text-slate-700 font-medium leading-relaxed bg-white p-2.5 rounded border border-slate-200">
+                    {selectedSupplier.alamatLengkap}
                   </p>
+                  <div className="text-[11px] text-slate-500 pt-1">
+                    Wilayah: <strong className="text-slate-800">{selectedSupplier.kota}, {selectedSupplier.provinsi}</strong>
+                  </div>
                 </div>
-                <DnaCell.Badge
-                  label={selectedSupplier.isPkp ? "PKP 11%" : "NON-PKP"}
-                  status={selectedSupplier.isPkp ? "success" : "default"}
-                />
-              </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-200">
-                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
-                  <div className="text-[10px] text-slate-500 uppercase font-bold">Kontak PIC</div>
-                  <div className="font-bold text-slate-800">{selectedSupplier.pic}</div>
-                </div>
-                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
-                  <div className="text-[10px] text-slate-500 uppercase font-bold">WhatsApp</div>
-                  <div className="font-mono text-emerald-600 font-bold">{selectedSupplier.phone}</div>
-                </div>
-                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
-                  <div className="text-[10px] text-slate-500 uppercase font-bold">Term of Payment</div>
-                  <div className="font-bold text-blue-600">{selectedSupplier.paymentTerm}</div>
-                </div>
-                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
-                  <div className="text-[10px] text-slate-500 uppercase font-bold">Ketersediaan Stok</div>
-                  <div className="font-bold text-slate-700">{selectedSupplier.realStokSupplier}</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-white border border-slate-200 rounded-xl">
+                    <span className="text-slate-400 block text-[11px]">Rekening Bank Pembayaran:</span>
+                    <span className="font-mono font-bold text-slate-900 text-xs block mt-1">
+                      {selectedSupplier.bankAccount}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-white border border-slate-200 rounded-xl">
+                    <span className="text-slate-400 block text-[11px]">Nomor NPWP Perusahaan:</span>
+                    <span className="font-mono font-bold text-slate-900 text-xs block mt-1">
+                      {selectedSupplier.npwp || "Belum Terdaftar"}
+                    </span>
+                  </div>
                 </div>
               </div>
-
-              <div className="space-y-1 pt-2">
-                <span className="text-slate-500 text-[11px]">Alamat Pengiriman & Korespondensi:</span>
-                <div className="font-medium text-slate-700 bg-white p-2 rounded border border-slate-200">
-                  {selectedSupplier.alamatLengkap}
+            )
+          },
+          {
+            id: "supply",
+            label: "Katalog Pasokan & Pajak",
+            content: selectedSupplier && (
+              <div className="space-y-4 text-xs">
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                  <div className="font-bold text-slate-900 border-b border-slate-200 pb-2 uppercase text-xs">
+                    Syarat Transaksi & Pengadaan
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-slate-400 block text-[11px]">Kategori Bahan:</span>
+                      <strong className="text-slate-900 text-sm">{selectedSupplier.kategoriBahan}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[11px]">Term of Payment (TOP):</span>
+                      <strong className="text-blue-700 font-mono text-sm">{selectedSupplier.paymentTerm}</strong>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 border-t border-slate-200 pt-2">
+                    <div>
+                      <span className="text-slate-400 block text-[11px]">Tarif PPN Faktur Pajak:</span>
+                      <span className="font-mono font-bold text-slate-900">
+                        {selectedSupplier.pajakPersen}% ({selectedSupplier.isPkp ? "Faktur Standar PKP" : "Non-PKP"})
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[11px]">Status Ketersediaan Stok:</span>
+                      <span className="font-semibold text-emerald-700">
+                        {selectedSupplier.realStokSupplier || "Stok Tersedia di Supplier"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                <div className="space-y-1">
-                  <span className="text-slate-500">Rekening Bank:</span>
-                  <div className="font-mono font-bold text-slate-800">{selectedSupplier.bankAccount}</div>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-slate-500">NPWP Perusahaan:</span>
-                  <div className="font-mono font-bold text-slate-800">{selectedSupplier.npwp || "-"}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <DnaButton variant="ghost" onClick={() => setIsDetailModalOpen(false)}>
-                Tutup
-              </DnaButton>
-              <DnaButton
-                variant="primary"
-                onClick={() => {
-                  setIsDetailModalOpen(false);
-                  handleOpenEditSupplier(selectedSupplier);
-                }}
-              >
-                Sunting Supplier
-              </DnaButton>
-            </div>
+            )
+          }
+        ]}
+        footerActions={
+          <div className="flex gap-2">
+            <DnaButton
+              variant="secondary"
+              size="md"
+              onClick={() => {
+                setIsDetailModalOpen(false);
+                if (selectedSupplier) handleOpenEditSupplier(selectedSupplier);
+              }}
+            >
+              <Edit2 className="w-4 h-4 mr-1.5" />
+              Sunting Data
+            </DnaButton>
+            <DnaButton
+              variant="primary"
+              size="md"
+              onClick={() => toast.success(`Riwayat Purchase Order supplier ${selectedSupplier?.vendorCode} berhasil diekspor!`)}
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+              Ekspor Riwayat PO
+            </DnaButton>
           </div>
-        )}
-      </DnaModal>
+        }
+      />
 
       {/* ── MODAL IMPORT EXCEL (Requirement Poin 1 & 47) ── */}
       <DnaModal

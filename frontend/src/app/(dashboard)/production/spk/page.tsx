@@ -3,28 +3,15 @@
 import React, { useState } from "react";
 import {
   Printer,
-  FileSpreadsheet,
   ArrowLeft,
-  Building2,
   Barcode,
-  CheckCircle2,
-  Calendar,
-  Clock,
-  Layers,
   FlaskConical,
-  Package,
-  ShieldCheck,
-  Award,
-  Sparkles,
-  Download
+  Layers,
 } from "lucide-react";
 import {
   DnaPageContainer,
   DnaPageHeader,
-  DnaDataTableCard,
-  DnaButton,
-  DnaBadge,
-  useDnaToast
+  DnaButton
 } from "@/components/dna";
 import Link from "next/link";
 
@@ -141,7 +128,6 @@ const SPK_DATABASE: Record<string, SpkDocumentData> = {
 };
 
 export default function SpkPrintablePage() {
-  const toast = useDnaToast();
   const [selectedSpkCode, setSelectedSpkCode] = useState<string>("SPK-2026-0042");
 
   const data = SPK_DATABASE[selectedSpkCode] || SPK_DATABASE["SPK-2026-0042"];
@@ -162,6 +148,12 @@ export default function SpkPrintablePage() {
               <span>Official CPKB Document</span>
             </div>
           }
+          tabs={[
+            { id: "SPK-2026-0042", label: "SPK-0042 (Niacinamide)" },
+            { id: "SPK-2026-0043", label: "SPK-0043 (Centella)" }
+          ]}
+          activeTab={selectedSpkCode}
+          onTabChange={setSelectedSpkCode}
           actions={
             <div className="flex items-center gap-2">
               <Link href="/production/work-orders">
@@ -170,17 +162,9 @@ export default function SpkPrintablePage() {
                   Kembali ke SPK List
                 </DnaButton>
               </Link>
-              <select
-                value={selectedSpkCode}
-                onChange={(e) => setSelectedSpkCode(e.target.value)}
-                className="px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="SPK-2026-0042">SPK-2026-0042 (Niacinamide Serum)</option>
-                <option value="SPK-2026-0043">SPK-2026-0043 (Centella Cream)</option>
-              </select>
               <DnaButton variant="primary" size="md" onClick={handlePrint}>
                 <Printer className="w-4 h-4 mr-1.5" />
-                Cetak Dokumen (Print / PDF)
+                Cetak Dokumen
               </DnaButton>
             </div>
           }

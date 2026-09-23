@@ -20,6 +20,7 @@ import {
   DnaBadge,
   useDnaToast,
 } from "@/components/dna";
+import { DnaCell } from "@/components/dna/cells/DnaCell";
 
 interface MutationRecord {
   id: string;
@@ -207,119 +208,157 @@ export default function ReportMutationGoodsPage() {
       {/* KPI Cards */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          title="Total Transaksi Mutasi"
+          label="Total Transaksi Mutasi"
           value={filteredData.length.toString()}
-          icon={ArrowRightLeft}
-          variant="default"
+          icon={<ArrowRightLeft className="w-5 h-5 text-indigo-600" />}
+          variant="info"
           subtext="Pergerakan stok tercatat"
         />
         <DnaStatCard
-          title="Total Kuantitas Masuk"
+          label="Total Kuantitas Masuk"
           value={totalIn.toLocaleString("id-ID")}
-          icon={ArrowDownRight}
+          icon={<ArrowDownRight className="w-5 h-5 text-emerald-600" />}
           variant="success"
           subtext="Inbound & transfer masuk"
         />
         <DnaStatCard
-          title="Total Kuantitas Keluar"
+          label="Total Kuantitas Keluar"
           value={totalOut.toLocaleString("id-ID")}
-          icon={ArrowUpRight}
-          variant="danger"
+          icon={<ArrowUpRight className="w-5 h-5 text-rose-600" />}
+          variant={totalOut > 0 ? "warning" : "default"}
           subtext="Outbound & pemakaian produksi"
         />
         <DnaStatCard
-          title="Audit Trail Status"
+          label="Audit Trail Status"
           value="Tervalidasi"
-          icon={RefreshCw}
+          icon={<RefreshCw className="w-5 h-5 text-blue-600" />}
           variant="info"
           subtext="Terhubung ke dokumen transaksi"
         />
       </DnaKpiGrid>
 
-      {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari no dokumen, nama barang, catatan..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <select
-            value={warehouseFilter}
-            onChange={(e) => setWarehouseFilter(e.target.value)}
-            className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="ALL">Semua Gudang</option>
-            <option value="Gudang Bahan Baku">Gudang Bahan Baku</option>
-            <option value="Gudang Kemasan">Gudang Kemasan</option>
-            <option value="Gudang Barang Jadi">Gudang Barang Jadi</option>
-            <option value="Gudang Surabaya">Gudang Surabaya</option>
-          </select>
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="ALL">Semua Tipe Transaksi</option>
-            <option value="INBOUND">Penerimaan (Inbound)</option>
-            <option value="OUTBOUND">Pengeluaran (Outbound)</option>
-            <option value="TRANSFER">Mutasi Antar Gudang</option>
-            <option value="ADJUSTMENT">Penyesuaian Stok</option>
-          </select>
-        </div>
-      </div>
-
-      {/* 1:1 Table (Exactly 11 columns matching legacy G-SERP) */}
-      <DnaDataTableCard title="Daftar Mutasi Keluar & Masuk Barang">
+      {/* Main Table Card (Rule 1: No title prop, Rule 4: Clean responsive columns) */}
+      <DnaDataTableCard
+        toolbarProps={{
+          searchQuery: searchTerm,
+          onSearchChange: setSearchTerm,
+          searchPlaceholder: "Cari no dokumen, nama barang, catatan...",
+          extraActions: (
+            <div className="flex items-center gap-2">
+              <select
+                value={warehouseFilter}
+                onChange={(e) => setWarehouseFilter(e.target.value)}
+                className="text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="ALL">Semua Gudang</option>
+                <option value="Gudang Bahan Baku">Gudang Bahan Baku</option>
+                <option value="Gudang Kemasan">Gudang Kemasan</option>
+                <option value="Gudang Barang Jadi">Gudang Barang Jadi</option>
+                <option value="Gudang Surabaya">Gudang Surabaya</option>
+              </select>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="ALL">Semua Tipe Transaksi</option>
+                <option value="INBOUND">Penerimaan (Inbound)</option>
+                <option value="OUTBOUND">Pengeluaran (Outbound)</option>
+                <option value="TRANSFER">Mutasi Antar Gudang</option>
+                <option value="ADJUSTMENT">Penyesuaian Stok</option>
+              </select>
+            </div>
+          ),
+        }}
+      >
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-              <tr>
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">Tanggal</th>
-                <th className="py-3 px-4">No. Dokumen</th>
-                <th className="py-3 px-4">Tipe Transaksi</th>
-                <th className="py-3 px-4">Gudang</th>
-                <th className="py-3 px-4">Barang</th>
-                <th className="py-3 px-4 text-right">Masuk</th>
-                <th className="py-3 px-4 text-right">Keluar</th>
-                <th className="py-3 px-4 text-right">Saldo Akhir</th>
-                <th className="py-3 px-4 text-center">Satuan</th>
-                <th className="py-3 px-4">Keterangan</th>
+          <table className="w-full text-left border-collapse text-[12px] min-w-[1250px]">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <th className="px-4 py-3 h-[40px] w-[110px]">Tanggal</th>
+                <th className="px-3 py-3 h-[40px] w-[140px]">No. Dokumen</th>
+                <th className="px-3 py-3 h-[40px] text-center w-[130px]">Tipe Transaksi</th>
+                <th className="px-3 py-3 h-[40px]">Gudang</th>
+                <th className="px-3 py-3 h-[40px]">Barang</th>
+                <th className="px-3 py-3 h-[40px] text-right w-[110px]">Masuk</th>
+                <th className="px-3 py-3 h-[40px] text-right w-[110px]">Keluar</th>
+                <th className="px-3 py-3 h-[40px] text-right w-[120px]">Saldo Akhir</th>
+                <th className="px-4 py-3 h-[40px]">Keterangan</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-8 text-center text-slate-400">
-                    Tidak ada transaksi mutasi sesuai filter
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                    <ArrowRightLeft className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                    Tidak ada transaksi mutasi sesuai filter.
                   </td>
                 </tr>
               ) : (
-                filteredData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.date}</td>
-                    <td className="py-3 px-4 font-semibold text-blue-600">{item.docNumber}</td>
-                    <td className="py-3 px-4">{getTypeBadge(item.type)}</td>
-                    <td className="py-3 px-4 text-slate-700">{item.warehouse}</td>
-                    <td className="py-3 px-4 font-medium text-slate-900">{item.materialName}</td>
-                    <td className="py-3 px-4 text-right font-semibold text-emerald-600">
-                      {item.qtyIn > 0 ? `+${item.qtyIn.toLocaleString("id-ID")}` : "-"}
+                filteredData.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="hover:bg-slate-50/60 transition-colors group h-[48px]"
+                  >
+                    {/* Kolom 1: Tanggal */}
+                    <td className="px-4 py-2 text-slate-600 whitespace-nowrap">
+                      {item.date}
                     </td>
-                    <td className="py-3 px-4 text-right font-semibold text-rose-600">
-                      {item.qtyOut > 0 ? `-${item.qtyOut.toLocaleString("id-ID")}` : "-"}
+
+                    {/* Kolom 2: No. Dokumen */}
+                    <td className="px-3 py-2">
+                      <DnaCell.Code value={item.docNumber} />
                     </td>
-                    <td className="py-3 px-4 text-right font-bold text-slate-900">
-                      {item.balance.toLocaleString("id-ID")}
+
+                    {/* Kolom 3: Tipe Transaksi */}
+                    <td className="px-3 py-2 text-center">
+                      {getTypeBadge(item.type)}
                     </td>
-                    <td className="py-3 px-4 text-center text-slate-600 uppercase font-medium">{item.unit}</td>
-                    <td className="py-3 px-4 text-slate-600 max-w-xs truncate">{item.notes}</td>
+
+                    {/* Kolom 4: Gudang */}
+                    <td className="px-3 py-2 text-slate-700 truncate max-w-[150px]">
+                      {item.warehouse}
+                    </td>
+
+                    {/* Kolom 5: Barang */}
+                    <td className="px-3 py-2 text-slate-900 font-medium truncate max-w-[180px]">
+                      {item.materialName}
+                    </td>
+
+                    {/* Kolom 6: Masuk */}
+                    <td className="px-3 py-2 text-right">
+                      {item.qtyIn > 0 ? (
+                        <span className="font-semibold text-emerald-700 font-mono text-[12px]">
+                          +{item.qtyIn.toLocaleString("id-ID")} {item.unit}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 font-normal">-</span>
+                      )}
+                    </td>
+
+                    {/* Kolom 7: Keluar */}
+                    <td className="px-3 py-2 text-right">
+                      {item.qtyOut > 0 ? (
+                        <span className="font-semibold text-rose-700 font-mono text-[12px]">
+                          -{item.qtyOut.toLocaleString("id-ID")} {item.unit}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 font-normal">-</span>
+                      )}
+                    </td>
+
+                    {/* Kolom 8: Saldo Akhir */}
+                    <td className="px-3 py-2 text-right">
+                      <DnaCell.Number
+                        value={item.balance}
+                        unit={item.unit}
+                      />
+                    </td>
+
+                    {/* Kolom 9: Keterangan */}
+                    <td className="px-4 py-2 text-slate-600 truncate max-w-[200px]">
+                      {item.notes}
+                    </td>
                   </tr>
                 ))
               )}

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/dna";
 import {
   ShieldAlert,
   AlertTriangle,

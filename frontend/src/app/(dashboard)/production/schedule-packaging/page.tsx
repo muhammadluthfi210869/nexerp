@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Package,
   Search,
@@ -43,53 +46,7 @@ interface SchedulePackagingItem {
   notes?: string;
 }
 
-const INITIAL_SCHEDULES: SchedulePackagingItem[] = [
-  {
-    id: "SCH-PKG-001",
-    code: "SCH-PKG-2026-0001",
-    date: "2026-09-21",
-    batchRecord: "BR-2026-0001",
-    salesOrder: "SO-202609-000004",
-    customer: "Farah Derma Clinic",
-    product: "Day Cream SPF 30",
-    targetPcs: 3000,
-    secondaryPackaging: "Dus Inner Box Day Cream",
-    packagingQty: 3050,
-    creator: "Super Admin",
-    status: "SCHEDULED",
-    notes: "Inner box + segel stiker hologram BPOM & shrink wrapping 6-pack"
-  },
-  {
-    id: "SCH-PKG-002",
-    code: "SCH-PKG-2026-0002",
-    date: "2026-09-22",
-    batchRecord: "BR-2026-0002",
-    salesOrder: "SO-202609-000005",
-    customer: "K-Skin Men",
-    product: "Facial Foam Charcoal 100ml",
-    targetPcs: 5000,
-    secondaryPackaging: "Dus Master Box Corrugated 24-in-1",
-    packagingQty: 210,
-    creator: "Super Admin",
-    status: "SCHEDULED",
-    notes: "Kemas master box isi 24 pcs dan penempelan label alamat karton"
-  },
-  {
-    id: "SCH-PKG-003",
-    code: "SCH-PKG-2026-0003",
-    date: "2026-09-16",
-    batchRecord: "BR-2026-0003",
-    salesOrder: "SO-202609-000008",
-    customer: "Anita Aesthetics",
-    product: "Moisturizer Gel Aloe 50gr",
-    targetPcs: 1500,
-    secondaryPackaging: "Dus Satuan Aloe Vera + Leaflet",
-    packagingQty: 1515,
-    creator: "Operator Packaging",
-    status: "COMPLETED",
-    notes: "100% selesai dan diserahterimakan ke Gudang Barang Jadi"
-  }
-];
+const INITIAL_SCHEDULES: SchedulePackagingItem[] = [];
 
 export default function SchedulePackagingPage() {
   return (
@@ -105,7 +62,40 @@ function SchedulePackagingContent() {
   const actionParam = searchParams.get("action");
   const { toast } = useDnaToast();
 
-  const [schedules, setSchedules] = useState<SchedulePackagingItem[]>(INITIAL_SCHEDULES);
+  const { data: serverSchedules } = useQuery({
+    queryKey: ["production-schedules-packaging"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/production/schedules?stage=PACKAGING");
+        const unwrapped = unwrapResponse(res);
+        if (Array.isArray(unwrapped)) {
+          return unwrapped.map((item: any, idx: number) => ({
+            id: item.id || `SCH-${idx}`,
+            code: item.scheduleNumber || `SCH-PKG-2026-${String(idx + 1).padStart(4, "0")}`,
+            date: item.startTime ? String(item.startTime).slice(0, 10) : new Date().toISOString().slice(0, 10),
+            batchRecord: item.workOrder?.woNumber || "BR-2026-0001",
+            salesOrder: item.workOrder?.lead?.clientName || "SO-202609-000004",
+            customer: item.workOrder?.lead?.clientName || "Farah Derma Clinic",
+            product: item.workOrder?.lead?.brandName || "Day Cream SPF 30",
+            targetPcs: Number(item.targetQty) || 3000,
+            secondaryPackaging: item.notes || "Dus Inner Box Day Cream",
+            packagingQty: Number(item.targetQty) || 3050,
+            creator: "Operator Packaging",
+            status: item.status || "SCHEDULED",
+            notes: item.notes || "",
+          }));
+        }
+      } catch (err) {
+        console.warn("Failed to fetch packaging schedules", err);
+      }
+      return [];
+    },
+  });
+
+  const [localSchedules, setLocalSchedules] = useState<SchedulePackagingItem[]>([]);
+  const schedules = useMemo(() => {
+    return [...localSchedules, ...(serverSchedules || [])];
+  }, [localSchedules, serverSchedules]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -165,7 +155,7 @@ function SchedulePackagingContent() {
       notes: formData.notes
     };
 
-    setSchedules([newSch, ...schedules]);
+    setLocalSchedules([newSch, ...localSchedules]);
     setIsCreateOpen(false);
     toast({
       title: "Jadwal Packaging Dibuat",

@@ -49,11 +49,11 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/dna";
+import { Input } from "@/components/dna";
+import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/dna";
 
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/dna";
 
 export default function WarehouseWorkstation() {
   const queryClient = useQueryClient();

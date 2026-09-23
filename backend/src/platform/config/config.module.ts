@@ -5,7 +5,7 @@
  * secrets have length >= 32 at startup. Fails closed if any are missing.
  */
 
-import { Module } from '@nestjs/common';
+import { Injectable, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 const FORBIDDEN_SECRETS = new Set([
@@ -26,6 +26,7 @@ function assertSecretStrength(name: string, val: string, required: boolean) {
   const isWeak = FORBIDDEN_SECRETS.has(val);
   const isShort = val.length < 32;
   if (isWeak || isShort) {
+    console.error(`[CONFIG ERROR] ${name}: val='${val}', len=${val?.length}, isWeak=${isWeak}, isShort=${isShort}`);
     const err = new Error(`WEAK_DEFAULT_SECRET: ${name} is invalid or weak`);
     (err as any).code = 'WEAK_DEFAULT_SECRET';
     (err as any).reason_code = 'WEAK_DEFAULT_SECRET';
@@ -47,6 +48,7 @@ export const platformConfigSchema = {
   }
 };
 
+@Injectable()
 export class PlatformConfig {
   jwtSecret: string;
   mfaEncryptionKey: string;
@@ -57,13 +59,8 @@ export class PlatformConfig {
   outboxMaxAttempts = 5;
 
   constructor(cs?: ConfigService) {
-    if (cs) {
-      this.jwtSecret = cs.get<string>('JWT_SECRET') || '';
-      this.mfaEncryptionKey = cs.get<string>('MFA_ENCRYPTION_KEY') || cs.get<string>('AES_SECRET_KEY') || '';
-    } else {
-      this.jwtSecret = '';
-      this.mfaEncryptionKey = '';
-    }
+    this.jwtSecret = (cs?.get<string>('JWT_SECRET')) || process.env.JWT_SECRET || '';
+    this.mfaEncryptionKey = (cs?.get<string>('MFA_ENCRYPTION_KEY') || cs?.get<string>('AES_SECRET_KEY')) || process.env.MFA_ENCRYPTION_KEY || process.env.AES_SECRET_KEY || '';
     platformConfigSchema.parse({
       JWT_SECRET: this.jwtSecret,
       MFA_ENCRYPTION_KEY: this.mfaEncryptionKey

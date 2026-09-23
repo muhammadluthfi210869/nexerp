@@ -7,12 +7,12 @@ import * as z from "zod";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Plus, Trash2, Save, AlertCircle, Search, Beaker, CheckCircle2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/dna";
+import { Input } from "@/components/dna";
+import { Label } from "@/components/dna";
+import { Button } from "@/components/dna";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/dna";
+import { Badge } from "@/components/dna";
 
 const formulaSchema = z.object({
   sample_id: z.string().uuid(),

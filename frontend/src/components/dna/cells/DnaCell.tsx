@@ -7,20 +7,21 @@ import { cn } from "@/lib/utils";
 // ── 1. CODE CELL (WO, PO, SKU, No Referensi) ──
 export interface DnaCellCodeProps {
   value?: string;
+  code?: string;
   children?: React.ReactNode;
   onClick?: () => void;
   className?: string;
   subtitle?: string;
 }
 
-export function DnaCellCode({ value, children, onClick, className, subtitle }: DnaCellCodeProps) {
-  const displayVal = children !== undefined ? children : value;
+export function DnaCellCode({ value, code, children, onClick, className, subtitle }: DnaCellCodeProps) {
+  const displayVal = children !== undefined ? children : (value ?? code);
   return (
-    <div className={cn("flex flex-col", className)}>
+    <div className={cn("flex flex-col whitespace-nowrap", className)}>
       <span
         onClick={onClick}
         className={cn(
-          "font-mono font-semibold text-[11.5px] tracking-tight transition-colors",
+          "font-sans font-semibold text-[11.5px] tracking-tight tabular-nums transition-colors whitespace-nowrap",
           onClick
             ? "text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
             : "text-slate-800"
@@ -29,7 +30,7 @@ export function DnaCellCode({ value, children, onClick, className, subtitle }: D
         {displayVal}
       </span>
       {subtitle && (
-        <span className="text-[10px] text-slate-400 font-normal">
+        <span className="text-[10px] text-slate-400 font-normal whitespace-nowrap">
           {subtitle}
         </span>
       )}
@@ -39,21 +40,26 @@ export function DnaCellCode({ value, children, onClick, className, subtitle }: D
 
 // ── 2. TEXT CELL (Nama Produk / Entitas, wrap ke bawah tanpa elipsis) ──
 export interface DnaCellTextProps {
-  primary: string;
+  primary?: string;
+  text?: string;
+  title?: string;
   secondary?: string;
+  subtitle?: string;
   className?: string;
   maxWidth?: string;
 }
 
-export function DnaCellText({ primary, secondary, className, maxWidth }: DnaCellTextProps) {
+export function DnaCellText({ primary, text, title, secondary, subtitle, className, maxWidth }: DnaCellTextProps) {
+  const displayPrimary = primary ?? text ?? title ?? "";
+  const displaySecondary = secondary ?? subtitle;
   return (
     <div className={cn("flex flex-col min-w-0 break-words whitespace-normal leading-tight", maxWidth || "max-w-[280px]", className)}>
       <span className="text-[12px] font-medium text-slate-900 leading-snug">
-        {primary}
+        {displayPrimary}
       </span>
-      {secondary && (
+      {displaySecondary && (
         <span className="text-[10.5px] text-slate-400 mt-0.5">
-          {secondary}
+          {displaySecondary}
         </span>
       )}
     </div>
@@ -167,7 +173,7 @@ export function DnaCellAvatar({
           {name}
         </span>
         {subtext && (
-          <span className="text-[10.5px] text-slate-400 font-mono truncate max-w-[180px]">
+          <span className="text-[10.5px] text-slate-400 truncate max-w-[180px]">
             {subtext}
           </span>
         )}
@@ -180,14 +186,17 @@ export function DnaCellAvatar({
 export interface DnaCellNumberProps {
   value: number;
   suffix?: string;
+  unit?: string;
+  colorClass?: string;
   className?: string;
 }
 
-export function DnaCellNumber({ value, suffix, className }: DnaCellNumberProps) {
+export function DnaCellNumber({ value, suffix, unit, colorClass, className }: DnaCellNumberProps) {
+  const displaySuffix = suffix ?? unit;
   return (
-    <div className={cn("text-right tabular-nums text-[12px] font-medium text-slate-700", className)}>
-      <span>{value.toLocaleString("id-ID")}</span>
-      {suffix && <span className="text-[10px] text-slate-400 ml-1 font-normal">{suffix}</span>}
+    <div className={cn("text-right tabular-nums text-[12px] font-medium text-slate-700", colorClass, className)}>
+      <span>{Number(value || 0).toLocaleString("id-ID")}</span>
+      {displaySuffix && <span className="text-[10px] text-slate-400 ml-1 font-normal">{displaySuffix}</span>}
     </div>
   );
 }
@@ -301,6 +310,8 @@ export const DnaCell = Object.assign(DnaCellText, {
   code: DnaCellCode,
   Text: DnaCellText,
   text: DnaCellText,
+  DoubleText: DnaCellText,
+  doubleText: DnaCellText,
   Badge: DnaCellBadge,
   badge: DnaCellBadge,
   Status: DnaCellBadge,
@@ -311,6 +322,8 @@ export const DnaCell = Object.assign(DnaCellText, {
   avatar: DnaCellAvatar,
   Number: DnaCellNumber,
   number: DnaCellNumber,
+  Numeric: DnaCellNumber,
+  numeric: DnaCellNumber,
   Currency: DnaCellCurrency,
   currency: DnaCellCurrency,
   Date: DnaCellDate,

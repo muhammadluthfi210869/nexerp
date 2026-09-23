@@ -312,7 +312,7 @@ const PURCHASE_SECTIONS: NavSection[] = [
       { name: "Retur Pembelian", href: "/pembelian/purchase-returns", icon: XCircle },
       { name: "Kebutuhan Barang", href: "/pembelian/kebutuhan", icon: Layers },
       { name: "Faktur Pembelian", href: "/pembelian/faktur-pembelian", icon: CreditCard },
-      { name: "DP Pembelian", href: "/pembelian/purchasing/down-payment", icon: DollarSign },
+      { name: "DP Pembelian", href: "/pembelian/dp-pembelian", icon: DollarSign },
       { name: "Permintaan HPP", href: "/finance/cogs-request", icon: FileSearch },
     ]
   },
@@ -468,7 +468,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
       { name: "Project Control", href: "/samples/project-control", icon: Kanban },
       { name: "Dashboard Digital Marketing", href: "/marketing/dashboard", icon: Sparkles },
       { name: "Dashboard Busdev", href: "/bussdev/dashboard", icon: Activity },
-      { name: "Dashboard R&D", href: "/samples/rnd-dashboard", icon: Beaker },
+      { name: "Dashboard R&D", href: "/rnd/dashboard", icon: Beaker },
       { name: "Dashboard SCM", href: "/scm/dashboard", icon: Truck },
       { name: "Dashboard Gudang", href: "/warehouse", icon: Warehouse },
       { name: "Dashboard Produksi", href: "/production", icon: Factory },

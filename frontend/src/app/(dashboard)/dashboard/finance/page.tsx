@@ -9,10 +9,10 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "@/components/dna";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/dna";
+import { Badge } from "@/components/dna";
+import { Button } from "@/components/dna";
 import { 
   FileText, 
   AlertCircle, 
@@ -26,10 +26,10 @@ import {
 import { KpiCard } from "@/components/dna/KpiCard";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/dna";
+import { Input } from "@/components/dna";
+import { Label } from "@/components/dna";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 // --- Types ---

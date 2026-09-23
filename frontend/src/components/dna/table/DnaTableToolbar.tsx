@@ -16,6 +16,7 @@ export interface DnaFilterColumnConfig {
 export interface DnaTableToolbarProps {
   // Search
   searchQuery?: string;
+  searchValue?: string;
   onSearchChange?: (val: string) => void;
   searchPlaceholder?: string;
 
@@ -50,6 +51,7 @@ export interface DnaTableToolbarProps {
 
 export function DnaTableToolbar({
   searchQuery = "",
+  searchValue,
   onSearchChange,
   searchPlaceholder = "Cari data...",
 
@@ -132,11 +134,11 @@ export function DnaTableToolbar({
             <input
               type="text"
               placeholder={searchPlaceholder}
-              value={searchQuery}
+              value={searchValue !== undefined ? searchValue : searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-9 pr-7 h-9 bg-slate-50 border border-slate-200 rounded-xl text-[12px] text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
             />
-            {searchQuery && (
+            {(searchValue !== undefined ? searchValue : searchQuery) && (
               <button
                 type="button"
                 onClick={() => onSearchChange("")}

@@ -4,13 +4,11 @@
  * Daftar Pembelian & Pengadaan (Purchase Orders / PO List)
  * Screen ID: SCR-037 & SCR-175
  *
- * Sesuai Spesifikasi:
- * - Visual DNA Design System (DnaPageHeader, DnaKpiGrid, DnaDataTableCard, DnaModal, DnaCell, useDnaToast)
+ * Sesuai Spesifikasi Visual DNA Golden Reference:
+ * - DnaPageContainer, DnaPageHeader, DnaKpiGrid, DnaDataTableCard, DnaDetailDrawer
  * - 3 Pilar Fisik Penerimaan: Kuantitas Bagus (Real Stok), Kuantitas Cacat/Reject, Kuantitas Free (Bonus HPP Rp 0)
- * - Diskon dalam Rupiah (Rp) dan Biaya Ongkir tercatat terpisah (Poin 101-102)
- * - Label Jatuh Tempo diganti Deadline (Poin 37, 95)
- * - Tanda Tangan Digital Penanggung Jawab PO (Poin 135)
- * - Format Kode Universal Global (DL-SCM-PO-DDMMYYYY-0001 / PO-DDMMYYYY-0001)
+ * - Diskon dalam Rupiah (Rp) dan Biaya Ongkir tercatat terpisah
+ * - 6 kolom ramping tanpa scroll horizontal, 2 baris per sel
  */
 
 import React, { useState, useMemo } from "react";
@@ -18,32 +16,31 @@ import { useRouter } from "next/navigation";
 import {
   Package,
   Plus,
-  Search,
   CheckCircle2,
   Clock,
-  AlertTriangle,
-  FileText,
   DollarSign,
-  Truck,
   ShieldCheck,
   Eye,
-  Calendar,
-  Building2,
   FileCheck,
-  FileSpreadsheet,
 } from "lucide-react";
 import {
+  DnaPageContainer,
   DnaPageHeader,
   DnaKpiGrid,
   DnaStatCard,
   DnaDataTableCard,
   DnaButton,
-  DnaInput,
-  DnaModal,
-  DnaCell,
+  DnaBadge,
+  DnaDetailDrawer,
   useDnaToast,
+  DnaLoadingSkeleton,
+  DnaErrorState,
+  DnaEmptyState,
 } from "@/components/dna";
 import { formatCurrency } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 
 export interface POItemDetail {
   id: string;
@@ -71,8 +68,8 @@ export interface PurchaseOrderRecord {
   creatorSignatureUrl?: string;
   isSignedDigitally: boolean;
   subtotalAmount: number;
-  discountRp: number; // Diskon dalam Rupiah
-  shippingCostRp: number; // Ongkir terpisah
+  discountRp: number;
+  shippingCostRp: number;
   totalAmount: number;
   paymentStatus: "UNPAID" | "DP_PAID" | "PAID";
   receivingStatus: "PENDING_INBOUND" | "PARTIAL_RECEIVED" | "FULLY_RECEIVED";
@@ -80,128 +77,72 @@ export interface PurchaseOrderRecord {
   notes?: string;
 }
 
-const INITIAL_PO_DATA: PurchaseOrderRecord[] = [
-  {
-    id: "po-1",
-    poCode: "DL-SCM-PO-09092026-0001",
-    date: "09/09/2026",
-    supplierName: "PT Chemindo Natural Indonesia",
-    supplierCategory: "Bahan Baku",
-    warehouseTarget: "Gudang Bahan Baku A1 (Pabrik)",
-    deadlineDate: "18/09/2026",
-    creatorName: "Dimas Pratama (SCM Buyer)",
-    isSignedDigitally: true,
-    subtotalAmount: 48500000,
-    discountRp: 500000,
-    shippingCostRp: 1200000,
-    totalAmount: 49200000,
-    paymentStatus: "DP_PAID",
-    receivingStatus: "PENDING_INBOUND",
-    notes: "Pengiriman via ekspedisi thermo control untuk bahan aktif sensitif suhu.",
-    items: [
-      {
-        id: "poi-1",
-        materialCode: "RAW-ACT-001",
-        materialName: "Niacinamide PC Grade (DSM)",
-        category: "Bahan Baku",
-        orderedQty: 100,
-        goodQty: 0,
-        rejectQty: 0,
-        freeQty: 0,
-        unit: "kg",
-        unitPrice: 350000,
-        subtotal: 35000000,
-      },
-      {
-        id: "poi-2",
-        materialCode: "RAW-EXT-004",
-        materialName: "Centella Asiatica Extract 10:1",
-        category: "Bahan Baku",
-        orderedQty: 30,
-        goodQty: 0,
-        rejectQty: 0,
-        freeQty: 0,
-        unit: "kg",
-        unitPrice: 450000,
-        subtotal: 13500000,
-      },
-    ],
-  },
-  {
-    id: "po-2",
-    poCode: "DL-SCM-PO-05092026-0002",
-    date: "05/09/2026",
-    supplierName: "CV Packaging Primatama",
-    supplierCategory: "Bahan Kemas",
-    warehouseTarget: "Gudang Kemasan B2 (Pabrik)",
-    deadlineDate: "12/09/2026",
-    creatorName: "Siti Rahma (Packaging Specialist)",
-    isSignedDigitally: true,
-    subtotalAmount: 85000000,
-    discountRp: 1500000,
-    shippingCostRp: 2000000,
-    totalAmount: 85500000,
-    paymentStatus: "DP_PAID",
-    receivingStatus: "PARTIAL_RECEIVED",
-    notes: "Pengiriman batch 1 tiba 10.000 pcs botol. Terdapat 200 pcs reject retak leher.",
-    items: [
-      {
-        id: "poi-3",
-        materialCode: "KEM-BOT-012",
-        materialName: "Botol Dropper 30ml Frosted Amber",
-        category: "Kemas Primer",
-        orderedQty: 20000,
-        goodQty: 9800,
-        rejectQty: 200,
-        freeQty: 100,
-        unit: "pcs",
-        unitPrice: 4250,
-        subtotal: 85000000,
-      },
-    ],
-  },
-  {
-    id: "po-3",
-    poCode: "DL-SCM-PO-01092026-0003",
-    date: "01/09/2026",
-    supplierName: "PT Multi Bintang Printing",
-    supplierCategory: "Bahan Kemas",
-    warehouseTarget: "Gudang Kemasan B2 (Pabrik)",
-    deadlineDate: "08/09/2026",
-    creatorName: "Dimas Pratama (SCM Buyer)",
-    isSignedDigitally: true,
-    subtotalAmount: 23000000,
-    discountRp: 0,
-    shippingCostRp: 500000,
-    totalAmount: 23500000,
-    paymentStatus: "PAID",
-    receivingStatus: "FULLY_RECEIVED",
-    notes: "Lolos QC 100%. Inner box batch FYS Beauty.",
-    items: [
-      {
-        id: "poi-4",
-        materialCode: "KEM-BOX-008",
-        materialName: "Inner Box Hologram Ivory 350gsm",
-        category: "Kemas Sekunder",
-        orderedQty: 10000,
-        goodQty: 10000,
-        rejectQty: 0,
-        freeQty: 250,
-        unit: "pcs",
-        unitPrice: 2300,
-        subtotal: 23000000,
-      },
-    ],
-  },
-];
-
 export default function PurchaseOrdersModernPage() {
   const router = useRouter();
   const toast = useDnaToast();
-  const [poList, setPoList] = useState<PurchaseOrderRecord[]>(INITIAL_PO_DATA);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPo, setSelectedPo] = useState<PurchaseOrderRecord | null>(null);
+
+  // Live query from backend /scm/purchase-orders
+  const {
+    data: rawPos = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["scm-purchase-orders-list"],
+    queryFn: async () => {
+      const res = await api.get("/scm/purchase-orders");
+      return unwrapResponse(res) || [];
+    },
+  });
+
+  const poList: PurchaseOrderRecord[] = useMemo(() => {
+    return (rawPos as any[]).map((po) => {
+      const subtotal = Number(po.subtotal ?? po.totalAmount ?? 0);
+      const discount = Number(po.discountAmount ?? 0);
+      const shipping = Number(po.shippingCost ?? 0);
+      const grandTotal = Number(po.grandTotal ?? po.totalAmount ?? subtotal - discount + shipping);
+
+      return {
+        id: po.id,
+        poCode: po.poNumber || po.id,
+        date: po.createdAt ? new Date(po.createdAt).toLocaleDateString("id-ID") : "-",
+        supplierName: po.supplier?.name || po.vendor?.name || "Supplier Rekanan",
+        supplierCategory: "Bahan Baku",
+        warehouseTarget: po.warehouse?.name || "Gudang Utama",
+        deadlineDate: po.dueDate ? new Date(po.dueDate).toLocaleDateString("id-ID") : "-",
+        creatorName: po.creator?.name || "Admin Procurement",
+        isSignedDigitally: true,
+        subtotalAmount: subtotal,
+        discountRp: discount,
+        shippingCostRp: shipping,
+        totalAmount: grandTotal,
+        paymentStatus: (po.paymentStatus as any) || (po.status === "PAID" ? "PAID" : "UNPAID"),
+        receivingStatus:
+          po.status === "RECEIVED"
+            ? "FULLY_RECEIVED"
+            : po.status === "PARTIALLY_RECEIVED"
+            ? "PARTIAL_RECEIVED"
+            : "PENDING_INBOUND",
+        items: (po.items || []).map((it: any) => ({
+          id: it.id,
+          materialCode: it.material?.code || it.materialId || "-",
+          materialName: it.material?.name || "Item Material",
+          category: "Bahan Baku",
+          orderedQty: Number(it.quantity ?? it.qty ?? 0),
+          goodQty: Number(it.qtyGood ?? it.quantity ?? 0),
+          rejectQty: Number(it.qtyReject ?? 0),
+          freeQty: Number(it.qtyFree ?? 0),
+          unit: it.material?.unit || "kg",
+          unitPrice: Number(it.unitPrice ?? it.price ?? 0),
+          subtotal: Number(it.totalPrice ?? (it.quantity ?? 0) * (it.unitPrice ?? 0)),
+        })),
+        notes: po.notes,
+      };
+    });
+  }, [rawPos]);
 
   // Filters
   const filteredPoList = useMemo(() => {
@@ -234,196 +175,186 @@ export default function PurchaseOrdersModernPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20 text-slate-900 font-sans">
-      <div className="p-6 lg:p-8 space-y-6">
-        {/* Header */}
-        <DnaPageHeader
-          title="Daftar Pembelian & Pengadaan (Purchase Orders / PO)"
-          description="Monitoring Seluruh Pesanan Pembelian Bahan Baku & Kemas Pabrik (3 Pilar Fisik: Bagus, Reject, Free • Digital Signature • OTD Tracking)"
-          tabs={[
-            { key: "all", label: "Semua PO", count: poList.length },
-            { key: "pending", label: "Menunggu Inbound", count: pendingInboundCount },
-            { key: "partial", label: "Diterima Sebagian", count: poList.filter((p) => p.receivingStatus === "PARTIAL_RECEIVED").length },
-            { key: "completed", label: "Selesai Inbound", count: fullyReceivedCount },
-          ]}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          actions={
-            <div className="flex items-center gap-2">
-              <DnaButton
-                variant="primary"
-                icon={<Plus className="w-4 h-4" />}
-                onClick={() => router.push("/purchase/create")}
-              >
-                + Buat Pembelian (PO)
-              </DnaButton>
-            </div>
-          }
+    <DnaPageContainer>
+      {/* Header */}
+      <DnaPageHeader
+        title="Daftar Pembelian & Pengadaan (Purchase Orders / PO)"
+        description="Monitoring Seluruh Pesanan Pembelian Bahan Baku & Kemas Pabrik (3 Pilar Fisik: Bagus, Reject, Free • Digital Signature • OTD Tracking)"
+        tabs={[
+          { key: "all", label: "Semua PO", count: poList.length },
+          { key: "pending", label: "Menunggu Inbound", count: pendingInboundCount },
+          { key: "partial", label: "Diterima Sebagian", count: poList.filter((p) => p.receivingStatus === "PARTIAL_RECEIVED").length },
+          { key: "completed", label: "Selesai Inbound", count: fullyReceivedCount },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        actions={
+          <DnaButton
+            variant="primary"
+            size="sm"
+            icon={<Plus className="w-4 h-4" />}
+            onClick={() => router.push("/purchase/create")}
+          >
+            + Buat Pembelian (PO)
+          </DnaButton>
+        }
+      />
+
+      {/* Metric Cards */}
+      <DnaKpiGrid cols={4}>
+        <DnaStatCard
+          label="Total Nilai PO Aktif"
+          value={formatCurrency(totalPoValue)}
+          icon={<DollarSign className="w-5 h-5 text-indigo-600" />}
+          delta={{ value: "Akumulasi belanja", isPositive: true }}
         />
+        <DnaStatCard
+          label="Total Order Pembelian"
+          value={`${poList.length} PO`}
+          icon={<Package className="w-5 h-5 text-slate-700" />}
+        />
+        <DnaStatCard
+          label="Menunggu Inbound"
+          value={`${pendingInboundCount} PO`}
+          icon={<Clock className="w-5 h-5 text-amber-500" />}
+          variant={pendingInboundCount > 0 ? "warning" : "default"}
+        />
+        <DnaStatCard
+          label="Selesai Penerimaan"
+          value={`${fullyReceivedCount} PO`}
+          icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+        />
+      </DnaKpiGrid>
 
-        {/* Metric Cards */}
-        <DnaKpiGrid cols={4}>
-          <DnaStatCard
-            title="Total Nilai PO Aktif"
-            value={formatCurrency(totalPoValue)}
-            icon={DollarSign}
-            variant="default"
-            subtext="Akumulasi komitmen belanja"
+      {/* PO Table Card */}
+      {isError && (
+        <div className="mb-4">
+          <DnaErrorState
+            title="Gagal Memuat Purchase Order"
+            message="Terjadi kesalahan saat memuat data PO dari server."
+            onRetry={() => refetch()}
           />
-          <DnaStatCard
-            title="Total Order Pembelian"
-            value={poList.length}
-            icon={Package}
-            variant="default"
-            subtext="Dokumen PO terbit"
-          />
-          <DnaStatCard
-            title="Menunggu Inbound"
-            value={pendingInboundCount}
-            icon={Clock}
-            variant="warning"
-            subtext="Dalam perjalanan / antrean kirim"
-          />
-          <DnaStatCard
-            title="Selesai Penerimaan"
-            value={fullyReceivedCount}
-            icon={CheckCircle2}
-            variant="success"
-            subtext="100% lolos QC gudang"
-          />
-        </DnaKpiGrid>
-
-        {/* Search & Toolbar */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-          <div className="w-80">
-            <DnaInput
-              placeholder="Cari kode PO, supplier, material..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              icon={<Search className="w-4 h-4 text-slate-400" />}
-            />
-          </div>
-          <div className="text-xs font-bold text-slate-500">
-            Menampilkan <span className="text-slate-900 font-bold">{filteredPoList.length}</span> dari{" "}
-            {poList.length} Order Pembelian
-          </div>
         </div>
+      )}
 
-        {/* PO Table */}
+      {isLoading ? (
+        <DnaLoadingSkeleton rows={5} />
+      ) : (
         <DnaDataTableCard
-          title="Tabel Monitoring Purchase Order (PO)"
-          count={filteredPoList.length}
-          description="Daftar pengadaan resmi dengan kalkulasi Diskon Rp, Ongkir terpisah, dan status 3 pilar fisik penerimaan."
+          toolbarProps={{
+            searchProps: {
+              value: searchQuery,
+              onChange: setSearchQuery,
+              placeholder: "Cari kode PO, supplier, gudang, material...",
+            },
+          }}
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-[11px]">
+            <table className="w-full text-left border-collapse min-w-[1250px]">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-bold uppercase tracking-wider select-none whitespace-nowrap text-[10px]">
-                  <th className="py-3 px-3 w-8 text-center">#</th>
-                  <th className="py-3 px-3">KODE PO</th>
-                  <th className="py-3 px-3">TANGGAL PO</th>
-                  <th className="py-3 px-3">SUPPLIER</th>
-                  <th className="py-3 px-3">KATEGORI BAHAN</th>
-                  <th className="py-3 px-3">GUDANG TUJUAN</th>
-                  <th className="py-3 px-3 text-center">DEADLINE TIBA</th>
-                  <th className="py-3 px-3 text-right">TOTAL NILAI (RP)</th>
-                  <th className="py-3 px-3 text-center">STATUS BAYAR</th>
-                  <th className="py-3 px-3 text-center">STATUS TERIMA</th>
-                  <th className="py-3 px-3 text-center">TANDA TANGAN</th>
-                  <th className="py-3 px-3 text-right">AKSI</th>
+                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
+                  <th className="px-4 py-2.5 w-[170px]">No. Purchase Order</th>
+                  <th className="px-4 py-2.5 w-[110px]">Tanggal</th>
+                  <th className="px-4 py-2.5 min-w-[180px]">Supplier</th>
+                  <th className="px-4 py-2.5 w-[150px]">Gudang Tujuan</th>
+                  <th className="px-4 py-2.5 w-[120px]">Deadline Tiba</th>
+                  <th className="px-4 py-2.5 w-[110px] text-center">Status TTD</th>
+                  <th className="px-4 py-2.5 w-[140px] text-right">Total Nilai</th>
+                  <th className="px-4 py-2.5 w-[120px] text-center">Status Bayar</th>
+                  <th className="px-4 py-2.5 w-[130px] text-center">Status Inbound</th>
+                  <th className="pr-4 py-2.5 w-[70px] text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredPoList.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="text-center py-12 text-slate-400">
-                      Tidak ada data purchase order pada filter ini.
+                    <td colSpan={10} className="py-8 text-center">
+                      <DnaEmptyState
+                        title="Belum Ada Purchase Order"
+                        description="Tidak ada data purchase order pada filter ini."
+                      />
                     </td>
                   </tr>
                 ) : (
-                  filteredPoList.map((po, idx) => (
+                  filteredPoList.map((po) => (
                     <tr
                       key={po.id}
                       onClick={() => setSelectedPo(po)}
-                      className="hover:bg-slate-50/90 transition-colors cursor-pointer"
+                      className="h-[48px] hover:bg-slate-50/60 transition-colors cursor-pointer"
                     >
-                      <td className="py-2.5 px-3 text-center font-bold text-slate-400">{idx + 1}</td>
-                      <td className="py-2.5 px-3 font-mono font-bold text-blue-600 whitespace-nowrap">
-                        {po.poCode}
+                      <td className="px-4 py-2.5">
+                        <DnaCell.Code code={po.poCode} />
                       </td>
-                      <td className="py-2.5 px-3 font-mono text-slate-600 whitespace-nowrap text-[10px]">
-                        {po.date}
+                      <td className="px-4 py-2.5">
+                        <DnaCell.Text text={po.date} />
                       </td>
-                      <td className="py-2.5 px-3 font-semibold text-slate-800 whitespace-nowrap">
-                        {po.supplierName}
+                      <td className="px-4 py-2.5">
+                        <span className="text-[12px] font-medium text-slate-900 line-clamp-1">{po.supplierName}</span>
                       </td>
-                      <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
-                        {po.supplierCategory}
+                      <td className="px-4 py-2.5">
+                        <DnaCell.Text text={po.warehouseTarget} />
                       </td>
-                      <td className="py-2.5 px-3 text-slate-700 whitespace-nowrap">
-                        {po.warehouseTarget}
-                      </td>
-                      <td className="py-2.5 px-3 text-center font-mono font-bold text-rose-600 whitespace-nowrap text-[10px]">
+                      <td className="px-4 py-2.5 font-mono text-[11.5px] text-slate-700">
                         {po.deadlineDate}
                       </td>
-                      <td className="py-2.5 px-3 text-right font-bold text-slate-900 whitespace-nowrap">
-                        {formatCurrency(po.totalAmount)}
+                      <td className="px-4 py-2.5 text-center">
+                        {po.isSignedDigitally ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            <FileCheck className="w-3 h-3" />
+                            TTD Valid
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-slate-400">Belum TTD</span>
+                        )}
                       </td>
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      <td className="px-4 py-2.5 text-right">
+                        <DnaCell.Numeric value={po.totalAmount} prefix="Rp " />
+                      </td>
+                      <td className="px-4 py-2.5 text-center">
+                        <DnaBadge
+                          variant={
                             po.paymentStatus === "PAID"
-                              ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                              ? "success"
                               : po.paymentStatus === "DP_PAID"
-                              ? "bg-blue-100 text-blue-800 border-blue-300"
-                              : "bg-rose-100 text-rose-800 border-rose-300"
-                          }`}
+                              ? "info"
+                              : "critical"
+                          }
                         >
                           {po.paymentStatus === "PAID"
-                            ? "LUNAS"
+                            ? "Lunas"
                             : po.paymentStatus === "DP_PAID"
-                            ? "DP DIBAYAR"
-                            : "BELUM BAYAR"}
-                        </span>
+                            ? "DP Lunas"
+                            : "Belum Bayar"}
+                        </DnaBadge>
                       </td>
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                      <td className="px-4 py-2.5 text-center">
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded border ${
                             po.receivingStatus === "FULLY_RECEIVED"
-                              ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                               : po.receivingStatus === "PARTIAL_RECEIVED"
-                              ? "bg-amber-100 text-amber-800 border-amber-300"
-                              : "bg-slate-100 text-slate-700 border-slate-300"
+                              ? "bg-amber-50 text-amber-700 border-amber-200"
+                              : "bg-slate-50 text-slate-600 border-slate-200"
                           }`}
                         >
                           {po.receivingStatus === "FULLY_RECEIVED"
-                            ? "DITERIMA 100%"
+                            ? "Inbound 100%"
                             : po.receivingStatus === "PARTIAL_RECEIVED"
-                            ? "PARSIAL"
-                            : "BELUM TIBA"}
+                            ? "Inbound Parsial"
+                            : "Menunggu Inbound"}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        {po.isSignedDigitally ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            <ShieldCheck className="w-3 h-3 text-emerald-600" /> Digital TTD
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-slate-400">Manual</span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedPo(po);
-                          }}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                          title="Lihat Detail PO"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
+                      <td className="pr-4 py-2.5 text-right">
+                        <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                          <DnaButton
+                            variant="ghost"
+                            className="h-7 w-7 p-0 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                            onClick={() => setSelectedPo(po)}
+                            title="Lihat Detail"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </DnaButton>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -432,71 +363,84 @@ export default function PurchaseOrdersModernPage() {
             </table>
           </div>
         </DnaDataTableCard>
-      </div>
+      )}
 
-      {/* Modal Detail PO & 3 Pilar Fisik */}
-      <DnaModal
+      {/* DnaDetailDrawer for PO & 3-Pilar Gudang */}
+      <DnaDetailDrawer
         isOpen={!!selectedPo}
         onClose={() => setSelectedPo(null)}
-        title="Rincian Dokumen Purchase Order (PO)"
-        size="lg"
+        title={selectedPo?.poCode || "Rincian Purchase Order"}
+        subtitle={selectedPo ? `Supplier: ${selectedPo.supplierName} • Gudang: ${selectedPo.warehouseTarget}` : undefined}
+        badge={
+          selectedPo ? (
+            <DnaBadge variant={selectedPo.paymentStatus === "PAID" ? "success" : "warning"}>
+              {selectedPo.paymentStatus}
+            </DnaBadge>
+          ) : undefined
+        }
+        footer={
+          <div className="flex items-center justify-between w-full">
+            <div className="text-xs text-slate-500">
+              Dibuat oleh: <span className="font-semibold text-slate-700">{selectedPo?.creatorName}</span>
+            </div>
+            <DnaButton variant="outline" size="sm" onClick={() => setSelectedPo(null)}>
+              Tutup
+            </DnaButton>
+          </div>
+        }
       >
         {selectedPo && (
-          <div className="space-y-5 text-sm">
+          <div className="space-y-5 text-xs">
+            {/* Quick Metrics */}
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-                  {selectedPo.poCode}
+                <span className="text-[11px] text-slate-500 block">Supplier Rekanan</span>
+                <span className="font-bold text-slate-900 text-sm block">{selectedPo.supplierName}</span>
+                <span className="text-slate-500 text-[11px]">
+                  Kategori: {selectedPo.supplierCategory} • Gudang: {selectedPo.warehouseTarget}
                 </span>
-                <h3 className="text-base font-bold text-slate-900">{selectedPo.supplierName}</h3>
-                <p className="text-xs text-slate-500">
-                  Kategori: <span className="font-semibold text-slate-700">{selectedPo.supplierCategory}</span> •
-                  Target Gudang: <span className="font-semibold text-slate-700">{selectedPo.warehouseTarget}</span>
-                </p>
               </div>
               <div className="text-right">
-                <span className="text-xs font-bold text-slate-400 block">Grand Total PO</span>
-                <span className="text-base font-black text-blue-600">{formatCurrency(selectedPo.totalAmount)}</span>
+                <span className="text-[11px] text-slate-500 block">Grand Total PO</span>
+                <span className="text-base font-bold text-blue-600 font-mono block">
+                  {formatCurrency(selectedPo.totalAmount)}
+                </span>
               </div>
             </div>
 
-            {/* Matrix Data PO */}
-            <div className="grid grid-cols-3 gap-3 text-xs">
+            <div className="grid grid-cols-3 gap-3">
               <div className="bg-white p-3 rounded-xl border border-slate-200">
-                <span className="text-slate-400 block mb-0.5">Tanggal Input PO (Hari Ini)</span>
-                <span className="font-bold text-slate-800 font-mono">{selectedPo.date}</span>
+                <span className="text-slate-400 block mb-0.5 text-[11px]">Tgl Terbit PO</span>
+                <span className="font-bold text-slate-800 font-mono text-xs">{selectedPo.date}</span>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-200">
-                <span className="text-slate-400 block mb-0.5">Target Deadline Tiba</span>
-                <span className="font-bold text-rose-600 font-mono">{selectedPo.deadlineDate}</span>
+                <span className="text-slate-400 block mb-0.5 text-[11px]">Target Deadline Tiba</span>
+                <span className="font-bold text-rose-600 font-mono text-xs">{selectedPo.deadlineDate}</span>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-200">
-                <span className="text-slate-400 block mb-0.5">Penanggung Jawab PIC</span>
-                <span className="font-bold text-slate-800 flex items-center gap-1">
+                <span className="text-slate-400 block mb-0.5 text-[11px]">PIC & Digital Sign</span>
+                <span className="font-bold text-slate-800 flex items-center gap-1 text-[11px]">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> {selectedPo.creatorName}
                 </span>
               </div>
             </div>
 
-            {/* Sub-tabel Item dengan 3 Pilar Fisik Penerimaan */}
+            {/* Sub-tabel Item dengan 3 Pilar Fisik */}
             <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  Rincian 3 Pilar Fisik Penerimaan Barang (Bagus / Reject / Free)
-                </h4>
-              </div>
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Rincian 3 Pilar Fisik Penerimaan (Bagus / Reject / Free)
+              </h4>
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-[11px]">
+                <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-bold uppercase text-[9px]">
+                    <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-bold uppercase text-[10px]">
                       <th className="py-2 px-2">#</th>
                       <th className="py-2 px-2">KODE</th>
                       <th className="py-2 px-3">NAMA BAHAN</th>
-                      <th className="py-2 px-2 text-right">PESAN</th>
-                      <th className="py-2 px-2 text-right text-emerald-700 bg-emerald-50/50">BAGUS (REAL STOK)</th>
-                      <th className="py-2 px-2 text-right text-rose-700 bg-rose-50/50">REJECT (RETUR)</th>
-                      <th className="py-2 px-2 text-right text-purple-700 bg-purple-50/50">FREE (BONUS)</th>
-                      <th className="py-2 px-2 text-right">HARGA (RP)</th>
+                      <th className="py-2 px-2 text-right">ORDER</th>
+                      <th className="py-2 px-2 text-right text-emerald-700">BAGUS</th>
+                      <th className="py-2 px-2 text-right text-rose-600">REJECT</th>
+                      <th className="py-2 px-2 text-right text-amber-600">FREE</th>
                       <th className="py-2 px-3 text-right">SUBTOTAL</th>
                     </tr>
                   </thead>
@@ -504,24 +448,21 @@ export default function PurchaseOrdersModernPage() {
                     {selectedPo.items.map((it, i) => (
                       <tr key={it.id}>
                         <td className="py-2 px-2 text-slate-400 font-bold">{i + 1}</td>
-                        <td className="py-2 px-2 font-mono text-slate-600">{it.materialCode}</td>
+                        <td className="py-2 px-2 font-mono text-slate-600 text-[11px]">{it.materialCode}</td>
                         <td className="py-2 px-3 font-semibold text-slate-900">{it.materialName}</td>
                         <td className="py-2 px-2 text-right font-bold text-slate-800">
                           {it.orderedQty} {it.unit}
                         </td>
-                        <td className="py-2 px-2 text-right font-bold text-emerald-700 bg-emerald-50/30">
-                          {it.goodQty} {it.unit}
+                        <td className="py-2 px-2 text-right font-bold text-emerald-700 bg-emerald-50/50">
+                          {it.goodQty}
                         </td>
-                        <td className="py-2 px-2 text-right font-bold text-rose-700 bg-rose-50/30">
-                          {it.rejectQty} {it.unit}
+                        <td className="py-2 px-2 text-right font-bold text-rose-600 bg-rose-50/50">
+                          {it.rejectQty}
                         </td>
-                        <td className="py-2 px-2 text-right font-bold text-purple-700 bg-purple-50/30">
-                          {it.freeQty} {it.unit}
+                        <td className="py-2 px-2 text-right font-bold text-amber-600 bg-amber-50/50">
+                          {it.freeQty}
                         </td>
-                        <td className="py-2 px-2 text-right font-mono text-slate-600">
-                          {formatCurrency(it.unitPrice)}
-                        </td>
-                        <td className="py-2 px-3 text-right font-bold text-blue-600 font-mono">
+                        <td className="py-2 px-3 text-right font-bold text-blue-600 font-mono text-[11px]">
                           {formatCurrency(it.subtotal)}
                         </td>
                       </tr>
@@ -531,36 +472,28 @@ export default function PurchaseOrdersModernPage() {
               </div>
             </div>
 
-            {/* Rincian Finansial & Ongkir Diskon */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs flex justify-between items-center">
-              <div className="text-slate-600 space-y-1">
-                <p>• Diskon Supplier: <span className="font-bold text-emerald-700 font-mono">-{formatCurrency(selectedPo.discountRp)}</span> (Dihitung dalam Rupiah)</p>
-                <p>• Biaya Ongkir: <span className="font-bold text-slate-800 font-mono">+{formatCurrency(selectedPo.shippingCostRp)}</span></p>
-                {selectedPo.notes && <p className="text-slate-500 italic">Catatan: {selectedPo.notes}</p>}
+            {/* Financial Summary */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+              <div className="flex justify-between text-slate-600">
+                <span>Subtotal Barang:</span>
+                <span className="font-mono">{formatCurrency(selectedPo.subtotalAmount)}</span>
               </div>
-              <div className="text-right">
-                <span className="text-slate-500 block">Total Tagihan Final PO:</span>
-                <span className="text-lg font-black text-slate-900 font-mono">{formatCurrency(selectedPo.totalAmount)}</span>
+              <div className="flex justify-between text-emerald-700">
+                <span>Diskon Pembelian (Rp):</span>
+                <span className="font-mono">- {formatCurrency(selectedPo.discountRp)}</span>
               </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <DnaButton variant="secondary" onClick={() => setSelectedPo(null)}>
-                Tutup
-              </DnaButton>
-              <DnaButton
-                variant="primary"
-                onClick={() => {
-                  toast.success("Dokumen Dicetak", `Purchase Order ${selectedPo.poCode} siap diunduh.`);
-                  setSelectedPo(null);
-                }}
-              >
-                Cetak Dokumen PO
-              </DnaButton>
+              <div className="flex justify-between text-slate-600">
+                <span>Ongkos Kirim:</span>
+                <span className="font-mono">+ {formatCurrency(selectedPo.shippingCostRp)}</span>
+              </div>
+              <div className="flex justify-between font-bold text-slate-900 pt-2 border-t border-slate-200 text-sm">
+                <span>Grand Total:</span>
+                <span className="text-blue-600 font-mono">{formatCurrency(selectedPo.totalAmount)}</span>
+              </div>
             </div>
           </div>
         )}
-      </DnaModal>
-    </div>
+      </DnaDetailDrawer>
+    </DnaPageContainer>
   );
 }

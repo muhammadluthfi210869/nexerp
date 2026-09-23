@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/dna";
+import { Badge } from "@/components/dna";
+import { Button } from "@/components/dna";
 import { 
   Users2, 
   Network, 
@@ -12,7 +12,7 @@ import {
   MoreVertical,
   Scale
 } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
+import { Slider } from "@/components/dna";
 import { cn } from "@/lib/utils";
 
 export function OrganogramManager() {

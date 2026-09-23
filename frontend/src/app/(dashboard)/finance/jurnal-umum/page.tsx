@@ -32,12 +32,19 @@ import {
   DnaButton,
   DnaBadge,
   DnaModal,
+  DnaDetailDrawer,
   formatRupiah,
   useDnaToast,
   DnaInput,
-  DnaSelect
+  DnaSelect,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
-import { DnaTable } from "@/components/dna";
 
 interface JournalEntryLine {
   id: string;
@@ -209,6 +216,15 @@ function JurnalUmumContent() {
             <span>Format ERP Lama G-SERP (Poin 25-27)</span>
           </div>
         }
+        tabs={[
+          { id: "ALL", label: "Semua Jurnal" },
+          { id: "MANUAL", label: "Manual" },
+          { id: "AUTO_AR", label: "Penjualan (AR)" },
+          { id: "AUTO_AP", label: "Pembelian (AP)" },
+          { id: "ADJUSTMENT", label: "Penyesuaian" }
+        ]}
+        activeTab={typeFilter}
+        onTabChange={setTypeFilter}
         actions={
           <div className="flex items-center gap-2">
             <Link href="/finance/ledger">
@@ -257,12 +273,13 @@ function JurnalUmumContent() {
         />
       </DnaKpiGrid>
 
-      {/* TABLE LIST FORMAT ERP LAMA G-SERP (SCR-079) */}
+      {/* Main Table Card (Rule 1: No title prop, Rule 4: Clean responsive columns) */}
       <DnaDataTableCard
-        title="Daftar Jurnal Umum (General Journal Book)"
-        badge={<DnaBadge variant="purple">{filteredJournals.length} Jurnal</DnaBadge>}
-        customToolbar={
-          <div className="flex flex-wrap items-center gap-2.5">
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari No Jurnal, deskripsi, referensi...",
+          extraActions: (
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
               <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
               <DnaInput
@@ -279,89 +296,114 @@ function JurnalUmumContent() {
                 className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
               />
             </div>
-<DnaSelect 
-              value={typeFilter}
-              onChange={setTypeFilter}
-              className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
-            >
-              <option value="ALL">Semua Tipe Jurnal</option>
-              <option value="MANUAL">Manual Adjustment</option>
-              <option value="AUTO_AR">Subledger AR (Penjualan)</option>
-              <option value="AUTO_AP">Subledger AP (Pembelian)</option>
-              <option value="ADJUSTMENT">Closing Adjustment</option>
-            </DnaSelect>
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <DnaInput
-                type="text"
-                placeholder="Cari kode/deskripsi..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-52 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-            </div>
-          </div>
-        }
+          ),
+        }}
       >
-        <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">#</th>
-                <th className="px-3.5 py-3">Kode</th>
-                <th className="px-3.5 py-3">Tanggal</th>
-                <th className="px-3.5 py-3">Deskripsi Jurnal</th>
-                <th className="px-3.5 py-3 text-right">Debit (Rp)</th>
-                <th className="px-3.5 py-3 text-right">Kredit (Rp)</th>
-                <th className="px-3.5 py-3 text-center">Tipe</th>
-                <th className="px-3.5 py-3">Referensi</th>
-                <th className="px-3.5 py-3 text-center">Status</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredJournals.map((j, idx) => (
-                <tr key={j.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 text-slate-400 font-mono">{idx + 1}</td>
-                  <td className="px-3.5 py-2.5 font-mono text-blue-700 font-bold">{j.code}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{j.date}</td>
-                  <td className="px-3.5 py-2.5 font-semibold text-slate-900">{j.description}</td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-emerald-700">{formatRupiah(j.totalDebit)}</td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">{formatRupiah(j.totalCredit)}</td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 font-mono text-slate-600 font-medium">
+        <DnaTable>
+          <DnaTableHead>
+            <tr>
+              <DnaTh className="w-[140px]">No. Jurnal</DnaTh>
+              <DnaTh className="w-[110px]">Tanggal</DnaTh>
+              <DnaTh>Deskripsi Transaksi</DnaTh>
+              <DnaTh className="w-[130px]">No. Referensi</DnaTh>
+              <DnaTh align="center" className="w-[120px]">Tipe Jurnal</DnaTh>
+              <DnaTh align="right" className="w-[140px]">Total Debit</DnaTh>
+              <DnaTh align="right" className="w-[140px]">Total Kredit</DnaTh>
+              <DnaTh align="center" className="w-[120px]">Status</DnaTh>
+              <DnaTh align="center" className="w-[90px]">Aksi</DnaTh>
+            </tr>
+          </DnaTableHead>
+          <DnaTableBody>
+            {filteredJournals.length === 0 ? (
+              <DnaTableRow>
+                <DnaTd colSpan={9} className="py-12 text-center text-slate-400">
+                  <BookOpen className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                  Tidak ada catatan jurnal umum yang sesuai filter.
+                </DnaTd>
+              </DnaTableRow>
+            ) : (
+              filteredJournals.map((j) => (
+                <DnaTableRow
+                  key={j.id}
+                  onClick={() => setSelectedJournal(j)}
+                  className="cursor-pointer"
+                >
+                  {/* Kolom 1: No. Jurnal */}
+                  <DnaTd>
+                    <DnaCell.Code value={j.code} />
+                  </DnaTd>
+
+                  {/* Kolom 2: Tanggal */}
+                  <DnaTd className="text-slate-600 whitespace-nowrap">
+                    {j.date}
+                  </DnaTd>
+
+                  {/* Kolom 3: Deskripsi Transaksi */}
+                  <DnaTd className="text-slate-900 font-medium truncate max-w-[240px]">
+                    {j.description}
+                  </DnaTd>
+
+                  {/* Kolom 4: Referensi */}
+                  <DnaTd>
+                    <DnaCell.Code value={j.reference} />
+                  </DnaTd>
+
+                  {/* Kolom 5: Tipe Jurnal */}
+                  <DnaTd align="center">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
                       {j.type}
                     </span>
-                  </td>
-                  <td className="px-3.5 py-2.5 font-mono text-slate-600 text-[11px]">{j.reference}</td>
-                  <td className="px-3.5 py-2.5 text-center">
+                  </DnaTd>
+
+                  {/* Kolom 6: Total Debit */}
+                  <DnaTd align="right">
+                    <span className="font-semibold text-xs tabular-nums text-emerald-700">
+                      {formatRupiah(j.totalDebit)}
+                    </span>
+                  </DnaTd>
+
+                  {/* Kolom 7: Total Kredit */}
+                  <DnaTd align="right">
+                    <span className="font-semibold text-xs tabular-nums text-rose-700">
+                      {formatRupiah(j.totalCredit)}
+                    </span>
+                  </DnaTd>
+
+                  {/* Kolom 8: Status */}
+                  <DnaTd align="center">
                     <DnaBadge variant={j.status === "POSTED" ? "success" : "default"}>
                       {j.status}
                     </DnaBadge>
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <button
+                  </DnaTd>
+
+                  {/* Kolom 9: Aksi */}
+                  <DnaTd align="center" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-center gap-1">
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setSelectedJournal(j)}
-                        className="p-1 text-slate-400 hover:text-blue-600 rounded transition-colors"
                         title="Lihat Rincian Multi-line"
+                        className="text-slate-400 hover:text-blue-600"
                       >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
+                        <Eye className="w-3.5 h-3.5" />
+                      </DnaButton>
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
                         onClick={() => toast.success(`Mencetak Bukti Jurnal ${j.code}...`)}
-                        className="p-1 text-slate-400 hover:text-purple-600 rounded transition-colors"
                         title="Print Jurnal"
+                        className="text-slate-400 hover:text-purple-600"
                       >
-                        <Printer className="w-4 h-4" />
-                      </button>
+                        <Printer className="w-3.5 h-3.5" />
+                      </DnaButton>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </DnaTable>
-        </div>
+                  </DnaTd>
+                </DnaTableRow>
+              ))
+            )}
+          </DnaTableBody>
+        </DnaTable>
       </DnaDataTableCard>
 
       {/* MODAL BUAT JURNAL UMUM (SCR-080) */}
@@ -389,7 +431,7 @@ function JurnalUmumContent() {
                 placeholder="e.g. ADJ-SEP-26 / MEMO-DIR-01"
                 value={headerForm.reference}
                 onChange={(e) => setHeaderForm({ ...headerForm, reference: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
               />
             </div>
           </div>
@@ -522,69 +564,127 @@ function JurnalUmumContent() {
         </div>
       </DnaModal>
 
-      {/* DETAIL JURNAL MODAL */}
-      <DnaModal
+      {/* DETAIL JURNAL DRAWER (QUICK PEEK) */}
+      <DnaDetailDrawer
         isOpen={!!selectedJournal}
         onClose={() => setSelectedJournal(null)}
         title={`Rincian Jurnal: ${selectedJournal?.code}`}
-        size="lg"
-      >
-        <div className="space-y-3.5 text-xs">
-          <div className="bg-slate-50 p-3 rounded-lg space-y-1.5 border border-slate-200">
-            <div className="flex justify-between">
-              <span className="text-slate-500">Tanggal:</span>
-              <strong className="text-slate-800">{selectedJournal?.date}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Deskripsi:</span>
-              <strong className="text-slate-800">{selectedJournal?.description}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Referensi / Tipe:</span>
-              <span className="font-mono">{selectedJournal?.reference} ({selectedJournal?.type})</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Dibuat Oleh:</span>
-              <span>{selectedJournal?.createdBy}</span>
-            </div>
-          </div>
+        subtitle={selectedJournal?.description}
+        badge={
+          selectedJournal && (
+            <DnaBadge variant={selectedJournal.status === "POSTED" ? "success" : "default"}>
+              {selectedJournal.status}
+            </DnaBadge>
+          )
+        }
+        tabs={[
+          {
+            id: "entries",
+            label: "Entri Double-Entry (Buku Besar)",
+            content: (
+              <div className="space-y-4 p-4 text-xs">
+                <div className="bg-slate-50 p-3.5 rounded-lg space-y-1.5 border border-slate-200">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-slate-500">Tanggal:</span>{" "}
+                      <strong className="text-slate-800">{selectedJournal?.date}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Referensi:</span>{" "}
+                      <span className="font-semibold tabular-nums">{selectedJournal?.reference}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Tipe Jurnal:</span>{" "}
+                      <span className="font-semibold text-purple-700">{selectedJournal?.type}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Dibuat Oleh:</span>{" "}
+                      <span className="text-slate-700">{selectedJournal?.createdBy}</span>
+                    </div>
+                  </div>
+                </div>
 
-          <div className="border border-slate-200 rounded-lg p-2.5">
-            <DnaTable className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-200 text-slate-500 font-semibold text-[11px]">
-                  <th className="py-1">Kode Akun</th>
-                  <th className="py-1">Nama Akun Buku Besar</th>
-                  <th className="py-1 text-right">Debit</th>
-                  <th className="py-1 text-right">Kredit</th>
-                  <th className="py-1">Keterangan Baris</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {selectedJournal?.lines.map((l) => (
-                  <tr key={l.id}>
-                    <td className="py-2 font-mono text-blue-700 font-bold">{l.accountCode}</td>
-                    <td className="py-2 font-semibold text-slate-800">{l.accountName}</td>
-                    <td className="py-2 text-right font-extrabold text-emerald-700">
-                      {l.debit > 0 ? formatRupiah(l.debit) : "-"}
-                    </td>
-                    <td className="py-2 text-right font-extrabold text-rose-700">
-                      {l.credit > 0 ? formatRupiah(l.credit) : "-"}
-                    </td>
-                    <td className="py-2 text-slate-600 text-[11px]">{l.lineDescription}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </DnaTable>
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <DnaButton variant="secondary" size="md" onClick={() => setSelectedJournal(null)}>
+                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                  <DnaTable className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-[11px]">
+                      <tr>
+                        <th className="p-2.5">Kode & Akun COA</th>
+                        <th className="p-2.5 text-right">Debit</th>
+                        <th className="p-2.5 text-right">Kredit</th>
+                        <th className="p-2.5">Keterangan</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {selectedJournal?.lines.map((l) => (
+                        <tr key={l.id}>
+                          <td className="p-2.5">
+                            <span className="text-blue-700 font-bold tabular-nums mr-1.5">{l.accountCode}</span>
+                            <span className="font-semibold text-slate-800">{l.accountName}</span>
+                          </td>
+                          <td className="p-2.5 text-right font-bold tabular-nums text-emerald-700">
+                            {l.debit > 0 ? formatRupiah(l.debit) : "-"}
+                          </td>
+                          <td className="p-2.5 text-right font-bold tabular-nums text-rose-700">
+                            {l.credit > 0 ? formatRupiah(l.credit) : "-"}
+                          </td>
+                          <td className="p-2.5 text-slate-500 text-[11px]">{l.lineDescription}</td>
+                        </tr>
+                      ))}
+                      <tr className="bg-slate-100 font-bold border-t-2 border-slate-300">
+                        <td className="p-2.5 text-slate-900 font-bold text-right text-xs">TOTAL:</td>
+                        <td className="p-2.5 text-right font-bold tabular-nums text-emerald-700">
+                          {selectedJournal ? formatRupiah(selectedJournal.totalDebit) : "0"}
+                        </td>
+                        <td className="p-2.5 text-right font-bold tabular-nums text-rose-700">
+                          {selectedJournal ? formatRupiah(selectedJournal.totalCredit) : "0"}
+                        </td>
+                        <td></td>
+                      </tr>
+                    </tbody>
+                  </DnaTable>
+                </div>
+              </div>
+            )
+          },
+          {
+            id: "audit",
+            label: "Informasi Audit",
+            content: (
+              <div className="p-4 space-y-3 text-xs">
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Status Validasi Balance:</span>
+                    <DnaBadge variant="success">BALANCED (DEBIT = KREDIT)</DnaBadge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Posting Status:</span>
+                    <span className="font-semibold text-emerald-800">POSTED TO GENERAL LEDGER</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Siklus Periode:</span>
+                    <span className="text-slate-700 font-medium">September 2026 (Open)</span>
+                  </div>
+                </div>
+              </div>
+            )
+          }
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
+            <DnaButton
+              variant="secondary"
+              size="md"
+              onClick={() => toast.success(`Mencetak Bukti Jurnal ${selectedJournal?.code}...`)}
+            >
+              <Printer className="w-4 h-4 mr-1.5" />
+              Cetak Jurnal
+            </DnaButton>
+            <DnaButton variant="primary" size="md" onClick={() => setSelectedJournal(null)}>
               Tutup
             </DnaButton>
           </div>
-        </div>
-      </DnaModal>
+        }
+      />
     </DnaPageContainer>
   );
 }

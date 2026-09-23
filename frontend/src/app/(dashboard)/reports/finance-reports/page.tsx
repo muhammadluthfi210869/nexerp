@@ -17,12 +17,12 @@ import {
 
 import { DnaButton, DnaInput, DnaBadge, DnaStatCard, DnaCard, DnaDataTableCard, DnaTabNav, DnaDatePicker } from "@/components/dna";
 import {
-  DnaTable as Table,
-  DnaTableBody as TableBody,
-  DnaTd as TableCell,
-  DnaTh as TableHead,
-  DnaTableHead as TableHeader,
-  DnaTableRow as TableRow,
+  DnaTable,
+  DnaTableBody,
+  DnaTd,
+  DnaTh,
+  DnaTableHead,
+  DnaTableRow,
 } from "@/components/dna";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -55,7 +55,7 @@ function TrialBalanceTab({ startDate, endDate }: { startDate: string, endDate: s
       .catch((err) => console.error("Failed to fetch trial balance", err));
   }, [startDate, endDate]);
 
-  const diff = Math.abs((totals.akhirDebit || 0) - (totals.akhirCredit || 0));
+  const diff = Math.abs((totals?.akhirDebit || totals?.totalDebit || 0) - (totals?.akhirCredit || totals?.totalCredit || 0));
 
   return (
     <div className="space-y-6 animate-fade-slide-in">
@@ -81,50 +81,50 @@ function TrialBalanceTab({ startDate, endDate }: { startDate: string, endDate: s
       </div>
 
       <DnaDataTableCard>
-        <Table className="table-dense">
-          <TableHeader className="bg-slate-50/50">
-            <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead rowSpan={2} className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-tight">Kode</TableHead>
-              <TableHead rowSpan={2} className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-tight">Nama Akun</TableHead>
-              <TableHead colSpan={2} className="px-4 py-2 text-center text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Saldo Awal</TableHead>
-              <TableHead colSpan={2} className="px-4 py-2 text-center text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Perubahan</TableHead>
-              <TableHead colSpan={2} className="px-4 py-2 text-center text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Saldo Akhir</TableHead>
-            </TableRow>
-            <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Debit</TableHead>
-              <TableHead className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight">Kredit</TableHead>
-              <TableHead className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Debit</TableHead>
-              <TableHead className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight">Kredit</TableHead>
-              <TableHead className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Debit</TableHead>
-              <TableHead className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight">Kredit</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <DnaTable className="table-dense">
+          <DnaTableHead className="bg-slate-50/50">
+            <DnaTableRow className="hover:bg-transparent border-slate-100">
+              <DnaTh rowSpan={2} className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-tight">Kode</DnaTh>
+              <DnaTh rowSpan={2} className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-tight">Nama Akun</DnaTh>
+              <DnaTh colSpan={2} className="px-4 py-2 text-center text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Saldo Awal</DnaTh>
+              <DnaTh colSpan={2} className="px-4 py-2 text-center text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Perubahan</DnaTh>
+              <DnaTh colSpan={2} className="px-4 py-2 text-center text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Saldo Akhir</DnaTh>
+            </DnaTableRow>
+            <DnaTableRow className="hover:bg-transparent border-slate-100">
+              <DnaTh className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Debit</DnaTh>
+              <DnaTh className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight">Kredit</DnaTh>
+              <DnaTh className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Debit</DnaTh>
+              <DnaTh className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight">Kredit</DnaTh>
+              <DnaTh className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight border-l border-slate-100">Debit</DnaTh>
+              <DnaTh className="px-4 py-2 text-right text-table-header text-slate-400 uppercase tracking-tight">Kredit</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {data.map((item, index) => (
-              <TableRow key={`${item.id}-${index}`} className="hover:bg-slate-50/30 transition-all duration-300 group">
-                <TableCell className="px-4 py-3 text-left font-black font-sans text-blue-600">{item.code}</TableCell>
-                <TableCell className="px-4 py-3 text-left font-medium text-slate-700">{item.name}</TableCell>
-                <TableCell className="px-4 py-3 text-right font-mono tabular-nums text-[11px] text-slate-500 border-l border-slate-50">{item.awalDebit > 0 ? formatCurrency(item.awalDebit) : "-"}</TableCell>
-                <TableCell className="px-4 py-3 text-right font-mono tabular-nums text-[11px] text-slate-500">{item.awalCredit > 0 ? formatCurrency(item.awalCredit) : "-"}</TableCell>
-                <TableCell className="px-4 py-3 text-right font-mono tabular-nums text-[11px] text-slate-600 border-l border-slate-100">{item.perubahanDebit > 0 ? formatCurrency(item.perubahanDebit) : "-"}</TableCell>
-                <TableCell className="px-4 py-3 text-right font-mono tabular-nums text-[11px] text-slate-600">{item.perubahanCredit > 0 ? formatCurrency(item.perubahanCredit) : "-"}</TableCell>
-                <TableCell className="px-4 py-3 text-right font-mono tabular-nums text-[11px] font-black text-slate-900 border-l border-slate-200">{item.akhirDebit > 0 ? formatCurrency(item.akhirDebit) : "-"}</TableCell>
-                <TableCell className="px-4 py-3 text-right font-mono tabular-nums text-[11px] font-black text-slate-900">{item.akhirCredit > 0 ? formatCurrency(item.akhirCredit) : "-"}</TableCell>
-              </TableRow>
+              <DnaTableRow key={`${item.id}-${index}`} className="hover:bg-slate-50/30 transition-all duration-300 group">
+                <DnaTd className="px-4 py-3 text-left font-black font-sans text-blue-600">{item.code}</DnaTd>
+                <DnaTd className="px-4 py-3 text-left font-medium text-slate-700">{item.name}</DnaTd>
+                <DnaTd className="px-4 py-3 text-right font-mono tabular-nums text-[11px] text-slate-500 border-l border-slate-50">{item.awalDebit > 0 ? formatCurrency(item.awalDebit) : "-"}</DnaTd>
+                <DnaTd className="px-4 py-3 text-right font-mono tabular-nums text-[11px] text-slate-500">{item.awalCredit > 0 ? formatCurrency(item.awalCredit) : "-"}</DnaTd>
+                <DnaTd className="px-4 py-3 text-right font-mono tabular-nums text-[11px] text-slate-600 border-l border-slate-100">{item.perubahanDebit > 0 ? formatCurrency(item.perubahanDebit) : "-"}</DnaTd>
+                <DnaTd className="px-4 py-3 text-right font-mono tabular-nums text-[11px] text-slate-600">{item.perubahanCredit > 0 ? formatCurrency(item.perubahanCredit) : "-"}</DnaTd>
+                <DnaTd className="px-4 py-3 text-right font-mono tabular-nums text-[11px] font-black text-slate-900 border-l border-slate-200">{item.akhirDebit > 0 ? formatCurrency(item.akhirDebit) : "-"}</DnaTd>
+                <DnaTd className="px-4 py-3 text-right font-mono tabular-nums text-[11px] font-black text-slate-900">{item.akhirCredit > 0 ? formatCurrency(item.akhirCredit) : "-"}</DnaTd>
+              </DnaTableRow>
             ))}
-          </TableBody>
+          </DnaTableBody>
           <tfoot className="bg-slate-900 text-white font-black uppercase text-[10px]">
             <tr>
               <td colSpan={2} className="px-4 py-4 text-xs italic text-left pl-6">Total Konsolidasi</td>
-              <td className="px-4 py-4 text-right text-xs text-slate-300 font-mono border-l border-slate-700">{formatCurrency(totals.awalDebit)}</td>
-              <td className="px-4 py-4 text-right text-xs text-slate-300 font-mono">{formatCurrency(totals.awalCredit)}</td>
-              <td className="px-4 py-4 text-right text-xs text-amber-300 font-mono border-l border-slate-700">{formatCurrency(totals.perubahanDebit)}</td>
-              <td className="px-4 py-4 text-right text-xs text-amber-300 font-mono">{formatCurrency(totals.perubahanCredit)}</td>
-              <td className="px-4 py-4 text-right text-xs text-emerald-300 font-mono border-l border-slate-700">{formatCurrency(totals.akhirDebit)}</td>
-              <td className="px-4 py-4 text-right text-xs text-emerald-300 font-mono">{formatCurrency(totals.akhirCredit)}</td>
+              <td className="px-4 py-4 text-right text-xs text-slate-300 font-mono border-l border-slate-700">{formatCurrency(totals?.awalDebit || 0)}</td>
+              <td className="px-4 py-4 text-right text-xs text-slate-300 font-mono">{formatCurrency(totals?.awalCredit || 0)}</td>
+              <td className="px-4 py-4 text-right text-xs text-amber-300 font-mono border-l border-slate-700">{formatCurrency(totals?.perubahanDebit || 0)}</td>
+              <td className="px-4 py-4 text-right text-xs text-amber-300 font-mono">{formatCurrency(totals?.perubahanCredit || 0)}</td>
+              <td className="px-4 py-4 text-right text-xs text-emerald-300 font-mono border-l border-slate-700">{formatCurrency(totals?.akhirDebit || 0)}</td>
+              <td className="px-4 py-4 text-right text-xs text-emerald-300 font-mono">{formatCurrency(totals?.akhirCredit || 0)}</td>
             </tr>
           </tfoot>
-        </Table>
+        </DnaTable>
       </DnaDataTableCard>
     </div>
   );
@@ -187,21 +187,20 @@ function ProfitLossTab({ startDate, endDate }: { startDate: string, endDate: str
 
   return (
     <div className="space-y-6 animate-fade-slide-in">
-      {/* 4 Funnel Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 4 Funnel Metrics Cards - BUS-RULE-070: TotalPendapatan -> TotalBebanHPP -> LabaOperasionalBersih */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="pnl-summary-cards">
         <DnaStatCard
           label="Total Pendapatan"
           value={formatCurrency(report.operatingRevenue.total)}
           icon={<TrendingUp className="text-emerald-500" />}
         />
         <DnaStatCard
-          label="Laba Kotor"
-          value={formatCurrency(report.grossProfit)}
-          subValue={`${grossMargin}% Gross Margin`}
-          icon={<TrendingUp className="text-emerald-600" />}
+          label="Total Beban Pokok (HPP)"
+          value={formatCurrency(report.cogs.total)}
+          icon={<TrendingUp className="text-rose-500" />}
         />
         <DnaStatCard
-          label="Laba Operasional"
+          label="Laba Operasional Bersih"
           value={formatCurrency(report.operatingIncome)}
           subValue={`${operatingMargin}% EBIT Margin`}
           icon={<ShieldCheck className="text-blue-600" />}
@@ -210,7 +209,7 @@ function ProfitLossTab({ startDate, endDate }: { startDate: string, endDate: str
           label="Laba Bersih"
           value={formatCurrency(report.netProfit)}
           subValue={`${netMargin}% Net Margin`}
-          icon={<TrendingUp className="text-emerald-500" />}
+          icon={<TrendingUp className="text-emerald-600" />}
         />
       </div>
 
@@ -348,9 +347,9 @@ function BalanceSheetTab({ endDate }: { endDate: string }) {
       .then(res => setData(res.data));
   }, [endDate]);
 
-  if (!data) return <div className="p-20 text-center animate-pulse font-black text-xs text-slate-400">MEMUAT LAPORAN NERACA...</div>;
+  if (!data || !data.assets) return <div className="p-20 text-center animate-pulse font-black text-xs text-slate-400">MEMUAT LAPORAN NERACA...</div>;
 
-  const balanceDiff = Math.abs(data.assets.total - data.totalLiabilitiesAndEquity);
+  const balanceDiff = Math.abs((data.assets?.total || 0) - (data.totalLiabilitiesAndEquity || 0));
 
   return (
     <div className="space-y-6 pb-10 animate-fade-slide-in">
@@ -509,10 +508,11 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
 
   useEffect(() => {
     api.get("/finance/accounts").then(res => {
-      setAccounts(res.data);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setAccounts(list);
       // Set initial selection only when accounts first arrive
-      setSelectedAccId((current) => current || (res.data[0]?.id ?? ""));
-    });
+      setSelectedAccId((current) => current || (list[0]?.id ?? ""));
+    }).catch(() => setAccounts([]));
   }, []);
 
   const fetchLedger = useCallback(() => {
@@ -529,9 +529,9 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
     }
   }, [selectedAccId, startDate, endDate, fetchLedger]);
 
-  const filteredAccounts = accounts.filter(a =>
-    a.code.toLowerCase().includes(accSearch.toLowerCase()) ||
-    a.name.toLowerCase().includes(accSearch.toLowerCase())
+  const filteredAccounts = (Array.isArray(accounts) ? accounts : []).filter(a =>
+    a.code?.toLowerCase().includes(accSearch.toLowerCase()) ||
+    a.name?.toLowerCase().includes(accSearch.toLowerCase())
   );
 
   const ledgerDebitTotal = ledgerData?.transactions?.reduce((sum: number, t: any) => sum + (t.debit || 0), 0) || 0;
@@ -640,33 +640,33 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
                 </div>
               }
             >
-              <Table className="table-dense">
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow className="hover:bg-transparent border-slate-100">
-                    <TableHead className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-left">Tanggal</TableHead>
-                    <TableHead className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-left">Keterangan</TableHead>
-                    <TableHead className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-right">Debit</TableHead>
-                    <TableHead className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-right">Kredit</TableHead>
-                    <TableHead className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-right">Saldo Berjalan</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <DnaTable className="table-dense">
+                <DnaTableHead className="bg-slate-50/50">
+                  <DnaTableRow className="hover:bg-transparent border-slate-100">
+                    <DnaTh className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-left">Tanggal</DnaTh>
+                    <DnaTh className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-left">Keterangan</DnaTh>
+                    <DnaTh className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-right">Debit</DnaTh>
+                    <DnaTh className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-right">Kredit</DnaTh>
+                    <DnaTh className="px-6 py-4 text-table-header text-slate-400 uppercase tracking-tight text-right">Saldo Berjalan</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {ledgerData.transactions.map((t: any, tIdx: number) => (
-                    <TableRow key={`${t.id}-${tIdx}`} className="hover:bg-slate-50/30 transition-all duration-300 group">
-                      <TableCell className="px-6 py-4 text-[10px] font-medium text-slate-500 text-left">
+                    <DnaTableRow key={`${t.id}-${tIdx}`} className="hover:bg-slate-50/30 transition-all duration-300 group">
+                      <DnaTd className="px-6 py-4 text-[10px] font-medium text-slate-500 text-left">
                         {new Date(t.date).toLocaleDateString("id-ID")}
-                      </TableCell>
-                      <TableCell className="px-6 py-4 text-left">
+                      </DnaTd>
+                      <DnaTd className="px-6 py-4 text-left">
                         <p className="text-xs font-semibold text-slate-700">{t.description}</p>
                         <p className="text-[9px] font-black text-slate-300 uppercase mt-0.5 tracking-wider">{t.reference}</p>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 text-right text-xs font-semibold text-slate-900 font-mono tabular-nums">
+                      </DnaTd>
+                      <DnaTd className="px-6 py-4 text-right text-xs font-semibold text-slate-900 font-mono tabular-nums">
                         {t.debit > 0 ? formatCurrency(t.debit) : "-"}
-                      </TableCell>
-                      <TableCell className="px-6 py-4 text-right text-xs font-semibold text-slate-900 font-mono tabular-nums">
+                      </DnaTd>
+                      <DnaTd className="px-6 py-4 text-right text-xs font-semibold text-slate-900 font-mono tabular-nums">
                         {t.credit > 0 ? formatCurrency(t.credit) : "-"}
-                      </TableCell>
-                      <TableCell className="px-6 py-4 text-right text-xs font-black text-blue-600 font-mono tabular-nums">
+                      </DnaTd>
+                      <DnaTd className="px-6 py-4 text-right text-xs font-black text-blue-600 font-mono tabular-nums">
                         {formatCurrency(t.balance)}
                         {t.attachmentUrls?.length > 0 && (
                           <div className="mt-2 flex justify-end gap-1">
@@ -677,24 +677,24 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
                             ))}
                           </div>
                         )}
-                      </TableCell>
-                    </TableRow>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))}
                   {ledgerData.transactions.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="py-12 text-center text-slate-400 italic text-xs">
+                    <DnaTableRow>
+                      <DnaTd colSpan={5} className="py-12 text-center text-slate-400 italic text-xs">
                         Tidak ada transaksi mutasi dalam periode ini.
-                      </TableCell>
-                    </TableRow>
+                      </DnaTd>
+                    </DnaTableRow>
                   )}
-                </TableBody>
+                </DnaTableBody>
                 <tfoot className="bg-slate-900 text-white font-black uppercase text-[10px]">
                   <tr>
                     <td colSpan={4} className="px-6 py-4 text-xs italic text-left pl-8">Saldo Akhir Per Periode</td>
                     <td className="px-6 py-4 text-right text-sm text-emerald-300 font-mono">{formatCurrency(ledgerData.endingBalance)}</td>
                   </tr>
                 </tfoot>
-              </Table>
+              </DnaTable>
             </DnaDataTableCard>
           </div>
         ) : null}
@@ -710,64 +710,67 @@ function ProjectBudgetingTab() {
   useEffect(() => {
     setLoading(true);
     api.get("/finance/reports/project-budgeting")
-      .then(res => setData(res.data))
+      .then(res => setData(Array.isArray(res.data) ? res.data : (res.data?.data || [])))
+      .catch(() => setData([]))
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="p-20 text-center animate-pulse font-black text-xs text-slate-400">ANALYZING PROJECT BUDGETS...</div>;
+
+  const projectList = Array.isArray(data) ? data : [];
 
   return (
     <div className="space-y-6 animate-fade-slide-in">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <DnaStatCard
           label="Total Project Budget"
-          value={formatCurrency(data.reduce((s, i) => s + i.budget, 0))}
+          value={formatCurrency(projectList.reduce((s, i) => s + (i.budget || 0), 0))}
           icon={<BookOpen className="text-blue-600" />}
         />
         <DnaStatCard
           label="Total Actual Spent"
-          value={formatCurrency(data.reduce((s, i) => s + i.spent, 0))}
+          value={formatCurrency(projectList.reduce((s, i) => s + (i.spent || 0), 0))}
           icon={<XCircle className="text-rose-500" />}
         />
         <DnaStatCard
           label="Total Material Cost"
-          value={formatCurrency(data.reduce((s, i) => s + i.materialSpend, 0))}
+          value={formatCurrency(projectList.reduce((s, i) => s + (i.materialSpend || 0), 0))}
           icon={<PieChart className="text-amber-500" />}
         />
         <DnaStatCard
-          label="Avg. Project Margin"
-          value={`${((data.reduce((s, i) => s + i.margin, 0) / (data.reduce((s, i) => s + i.budget, 0) || 1)) * 100).toFixed(1)}%`}
+          label="Total Operational Spent"
+          value={formatCurrency(projectList.reduce((s, i) => s + (i.operationalSpend || 0), 0))}
           icon={<Target className="text-emerald-500" />}
         />
       </div>
 
       <DnaDataTableCard>
-        <Table className="table-dense">
-          <TableHeader className="bg-slate-50/50">
-            <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead className="px-6 py-4 text-left text-table-header text-slate-400 uppercase tracking-tight">Project / Product</TableHead>
-              <TableHead className="px-6 py-4 text-right text-table-header text-slate-400 uppercase tracking-tight">Budget</TableHead>
-              <TableHead className="px-6 py-4 text-right text-table-header text-slate-400 uppercase tracking-tight">Spent</TableHead>
-              <TableHead className="px-6 py-4 text-center text-table-header text-slate-400 uppercase tracking-tight">Burn Rate (%)</TableHead>
-              <TableHead className="px-6 py-4 text-center text-table-header text-slate-400 uppercase tracking-tight">Status</TableHead>
-              <TableHead className="px-6 py-4 text-right pr-10 text-table-header text-slate-400 uppercase tracking-tight">Margin (%)</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <DnaTable className="table-dense">
+          <DnaTableHead className="bg-slate-50/50">
+            <DnaTableRow className="hover:bg-transparent border-slate-100">
+              <DnaTh className="px-6 py-4 text-left text-table-header text-slate-400 uppercase tracking-tight">Project / Product</DnaTh>
+              <DnaTh className="px-6 py-4 text-right text-table-header text-slate-400 uppercase tracking-tight">Budget</DnaTh>
+              <DnaTh className="px-6 py-4 text-right text-table-header text-slate-400 uppercase tracking-tight">Spent</DnaTh>
+              <DnaTh className="px-6 py-4 text-center text-table-header text-slate-400 uppercase tracking-tight">Burn Rate (%)</DnaTh>
+              <DnaTh className="px-6 py-4 text-center text-table-header text-slate-400 uppercase tracking-tight">Status</DnaTh>
+              <DnaTh className="px-6 py-4 text-right pr-10 text-table-header text-slate-400 uppercase tracking-tight">Margin (%)</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {data.map((item, pIdx) => {
               const burnRate = (item.spent / (item.budget || 1)) * 100;
               const burnRateColor = burnRate > 100 ? "text-rose-600 font-bold animate-pulse" : burnRate >= 80 ? "text-amber-500" : "text-emerald-500";
               const burnRateBg = burnRate > 100 ? "bg-rose-500" : burnRate >= 80 ? "bg-amber-500" : "bg-emerald-500";
 
               return (
-                <TableRow key={`${item.id}-${pIdx}`} className="hover:bg-slate-50 transition-colors border-b border-slate-50">
-                  <TableCell className="px-6 py-5 text-left">
+                <DnaTableRow key={`${item.id}-${pIdx}`} className="hover:bg-slate-50 transition-colors border-b border-slate-50">
+                  <DnaTd className="px-6 py-5 text-left">
                     <p className="text-xs font-black text-slate-900 uppercase">{item.project}</p>
                     <p className="text-[9px] font-medium text-slate-400 uppercase mt-1">{item.product}</p>
-                  </TableCell>
-                  <TableCell className="px-6 py-5 text-right text-xs font-medium text-slate-600 font-mono tabular-nums">{formatCurrency(item.budget)}</TableCell>
-                  <TableCell className="px-6 py-5 text-right text-xs font-medium text-rose-500 font-mono tabular-nums">{formatCurrency(item.spent)}</TableCell>
-                  <TableCell className="px-6 py-5 text-center">
+                  </DnaTd>
+                  <DnaTd className="px-6 py-5 text-right text-xs font-medium text-slate-600 font-mono tabular-nums">{formatCurrency(item.budget)}</DnaTd>
+                  <DnaTd className="px-6 py-5 text-right text-xs font-medium text-rose-500 font-mono tabular-nums">{formatCurrency(item.spent)}</DnaTd>
+                  <DnaTd className="px-6 py-5 text-center">
                     <div className="flex flex-col items-center gap-1">
                       <span className={cn("text-xs font-mono", burnRateColor)}>
                         {burnRate.toFixed(1)}%
@@ -776,13 +779,13 @@ function ProjectBudgetingTab() {
                         <div className={cn("h-full", burnRateBg)} style={{ width: `${Math.max(0, Math.min(100, burnRate))}%` }} />
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-5 text-center">
-                    <DnaBadge status={item.progress === 'IN_PRODUCTION' ? 'warning' : 'info'}>
+                  </DnaTd>
+                  <DnaTd className="px-6 py-5 text-center">
+                    <DnaBadge variant={item.progress === 'IN_PRODUCTION' ? 'warning' : 'info'}>
                       {item.progress}
                     </DnaBadge>
-                  </TableCell>
-                  <TableCell className="px-6 py-5 text-right pr-10">
+                  </DnaTd>
+                  <DnaTd className="px-6 py-5 text-right pr-10">
                     <div className="flex flex-col items-end">
                       <span className={cn("text-xs font-black font-mono", item.marginPercent > 30 ? "text-emerald-500" : "text-rose-500")}>
                         {item.marginPercent.toFixed(1)}%
@@ -791,12 +794,12 @@ function ProjectBudgetingTab() {
                          <div className={cn("h-full", item.marginPercent > 30 ? "bg-emerald-500" : "bg-rose-500")} style={{ width: `${Math.max(0, Math.min(100, item.marginPercent))}%` }} />
                       </div>
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </DnaTd>
+                </DnaTableRow>
               );
             })}
-          </TableBody>
-        </Table>
+          </DnaTableBody>
+        </DnaTable>
       </DnaDataTableCard>
     </div>
   );

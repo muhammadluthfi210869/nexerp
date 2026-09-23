@@ -126,7 +126,7 @@ export default function PurchaseReturnApprovalPage() {
       header: "No. Retur",
       accessor: "code",
       sortable: true,
-      render: (item) => <DnaCell.code>{item.code}</DnaCell.code>,
+      render: (item) => <DnaCell.Code value={item.code} />,
     },
     {
       header: "Supplier",
@@ -141,7 +141,7 @@ export default function PurchaseReturnApprovalPage() {
       accessor: "refPo",
       sortable: true,
       render: (item) => (
-        <span className="text-blue-600 font-mono font-medium text-xs whitespace-nowrap">{item.refPo}</span>
+        <span className="text-blue-600 font-sans font-medium tabular-nums text-xs whitespace-nowrap">{item.refPo}</span>
       ),
     },
     {
@@ -170,11 +170,7 @@ export default function PurchaseReturnApprovalPage() {
       accessor: "totalAmount",
       align: "right",
       sortable: true,
-      render: (item) => (
-        <span className="font-mono font-bold text-slate-900">
-          {formatRupiah(item.totalAmount)}
-        </span>
-      ),
+      render: (item) => <DnaCell.Currency value={item.totalAmount} />,
     },
     {
       header: "Status",

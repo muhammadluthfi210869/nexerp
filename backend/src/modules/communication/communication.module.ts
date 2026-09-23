@@ -9,11 +9,12 @@
 import { Module } from '@nestjs/common';
 import { CommunicationService } from './communication.service';
 import { CommunicationController } from './communication.controller';
+import { EntityCommunicationController } from './entity-communication.controller';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [AuthModule],
-  controllers: [CommunicationController],
+  controllers: [CommunicationController, EntityCommunicationController],
   providers: [CommunicationService],
   exports: [CommunicationService],
 })

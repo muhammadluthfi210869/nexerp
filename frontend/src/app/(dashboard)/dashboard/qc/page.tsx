@@ -9,9 +9,9 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from "@/components/dna";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/dna";
+import { Button } from "@/components/dna";
 import { 
   CheckCircle2, 
   ClipboardCheck, 
@@ -24,7 +24,7 @@ import { KpiCard } from "@/components/dna/KpiCard";
 import { DnaBadge } from "@/components/dna/DnaBadge";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 // --- Types ---

@@ -1,9 +1,9 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/dna";
 import { AlertCircle, ShieldAlert } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/dna";
 
 interface RiskAlertCardProps {
   overdueAR?: number;

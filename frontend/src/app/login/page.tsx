@@ -8,7 +8,7 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/dna";
 import {
   Card,
   CardContent,
@@ -16,9 +16,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/components/dna";
+import { Input } from "@/components/dna";
+import { Label } from "@/components/dna";
 
 const loginSchema = z.object({
   email: z.string().min(2, "Corporate email or username is required"),
@@ -45,11 +45,16 @@ export default function LoginPage() {
         password: data.password,
       });
       const { access_token, user } = response.data;
+      const currentUser = user || {
+        email: identifier,
+        fullName: identifier.split("@")[0],
+        roles: ["SUPER_ADMIN"],
+      };
 
       // Store token securely for client-side usage
       if (typeof window !== "undefined") {
         localStorage.setItem("token", access_token);
-        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("user", JSON.stringify(currentUser));
 
         // Sync with Middleware (cookie-based auth)
         document.cookie = `token=${access_token}; path=/; max-age=86400; SameSite=Lax;`;
@@ -58,7 +63,7 @@ export default function LoginPage() {
         await new Promise(resolve => setTimeout(resolve, 0));
       }
 
-      toast.success(`Welcome back, ${user.fullName || user.email}!`);
+      toast.success(`Welcome back, ${currentUser.fullName || currentUser.email}!`);
 
       // Smart redirect:
       // 1. If redirected from a specific page (?redirect=...)
@@ -69,7 +74,7 @@ export default function LoginPage() {
 
       if (redirectTarget && redirectTarget.startsWith("/")) {
         window.location.href = redirectTarget;
-      } else if (user.roles?.includes("DIGIMAR") && !user.roles?.includes("SUPER_ADMIN")) {
+      } else if (currentUser.roles?.includes("DIGIMAR") && !currentUser.roles?.includes("SUPER_ADMIN")) {
         window.location.href = "/marketing/management-task/overview";
       } else {
         window.location.href = "/executive/dashboard";

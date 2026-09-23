@@ -1,7 +1,15 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { Prisma, LeadSource, LeadStatus, WorkflowStatus } from '@prisma/client';
 import * as crypto from 'crypto';
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 @Injectable()
 export class LeadCaptureService {
@@ -16,6 +24,27 @@ export class LeadCaptureService {
   private generateTrackingCode(): string {
     const rand = crypto.randomBytes(4).toString('hex').toUpperCase();
     return `DL${rand}`;
+  }
+
+  // ──────────────────────────────────────────────
+  //  TENANT RESOLUTION (public intake)
+  // ──────────────────────────────────────────────
+
+  /**
+   * Public intake NEVER accepts a tenant from the request. The owning
+   * organization is server configuration; if it is missing or malformed the
+   * intake fails closed before writing anything.
+   */
+  private resolvePublicOrganizationId(): string {
+    const raw = process.env.P07_PUBLIC_LEAD_ORGANIZATION_ID;
+    if (typeof raw !== 'string' || !UUID_PATTERN.test(raw.trim())) {
+      throw new ServiceUnavailableException({
+        code: 'P07_TENANT_UNRESOLVED',
+        message:
+          'Intake ditolak: organisasi publik belum dikonfigurasi di server.',
+      });
+    }
+    return raw.trim();
   }
 
   // ──────────────────────────────────────────────
@@ -62,6 +91,7 @@ export class LeadCaptureService {
     const lead = await this.prisma.leadCapture.create({
       data: {
         trackingCode,
+        organizationId: this.resolvePublicOrganizationId(),
         status: 'PENDING' as LeadStatus,
         workflowStatus: 'NEW_LEAD' as WorkflowStatus,
         ...data,
@@ -120,6 +150,7 @@ export class LeadCaptureService {
       updated = await this.prisma.leadCapture.create({
         data: {
           trackingCode,
+          organizationId: this.resolvePublicOrganizationId(),
           phone: data.phone,
           waProfileName: data.waName,
           waMessage: data.waMessage,
@@ -132,6 +163,7 @@ export class LeadCaptureService {
       updated = await this.prisma.leadCapture.update({
         where: { trackingCode },
         data: {
+          organizationId: this.resolvePublicOrganizationId(),
           phone: data.phone,
           waProfileName: data.waName,
           waMessage: data.waMessage,
@@ -177,6 +209,8 @@ export class LeadCaptureService {
     msgId?: string,
   ) {
     const normalizedPhone = this.normalizePhone(phone);
+    // Fail closed before taking the advisory lock or touching any row.
+    const organizationId = this.resolvePublicOrganizationId();
     const windowMs =
       Number(process.env.ORPHAN_DEDUP_WINDOW_MS) || 7 * 24 * 60 * 60 * 1000;
     // Advisory-lock key scoped to this module so other callers cannot
@@ -210,6 +244,7 @@ export class LeadCaptureService {
           const updated = await tx.leadCapture.update({
             where: { id: existing.id },
             data: {
+              organizationId,
               phone: normalizedPhone,
               waMessage: text,
               status: 'WA_CONTACTED' as LeadStatus,
@@ -240,6 +275,7 @@ export class LeadCaptureService {
         const created = await tx.leadCapture.create({
           data: {
             trackingCode,
+            organizationId,
             status: 'WA_CONTACTED' as LeadStatus,
             workflowStatus: 'NEW_LEAD' as WorkflowStatus,
             phone: normalizedPhone,

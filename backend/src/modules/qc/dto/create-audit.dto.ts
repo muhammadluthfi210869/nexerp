@@ -61,6 +61,10 @@ export class CreateQCAuditDto {
 
   @IsString()
   @IsOptional()
+  inkjetCheck?: string;
+
+  @IsString()
+  @IsOptional()
   sealingCheck?: string;
 
   @IsString()

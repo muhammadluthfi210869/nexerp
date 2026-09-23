@@ -55,6 +55,7 @@ describe('P07-SF6 golden thread (real services, real audit + outbox)', () => {
     // extends. DI fails when both are listed as separate providers because
     // Nest tries to construct a bare PrismaClient without the driver adapter.
     // Register the existing PrismaService under the PrismaClient token.
+    const { OutboxService } = await import('../../../src/platform/outbox/outbox.service');
     const mod = await Test.createTestingModule({
       providers: [
         LeadService,
@@ -66,6 +67,11 @@ describe('P07-SF6 golden thread (real services, real audit + outbox)', () => {
         {
           provide: AuditService,
           useFactory: (prisma: PrismaService) => new AuditService(prisma as unknown as PrismaClient),
+          inject: [PrismaService],
+        },
+        {
+          provide: OutboxService,
+          useFactory: (prisma: PrismaService) => new OutboxService(prisma as unknown as PrismaClient),
           inject: [PrismaService],
         },
       ],
@@ -140,62 +146,75 @@ describe('P07-SF6 golden thread (real services, real audit + outbox)', () => {
     try { await moduleRef?.close(); } catch {}
   });
 
-  test('golden thread: intake → owner → qualification → audit → outbox (one effect each)', async () => {
+  test('golden thread: intake → owner → qualification → audit → outbox (one effect each, governed)', async () => {
     // 1) INTAKE — real LeadCaptureService (now atomic via tx + advisory lock).
     const intake = await leadCapture.upsertOrphanLead(phone!, `${TAG} visitor`, 'halo', `${TAG}-m-1`);
     canonicalLeadId = intake.id;
 
-    // 2) OWNER ASSIGNMENT — real LeadService.createLead routes via the same
-    //    staff id we created; ONE canonical SalesLead is persisted.
-    const salesLead = await leadService.createLead({
-      clientName: `${TAG}-client`,
-      contactInfo: phone,
-      source: 'P07-SF6',
-      productInterest: 'Golden thread product',
-      estimatedValue: 5000000,
-      picId: staffId,
-    } as any);
-    salesLeadId = salesLead.id;
-    expect(salesLead.picId).toBe(staffId); // exactly one current owner
-
-    // 3) QUALIFICATION — legal transition only.
-    await leadService.advanceLeadStage(salesLeadId, {
-      newStatus: WorkflowStatus.CONTACTED,
-      action: 'CONTACT',
-      loggedBy: staffUserId!,
-    } as any);
-
-    // 4) AUDIT — real AuditService.writeDirectAudit writes one immutable row.
-    const auditRes = await auditService.writeDirectAudit({
-      actorUserId: staffUserId!,
-      actorRoleSlug: 'DIGIMAR',
-      actorPermissionSnapshot: { roles: ['DIGIMAR'] },
-      correlationId: CORRELATION_ID,
-      source: TAG,
-      entityType: 'SalesLead',
-      entityId: salesLeadId,
-      action: 'QUALIFY',
-      afterSnapshot: { status: 'CONTACTED' },
-    });
-    expect(auditRes.id).toBeDefined();
-
-    // 5) OUTBOX — write one required outbox event via prisma (the production
-    //    outbox table). P05 owns the dispatcher; P07 verifies the row.
-    const outbox = await prisma.outboxEvent.create({
+    // The capture must carry a GRANTED consent before the governed
+    // qualification command will accept it.
+    await prisma.leadAttribute.create({
       data: {
-        id: randomUUID(),
-        eventType: 'lead.qualified',
-        aggregateType: 'SalesLead',
-        aggregateId: salesLeadId,
-        idempotencyKey: `${TAG}-idem-${randomUUID().slice(0, 8)}`,
-        payload: { leadId: salesLeadId, status: 'CONTACTED' },
-        correlationId: CORRELATION_ID,
-        status: OutboxStatus.PENDING,
+        leadId: canonicalLeadId,
+        key: 'consent_withdrawn',
+        value: 'false',
+        confirmed: true,
+        source: `${TAG}-fixture`,
       },
     });
-    outboxIds.push(outbox.id);
 
-    // ASSERTIONS — exactly one each.
+    // 2) OWNER ASSIGNMENT — real LeadService.createLead routes via the same
+    //    staff id we created; ONE canonical SalesLead is persisted and linked
+    //    to the capture by `leadCaptureId` (the tenant comes from the actor).
+    //    The actor belongs to the same organization the public intake wrote
+    //    into, so the capture-to-commercial handoff stays inside one tenant.
+    const tenantId = process.env.P07_PUBLIC_LEAD_ORGANIZATION_ID;
+    if (!tenantId) {
+      throw new Error('P07_PUBLIC_LEAD_ORGANIZATION_ID must be configured (backend/.env)');
+    }
+    const salesLead = await leadService.createLead(
+      {
+        clientName: `${TAG}-client`,
+        contactInfo: phone,
+        source: 'P07-SF6',
+        productInterest: 'Golden thread product',
+        estimatedValue: 5000000,
+        picId: staffId,
+        leadCaptureId: canonicalLeadId,
+      } as any,
+      {
+        userId: staffUserId!,
+        organizationId: tenantId,
+        roles: ['COMMERCIAL'],
+        correlationId: CORRELATION_ID,
+      },
+    );
+    salesLeadId = salesLead.id;
+    expect(salesLead.picId).toBe(staffId); // exactly one current owner
+    expect(salesLead.organizationId).toBe(tenantId);
+    expect(salesLead.leadCaptureId).toBe(canonicalLeadId); // canonical link
+
+    // 3) QUALIFICATION via the GOVERNED advance path. This is the
+    //    production entry point — it writes audit + outbox + idempotency
+    //    atomically in ONE Prisma transaction.
+    const actor = {
+      userId: staffUserId!,
+      organizationId: tenantId,
+      roles: ['COMMERCIAL'],
+      correlationId: CORRELATION_ID,
+      idempotencyKey: `${TAG}-idem-${randomUUID().slice(0, 8)}`,
+    };
+    await leadService.advanceLeadStageGoverned(
+      salesLeadId,
+      {
+        newStatus: WorkflowStatus.CONTACTED,
+        action: 'CONTACT',
+        loggedBy: staffUserId!,
+      } as any,
+      actor,
+    );
+
+    // ASSERTIONS — exactly one each, scoped by correlationId.
     const canonicalRows = await prisma.leadCapture.findMany({ where: { phone: phone!.replace(/\D/g, '') } });
     expect(canonicalRows.length).toBe(1);
     expect(canonicalRows[0].id).toBe(canonicalLeadId);
@@ -207,27 +226,48 @@ describe('P07-SF6 golden thread (real services, real audit + outbox)', () => {
     expect(current!.status).toBe(WorkflowStatus.CONTACTED);
 
     const auditRows = await prisma.auditLog.findMany({
-      where: { source: TAG, correlationId: CORRELATION_ID },
+      where: { entityType: 'SalesLead', entityId: salesLeadId, correlationId: CORRELATION_ID },
     });
-    expect(auditRows.length).toBeGreaterThanOrEqual(1);
+    expect(auditRows.length).toBe(1);
 
-    const outboxRows = await prisma.outboxEvent.findMany({ where: { id: outbox.id } });
+    const outboxRows = await prisma.outboxEvent.findMany({
+      where: { aggregateType: 'SalesLead', aggregateId: salesLeadId, correlationId: CORRELATION_ID },
+    });
     expect(outboxRows.length).toBe(1);
 
-    // 6) ROLLBACK ATOMICITY — emulate a failing business transaction by
-    //    attempting an illegal transition. The lead status must NOT move and
-    //    no audit/outbox row is created for that attempt.
-    const auditBefore = await prisma.auditLog.count({ where: { source: TAG, correlationId: CORRELATION_ID } });
+    // 4) ROLLBACK ATOMICITY — illegal transition (CONTACTED → WON_DEAL)
+    //    must rollback with ZERO audit, ZERO outbox, ZERO business change.
+    const auditBefore = await prisma.auditLog.count({
+      where: { entityType: 'SalesLead', entityId: salesLeadId },
+    });
+    const outboxBefore = await prisma.outboxEvent.count({
+      where: { aggregateType: 'SalesLead', aggregateId: salesLeadId },
+    });
     await expect(
-      leadService.advanceLeadStage(salesLeadId, {
-        newStatus: WorkflowStatus.WON_DEAL,
-        action: 'WON',
-        loggedBy: staffUserId!,
-      } as any),
+      leadService.advanceLeadStageGoverned(
+        salesLeadId,
+        {
+          newStatus: WorkflowStatus.WON_DEAL,
+          action: 'WON',
+          loggedBy: staffUserId!,
+        } as any,
+        {
+          userId: staffUserId!,
+          organizationId: tenantId,
+          roles: ['COMMERCIAL'],
+          correlationId: randomUUID(),
+        },
+      ),
     ).rejects.toBeDefined();
     const after = await prisma.salesLead.findUnique({ where: { id: salesLeadId } });
     expect(after!.status).toBe(WorkflowStatus.CONTACTED); // unchanged
-    const auditAfter = await prisma.auditLog.count({ where: { source: TAG, correlationId: CORRELATION_ID } });
-    expect(auditAfter).toBe(auditBefore); // no new audit row from the failed attempt
+    const auditAfter = await prisma.auditLog.count({
+      where: { entityType: 'SalesLead', entityId: salesLeadId },
+    });
+    expect(auditAfter).toBe(auditBefore);
+    const outboxAfter = await prisma.outboxEvent.count({
+      where: { aggregateType: 'SalesLead', aggregateId: salesLeadId },
+    });
+    expect(outboxAfter).toBe(outboxBefore);
   });
 });

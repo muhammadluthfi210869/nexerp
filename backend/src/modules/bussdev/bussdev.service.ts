@@ -1005,8 +1005,10 @@ export class BussdevService {
 
   async getLeadsByGroup(
     group: 'guest' | 'sample' | 'production' | 'ro' | 'lost',
+    organizationId?: string,
   ) {
     let where: any = {};
+    const tenantScope = organizationId ? { organizationId } : {};
 
     switch (group) {
       case 'guest':
@@ -1045,7 +1047,7 @@ export class BussdevService {
     }
 
     return this.prisma.salesLead.findMany({
-      where,
+      where: { ...tenantScope, ...where },
       include: {
         pic: true,
         activities: { orderBy: { sequenceNumber: 'desc' }, take: 1 },
@@ -1710,12 +1712,13 @@ export class BussdevService {
     });
   }
 
-  async getStuckLeads() {
+  async getStuckLeads(organizationId?: string) {
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
     return this.prisma.salesLead.findMany({
       where: {
+        ...(organizationId ? { organizationId } : {}),
         lastStageAt: { lt: threeDaysAgo },
         status: {
           notIn: ['LOST', 'WON_DEAL', 'ABORTED'],

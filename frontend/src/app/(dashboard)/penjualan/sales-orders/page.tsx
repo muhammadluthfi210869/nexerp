@@ -18,6 +18,8 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   FileSpreadsheet,
   Plus,
@@ -40,10 +42,14 @@ import {
   DnaPageHeader,
   DnaKpiGrid,
   DnaDataTableCard,
+  DnaDetailDrawer,
   DnaButton,
   DnaInput,
   DnaModal,
   DnaCell,
+  DnaLoadingSkeleton,
+  DnaErrorState,
+  DnaEmptyState,
   useDnaToast,
 } from "@/components/dna";
 import { formatCurrency } from "@/lib/utils";
@@ -76,129 +82,11 @@ export interface SalesOrderItem {
   notes?: string;
 }
 
-const INITIAL_SALES_ORDERS: SalesOrderItem[] = [
-  {
-    id: "so-1",
-    soCode: "SO-202609-000002",
-    orderDate: "2026-09-01",
-    customerName: "PT Maju Jaya Skincare",
-    brandName: "Maju Glow",
-    category: "MAKLON_BARU",
-    deadlineFinal: "2026-10-15",
-    deadlinePic: {
-      design: "2026-09-08",
-      rnd: "2026-09-15",
-      scm: "2026-09-22",
-      production: "2026-10-10",
-    },
-    items: [
-      {
-        itemName: "Day Cream SPF 50 Tone Up 30g",
-        netto: "30g",
-        qty: 5000,
-        unitPrice: 28000,
-        discount: 2500000,
-        subtotal: 137500000,
-      },
-    ],
-    grandTotal: 137500000,
-    approvalStatus: "IN_PRODUCTION",
-    gatekeeperStatus: "RELEASED",
-    notes: "DP 50% sudah diterima dan diverifikasi Finance. Lanjut tahap filling.",
-  },
-  {
-    id: "so-2",
-    soCode: "SO-202609-000004",
-    orderDate: "2026-09-03",
-    customerName: "Vivin Anggi Ardita",
-    brandName: "FYS Beauty Care",
-    category: "REPEAT_ORDER",
-    deadlineFinal: "2026-09-28",
-    deadlinePic: {
-      design: "2026-09-05",
-      rnd: "2026-09-07",
-      scm: "2026-09-12",
-      production: "2026-09-25",
-    },
-    items: [
-      {
-        itemName: "Acne Facial Wash 100ml",
-        netto: "100ml",
-        qty: 3000,
-        unitPrice: 22000,
-        discount: 0,
-        subtotal: 66000000,
-      },
-    ],
-    grandTotal: 66000000,
-    approvalStatus: "IN_PRODUCTION",
-    gatekeeperStatus: "HELD",
-    notes: "Produksi selesai, menunggu konfirmasi pelunasan sebelum DO dilepas.",
-  },
-  {
-    id: "so-3",
-    soCode: "SO-202609-000005",
-    orderDate: "2026-09-05",
-    customerName: "Beauty Hub Indonesia",
-    brandName: "GlowHub",
-    category: "MAKLON_BARU",
-    deadlineFinal: "2026-10-30",
-    deadlinePic: {
-      design: "2026-09-15",
-      rnd: "2026-09-25",
-      scm: "2026-10-05",
-      production: "2026-10-25",
-    },
-    items: [
-      {
-        itemName: "Brightening Body Lotion 250ml",
-        netto: "250ml",
-        qty: 2000,
-        unitPrice: 42000,
-        discount: 1000000,
-        subtotal: 83000000,
-      },
-    ],
-    grandTotal: 83000000,
-    approvalStatus: "PENDING",
-    gatekeeperStatus: "HELD",
-    notes: "Menunggu persetujuan Direktur & verifikasi DP 50%.",
-  },
-  {
-    id: "so-4",
-    soCode: "SO-202609-000008",
-    orderDate: "2026-09-07",
-    customerName: "PT Cosmo Indah Jaya",
-    brandName: "CosmoDerm",
-    category: "REPEAT_ORDER",
-    deadlineFinal: "2026-10-20",
-    deadlinePic: {
-      design: "2026-09-10",
-      rnd: "2026-09-12",
-      scm: "2026-09-20",
-      production: "2026-10-15",
-    },
-    items: [
-      {
-        itemName: "Moisturizer Gel Aloe 50ml",
-        netto: "50ml",
-        qty: 4000,
-        unitPrice: 32000,
-        discount: 3000000,
-        subtotal: 125000000,
-      },
-    ],
-    grandTotal: 125000000,
-    approvalStatus: "APPROVED",
-    gatekeeperStatus: "HELD",
-    notes: "Batch record diterbitkan, jadwal mixing tgl 12 September.",
-  },
-];
-
 function SalesOrdersContent() {
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
-  const [orders, setOrders] = useState<SalesOrderItem[]>(INITIAL_SALES_ORDERS);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [selectedGatekeeper, setSelectedGatekeeper] = useState("ALL");
@@ -234,6 +122,71 @@ function SalesOrdersContent() {
     notes: "",
   });
 
+  // Query commercial sales orders
+  const {
+    data: orders = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery<SalesOrderItem[]>({
+    queryKey: ["commercial-sales-orders"],
+    queryFn: async () => {
+      const resp = await api.get("/commercial/sales-orders");
+      return (resp.data || []).map((so: any) => ({
+        id: so.id,
+        soCode: so.orderNumber,
+        orderDate: so.orderDate
+          ? new Date(so.orderDate).toISOString().slice(0, 10)
+          : so.createdAt
+          ? new Date(so.createdAt).toISOString().slice(0, 10)
+          : "",
+        customerName: so.lead?.clientName || so.customerName || "Pelanggan",
+        brandName: so.brandName || so.lead?.brandName || "Brand",
+        category: (so.salesCategory || so.category || "MAKLON_BARU") as SalesOrderItem["category"],
+        deadlineFinal: so.deadlineFinal
+          ? new Date(so.deadlineFinal).toISOString().slice(0, 10)
+          : "-",
+        deadlinePic: {
+          design: so.deadlineDesign
+            ? new Date(so.deadlineDesign).toISOString().slice(0, 10)
+            : "-",
+          rnd: so.deadlineRnd ? new Date(so.deadlineRnd).toISOString().slice(0, 10) : "-",
+          scm: so.deadlineScm ? new Date(so.deadlineScm).toISOString().slice(0, 10) : "-",
+          production: so.deadlineProduction
+            ? new Date(so.deadlineProduction).toISOString().slice(0, 10)
+            : "-",
+        },
+        items: (so.items || []).map((it: any) => ({
+          itemName: it.productName || it.description || "Item",
+          netto: it.netto ? `${it.netto}g` : "30g",
+          qty: Number(it.quantity) || 0,
+          unitPrice: Number(it.unitPrice) || 0,
+          discount: Number(it.discount) || 0,
+          subtotal:
+            (Number(it.quantity) || 0) * (Number(it.unitPrice) || 0) - (Number(it.discount) || 0),
+        })),
+        grandTotal: Number(so.totalAmount) || 0,
+        approvalStatus: so.status || "PENDING",
+        gatekeeperStatus: (so.deliveryGateStatus || "HELD") as "HELD" | "RELEASED",
+        notes: so.notes || "",
+      }));
+    },
+  });
+
+  // Query customers for leadId mapping if available
+  const { data: customers = [] } = useQuery({
+    queryKey: ["master-customers-dropdown"],
+    queryFn: async () => {
+      try {
+        const resp = await api.get("/customers");
+        return resp.data || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
   // KPI calculations
   const totalOmzet = orders.reduce((sum, o) => sum + o.grandTotal, 0);
   const totalPending = orders.filter((o) => o.approvalStatus === "PENDING").length;
@@ -261,6 +214,43 @@ function SalesOrdersContent() {
     });
   }, [orders, selectedKpiFilter, selectedCategory, selectedGatekeeper, searchQuery]);
 
+  // Gatekeeper mutation
+  const gatekeeperMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: "HELD" | "RELEASED" }) => {
+      return api.post(`/commercial/sales-orders/${id}/delivery-gate`, { status });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["commercial-sales-orders"] });
+      toast.success(
+        `Gatekeeper Pengiriman diubah ke ${variables.status}. ${
+          variables.status === "RELEASED"
+            ? "Gudang diizinkan mencetak Surat Jalan / DO."
+            : "Gudang dikunci dari pengiriman."
+        }`
+      );
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || err.message || "Gagal mengubah gatekeeper";
+      toast.error("Gagal", msg);
+    },
+  });
+
+  // Create SO mutation
+  const createSOMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      return api.post("/commercial/sales-orders", payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["commercial-sales-orders"] });
+      toast.success("Sales Order berhasil diterbitkan!");
+      setIsCreateOpen(false);
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || err.message || "Gagal menerbitkan SO";
+      toast.error("Validasi Gagal", msg);
+    },
+  });
+
   const handleCreateSO = () => {
     if (!form.customerName.trim() || !form.itemName.trim()) {
       toast.warning("Nama Pelanggan dan Nama Produk wajib diisi!");
@@ -270,263 +260,281 @@ function SalesOrdersContent() {
     const qtyNum = parseInt(form.qty) || 1000;
     const priceNum = parseInt(form.unitPrice) || 30000;
     const discNum = parseInt(form.discount) || 0;
-    const totalLine = qtyNum * priceNum - discNum;
 
-    const seqNumber = String(orders.length + 1).padStart(6, "0");
-    const dateStamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const generatedCode =
-      codeType === "FULL"
-        ? `DL-BUS-SO-${dateStamp}-${seqNumber}`
-        : `SO-${dateStamp.slice(0, 6)}-${seqNumber}`;
+    const matchedCustomer = customers.find(
+      (c: any) =>
+        c.clientName?.toLowerCase() === form.customerName.trim().toLowerCase() ||
+        c.name?.toLowerCase() === form.customerName.trim().toLowerCase()
+    );
+    const leadId = matchedCustomer?.id || (customers[0]?.id ?? "00000000-0000-0000-0000-000000000001");
 
-    const newSO: SalesOrderItem = {
-      id: "so-" + Date.now(),
-      soCode: generatedCode,
-      orderDate: form.orderDate,
-      customerName: form.customerName,
+    createSOMutation.mutate({
+      leadId,
+      salesCategory: form.category,
       brandName: form.brandName || form.customerName,
-      category: form.category,
       deadlineFinal: form.deadlineFinal,
-      deadlinePic: {
-        design: form.deadlineDesign,
-        rnd: form.deadlineRnd,
-        scm: form.deadlineScm,
-        production: form.deadlineProduction,
-      },
+      deadlineDesign: form.deadlineDesign,
+      deadlineRnd: form.deadlineRnd,
+      deadlineScm: form.deadlineScm,
+      deadlineProduction: form.deadlineProduction,
+      notes: form.notes,
       items: [
         {
-          itemName: form.itemName,
-          netto: form.netto,
-          qty: qtyNum,
+          materialId: "00000000-0000-0000-0000-000000000001",
+          productName: form.itemName,
+          quantity: qtyNum,
           unitPrice: priceNum,
           discount: discNum,
-          subtotal: totalLine,
         },
       ],
-      grandTotal: totalLine,
-      approvalStatus: "PENDING",
-      gatekeeperStatus: "HELD",
-      notes: form.notes,
-    };
-
-    setOrders((prev) => [newSO, ...prev]);
-    setIsCreateOpen(false);
-    toast.success(`Sales Order ${newSO.soCode} berhasil diterbitkan!`);
+    });
   };
 
   const handleToggleGatekeeper = (so: SalesOrderItem) => {
     const nextStatus = so.gatekeeperStatus === "HELD" ? "RELEASED" : "HELD";
-    setOrders((prev) =>
-      prev.map((item) =>
-        item.id === so.id ? { ...item, gatekeeperStatus: nextStatus } : item
-      )
-    );
+    gatekeeperMutation.mutate({ id: so.id, status: nextStatus });
     if (selectedDetail && selectedDetail.id === so.id) {
       setSelectedDetail((prev) => (prev ? { ...prev, gatekeeperStatus: nextStatus } : null));
     }
-    toast.success(
-      `Gatekeeper Pengiriman diubah ke ${nextStatus}. ${
-        nextStatus === "RELEASED"
-          ? "Gudang diizinkan mencetak Surat Jalan / DO."
-          : "Gudang dikunci dari pengiriman."
-      }`
-    );
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20 text-slate-900 font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] pb-20 text-slate-900 font-sans space-y-6">
       <DnaPageHeader
-        title="Penjualan & Sales Orders (SO)"
-        description="Pusat Kontrol Pesanan Penjualan, Matriks Deadline per PIC, dan Otorisasi Gatekeeper Logistik"
-        backLink={{ href: "/bussdev/client-manager?tab=production", label: "Client Produksi" }}
-        badge={
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            ORDER WORKBENCH
-          </span>
-        }
-        actions={
-          <DnaButton
-            variant="primary"
-            size="sm"
-            onClick={() => setIsCreateOpen(true)}
-            className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Buat Sales Order (SO)
-          </DnaButton>
-        }
+        title="PENJUALAN & SALES ORDERS (SO)"
+        tabs={[
+          { key: "ALL", label: "Semua Order", count: orders.length },
+          { key: "PENDING", label: "Menunggu Approval", count: totalPending },
+          { key: "IN_PROD", label: "Proses Pabrik", count: totalInProd },
+        ]}
+        activeTab={selectedKpiFilter || "ALL"}
+        onTabChange={(k) => setSelectedKpiFilter(k === "ALL" ? null : k)}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pt-6">
-        {/* 4 KPI Cards */}
-        <DnaKpiGrid
-          columns={4}
-          items={[
-            {
-              label: "TOTAL SALES ORDERS",
-              value: `${orders.length} Order`,
-              subtext: "Seluruh kontrak penjualan aktif",
-              icon: FileSpreadsheet,
-              status: selectedKpiFilter === null ? "primary" : "neutral",
-              onClick: () => setSelectedKpiFilter(null),
-            },
-            {
-              label: "MENUNGGU APPROVAL",
-              value: `${totalPending} SO`,
-              subtext: "Verifikasi kontrak & DP awal",
-              icon: Clock,
-              status: selectedKpiFilter === "PENDING" ? "warning" : "neutral",
-              onClick: () =>
-                setSelectedKpiFilter(selectedKpiFilter === "PENDING" ? null : "PENDING"),
-            },
-            {
-              label: "DALAM PRODUKSI PABRIK",
-              value: `${totalInProd} SO`,
-              subtext: "Tahap mixing / filling / packing",
-              icon: Package,
-              status: selectedKpiFilter === "IN_PROD" ? "purple" : "neutral",
-              onClick: () =>
-                setSelectedKpiFilter(selectedKpiFilter === "IN_PROD" ? null : "IN_PROD"),
-            },
-            {
-              label: "TOTAL OMZET BERJALAN",
-              value: formatCurrency(totalOmzet),
-              subtext: `${totalReleased} SO Diizinkan Kirim (RELEASED)`,
-              icon: DollarSign,
-              status: "success",
-            },
-          ]}
+      {/* 4 KPI Cards */}
+      <DnaKpiGrid
+        cards={[
+          {
+            key: "ALL",
+            title: "TOTAL SALES ORDERS",
+            value: `${orders.length} Order`,
+            deltaText: "Kontrak aktif terdaftar",
+            isDeltaPositive: true,
+            icon: <FileSpreadsheet className="w-4 h-4" />,
+            iconBg: "bg-blue-50",
+            iconColor: "text-blue-600",
+            isSelected: selectedKpiFilter === null,
+            onClick: () => setSelectedKpiFilter(null),
+          },
+          {
+            key: "PENDING",
+            title: "MENUNGGU APPROVAL",
+            value: `${totalPending} SO`,
+            deltaText: "Verifikasi kontrak & DP",
+            isDeltaPositive: false,
+            icon: <Clock className="w-4 h-4" />,
+            iconBg: "bg-amber-50",
+            iconColor: "text-amber-600",
+            isSelected: selectedKpiFilter === "PENDING",
+            onClick: () =>
+              setSelectedKpiFilter(selectedKpiFilter === "PENDING" ? null : "PENDING"),
+          },
+          {
+            key: "IN_PROD",
+            title: "DALAM PRODUKSI PABRIK",
+            value: `${totalInProd} SO`,
+            deltaText: "Mixing / filling / packing",
+            isDeltaPositive: true,
+            icon: <Package className="w-4 h-4" />,
+            iconBg: "bg-purple-50",
+            iconColor: "text-purple-600",
+            isSelected: selectedKpiFilter === "IN_PROD",
+            onClick: () =>
+              setSelectedKpiFilter(selectedKpiFilter === "IN_PROD" ? null : "IN_PROD"),
+          },
+          {
+            key: "OMZET",
+            title: "TOTAL OMZET BERJALAN",
+            value: formatCurrency(totalOmzet),
+            deltaText: `${totalReleased} SO Siap Kirim (RELEASED)`,
+            isDeltaPositive: true,
+            icon: <DollarSign className="w-4 h-4" />,
+            iconBg: "bg-emerald-50",
+            iconColor: "text-emerald-600",
+          },
+        ]}
+      />
+
+      {/* Data Table Card with Unified Toolbar */}
+      {isLoading ? (
+        <DnaLoadingSkeleton rows={6} />
+      ) : isError ? (
+        <DnaErrorState
+          title="Gagal Memuat Sales Order"
+          message={(error as any)?.message || "Terjadi kesalahan saat memuat data dari server."}
+          onRetry={() => refetch()}
         />
-
-        {/* Level-2 Filter Toolbar */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="w-72">
-              <DnaInput
-                placeholder="Cari no SO, nama klien, brand..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                icon={<Search className="w-4 h-4 text-slate-400" />}
-              />
-            </div>
-
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="ALL">Semua Kategori Order</option>
-              <option value="MAKLON_BARU">Maklon Baru (First Batch)</option>
-              <option value="REPEAT_ORDER">Repeat Order (RO)</option>
-              <option value="JUAL_PUTUS">Jual Putus / Distribusi</option>
-            </select>
-
-            <select
-              value={selectedGatekeeper}
-              onChange={(e) => setSelectedGatekeeper(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="ALL">Semua Gatekeeper</option>
-              <option value="HELD">HELD (Tahan Pengiriman)</option>
-              <option value="RELEASED">RELEASED (Siap Kirim)</option>
-            </select>
-          </div>
-
-          <div className="text-xs font-bold text-slate-400">
-            Menampilkan <span className="text-slate-800">{filteredOrders.length}</span> Sales Order
-          </div>
-        </div>
-
-        {/* Data Table Card */}
-        <DnaDataTableCard title="Daftar Kontrak Sales Order (SO)" count={filteredOrders.length}>
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                <th className="p-3 w-10 text-center">#</th>
-                <th className="p-3">KODE SO</th>
-                <th className="p-3">TANGGAL</th>
-                <th className="p-3">PELANGGAN</th>
-                <th className="p-3">KATEGORI</th>
-                <th className="p-3">BRAND</th>
-                <th className="p-3">PEMBUAT</th>
-                <th className="p-3">DEADLINE PER PIC</th>
-                <th className="p-3 text-right">GRAND TOTAL</th>
-                <th className="p-3 text-center">STATUS</th>
-                <th className="p-3 text-right">#</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOrders.map((so, idx) => (
-                <tr
-                  key={so.id}
-                  onClick={() => setSelectedDetail(so)}
-                  className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 cursor-pointer group text-xs"
-                >
-                  <td className="p-3 text-center text-slate-400 font-mono">{idx + 1}</td>
-                  <td className="p-3 font-mono font-semibold text-blue-600 whitespace-nowrap">{so.soCode}</td>
-                  <td className="p-3 text-slate-600 whitespace-nowrap">{so.orderDate}</td>
-                  <td className="p-3 font-semibold text-slate-900 whitespace-nowrap">{so.customerName}</td>
-                  <td className="p-3 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
-                      {so.category.replace(/_/g, " ")}
-                    </span>
-                  </td>
-                  <td className="p-3 font-medium text-slate-800 whitespace-nowrap">{so.brandName}</td>
-                  <td className="p-3 text-slate-700 whitespace-nowrap">Irma Safarina (BusDev)</td>
-                  <td className="p-3 text-slate-600 whitespace-nowrap font-mono">{so.deadlineFinal}</td>
-                  <td className="p-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
-                    {formatCurrency(so.grandTotal)}
-                  </td>
-                  <td className="p-3 text-center whitespace-nowrap">
-                    <DnaCell.Badge
-                      status={
-                        so.approvalStatus === "COMPLETED"
-                          ? "approved"
-                          : so.approvalStatus === "IN_PRODUCTION"
-                          ? "progress"
-                          : so.approvalStatus === "APPROVED"
-                          ? "info"
-                          : "pending"
-                      }
-                      label={so.approvalStatus}
-                    />
-                  </td>
-                  <td className="p-3 text-right whitespace-nowrap">
-                    <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleGatekeeper(so)}
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black tracking-tight border transition-all cursor-pointer ${
-                          so.gatekeeperStatus === "RELEASED"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
-                            : "bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100"
-                        }`}
-                        title="Toggle gatekeeper pengiriman"
-                      >
-                        {so.gatekeeperStatus === "RELEASED" ? (
-                          <>
-                            <Unlock className="w-3 h-3" />
-                            RELEASED
-                          </>
-                        ) : (
-                          <>
-                            <Lock className="w-3 h-3" />
-                            HELD
-                          </>
-                        )}
-                      </button>
-                      <DnaButton variant="ghost" size="sm" onClick={() => setSelectedDetail(so)}>
-                        Detail
-                      </DnaButton>
-                    </div>
-                  </td>
+      ) : (
+        <DnaDataTableCard
+          toolbarProps={{
+            searchQuery,
+            onSearchChange: setSearchQuery,
+            searchPlaceholder: "Cari no SO, nama klien, brand...",
+            filterColumns: [
+              {
+                key: "category",
+                label: "Kategori Order",
+                type: "select",
+                options: ["MAKLON_BARU", "REPEAT_ORDER", "JUAL_PUTUS"],
+              },
+              {
+                key: "gatekeeper",
+                label: "Gatekeeper DO",
+                type: "select",
+                options: ["RELEASED", "HELD"],
+              },
+            ],
+            selectedColumn: selectedCategory !== "ALL" ? "category" : selectedGatekeeper !== "ALL" ? "gatekeeper" : undefined,
+            onSelectColumn: (col) => {
+              if (!col) {
+                setSelectedCategory("ALL");
+                setSelectedGatekeeper("ALL");
+              }
+            },
+            filterValue: selectedCategory !== "ALL" ? selectedCategory : selectedGatekeeper !== "ALL" ? selectedGatekeeper : "",
+            onFilterValueChange: (val) => {
+              if (["MAKLON_BARU", "REPEAT_ORDER", "JUAL_PUTUS"].includes(val)) {
+                setSelectedCategory(val);
+              } else if (["RELEASED", "HELD"].includes(val)) {
+                setSelectedGatekeeper(val);
+              } else {
+                setSelectedCategory("ALL");
+                setSelectedGatekeeper("ALL");
+              }
+            },
+            actionButton: {
+              label: "Buat Sales Order (SO)",
+              onClick: () => setIsCreateOpen(true),
+            },
+          }}
+          paginationProps={{
+            currentPage: 1,
+            totalPages: 1,
+            totalEntries: filteredOrders.length,
+            pageSize: 10,
+            onPageChange: () => {},
+          }}
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[1200px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold uppercase tracking-wider select-none">
+                  <th className="px-3.5 py-2.5 w-[50px] text-center text-slate-400">#</th>
+                  <th className="px-3.5 py-2.5 w-[180px]">No. Sales Order</th>
+                  <th className="px-3.5 py-2.5 w-[110px]">Tanggal</th>
+                  <th className="px-3.5 py-2.5 min-w-[200px]">Pelanggan & Brand</th>
+                  <th className="px-3.5 py-2.5 w-[140px]">Kategori</th>
+                  <th className="px-3.5 py-2.5 w-[120px]">Deadline Final</th>
+                  <th className="px-3.5 py-2.5 w-[150px] text-right">Total Nilai</th>
+                  <th className="px-3.5 py-2.5 w-[120px] text-center">Gatekeeper</th>
+                  <th className="px-3.5 py-2.5 w-[130px] text-center">Status Order</th>
+                  <th className="pr-4 py-2.5 w-[70px] text-right">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="p-8 text-center text-slate-400 text-xs">
+                      Tidak ada transaksi sales order yang sesuai dengan filter atau pencarian Anda.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredOrders.map((so, idx) => (
+                    <tr
+                      key={so.id}
+                      onClick={() => setSelectedDetail(so)}
+                      className="h-[48px] hover:bg-slate-50/60 transition-colors cursor-pointer group"
+                    >
+                      <td className="px-3.5 py-2.5 text-center text-slate-400 tabular-nums text-[12px]">{idx + 1}</td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Code code={so.soCode} />
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <DnaCell.Text text={so.orderDate} />
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <div>
+                          <div className="text-[12px] font-medium text-slate-900 line-clamp-1">{so.customerName}</div>
+                          <div className="text-[10.5px] text-slate-400 font-normal mt-0.5 line-clamp-1">{so.brandName}</div>
+                        </div>
+                      </td>
+                      <td className="px-3.5 py-2.5">
+                        <span className="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200 uppercase">
+                          {so.category.replace(/_/g, " ")}
+                        </span>
+                      </td>
+                      <td className="px-3.5 py-2.5 font-mono text-[11.5px] text-slate-700">
+                        {so.deadlineFinal}
+                      </td>
+                      <td className="px-3.5 py-2.5 text-right">
+                        <DnaCell.Numeric value={so.grandTotal} prefix="Rp " />
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleGatekeeper(so)}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-semibold border transition-all cursor-pointer ${
+                            so.gatekeeperStatus === "RELEASED"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                              : "bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100"
+                          }`}
+                          title="Klik untuk ubah gatekeeper logistik"
+                        >
+                          {so.gatekeeperStatus === "RELEASED" ? (
+                            <>
+                              <Unlock className="w-3 h-3 text-emerald-600" />
+                              RELEASED
+                            </>
+                          ) : (
+                            <>
+                              <Lock className="w-3 h-3 text-rose-600" />
+                              HELD
+                            </>
+                          )}
+                        </button>
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center">
+                        <DnaCell.Badge
+                          status={
+                            so.approvalStatus === "COMPLETED"
+                              ? "approved"
+                              : so.approvalStatus === "IN_PRODUCTION"
+                              ? "progress"
+                              : so.approvalStatus === "APPROVED"
+                              ? "info"
+                              : "pending"
+                          }
+                          label={so.approvalStatus}
+                        />
+                      </td>
+                      <td className="pr-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                        <DnaButton
+                          variant="ghost"
+                          className="h-7 w-7 p-0 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                          onClick={() => setSelectedDetail(so)}
+                          title="Lihat Detail"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                        </DnaButton>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </DnaDataTableCard>
-      </div>
+      )}
 
       {/* Modal Buat SO Baru (Multi-Line Cart & Deadline per PIC) */}
       <DnaModal
@@ -727,16 +735,23 @@ function SalesOrdersContent() {
         </div>
       </DnaModal>
 
-      {/* Modal Detail SO */}
-      {selectedDetail && (
-        <DnaModal
-          isOpen={true}
-          onClose={() => setSelectedDetail(null)}
-          title={`Detail Sales Order — ${selectedDetail.soCode}`}
-          subtitle={`${selectedDetail.customerName} (${selectedDetail.brandName})`}
-          size="lg"
-          footer={
-            <div className="flex justify-between items-center w-full">
+      {/* Drawer Detail SO */}
+      <DnaDetailDrawer
+        isOpen={!!selectedDetail}
+        onClose={() => setSelectedDetail(null)}
+        title={selectedDetail ? `Sales Order ${selectedDetail.soCode}` : "Detail Sales Order"}
+        subtitle={selectedDetail ? `${selectedDetail.customerName} (${selectedDetail.brandName})` : undefined}
+        badge={selectedDetail?.approvalStatus}
+        badgeVariant={
+          selectedDetail?.approvalStatus === "COMPLETED"
+            ? "success"
+            : selectedDetail?.approvalStatus === "IN_PRODUCTION"
+            ? "primary"
+            : "neutral"
+        }
+        actions={
+          selectedDetail && (
+            <>
               <button
                 type="button"
                 onClick={() => handleToggleGatekeeper(selectedDetail)}
@@ -749,33 +764,33 @@ function SalesOrdersContent() {
                 {selectedDetail.gatekeeperStatus === "RELEASED" ? (
                   <>
                     <Lock className="w-3.5 h-3.5" />
-                    Kunci Gatekeeper (Tahan Pengiriman DO)
+                    Kunci Gatekeeper (Tahan DO)
                   </>
                 ) : (
                   <>
                     <Unlock className="w-3.5 h-3.5" />
-                    Buka Kunci Gatekeeper (Otorisasi Pengiriman DO)
+                    Buka Gatekeeper (Siap Kirim DO)
                   </>
                 )}
               </button>
-              <div className="flex gap-2">
-                <DnaButton variant="ghost" onClick={() => setSelectedDetail(null)}>
-                  Tutup
-                </DnaButton>
-                <DnaButton
-                  variant="primary"
-                  onClick={() => {
-                    toast.info(`Mencetak Kontrak Penjualan ${selectedDetail.soCode}`);
-                  }}
-                  className="gap-1.5"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  Cetak Kontrak SO
-                </DnaButton>
-              </div>
-            </div>
-          }
-        >
+              <DnaButton
+                variant="primary"
+                onClick={() => {
+                  toast.info(`Mencetak Kontrak Penjualan ${selectedDetail.soCode}`);
+                }}
+                className="gap-1.5"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                Cetak SO
+              </DnaButton>
+              <DnaButton variant="outline" onClick={() => setSelectedDetail(null)}>
+                Tutup
+              </DnaButton>
+            </>
+          )
+        }
+      >
+        {selectedDetail && (
           <div className="space-y-4 text-xs">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
               <div>
@@ -826,34 +841,36 @@ function SalesOrdersContent() {
               <span className="text-[11px] font-bold text-slate-800 uppercase tracking-wider block">
                 Rincian Produk Dipesan
               </span>
-              <table className="w-full text-left border-collapse text-[12px]">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[10px] font-bold">
-                    <th className="p-2">PRODUK</th>
-                    <th className="p-2 text-center">NETTO</th>
-                    <th className="p-2 text-right">QTY</th>
-                    <th className="p-2 text-right">HARGA (RP)</th>
-                    <th className="p-2 text-right">DISKON (RP)</th>
-                    <th className="p-2 text-right">SUBTOTAL</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedDetail.items.map((it, idx) => (
-                    <tr key={idx} className="border-b border-slate-100">
-                      <td className="p-2 font-bold text-slate-800">{it.itemName}</td>
-                      <td className="p-2 text-center text-slate-500">{it.netto}</td>
-                      <td className="p-2 text-right font-medium">{it.qty.toLocaleString()} pcs</td>
-                      <td className="p-2 text-right font-medium">{formatCurrency(it.unitPrice)}</td>
-                      <td className="p-2 text-right text-rose-600 font-medium">
-                        {it.discount > 0 ? `-${formatCurrency(it.discount)}` : "—"}
-                      </td>
-                      <td className="p-2 text-right font-bold text-slate-900">
-                        {formatCurrency(it.subtotal)}
-                      </td>
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <table className="w-full text-left border-collapse text-[12px]">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[10px] font-bold">
+                      <th className="p-2.5">PRODUK</th>
+                      <th className="p-2.5 text-center">NETTO</th>
+                      <th className="p-2.5 text-right">QTY</th>
+                      <th className="p-2.5 text-right">HARGA (RP)</th>
+                      <th className="p-2.5 text-right">DISKON (RP)</th>
+                      <th className="p-2.5 text-right">SUBTOTAL</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {selectedDetail.items.map((it, idx) => (
+                      <tr key={idx}>
+                        <td className="p-2.5 font-bold text-slate-800">{it.itemName}</td>
+                        <td className="p-2.5 text-center text-slate-500">{it.netto}</td>
+                        <td className="p-2.5 text-right font-medium">{it.qty.toLocaleString()} pcs</td>
+                        <td className="p-2.5 text-right font-medium">{formatCurrency(it.unitPrice)}</td>
+                        <td className="p-2.5 text-right text-rose-600 font-medium">
+                          {it.discount > 0 ? `-${formatCurrency(it.discount)}` : "—"}
+                        </td>
+                        <td className="p-2.5 text-right font-bold text-slate-900">
+                          {formatCurrency(it.subtotal)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {selectedDetail.notes && (
@@ -863,8 +880,8 @@ function SalesOrdersContent() {
               </div>
             )}
           </div>
-        </DnaModal>
-      )}
+        )}
+      </DnaDetailDrawer>
     </div>
   );
 }

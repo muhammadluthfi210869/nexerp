@@ -91,7 +91,7 @@ export class CanonicalErrorFilter implements ExceptionFilter {
       // could never switch on the code the contract names.
       code = res.code || res.reason_code || res.error || code;
     }
-    return { status, code, message: msg };
+    return { status, code, message: msg, fieldErrors: res?.fieldErrors };
   }
 
   private fromError(err: any): ErrorPayload {

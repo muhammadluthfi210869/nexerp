@@ -1,11 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Percent,
   Plus,
   Edit3,
   Power,
+  Eye,
+  FileSpreadsheet,
+  Receipt,
+  CheckCircle2,
 } from "lucide-react";
 import {
   DnaPageHeader,
@@ -14,10 +18,9 @@ import {
   DnaButton,
   DnaDataTableCard,
   DnaTable,
-  DnaTableHead,
-  DNA_TABLE_CLASSES,
   DnaCell,
   DnaModal,
+  DnaDetailDrawer,
   DnaInput,
   DnaTextarea,
   useDnaToast,
@@ -25,7 +28,6 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
-import { cn } from "@/lib/utils";
 
 interface TaxRate {
   id: string;
@@ -45,10 +47,13 @@ const EMPTY_FORM: TaxRateForm = { name: "", rate: "", description: "" };
 
 export default function MasterTaxRatesPage() {
   const queryClient = useQueryClient();
-  const { showToast } = useDnaToast();
+  const { showToast, success, error } = useDnaToast();
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<TaxRateForm>(EMPTY_FORM);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTaxRate, setSelectedTaxRate] = useState<TaxRate | null>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
 
   const {
     data: taxRates,
@@ -70,12 +75,12 @@ export default function MasterTaxRatesPage() {
       return res.data;
     },
     onSuccess: () => {
-      showToast({ type: "success", title: "Tarif Pajak Ditambahkan", message: `${form.name} berhasil disimpan.` });
+      success(`Tarif pajak ${form.name} berhasil disimpan.`);
       queryClient.invalidateQueries({ queryKey: ["tax-rates"] });
       closeModal();
     },
     onError: (err: any) => {
-      showToast({ type: "error", title: "Gagal", message: err.response?.data?.message || "Tidak bisa menambah tarif." });
+      error(err.response?.data?.message || "Tidak bisa menambah tarif.");
     },
   });
 
@@ -85,12 +90,12 @@ export default function MasterTaxRatesPage() {
       return res.data;
     },
     onSuccess: () => {
-      showToast({ type: "success", title: "Tarif Pajak Diperbarui", message: `${form.name} berhasil diubah.` });
+      success(`Tarif pajak ${form.name} berhasil diubah.`);
       queryClient.invalidateQueries({ queryKey: ["tax-rates"] });
       closeModal();
     },
     onError: (err: any) => {
-      showToast({ type: "error", title: "Gagal", message: err.response?.data?.message || "Tidak bisa mengubah tarif." });
+      error(err.response?.data?.message || "Tidak bisa mengubah tarif.");
     },
   });
 
@@ -100,8 +105,11 @@ export default function MasterTaxRatesPage() {
       return res.data;
     },
     onSuccess: () => {
-      showToast({ type: "warning", title: "Status Diubah", message: "Tarif pajak dinonaktifkan." });
+      success("Status tarif pajak berhasil diperbarui.");
       queryClient.invalidateQueries({ queryKey: ["tax-rates"] });
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || "Gagal mengubah status tarif pajak.");
     },
   });
 
@@ -129,12 +137,12 @@ export default function MasterTaxRatesPage() {
 
   function handleSubmit() {
     if (!form.name.trim() || !form.rate) {
-      showToast({ type: "error", title: "Validasi Gagal", message: "Nama dan tarif wajib diisi." });
+      error("Nama dan persentase tarif wajib diisi.");
       return;
     }
     const rate = Number(form.rate);
     if (Number.isNaN(rate) || rate < 0 || rate > 100) {
-      showToast({ type: "error", title: "Validasi Gagal", message: "Tarif harus angka 0-100." });
+      error("Tarif harus berupa angka valid antara 0 - 100.");
       return;
     }
     const dto = { name: form.name, rate, description: form.description || undefined };
@@ -145,6 +153,18 @@ export default function MasterTaxRatesPage() {
     }
   }
 
+  const filteredTaxRates = useMemo(() => {
+    if (!taxRates) return [];
+    if (!searchQuery.trim()) return taxRates;
+    const q = searchQuery.toLowerCase();
+    return taxRates.filter(
+      (t) =>
+        t.name.toLowerCase().includes(q) ||
+        (t.description && t.description.toLowerCase().includes(q)) ||
+        String(t.rate).includes(q)
+    );
+  }, [taxRates, searchQuery]);
+
   const active = taxRates?.filter((t) => t.isActive).length || 0;
   const total = taxRates?.length || 0;
 
@@ -152,7 +172,7 @@ export default function MasterTaxRatesPage() {
     <div className="space-y-6 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
       <DnaPageHeader
         title="MASTER TARIF PAJAK"
-        badge={<DnaBadge status="info">MASTER DATA</DnaBadge>}
+        badge={<DnaBadge variant="info">MASTER DATA</DnaBadge>}
         subtitle="Konfigurasi tarif pajak (PPN, PPh) yang dipakai di seluruh transaksi penjualan, pembelian, dan jurnal."
         breadcrumbItems={[
           { label: "Master", href: "/master" },
@@ -161,7 +181,7 @@ export default function MasterTaxRatesPage() {
         actions={
           <DnaButton variant="primary" onClick={openCreate} className="flex items-center gap-1.5">
             <Plus className="w-3.5 h-3.5" />
-            <span>+ Tambah Tarif</span>
+            <span>Tambah Tarif</span>
           </DnaButton>
         }
       />
@@ -173,108 +193,219 @@ export default function MasterTaxRatesPage() {
       </div>
 
       <DnaDataTableCard
-        title="DAFTAR TARIF PAJAK"
-        count={total}
-        badge={<DnaBadge status="neutral">PPN & PPh</DnaBadge>}
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari nama tarif atau deskripsi pajak...",
+          actionButton: {
+            label: "Tambah Tarif",
+            onClick: openCreate,
+          },
+        }}
       >
-        <DnaTable>
-          <DnaTableHead>
-            <tr>
-              <th className={cn(DNA_TABLE_CLASSES.th, "w-12 text-center")}>#</th>
-              <th className={DNA_TABLE_CLASSES.th}>Nama Tarif</th>
-              <th className={cn(DNA_TABLE_CLASSES.th, "text-right")}>Persentase</th>
-              <th className={DNA_TABLE_CLASSES.th}>Deskripsi</th>
-              <th className={cn(DNA_TABLE_CLASSES.th, "text-center")}>Status</th>
-              <th className={cn(DNA_TABLE_CLASSES.th, "text-center w-32")}>Aksi</th>
-            </tr>
-          </DnaTableHead>
-          <tbody className={DNA_TABLE_CLASSES.tbody}>
-            {isLoading ? (
-              <tr>
-                <td colSpan={6} className="p-6 text-center text-xs text-slate-400">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                    <span>Memuat data tarif pajak...</span>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[800px]">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold tracking-wider uppercase select-none">
+                <th className="px-3.5 py-2.5 w-12 text-center text-slate-400">#</th>
+                <th className="px-3.5 py-2.5">Nama Tarif Pajak</th>
+                <th className="px-3.5 py-2.5 text-right w-[150px]">Persentase (%)</th>
+                <th className="px-3.5 py-2.5">Deskripsi & Ruang Lingkup</th>
+                <th className="px-3.5 py-2.5 text-center w-[120px]">Status</th>
+                <th className="px-3.5 py-2.5 text-center w-[120px] whitespace-nowrap">Aksi</th>
               </tr>
-            ) : isError ? (
-              <tr>
-                <td colSpan={6} className="p-6 text-center text-xs text-rose-500">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <span>Gagal memuat data tarif pajak: {(taxRatesError as any)?.message || "Terjadi kesalahan"}</span>
-                    <button
-                      type="button"
-                      onClick={() => refetch()}
-                      className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors inline-block"
-                    >
-                      Coba Lagi
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ) : !taxRates || taxRates.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="p-6 text-center text-xs text-slate-400">
-                  Belum ada tarif. Klik "Tambah Tarif" untuk membuat.
-                </td>
-              </tr>
-            ) : (
-              taxRates.map((tr, idx) => (
-                <tr key={tr.id} className={DNA_TABLE_CLASSES.tr}>
-                  <td className={cn(DNA_TABLE_CLASSES.td, "text-center font-mono text-slate-400")}>
-                    {idx + 1}
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="px-3.5 py-8 text-center text-xs text-slate-400">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      <span>Memuat data tarif pajak...</span>
+                    </div>
                   </td>
-                  <td className={DNA_TABLE_CLASSES.td}>
-                    <DnaCell.Text primary={tr.name} />
-                  </td>
-                  <td className={cn(DNA_TABLE_CLASSES.td, "text-right font-mono font-bold")}>
-                    {Number(tr.rate).toFixed(2)}%
-                  </td>
-                  <td className={cn(DNA_TABLE_CLASSES.td, "text-xs text-slate-600")}>
-                    {tr.description || <span className="text-slate-300">—</span>}
-                  </td>
-                  <td className={cn(DNA_TABLE_CLASSES.td, "text-center")}>
-                    <DnaBadge status={tr.isActive ? "success" : "neutral"}>
-                      {tr.isActive ? "AKTIF" : "NON-AKTIF"}
-                    </DnaBadge>
-                  </td>
-                  <td className={cn(DNA_TABLE_CLASSES.td, "text-center")}>
-                    <div className="flex items-center justify-center gap-1.5">
+                </tr>
+              ) : isError ? (
+                <tr>
+                  <td colSpan={6} className="px-3.5 py-8 text-center text-xs text-rose-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <span>Gagal memuat data tarif pajak: {(taxRatesError as any)?.message || "Terjadi kesalahan"}</span>
                       <button
                         type="button"
-                        onClick={() => openEdit(tr)}
-                        className="p-1 text-slate-500 hover:text-blue-600 rounded transition-colors"
-                        title="Sunting"
+                        onClick={() => refetch()}
+                        className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors inline-block"
                       >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (confirm(`Nonaktifkan tarif "${tr.name}"?`)) {
-                            toggleMutation.mutate(tr.id);
-                          }
-                        }}
-                        className={cn(
-                          "p-1 rounded transition-colors",
-                          tr.isActive
-                            ? "text-slate-400 hover:text-rose-600"
-                            : "text-emerald-500 hover:text-emerald-700"
-                        )}
-                        title={tr.isActive ? "Nonaktifkan" : "Aktifkan kembali (perlu edit)"}
-                        disabled={!tr.isActive}
-                      >
-                        <Power className="w-3.5 h-3.5" />
+                        Coba Lagi
                       </button>
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </DnaTable>
+              ) : filteredTaxRates.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-3.5 py-8 text-center text-xs text-slate-400">
+                    Belum ada tarif yang sesuai filter.
+                  </td>
+                </tr>
+              ) : (
+                filteredTaxRates.map((tr, idx) => (
+                  <tr
+                    key={tr.id}
+                    className="h-[48px] hover:bg-slate-50/80 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setSelectedTaxRate(tr);
+                      setIsDetailDrawerOpen(true);
+                    }}
+                  >
+                    <td className="px-3.5 py-2.5 text-center font-mono text-slate-400 text-[11px] tabular-nums">
+                      {idx + 1}
+                    </td>
+                    <td className="px-3.5 py-2.5">
+                      <DnaCell.Text className="font-semibold text-slate-900">{tr.name}</DnaCell.Text>
+                    </td>
+                    <td className="px-3.5 py-2.5 text-right">
+                      <DnaCell.Numeric
+                        value={Number(tr.rate)}
+                        suffix="%"
+                        className="font-mono font-bold text-blue-600"
+                      />
+                    </td>
+                    <td className="px-3.5 py-2.5">
+                      <DnaCell.Text className="text-slate-600">
+                        {tr.description || <span className="text-slate-300">-</span>}
+                      </DnaCell.Text>
+                    </td>
+                    <td className="px-3.5 py-2.5 text-center">
+                      <DnaBadge variant={tr.isActive ? "success" : "neutral"}>
+                        {tr.isActive ? "AKTIF" : "NON-AKTIF"}
+                      </DnaBadge>
+                    </td>
+                    <td className="px-3.5 py-2.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-1">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
+                          onClick={() => {
+                            setSelectedTaxRate(tr);
+                            setIsDetailDrawerOpen(true);
+                          }}
+                          title="Lihat Detail"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </DnaButton>
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
+                          onClick={() => openEdit(tr)}
+                          title="Sunting Tarif"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </DnaButton>
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          className={`h-7 w-7 p-0 ${tr.isActive ? "text-slate-400 hover:text-rose-600" : "text-emerald-500 hover:text-emerald-700"}`}
+                          onClick={() => toggleMutation.mutate(tr.id)}
+                          title={tr.isActive ? "Nonaktifkan" : "Aktifkan"}
+                        >
+                          <Power className="w-3.5 h-3.5" />
+                        </DnaButton>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </DnaDataTableCard>
+
+      {/* ── DETAIL DRAWER TARIF PAJAK (Golden Rule 5) ── */}
+      <DnaDetailDrawer
+        isOpen={isDetailDrawerOpen}
+        onClose={() => setIsDetailDrawerOpen(false)}
+        title={selectedTaxRate?.name || "Detail Tarif Pajak"}
+        subtitle={`Tarif: ${selectedTaxRate ? Number(selectedTaxRate.rate).toFixed(2) : 0}% • Status: ${selectedTaxRate?.isActive ? "Aktif" : "Non-Aktif"}`}
+        badge={
+          selectedTaxRate?.isActive ? (
+            <DnaBadge variant="success">TARIF AKTIF</DnaBadge>
+          ) : (
+            <DnaBadge variant="neutral">NON-AKTIF</DnaBadge>
+          )
+        }
+        tabs={[
+          {
+            id: "specs",
+            label: "Detail & Ketentuan",
+            content: selectedTaxRate ? (
+              <div className="space-y-4 text-xs">
+                <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Nama Tarif Pajak</span>
+                    <span className="font-bold text-slate-900 text-sm">{selectedTaxRate.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Persentase Pemotongan / Pungutan</span>
+                    <span className="font-mono font-bold text-blue-600 text-sm">
+                      {Number(selectedTaxRate.rate).toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-slate-500 block text-[11px]">Deskripsi & Ruang Lingkup Pengenaan</span>
+                    <span className="text-slate-700">
+                      {selectedTaxRate.description || "Tidak ada deskripsi tambahan untuk tarif ini."}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Receipt className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <span className="font-bold text-slate-900 block">Modul yang Menggunakan</span>
+                      <span className="text-slate-500 text-[11px]">Invoice Penjualan, Purchase Order, Jurnal Memorial</span>
+                    </div>
+                  </div>
+                  <DnaBadge variant="info">Otomatis</DnaBadge>
+                </div>
+              </div>
+            ) : null,
+          },
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              icon={<FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />}
+              onClick={() => {
+                success(`Rekapitulasi tarif ${selectedTaxRate?.name} diekspor.`);
+              }}
+            >
+              Export Rekap
+            </DnaButton>
+            <div className="flex items-center gap-2">
+              <DnaButton
+                variant="secondary"
+                size="sm"
+                icon={<Edit3 className="w-3.5 h-3.5" />}
+                onClick={() => {
+                  if (selectedTaxRate) {
+                    setIsDetailDrawerOpen(false);
+                    openEdit(selectedTaxRate);
+                  }
+                }}
+              >
+                Sunting
+              </DnaButton>
+              <DnaButton variant="primary" size="sm" onClick={() => setIsDetailDrawerOpen(false)}>
+                Selesai
+              </DnaButton>
+            </div>
+          </div>
+        }
+      />
 
       <DnaModal
         isOpen={isOpen}

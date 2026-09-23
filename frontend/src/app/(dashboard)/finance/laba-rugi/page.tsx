@@ -34,9 +34,14 @@ import {
   formatRupiah,
   useDnaToast,
   DnaInput,
-  DnaCheckbox
+  DnaCheckbox,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd
 } from "@/components/dna";
-import { DnaTable } from "@/components/dna";
 
 interface StatementRow {
   code: string;
@@ -201,24 +206,24 @@ export default function LabaRugiReportPage() {
         }
       >
         <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3 w-28">Kode Akun</th>
-                <th className="px-3.5 py-3">Uraian / Deskripsi Akun (Hierarki G-SERP)</th>
-                <th className="px-3.5 py-3 text-right">Periode Berjalan (Rp)</th>
-                {showComparison && <th className="px-3.5 py-3 text-right">Periode Lalu (Rp)</th>}
-                {showComparison && <th className="px-3.5 py-3 text-right">Pertumbuhan (%)</th>}
-                <th className="px-3.5 py-3 text-center">#</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable className="w-full text-left text-xs">
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="w-28">Kode Akun</DnaTh>
+                <DnaTh>Uraian / Deskripsi Akun (Hierarki G-SERP)</DnaTh>
+                <DnaTh className="text-right">Periode Berjalan (Rp)</DnaTh>
+                {showComparison && <DnaTh className="text-right">Periode Lalu (Rp)</DnaTh>}
+                {showComparison && <DnaTh className="text-right">Pertumbuhan (%)</DnaTh>}
+                <DnaTh className="text-center w-12">#</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {FALLBACK_P_AND_L_ROWS.map((row, idx) => {
                 const isHeader = row.isHeader;
                 const isTotal = row.isTotal;
 
                 return (
-                  <tr
+                  <DnaTableRow
                     key={idx}
                     className={`transition-colors ${
                       isHeader
@@ -228,26 +233,26 @@ export default function LabaRugiReportPage() {
                         : "hover:bg-slate-50/50 text-slate-700"
                     }`}
                   >
-                    <td className="px-3.5 py-2 font-mono text-[11px] text-slate-500 font-semibold">
+                    <DnaTd className="text-[11px] text-slate-500 font-semibold tabular-nums">
                       {row.code.startsWith("TOT_") || row.code === "GROSS_PRF" || row.code.startsWith("NET_") ? "" : row.code}
-                    </td>
-                    <td className={`px-3.5 py-2 ${row.level === 1 ? "pl-8 text-slate-800" : "font-extrabold text-slate-900"}`}>
+                    </DnaTd>
+                    <DnaTd className={row.level === 1 ? "pl-8 text-slate-800" : "font-extrabold text-slate-900"}>
                       {row.name}
-                    </td>
-                    <td className={`px-3.5 py-2 text-right ${isTotal ? "font-black text-sm text-slate-900" : "font-semibold"}`}>
+                    </DnaTd>
+                    <DnaTd className={`text-right tabular-nums ${isTotal ? "font-black text-sm text-slate-900" : "font-semibold"}`}>
                       {isHeader ? "" : formatRupiah(row.currentAmount)}
-                    </td>
+                    </DnaTd>
                     {showComparison && (
-                      <td className="px-3.5 py-2 text-right text-slate-500 font-medium">
+                      <DnaTd className="text-right text-slate-500 font-medium tabular-nums">
                         {isHeader ? "" : formatRupiah(row.prevAmount)}
-                      </td>
+                      </DnaTd>
                     )}
                     {showComparison && (
-                      <td className="px-3.5 py-2 text-right font-bold text-emerald-700">
+                      <DnaTd className="text-right font-bold text-emerald-700 tabular-nums">
                         {isHeader ? "" : `+${row.growthPct}%`}
-                      </td>
+                      </DnaTd>
                     )}
-                    <td className="px-3.5 py-2 text-center">
+                    <DnaTd className="text-center">
                       {!isHeader && !isTotal && (
                         <button
                           onClick={() => setSelectedRow(row)}
@@ -257,11 +262,11 @@ export default function LabaRugiReportPage() {
                           <Eye className="w-3.5 h-3.5" />
                         </button>
                       )}
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 );
               })}
-            </tbody>
+            </DnaTableBody>
           </DnaTable>
         </div>
       </DnaDataTableCard>
@@ -287,24 +292,24 @@ export default function LabaRugiReportPage() {
           <div className="border border-slate-200 rounded-lg p-3">
             <p className="text-slate-700 font-semibold mb-2">Daftar Jurnal Transaksi Pembentuk Saldo:</p>
             <DnaTable className="w-full text-left text-[11px]">
-              <thead>
-                <tr className="border-b border-slate-200 text-slate-500 font-semibold">
-                  <th className="py-1">Tanggal</th>
-                  <th className="py-1">No. Jurnal</th>
-                  <th className="py-1">Deskripsi Transaksi</th>
-                  <th className="py-1 text-right">Debit</th>
-                  <th className="py-1 text-right">Kredit</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                <tr>
-                  <td className="py-2 text-slate-600">2026-09-08</td>
-                  <td className="py-2 font-mono text-blue-700 font-semibold">DL-FIN-JRN-08092026-0001</td>
-                  <td className="py-2 text-slate-800">Realisasi Termin PO-8821 PT Glowing</td>
-                  <td className="py-2 text-right text-emerald-700 font-bold">Rp 450.000.000</td>
-                  <td className="py-2 text-right text-slate-400">-</td>
-                </tr>
-              </tbody>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 text-slate-500 font-semibold">
+                  <DnaTh className="py-1">Tanggal</DnaTh>
+                  <DnaTh className="py-1">No. Jurnal</DnaTh>
+                  <DnaTh className="py-1">Deskripsi Transaksi</DnaTh>
+                  <DnaTh className="py-1 text-right">Debit</DnaTh>
+                  <DnaTh className="py-1 text-right">Kredit</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody className="divide-y divide-slate-100">
+                <DnaTableRow>
+                  <DnaTd className="py-2 text-slate-600 tabular-nums">2026-09-08</DnaTd>
+                  <DnaTd className="py-2 text-blue-700 font-semibold tabular-nums">DL-FIN-JRN-08092026-0001</DnaTd>
+                  <DnaTd className="py-2 text-slate-800">Realisasi Termin PO-8821 PT Glowing</DnaTd>
+                  <DnaTd className="py-2 text-right text-emerald-700 font-bold tabular-nums">Rp 450.000.000</DnaTd>
+                  <DnaTd className="py-2 text-right text-slate-400">-</DnaTd>
+                </DnaTableRow>
+              </DnaTableBody>
             </DnaTable>
           </div>
           <div className="flex justify-end pt-2 border-t border-slate-100">

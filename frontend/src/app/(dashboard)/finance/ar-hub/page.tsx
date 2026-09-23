@@ -24,14 +24,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 import { DnaInput, DnaButton, DnaBadge, DnaStatCard, DnaPageContainer, DnaPageHeader, DnaKpiGrid, DnaDataTableCard, DnaSelect, DnaTabNav, DnaTextarea } from "@/components/dna";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/dna";
 import {
-  DnaTable as Table,
-  DnaTableBody as TableBody,
-  DnaTd as TableCell,
-  DnaTh as TableHead,
-  DnaTableHead as TableHeader,
-  DnaTableRow as TableRow,
+  DnaTable,
+  DnaTableBody,
+  DnaTd,
+  DnaTh,
+  DnaTableHead,
+  DnaTableRow,
 } from "@/components/dna";
 
 // Static Data from Plan
@@ -153,22 +153,22 @@ export default function ARHubPrototype() {
           }
         >
           <div hidden={activeTab !== "products"} className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50/50">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="pl-6 py-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Faktur Identity</TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">SO / Client</TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">DO Reference</TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Valuation</TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Outstanding</TableHead>
-                  <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
-                  <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <DnaTable className="table-dense">
+              <DnaTableHead className="bg-slate-50/50">
+                <DnaTableRow className="hover:bg-transparent border-slate-100">
+                  <DnaTh className="pl-6 py-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Faktur Identity</DnaTh>
+                  <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">SO / Client</DnaTh>
+                  <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">DO Reference</DnaTh>
+                  <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Valuation</DnaTh>
+                  <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Outstanding</DnaTh>
+                  <DnaTh className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</DnaTh>
+                  <DnaTh className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Actions</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {STATIC_SALES_INVOICES.map((inv) => (
-                  <TableRow key={inv.kode_faktur} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                    <TableCell className="pl-6 py-4">
+                  <DnaTableRow key={inv.kode_faktur} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                    <DnaTd className="pl-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                           <FileIcon className="h-4.5 w-4.5" />
@@ -178,28 +178,28 @@ export default function ARHubPrototype() {
                           <span className="text-[9px] font-medium text-slate-400 uppercase">{inv.tanggal}</span>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="py-4">
+                    </DnaTd>
+                    <DnaTd className="py-4">
                       <div className="flex flex-col">
                         <span className="font-black text-slate-900 text-[11px] uppercase">{inv.kode_so}</span>
                         <span className="text-[9px] font-medium text-blue-600 uppercase italic">{inv.pelanggan}</span>
                       </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <DnaBadge status="default">{inv.kode_do}</DnaBadge>
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 text-slate-900 text-xs font-black">
+                    </DnaTd>
+                    <DnaTd className="py-4">
+                      <DnaBadge variant="default">{inv.kode_do}</DnaBadge>
+                    </DnaTd>
+                    <DnaTd className="text-right tabular-nums py-4 text-slate-900 text-xs font-semibold">
                       Rp {inv.grand_total.toLocaleString('id-ID')}
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 text-rose-600 text-xs font-black">
+                    </DnaTd>
+                    <DnaTd className="text-right tabular-nums py-4 text-rose-600 text-xs font-semibold">
                       Rp {inv.sisa.toLocaleString('id-ID')}
-                    </TableCell>
-                    <TableCell className="text-center py-4">
-                      <DnaBadge status={inv.status === "Lunas" ? "success" : "critical"}>
+                    </DnaTd>
+                    <DnaTd className="text-center py-4">
+                      <DnaBadge variant={inv.status === "Lunas" ? "success" : "critical"}>
                         {inv.status}
                       </DnaBadge>
-                    </TableCell>
-                    <TableCell className="pr-6 text-right py-4">
+                    </DnaTd>
+                    <DnaTd className="pr-6 text-right py-4">
                       <div className="flex justify-end gap-2">
                         <DnaButton variant="outline" className="h-8 w-8 p-0 rounded-lg bg-slate-50 hover:bg-gray-100 hover:text-gray-900 transition-all shadow-sm">
                           <Eye className="h-3.5 w-3.5" />
@@ -214,29 +214,29 @@ export default function ARHubPrototype() {
                           </DnaButton>
                         )}
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </TableBody>
-            </Table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
 
           <div hidden={activeTab !== "samples"} className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50/50">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="pl-6 py-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Sample Identity</TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Pelanggan / Produk</TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Valuation</TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Outstanding</TableHead>
-                  <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
-                  <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <DnaTable className="table-dense">
+              <DnaTableHead className="bg-slate-50/50">
+                <DnaTableRow className="hover:bg-transparent border-slate-100">
+                  <DnaTh className="pl-6 py-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Sample Identity</DnaTh>
+                  <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Pelanggan / Produk</DnaTh>
+                  <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Valuation</DnaTh>
+                  <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Outstanding</DnaTh>
+                  <DnaTh className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</DnaTh>
+                  <DnaTh className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Actions</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {STATIC_SAMPLE_INVOICES.map((inv) => (
-                  <TableRow key={inv.kode_faktur} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                    <TableCell className="pl-6 py-4">
+                  <DnaTableRow key={inv.kode_faktur} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                    <DnaTd className="pl-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                           <FlaskConical className="h-4.5 w-4.5" />
@@ -246,25 +246,25 @@ export default function ARHubPrototype() {
                           <span className="text-[9px] font-medium text-slate-400 uppercase">Ref: {inv.kode_sample}</span>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="py-4">
+                    </DnaTd>
+                    <DnaTd className="py-4">
                       <div className="flex flex-col">
                         <span className="font-black text-slate-900 text-[11px] uppercase">{inv.pelanggan}</span>
                         <span className="text-[9px] font-medium text-blue-600 uppercase italic">{inv.produk}</span>
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 text-slate-900 text-xs font-black">
+                    </DnaTd>
+                    <DnaTd className="text-right tabular-nums py-4 text-slate-900 text-xs font-semibold">
                       Rp {inv.grand_total.toLocaleString('id-ID')}
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 text-rose-600 text-xs font-black">
+                    </DnaTd>
+                    <DnaTd className="text-right tabular-nums py-4 text-rose-600 text-xs font-semibold">
                       Rp {inv.sisa.toLocaleString('id-ID')}
-                    </TableCell>
-                    <TableCell className="text-center py-4">
-                      <DnaBadge status={inv.status === "Lunas" ? "success" : "critical"}>
+                    </DnaTd>
+                    <DnaTd className="text-center py-4">
+                      <DnaBadge variant={inv.status === "Lunas" ? "success" : "critical"}>
                         {inv.status}
                       </DnaBadge>
-                    </TableCell>
-                    <TableCell className="pr-6 text-right py-4">
+                    </DnaTd>
+                    <DnaTd className="pr-6 text-right py-4">
                       <div className="flex justify-end gap-2">
                         <DnaButton variant="outline" className="h-8 w-8 p-0 rounded-lg bg-slate-50 hover:bg-gray-100 hover:text-gray-900 transition-all shadow-sm">
                           <Eye className="h-3.5 w-3.5" />
@@ -277,11 +277,11 @@ export default function ARHubPrototype() {
                           <CircleDollarSign className="mr-1.5 h-3.5 w-3.5" /> Collect
                         </DnaButton>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </TableBody>
-            </Table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
 
           <div hidden={activeTab !== "returns"} className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">

@@ -1,10 +1,18 @@
-import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsDateString,
+  IsBoolean,
+} from 'class-validator';
 import { InvoiceType } from '@prisma/client';
 
 export class CreateInvoiceDto {
   @IsString()
   @IsNotEmpty()
-  id!: string; // INV-SO-XXX-DP
+  id!: string; // INV-SO-XXX-DP or INV-XXXX
 
   @IsString()
   @IsNotEmpty()
@@ -17,4 +25,16 @@ export class CreateInvoiceDto {
   @IsNumber()
   @IsNotEmpty()
   amountDue!: number;
+
+  @IsOptional()
+  @IsDateString()
+  invoiceDate?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  overrideCreditLimit?: boolean;
+
+  @IsOptional()
+  @IsString()
+  overrideReason?: string;
 }

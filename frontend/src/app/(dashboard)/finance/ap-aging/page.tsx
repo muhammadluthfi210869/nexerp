@@ -46,13 +46,6 @@ interface ApAgingItem {
   bucket: "Current" | "1-30" | "31-60" | ">60";
 }
 
-const FALLBACK_AP_ITEMS: ApAgingItem[] = [
-  { id: "1", vendor: "PT Bahan Kimia Aktif Nusantara", invoiceNo: "BILL-2609-012", invoiceDate: "2026-08-25", deadline: "2026-09-12", statusDueDate: "H-3", daysOverdue: 0, amount: 280000000, bucket: "Current" },
-  { id: "2", vendor: "CV Botol & Jar Kemas Lestari", invoiceNo: "BILL-2608-088", invoiceDate: "2026-08-16", deadline: "2026-09-16", statusDueDate: "H-7", daysOverdue: 0, amount: 160000000, bucket: "Current" },
-  { id: "3", vendor: "PT Percetakan Box & Folding Karton", invoiceNo: "BILL-2608-041", invoiceDate: "2026-07-15", deadline: "2026-08-15", statusDueDate: "OVERDUE", daysOverdue: 25, amount: 95000000, bucket: "1-30" },
-  { id: "4", vendor: "PT Aroma Fragrance Essential", invoiceNo: "BILL-2607-010", invoiceDate: "2026-06-20", deadline: "2026-07-20", statusDueDate: "OVERDUE", daysOverdue: 51, amount: 155000000, bucket: "31-60" },
-];
-
 export default function ApAgingReportPage() {
   const toast = useDnaToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,23 +53,61 @@ export default function ApAgingReportPage() {
   const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
   const [selectedInvoice, setSelectedInvoice] = useState<ApAgingItem | null>(null);
 
-  // Real-time Saldo Bank (Poin 10-12)
+  // Live AP / Bills query
+  const { data: billsRaw = [], isLoading } = useQuery({
+    queryKey: ["finance-ap-aging-bills"],
+    queryFn: async (): Promise<any[]> => {
+      const res = await api.get("/finance/bills");
+      return unwrapResponse<any[]>(res) || [];
+    },
+  });
+
   const realTimeBankBalance = 1550000000;
 
-  const totalOutstanding = useMemo(() => FALLBACK_AP_ITEMS.reduce((acc, r) => acc + r.amount, 0), []);
-  const countH3 = useMemo(() => FALLBACK_AP_ITEMS.filter((r) => r.statusDueDate === "H-3").length, []);
-  const countH7 = useMemo(() => FALLBACK_AP_ITEMS.filter((r) => r.statusDueDate === "H-7").length, []);
-  const overdueCount = useMemo(() => FALLBACK_AP_ITEMS.filter((r) => r.statusDueDate === "OVERDUE").length, []);
+  const apItems: ApAgingItem[] = useMemo(() => {
+    const now = new Date();
+    return (billsRaw || []).map((b: any) => {
+      const deadline = b.dueDate || b.createdAt;
+      const daysToDue = deadline ? Math.ceil((new Date(deadline).getTime() - now.getTime()) / 86400000) : 0;
+      const daysOverdue = daysToDue < 0 ? Math.abs(daysToDue) : 0;
+      let statusDueDate: "H-3" | "H-7" | "OVERDUE" | "NORMAL" = "NORMAL";
+      if (daysToDue < 0) statusDueDate = "OVERDUE";
+      else if (daysToDue <= 3) statusDueDate = "H-3";
+      else if (daysToDue <= 7) statusDueDate = "H-7";
+
+      let bucket: "Current" | "1-30" | "31-60" | ">60" = "Current";
+      if (daysOverdue > 60) bucket = ">60";
+      else if (daysOverdue > 30) bucket = "31-60";
+      else if (daysOverdue > 0) bucket = "1-30";
+
+      return {
+        id: b.id,
+        vendor: b.supplier?.name || b.lead?.clientName || "Vendor Supplier",
+        invoiceNo: b.invoiceNumber || `BILL-${b.id?.slice(0, 8)}`,
+        invoiceDate: b.createdAt ? new Date(b.createdAt).toISOString().split("T")[0] : "",
+        deadline: deadline ? new Date(deadline).toISOString().split("T")[0] : "",
+        statusDueDate,
+        daysOverdue,
+        amount: Number(b.amountDue || b.totalAmount || 0),
+        bucket,
+      };
+    });
+  }, [billsRaw]);
+
+  const totalOutstanding = useMemo(() => apItems.reduce((acc, r) => acc + r.amount, 0), [apItems]);
+  const countH3 = useMemo(() => apItems.filter((r) => r.statusDueDate === "H-3").length, [apItems]);
+  const countH7 = useMemo(() => apItems.filter((r) => r.statusDueDate === "H-7").length, [apItems]);
+  const overdueCount = useMemo(() => apItems.filter((r) => r.statusDueDate === "OVERDUE").length, [apItems]);
 
   const filteredItems = useMemo(() => {
-    return FALLBACK_AP_ITEMS.filter((item) => {
+    return apItems.filter((item) => {
       const matchSearch =
         item.vendor.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.invoiceNo.toLowerCase().includes(searchQuery.toLowerCase());
       const matchBucket = bucketFilter === "ALL" || item.bucket === bucketFilter;
       return matchSearch && matchBucket;
     });
-  }, [searchQuery, bucketFilter]);
+  }, [apItems, searchQuery, bucketFilter]);
 
   return (
     <DnaPageContainer>
@@ -109,7 +140,7 @@ export default function ApAgingReportPage() {
           label="Total Outstanding AP"
           value={formatRupiah(totalOutstanding)}
           icon={<DollarSign className="w-5 h-5 text-rose-600" />}
-          delta={{ value: `${FALLBACK_AP_ITEMS.length} Faktur Supplier`, isPositive: false }}
+          delta={{ value: `${apItems.length} Faktur Supplier`, isPositive: false }}
           subtext="Total Kewajiban Hutang Berjalan"
           variant="critical"
         />

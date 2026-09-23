@@ -1,7 +1,6 @@
 "use client";
-export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -15,214 +14,265 @@ import {
   Send,
   Clock,
   Moon,
+  Bookmark,
+  CheckCircle2,
+  FileText,
 } from "lucide-react";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { DashboardShell } from "@/components/layout/DashboardShell";
 import {
+  DnaPageHeader,
   DnaCard,
   DnaButton,
   DnaInput,
   DnaSelect,
-  DnaTabNav,
-  DnaModal,
+  DnaBadge,
+  DnaConfirmDialog,
+  useDnaToast,
 } from "@/components/dna";
 
-// SPEC: SCR-LEG-INPUT-001 — Compliance Entry Portal (HKI / BPOM / Halal) tabs with date inputs
+type FormType = "hki" | "bpom" | "halal";
 
-type FormType = 'hki' | 'bpom' | 'halal';
-
-const FORM_CONFIGS: Record<FormType, { dotColor: string; title: string; submitLabel: string; fields: any[] }> = {
+const FORM_CONFIGS: Record<
+  FormType,
+  {
+    badgeVariant: "purple" | "info" | "success";
+    title: string;
+    subtitle: string;
+    submitLabel: string;
+    fields: { label: string; name: string; icon: any; placeholder: string; required?: boolean; type?: string }[];
+  }
+> = {
   hki: {
-    dotColor: "bg-blue-600",
-    title: "HKI BRANDING REGISTRY",
-    submitLabel: "FILE HKI RECORD",
+    badgeVariant: "purple",
+    title: "PENDAFTARAN HKI & MEREK DAGANG",
+    subtitle: "Inisialisasi pendaftaran nama brand, logo grafis, dan perlindungan kelas kosmetik ke DJKI Kemenkumham",
+    submitLabel: "Daftarkan Berkas HKI",
     fields: [
-      { label: "HKI ID / Application Number", name: "hkiId", icon: Tag, placeholder: "e.g. IPT20240001", required: true },
-      { label: "Brand Name", name: "brandName", icon: ShieldCheck, placeholder: "e.g. Nex White", required: true },
-      { label: "Type / Class", name: "type", icon: FileCheck, placeholder: "e.g. Cosmetic Class 3", required: true },
-      { label: "Client Name", name: "clientName", icon: Building2, placeholder: "e.g. PT Nex Industri", required: true },
-      { label: "Application Date", name: "applicationDate", icon: Calendar, type: "date", required: true },
-      { label: "Expiry Date (Optional)", name: "expiryDate", icon: Clock, type: "date" },
+      { label: "Nomor Permohonan / ID HKI *", name: "hkiId", icon: Tag, placeholder: "e.g. IPT20240001", required: true },
+      { label: "Nama Brand / Merek *", name: "brandName", icon: ShieldCheck, placeholder: "e.g. Nex White Aesthetic", required: true },
+      { label: "Kelas Merek (Klasifikasi Nice) *", name: "type", icon: FileCheck, placeholder: "e.g. Kelas 3 (Kosmetika)", required: true },
+      { label: "Nama Klien / Pemilik Hak *", name: "clientName", icon: Building2, placeholder: "e.g. PT Nex Industri Kosmetika", required: true },
+      { label: "Tanggal Pengajuan Permohonan *", name: "applicationDate", icon: Calendar, type: "date", placeholder: "", required: true },
+      { label: "Estimasi Selesai / Kadaluarsa", name: "expiryDate", icon: Clock, type: "date", placeholder: "" },
     ],
   },
   bpom: {
-    dotColor: "bg-emerald-600",
-    title: "BPOM PRODUCT REGISTRY",
-    submitLabel: "FILE BPOM RECORD",
+    badgeVariant: "info",
+    title: "PENGAJUAN NOTIFIKASI BPOM KOSMETIK",
+    subtitle: "Pendaftaran formula, klaim kosmetik, dan pemenuhan berkas dossier produk ke Badan POM RI",
+    submitLabel: "Daftarkan Berkas BPOM",
     fields: [
-      { label: "BPOM ID / NI Number", name: "bpomId", icon: Tag, placeholder: "e.g. NA18240001", required: true },
-      { label: "Product Name", name: "productName", icon: FlaskConical, placeholder: "e.g. Anti-Aging Serum", required: true },
-      { label: "Category", name: "category", icon: FileCheck, placeholder: "e.g. Skin Care", required: true },
-      { label: "Client Name", name: "clientName", icon: Building2, placeholder: "e.g. PT Artha Prima", required: true },
-      { label: "Application Date", name: "applicationDate", icon: Calendar, type: "date", required: true },
-      { label: "Expiry Date (Optional)", name: "expiryDate", icon: Clock, type: "date" },
+      { label: "Nomor Notifikasi / Kode BPOM *", name: "bpomId", icon: Tag, placeholder: "e.g. NA18240001234", required: true },
+      { label: "Nama Produk Lengkap *", name: "productName", icon: FlaskConical, placeholder: "e.g. Anti-Aging Barrier Serum 30ml", required: true },
+      { label: "Kategori Produk Kosmetik *", name: "category", icon: FileCheck, placeholder: "e.g. Skin Care / Wajah", required: true },
+      { label: "Nama Klien Maklon *", name: "clientName", icon: Building2, placeholder: "e.g. PT Artha Prima Estetika", required: true },
+      { label: "Tanggal Pengajuan Notifikasi *", name: "applicationDate", icon: Calendar, type: "date", placeholder: "", required: true },
+      { label: "Batas Akhir Berlaku (3 Tahun)", name: "expiryDate", icon: Clock, type: "date", placeholder: "" },
     ],
   },
   halal: {
-    dotColor: "bg-emerald-700",
-    title: "HALAL CERTIFICATION REGISTRY",
-    submitLabel: "FILE HALAL RECORD",
+    badgeVariant: "success",
+    title: "SERTIFIKASI HALAL PRODUK (BPJPH / MUI)",
+    subtitle: "Pencatatan ketertelusuran bahan baku halal, sistem jaminan produk halal (SJPH), dan sertifikat resmi",
+    submitLabel: "Daftarkan Berkas Halal",
     fields: [
-      { label: "Halal ID / Certificate Number", name: "halalId", icon: Tag, placeholder: "e.g. ID001100000001", required: true },
-      { label: "Product Name", name: "productName", icon: Moon, placeholder: "e.g. Serum Whitening", required: true },
-      { label: "Manufacturer", name: "manufacturer", icon: Building2, placeholder: "e.g. PT Nex Industri", required: true },
-      { label: "Category", name: "category", icon: FileCheck, placeholder: "e.g. Kosmetik", required: true },
-      { label: "Application Date", name: "applicationDate", icon: Calendar, type: "date", required: true },
-      { label: "Expiry Date (Optional)", name: "expiryDate", icon: Clock, type: "date" },
+      { label: "Nomor Sertifikat Halal *", name: "halalId", icon: Tag, placeholder: "e.g. ID0011000000012345", required: true },
+      { label: "Nama Produk / Varian *", name: "productName", icon: Moon, placeholder: "e.g. Brightening Facial Wash", required: true },
+      { label: "Pabrik / Manufaktur *", name: "manufacturer", icon: Building2, placeholder: "e.g. Pabrik Dreamlab Sidoarjo", required: true },
+      { label: "Kategori Produk *", name: "category", icon: FileCheck, placeholder: "e.g. Kosmetika & Perawatan Diri", required: true },
+      { label: "Tanggal Terbit Sertifikat *", name: "applicationDate", icon: Calendar, type: "date", placeholder: "", required: true },
+      { label: "Batas Akhir Berlaku (4 Tahun)", name: "expiryDate", icon: Clock, type: "date", placeholder: "" },
     ],
   },
 };
 
-export default function ComplianceInput() {
+export default function ComplianceInputPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { success, error: toastError } = useDnaToast();
   const [activeTab, setActiveTab] = useState<FormType>("hki");
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState<{ type: FormType; data: any } | null>(null);
 
   const { data: staffs } = useQuery({
     queryKey: ["legal-staffs"],
     queryFn: async () => {
       const resp = await api.get("/legality/staffs");
-      return resp.data;
-    }
+      return resp.data || [];
+    },
   });
-
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [pendingSubmit, setPendingSubmit] = useState<{ type: FormType; data: any } | null>(null);
 
   const mutation = useMutation({
     mutationFn: async ({ type, data }: { type: FormType; data: any }) => {
       return api.post(`/legality/${type}`, data);
     },
     onSuccess: () => {
-      toast.success("Record filed successfully in Auditory Log");
       queryClient.invalidateQueries({ queryKey: ["hki-records"] });
       queryClient.invalidateQueries({ queryKey: ["bpom-records"] });
+      queryClient.invalidateQueries({ queryKey: ["halal-records"] });
       queryClient.invalidateQueries({ queryKey: ["legality-dashboard"] });
-      router.push("/legality/records");
-    },
-    onError: (err) => {
-      toast.error("Failed to file record. Check connection.");
-      console.error(err);
-    }
-  });
-
-  const handleSubmit = async (e: React.FormEvent, type: FormType) => {
-    e.preventDefault();
-
-    try {
-      const formData = new FormData(e.target as HTMLFormElement);
-      const rawData = Object.fromEntries(formData.entries());
-
-      const payload = {
-        ...rawData,
-        applicationDate: new Date(rawData.applicationDate as string).toISOString(),
-        expiryDate: rawData.expiryDate ? new Date(rawData.expiryDate as string).toISOString() : null,
-      };
-
-      setPendingSubmit({ type, data: payload });
-      setShowConfirm(true);
-    } catch (error) {
-      console.error("GAGAL SUBMIT:", error);
-      toast.error("Submission failed. Please check your data and connection.");
-    }
-  };
-
-  const confirmSubmit = async () => {
-    setShowConfirm(false);
-    if (!pendingSubmit) return;
-    const { type, data: payload } = pendingSubmit;
-
-    try {
-      console.log("PAYLOAD DIKIRIM:", payload);
-      toast.loading(`Filing ${type.toUpperCase()} record...`, { id: "submit-toast" });
-      await mutation.mutateAsync({ type, data: payload });
-      toast.success(`${type.toUpperCase()} record registered successfully!`, { id: "submit-toast" });
-      queryClient.invalidateQueries({ queryKey: ["hki-records"] });
-      queryClient.invalidateQueries({ queryKey: ["bpom-records"] });
-      queryClient.invalidateQueries({ queryKey: ["legality-dashboard"] });
+      success(`Berkas ${activeTab.toUpperCase()} berhasil didaftarkan ke audit log.`);
       setTimeout(() => {
         router.push("/legality/records");
-      }, 1500);
-    } catch (error) {
-      console.error("GAGAL SUBMIT:", error);
-      toast.error("Submission failed. Please check your data and connection.", { id: "submit-toast" });
-    }
+      }, 1000);
+    },
+    onError: (err: any) => {
+      toastError(err?.response?.data?.message || "Gagal mendaftarkan berkas legalitas.");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const rawData = Object.fromEntries(formData.entries());
+
+    const payload = {
+      ...rawData,
+      applicationDate: rawData.applicationDate ? new Date(rawData.applicationDate as string).toISOString() : new Date().toISOString(),
+      expiryDate: rawData.expiryDate ? new Date(rawData.expiryDate as string).toISOString() : null,
+    };
+
+    setPendingSubmit({ type: activeTab, data: payload });
+    setShowConfirm(true);
   };
 
-  const staffOptions = (staffs || []).map((s: any) => ({ label: `${s.name} - ${s.department}`, value: s.id }));
+  const confirmSubmit = () => {
+    if (!pendingSubmit) return;
+    mutation.mutate(pendingSubmit);
+    setShowConfirm(false);
+  };
+
+  const staffOptions = (staffs || []).map((s: any) => ({
+    label: `${s.name} (${s.department || "Legal"})`,
+    value: s.id,
+  }));
+
   const config = FORM_CONFIGS[activeTab];
 
   return (
-    <DashboardShell
-      title="COMPLIANCE"
-      titleAccent="ENTRY PORTAL"
-      subtitle="Initialize new HKI Branding or BPOM Product registration into the audit cycle."
-    >
-      <DnaTabNav
+    <div className="space-y-6 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
+      {/* ── 01. PAGE HEADER DENGAN TABS TERPADU (Golden Rule 2) ── */}
+      <DnaPageHeader
+        backLink={{ href: "/legality/records", label: "Kembali ke Arsip Legalitas" }}
+        title="PORTAL PENDAFTARAN REGULASI & SERTIFIKASI"
+        badge={<DnaBadge variant="info">ENTRY PORTAL</DnaBadge>}
+        subtitle="Registrasi berkas HKI Merek, izin edar Notifikasi BPOM, dan sertifikasi Halal ke siklus audit resmi"
         tabs={[
-          { id: "hki", label: "HKI BRANDING" },
-          { id: "bpom", label: "BPOM PRODUCT" },
-          { id: "halal", label: "HALAL CERT" },
+          {
+            key: "hki",
+            label: "Pendaftaran HKI Merek",
+            icon: <Bookmark className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "bpom",
+            label: "Notifikasi BPOM Kosmetik",
+            icon: <FlaskConical className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "halal",
+            label: "Sertifikasi Halal MUI",
+            icon: <Moon className="w-3.5 h-3.5" />,
+          },
         ]}
         activeTab={activeTab}
         onTabChange={(k) => setActiveTab(k as FormType)}
-        className="mb-6"
       />
 
-      <DnaCard>
-        <div className="flex items-center gap-2 mb-4">
-          <span className={`w-2 h-2 rounded-full ${config.dotColor}`} />
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">{config.title}</h3>
-        </div>
-        <form onSubmit={(e) => handleSubmit(e, activeTab)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {config.fields.map((f) => (
-              <DnaInput
-                key={f.name}
-                name={f.name}
-                label={f.label}
-                type={f.type || "text"}
-                placeholder={f.placeholder}
-                required={f.required}
-                icon={f.icon}
-              />
-            ))}
-            <DnaSelect
-              label={<><UserCircle className="w-4 h-4 inline" /> Assigned PIC</>}
-              name="picId"
-              placeholder="Select PIC Officer"
-              options={staffOptions}
-              required
-            />
-          </div>
-
-          <div className="pt-4 border-t border-slate-100 flex justify-end">
+      {/* ── 02. ENTERPRISE FORM CARD ── */}
+      <div className="max-w-4xl mx-auto">
+        <DnaCard>
+          <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <DnaBadge variant={config.badgeVariant}>{activeTab.toUpperCase()}</DnaBadge>
+                <h3 className="text-base font-bold text-slate-900">{config.title}</h3>
+              </div>
+              <p className="text-xs text-slate-500">{config.subtitle}</p>
+            </div>
             <DnaButton
-              type="submit"
-              disabled={mutation.isPending}
-              variant="primary"
-              icon={<Send />}
+              variant="outline"
+              size="sm"
+              icon={<FileText className="w-3.5 h-3.5" />}
+              onClick={() => router.push("/legality/records")}
             >
-              {mutation.isPending ? "FILING..." : config.submitLabel}
+              Lihat Arsip Terdaftar
             </DnaButton>
           </div>
-        </form>
-      </DnaCard>
 
-      <DnaModal
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {config.fields.map((f) => (
+                <div key={f.name}>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {f.label}
+                  </label>
+                  <DnaInput
+                    name={f.name}
+                    type={f.type || "text"}
+                    placeholder={f.placeholder}
+                    required={f.required}
+                  />
+                </div>
+              ))}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  PIC Staf Pengurus *
+                </label>
+                <DnaSelect
+                  name="picId"
+                  placeholder="Pilih Staf Legal Penanggung Jawab"
+                  options={
+                    staffOptions.length > 0
+                      ? staffOptions
+                      : [
+                          { label: "Ratna (Regulatory Affairs)", value: "staff-01" },
+                          { label: "Budi (HKI Specialist)", value: "staff-02" },
+                          { label: "Dewi (Halal Assurance Officer)", value: "staff-03" },
+                        ]
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span>Dokumen akan otomatis diverifikasi ke Master Timeline Kepatuhan Audit</span>
+              </div>
+              <span className="font-mono text-[11px] text-slate-400">OSS RBA & BPOM Integrated</span>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+              <DnaButton
+                variant="secondary"
+                type="button"
+                onClick={() => router.push("/legality/records")}
+              >
+                Batal
+              </DnaButton>
+              <DnaButton
+                type="submit"
+                variant="primary"
+                disabled={mutation.isPending}
+                icon={<Send className="w-3.5 h-3.5" />}
+              >
+                {mutation.isPending ? "Mendaftarkan..." : config.submitLabel}
+              </DnaButton>
+            </div>
+          </form>
+        </DnaCard>
+      </div>
+
+      {/* Confirmation Dialog */}
+      <DnaConfirmDialog
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
-        title="Konfirmasi"
-        subtitle="Apakah Anda yakin ingin menyimpan data ini?"
-        size="sm"
-        footer={
-          <>
-            <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
-            <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>
-          </>
-        }
+        onConfirm={confirmSubmit}
+        title="Konfirmasi Pendaftaran Regulasi"
+        description={`Apakah Anda yakin ingin mendaftarkan berkas ${activeTab.toUpperCase()} ini ke audit log kepatuhan?`}
+        confirmText="Ya, Daftarkan Sekarang"
+        variant="primary"
       />
-    </DashboardShell>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense, useEffect } from "react";
+import React, { useState, Suspense, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -26,6 +26,7 @@ import {
   DnaDataTableCard,
   DnaCell,
   DnaModal,
+  DnaDetailDrawer,
   DnaButton,
   DnaInput,
   useDnaToast,
@@ -110,6 +111,7 @@ function SalesTargetContent() {
   const toast = useDnaToast();
   const [targets, setTargets] = useState<SalesTargetItem[]>(INITIAL_TARGETS);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
   const [selectedMonth, setSelectedMonth] = useState(3);
   const [selectedYear, setSelectedYear] = useState(2026);
   const [detailTarget, setDetailTarget] = useState<SalesTargetItem | null>(null);
@@ -128,23 +130,43 @@ function SalesTargetContent() {
   const [formNominal, setFormNominal] = useState("");
   const [formNotes, setFormNotes] = useState("");
 
-  const filteredTargets = targets.filter((t) => {
-    const q = searchTerm.toLowerCase();
-    const matchesSearch =
-      t.picName.toLowerCase().includes(q) ||
-      t.picEmail.toLowerCase().includes(q) ||
-      t.role.toLowerCase().includes(q);
-    const matchesPeriod = t.month === selectedMonth && t.year === selectedYear;
-    return matchesSearch && matchesPeriod;
-  });
+  const periodTargets = useMemo(() => {
+    return targets.filter((t) => t.month === selectedMonth && t.year === selectedYear);
+  }, [targets, selectedMonth, selectedYear]);
 
-  const totalTargetPeriod = filteredTargets.reduce((sum, t) => sum + t.nominalTarget, 0);
-  const totalRealizedPeriod = filteredTargets.reduce((sum, t) => sum + t.realizedRevenue, 0);
+  const filteredTargets = useMemo(() => {
+    return periodTargets.filter((t) => {
+      const pct = Math.round((t.realizedRevenue / (t.nominalTarget || 1)) * 100);
+      let matchesTab = true;
+      if (activeTab === "reached") matchesTab = pct >= 100;
+      else if (activeTab === "ontrack") matchesTab = pct >= 70 && pct < 100;
+      else if (activeTab === "under") matchesTab = pct < 70;
+
+      const q = searchTerm.toLowerCase();
+      const matchesSearch =
+        t.picName.toLowerCase().includes(q) ||
+        t.picEmail.toLowerCase().includes(q) ||
+        t.role.toLowerCase().includes(q);
+
+      return matchesTab && matchesSearch;
+    });
+  }, [periodTargets, activeTab, searchTerm]);
+
+  const countAll = periodTargets.length;
+  const countReached = periodTargets.filter((t) => Math.round((t.realizedRevenue / (t.nominalTarget || 1)) * 100) >= 100).length;
+  const countOnTrack = periodTargets.filter((t) => {
+    const p = Math.round((t.realizedRevenue / (t.nominalTarget || 1)) * 100);
+    return p >= 70 && p < 100;
+  }).length;
+  const countUnder = periodTargets.filter((t) => Math.round((t.realizedRevenue / (t.nominalTarget || 1)) * 100) < 70).length;
+
+  const totalTargetPeriod = periodTargets.reduce((sum, t) => sum + t.nominalTarget, 0);
+  const totalRealizedPeriod = periodTargets.reduce((sum, t) => sum + t.realizedRevenue, 0);
   const avgAchievement =
     totalTargetPeriod > 0 ? Math.round((totalRealizedPeriod / totalTargetPeriod) * 100) : 0;
 
   // Best Performer
-  const topPerformer = [...filteredTargets].sort(
+  const topPerformer = [...periodTargets].sort(
     (a, b) => b.realizedRevenue / (b.nominalTarget || 1) - a.realizedRevenue / (a.nominalTarget || 1)
   )[0];
 
@@ -180,10 +202,18 @@ function SalesTargetContent() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 space-y-6">
-      {/* Top Header */}
+      {/* Top Header with Unified Tabs */}
       <DnaPageHeader
         title="TARGET PENJUALAN BUSDEV"
         description="Penetapan kuota omzet bulanan tim Business Development maklon kosmetik, monitoring realisasi revenue faktur terbayar, dan evaluasi performa Account Executive."
+        tabs={[
+          { key: "all", label: "Semua AE", count: countAll },
+          { key: "reached", label: "Tercapai", count: countReached },
+          { key: "ontrack", label: "On Track (70-99%)", count: countOnTrack },
+          { key: "under", label: "Di Bawah Target", count: countUnder },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         actions={
           <DnaButton
             variant="primary"
@@ -201,7 +231,7 @@ function SalesTargetContent() {
           {
             label: `Target Omzet ${MONTHS_ID[selectedMonth - 1]} ${selectedYear}`,
             value: `Rp ${(totalTargetPeriod / 1000000000).toFixed(2)} M`,
-            subtitle: `${filteredTargets.length} Account Executive`,
+            subtitle: `${countAll} Account Executive`,
             trend: "Target Konsolidasi",
             icon: Target,
             variant: "blue",
@@ -237,21 +267,17 @@ function SalesTargetContent() {
 
       {/* Main Table Card */}
       <DnaDataTableCard
-        title={`Target & Realisasi: ${MONTHS_ID[selectedMonth - 1]} ${selectedYear}`}
         count={filteredTargets.length}
-        totalItems={targets.length}
+        totalItems={countAll}
+        toolbarProps={{
+          searchPlaceholder: "Cari PIC atau jabatan...",
+          searchValue: searchTerm,
+          onSearchChange: setSearchTerm,
+        }}
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="w-60">
-              <DnaInput
-                placeholder="Cari PIC atau jabatan..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                icon={<Search className="w-4 h-4 text-slate-400" />}
-              />
-            </div>
+          <div className="flex items-center gap-2">
             <select
-              className="text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="text-xs p-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(Number(e.target.value))}
             >
@@ -262,7 +288,7 @@ function SalesTargetContent() {
               ))}
             </select>
             <select
-              className="text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="text-xs p-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
             >
@@ -275,23 +301,22 @@ function SalesTargetContent() {
           </div>
         }
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="w-full">
+          <table className="w-full text-left border-collapse text-xs table-fixed">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-4">ACCOUNT EXECUTIVE / PIC</th>
-                <th className="py-3 px-4">JABATAN</th>
-                <th className="py-3 px-4 text-right">TARGET OMZET</th>
-                <th className="py-3 px-4 text-right">REALISASI REVENUE</th>
-                <th className="py-3 px-4 text-center">PENCAPAIAN (%)</th>
-                <th className="py-3 px-4 text-center">STATUS KUOTA</th>
-                <th className="py-3 px-4 text-right">AKSI</th>
+                <th className="py-3 px-3 w-[25%]">Account Executive & Email</th>
+                <th className="py-3 px-3 w-[18%]">Jabatan & Periode</th>
+                <th className="py-3 px-3 w-[17%] text-right">Target Omzet</th>
+                <th className="py-3 px-3 w-[17%] text-right">Realisasi Revenue</th>
+                <th className="py-3 px-3 w-[13%] text-center">Pencapaian</th>
+                <th className="py-3 px-3 w-[10%] text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
+            <tbody className="divide-y divide-slate-100">
               {filteredTargets.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-slate-400">
+                  <td colSpan={6} className="text-center py-12 text-slate-400">
                     <Target className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
                     <p className="font-semibold text-slate-600">Tidak ada target pada periode ini</p>
                     <p className="text-xs text-slate-400">Pilih bulan lain atau klik Alokasikan Target Baru.</p>
@@ -305,25 +330,27 @@ function SalesTargetContent() {
 
                   return (
                     <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3.5 px-4">
-                        <DnaCell.Avatar name={t.picName} subtext={t.picEmail} />
+                      <td className="py-3 px-3">
+                        <p className="font-semibold text-slate-900 truncate">{t.picName}</p>
+                        <p className="text-[11px] text-slate-400 font-mono truncate">{t.picEmail}</p>
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md">
-                          {t.role}
-                        </span>
+                      <td className="py-3 px-3">
+                        <p className="text-slate-800 font-medium truncate">{t.role}</p>
+                        <p className="text-[10px] text-slate-400 font-mono">{MONTHS_ID[t.month - 1]} {t.year}</p>
                       </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <span className="font-bold text-slate-900">
+                      <td className="py-3 px-3 text-right">
+                        <p className="font-mono font-bold text-slate-900">
                           Rp {t.nominalTarget.toLocaleString("id-ID")}
-                        </span>
+                        </p>
+                        <p className="text-[10px] text-slate-400">Kuota</p>
                       </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <span className="font-bold text-emerald-600">
+                      <td className="py-3 px-3 text-right">
+                        <p className="font-mono font-bold text-emerald-600">
                           Rp {t.realizedRevenue.toLocaleString("id-ID")}
-                        </span>
+                        </p>
+                        <p className="text-[10px] text-slate-400">Realized</p>
                       </td>
-                      <td className="py-3.5 px-4 text-center">
+                      <td className="py-3 px-3 text-center">
                         <div className="inline-flex flex-col items-center">
                           <span
                             className={`font-bold text-xs ${
@@ -332,7 +359,7 @@ function SalesTargetContent() {
                           >
                             {pct}%
                           </span>
-                          <div className="w-20 bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
+                          <div className="w-16 bg-slate-100 h-1 rounded-full overflow-hidden mt-0.5">
                             <div
                               className={`h-full rounded-full ${
                                 isSuccess ? "bg-emerald-500" : isOnTrack ? "bg-blue-500" : "bg-amber-500"
@@ -342,28 +369,16 @@ function SalesTargetContent() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <DnaCell.Badge
-                          status={isSuccess ? "success" : isOnTrack ? "info" : "warning"}
-                          label={isSuccess ? "Tercapai" : isOnTrack ? "On Track" : "Di Bawah Target"}
-                        />
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <DnaCell.Actions
-                          onView={() => setDetailTarget(t)}
-                          extraActions={
-                            <button
-                              type="button"
-                              onClick={() => {
-                                toast.info("Sesuaikan Kuota", `Ubah alokasi target untuk ${t.picName}`);
-                              }}
-                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border-none bg-transparent cursor-pointer"
-                              title="Sesuaikan Kuota"
-                            >
-                              <Target className="w-3.5 h-3.5" />
-                            </button>
-                          }
-                        />
+                      <td className="py-3 px-3 text-right">
+                        <div className="flex justify-end gap-1">
+                          <DnaButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDetailTarget(t)}
+                          >
+                            Detail
+                          </DnaButton>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -374,53 +389,54 @@ function SalesTargetContent() {
         </div>
       </DnaDataTableCard>
 
-      {/* Modal Detail Target PIC */}
-      <DnaModal
+      {/* Drawer Detail Target PIC */}
+      <DnaDetailDrawer
         isOpen={!!detailTarget}
         onClose={() => setDetailTarget(null)}
-        title="Detail Target & Realisasi BusDev"
-        size="md"
+        title={detailTarget?.picName || "Detail Target BusDev"}
+        subtitle={detailTarget ? `${detailTarget.role} • ${MONTHS_ID[detailTarget.month - 1]} ${detailTarget.year}` : undefined}
+        badge={
+          detailTarget ? (
+            <DnaCell.Badge
+              status={
+                detailTarget.realizedRevenue >= detailTarget.nominalTarget
+                  ? "success"
+                  : "info"
+              }
+              label={
+                detailTarget.realizedRevenue >= detailTarget.nominalTarget
+                  ? "Tercapai"
+                  : "On Track"
+              }
+            />
+          ) : undefined
+        }
+        actions={
+          detailTarget ? (
+            <div className="flex items-center justify-end w-full">
+              <DnaButton variant="secondary" onClick={() => setDetailTarget(null)}>
+                Tutup
+              </DnaButton>
+            </div>
+          ) : undefined
+        }
       >
         {detailTarget && (
-          <div className="space-y-4 text-sm">
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Account Executive
-                </span>
-                <h3 className="text-base font-bold text-slate-900">{detailTarget.picName}</h3>
-                <p className="text-xs text-slate-500">
-                  {detailTarget.role} • {MONTHS_ID[detailTarget.month - 1]} {detailTarget.year}
-                </p>
-              </div>
-              <DnaCell.Badge
-                status={
-                  detailTarget.realizedRevenue >= detailTarget.nominalTarget
-                    ? "success"
-                    : "info"
-                }
-                label={
-                  detailTarget.realizedRevenue >= detailTarget.nominalTarget
-                    ? "Tercapai"
-                    : "On Track"
-                }
-              />
-            </div>
-
-            <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
+          <div className="space-y-4 text-xs">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-slate-500">Target Omzet:</span>
-                <span className="font-bold text-slate-900 text-sm">
+                <span className="font-bold text-slate-900 font-mono text-sm">
                   Rp {detailTarget.nominalTarget.toLocaleString("id-ID")}
                 </span>
               </div>
               <div className="flex justify-between text-emerald-600 font-semibold">
                 <span>Realisasi Penjualan:</span>
-                <span className="text-sm">Rp {detailTarget.realizedRevenue.toLocaleString("id-ID")}</span>
+                <span className="font-mono text-sm">Rp {detailTarget.realizedRevenue.toLocaleString("id-ID")}</span>
               </div>
-              <div className="flex justify-between border-t border-slate-100 pt-2 text-slate-700">
+              <div className="flex justify-between border-t border-slate-200 pt-2 text-slate-700">
                 <span>Kekurangan Kuota (Gap):</span>
-                <span className="font-bold text-rose-600">
+                <span className="font-bold text-rose-600 font-mono">
                   Rp{" "}
                   {Math.max(0, detailTarget.nominalTarget - detailTarget.realizedRevenue).toLocaleString(
                     "id-ID"
@@ -430,29 +446,14 @@ function SalesTargetContent() {
             </div>
 
             {detailTarget.notes && (
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs text-slate-600">
-                <span className="font-bold block mb-1 text-slate-500">Fokus Akun & Strategi:</span>
+              <div className="bg-amber-50/60 p-3 rounded-xl border border-amber-200/60 text-xs text-slate-700">
+                <span className="font-bold block mb-1 text-slate-600">Fokus Akun & Strategi:</span>
                 {detailTarget.notes}
               </div>
             )}
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <DnaButton variant="secondary" onClick={() => setDetailTarget(null)}>
-                Tutup
-              </DnaButton>
-              <DnaButton
-                variant="primary"
-                onClick={() => {
-                  toast.success("Tersimpan", "Catatan target diperbarui.");
-                  setDetailTarget(null);
-                }}
-              >
-                Simpan Penyesuaian
-              </DnaButton>
-            </div>
           </div>
         )}
-      </DnaModal>
+      </DnaDetailDrawer>
 
       {/* Modal Alokasikan Target Baru */}
       <DnaModal

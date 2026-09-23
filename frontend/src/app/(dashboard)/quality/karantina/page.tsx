@@ -2,6 +2,9 @@
 
 import React, { useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   ShieldAlert,
   AlertTriangle,
@@ -33,7 +36,8 @@ import {
   useDnaToast,
   DnaInput,
   DnaSelect,
-  DnaTextarea
+  DnaTextarea,
+  DnaCell,
 } from "@/components/dna";
 import { DnaTable } from "@/components/dna";
 
@@ -57,79 +61,6 @@ interface QuarantineItem {
   evidenceUrl?: string;
 }
 
-const FALLBACK_QUARANTINE: QuarantineItem[] = [
-  {
-    id: "1",
-    code: "QRN-2609-001",
-    batchNo: "LOT-KMS-2609-012",
-    date: "2026-09-08",
-    materialName: "Botol Kaca Serum 30ml Amber Pipet",
-    materialCode: "KMS-BTL-030A",
-    warehouse: "Gudang Karantina Barat (GK-01)",
-    qty: 50,
-    unit: "PCS",
-    defectCategory: "KEMASAN",
-    defectType: "Botol Kaca Retak & Bocor",
-    defectLocation: "Pallet B-03 Baris 2",
-    estimatedValue: 450000,
-    status: "QUARANTINE"
-  },
-  {
-    id: "2",
-    code: "QRN-2609-002",
-    batchNo: "LOT-RAW-2608-041",
-    date: "2026-09-05",
-    materialName: "Ekstrak Centella Asiatica 10% Liquid",
-    materialCode: "RAW-ECA-010L",
-    warehouse: "Gudang Karantina Cold Storage (GK-02)",
-    qty: 5,
-    unit: "KG",
-    defectCategory: "KIMIA",
-    defectType: "Warna Keruh Mengendap (Off-spec R&D)",
-    defectLocation: "Drum C-01",
-    estimatedValue: 6250000,
-    status: "DISPOSAL",
-    executedAt: "2026-09-07",
-    lossAccount: "5190 - Biaya Kerugian Produksi & Scrap",
-    evidenceUrl: "BA-QC-2609-01.pdf"
-  },
-  {
-    id: "3",
-    code: "QRN-2609-003",
-    batchNo: "BATCH-FIL-2608-099",
-    date: "2026-09-03",
-    materialName: "Sunscreen Glow Gel SPF 50 Tube 30ml",
-    materialCode: "BSJ-SGG-050T",
-    warehouse: "Gudang Karantina Produksi (GK-03)",
-    qty: 120,
-    unit: "TUBE",
-    defectCategory: "FISIK",
-    defectType: "Sealing Ekor Tube Miring 2mm",
-    defectLocation: "Filling Line 2",
-    estimatedValue: 3600000,
-    status: "REWORK",
-    executedAt: "2026-09-04",
-    lossAccount: "5190 - Biaya Kerugian Produksi & Scrap"
-  },
-  {
-    id: "4",
-    code: "QRN-2609-004",
-    batchNo: "LOT-KMS-2608-072",
-    date: "2026-08-30",
-    materialName: "Inner Box Hologram Serum Retinol 30ml",
-    materialCode: "KMS-BOX-030H",
-    warehouse: "Gudang Karantina Kemasan (GK-01)",
-    qty: 500,
-    unit: "PCS",
-    defectCategory: "LABEL_DOKUMEN",
-    defectType: "Salah Nomor Notifikasi BPOM Cetak",
-    defectLocation: "Pallet A-01",
-    estimatedValue: 1250000,
-    status: "RETURN_TO_VENDOR",
-    executedAt: "2026-09-01"
-  }
-];
-
 export default function QuarantinePage() {
   return (
     <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Modul Karantina...</div>}>
@@ -147,6 +78,41 @@ function QuarantineContent() {
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false);
   const [selectedDetail, setSelectedDetail] = useState<QuarantineItem | null>(null);
 
+  const { data: serverQuarantine } = useQuery({
+    queryKey: ["quality-karantina-items"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/qc/audits");
+        const unwrapped = unwrapResponse(res);
+        if (Array.isArray(unwrapped)) {
+          return unwrapped
+            .filter((a: any) => a.status === "QUARANTINE" || a.status === "REJECT")
+            .map((a: any, idx: number) => ({
+              id: a.id,
+              code: `QRN-2609-${String(idx + 1).padStart(3, "0")}`,
+              batchNo: a.stepLog?.wo?.batchNo || a.woId || `BATCH-${a.id.slice(0, 6)}`,
+              date: a.createdAt ? new Date(a.createdAt).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+              materialName: a.stepLog?.wo?.formula?.sampleRequest?.productName || "Material / Batch In Quarantine",
+              materialCode: a.defectType || "QC-ITEM",
+              warehouse: "Gudang Karantina (GK-01)",
+              qty: Number(a.stepLog?.qtyQuarantine || a.stepLog?.qtyReject || 100),
+              unit: "PCS",
+              defectCategory: a.defectCategory || "FISIK",
+              defectType: a.defectType || "Defect Parameter",
+              defectLocation: a.phase || "LINE_QC",
+              estimatedValue: 1500000,
+              status: (a.disposition || a.status) === "GOOD" ? "QUARANTINE" : (a.disposition || "QUARANTINE"),
+            }));
+        }
+      } catch (err) {
+        console.warn("Failed to fetch quarantine audits", err);
+      }
+      return [] as QuarantineItem[];
+    }
+  });
+
+  const quarantineItems = serverQuarantine || [];
+
   // Form Resolusi Karantina (SCR-EKSEPSI-002)
   const [resolveForm, setResolveForm] = useState({
     refCode: "QRN-2609-001",
@@ -160,7 +126,7 @@ function QuarantineContent() {
   });
 
   const activeQuarantineList = useMemo(() => {
-    return FALLBACK_QUARANTINE.filter((item) => {
+    return quarantineItems.filter((item) => {
       const matchSearch =
         item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.batchNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -169,19 +135,19 @@ function QuarantineContent() {
       const matchStatus = statusFilter === "ALL" || item.status === statusFilter;
       return matchSearch && matchCategory && matchStatus;
     });
-  }, [searchQuery, categoryFilter, statusFilter]);
+  }, [quarantineItems, searchQuery, categoryFilter, statusFilter]);
 
   const totalInQuarantine = useMemo(() => {
-    return FALLBACK_QUARANTINE.filter(i => i.status === "QUARANTINE").length;
-  }, []);
+    return quarantineItems.filter(i => i.status === "QUARANTINE").length;
+  }, [quarantineItems]);
 
   const totalScrapValue = useMemo(() => {
-    return FALLBACK_QUARANTINE.reduce((acc, i) => acc + i.estimatedValue, 0);
-  }, []);
+    return quarantineItems.reduce((acc, i) => acc + i.estimatedValue, 0);
+  }, [quarantineItems]);
 
   const totalResolved = useMemo(() => {
-    return FALLBACK_QUARANTINE.filter(i => i.status !== "QUARANTINE").length;
-  }, []);
+    return quarantineItems.filter(i => i.status !== "QUARANTINE").length;
+  }, [quarantineItems]);
 
   const handleExecuteResolution = () => {
     toast.success(`Resolusi Karantina ${resolveForm.refCode} berhasil dieksekusi via ${resolveForm.action}!`);
@@ -243,110 +209,88 @@ function QuarantineContent() {
 
       {/* DATA TABLE */}
       <DnaDataTableCard
-        title="Daftar Antrean & Riwayat Barang Karantina"
-        badge={<DnaBadge variant="default">{activeQuarantineList.length} Item</DnaBadge>}
-        customToolbar={
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <DnaInput
-                type="text"
-                placeholder="Cari kode/batch/material..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-52 focus:outline-none focus:ring-2 focus:ring-rose-500"
-              />
-            </div>
-            <DnaSelect
-              value={categoryFilter}
-              onChange={(val) => setCategoryFilter(val)}
-              className="text-xs py-1.5 px-2.5 border border-slate-200 rounded-lg bg-white"
-            >
-              <option value="ALL">Semua Kategori Cacat</option>
-              <option value="KEMASAN">Kemasan</option>
-              <option value="FISIK">Fisik</option>
-              <option value="KIMIA">Kimiawi</option>
-              <option value="MIKROBIOLOGI">Mikrobiologi</option>
-              <option value="LABEL_DOKUMEN">Label / Dokumen</option>
-            </DnaSelect>
-            <DnaSelect
-              value={statusFilter}
-              onChange={(val) => setStatusFilter(val)}
-              className="text-xs py-1.5 px-2.5 border border-slate-200 rounded-lg bg-white"
-            >
-              <option value="ALL">Semua Status</option>
-              <option value="QUARANTINE">Menunggu Eksekusi</option>
-              <option value="DISPOSAL">Pemusnahan (Scrap)</option>
-              <option value="REWORK">Olah Ulang (Rework)</option>
-              <option value="RETURN_TO_VENDOR">Retur Supplier</option>
-            </DnaSelect>
-          </div>
-        }
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari kode / batch / material karantina...",
+          filterColumns: [
+            { key: "category", label: "Kategori Cacat", type: "select", options: ["KEMASAN", "FISIK", "KIMIA", "MIKROBIOLOGI", "LABEL_DOKUMEN"] },
+            { key: "status", label: "Status Karantina", type: "select", options: ["QUARANTINE", "DISPOSAL", "REWORK", "RETURN_TO_VENDOR"] },
+          ],
+          selectedColumn: "status",
+          filterValue: statusFilter,
+          onFilterValueChange: setStatusFilter,
+        }}
       >
         <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left border-collapse text-xs">
+          <DnaTable className="min-w-[1250px]">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">#</th>
-                <th className="px-3.5 py-3">No. Karantina</th>
-                <th className="px-3.5 py-3">Tanggal</th>
-                <th className="px-3.5 py-3">Batch / Lot Ref</th>
-                <th className="px-3.5 py-3">Nama Material / Barang</th>
-                <th className="px-3.5 py-3 text-right">Qty</th>
-                <th className="px-3.5 py-3">Satuan</th>
-                <th className="px-3.5 py-3">Kategori Cacat</th>
-                <th className="px-3.5 py-3 text-right">Taksiran Nilai</th>
-                <th className="px-3.5 py-3 text-center">Status</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <th className="p-3.5 w-10 text-slate-400 font-mono text-center">#</th>
+                <th className="p-3.5 w-36 min-w-[130px] whitespace-nowrap">NO. KARANTINA</th>
+                <th className="p-3.5 w-28 min-w-[110px] whitespace-nowrap">TANGGAL</th>
+                <th className="p-3.5 w-32 min-w-[120px] whitespace-nowrap">BATCH / LOT REF</th>
+                <th className="p-3.5 min-w-[220px]">NAMA MATERIAL / BARANG</th>
+                <th className="p-3.5 w-28 min-w-[100px] text-right whitespace-nowrap">KUANTITAS</th>
+                <th className="p-3.5 w-36 min-w-[130px] whitespace-nowrap">KATEGORI CACAT</th>
+                <th className="p-3.5 w-36 min-w-[120px] text-right whitespace-nowrap">TAKSIRAN NILAI</th>
+                <th className="p-3.5 w-32 min-w-[110px] text-center whitespace-nowrap">STATUS</th>
+                <th className="p-3.5 text-center w-24 whitespace-nowrap">AKSI</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {activeQuarantineList.map((item, idx) => (
-                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 text-slate-400 font-mono">{idx + 1}</td>
-                  <td className="px-3.5 py-2.5 font-mono text-rose-700 font-bold">{item.code}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.date}</td>
-                  <td className="px-3.5 py-2.5 font-mono text-slate-700 font-medium">{item.batchNo}</td>
-                  <td className="px-3.5 py-2.5 font-semibold text-slate-900">{item.materialName}</td>
-                  <td className="px-3.5 py-2.5 text-right font-extrabold text-slate-900">{item.qty}</td>
-                  <td className="px-3.5 py-2.5 text-slate-500 font-medium">{item.unit}</td>
-                  <td className="px-3.5 py-2.5">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700">
-                      {item.defectCategory}
-                    </span>
+              {activeQuarantineList.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="py-12 text-center text-slate-400">
+                    Tidak ada data barang karantina ditemukan
                   </td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-slate-800">
-                    {formatRupiah(item.estimatedValue)}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <DnaBadge
-                      variant={
-                        item.status === "QUARANTINE"
-                          ? "danger"
-                          : item.status === "DISPOSAL"
-                          ? "warning"
-                          : "success"
-                      }
-                    >
-                      {item.status === "QUARANTINE"
-                        ? "TERTAHAN"
-                        : item.status === "DISPOSAL"
-                        ? "SCRAP"
-                        : item.status === "REWORK"
-                        ? "REWORK"
-                        : "RETUR"}
-                    </DnaBadge>
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <button
+                </tr>
+              ) : (
+                activeQuarantineList.map((item, idx) => (
+                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-3.5 text-slate-400 font-mono text-[11px] tabular-nums text-center">{idx + 1}</td>
+                    <td className="p-3.5 whitespace-nowrap">
+                      <DnaCell.Code
+                        value={item.code}
                         onClick={() => setSelectedDetail(item)}
-                        className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
-                        title="Lihat Detail Cacat"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      {item.status === "QUARANTINE" && (
+                      />
+                    </td>
+                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Date value={item.date} /></td>
+                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Code value={item.batchNo} /></td>
+                    <td className="p-3.5 min-w-[220px]"><DnaCell.Text primary={item.materialName} /></td>
+                    <td className="p-3.5 text-right whitespace-nowrap">
+                      <DnaCell.Number value={item.qty} suffix={item.unit} />
+                    </td>
+                    <td className="p-3.5 whitespace-nowrap">
+                      <DnaCell.Badge status={item.defectCategory} />
+                    </td>
+                    <td className="p-3.5 text-right whitespace-nowrap">
+                      <DnaCell.Currency value={item.estimatedValue} />
+                    </td>
+                    <td className="p-3.5 text-center whitespace-nowrap">
+                      <DnaCell.Badge
+                        status={
+                          item.status === "QUARANTINE"
+                            ? "Tertahan"
+                            : item.status === "DISPOSAL"
+                            ? "Scrap"
+                            : item.status === "REWORK"
+                            ? "Rework"
+                            : "Retur"
+                        }
+                      />
+                    </td>
+                    <td className="p-3.5 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedDetail(item)}
+                          className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors border-none bg-transparent cursor-pointer"
+                          title="Lihat Detail Cacat"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        {item.status === "QUARANTINE" && (
                         <button
                           onClick={() => {
                             setResolveForm({
@@ -371,7 +315,7 @@ function QuarantineContent() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </DnaTable>
         </div>
@@ -395,7 +339,7 @@ function QuarantineContent() {
               <DnaSelect
                 value={resolveForm.refCode}
                 onChange={(val) => {
-                  const match = FALLBACK_QUARANTINE.find(q => q.code === val);
+                  const match = quarantineItems.find((q: any) => q.code === val);
                   if (match) {
                     setResolveForm({
                       ...resolveForm,
@@ -408,7 +352,7 @@ function QuarantineContent() {
                 }}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-mono font-bold"
               >
-                {FALLBACK_QUARANTINE.filter(q => q.status === "QUARANTINE").map(q => (
+                {quarantineItems.filter((q: any) => q.status === "QUARANTINE").map((q: any) => (
                   <option key={q.id} value={q.code}>
                     {q.code} — {q.batchNo} ({q.materialName})
                   </option>

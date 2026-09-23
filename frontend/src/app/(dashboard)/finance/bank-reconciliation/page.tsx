@@ -31,6 +31,7 @@ import {
   DnaButton,
   DnaBadge,
   DnaModal,
+  DnaDetailDrawer,
   formatRupiah,
   useDnaToast,
   DnaInput,
@@ -102,6 +103,13 @@ export default function BankReconciliationPage() {
             <span>Poin 20 & 21: Two-Column Engine & Filter COA Custom</span>
           </div>
         }
+        tabs={[
+          { id: "1120", label: "1120 - Bank BCA" },
+          { id: "1130", label: "1130 - Mandiri Payroll" },
+          { id: "1110", label: "1110 - Petty Cash" }
+        ]}
+        activeTab={selectedAccount}
+        onTabChange={setSelectedAccount}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton variant="secondary" size="md" onClick={() => setIsJournalModalOpen(true)}>
@@ -144,42 +152,28 @@ export default function BankReconciliationPage() {
         />
       </DnaKpiGrid>
 
-      {/* FILTER CONTROLS */}
-      <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1">Akun Kas / Bank (COA) *</label>
-<DnaSelect 
-              value={selectedAccount}
-              onChange={setSelectedAccount}
-              className="px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white font-medium"
-            >
-              <option value="1120">1120 - Bank BCA Operasional (521-009182)</option>
-              <option value="1130">1130 - Bank Mandiri Payroll & Pajak (137-00123)</option>
-              <option value="1110">1110 - Kas Tunai Petty Cash Kantor</option>
-            </DnaSelect>
-          </div>
-          <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1">Filter Kalender Lengkap *</label>
-            <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
-              <DnaInput
-                type="date"
-                value={dateRange.start}
-                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
-              />
-              <span className="text-slate-400 font-semibold">s/d</span>
-              <DnaInput
-                type="date"
-                value={dateRange.end}
-                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
-              />
-            </div>
+      {/* FILTER & ENGINE TOOLBAR */}
+      <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-slate-500">Periode Mutasi:</span>
+          <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
+            <DnaInput
+              type="date"
+              value={dateRange.start}
+              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+              className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
+            />
+            <span className="text-slate-400 font-semibold">s/d</span>
+            <DnaInput
+              type="date"
+              value={dateRange.end}
+              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+              className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
+            />
           </div>
         </div>
 
-        <div className="flex items-center gap-2 pt-4">
+        <div className="flex items-center gap-2">
           <DnaButton variant="secondary" size="md" onClick={handleAutoMatch}>
             <RefreshCw className="w-4 h-4 mr-1.5" />
             Jalankan Auto-Match
@@ -192,106 +186,118 @@ export default function BankReconciliationPage() {
       </div>
 
       {/* TWO-COLUMN RECONCILIATION ENGINE (SCR-076) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* KOLOM KIRI: BANK STATEMENT LINES */}
-        <DnaDataTableCard
-          title="Kolom Kiri: Mutasi Rekening Koran (Bank Statement)"
-          badge={<DnaBadge variant="purple">{bankLines.length} Baris Bank</DnaBadge>}
-        >
-          <div className="overflow-x-auto">
-            <DnaTable className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                  <th className="px-3 py-2.5">Tanggal</th>
-                  <th className="px-3 py-2.5">Keterangan Bank</th>
-                  <th className="px-3 py-2.5 text-right">Nominal</th>
-                  <th className="px-3 py-2.5 text-center">Status Match</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {bankLines.map((b) => (
-                  <tr key={b.id} className="hover:bg-slate-50/50">
-                    <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{b.date}</td>
-                    <td className="px-3 py-2 font-medium text-slate-800 text-[11px]">{b.description}</td>
-                    <td className={`px-3 py-2 text-right font-extrabold ${b.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+        <DnaDataTableCard>
+          <DnaTable className="w-full text-left border-collapse text-xs table-fixed">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <th className="px-3.5 py-2.5 w-[28%]">Tanggal & Ref</th>
+                <th className="px-3.5 py-2.5 w-[42%]">Keterangan Rekening Koran</th>
+                <th className="px-3.5 py-2.5 text-right w-[30%]">Nominal & Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {bankLines.map((b) => (
+                <tr key={b.id} className="hover:bg-slate-50/50">
+                  <td className="px-3.5 py-2">
+                    <div className="font-semibold text-slate-800">{b.date}</div>
+                    <div className="text-[10px] text-slate-500 font-mono">{b.systemTxId || "Unmatched Bank"}</div>
+                  </td>
+                  <td className="px-3.5 py-2">
+                    <div className="font-medium text-slate-800 text-[11px] truncate">{b.description}</div>
+                    <div className="text-[10px] text-slate-400 font-mono">Statement Line</div>
+                  </td>
+                  <td className="px-3.5 py-2 text-right">
+                    <div className={`font-extrabold text-xs ${b.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
                       {formatRupiah(b.amount)}
-                    </td>
-                    <td className="px-3 py-2 text-center">
+                    </div>
+                    <div className="mt-0.5">
                       <DnaBadge variant={b.matched ? "success" : "warning"}>
                         {b.matched ? "MATCHED" : "UNMATCHED"}
                       </DnaBadge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </DnaTable>
-          </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </DnaTable>
         </DnaDataTableCard>
 
         {/* KOLOM KANAN: SYSTEM TRANSACTIONS */}
-        <DnaDataTableCard
-          title="Kolom Kanan: Transaksi Kas & Bank Sistem (System Book)"
-          badge={<DnaBadge variant="info">{systemLines.length} Transaksi Sistem</DnaBadge>}
-        >
-          <div className="overflow-x-auto">
-            <DnaTable className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                  <th className="px-3 py-2.5">Tanggal</th>
-                  <th className="px-3 py-2.5">No. Dokumen</th>
-                  <th className="px-3 py-2.5">Deskripsi Kas Masuk/Keluar</th>
-                  <th className="px-3 py-2.5 text-right">Nominal</th>
-                  <th className="px-3 py-2.5 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {systemLines.map((s) => (
-                  <tr key={s.id} className="hover:bg-slate-50/50">
-                    <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{s.date}</td>
-                    <td className="px-3 py-2 font-mono text-blue-700 font-bold">{s.docNo}</td>
-                    <td className="px-3 py-2 font-medium text-slate-800 text-[11px]">{s.description}</td>
-                    <td className={`px-3 py-2 text-right font-extrabold ${s.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+        <DnaDataTableCard>
+          <DnaTable className="w-full text-left border-collapse text-xs table-fixed">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <th className="px-3.5 py-2.5 w-[28%]">Dokumen & Tanggal</th>
+                <th className="px-3.5 py-2.5 w-[42%]">Deskripsi Buku Sistem</th>
+                <th className="px-3.5 py-2.5 text-right w-[30%]">Nominal & Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {systemLines.map((s) => (
+                <tr key={s.id} className="hover:bg-slate-50/50">
+                  <td className="px-3.5 py-2">
+                    <div className="font-mono text-blue-700 font-bold">{s.docNo}</div>
+                    <div className="text-[10px] text-slate-500 font-mono">{s.date}</div>
+                  </td>
+                  <td className="px-3.5 py-2">
+                    <div className="font-medium text-slate-800 text-[11px] truncate">{s.description}</div>
+                    <div className="text-[10px] text-slate-400 font-mono">ERP General Ledger</div>
+                  </td>
+                  <td className="px-3.5 py-2 text-right">
+                    <div className={`font-extrabold text-xs ${s.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
                       {formatRupiah(s.amount)}
-                    </td>
-                    <td className="px-3 py-2 text-center">
+                    </div>
+                    <div className="mt-0.5">
                       <DnaBadge variant={s.matched ? "success" : "warning"}>
                         {s.matched ? "MATCHED" : "UNMATCHED"}
                       </DnaBadge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </DnaTable>
-          </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </DnaTable>
         </DnaDataTableCard>
       </div>
 
-      {/* JURNAL REKONSILIASI MODAL */}
-      <DnaModal
+      {/* JURNAL REKONSILIASI DRAWER (QUICK PEEK) */}
+      <DnaDetailDrawer
         isOpen={isJournalModalOpen}
         onClose={() => setIsJournalModalOpen(false)}
-        title="Buat Jurnal Rekonsiliasi (Biaya Adm & Bunga Bank)"
-        size="md"
-      >
-        <div className="space-y-3.5 text-xs">
-          <p className="text-slate-600">
-            Jurnal otomatis untuk mencatat selisih biaya administrasi bank dan pendapatan bunga giro yang tercatat di rekening koran:
-          </p>
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2">
-            <div className="flex justify-between">
-              <span>Beban Administrasi Bank (6190):</span>
-              <strong className="text-rose-700">Rp 250.000 (Dr)</strong>
-            </div>
-            <div className="flex justify-between">
-              <span>Pendapatan Jasa Bunga Giro (4190):</span>
-              <strong className="text-emerald-700">Rp 4.250.000 (Cr)</strong>
-            </div>
-            <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-slate-900">
-              <span>Net Mutasi Kas/Bank Masuk:</span>
-              <strong className="text-blue-700">+Rp 4.000.000 (Dr Kas/Bank)</strong>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
+        title="Jurnal Penyesuaian Rekonsiliasi Bank"
+        subtitle="Mencatat selisih biaya administrasi bank dan pendapatan bunga giro"
+        badge={<DnaBadge variant="warning">RECON ADJUSTMENT</DnaBadge>}
+        tabs={[
+          {
+            id: "entries",
+            label: "Detail Jurnal Selisih",
+            content: (
+              <div className="space-y-4 p-4 text-xs">
+                <p className="text-slate-600">
+                  Jurnal otomatis untuk mencatat selisih biaya administrasi bank dan pendapatan bunga giro yang tercatat di rekening koran:
+                </p>
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2.5">
+                  <div className="flex justify-between">
+                    <span>Beban Administrasi Bank (6190):</span>
+                    <strong className="text-rose-700">Rp 250.000 (Dr)</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Pendapatan Jasa Bunga Giro (4190):</span>
+                    <strong className="text-emerald-700">Rp 4.250.000 (Cr)</strong>
+                  </div>
+                  <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-slate-900">
+                    <span>Net Mutasi Kas/Bank Masuk:</span>
+                    <strong className="text-blue-700">+Rp 4.000.000 (Dr Kas/Bank)</strong>
+                  </div>
+                </div>
+              </div>
+            )
+          }
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
             <DnaButton variant="secondary" size="md" onClick={() => setIsJournalModalOpen(false)}>
               Batal
             </DnaButton>
@@ -299,8 +305,8 @@ export default function BankReconciliationPage() {
               Posting Jurnal Rekonsiliasi
             </DnaButton>
           </div>
-        </div>
-      </DnaModal>
+        }
+      />
     </DnaPageContainer>
   );
 }

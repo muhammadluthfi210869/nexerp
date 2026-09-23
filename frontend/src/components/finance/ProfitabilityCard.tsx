@@ -1,10 +1,10 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/dna";
 import { Award, Briefcase } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/dna";
+import { Progress } from "@/components/dna";
 
 interface ProfitabilityCardProps {
   profit?: number;

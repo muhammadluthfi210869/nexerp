@@ -52,6 +52,12 @@ export class CreateLeadDto {
   @IsUUID()
   picId?: string;
 
+  // Canonical capture-to-commercial link. The owning organization is NOT part
+  // of the DTO: it comes from the authenticated request context.
+  @IsOptional()
+  @IsUUID()
+  leadCaptureId?: string;
+
   @IsOptional()
   @IsBoolean()
   isRepeatOrder?: boolean;

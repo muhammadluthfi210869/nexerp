@@ -120,18 +120,17 @@ export default function RequestCogsApprovalPage() {
       header: "No. HPP",
       accessor: "code",
       sortable: true,
-      render: (item) => <DnaCell.code>{item.code}</DnaCell.code>,
+      render: (item) => <DnaCell.Code value={item.code} />,
     },
     {
-      header: "Klien & Produk",
-      accessor: "client",
+      header: "Produk & Klien",
+      accessor: "productName",
       sortable: true,
       render: (item) => (
-        <div>
-          <p className="font-semibold text-slate-800">{item.client}</p>
-          <p className="text-xs text-slate-600 font-medium">{item.productName}</p>
-          <p className="text-[11px] text-blue-600 font-mono">Ref: {item.sampleRef}</p>
-        </div>
+        <DnaCell.Text
+          primary={item.productName}
+          secondary={item.client}
+        />
       ),
     },
     {
@@ -139,41 +138,32 @@ export default function RequestCogsApprovalPage() {
       accessor: "moq",
       align: "right",
       sortable: true,
-      render: (item) => (
-        <span className="font-mono font-semibold text-slate-800">
-          {item.moq.toLocaleString("id-ID")} pcs
-        </span>
-      ),
+      render: (item) => <DnaCell.Number value={item.moq} suffix="pcs" />,
     },
     {
       header: "HPP / Unit",
       accessor: "totalHpp",
       align: "right",
       sortable: true,
+      render: (item) => <DnaCell.Currency value={item.totalHpp} />,
+    },
+    {
+      header: "Margin",
+      accessor: "marginPercent",
+      align: "center",
+      sortable: true,
       render: (item) => (
-        <div>
-          <p className="font-mono font-bold text-slate-900">{formatRupiah(item.totalHpp)}</p>
-          <p className="text-[10px] text-slate-400">
-            Form: {formatRupiah(item.formulaHpp)} | Pkg: {formatRupiah(item.packagingHpp)}
-          </p>
-        </div>
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 tabular-nums">
+          +{item.marginPercent}%
+        </span>
       ),
     },
     {
-      header: "Margin & Rekomendasi Jual",
-      accessor: "marginPercent",
+      header: "Rekomendasi Jual",
+      accessor: "sellingPrice",
       align: "right",
       sortable: true,
-      render: (item) => (
-        <div>
-          <span className="inline-block px-1.5 py-0.5 rounded-sm bg-emerald-50 text-emerald-700 font-bold text-[11px] border border-emerald-200">
-            +{item.marginPercent}%
-          </span>
-          <p className="font-mono font-bold text-blue-700 text-xs mt-0.5">
-            {formatRupiah(item.sellingPrice)}
-          </p>
-        </div>
-      ),
+      render: (item) => <DnaCell.Currency value={item.sellingPrice} />,
     },
     {
       header: "Status",
@@ -213,7 +203,7 @@ export default function RequestCogsApprovalPage() {
     partnerLabel: "Klien Pemesan",
     warehouseName: "R&D Costing Department",
     totalAmount: item.sellingPrice * item.moq,
-    notes: `${item.notes} | Margin Gross Target: ${item.marginPercent}% | Rekomendasi Harga Jual: ${formatRupiah(item.sellingPrice)}/pcs`,
+    notes: `${item.notes} [Sample Ref: ${item.sampleRef}] | Margin Gross Target: ${item.marginPercent}% | Rekomendasi Harga Jual: ${formatRupiah(item.sellingPrice)}/pcs`,
     lineItems: [
       {
         id: "c-1",

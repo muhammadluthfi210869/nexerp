@@ -25,6 +25,7 @@ import {
   DnaButton,
   DnaBadge,
   DnaModal,
+  DnaDetailDrawer,
   DnaInput,
   useDnaToast,
 } from "@/components/dna";
@@ -190,12 +191,25 @@ function GuestBookContent() {
     });
   };
 
+  const countAll = guests.length;
+  const countBranded = guests.filter((g) => g.category === "BRANDED").length;
+  const countKlinik = guests.filter((g) => g.category === "KLINIK").length;
+  const countPemula = guests.filter((g) => g.category === "PEMULA").length;
+
   return (
     <DnaPageContainer>
+      {/* Top Header with Unified Tabs */}
       <DnaPageHeader
-        title="Buku Tamu Kunjungan Klien (Guest Book)"
-        subtitle="Pencatatan dan monitoring kehadiran calon klien maklon, PIC pendamping, estimasi MOQ, dan kategori prospek"
-        breadcrumbs={[{ label: "Operasional", href: "/sales" }, { label: "Buku Tamu" }]}
+        title="BUKU TAMU KUNJUNGAN KLIEN (GUEST BOOK)"
+        description="Pencatatan dan monitoring kehadiran calon klien maklon kosmetik, PIC pendamping, estimasi target MOQ, dan segmentasi kategori prospek bisnis."
+        tabs={[
+          { key: "ALL", label: "Semua Kategori", count: countAll },
+          { key: "BRANDED", label: "Branded", count: countBranded },
+          { key: "KLINIK", label: "Klinik Estetika", count: countKlinik },
+          { key: "PEMULA", label: "Start-up / Pemula", count: countPemula },
+        ]}
+        activeTab={categoryFilter}
+        onTabChange={setCategoryFilter}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
@@ -204,216 +218,203 @@ function GuestBookContent() {
             </DnaButton>
             <DnaButton variant="primary" size="md" onClick={() => setIsModalOpen(true)}>
               <Plus className="w-4 h-4 mr-1.5" />
-              + Buat Buku Tamu
+              Buat Buku Tamu
             </DnaButton>
           </div>
         }
       />
 
-      <DnaKpiGrid cols={4}>
-        <DnaStatCard
-          label="Total Tamu Terdaftar"
-          value={`${guests.length} Tamu`}
-          icon={<Users className="w-5 h-5 text-blue-600" />}
-          delta={{ value: "+28% vs bln lalu", isPositive: true }}
-          subtext="Prospect Klien Periode Ini"
-          variant="info"
-        />
-        <DnaStatCard
-          label="Klien Brand Established"
-          value={`${guests.filter((g) => g.category === "BRANDED").length} Klien`}
-          icon={<Building2 className="w-5 h-5 text-purple-600" />}
-          subtext="Segmen Brand Berkembang"
-          variant="purple"
-        />
-        <DnaStatCard
-          label="Klinik Kecantikan"
-          value={`${guests.filter((g) => g.category === "KLINIK").length} Klinik`}
-          icon={<Sparkles className="w-5 h-5 text-emerald-600" />}
-          delta={{ value: "Dokter & Aesthetic Clinic", isPositive: true }}
-          variant="success"
-        />
-        <DnaStatCard
-          label="Klien Pemula (Start-up)"
-          value={`${guests.filter((g) => g.category === "PEMULA").length} Mitra`}
-          icon={<Clock className="w-5 h-5 text-amber-600" />}
-          delta={{ value: "Edukasi Formula & MOQ", isPositive: true }}
-          variant="warning"
-        />
-      </DnaKpiGrid>
+      {/* KPI Cards */}
+      <DnaKpiGrid
+        items={[
+          {
+            label: "Total Tamu Terdaftar",
+            value: `${guests.length} Tamu`,
+            subtitle: "Calon mitra maklon periode ini",
+            trend: "+28% vs bln lalu",
+            icon: Users,
+            variant: "blue",
+          },
+          {
+            label: "Klien Brand Established",
+            value: `${countBranded} Klien`,
+            subtitle: "Segmen brand berkembang",
+            trend: "High Volume",
+            icon: Building2,
+            variant: "purple",
+          },
+          {
+            label: "Klinik Kecantikan",
+            value: `${countKlinik} Klinik`,
+            subtitle: "Dokter & aesthetic clinic",
+            trend: "Klinis Medis",
+            icon: Sparkles,
+            variant: "emerald",
+          },
+          {
+            label: "Klien Pemula (Start-up)",
+            value: `${countPemula} Mitra`,
+            subtitle: "Edukasi formula & MOQ 1000",
+            trend: "Inkubasi",
+            icon: Clock,
+            variant: "amber",
+          },
+        ]}
+      />
 
+      {/* Main Table Card */}
       <DnaDataTableCard
-        title="Daftar Buku Tamu Kunjungan Klien"
         count={filteredGuests.length}
         totalItems={guests.length}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-medium"
-            >
-              <option value="ALL">Semua Kategori</option>
-              <option value="BRANDED">BRANDED</option>
-              <option value="KLINIK">KLINIK</option>
-              <option value="PEMULA">PEMULA</option>
-              <option value="DISTRIBUTOR">DISTRIBUTOR</option>
-            </select>
-            <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
-              <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
-              <input
-                type="date"
-                value={dateRange.start}
-                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
-              />
-              <span className="text-slate-400 font-semibold">s/d</span>
-              <input
-                type="date"
-                value={dateRange.end}
-                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
-              />
-            </div>
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Cari nama, kontak, kota..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-            </div>
-          </div>
-        }
+        toolbarProps={{
+          searchPlaceholder: "Cari nama tamu, kontak WhatsApp, kota, atau produk...",
+          searchValue: searchQuery,
+          onSearchChange: setSearchQuery,
+        }}
       >
-        <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left text-[12px]">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
-              <tr>
-                <th className="px-3 py-3 w-10 text-center">#</th>
-                <th className="px-3 py-3">Tanggal & Waktu</th>
-                <th className="px-3 py-3">Nama Klien</th>
-                <th className="px-3 py-3">Meeting & PIC</th>
-                <th className="px-3 py-3">Kontak</th>
-                <th className="px-3 py-3">Kota</th>
-                <th className="px-3 py-3">Produk Diminati</th>
-                <th className="px-3 py-3 text-right">MOQ</th>
-                <th className="px-3 py-3">Target Market</th>
-                <th className="px-3 py-3 text-center">Kategori</th>
-                <th className="px-3 py-3 text-right">Aksi</th>
+        <div className="w-full">
+          <table className="w-full text-left border-collapse text-xs table-fixed">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <th className="py-3 px-3 w-[18%]">Waktu & Kota</th>
+                <th className="py-3 px-3 w-[22%]">Klien & Kontak</th>
+                <th className="py-3 px-3 w-[20%]">Meeting & Kategori</th>
+                <th className="py-3 px-3 w-[20%]">Minat Produk & MOQ</th>
+                <th className="py-3 px-3 w-[10%] text-center">Kategori</th>
+                <th className="py-3 px-3 w-[10%] text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredGuests.map((g, idx) => (
-                <tr key={g.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-3 py-3 text-center text-slate-400 font-mono text-xs">{idx + 1}</td>
-                  <td className="px-3 py-3 text-slate-600 whitespace-nowrap text-xs">{g.dateTime}</td>
-                  <td className="px-3 py-3 font-semibold text-slate-900 whitespace-nowrap text-xs">{g.clientName}</td>
-                  <td className="px-3 py-3 text-slate-700 whitespace-nowrap text-xs">{g.meetingPic}</td>
-                  <td className="px-3 py-3 font-mono text-slate-600 whitespace-nowrap text-xs">{g.contact}</td>
-                  <td className="px-3 py-3 text-slate-700 whitespace-nowrap text-xs">{g.city}</td>
-                  <td className="px-3 py-3 text-slate-800 max-w-xs truncate text-xs font-medium">{g.productInterest}</td>
-                  <td className="px-3 py-3 text-right font-mono font-bold text-blue-600 whitespace-nowrap text-xs">
-                    {g.moq.toLocaleString("id-ID")} pcs
-                  </td>
-                  <td className="px-3 py-3 text-slate-600 whitespace-nowrap text-xs">{g.targetMarket}</td>
-                  <td className="px-3 py-3 text-center whitespace-nowrap text-xs">
-                    <DnaBadge
-                      variant={
-                        g.category === "BRANDED"
-                          ? "purple"
-                          : g.category === "KLINIK"
-                          ? "emerald"
-                          : g.category === "PEMULA"
-                          ? "amber"
-                          : "blue"
-                      }
-                    >
-                      {g.category}
-                    </DnaBadge>
-                  </td>
-                  <td className="px-3 py-3 text-right whitespace-nowrap">
-                    <DnaButton
-                      variant="ghost"
-                      size="sm"
-                      icon={<Eye className="w-3.5 h-3.5" />}
-                      onClick={() => setSelectedGuest(g)}
-                    >
-                      Detail
-                    </DnaButton>
+            <tbody className="divide-y divide-slate-100">
+              {filteredGuests.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12 text-slate-400">
+                    <Users className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
+                    <p className="font-semibold text-slate-600">Tidak ada data tamu kunjungan</p>
+                    <p className="text-xs text-slate-400">Coba sesuaikan kata kunci pencarian atau filter kategori.</p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredGuests.map((g) => (
+                  <tr key={g.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3 px-3">
+                      <p className="font-mono font-semibold text-slate-700">{g.dateTime}</p>
+                      <p className="text-[11px] text-slate-400 truncate">{g.city}</p>
+                    </td>
+                    <td className="py-3 px-3">
+                      <p className="font-semibold text-slate-900 truncate">{g.clientName}</p>
+                      <p className="font-mono text-[11px] text-blue-600 truncate">{g.contact}</p>
+                    </td>
+                    <td className="py-3 px-3">
+                      <p className="text-slate-800 font-medium truncate">{g.meetingPic}</p>
+                      <p className="text-[10px] text-slate-400 truncate">{g.targetMarket}</p>
+                    </td>
+                    <td className="py-3 px-3">
+                      <p className="font-semibold text-slate-800 truncate">{g.productInterest}</p>
+                      <p className="font-mono text-[10px] text-slate-500">MOQ: {g.moq.toLocaleString("id-ID")} pcs</p>
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <DnaBadge
+                        variant={
+                          g.category === "BRANDED"
+                            ? "purple"
+                            : g.category === "KLINIK"
+                            ? "emerald"
+                            : g.category === "PEMULA"
+                            ? "amber"
+                            : "blue"
+                        }
+                      >
+                        {g.category}
+                      </DnaBadge>
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <div className="flex justify-end gap-1">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedGuest(g)}
+                        >
+                          Detail
+                        </DnaButton>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
-          </DnaTable>
+          </table>
         </div>
       </DnaDataTableCard>
 
-      {/* Modal Detail Kunjungan */}
-      <DnaModal
+      {/* Drawer Detail Kunjungan */}
+      <DnaDetailDrawer
         isOpen={!!selectedGuest}
         onClose={() => setSelectedGuest(null)}
-        title={`Detail Tamu: ${selectedGuest?.clientName || ""}`}
-        size="md"
-      >
-        {selectedGuest && (
-          <div className="space-y-4 text-sm">
-            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-              <div>
-                <span className="text-xs text-slate-400 block font-medium">Tanggal & Waktu</span>
-                <span className="font-semibold text-slate-800">{selectedGuest.dateTime}</span>
-              </div>
-              <div>
-                <span className="text-xs text-slate-400 block font-medium">Asal Kota</span>
-                <span className="font-semibold text-slate-800">{selectedGuest.city}</span>
-              </div>
-              <div>
-                <span className="text-xs text-slate-400 block font-medium">Meeting Bersama PIC</span>
-                <span className="font-medium text-slate-800">{selectedGuest.meetingPic}</span>
-              </div>
-              <div>
-                <span className="text-xs text-slate-400 block font-medium">Nomor WhatsApp</span>
-                <span className="font-mono font-bold text-blue-600">{selectedGuest.contact}</span>
-              </div>
-              <div>
-                <span className="text-xs text-slate-400 block font-medium">Estimasi Rencana MOQ</span>
-                <span className="font-mono font-bold text-slate-900">{selectedGuest.moq.toLocaleString("id-ID")} pcs</span>
-              </div>
-              <div>
-                <span className="text-xs text-slate-400 block font-medium">Kategori Klien</span>
-                <DnaBadge
-                  variant={
-                    selectedGuest.category === "BRANDED"
-                      ? "purple"
-                      : selectedGuest.category === "KLINIK"
-                      ? "emerald"
-                      : selectedGuest.category === "PEMULA"
-                      ? "amber"
-                      : "blue"
-                  }
-                >
-                  {selectedGuest.category}
-                </DnaBadge>
-              </div>
-            </div>
-            <div>
-              <span className="text-xs text-slate-400 block font-medium">Produk Diminati</span>
-              <p className="text-slate-800 font-medium mt-1">{selectedGuest.productInterest}</p>
-            </div>
-            <div>
-              <span className="text-xs text-slate-400 block font-medium">Target Pasar Konsumen</span>
-              <p className="text-slate-700 mt-1">{selectedGuest.targetMarket}</p>
-            </div>
-            <div className="flex justify-end pt-3 border-t border-slate-100">
+        title={selectedGuest?.clientName || "Detail Tamu"}
+        subtitle={selectedGuest ? `${selectedGuest.city} • ${selectedGuest.dateTime}` : undefined}
+        badge={
+          selectedGuest ? (
+            <DnaBadge
+              variant={
+                selectedGuest.category === "BRANDED"
+                  ? "purple"
+                  : selectedGuest.category === "KLINIK"
+                  ? "emerald"
+                  : selectedGuest.category === "PEMULA"
+                  ? "amber"
+                  : "blue"
+              }
+            >
+              {selectedGuest.category}
+            </DnaBadge>
+          ) : undefined
+        }
+        actions={
+          selectedGuest ? (
+            <div className="flex items-center justify-end w-full">
               <DnaButton variant="secondary" onClick={() => setSelectedGuest(null)}>
                 Tutup
               </DnaButton>
             </div>
+          ) : undefined
+        }
+      >
+        {selectedGuest && (
+          <div className="space-y-4 text-xs">
+            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Waktu Kunjungan</span>
+                <span className="font-mono font-semibold text-slate-800 text-xs">{selectedGuest.dateTime}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Asal Kota</span>
+                <span className="font-semibold text-slate-800 text-xs">{selectedGuest.city}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">PIC Pertemuan</span>
+                <span className="font-medium text-slate-800 text-xs">{selectedGuest.meetingPic}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">WhatsApp Klien</span>
+                <span className="font-mono font-bold text-blue-600 text-xs">{selectedGuest.contact}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Target MOQ</span>
+                <span className="font-mono font-bold text-slate-900 text-xs">{selectedGuest.moq.toLocaleString("id-ID")} pcs</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Target Pasar Konsumen</span>
+                <span className="font-medium text-slate-700 text-xs">{selectedGuest.targetMarket}</span>
+              </div>
+            </div>
+
+            <div className="bg-slate-50/60 p-4 rounded-xl border border-slate-200 space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Produk yang Diminati</span>
+              <p className="text-slate-800 font-semibold text-sm">{selectedGuest.productInterest}</p>
+            </div>
           </div>
         )}
-      </DnaModal>
+      </DnaDetailDrawer>
 
       {/* Modal Buat Tamu Baru */}
       <DnaModal

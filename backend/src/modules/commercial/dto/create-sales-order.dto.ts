@@ -4,6 +4,8 @@ import {
   IsUUID,
   IsNumber,
   IsOptional,
+  IsArray,
+  ArrayMinSize,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -43,8 +45,8 @@ export class CreateSalesOrderDto {
   @IsNotEmpty()
   sampleId!: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'SO_CATEGORY_REQUIRED: Kategori penjualan wajib diisi.' })
+  @IsNotEmpty({ message: 'SO_CATEGORY_REQUIRED: Kategori penjualan wajib diisi.' })
   salesCategory!: string;
 
   @IsString()
@@ -60,10 +62,11 @@ export class CreateSalesOrderDto {
   currencyId?: string;
 
   @IsNumber()
-  @IsNotEmpty()
-  totalAmount!: number;
+  @IsOptional()
+  totalAmount?: number;
 
-  @IsNotEmpty()
+  @IsArray({ message: 'CART_EMPTY: Sales order harus memiliki minimal 1 item produk.' })
+  @ArrayMinSize(1, { message: 'CART_EMPTY: Sales order harus memiliki minimal 1 item produk.' })
   @ValidateNested({ each: true })
   @Type(() => CreateSalesOrderItemDto)
   items!: CreateSalesOrderItemDto[];

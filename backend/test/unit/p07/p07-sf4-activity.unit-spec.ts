@@ -35,6 +35,8 @@ describe('P07-SF4 activity persists and links to canonical lead (real services)'
   let phone: string | null = null;
 
   beforeAll(async () => {
+    const { AuditService } = await import('../../../src/platform/audit/audit.service');
+    const { OutboxService } = await import('../../../src/platform/outbox/outbox.service');
     const mod = await Test.createTestingModule({
       providers: [
         LeadService,
@@ -43,6 +45,8 @@ describe('P07-SF4 activity persists and links to canonical lead (real services)'
         PrismaService,
         EventEmitter2,
         { provide: IdGeneratorService, useValue: { generateId: async (prefix: string) => `${prefix}-${randomUUID().slice(0, 6)}` } },
+        { provide: AuditService, useFactory: (p: PrismaService) => new AuditService(p as any), inject: [PrismaService] },
+        { provide: OutboxService, useFactory: (p: PrismaService) => new OutboxService(p as any), inject: [PrismaService] },
       ],
     }).compile();
     moduleRef = mod;
@@ -90,14 +94,23 @@ describe('P07-SF4 activity persists and links to canonical lead (real services)'
 
     // Mirror the lead into the Bussdev SalesLead table so logActivity (which
     // targets SalesLead) can attach activity to a real row.
-    const salesLead = await leadService.createLead({
-      clientName: `${TAG}-client`,
-      contactInfo: phone,
-      source: 'P07-SF4',
-      productInterest: 'SF4 activity seed',
-      estimatedValue: 1000000,
-      picId: staffId,
-    } as any);
+    const salesLead = await leadService.createLead(
+      {
+        clientName: `${TAG}-client`,
+        contactInfo: phone,
+        source: 'P07-SF4',
+        productInterest: 'SF4 activity seed',
+        estimatedValue: 1000000,
+        picId: staffId,
+      },
+      {
+        // The owning organization comes from the trusted actor context.
+        userId: staffUserId,
+        organizationId: randomUUID(),
+        roles: ['COMMERCIAL'],
+        correlationId: randomUUID(),
+      },
+    );
     leadId = salesLead.id;
   });
 

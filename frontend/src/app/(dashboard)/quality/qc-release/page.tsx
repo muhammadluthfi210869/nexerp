@@ -8,21 +8,14 @@ import {
   ShieldCheck,
   ShieldAlert,
   FileCheck,
-  Award,
   CheckCircle2,
-  AlertTriangle,
   Clock,
   Eye,
   Search,
-  Filter,
-  Layers,
   FlaskConical,
-  FileText,
-  Printer,
+  Building2,
   Sparkles,
-  ArrowRight,
-  UserCheck,
-  Building2
+  FileSpreadsheet
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -32,31 +25,30 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
+  DnaDetailDrawer,
   DnaModal,
-  DnaTabNav,
+  DnaInput,
   useDnaToast
 } from "@/components/dna";
 import Link from "next/link";
 
 interface QcReleaseBatchItem {
   id: string;
-  batchNumber: string; // e.g. BATCH-ELX-0905
-  spkCode: string; // e.g. SPK-2026-0040
+  batchNumber: string;
+  spkCode: string;
   customerName: string;
   brandName: string;
   productName: string;
   category: string;
-  outputQty: number; // PCS
+  outputQty: number;
   completionDate: string;
-  // Lab parameters
   organolepticPass: boolean;
   phValue: number;
   phRange: string;
   viscosityCps: number;
-  microbiologyPass: boolean; // ALT & Patogen bebas
-  microbiologyResult: string; // e.g. ALT < 10 CFU/g (Pass)
+  microbiologyPass: boolean;
+  microbiologyResult: string;
   specificGravity: number;
-  // APJ Release
   status: "QUARANTINE" | "INVESTIGATION" | "RELEASED" | "REJECTED";
   apjName?: string;
   apjSipa?: string;
@@ -65,112 +57,23 @@ interface QcReleaseBatchItem {
   notes?: string;
 }
 
-const FALLBACK_QC_RELEASE_BATCHES: QcReleaseBatchItem[] = [
-  {
-    id: "qc-1",
-    batchNumber: "BATCH-ELX-0905",
-    spkCode: "SPK-2026-0040",
-    customerName: "PT Elixir Botanika Internasional",
-    brandName: "ElixirHerb",
-    productName: "Rosemary Purifying Hair Tonic",
-    category: "Haircare",
-    outputQty: 9940,
-    completionDate: "2026-09-09",
-    organolepticPass: true,
-    phValue: 5.6,
-    phRange: "5.2 - 6.0",
-    viscosityCps: 150,
-    microbiologyPass: true,
-    microbiologyResult: "ALT < 10 CFU/g, Bebas Patogen (Pass)",
-    specificGravity: 0.998,
-    status: "QUARANTINE",
-    notes: "Inkubasi micro 3x24 jam selesai hari ini. Siap ditandatangani APJ."
-  },
-  {
-    id: "qc-2",
-    batchNumber: "BATCH-LUM-0901",
-    spkCode: "SPK-2026-0038",
-    customerName: "PT Sinar Kosmetika Abadi",
-    brandName: "LuminaCare",
-    productName: "Hyaluronic Acid Hydrating Toner",
-    category: "Skincare",
-    outputQty: 7980,
-    completionDate: "2026-09-06",
-    organolepticPass: true,
-    phValue: 5.4,
-    phRange: "5.0 - 5.8",
-    viscosityCps: 200,
-    microbiologyPass: true,
-    microbiologyResult: "ALT < 10 CFU/g, Bebas Patogen (Pass)",
-    specificGravity: 1.002,
-    status: "RELEASED",
-    apjName: "apt. Siti Rahmawati, S.Farm",
-    apjSipa: "19920815/SIPA_32.73/2022/2044",
-    coaNumber: "COA-2026-0906-088",
-    releaseDate: "2026-09-07 14:30",
-    notes: "Batch rilis resmi, telah mutasi ke Gudang Produk Jadi WH-03."
-  },
-  {
-    id: "qc-3",
-    batchNumber: "BATCH-DERM-0828",
-    spkCode: "SPK-2026-0035",
-    customerName: "PT Derma Lab Medika",
-    brandName: "DermaPure",
-    productName: "Salicylic Acid 2% Acne Spot Gel",
-    category: "Skincare",
-    outputQty: 3985,
-    completionDate: "2026-09-02",
-    organolepticPass: true,
-    phValue: 4.2,
-    phRange: "3.8 - 4.5",
-    viscosityCps: 6200,
-    microbiologyPass: true,
-    microbiologyResult: "ALT < 10 CFU/g, Bebas Patogen (Pass)",
-    specificGravity: 1.045,
-    status: "RELEASED",
-    apjName: "apt. Siti Rahmawati, S.Farm",
-    apjSipa: "19920815/SIPA_32.73/2022/2044",
-    coaNumber: "COA-2026-0902-076",
-    releaseDate: "2026-09-03 10:15",
-    notes: "Lolos seluruh pengujian fisika-kimia dan stabilitas mikro."
-  },
-  {
-    id: "qc-4",
-    batchNumber: "BATCH-GLW-0909",
-    spkCode: "SPK-2026-0042",
-    customerName: "PT Cantika Jelita Nusantara",
-    brandName: "GlowGoddess",
-    productName: "Niacinamide 10% Brightening Serum",
-    category: "Skincare",
-    outputQty: 5000,
-    completionDate: "2026-09-10",
-    organolepticPass: true,
-    phValue: 5.4,
-    phRange: "5.2 - 5.8",
-    viscosityCps: 1200,
-    microbiologyPass: false,
-    microbiologyResult: "Sedang Dalam Masa Inkubasi (H-2/3)",
-    specificGravity: 1.015,
-    status: "INVESTIGATION",
-    notes: "Menunggu inkubasi mikrobiologi 72 jam sebelum evaluasi APJ."
-  }
-];
-
 const STATUS_CONFIG: Record<string, { label: string; badge: "default" | "warning" | "success" | "critical" }> = {
-  QUARANTINE: { label: "Karantina (Menunggu Rilis APJ)", badge: "warning" },
-  INVESTIGATION: { label: "Inkubasi Mikro / Investigasi", badge: "default" },
-  RELEASED: { label: "Rilis Resmi APJ (WH-03)", badge: "success" },
-  REJECTED: { label: "Reject Mutu (Karantina)", badge: "critical" }
+  QUARANTINE: { label: "Karantina APJ", badge: "warning" },
+  INVESTIGATION: { label: "Inkubasi Mikro", badge: "default" },
+  RELEASED: { label: "Rilis Resmi WH-03", badge: "success" },
+  REJECTED: { label: "Reject Mutu", badge: "critical" }
 };
 
 export default function QcReleasePage() {
   const toast = useDnaToast();
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Modals state
+  // Modals & Drawer state
   const [releaseModalItem, setReleaseModalItem] = useState<QcReleaseBatchItem | null>(null);
   const [detailModalItem, setDetailModalItem] = useState<QcReleaseBatchItem | null>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
 
   // Form states for APJ Release
   const [apjName, setApjName] = useState("apt. Siti Rahmawati, S.Farm");
@@ -178,23 +81,23 @@ export default function QcReleasePage() {
   const [apjNotes, setApjNotes] = useState("Seluruh parameter fisika-kimia, mikrobiologi, dan organoleptik telah diverifikasi memenuhi spesifikasi CPKB.");
   const [agreeCheck, setAgreeCheck] = useState(false);
 
-  const { data: serverBatches } = useQuery({
+  const { data: serverBatches, refetch, isLoading } = useQuery({
     queryKey: ["production-qc-release-batches"],
     queryFn: async () => {
       try {
-        const res = await api.get("/production/audit");
+        const res = await api.get("/qc/release/batches");
         const unwrapped = unwrapResponse(res);
-        if (Array.isArray(unwrapped) && unwrapped.length > 0) {
-          // Map if server returns
+        if (Array.isArray(unwrapped)) {
+          return unwrapped as QcReleaseBatchItem[];
         }
       } catch (err) {
-        console.warn("Using fallback QC release batches", err);
+        console.warn("Failed to fetch QC release batches", err);
       }
-      return FALLBACK_QC_RELEASE_BATCHES;
+      return [] as QcReleaseBatchItem[];
     }
   });
 
-  const batches = serverBatches || FALLBACK_QC_RELEASE_BATCHES;
+  const batches = serverBatches || [];
 
   const filteredBatches = useMemo(() => {
     return batches.filter((b) => {
@@ -215,393 +118,370 @@ export default function QcReleasePage() {
     });
   }, [batches, activeTab, searchQuery]);
 
-  // KPI Calculations
   const quarantineCount = batches.filter((b) => b.status === "QUARANTINE").length;
   const releasedCount = batches.filter((b) => b.status === "RELEASED").length;
   const investigationCount = batches.filter((b) => b.status === "INVESTIGATION").length;
 
-  const handleExecuteRelease = () => {
+  const handleExecuteRelease = async () => {
     if (!releaseModalItem) return;
     if (!agreeCheck) {
       toast.error("Validasi APJ Diperlukan", "Harap centang konfirmasi kepatuhan CPKB sebelum merilis batch.");
       return;
     }
 
-    const coaCode = `COA-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${String(batches.length + 100).slice(-3)}`;
-    releaseModalItem.status = "RELEASED";
-    releaseModalItem.apjName = apjName;
-    releaseModalItem.apjSipa = apjSipa;
-    releaseModalItem.coaNumber = coaCode;
-    releaseModalItem.releaseDate = new Date().toLocaleString("id-ID");
-    releaseModalItem.notes = apjNotes;
+    try {
+      setIsSubmitting(true);
+      const res = await api.post("/qc/release", {
+        batchNumber: releaseModalItem.batchNumber,
+        workOrderId: releaseModalItem.id,
+        releaseQty: releaseModalItem.outputQty,
+        apjName,
+        apjSipa,
+        notes: apjNotes,
+      });
+      const data = unwrapResponse(res);
+      const coaCode = data?.coaNumber || `COA-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-001`;
 
-    setReleaseModalItem(null);
-    setAgreeCheck(false);
-    toast.success("Batch Berhasil Dirilis APJ", `Batch ${releaseModalItem.batchNumber} telah dirilis resmi dengan ${coaCode} ke Gudang WH-03.`);
+      await refetch();
+      setReleaseModalItem(null);
+      setIsDetailDrawerOpen(false);
+      setAgreeCheck(false);
+      toast.success("Batch Berhasil Dirilis APJ", `Batch ${releaseModalItem.batchNumber} telah dirilis resmi (${coaCode}) ke Gudang WH-03.`);
+    } catch (err: any) {
+      toast.error("Gagal Rilis Batch", err?.response?.data?.message || err?.message || "Terjadi kesalahan saat memproses rilis APJ.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <DnaPageContainer>
+      {/* 1. Header Page with Unified Top-Right Tabs */}
       <DnaPageHeader
         title="Inspeksi QC & Gerbang Rilis APJ"
-        subtitle="Gerbang Karantina Mutu CPKB: Verifikasi mikrobiologi, fisika-kimia, dan e-signature Apoteker Penanggung Jawab (SIPA)"
-        badge={
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>APJ Release Gate (CPKB)</span>
-          </div>
-        }
+        description="Gerbang Karantina Mutu CPKB: Verifikasi mikrobiologi, fisika-kimia, dan otorisasi e-signature Apoteker Penanggung Jawab."
+        badge={<DnaBadge variant="neutral">APJ-RELEASE</DnaBadge>}
+        breadcrumbs={[
+          { label: "Produksi Pabrik", href: "/production" },
+          { label: "Quality Assurance", href: "/quality/qc-release" },
+          { label: "Gerbang Rilis APJ", href: "/quality/qc-release" }
+        ]}
+        tabs={[
+          { id: "ALL", label: `Semua Batch (${batches.length})` },
+          { id: "QUARANTINE", label: `Menunggu Rilis (${quarantineCount})` },
+          { id: "INVESTIGATION", label: `Inkubasi Mikro (${investigationCount})` },
+          { id: "RELEASED", label: `Lolos Rilis (${releasedCount})` }
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         actions={
           <div className="flex items-center gap-2">
+            <DnaButton
+              variant="secondary"
+              onClick={() => toast.success("Export Data", "Data rilis APJ berhasil diekspor.")}
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+              Export Excel
+            </DnaButton>
             <Link href="/warehouse/stok">
-              <DnaButton variant="secondary" size="md">
+              <DnaButton variant="primary">
                 <Building2 className="w-4 h-4 mr-1.5" />
-                Gudang Produk Jadi (WH-03)
+                Gudang WH-03
               </DnaButton>
             </Link>
           </div>
         }
       />
 
-      {/* KPI Grid */}
+      {/* 2. KPI Grid */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          label="Menunggu Rilis APJ"
+          label="MENUNGGU RILIS APJ"
           value={`${quarantineCount} Batch`}
           icon={<Clock className="w-5 h-5 text-amber-600" />}
-          subtext="Karantina QC"
-          variant="warning"
+          subValue="Karantina Kepatuhan CPKB"
         />
         <DnaStatCard
-          label="Batch Lolos Rilis"
+          label="BATCH LOLOS RILIS"
           value={`${releasedCount} Batch`}
           icon={<ShieldCheck className="w-5 h-5 text-emerald-600" />}
-          delta={{ value: "100% rilis bulan ini", isPositive: true }}
-          variant="success"
+          subValue="Tersimpan di WH-03"
         />
         <DnaStatCard
-          label="Inkubasi Mikrobiologi"
+          label="INKUBASI MIKROBIOLOGI"
           value={`${investigationCount} Batch`}
           icon={<FlaskConical className="w-5 h-5 text-blue-600" />}
-          subtext="Inkubasi 72 Jam"
-          variant="info"
+          subValue="Uji Inkubasi 72 Jam"
         />
         <DnaStatCard
-          label="Rata-rata Waktu Rilis"
+          label="SLA RATA-RATA RILIS"
           value="3.2 Jam"
           icon={<Sparkles className="w-5 h-5 text-purple-600" />}
-          delta={{ value: "SLA < 6 Jam", isPositive: true }}
-          variant="purple"
+          subValue="Target Standar < 6 Jam"
         />
       </DnaKpiGrid>
 
-      {/* Main Table Card */}
+      {/* 3. DataTable Card (Zero redundant title, zero horizontal scroll, max 6 cols) */}
       <DnaDataTableCard
-        title="Daftar Batch Karantina & Rilis APJ"
-        badge={
-          <DnaBadge variant="default">
-            {filteredBatches.length} Batch
-          </DnaBadge>
-        }
-        customToolbar={
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 w-full">
-            <DnaTabNav
-              tabs={[
-                { id: "ALL", label: "Semua Batch", badge: batches.length },
-                { id: "QUARANTINE", label: "Menunggu Rilis APJ", badge: quarantineCount },
-                { id: "INVESTIGATION", label: "Inkubasi Mikro", badge: investigationCount },
-                { id: "RELEASED", label: "Lolos Rilis (WH-03)", badge: releasedCount }
-              ]}
-              activeTab={activeTab}
-              onChange={setActiveTab}
-            />
-
-            <div className="flex items-center gap-2">
-              <div className="relative min-w-[220px]">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Cari No. Batch, SPK, Produk..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white"
-                />
-              </div>
-            </div>
-          </div>
-        }
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Cari No. Batch, SPK, Produk, Brand, Pelanggan..."
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+        <div className="w-full">
+          <table className="w-full text-left text-xs table-fixed">
+            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="px-3.5 py-3">No. Batch & SPK</th>
-                <th className="px-3.5 py-3">Klien & Brand</th>
-                <th className="px-3.5 py-3">Produk & Kategori</th>
-                <th className="px-3.5 py-3 text-right">Output (PCS)</th>
-                <th className="px-3.5 py-3">Hasil Uji Fisika-Kimia</th>
-                <th className="px-3.5 py-3">Uji Mikrobiologi</th>
-                <th className="px-3.5 py-3">Status Rilis</th>
-                <th className="px-3.5 py-3">Signatory APJ</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
+                <th className="py-3 px-4 w-[18%]">No. Batch & SPK</th>
+                <th className="py-3 px-4 w-[24%]">Produk & Brand</th>
+                <th className="py-3 px-4 w-[22%]">Output & Fisika-Kimia</th>
+                <th className="py-3 px-4 w-[18%]">Uji Mikrobiologi</th>
+                <th className="py-3 px-4 w-[12%]">Status & APJ</th>
+                <th className="py-3 px-4 w-[6%] text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredBatches.map((item) => {
-                const statusInfo = STATUS_CONFIG[item.status] || { label: item.status, badge: "default" };
-                return (
-                  <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-3.5 py-3">
-                      <div className="font-bold text-blue-700 font-mono">{item.batchNumber}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">{item.spkCode}</div>
-                    </td>
-                    <td className="px-3.5 py-3">
-                      <div className="font-medium text-slate-900">{item.customerName}</div>
-                      <div className="text-[10px] text-slate-500 font-semibold">{item.brandName}</div>
-                    </td>
-                    <td className="px-3.5 py-3">
-                      <div className="font-medium text-slate-800">{item.productName}</div>
-                      <div className="text-[10px] text-slate-500">{item.category}</div>
-                    </td>
-                    <td className="px-3.5 py-3 text-right font-semibold text-slate-800">
-                      {item.outputQty.toLocaleString()} PCS
-                    </td>
-                    <td className="px-3.5 py-3">
-                      <div className="text-[11px] text-slate-800 font-medium">pH: {item.phValue} ({item.phRange})</div>
-                      <div className="text-[10px] text-slate-500">Viskositas: {item.viscosityCps} cPs • SG: {item.specificGravity}</div>
-                    </td>
-                    <td className="px-3.5 py-3">
-                      <div className="flex items-center gap-1">
-                        {item.microbiologyPass ? (
-                          <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    Memuat antrian karantina QC...
+                  </td>
+                </tr>
+              ) : filteredBatches.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    <ShieldCheck className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                    Tidak ada batch karantina yang sesuai filter.
+                  </td>
+                </tr>
+              ) : (
+                filteredBatches.map((item) => {
+                  const statusInfo = STATUS_CONFIG[item.status] || { label: item.status, badge: "default" };
+                  return (
+                    <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-3 px-4 truncate">
+                        <p className="font-mono text-xs font-bold text-blue-700 truncate">{item.batchNumber}</p>
+                        <p className="text-[11px] text-slate-500 font-mono mt-0.5 truncate">{item.spkCode}</p>
+                      </td>
+                      <td className="py-3 px-4 truncate">
+                        <p className="font-semibold text-slate-900 text-xs truncate">{item.productName}</p>
+                        <p className="text-[11px] text-slate-500 truncate">{item.customerName} ({item.brandName})</p>
+                      </td>
+                      <td className="py-3 px-4 truncate">
+                        <p className="font-mono font-bold text-slate-900 text-xs truncate">
+                          {item.outputQty.toLocaleString()} Pcs
+                        </p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          pH: {item.phValue} • Visk: {item.viscosityCps} cPs
+                        </p>
+                      </td>
+                      <td className="py-3 px-4 truncate">
+                        <div className="flex items-center gap-1">
+                          <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${item.microbiologyPass ? "text-emerald-600" : "text-amber-500"}`} />
+                          <span className={`font-semibold text-xs truncate ${item.microbiologyPass ? "text-emerald-700" : "text-amber-700"}`}>
                             {item.microbiologyResult}
                           </span>
-                        ) : (
-                          <span className="text-amber-700 font-medium flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-amber-600" />
-                            {item.microbiologyResult}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-3.5 py-3">
-                      <DnaBadge variant={statusInfo.badge}>
-                        {statusInfo.label}
-                      </DnaBadge>
-                    </td>
-                    <td className="px-3.5 py-3 text-slate-700">
-                      {item.apjName ? (
-                        <div>
-                          <div className="font-medium text-slate-900">{item.apjName}</div>
-                          <div className="text-[10px] text-emerald-700 font-mono font-semibold">{item.coaNumber}</div>
                         </div>
-                      ) : (
-                        <span className="text-[10px] text-slate-400 italic">Belum Ditandatangani</span>
-                      )}
-                    </td>
-                    <td className="px-3.5 py-3 text-center">
-                      <div className="flex items-center justify-center gap-1">
+                        <p className="text-[10px] text-slate-400 mt-0.5">Uji ALT & Patogen</p>
+                      </td>
+                      <td className="py-3 px-4 truncate">
+                        <DnaBadge variant={statusInfo.badge}>{statusInfo.label}</DnaBadge>
+                        <p className="text-[10px] font-mono text-slate-500 mt-0.5 truncate">{item.coaNumber || "Belum ttd"}</p>
+                      </td>
+                      <td className="py-3 px-4 text-right">
                         <DnaButton
-                          variant="secondary"
+                          variant="ghost"
                           size="sm"
-                          onClick={() => setDetailModalItem(item)}
-                          title="Lihat Hasil Lab Lengkap"
+                          onClick={() => {
+                            setDetailModalItem(item);
+                            setIsDetailDrawerOpen(true);
+                          }}
+                          title="Lihat Detail Hasil QC"
                         >
-                          <Eye className="w-3.5 h-3.5" />
+                          <Eye className="w-4 h-4 text-slate-600" />
                         </DnaButton>
-
-                        {item.status === "QUARANTINE" && (
-                          <DnaButton
-                            variant="primary"
-                            size="sm"
-                            onClick={() => {
-                              setReleaseModalItem(item);
-                              setAgreeCheck(false);
-                            }}
-                            title="Proses Pelepasan & Rilis APJ"
-                          >
-                            <ShieldCheck className="w-3.5 h-3.5 mr-1" />
-                            Rilis APJ
-                          </DnaButton>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
       </DnaDataTableCard>
 
-      {/* MODAL GERBANG RILIS APJ (E-SIGNATURE & COA) */}
+      {/* 4. Modal Konfirmasi Rilis APJ */}
       <DnaModal
         isOpen={!!releaseModalItem}
         onClose={() => setReleaseModalItem(null)}
-        title={`Gerbang Pelepasan & Rilis APJ: ${releaseModalItem?.batchNumber}`}
-        size="lg"
+        title={`Otorisasi Rilis Resmi APJ: ${releaseModalItem?.batchNumber}`}
+        size="md"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <DnaButton variant="secondary" onClick={() => setReleaseModalItem(null)}>
+              Batal
+            </DnaButton>
+            <DnaButton
+              variant="primary"
+              onClick={handleExecuteRelease}
+              disabled={isSubmitting || !agreeCheck}
+            >
+              {isSubmitting ? "Memproses..." : "Tandatangani & Rilis"}
+            </DnaButton>
+          </div>
+        }
       >
         {releaseModalItem && (
           <div className="space-y-4 text-xs">
-            <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-1.5">
-              <div className="flex items-center gap-1.5 text-emerald-900 font-bold">
-                <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                <span>Verifikasi Pelepasan Batch Sesuai Regulasi CPKB & BPOM RI</span>
-              </div>
-              <div className="text-emerald-800">
-                Produk: <strong>{releaseModalItem.productName}</strong> ({releaseModalItem.customerName})
-              </div>
-              <div className="text-[11px] text-slate-600">
-                Jumlah Output Rilis: <strong className="text-slate-900">{releaseModalItem.outputQty.toLocaleString()} PCS</strong>
-              </div>
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg space-y-1">
+              <div className="font-bold text-emerald-950">{releaseModalItem.productName}</div>
+              <p className="text-emerald-800">
+                Kuantitas Rilis: <span className="font-bold">{releaseModalItem.outputQty.toLocaleString()} Pcs</span> ke Gudang Produk Jadi (WH-03)
+              </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-white border border-slate-200 rounded-lg">
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold uppercase">Uji Organoleptik</div>
-                <div className="font-bold text-emerald-700 flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  LULUS
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold uppercase">pH Aktual</div>
-                <div className="font-bold text-slate-800">{releaseModalItem.phValue} (Standar: {releaseModalItem.phRange})</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold uppercase">Viskositas & SG</div>
-                <div className="font-bold text-slate-800">{releaseModalItem.viscosityCps} cPs / {releaseModalItem.specificGravity}</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold uppercase">Mikrobiologi (ALT)</div>
-                <div className="font-bold text-emerald-700 flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  BEBAS PATOGEN
-                </div>
-              </div>
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Nama Apoteker Penanggung Jawab (APJ)</label>
+              <DnaInput
+                value={apjName}
+                onChange={(e) => setApjName(e.target.value)}
+              />
             </div>
 
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
-              <div className="font-semibold text-slate-800 flex items-center gap-1.5">
-                <UserCheck className="w-4 h-4 text-blue-600" />
-                <span>Identitas Apoteker Penanggung Jawab (APJ):</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Nama Apoteker Penanggung Jawab</label>
-                  <input
-                    type="text"
-                    value={apjName}
-                    onChange={(e) => setApjName(e.target.value)}
-                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded font-semibold text-slate-800"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Nomor SIPA / STRA Resmi</label>
-                  <input
-                    type="text"
-                    value={apjSipa}
-                    onChange={(e) => setApjSipa(e.target.value)}
-                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded font-mono text-blue-700 font-semibold"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Pernyataan & Catatan Kelayakan Rilis</label>
-                <textarea
-                  rows={2}
-                  value={apjNotes}
-                  onChange={(e) => setApjNotes(e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded text-slate-700"
-                />
-              </div>
-
-              <div className="pt-2 border-t border-slate-200">
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={agreeCheck}
-                    onChange={(e) => setAgreeCheck(e.target.checked)}
-                    className="mt-0.5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <span className="text-[11px] font-medium text-slate-800 leading-snug">
-                    Saya sebagai <strong>Apoteker Penanggung Jawab (APJ)</strong> menyatakan dengan sebenarnya bahwa seluruh tahapan produksi (Mixing, Filling, Packaging) dan pengujian mutu batch ini telah memenuhi prinsip Cara Pembuatan Kosmetika yang Baik (CPKB) dan layak dirilis ke pasar / gudang produk jadi.
-                  </span>
-                </label>
-              </div>
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Nomor Surat Izin Praktik Apoteker (SIPA)</label>
+              <DnaInput
+                value={apjSipa}
+                onChange={(e) => setApjSipa(e.target.value)}
+              />
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <DnaButton variant="secondary" onClick={() => setReleaseModalItem(null)}>
-                Batal
-              </DnaButton>
-              <DnaButton variant="primary" onClick={handleExecuteRelease}>
-                <Award className="w-4 h-4 mr-1.5" />
-                Terbitkan CoA & Rilis ke WH-03
-              </DnaButton>
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Catatan Pelepasan Batch</label>
+              <DnaInput
+                value={apjNotes}
+                onChange={(e) => setApjNotes(e.target.value)}
+              />
+            </div>
+
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-start gap-2">
+              <input
+                type="checkbox"
+                id="agree-release"
+                checked={agreeCheck}
+                onChange={(e) => setAgreeCheck(e.target.checked)}
+                className="mt-0.5"
+              />
+              <label htmlFor="agree-release" className="text-slate-700 font-medium">
+                Saya menyatakan dengan penuh tanggung jawab kefarmasian bahwa seluruh parameter mutu telah lolos uji CPKB.
+              </label>
             </div>
           </div>
         )}
       </DnaModal>
 
-      {/* MODAL DETAIL BATCH QC */}
-      <DnaModal
-        isOpen={!!detailModalItem}
-        onClose={() => setDetailModalItem(null)}
-        title={`Laporan Pengujian Mutu: ${detailModalItem?.batchNumber}`}
-        size="md"
-      >
-        {detailModalItem && (
-          <div className="space-y-4 text-xs">
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-              <div className="font-bold text-slate-900">{detailModalItem.productName} ({detailModalItem.brandName})</div>
-              <div className="text-slate-600">Klien: {detailModalItem.customerName} • Qty: {detailModalItem.outputQty.toLocaleString()} PCS</div>
-            </div>
+      {/* 5. Quick Peek Drawer (Rule 5) */}
+      <DnaDetailDrawer
+        isOpen={isDetailDrawerOpen}
+        onClose={() => setIsDetailDrawerOpen(false)}
+        title={detailModalItem?.batchNumber || "Detail Rilis QC"}
+        subtitle={detailModalItem ? `${detailModalItem.productName} • ${detailModalItem.customerName}` : undefined}
+        badge={detailModalItem ? <DnaBadge variant={STATUS_CONFIG[detailModalItem.status]?.badge || "default"}>{STATUS_CONFIG[detailModalItem.status]?.label}</DnaBadge> : undefined}
+        tabs={[
+          {
+            id: "params",
+            label: "Parameter Fisika-Kimia",
+            content: detailModalItem ? (
+              <div className="space-y-4 text-xs">
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono font-bold text-blue-700">{detailModalItem.batchNumber}</span>
+                    <span className="font-mono text-slate-500">{detailModalItem.spkCode}</span>
+                  </div>
+                  <p className="font-bold text-slate-900 text-sm">{detailModalItem.productName}</p>
+                  <p className="text-slate-600">{detailModalItem.customerName} ({detailModalItem.brandName})</p>
+                </div>
 
-            <div className="space-y-2 p-3 bg-white border border-slate-200 rounded-lg">
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Status Pelepasan:</span>
-                <DnaBadge variant={STATUS_CONFIG[detailModalItem.status]?.badge || "default"}>
-                  {STATUS_CONFIG[detailModalItem.status]?.label}
-                </DnaBadge>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">No. Sertifikat Analisis (CoA):</span>
-                <span className="font-mono font-bold text-emerald-700">{detailModalItem.coaNumber || "Belum terbit"}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">APJ Penandatangan:</span>
-                <span className="font-semibold text-slate-900">{detailModalItem.apjName || "-"}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Nomor SIPA:</span>
-                <span className="font-mono text-slate-700">{detailModalItem.apjSipa || "-"}</span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-slate-500">Waktu Pelepasan:</span>
-                <span className="font-medium text-slate-800">{detailModalItem.releaseDate || "-"}</span>
-              </div>
-            </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="text-slate-500 block mb-1">pH Terukur</span>
+                    <p className="font-mono font-bold text-slate-900 text-sm">{detailModalItem.phValue}</p>
+                    <span className="text-[10px] text-slate-400">Spec: {detailModalItem.phRange}</span>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="text-slate-500 block mb-1">Viskositas</span>
+                    <p className="font-mono font-bold text-slate-900 text-sm">{detailModalItem.viscosityCps} cPs</p>
+                    <span className="text-[10px] text-slate-400">Spindle 4 @30 RPM</span>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="text-slate-500 block mb-1">Specific Gravity</span>
+                    <p className="font-mono font-bold text-slate-900 text-sm">{detailModalItem.specificGravity}</p>
+                    <span className="text-[10px] text-slate-400">Piknometer</span>
+                  </div>
+                </div>
 
-            {detailModalItem.notes && (
-              <div className="p-2.5 bg-blue-50/70 border border-blue-200 rounded-lg text-blue-900">
-                <div className="font-semibold text-[11px] mb-0.5">Catatan Rilis:</div>
-                <div>{detailModalItem.notes}</div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                  <span className="font-bold text-slate-700">Pemeriksaan Organoleptik:</span>
+                  <p className="text-slate-600">
+                    {detailModalItem.organolepticPass ? "Warna, aroma, dan homogenitas memenuhi standar master sampel." : "Tidak memenuhi kriteria organoleptik."}
+                  </p>
+                </div>
               </div>
+            ) : null
+          },
+          {
+            id: "microbiology",
+            label: "Mikrobiologi & APJ",
+            content: detailModalItem ? (
+              <div className="space-y-3 text-xs">
+                <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200 flex justify-between items-center">
+                  <div>
+                    <p className="font-bold text-emerald-950">Uji Mikrobiologi (ALT & Patogen)</p>
+                    <p className="text-[11px] text-emerald-800">{detailModalItem.microbiologyResult}</p>
+                  </div>
+                  <DnaBadge variant={detailModalItem.microbiologyPass ? "success" : "warning"}>
+                    {detailModalItem.microbiologyPass ? "LOLOS" : "INKUBASI"}
+                  </DnaBadge>
+                </div>
+
+                <div className="p-3 bg-white rounded-lg border border-slate-200 space-y-2">
+                  <p className="font-bold text-slate-700 uppercase">Otorisasi Apoteker Penanggung Jawab:</p>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">APJ:</span>
+                    <span className="font-semibold text-slate-900">{detailModalItem.apjName || "Belum ditandatangani"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">No. SIPA:</span>
+                    <span className="font-mono text-slate-700">{detailModalItem.apjSipa || "—"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">No. Sertifikat CoA:</span>
+                    <span className="font-mono font-bold text-emerald-700">{detailModalItem.coaNumber || "—"}</span>
+                  </div>
+                </div>
+              </div>
+            ) : null
+          }
+        ]}
+        footerActions={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <DnaButton variant="secondary" onClick={() => setIsDetailDrawerOpen(false)}>
+              Tutup
+            </DnaButton>
+            {detailModalItem?.status === "QUARANTINE" && (
+              <DnaButton
+                variant="primary"
+                onClick={() => {
+                  setReleaseModalItem(detailModalItem);
+                  setAgreeCheck(false);
+                }}
+              >
+                <ShieldCheck className="w-4 h-4 mr-1.5" />
+                Rilis APJ Sekarang
+              </DnaButton>
             )}
-
-            <div className="flex justify-end pt-2 border-t border-slate-100">
-              <DnaButton variant="primary" size="sm" onClick={() => setDetailModalItem(null)}>
-                Tutup
-              </DnaButton>
-            </div>
           </div>
-        )}
-      </DnaModal>
+        }
+      />
     </DnaPageContainer>
   );
 }

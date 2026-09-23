@@ -29,12 +29,19 @@ import {
   DnaButton,
   DnaBadge,
   DnaModal,
+  DnaDetailDrawer,
   formatRupiah,
   useDnaToast,
   DnaInput,
-  DnaSelect
+  DnaSelect,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
+  DnaCell
 } from "@/components/dna";
-import { DnaTable } from "@/components/dna";
 
 interface CashInItem {
   id: string;
@@ -49,13 +56,6 @@ interface CashInItem {
   reference?: string;
 }
 
-const FALLBACK_CASH_IN: CashInItem[] = [
-  { id: "1", code: "KM-2609-001", date: "2026-09-08", description: "Penerimaan Termin 50% Produksi PO-8821 PT Glowing", from: "PT Glowing Beauty Indonesia", account: "BCA Operasional (521-009182)", amount: 450000000, status: "POSTED", category: "Maklon OEM", reference: "AR-INV-2609-01" },
-  { id: "2", code: "KM-2609-002", date: "2026-09-07", description: "Pelunasan Invoice Jasa Notifikasi BPOM", from: "CV Cantik Natural", account: "Mandiri Payroll (137-00123)", amount: 35000000, status: "POSTED", category: "Legalitas BPOM", reference: "AR-INV-2608-88" },
-  { id: "3", code: "KM-2609-003", date: "2026-09-05", description: "Penerimaan Bunga Bank Giro Penempatan", from: "Bank BCA", account: "BCA Operasional (521-009182)", amount: 4250000, status: "POSTED", category: "Pendapatan Bunga", reference: "-" },
-  { id: "4", code: "KM-2609-004", date: "2026-09-03", description: "Penerimaan Penjualan Batch Sample R&D", from: "dr. Vina Aesthetic Clinic", account: "BCA Operasional (521-009182)", amount: 15000000, status: "POSTED", category: "Sample R&D", reference: "SO-SMP-041" },
-];
-
 export default function CashInPage() {
   return (
     <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Kas Masuk...</div>}>
@@ -67,10 +67,46 @@ export default function CashInPage() {
 function CashInContent() {
   const searchParams = useSearchParams();
   const toast = useDnaToast();
+  const [statusTab, setStatusTab] = useState<string>("ALL");
   const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedDetail, setSelectedDetail] = useState<CashInItem | null>(null);
+
+  // Live Cash In / Journals query
+  const { data: journalsRaw = [], isLoading, refetch } = useQuery({
+    queryKey: ["finance-cash-in-journals"],
+    queryFn: async (): Promise<any[]> => {
+      const res = await api.get("/finance/journals");
+      return unwrapResponse<any[]>(res) || [];
+    },
+  });
+
+  const cashInItems: CashInItem[] = useMemo(() => {
+    return (journalsRaw || [])
+      .filter((j: any) =>
+        j.reference?.includes("KM") ||
+        j.reference?.includes("CASH-IN") ||
+        j.sourceDocumentType === "MANUAL" ||
+        j.lines?.some((l: any) => l.account?.type === "REVENUE")
+      )
+      .map((j: any) => {
+        const debitLine = j.lines?.find((l: any) => Number(l.debit) > 0);
+        const creditLine = j.lines?.find((l: any) => Number(l.credit) > 0);
+        return {
+          id: j.id,
+          code: j.reference || `KM-${j.id?.slice(0, 8)}`,
+          date: j.date ? new Date(j.date).toISOString().split("T")[0] : "",
+          description: j.description || "Penerimaan Kas",
+          from: j.sourceDocumentType || "Pelanggan",
+          account: debitLine?.account?.name || "Kas/Bank BCA",
+          amount: Number(debitLine?.debit || creditLine?.credit || 0),
+          status: "POSTED" as const,
+          category: creditLine?.account?.name || "Pendapatan",
+          reference: j.reference,
+        };
+      });
+  }, [journalsRaw]);
 
   useEffect(() => {
     if (searchParams.get("action") === "create") {
@@ -90,18 +126,19 @@ function CashInContent() {
   });
 
   const totalKasMasuk = useMemo(() => {
-    return FALLBACK_CASH_IN.reduce((acc, r) => acc + r.amount, 0);
-  }, []);
+    return cashInItems.reduce((acc, r) => acc + r.amount, 0);
+  }, [cashInItems]);
 
   const filteredItems = useMemo(() => {
-    return FALLBACK_CASH_IN.filter((item) => {
+    return cashInItems.filter((item) => {
       const matchSearch =
         item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.from.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchSearch;
+      const matchTab = statusTab === "ALL" || item.status === statusTab;
+      return matchSearch && matchTab;
     });
-  }, [searchQuery]);
+  }, [cashInItems, searchQuery, statusTab]);
 
   const handleSave = () => {
     if (!formData.description || !formData.amount) {
@@ -132,6 +169,13 @@ function CashInContent() {
             <span>Poin 18: Single Card Ringkas & Filter Kalender Lengkap</span>
           </div>
         }
+        tabs={[
+          { id: "ALL", label: "Semua Mutasi" },
+          { id: "POSTED", label: "Posted (Jurnal)" },
+          { id: "DRAFT", label: "Draft" }
+        ]}
+        activeTab={statusTab}
+        onTabChange={setStatusTab}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
@@ -160,8 +204,6 @@ function CashInContent() {
 
       {/* DATA TABLE CARD DENGAN DATE RANGE PICKER BEBAS */}
       <DnaDataTableCard
-        title="Daftar Mutasi Kas Bank Masuk"
-        badge={<DnaBadge variant="success">{filteredItems.length} Transaksi</DnaBadge>}
         customToolbar={
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
@@ -198,67 +240,87 @@ function CashInContent() {
         }
       >
         <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">#</th>
-                <th className="px-3.5 py-3">Kode</th>
-                <th className="px-3.5 py-3">Tanggal</th>
-                <th className="px-3.5 py-3">Deskripsi Penerimaan</th>
-                <th className="px-3.5 py-3">Dari (Pengirim)</th>
-                <th className="px-3.5 py-3">Kas / Bank</th>
-                <th className="px-3.5 py-3 text-right">Jumlah (Rp)</th>
-                <th className="px-3.5 py-3 text-center">Status</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
+          <DnaTable className="min-w-[1100px]">
+            <DnaTableHead>
+              <tr>
+                <DnaTh className="w-[130px]">No Bukti</DnaTh>
+                <DnaTh className="w-[110px]">Tanggal</DnaTh>
+                <DnaTh>Deskripsi Penerimaan</DnaTh>
+                <DnaTh>Diterima Dari</DnaTh>
+                <DnaTh>Rekening Kas/Bank</DnaTh>
+                <DnaTh>Kategori / CoA</DnaTh>
+                <DnaTh align="right" className="w-[140px]">Jumlah (Rp)</DnaTh>
+                <DnaTh align="center" className="w-[100px]">Status</DnaTh>
+                <DnaTh align="center" className="w-[80px]">Aksi</DnaTh>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredItems.map((item, idx) => (
-                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 text-slate-400 font-mono">{idx + 1}</td>
-                  <td className="px-3.5 py-2.5 font-mono text-emerald-700 font-bold">{item.code}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.date}</td>
-                  <td className="px-3.5 py-2.5 font-semibold text-slate-900">{item.description}</td>
-                  <td className="px-3.5 py-2.5 text-slate-700 font-medium">{item.from}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 text-[11px]">{item.account}</td>
-                  <td className="px-3.5 py-2.5 text-right font-extrabold text-emerald-700 text-xs">
-                    {formatRupiah(item.amount)}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
+            </DnaTableHead>
+            <DnaTableBody>
+              {filteredItems.map((item) => (
+                <DnaTableRow
+                  key={item.id}
+                  onClick={() => setSelectedDetail(item)}
+                  className="cursor-pointer"
+                >
+                  <DnaTd>
+                    <DnaCell.Code value={item.code} />
+                  </DnaTd>
+                  <DnaTd>
+                    <DnaCell.Date value={item.date} />
+                  </DnaTd>
+                  <DnaTd isPrimary>
+                    <DnaCell.Text primary={item.description} />
+                  </DnaTd>
+                  <DnaTd>
+                    <DnaCell.Text primary={item.from} />
+                  </DnaTd>
+                  <DnaTd>
+                    <DnaCell.Text primary={item.account} />
+                  </DnaTd>
+                  <DnaTd isMuted>
+                    <DnaCell.Text primary={item.category} />
+                  </DnaTd>
+                  <DnaTd align="right">
+                    <DnaCell.Currency value={item.amount} className="font-semibold text-emerald-700" />
+                  </DnaTd>
+                  <DnaTd align="center">
                     <DnaBadge variant={item.status === "POSTED" ? "success" : "default"}>
                       {item.status}
                     </DnaBadge>
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <button
+                  </DnaTd>
+                  <DnaTd align="center" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-center gap-1">
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setSelectedDetail(item)}
-                        className="p-1 text-slate-400 hover:text-emerald-600 rounded transition-colors"
                         title="Lihat Detail"
+                        className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
                       >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
+                        <Eye className="w-3.5 h-3.5" />
+                      </DnaButton>
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
                         onClick={() => toast.success(`Mencetak Bukti Kas Masuk ${item.code}...`)}
-                        className="p-1 text-slate-400 hover:text-blue-600 rounded transition-colors"
-                        title="Print Bukti Kas Masuk"
+                        title="Print Bukti"
+                        className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
                       >
-                        <Printer className="w-4 h-4" />
-                      </button>
+                        <Printer className="w-3.5 h-3.5 text-blue-600" />
+                      </DnaButton>
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-              <tr className="bg-emerald-50/75 font-black border-t-2 border-emerald-300">
-                <td colSpan={6} className="px-3.5 py-3 text-emerald-950 font-black text-right text-xs">
+              <tr className="bg-emerald-50/75 font-semibold border-t-2 border-emerald-300">
+                <td colSpan={6} className="px-3.5 py-3 text-emerald-950 font-bold text-right text-xs">
                   TOTAL KAS MASUK:
                 </td>
-                <td className="px-3.5 py-3 text-right text-emerald-950 font-black text-sm">
+                <td className="px-3.5 py-3 text-right text-emerald-950 font-bold tabular-nums text-sm">
                   {formatRupiah(totalKasMasuk)}
                 </td>
                 <td colSpan={2}></td>
               </tr>
-            </tbody>
+            </DnaTableBody>
           </DnaTable>
         </div>
       </DnaDataTableCard>
@@ -373,49 +435,121 @@ function CashInContent() {
         </div>
       </DnaModal>
 
-      {/* DETAIL MODAL */}
-      <DnaModal
+      {/* DETAIL DRAWER (QUICK PEEK) */}
+      <DnaDetailDrawer
         isOpen={!!selectedDetail}
         onClose={() => setSelectedDetail(null)}
-        title={`Detail Kas Masuk: ${selectedDetail?.code}`}
-        size="md"
-      >
-        <div className="space-y-3.5 text-xs">
-          <div className="bg-slate-50 p-3 rounded-lg space-y-2 border border-slate-200">
-            <div className="flex justify-between">
-              <span className="text-slate-500">Tanggal Transaksi:</span>
-              <strong className="text-slate-800">{selectedDetail?.date}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Sumber Dana / Pengirim:</span>
-              <strong className="text-slate-800">{selectedDetail?.from}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Akun Rekening Penerima:</span>
-              <strong className="text-slate-800">{selectedDetail?.account}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Kategori / CoA:</span>
-              <strong className="text-slate-800">{selectedDetail?.category}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Dokumen Ref:</span>
-              <strong className="text-slate-800 font-mono">{selectedDetail?.reference}</strong>
-            </div>
-            <div className="flex justify-between border-t border-slate-200 pt-2">
-              <span className="text-slate-900 font-bold">Total Nominal:</span>
-              <strong className="text-emerald-700 font-black text-sm">
-                {selectedDetail ? formatRupiah(selectedDetail.amount) : "0"}
-              </strong>
-            </div>
-          </div>
-          <div className="flex justify-end pt-2">
-            <DnaButton variant="secondary" size="md" onClick={() => setSelectedDetail(null)}>
+        title={`Bukti Kas Masuk: ${selectedDetail?.code}`}
+        subtitle={selectedDetail?.description}
+        badge={
+          selectedDetail && (
+            <DnaBadge variant={selectedDetail.status === "POSTED" ? "success" : "default"}>
+              {selectedDetail.status}
+            </DnaBadge>
+          )
+        }
+        tabs={[
+          {
+            id: "info",
+            label: "Rincian Transaksi",
+            content: (
+              <div className="space-y-4 p-4 text-xs">
+                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                  <div>
+                    <div className="text-[11px] text-slate-500">Nomor Bukti</div>
+                    <div className="font-mono font-bold text-emerald-700 text-sm">{selectedDetail?.code}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Tanggal Transaksi</div>
+                    <div className="font-medium text-slate-800">{selectedDetail?.date}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Sumber / Pengirim</div>
+                    <div className="font-semibold text-slate-900">{selectedDetail?.from}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Akun Rekening Penerima</div>
+                    <div className="font-semibold text-slate-800">{selectedDetail?.account}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Kategori / Akun Pendapatan</div>
+                    <div className="font-medium text-slate-700">{selectedDetail?.category}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Dokumen Referensi</div>
+                    <div className="font-mono text-slate-800">{selectedDetail?.reference || "-"}</div>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-emerald-50 rounded-lg border border-emerald-200 flex justify-between items-center">
+                  <div>
+                    <div className="text-[11px] text-emerald-700 font-bold uppercase">Total Nominal Kas Masuk</div>
+                    <div className="text-xl font-black text-emerald-900">
+                      {selectedDetail ? formatRupiah(selectedDetail.amount) : "0"}
+                    </div>
+                  </div>
+                  <DnaBadge variant="success">INFLOW VERIFIED</DnaBadge>
+                </div>
+              </div>
+            )
+          },
+          {
+            id: "journal",
+            label: "Jurnal Posting",
+            content: (
+              <div className="p-4 space-y-3 text-xs">
+                <div className="text-slate-500 font-medium">Entri Jurnal Akuntansi Otomatis:</div>
+                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-[11px]">
+                      <tr>
+                        <th className="p-2.5">Akun COA</th>
+                        <th className="p-2.5 text-right">Debit</th>
+                        <th className="p-2.5 text-right">Kredit</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      <tr>
+                        <td className="p-2.5 font-medium text-slate-800">
+                          Dr. {selectedDetail?.account}
+                        </td>
+                        <td className="p-2.5 text-right font-bold text-emerald-700">
+                          {selectedDetail ? formatRupiah(selectedDetail.amount) : "0"}
+                        </td>
+                        <td className="p-2.5 text-right text-slate-400">-</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2.5 font-medium text-slate-800 pl-6">
+                          Cr. {selectedDetail?.category}
+                        </td>
+                        <td className="p-2.5 text-right text-slate-400">-</td>
+                        <td className="p-2.5 text-right font-bold text-emerald-700">
+                          {selectedDetail ? formatRupiah(selectedDetail.amount) : "0"}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )
+          }
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
+            <DnaButton
+              variant="secondary"
+              size="md"
+              onClick={() => toast.success(`Mencetak Bukti Kas Masuk ${selectedDetail?.code}...`)}
+            >
+              <Printer className="w-4 h-4 mr-1.5" />
+              Cetak Bukti
+            </DnaButton>
+            <DnaButton variant="primary" size="md" onClick={() => setSelectedDetail(null)}>
               Tutup
             </DnaButton>
           </div>
-        </div>
-      </DnaModal>
+        }
+      />
     </DnaPageContainer>
   );
 }

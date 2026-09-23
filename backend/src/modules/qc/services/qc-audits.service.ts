@@ -28,15 +28,16 @@ export class QCAuditsService {
   }
 
   async create(userId: string, dto: CreateQCAuditDto) {
-    const normalizedStatus = this.normalizeStatus(dto.status);
+    try {
+      const normalizedStatus = this.normalizeStatus(dto.status);
 
-    // Resolve phase dari stage jika tidak dikirim
-    const phase = dto.phase || this.inferPhase(dto);
+      // Resolve phase dari stage jika tidak dikirim
+      const phase = dto.phase || this.inferPhase(dto);
 
-    // Threshold validation: cek parameter terhadap QCParameter target
-    if (dto.stepLogId && normalizedStatus === 'GOOD') {
-      await this.validateThresholds(dto, userId);
-    }
+      // Threshold validation: cek parameter terhadap QCParameter target
+      if (dto.stepLogId && normalizedStatus === 'GOOD') {
+        await this.validateThresholds(dto, userId);
+      }
 
     const result = await this.prisma.$transaction(async (tx: any) => {
       // PHASE 1: Handle Production Step Log (Mixing/Filling/Packing stage)
@@ -142,6 +143,10 @@ export class QCAuditsService {
               ? dto.organoleptic === 'PASS'
               : undefined,
           samplingVolume: dto.fillingWeight,
+          inkjetCheck:
+            dto.inkjetCheck !== undefined
+              ? dto.inkjetCheck === 'PASS'
+              : undefined,
           sealingCheck:
             dto.sealingCheck !== undefined
               ? dto.sealingCheck === 'PASS'
@@ -241,16 +246,20 @@ export class QCAuditsService {
       });
     }
 
-    if (dto.bypassReason) {
-      this.eventEmitter.emit('qc.supervisor_bypass', {
-        auditId: result.id,
-        reason: dto.bypassReason,
-        supervisorId: userId,
-        stepLogId: dto.stepLogId,
-      });
-    }
+      if (dto.bypassReason) {
+        this.eventEmitter.emit('qc.supervisor_bypass', {
+          auditId: result.id,
+          reason: dto.bypassReason,
+          supervisorId: userId,
+          stepLogId: dto.stepLogId,
+        });
+      }
 
-    return result;
+      return result;
+    } catch (err) {
+      console.error('QCAuditsService.create ERROR:', err);
+      throw err;
+    }
   }
 
   private inferPhase(dto: CreateQCAuditDto): any {

@@ -21,6 +21,7 @@ import {
   DnaBadge,
   useDnaToast,
 } from "@/components/dna";
+import { DnaCell } from "@/components/dna/cells/DnaCell";
 import { formatCurrency } from "@/lib/utils";
 
 interface StockRecord {
@@ -194,117 +195,159 @@ export default function ReportStockPage() {
       {/* KPI Cards 3-Pilar */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          title="Total Fisik Persediaan"
+          label="Total Fisik Persediaan"
           value={totalPhysical.toLocaleString("id-ID")}
-          icon={Boxes}
-          variant="default"
+          icon={<Boxes className="w-5 h-5 text-indigo-600" />}
+          variant="info"
           subtext="Total seluruh kuantitas di gudang"
         />
         <DnaStatCard
-          title="Stok Bagus (Siap Pakai/Kirim)"
+          label="Stok Bagus (Siap Pakai/Kirim)"
           value={totalGood.toLocaleString("id-ID")}
-          icon={PackageCheck}
+          icon={<PackageCheck className="w-5 h-5 text-emerald-600" />}
           variant="success"
           subtext="Lolos QC dan layak proses"
         />
         <DnaStatCard
-          title="Stok Cacat / Reject"
+          label="Stok Cacat / Reject"
           value={totalReject.toLocaleString("id-ID")}
-          icon={AlertTriangle}
-          variant="danger"
+          icon={<AlertTriangle className="w-5 h-5 text-rose-600" />}
+          variant={totalReject > 0 ? "warning" : "default"}
           subtext="Rusak/reject dalam penampungan"
         />
         <DnaStatCard
-          title="Item Menipis (Reorder Alert)"
+          label="Item Menipis (Reorder Alert)"
           value={totalLowStock.toString()}
-          icon={AlertTriangle}
-          variant="warning"
+          icon={<AlertTriangle className="w-5 h-5 text-amber-600" />}
+          variant={totalLowStock > 0 ? "warning" : "default"}
           subtext="Stok mendekati batas aman"
         />
       </DnaKpiGrid>
 
-      {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari kode, nama barang, gudang..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <select
-            value={warehouseFilter}
-            onChange={(e) => setWarehouseFilter(e.target.value)}
-            className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="ALL">Semua Gudang</option>
-            <option value="Gudang Bahan Baku">Gudang Bahan Baku</option>
-            <option value="Gudang Kemasan">Gudang Kemasan</option>
-            <option value="Gudang Barang Jadi">Gudang Barang Jadi</option>
-            <option value="Gudang Surabaya">Gudang Surabaya</option>
-          </select>
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="ALL">Semua Kategori</option>
-            <option value="Bahan Baku">Bahan Baku</option>
-            <option value="Kemasan Primer">Kemasan Primer</option>
-            <option value="Kemasan Sekunder">Kemasan Sekunder</option>
-            <option value="Barang Jadi">Barang Jadi</option>
-          </select>
-        </div>
-      </div>
-
-      {/* 1:1 Table (Exactly 10 columns matching legacy G-SERP) */}
-      <DnaDataTableCard title="Daftar Saldo Stok Barang">
+      {/* Main Table Card (Rule 1: No title prop, Rule 4: Clean responsive columns) */}
+      <DnaDataTableCard
+        toolbarProps={{
+          searchQuery: searchTerm,
+          onSearchChange: setSearchTerm,
+          searchPlaceholder: "Cari kode, nama barang, gudang...",
+          extraActions: (
+            <div className="flex items-center gap-2">
+              <select
+                value={warehouseFilter}
+                onChange={(e) => setWarehouseFilter(e.target.value)}
+                className="text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="ALL">Semua Gudang</option>
+                <option value="Gudang Bahan Baku">Gudang Bahan Baku</option>
+                <option value="Gudang Kemasan">Gudang Kemasan</option>
+                <option value="Gudang Barang Jadi">Gudang Barang Jadi</option>
+                <option value="Gudang Surabaya">Gudang Surabaya</option>
+              </select>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="ALL">Semua Kategori</option>
+                <option value="Bahan Baku">Bahan Baku</option>
+                <option value="Kemasan Primer">Kemasan Primer</option>
+                <option value="Kemasan Sekunder">Kemasan Sekunder</option>
+                <option value="Barang Jadi">Barang Jadi</option>
+              </select>
+            </div>
+          ),
+        }}
+      >
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-              <tr>
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">Kode Barang</th>
-                <th className="py-3 px-4">Nama Barang</th>
-                <th className="py-3 px-4">Kategori</th>
-                <th className="py-3 px-4">Gudang</th>
-                <th className="py-3 px-4 text-right">Stok Bagus</th>
-                <th className="py-3 px-4 text-right">Stok Cacat</th>
-                <th className="py-3 px-4 text-right">Total Fisik</th>
-                <th className="py-3 px-4 text-center">Satuan</th>
-                <th className="py-3 px-4 text-center">Status Stok</th>
+          <table className="w-full text-left border-collapse text-[12px]">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <th className="px-4 py-3 h-[40px] w-[130px]">Kode Barang</th>
+                <th className="px-3 py-3 h-[40px]">Nama Barang</th>
+                <th className="px-3 py-3 h-[40px] w-[140px]">Kategori</th>
+                <th className="px-3 py-3 h-[40px]">Gudang</th>
+                <th className="px-3 py-3 h-[40px] text-right w-[120px]">Stok Bagus</th>
+                <th className="px-3 py-3 h-[40px] text-right w-[110px]">Stok Cacat</th>
+                <th className="px-3 py-3 h-[40px] text-right w-[120px]">Total Fisik</th>
+                <th className="px-3 py-3 h-[40px] text-right w-[110px]">Min. Stok</th>
+                <th className="px-4 py-3 h-[40px] text-center w-[130px]">Status Stok</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-8 text-center text-slate-400">
-                    Tidak ada barang sesuai filter
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                    <Boxes className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                    Tidak ada barang sesuai filter.
                   </td>
                 </tr>
               ) : (
-                filteredData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
-                    <td className="py-3 px-4 font-semibold text-blue-600">{item.code}</td>
-                    <td className="py-3 px-4 font-medium text-slate-900">{item.name}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.category}</td>
-                    <td className="py-3 px-4 text-slate-700">{item.warehouse}</td>
-                    <td className="py-3 px-4 text-right font-semibold text-emerald-600">
-                      {item.goodQty.toLocaleString("id-ID")}
+                filteredData.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="hover:bg-slate-50/60 transition-colors group h-[48px]"
+                  >
+                    {/* Kolom 1: Kode Barang */}
+                    <td className="px-4 py-2">
+                      <DnaCell.Code value={item.code} />
                     </td>
-                    <td className="py-3 px-4 text-right text-rose-600 font-medium">
-                      {item.rejectQty.toLocaleString("id-ID")}
+
+                    {/* Kolom 2: Nama Barang */}
+                    <td className="px-3 py-2 text-slate-900 font-medium truncate max-w-[220px]">
+                      {item.name}
                     </td>
-                    <td className="py-3 px-4 text-right font-bold text-slate-900">
-                      {item.totalQty.toLocaleString("id-ID")}
+
+                    {/* Kolom 3: Kategori */}
+                    <td className="px-3 py-2 text-slate-600">
+                      {item.category}
                     </td>
-                    <td className="py-3 px-4 text-center text-slate-600 uppercase font-medium">{item.unit}</td>
-                    <td className="py-3 px-4 text-center">{getStatusBadge(item.status)}</td>
+
+                    {/* Kolom 4: Gudang */}
+                    <td className="px-3 py-2 text-slate-800 truncate max-w-[160px]">
+                      {item.warehouse}
+                    </td>
+
+                    {/* Kolom 5: Stok Bagus */}
+                    <td className="px-3 py-2 text-right">
+                      <DnaCell.Number
+                        value={item.goodQty}
+                        unit={item.unit}
+                        colorClass="text-emerald-700 font-semibold"
+                      />
+                    </td>
+
+                    {/* Kolom 6: Stok Cacat */}
+                    <td className="px-3 py-2 text-right">
+                      {item.rejectQty > 0 ? (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                          {item.rejectQty.toLocaleString("id-ID")} {item.unit}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 font-normal">0 {item.unit}</span>
+                      )}
+                    </td>
+
+                    {/* Kolom 7: Total Fisik */}
+                    <td className="px-3 py-2 text-right">
+                      <DnaCell.Number
+                        value={item.totalQty}
+                        unit={item.unit}
+                      />
+                    </td>
+
+                    {/* Kolom 8: Min. Stok */}
+                    <td className="px-3 py-2 text-right">
+                      <DnaCell.Number
+                        value={item.minStock}
+                        unit={item.unit}
+                        colorClass="text-slate-600"
+                      />
+                    </td>
+
+                    {/* Kolom 9: Status Stok */}
+                    <td className="px-4 py-2 text-center">
+                      {getStatusBadge(item.status)}
+                    </td>
                   </tr>
                 ))
               )}

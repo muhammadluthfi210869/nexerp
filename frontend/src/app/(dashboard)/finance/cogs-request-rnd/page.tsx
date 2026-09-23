@@ -27,9 +27,16 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
-  useDnaToast
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
+  DnaCell,
+  useDnaToast,
 } from "@/components/dna";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/dna";
 
 interface CogsRequest {
   id: string;
@@ -255,15 +262,13 @@ function CogsRequestContent() {
         />
       </DnaKpiGrid>
 
-      {/* 3. DataTable (1:1 G-SERP Row 139 — EXACT 9 COLUMNS) */}
+      {/* 3. DataTable */}
       <DnaDataTableCard
-        title="Daftar Permintaan HPP Produk"
-        description="Pelacakan estimasi biaya pokok produksi berdasarkan formula, jumlah MOQ, dan persetujuan komersial."
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari kode HPP, pelanggan, produk, formula..."
-        actions={
-          <div className="flex items-center gap-2">
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari kode HPP, pelanggan, produk, formula...",
+          extraActions: (
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -273,72 +278,66 @@ function CogsRequestContent() {
               <option value="APPROVED">Disetujui Management</option>
               <option value="PENDING">Menunggu Approval</option>
             </select>
-          </div>
-        }
+          ),
+        }}
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200 font-bold text-slate-600 uppercase tracking-wider text-[10.5px]">
-              <tr>
-                <th className="py-3 px-3 text-center w-10">#</th>
-                <th className="py-3 px-3 w-28">Kode</th>
-                <th className="py-3 px-3 w-24">Tanggal</th>
-                <th className="py-3 px-3">Pelanggan</th>
-                <th className="py-3 px-3">Produk</th>
-                <th className="py-3 px-3 w-40">Formula</th>
-                <th className="py-3 px-3 text-right w-28">Jumlah MOQ</th>
-                <th className="py-3 px-3 text-center w-36">Status</th>
-                <th className="py-3 px-3 text-center w-16">#</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredCogs.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-400">
-                    Tidak ada data permintaan HPP ditemukan.
-                  </td>
-                </tr>
-              ) : (
-                filteredCogs.map((row, idx) => (
-                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-3 text-center text-slate-400 font-bold">{idx + 1}</td>
-                    <td className="py-3 px-3 font-mono font-bold text-blue-600">{row.requestCode}</td>
-                    <td className="py-3 px-3 text-slate-600 font-mono">{row.requestDate}</td>
-                    <td className="py-3 px-3 font-semibold text-slate-900">{row.customerName}</td>
-                    <td className="py-3 px-3 text-slate-800">{row.productName}</td>
-                    <td className="py-3 px-3 font-mono text-indigo-600 font-bold">{row.formulaCode}</td>
-                    <td className="py-3 px-3 text-right font-mono font-bold text-slate-900">
-                      {row.moqQty.toLocaleString("id-ID")} pcs
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          row.status === "APPROVED"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {row.statusLabel}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <button
-                        onClick={() => setSelectedCogs(row)}
-                        className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
-                        title="Lihat Rincian HPP per Unit"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DnaTable>
+          <DnaTableHead>
+            <tr>
+              <DnaTh align="center" className="w-10">#</DnaTh>
+              <DnaTh className="w-28">Kode</DnaTh>
+              <DnaTh className="w-24">Tanggal</DnaTh>
+              <DnaTh>Pelanggan</DnaTh>
+              <DnaTh>Produk</DnaTh>
+              <DnaTh className="w-40">Formula</DnaTh>
+              <DnaTh align="right" className="w-28">Jumlah MOQ</DnaTh>
+              <DnaTh align="center" className="w-36">Status</DnaTh>
+              <DnaTh align="center" className="w-16">#</DnaTh>
+            </tr>
+          </DnaTableHead>
+          <DnaTableBody>
+            {filteredCogs.length === 0 ? (
+              <DnaTableRow>
+                <DnaTd colSpan={9} className="py-8 text-center text-slate-400">
+                  Tidak ada data permintaan HPP ditemukan.
+                </DnaTd>
+              </DnaTableRow>
+            ) : (
+              filteredCogs.map((row, idx) => (
+                <DnaTableRow key={row.id}>
+                  <DnaTd align="center" className="text-slate-400 font-bold">{idx + 1}</DnaTd>
+                  <DnaTd>
+                    <DnaCell.Code value={row.requestCode} />
+                  </DnaTd>
+                  <DnaTd className="text-slate-600 tabular-nums">{row.requestDate}</DnaTd>
+                  <DnaTd className="font-semibold text-slate-900">{row.customerName}</DnaTd>
+                  <DnaTd className="text-slate-800">{row.productName}</DnaTd>
+                  <DnaTd className="text-indigo-600 font-bold tabular-nums">{row.formulaCode}</DnaTd>
+                  <DnaTd align="right" className="font-bold tabular-nums text-slate-900">
+                    {row.moqQty.toLocaleString("id-ID")} pcs
+                  </DnaTd>
+                  <DnaTd align="center">
+                    <DnaBadge variant={row.status === "APPROVED" ? "success" : "warning"}>
+                      {row.statusLabel}
+                    </DnaBadge>
+                  </DnaTd>
+                  <DnaTd align="center">
+                    <button
+                      onClick={() => setSelectedCogs(row)}
+                      className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                      title="Lihat Rincian HPP per Unit"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  </DnaTd>
+                </DnaTableRow>
+              ))
+            )}
+          </DnaTableBody>
+        </DnaTable>
       </DnaDataTableCard>
 
-      {/* 4. Modal Buat Permintaan HPP (1:1 G-SERP Row 140 / ?action=create) */}
+      {/* 4. Modal Buat Permintaan HPP */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150">
@@ -374,7 +373,7 @@ function CogsRequestContent() {
                     required
                     value={formData.tanggal}
                     onChange={(e) => setFormData({ ...formData, tanggal: e.target.value })}
-                    className="h-8 text-xs font-mono"
+                    className="h-8 text-xs tabular-nums"
                   />
                 </div>
               </div>
@@ -385,7 +384,7 @@ function CogsRequestContent() {
                   <Input
                     value={formData.salesSample}
                     onChange={(e) => setFormData({ ...formData, salesSample: e.target.value })}
-                    className="h-8 text-xs font-mono font-bold"
+                    className="h-8 text-xs tabular-nums font-semibold"
                   />
                 </div>
                 <div>
@@ -393,7 +392,7 @@ function CogsRequestContent() {
                   <Input
                     value={formData.formula}
                     onChange={(e) => setFormData({ ...formData, formula: e.target.value })}
-                    className="h-8 text-xs font-mono font-bold"
+                    className="h-8 text-xs tabular-nums font-semibold"
                   />
                 </div>
               </div>
@@ -446,7 +445,7 @@ function CogsRequestContent() {
                     required
                     value={formData.jumlahMoq}
                     onChange={(e) => setFormData({ ...formData, jumlahMoq: parseInt(e.target.value) || 0 })}
-                    className="h-8 text-xs font-mono font-bold"
+                    className="h-8 text-xs tabular-nums font-semibold"
                   />
                 </div>
               </div>
@@ -471,7 +470,7 @@ function CogsRequestContent() {
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="font-bold text-slate-800 text-base">Rincian Komposisi HPP per Unit</h3>
-                <p className="text-xs font-mono text-blue-600">{selectedCogs.requestCode} • {selectedCogs.productName}</p>
+                <p className="text-xs text-blue-600 font-semibold tabular-nums">{selectedCogs.requestCode} • {selectedCogs.productName}</p>
               </div>
               <button onClick={() => setSelectedCogs(null)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
@@ -481,31 +480,31 @@ function CogsRequestContent() {
             <div className="space-y-2 text-xs">
               <div className="flex justify-between py-1.5 border-b border-slate-100">
                 <span className="text-slate-500 font-medium">1. Formula Bulk / Netto:</span>
-                <span className="font-mono font-bold text-slate-800">Rp {selectedCogs.formulaCost.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums font-semibold text-slate-800">Rp {selectedCogs.formulaCost.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between py-1.5 border-b border-slate-100">
                 <span className="text-slate-500 font-medium">2. Kemasan Primer (Botol/Jar/Tube):</span>
-                <span className="font-mono font-bold text-slate-800">Rp {selectedCogs.primaryPackCost.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums font-semibold text-slate-800">Rp {selectedCogs.primaryPackCost.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between py-1.5 border-b border-slate-100">
                 <span className="text-slate-500 font-medium">3. Kemasan Sekunder (Box Printing/Seal):</span>
-                <span className="font-mono font-bold text-slate-800">Rp {selectedCogs.secondaryPackCost.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums font-semibold text-slate-800">Rp {selectedCogs.secondaryPackCost.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between py-1.5 border-b border-slate-100">
                 <span className="text-slate-500 font-medium">4. Upah Tenaga Kerja Langsung:</span>
-                <span className="font-mono font-bold text-slate-800">Rp {selectedCogs.laborCost.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums font-semibold text-slate-800">Rp {selectedCogs.laborCost.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between py-1.5 border-b border-slate-100">
                 <span className="text-slate-500 font-medium">5. Alokasi Overhead Pabrik (Listrik & QC):</span>
-                <span className="font-mono font-bold text-slate-800">Rp {selectedCogs.overheadCost.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums font-semibold text-slate-800">Rp {selectedCogs.overheadCost.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between py-2 bg-slate-50 px-3 rounded-lg border border-slate-200">
                 <span className="font-bold text-slate-900">Total HPP per Pcs (BOM):</span>
-                <span className="font-mono font-bold text-rose-600 text-sm">Rp {selectedCogs.totalHppPerPcs.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums font-bold text-rose-600 text-sm">Rp {selectedCogs.totalHppPerPcs.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between py-2 bg-emerald-50 px-3 rounded-lg border border-emerald-200">
                 <span className="font-bold text-emerald-900">Rekomendasi Harga Jual (Quotation):</span>
-                <span className="font-mono font-bold text-emerald-700 text-sm">Rp {selectedCogs.recommendedPrice.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums font-bold text-emerald-700 text-sm">Rp {selectedCogs.recommendedPrice.toLocaleString("id-ID")}</span>
               </div>
             </div>
 

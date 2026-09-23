@@ -15,12 +15,12 @@ import { formatCurrency } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DnaDataTableCard, DnaStatCard, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
 import {
-  DnaTable as Table,
-  DnaTableBody as TableBody,
-  DnaTd as TableCell,
-  DnaTh as TableHead,
-  DnaTableHead as TableHeader,
-  DnaTableRow as TableRow,
+  DnaTable,
+  DnaTableBody,
+  DnaTd,
+  DnaTh,
+  DnaTableHead,
+  DnaTableRow,
 } from "@/components/dna";
 
 export default function FinanceApprovalsPage() {
@@ -68,13 +68,13 @@ export default function FinanceApprovalsPage() {
   const getDnaStatus = (status: string) => {
     switch (status) {
       case "PENDING_APPROVAL_MGR":
-        return <DnaBadge status="warning">Menunggu Manager</DnaBadge>;
+        return <DnaBadge variant="warning">Menunggu Manager</DnaBadge>;
       case "APPROVED_BY_MGR":
-        return <DnaBadge status="info">Disetujui Manager</DnaBadge>;
+        return <DnaBadge variant="info">Disetujui Manager</DnaBadge>;
       case "PAID":
-        return <DnaBadge status="success">Sudah Cair</DnaBadge>;
+        return <DnaBadge variant="success">Sudah Cair</DnaBadge>;
       default:
-        return <DnaBadge status="default">{status}</DnaBadge>;
+        return <DnaBadge variant="default">{status}</DnaBadge>;
     }
   };
 
@@ -113,52 +113,52 @@ export default function FinanceApprovalsPage() {
             </div>
           }
         >
-          <Table className="table-dense">
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="py-4 pl-6 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">ID / TANGGAL</TableHead>
-                <TableHead className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">DEPARTEMEN</TableHead>
-                <TableHead className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">DESKRIPSI / KEPERLUAN</TableHead>
-                <TableHead className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">DIAJUKAN OLEH</TableHead>
-                <TableHead className="text-right text-[8px] font-black text-slate-400 uppercase tracking-widest">NOMINAL</TableHead>
-                <TableHead className="text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">STATUS</TableHead>
-                <TableHead className="pr-6 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">AKSI</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <DnaTable className="table-dense">
+            <DnaTableHead className="bg-slate-50/50">
+              <DnaTableRow className="hover:bg-transparent border-slate-100">
+                <DnaTh className="py-4 pl-6 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">ID / TANGGAL</DnaTh>
+                <DnaTh className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">DEPARTEMEN</DnaTh>
+                <DnaTh className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">DESKRIPSI / KEPERLUAN</DnaTh>
+                <DnaTh className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">DIAJUKAN OLEH</DnaTh>
+                <DnaTh className="text-right text-[8px] font-black text-slate-400 uppercase tracking-widest">NOMINAL</DnaTh>
+                <DnaTh className="text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">STATUS</DnaTh>
+                <DnaTh className="pr-6 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">AKSI</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredRequests.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="px-4 py-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="px-4 py-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
                     Tidak ada pengajuan dana yang ditemukan
-                  </TableCell>
-                </TableRow>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredRequests.map((req: any) => (
-                  <TableRow key={req.id} className="group hover:bg-slate-50/50 transition-all cursor-default border-slate-50">
-                    <TableCell className="py-3 pl-6">
+                  <DnaTableRow key={req.id} className="group hover:bg-slate-50/50 transition-all cursor-default border-slate-50">
+                    <DnaTd className="py-3 pl-6">
                       <p className="font-black text-slate-900 uppercase tracking-tight">#{req.id}</p>
                       <p className="text-[8px] font-medium text-slate-300 uppercase leading-none mt-0.5">
                         {new Date(req.createdAt).toLocaleDateString("id-ID")}
                       </p>
-                    </TableCell>
-                    <TableCell className="py-3">
+                    </DnaTd>
+                    <DnaTd className="py-3">
                       <span className="inline-flex items-center gap-1.5 text-[9px] font-black text-slate-700 bg-slate-100 rounded px-2 py-0.5 uppercase">
                         <Building2 className="w-3 h-3 text-slate-400" /> {req.departmentId}
                       </span>
-                    </TableCell>
-                    <TableCell className="py-3">
+                    </DnaTd>
+                    <DnaTd className="py-3">
                       <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{req.reason}</p>
-                    </TableCell>
-                    <TableCell className="py-3">
+                    </DnaTd>
+                    <DnaTd className="py-3">
                       <p className="text-[10px] font-medium text-slate-600 italic">{req.user?.fullName}</p>
-                    </TableCell>
-                    <TableCell className="py-3 text-right font-mono tabular-nums text-xs font-black">
+                    </DnaTd>
+                    <DnaTd className="py-3 text-right font-sans tabular-nums text-xs font-semibold text-slate-900">
                       {formatCurrency(req.amount)}
-                    </TableCell>
-                    <TableCell className="py-3 text-center">
+                    </DnaTd>
+                    <DnaTd className="py-3 text-center">
                       {getDnaStatus(req.status)}
-                    </TableCell>
-                    <TableCell className="py-3 pr-6 text-center">
+                    </DnaTd>
+                    <DnaTd className="py-3 pr-6 text-center">
                       <div className="flex justify-center gap-2">
                         {req.status === "PENDING_APPROVAL_MGR" && (
                           <DnaButton
@@ -184,17 +184,17 @@ export default function FinanceApprovalsPage() {
                           </DnaButton>
                         )}
                         {req.status === "PAID" && (
-                          <DnaBadge status="success">
+                          <DnaBadge variant="success">
                             SELESAI
                           </DnaBadge>
                         )}
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </TableBody>
-          </Table>
+            </DnaTableBody>
+          </DnaTable>
         </DnaDataTableCard>
       </div>
     </DashboardShell>

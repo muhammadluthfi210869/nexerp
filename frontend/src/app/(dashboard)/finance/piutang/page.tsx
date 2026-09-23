@@ -32,12 +32,12 @@ import {
 } from "lucide-react";
 import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaTabNav, DnaSelect, DnaTextarea } from "@/components/dna";
 import {
-  DnaTable as Table,
-  DnaTableBody as TableBody,
-  DnaTd as TableCell,
-  DnaTh as TableHead,
-  DnaTableHead as TableHeader,
-  DnaTableRow as TableRow,
+  DnaTable,
+  DnaTableBody,
+  DnaTd,
+  DnaTh,
+  DnaTableHead,
+  DnaTableRow,
   DnaDialog as Dialog,
   DnaDialogContent as DialogContent,
   DnaDialogHeader as DialogHeader,
@@ -138,21 +138,21 @@ function FakturJualTab() {
           </div>
         }
       >
-        <Table className="table-dense">
-          <TableHeader className="bg-slate-50/70">
-            <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Invoice Identity</TableHead>
-              <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Client / Partner</TableHead>
-              <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Commercial Origin</TableHead>
-              <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Amount Due</TableHead>
-              <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Protocol Status</TableHead>
-              <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <DnaTable className="table-dense">
+          <DnaTableHead className="bg-slate-50/70">
+            <DnaTableRow className="hover:bg-transparent border-slate-100">
+              <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Invoice Identity</DnaTh>
+              <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Client / Partner</DnaTh>
+              <DnaTh className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Commercial Origin</DnaTh>
+              <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Amount Due</DnaTh>
+              <DnaTh className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Protocol Status</DnaTh>
+              <DnaTh className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Actions</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {filtered.map((inv) => (
-              <TableRow key={inv.id} className="group hover:bg-blue-50/30 transition-all duration-300 border-b border-slate-50">
-                <TableCell className="pl-6 text-left">
+              <DnaTableRow key={inv.id} className="group hover:bg-blue-50/30 transition-all duration-300 border-b border-slate-50">
+                <DnaTd className="pl-6 text-left">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                       <FileCheck2 className="h-4 w-4" />
@@ -162,36 +162,36 @@ function FakturJualTab() {
                       <span className="text-[9px] font-medium text-slate-400 uppercase mt-0.5">Due: {inv.dueDate}</span>
                     </div>
                   </div>
-                </TableCell>
-                <TableCell className="text-left">
+                </DnaTd>
+                <DnaTd className="text-left">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center font-black text-[9px] text-slate-500 uppercase">{inv.customer.charAt(0)}</div>
                     <p className="font-black text-slate-900 text-xs uppercase italic">{inv.customer}</p>
                   </div>
-                </TableCell>
-                <TableCell className="text-center">
-                  <DnaBadge status="default">{inv.source}</DnaBadge>
-                </TableCell>
-                <TableCell className="text-right font-black text-slate-900 text-xs font-mono tabular-nums">Rp {inv.amount.toLocaleString("id-ID")}</TableCell>
-                <TableCell className="text-center">
-                  <DnaBadge status={inv.status === "PAID" ? "success" : inv.status === "OVERDUE" ? "critical" : "info"}>{inv.status}</DnaBadge>
-                </TableCell>
-                <TableCell className="pr-6 text-right">
+                </DnaTd>
+                <DnaTd className="text-center">
+                  <DnaBadge variant="default">{inv.source}</DnaBadge>
+                </DnaTd>
+                <DnaTd className="text-right font-black text-slate-900 text-xs tabular-nums">Rp {inv.amount.toLocaleString("id-ID")}</DnaTd>
+                <DnaTd className="text-center">
+                  <DnaBadge variant={inv.status === "PAID" ? "success" : inv.status === "OVERDUE" ? "critical" : "info"}>{inv.status}</DnaBadge>
+                </DnaTd>
+                <DnaTd className="pr-6 text-right">
                   <div className="flex justify-end gap-1.5">
                     <DnaButton variant="outline" size="sm" icon={<Printer className="h-3.5 w-3.5" />} />
                     <DnaButton variant="outline" size="sm" icon={<Mail className="h-3.5 w-3.5" />} />
                     <DnaButton variant="outline" size="sm" icon={<MoreHorizontal className="h-3.5 w-3.5" />} />
                   </div>
-                </TableCell>
-              </TableRow>
+                </DnaTd>
+              </DnaTableRow>
             ))}
             {filtered.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-slate-400 italic">No invoices found.</TableCell>
-              </TableRow>
+              <DnaTableRow>
+                <DnaTd colSpan={6} className="text-center py-10 text-slate-400 italic">No invoices found.</DnaTd>
+              </DnaTableRow>
             )}
-          </TableBody>
-        </Table>
+          </DnaTableBody>
+        </DnaTable>
       </DnaDataTableCard>
     </div>
   );
@@ -244,63 +244,63 @@ function FakturBeliTab() {
           </div>
         }
       >
-        <Table>
-          <TableHeader className="bg-slate-50/50">
-            <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead className="py-4 px-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Bill ID</TableHead>
-              <TableHead className="py-4 px-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Vendor Entity</TableHead>
-              <TableHead className="py-4 px-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Timeline</TableHead>
-              <TableHead className="py-4 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Balance</TableHead>
-              <TableHead className="py-4 px-4 text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Protocol Status</TableHead>
-              <TableHead className="pr-10 text-right py-4 px-4 font-black text-slate-400 uppercase tracking-tight text-[9px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <DnaTable>
+          <DnaTableHead className="bg-slate-50/50">
+            <DnaTableRow className="hover:bg-transparent border-slate-100">
+              <DnaTh className="py-4 px-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Bill ID</DnaTh>
+              <DnaTh className="py-4 px-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Vendor Entity</DnaTh>
+              <DnaTh className="py-4 px-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Timeline</DnaTh>
+              <DnaTh className="py-4 px-4 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Balance</DnaTh>
+              <DnaTh className="py-4 px-4 text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Protocol Status</DnaTh>
+              <DnaTh className="pr-10 text-right py-4 px-4 font-black text-slate-400 uppercase tracking-tight text-[9px]">Actions</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {filtered.map((bill) => (
-              <TableRow key={bill.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                <TableCell className="py-8 pl-10 text-left">
+              <DnaTableRow key={bill.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                <DnaTd className="py-8 pl-10 text-left">
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shadow-sm group-hover:rotate-6 transition-transform">
                       <Receipt className="h-4 w-4" />
                     </div>
                     <span className="font-black text-slate-900 tracking-tight text-base uppercase italic">{bill.id}</span>
                   </div>
-                </TableCell>
-                <TableCell className="text-left">
+                </DnaTd>
+                <DnaTd className="text-left">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
                       <Building2 className="h-4 w-4 text-slate-400" />
                     </div>
                     <p className="font-black text-slate-900 text-sm uppercase italic">{bill.vendor}</p>
                   </div>
-                </TableCell>
-                <TableCell className="text-left">
+                </DnaTd>
+                <DnaTd className="text-left">
                   <div className="space-y-1">
                     <p className="text-[10px] font-medium text-slate-400 uppercase tracking-tight">Issue: {bill.date}</p>
                     <p className="text-[10px] font-black text-rose-500 uppercase tracking-tight flex items-center gap-1">
                       <Clock className="h-2.5 w-2.5" /> Due: {bill.dueDate}
                     </p>
                   </div>
-                </TableCell>
-                <TableCell className="text-right font-black text-slate-900 font-mono tabular-nums">Rp {bill.total.toLocaleString("id-ID")}</TableCell>
-                <TableCell className="text-center">
-                  <DnaBadge status={bill.status === "PAID" ? "success" : bill.status === "PARTIAL" ? "warning" : "critical"}>{bill.status}</DnaBadge>
-                </TableCell>
-                <TableCell className="pr-10 text-right">
+                </DnaTd>
+                <DnaTd className="text-right font-black text-slate-900 tabular-nums">Rp {bill.total.toLocaleString("id-ID")}</DnaTd>
+                <DnaTd className="text-center">
+                  <DnaBadge variant={bill.status === "PAID" ? "success" : bill.status === "PARTIAL" ? "warning" : "critical"}>{bill.status}</DnaBadge>
+                </DnaTd>
+                <DnaTd className="pr-10 text-right">
                   <div className="flex justify-end gap-2">
                     <DnaButton variant="outline" size="sm" icon={<ShieldCheck className="h-4 w-4" />} />
                     <DnaButton variant="outline" size="sm" icon={<MoreHorizontal className="h-4 w-4" />} />
                   </div>
-                </TableCell>
-              </TableRow>
+                </DnaTd>
+              </DnaTableRow>
             ))}
             {filtered.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-slate-400 italic">No bills found.</TableCell>
-              </TableRow>
+              <DnaTableRow>
+                <DnaTd colSpan={6} className="text-center py-10 text-slate-400 italic">No bills found.</DnaTd>
+              </DnaTableRow>
             )}
-          </TableBody>
-        </Table>
+          </DnaTableBody>
+        </DnaTable>
       </DnaDataTableCard>
     </div>
   );
@@ -346,7 +346,7 @@ function SalesOrdersTab() {
               className="p-6 bg-white border border-slate-200 shadow-sm border-l-4 border-amber-500 rounded-2xl group hover:scale-[1.02] transition-all"
             >
               <div className="flex justify-between items-start mb-4">
-                <DnaBadge status="warning">AWAITING DP</DnaBadge>
+                <DnaBadge variant="warning">AWAITING DP</DnaBadge>
                 <span className="text-[10px] font-black text-slate-300">#{order.id}</span>
               </div>
               <h4 className="font-black text-slate-900 uppercase italic text-sm line-clamp-1">{order.lead?.clientName}</h4>
@@ -375,20 +375,20 @@ function SalesOrdersTab() {
           </div>
         }
       >
-        <Table className="table-dense">
-          <TableHeader className="bg-slate-50/50">
-            <TableRow className="border-slate-100">
-              <TableHead className="py-4 pl-6 font-black text-slate-400 uppercase tracking-tight text-[10px]">Order Protocol</TableHead>
-              <TableHead className="py-4 font-black text-slate-400 uppercase tracking-tight text-[10px]">Commercial Value</TableHead>
-              <TableHead className="py-4 font-black text-slate-400 uppercase tracking-tight text-[10px] text-center">Payment Intel</TableHead>
-              <TableHead className="py-4 font-black text-slate-400 uppercase tracking-tight text-[10px] text-center">Lifecycle</TableHead>
-              <TableHead className="pr-6 text-right py-4 font-black text-slate-400 uppercase tracking-tight text-[10px]">Audit</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <DnaTable className="table-dense">
+          <DnaTableHead className="bg-slate-50/50">
+            <DnaTableRow className="border-slate-100">
+              <DnaTh className="py-4 pl-6 font-black text-slate-400 uppercase tracking-tight text-[10px]">Order Protocol</DnaTh>
+              <DnaTh className="py-4 font-black text-slate-400 uppercase tracking-tight text-[10px]">Commercial Value</DnaTh>
+              <DnaTh className="py-4 font-black text-slate-400 uppercase tracking-tight text-[10px] text-center">Payment Intel</DnaTh>
+              <DnaTh className="py-4 font-black text-slate-400 uppercase tracking-tight text-[10px] text-center">Lifecycle</DnaTh>
+              <DnaTh className="pr-6 text-right py-4 font-black text-slate-400 uppercase tracking-tight text-[10px]">Audit</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {filteredOrders?.map((order: any) => (
-              <TableRow key={order.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                <TableCell className="py-4 pl-6">
+              <DnaTableRow key={order.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                <DnaTd className="py-4 pl-6">
                   <div className="flex items-center gap-5">
                     <div className="h-14 w-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black italic shadow-sm group-hover:bg-amber-500 transition-all duration-500">
                       <ShoppingCart className="h-6 w-6" />
@@ -401,22 +401,22 @@ function SalesOrdersTab() {
                       </p>
                     </div>
                   </div>
-                </TableCell>
-                <TableCell>
+                </DnaTd>
+                <DnaTd>
                   <div className="flex flex-col">
-                    <span className="font-black text-slate-900 text-sm tracking-tighter font-mono tabular-nums">{formatCurrency(Number(order.totalAmount))}</span>
+                    <span className="font-black text-slate-900 text-sm tracking-tighter tabular-nums">{formatCurrency(Number(order.totalAmount))}</span>
                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight mt-0.5">MOQ: {order.quantity?.toLocaleString()} Pcs</span>
                   </div>
-                </TableCell>
-                <TableCell className="text-center">
+                </DnaTd>
+                <DnaTd className="text-center">
                   {order.isPaymentVerified ? (
                     <div className="flex flex-col items-center gap-1">
-                      <DnaBadge status="success">VERIFIED</DnaBadge>
+                      <DnaBadge variant="success">VERIFIED</DnaBadge>
                       <span className="text-[8px] font-medium text-slate-400 uppercase tracking-tight">On {new Date(order.paymentVerifiedAt).toLocaleDateString()}</span>
                     </div>
                   ) : order.paymentProofUrl ? (
                     <div className="flex flex-col items-center gap-2">
-                      <DnaBadge status="warning" className="animate-pulse">PENDING VALIDATION</DnaBadge>
+                      <DnaBadge variant="warning" className="animate-pulse">PENDING VALIDATION</DnaBadge>
                       <DnaButton
                         variant="ghost"
                         className="h-6 text-[8px] text-blue-600 hover:bg-blue-50"
@@ -430,23 +430,23 @@ function SalesOrdersTab() {
                       </DnaButton>
                     </div>
                   ) : (
-                    <DnaBadge status="default">AWAITING PROOF</DnaBadge>
+                    <DnaBadge variant="default">AWAITING PROOF</DnaBadge>
                   )}
-                </TableCell>
-                <TableCell className="text-center">
-                  <DnaBadge status={order.status === "DP_PAID" ? "info" : order.status === "PENDING_DP" ? "warning" : "default"}>
+                </DnaTd>
+                <DnaTd className="text-center">
+                  <DnaBadge variant={order.status === "DP_PAID" ? "info" : order.status === "PENDING_DP" ? "warning" : "default"}>
                     {order.status?.replace("_", " ")}
                   </DnaBadge>
-                </TableCell>
-                <TableCell className="text-right pr-6">
+                </DnaTd>
+                <DnaTd className="text-right pr-6">
                   <DnaButton variant="outline" className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 text-slate-400">
                     <ChevronRight className="h-4 w-4" />
                   </DnaButton>
-                </TableCell>
-              </TableRow>
+                </DnaTd>
+              </DnaTableRow>
             ))}
-          </TableBody>
-        </Table>
+          </DnaTableBody>
+        </DnaTable>
       </DnaDataTableCard>
 
       <Dialog open={isProofModalOpen} onOpenChange={setIsProofModalOpen}>
@@ -468,11 +468,11 @@ function SalesOrdersTab() {
             <div className="grid grid-cols-2 gap-8">
               <div className="space-y-1">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Total Transaction</p>
-                <p className="text-2xl font-black text-slate-900 tracking-tighter italic font-mono tabular-nums">{formatCurrency(Number(selectedOrder?.totalAmount || 0))}</p>
+                <p className="text-2xl font-black text-slate-900 tracking-tighter italic tabular-nums">{formatCurrency(Number(selectedOrder?.totalAmount || 0))}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Expected DP (30%)</p>
-                <p className="text-2xl font-black text-emerald-600 tracking-tighter italic font-mono tabular-nums">{formatCurrency(Number(selectedOrder?.totalAmount || 0) * 0.3)}</p>
+                <p className="text-2xl font-black text-emerald-600 tracking-tighter italic tabular-nums">{formatCurrency(Number(selectedOrder?.totalAmount || 0) * 0.3)}</p>
               </div>
             </div>
             <div className="space-y-3">
@@ -569,22 +569,22 @@ function ARHubTab() {
         }
       >
         <div hidden={activeTab !== "products"} className="m-0 animate-in fade-in slide-in-from-left-4 duration-500">
-          <Table className="table-dense">
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="pl-6 py-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Faktur Identity</TableHead>
-                <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">SO / Client</TableHead>
-                <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">DO Reference</TableHead>
-                <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Valuation</TableHead>
-                <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Outstanding</TableHead>
-                <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
-                <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <DnaTable className="table-dense">
+            <DnaTableHead className="bg-slate-50/50">
+              <DnaTableRow className="hover:bg-transparent border-slate-100">
+                <DnaTh className="pl-6 py-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Faktur Identity</DnaTh>
+                <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">SO / Client</DnaTh>
+                <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">DO Reference</DnaTh>
+                <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Valuation</DnaTh>
+                <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Outstanding</DnaTh>
+                <DnaTh className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</DnaTh>
+                <DnaTh className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Actions</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {STATIC_SALES_INVOICES.map((inv) => (
-                <TableRow key={inv.kode_faktur} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                  <TableCell className="pl-6 py-4">
+                <DnaTableRow key={inv.kode_faktur} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                  <DnaTd className="pl-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                         <FileText className="h-4.5 w-4.5" />
@@ -594,26 +594,26 @@ function ARHubTab() {
                         <span className="text-[9px] font-medium text-slate-400 uppercase">{inv.tanggal}</span>
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="py-4">
+                  </DnaTd>
+                  <DnaTd className="py-4">
                     <div className="flex flex-col">
                       <span className="font-black text-slate-900 text-[11px] uppercase">{inv.kode_so}</span>
                       <span className="text-[9px] font-medium text-blue-600 uppercase italic">{inv.pelanggan}</span>
                     </div>
-                  </TableCell>
-                  <TableCell className="py-4">
-                    <DnaBadge status="default">{inv.kode_do}</DnaBadge>
-                  </TableCell>
-                  <TableCell className="text-right font-mono tabular-nums py-4 text-slate-900 text-xs font-black">
+                  </DnaTd>
+                  <DnaTd className="py-4">
+                    <DnaBadge variant="default">{inv.kode_do}</DnaBadge>
+                  </DnaTd>
+                  <DnaTd className="text-right tabular-nums py-4 text-slate-900 text-xs font-black">
                     Rp {inv.grand_total.toLocaleString("id-ID")}
-                  </TableCell>
-                  <TableCell className="text-right font-mono tabular-nums py-4 text-rose-600 text-xs font-black">
+                  </DnaTd>
+                  <DnaTd className="text-right tabular-nums py-4 text-rose-600 text-xs font-black">
                     Rp {inv.sisa.toLocaleString("id-ID")}
-                  </TableCell>
-                  <TableCell className="text-center py-4">
-                    <DnaBadge status={inv.status === "Lunas" ? "success" : "critical"}>{inv.status}</DnaBadge>
-                  </TableCell>
-                  <TableCell className="pr-6 text-right py-4">
+                  </DnaTd>
+                  <DnaTd className="text-center py-4">
+                    <DnaBadge variant={inv.status === "Lunas" ? "success" : "critical"}>{inv.status}</DnaBadge>
+                  </DnaTd>
+                  <DnaTd className="pr-6 text-right py-4">
                     <div className="flex justify-end gap-2">
                       <DnaButton variant="outline" className="h-8 w-8 p-0 rounded-lg bg-slate-50 hover:bg-gray-100 hover:text-gray-900 transition-all shadow-sm">
                         <Eye className="h-3.5 w-3.5" />
@@ -628,29 +628,29 @@ function ARHubTab() {
                         </DnaButton>
                       )}
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-            </TableBody>
-          </Table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
 
         <div hidden={activeTab !== "samples"} className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">
-          <Table className="table-dense">
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="pl-6 py-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Sample Identity</TableHead>
-                <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Pelanggan / Produk</TableHead>
-                <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Valuation</TableHead>
-                <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Outstanding</TableHead>
-                <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
-                <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <DnaTable className="table-dense">
+            <DnaTableHead className="bg-slate-50/50">
+              <DnaTableRow className="hover:bg-transparent border-slate-100">
+                <DnaTh className="pl-6 py-4 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Sample Identity</DnaTh>
+                <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Pelanggan / Produk</DnaTh>
+                <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Valuation</DnaTh>
+                <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Outstanding</DnaTh>
+                <DnaTh className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</DnaTh>
+                <DnaTh className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Actions</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {STATIC_SAMPLE_INVOICES.map((inv) => (
-                <TableRow key={inv.kode_faktur} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                  <TableCell className="pl-6 py-4">
+                <DnaTableRow key={inv.kode_faktur} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                  <DnaTd className="pl-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                         <FlaskConical className="h-4.5 w-4.5" />
@@ -660,23 +660,23 @@ function ARHubTab() {
                         <span className="text-[9px] font-medium text-slate-400 uppercase">Ref: {inv.kode_sample}</span>
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="py-4">
+                  </DnaTd>
+                  <DnaTd className="py-4">
                     <div className="flex flex-col">
                       <span className="font-black text-slate-900 text-[11px] uppercase">{inv.pelanggan}</span>
                       <span className="text-[9px] font-medium text-blue-600 uppercase italic">{inv.produk}</span>
                     </div>
-                  </TableCell>
-                  <TableCell className="text-right font-mono tabular-nums py-4 text-slate-900 text-xs font-black">
+                  </DnaTd>
+                  <DnaTd className="text-right tabular-nums py-4 text-slate-900 text-xs font-black">
                     Rp {inv.grand_total.toLocaleString("id-ID")}
-                  </TableCell>
-                  <TableCell className="text-right font-mono tabular-nums py-4 text-rose-600 text-xs font-black">
+                  </DnaTd>
+                  <DnaTd className="text-right tabular-nums py-4 text-rose-600 text-xs font-black">
                     Rp {inv.sisa.toLocaleString("id-ID")}
-                  </TableCell>
-                  <TableCell className="text-center py-4">
-                    <DnaBadge status={inv.status === "Lunas" ? "success" : "critical"}>{inv.status}</DnaBadge>
-                  </TableCell>
-                  <TableCell className="pr-6 text-right py-4">
+                  </DnaTd>
+                  <DnaTd className="text-center py-4">
+                    <DnaBadge variant={inv.status === "Lunas" ? "success" : "critical"}>{inv.status}</DnaBadge>
+                  </DnaTd>
+                  <DnaTd className="pr-6 text-right py-4">
                     <div className="flex justify-end gap-2">
                       <DnaButton variant="outline" className="h-8 w-8 p-0 rounded-lg bg-slate-50 hover:bg-gray-100 hover:text-gray-900 transition-all shadow-sm">
                         <Eye className="h-3.5 w-3.5" />
@@ -689,11 +689,11 @@ function ARHubTab() {
                         <CircleDollarSign className="mr-1.5 h-3.5 w-3.5" /> Collect
                       </DnaButton>
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-            </TableBody>
-          </Table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
 
         <div hidden={activeTab !== "returns"} className="m-0 animate-in fade-in slide-in-from-right-4 duration-500">

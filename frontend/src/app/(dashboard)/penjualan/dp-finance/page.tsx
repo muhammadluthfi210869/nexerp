@@ -18,12 +18,12 @@ import {
 } from "lucide-react";
 import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaTabNav } from "@/components/dna";
 import {
-  DnaTable as Table,
-  DnaTableBody as TableBody,
-  DnaTd as TableCell,
-  DnaTh as TableHead,
-  DnaTableHead as TableHeader,
-  DnaTableRow as TableRow,
+  DnaTable,
+  DnaTableBody,
+  DnaTd,
+  DnaTh,
+  DnaTableHead,
+  DnaTableRow,
 } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
@@ -74,10 +74,10 @@ export default function DpConsolidatedPage() {
   );
 
   const poStatusBadge = (status: string) => {
-    if (status === "APPROVED") return <DnaBadge status="success">APPROVED</DnaBadge>;
-    if (status === "PENDING") return <DnaBadge status="warning">PENDING</DnaBadge>;
-    if (status === "DP_PAID") return <DnaBadge status="info">DP PAID</DnaBadge>;
-    return <DnaBadge status="default">{status}</DnaBadge>;
+    if (status === "APPROVED") return <DnaBadge variant="success">APPROVED</DnaBadge>;
+    if (status === "PENDING") return <DnaBadge variant="warning">PENDING</DnaBadge>;
+    if (status === "DP_PAID") return <DnaBadge variant="info">DP PAID</DnaBadge>;
+    return <DnaBadge variant="default">{status}</DnaBadge>;
   };
 
   return (
@@ -136,39 +136,39 @@ export default function DpConsolidatedPage() {
               </div>
             }
           >
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50/70">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">PO Number</TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Supplier</TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Total</TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sudah Dibayar</TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sisa</TableHead>
-                  <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
-                  <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <DnaTable className="table-dense">
+              <DnaTableHead className="bg-slate-50/70">
+                <DnaTableRow className="hover:bg-transparent border-slate-100">
+                  <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">PO Number</DnaTh>
+                  <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Supplier</DnaTh>
+                  <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Total</DnaTh>
+                  <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sudah Dibayar</DnaTh>
+                  <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sisa</DnaTh>
+                  <DnaTh className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</DnaTh>
+                  <DnaTh className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredPO.map((po: any) => {
                   const total = Number(po.totalAmount) || 0;
                   const paid = Number(po.paidAmount) || 0;
                   const sisa = total - paid;
                   return (
-                    <TableRow key={po.id} className="group hover:bg-slate-50/30 transition-all border-b border-slate-50">
-                      <TableCell className="pl-6 py-4">
+                    <DnaTableRow key={po.id} className="group hover:bg-slate-50/30 transition-all border-b border-slate-50">
+                      <DnaTd className="pl-6 py-4">
                         <span className="font-black text-slate-900 text-xs uppercase italic">{po.poNumber}</span>
-                      </TableCell>
-                      <TableCell className="py-4">
+                      </DnaTd>
+                      <DnaTd className="py-4">
                         <div className="flex items-center gap-2">
                           <Building2 className="h-3.5 w-3.5 text-slate-400" />
                           <span className="font-medium text-slate-700 text-xs">{po.supplier?.name || po.supplierName || "-"}</span>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {total.toLocaleString("id-ID")}</TableCell>
-                      <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {paid.toLocaleString("id-ID")}</TableCell>
-                      <TableCell className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">Rp {sisa.toLocaleString("id-ID")}</TableCell>
-                      <TableCell className="text-center py-4">{poStatusBadge(po.status)}</TableCell>
-                      <TableCell className="pr-6 text-right py-4">
+                      </DnaTd>
+                      <DnaTd className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {total.toLocaleString("id-ID")}</DnaTd>
+                      <DnaTd className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {paid.toLocaleString("id-ID")}</DnaTd>
+                      <DnaTd className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">Rp {sisa.toLocaleString("id-ID")}</DnaTd>
+                      <DnaTd className="text-center py-4">{poStatusBadge(po.status)}</DnaTd>
+                      <DnaTd className="pr-6 text-right py-4">
                         <DnaButton
                           variant="outline"
                           size="sm"
@@ -177,17 +177,17 @@ export default function DpConsolidatedPage() {
                         >
                           Bayar DP
                         </DnaButton>
-                      </TableCell>
-                    </TableRow>
+                      </DnaTd>
+                    </DnaTableRow>
                   );
                 })}
                 {filteredPO.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-slate-400 italic text-xs">Tidak ada PO ditemukan.</TableCell>
-                  </TableRow>
+                  <DnaTableRow>
+                    <DnaTd colSpan={7} className="text-center py-10 text-slate-400 italic text-xs">Tidak ada PO ditemukan.</DnaTd>
+                  </DnaTableRow>
                 )}
-              </TableBody>
-            </Table>
+              </DnaTableBody>
+            </DnaTable>
           </DnaDataTableCard>
         </div>
 
@@ -231,43 +231,43 @@ export default function DpConsolidatedPage() {
               </div>
             }
           >
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50/70">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">SO Number</TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Customer</TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Total</TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sudah Dibayar</TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sisa</TableHead>
-                  <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
-                  <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <DnaTable className="table-dense">
+              <DnaTableHead className="bg-slate-50/70">
+                <DnaTableRow className="hover:bg-transparent border-slate-100">
+                  <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">SO Number</DnaTh>
+                  <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Customer</DnaTh>
+                  <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Total</DnaTh>
+                  <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sudah Dibayar</DnaTh>
+                  <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sisa</DnaTh>
+                  <DnaTh className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</DnaTh>
+                  <DnaTh className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredSO.map((so: any) => {
                   const total = Number(so.totalAmount) || 0;
                   const paid = Number(so.amountPaid) || 0;
                   const sisa = total - paid;
                   return (
-                    <TableRow key={so.id} className="group hover:bg-slate-50/30 transition-all border-b border-slate-50">
-                      <TableCell className="pl-6 py-4">
+                    <DnaTableRow key={so.id} className="group hover:bg-slate-50/30 transition-all border-b border-slate-50">
+                      <DnaTd className="pl-6 py-4">
                         <span className="font-black text-slate-900 text-xs uppercase italic">{so.orderNumber}</span>
-                      </TableCell>
-                      <TableCell className="py-4">
+                      </DnaTd>
+                      <DnaTd className="py-4">
                         <div className="flex items-center gap-2">
                           <Building2 className="h-3.5 w-3.5 text-slate-400" />
                           <span className="font-medium text-slate-700 text-xs">{so.lead?.clientName || "-"}</span>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {total.toLocaleString("id-ID")}</TableCell>
-                      <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {paid.toLocaleString("id-ID")}</TableCell>
-                      <TableCell className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">Rp {sisa.toLocaleString("id-ID")}</TableCell>
-                      <TableCell className="text-center py-4">
-                        <DnaBadge status={paid === 0 ? "critical" : paid < total ? "warning" : "success"}>
+                      </DnaTd>
+                      <DnaTd className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {total.toLocaleString("id-ID")}</DnaTd>
+                      <DnaTd className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {paid.toLocaleString("id-ID")}</DnaTd>
+                      <DnaTd className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">Rp {sisa.toLocaleString("id-ID")}</DnaTd>
+                      <DnaTd className="text-center py-4">
+                        <DnaBadge variant={paid === 0 ? "critical" : paid < total ? "warning" : "success"}>
                           {paid === 0 ? "Belum Bayar" : paid < total ? "Partial" : "Lunas"}
                         </DnaBadge>
-                      </TableCell>
-                      <TableCell className="pr-6 text-right py-4">
+                      </DnaTd>
+                      <DnaTd className="pr-6 text-right py-4">
                         <DnaButton
                           variant="outline"
                           size="sm"
@@ -276,17 +276,17 @@ export default function DpConsolidatedPage() {
                         >
                           Catat DP
                         </DnaButton>
-                      </TableCell>
-                    </TableRow>
+                      </DnaTd>
+                    </DnaTableRow>
                   );
                 })}
                 {filteredSO.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-slate-400 italic text-xs">Tidak ada SO ditemukan.</TableCell>
-                  </TableRow>
+                  <DnaTableRow>
+                    <DnaTd colSpan={7} className="text-center py-10 text-slate-400 italic text-xs">Tidak ada SO ditemukan.</DnaTd>
+                  </DnaTableRow>
                 )}
-              </TableBody>
-            </Table>
+              </DnaTableBody>
+            </DnaTable>
           </DnaDataTableCard>
         </div>
       </>

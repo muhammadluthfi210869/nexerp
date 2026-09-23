@@ -29,23 +29,9 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
+} from "@/components/dna";
 
 // Static Data from Plan
-const STATIC_HPP_REQUESTS = [
-  { kode: "HPP-001", tanggal: "01/04/2026", pelanggan: "PT Maju Jaya", produk: "Hair Mask", formula: "FML-001 Rev 2", moq: 1000, status: "Proses" },
-  { kode: "HPP-002", tanggal: "03/04/2026", pelanggan: "CV Sejahtera", produk: "Body Lotion", formula: "FML-002 Rev 1", moq: 500, status: "Selesai" },
-  { kode: "HPP-003", tanggal: "07/04/2026", pelanggan: "Beauty Hub Indonesia", produk: "Sunscreen SPF 50", formula: "FML-004 Rev 3", moq: 2000, status: "Proses" },
-  { kode: "HPP-004", tanggal: "10/04/2026", pelanggan: "PT Cosmo Indah", produk: "Facial Wash", formula: "FML-005 Rev 1", moq: 1500, status: "Selesai" },
-  { kode: "HPP-005", tanggal: "14/04/2026", pelanggan: "UD Sinar Jaya", produk: "Hand Cream 50g", formula: "FML-008 Rev 1", moq: 3000, status: "Draft" },
-];
-
-const MOCK_SAMPLES = {
-  "Sample-A": { name: "Anti-Aging Serum", netto: "30ml", revision: "Rev 3", formula: "FML-99-X" },
-  "Sample-B": { name: "Brightening Day Cream", netto: "50g", revision: "Rev 1", formula: "FML-102-Y" },
-  "Sample-C": { name: "Niacinamide Toner", netto: "100ml", revision: "Rev 2", formula: "FML-106-Z" },
-};
-
 export default function COGSRequestPrototype() {
   const [view, setView] = useState<"list" | "form">("list");
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
@@ -64,21 +50,21 @@ export default function COGSRequestPrototype() {
     queryFn: async () => {
       try {
         const resp = await api.get("/finance/cogs-requests");
-        return resp.data;
+        return resp.data || [];
       } catch {
-        return STATIC_HPP_REQUESTS;
+        return [];
       }
     },
   });
 
-  const { data: samples = {}, isLoading: samplesLoading } = useQuery({
+  const { data: samples = {}, isLoading: samplesLoading } = useQuery<Record<string, any>>({
     queryKey: ["rnd-samples-for-cogs"],
     queryFn: async () => {
       try {
         const resp = await api.get("/rnd/samples");
-        return resp.data;
+        return resp.data || {};
       } catch {
-        return MOCK_SAMPLES;
+        return {};
       }
     },
   });
@@ -326,11 +312,9 @@ export default function COGSRequestPrototype() {
                     {samplesLoading ? (
                       <option disabled>Loading...</option>
                     ) : (
-                      <>
-                        <option value="Sample-A">SSI-001 | Anti-Aging Serum</option>
-                        <option value="Sample-B">SSI-005 | Brightening Day Cream</option>
-                        <option value="Sample-C">SSI-006 | Niacinamide Toner</option>
-                      </>
+                      Object.entries(samples as Record<string, any>).map(([key, s]: [string, any]) => (
+                        <option key={key} value={key}>{s.name || key}</option>
+                      ))
                     )}
                   </select>
                 </div>
@@ -340,19 +324,19 @@ export default function COGSRequestPrototype() {
                     <div className="space-y-0.5">
                       <p className="text-[7px] font-black text-slate-400 uppercase">Product Name</p>
                       <p className="font-black text-slate-900 text-[11px] uppercase italic">
-                        {samples[selectedSample as keyof typeof MOCK_SAMPLES]?.name}
+                        {(samples as Record<string, any>)[selectedSample]?.name || selectedSample}
                       </p>
                     </div>
                     <div className="space-y-0.5 text-left md:text-center">
                       <p className="text-[7px] font-black text-slate-400 uppercase">Netto / Size</p>
                       <p className="font-black text-slate-900 text-[11px] uppercase">
-                        {samples[selectedSample as keyof typeof MOCK_SAMPLES]?.netto}
+                        {(samples as Record<string, any>)[selectedSample]?.netto || "-"}
                       </p>
                     </div>
                     <div className="space-y-0.5 text-left md:text-right">
                       <p className="text-[7px] font-black text-slate-400 uppercase">Current Formula</p>
                       <DnaBadge status="purple">
-                        {samples[selectedSample as keyof typeof MOCK_SAMPLES]?.formula} {samples[selectedSample as keyof typeof MOCK_SAMPLES]?.revision}
+                        {`${(samples as Record<string, any>)[selectedSample]?.formula || "FML"} ${(samples as Record<string, any>)[selectedSample]?.revision || "Rev 1"}`}
                       </DnaBadge>
                     </div>
                   </div>

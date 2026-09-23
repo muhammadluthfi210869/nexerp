@@ -19,6 +19,10 @@ export class CreatePurchaseReturnItemDto {
 
   @IsNotEmpty()
   unitPrice!: number;
+
+  @IsString()
+  @IsOptional()
+  reason?: string;
 }
 
 export class CreatePurchaseReturnDto {
@@ -27,8 +31,8 @@ export class CreatePurchaseReturnDto {
   supplierId!: string;
 
   @IsUUID()
-  @IsNotEmpty()
-  warehouseId!: string;
+  @IsOptional()
+  warehouseId?: string;
 
   @IsUUID()
   @IsOptional()
@@ -41,6 +45,10 @@ export class CreatePurchaseReturnDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @IsString()
+  @IsOptional()
+  reason?: string;
 
   @IsArray()
   @ValidateNested({ each: true })

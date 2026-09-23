@@ -21,8 +21,8 @@ import {
   Bookmark,
   Package
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card } from "@/components/dna";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/dna";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { ChartSkeleton } from "@/components/charts/ChartSkeleton";

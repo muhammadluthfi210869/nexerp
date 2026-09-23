@@ -1,8 +1,7 @@
 "use client";
 
-import RndProjectMonitoringPage from "../project-monitoring/page";
+import RndDashboardPage from "@/app/(dashboard)/rnd/dashboard/page";
 
-export default function RndDashboardPage() {
-  return <RndProjectMonitoringPage />;
+export default function SamplesRndDashboardPage() {
+  return <RndDashboardPage />;
 }
-

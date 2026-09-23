@@ -5,8 +5,27 @@ import {
   IsBoolean,
   IsEnum,
   IsUUID,
+  IsArray,
+  IsNumber,
+  ValidateNested,
 } from 'class-validator';
-import { ContractType } from '@prisma/client';
+import { Type } from 'class-transformer';
+import { ContractType, Division } from '@prisma/client';
+
+export class EmployeeRoleDto {
+  @IsEnum(Division)
+  division!: Division;
+
+  @IsString()
+  roleName!: string;
+
+  @IsNumber()
+  weight!: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isPrimary?: boolean;
+}
 
 export class CreateEmployeeDto {
   @IsString()
@@ -88,6 +107,26 @@ export class CreateEmployeeDto {
   @IsString()
   baseSalary?: string;
 
+  @IsOptional()
+  @IsString()
+  positionAllowance?: string;
+
+  @IsOptional()
+  @IsString()
+  transportFlat?: string;
+
+  @IsOptional()
+  @IsString()
+  transportTentativeDaily?: string;
+
+  @IsOptional()
+  @IsString()
+  onboardingStatus?: string;
+
+  @IsOptional()
+  @IsNumber()
+  totalTrainingHours?: number;
+
   @IsDateString()
   joinedAt!: string;
 
@@ -106,4 +145,10 @@ export class CreateEmployeeDto {
   @IsOptional()
   @IsUUID()
   managerId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => EmployeeRoleDto)
+  roles?: EmployeeRoleDto[];
 }

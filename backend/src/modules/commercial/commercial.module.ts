@@ -7,14 +7,18 @@ import { InvoicesController } from './controllers/invoices.controller';
 import { PaymentsController } from './controllers/payments.controller';
 import { RetentionController } from './controllers/retention.controller';
 
+import { SalesDownPaymentsService } from './services/sales-down-payments.service';
+import { SalesDownPaymentsController } from './controllers/sales-down-payments.controller';
+
 @Module({
-  providers: [SalesOrdersService, InvoicesService, PaymentsService],
+  providers: [SalesOrdersService, InvoicesService, PaymentsService, SalesDownPaymentsService],
   controllers: [
     SalesOrdersController,
     InvoicesController,
     PaymentsController,
     RetentionController,
+    SalesDownPaymentsController,
   ],
-  exports: [SalesOrdersService, InvoicesService, PaymentsService],
+  exports: [SalesOrdersService, InvoicesService, PaymentsService, SalesDownPaymentsService],
 })
 export class CommercialModule {}

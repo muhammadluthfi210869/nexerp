@@ -9,9 +9,13 @@ import { LeadService } from './services/lead.service';
 import { PipelineService } from './services/pipeline.service';
 import { RetentionService } from './services/retention.service';
 import { AnalyticsService } from './services/analytics.service';
+import { AuditService } from '../../platform/audit/audit.service';
+import { OutboxService } from '../../platform/outbox/outbox.service';
+
+import { ReturnsModule } from './returns/returns.module';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => ScmModule)],
+  imports: [PrismaModule, forwardRef(() => ScmModule), ReturnsModule],
   controllers: [BussdevController],
   providers: [
     BussdevService,
@@ -20,6 +24,8 @@ import { AnalyticsService } from './services/analytics.service';
     PipelineService,
     RetentionService,
     AnalyticsService,
+    AuditService,
+    OutboxService,
   ],
   exports: [
     BussdevService,

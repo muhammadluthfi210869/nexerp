@@ -37,6 +37,7 @@ model Account {
   code                  String            @unique
   name                  String
   isActive              Boolean           @default(true)
+  allowManualJournal    Boolean           @default(true)
   type                  AccountType
   normalBalance         NormalBalance
   parentId              String?           @db.Uuid

@@ -11,18 +11,18 @@ import {
   DialogTitle, 
   DialogDescription,
   DialogFooter
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/dna";
+import { Button } from "@/components/dna";
+import { Badge } from "@/components/dna";
+import { Textarea } from "@/components/dna";
 import { 
   Select, 
   SelectContent, 
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+} from "@/components/dna";
+import { Label } from "@/components/dna";
 import { 
   Phone, 
   Clock, 

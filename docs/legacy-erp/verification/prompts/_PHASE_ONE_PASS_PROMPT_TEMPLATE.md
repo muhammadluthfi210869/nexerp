@@ -9,7 +9,8 @@ Implement **{{PHASE_ID}} — {{PHASE_NAME}}** until its focused acceptance passe
 3. the `{{PHASE_ID}}` row in the roadmap and registry
 4. `{{ACCEPTANCE_CHECKLIST_PATH}}`
 5. `{{REMEDIATION_MAP_PATH}}`
-6. only the canonical contracts traced to this phase
+6. `docs/legacy-erp/verification/ALL_PHASE_LEGACY_PARITY_AND_PROVENANCE_AUDIT.md`
+7. only the canonical contracts traced to this phase
 
 ## Scope
 
@@ -17,7 +18,20 @@ Implement **{{PHASE_ID}} — {{PHASE_NAME}}** until its focused acceptance passe
 - In scope: `{{IN_SCOPE}}`
 - Out of scope: `{{OUT_OF_SCOPE}}`
 - Known P0/P1: `{{KNOWN_BLOCKERS}}`
+- Risk tier: `{{LOW_MEDIUM_OR_HIGH}}`
+- Minimum sufficient proof for this tier: `{{RISK_BASED_TEST_PACKAGE}}`
+- Affected interfaces/consumers: `{{CHANGE_IMPACT_MAP}}`
+- Material seams and assertions: `{{SEAM_TESTS}}`
+- Environment prerequisites: `{{ENVIRONMENT_PREFLIGHT}}`
 - P2/P3 backlog is non-blocking.
+
+## Provenance freeze
+
+For every primary acceptance behavior, declare:
+
+`behavior → LEGACY_OBSERVED | LEGACY_REPORTED | OWNER_REQUIRED | OWNER_APPROVED_EVOLUTION | TECHNICAL_SAFETY | INFERRED_NEEDS_CONFIRMATION | DEFERRED_OUT_OF_SCOPE → exact source/evidence → verified boundary → unresolved choice`
+
+Do not present a requested evolution, implementation detail, or AI inference as legacy parity. A material threshold, actor, transition, formula, or commercial policy labeled `INFERRED_NEEDS_CONFIRMATION` blocks only its affected slice until the owner decides; unrelated work continues.
 
 ## Required method
 
@@ -29,9 +43,12 @@ Implement **{{PHASE_ID}} — {{PHASE_NAME}}** until its focused acceptance passe
 
 `{{SUBPHASES_AND_TARGETED_COMMANDS}}`
 
-6. After every subphase is green, run exactly one thin final command: `{{FINAL_VERIFY_COMMAND}}`.
-7. If it fails, isolate and fix the owning subphase, rerun that focused test, then allow one final-command rerun.
-8. Finish when scoped acceptance passes and no P0/P1 remains.
+6. Verify declared material seams, then run the phase golden thread: `{{GOLDEN_THREAD_COMMAND_OR_NOT_APPLICABLE}}`.
+7. After every subphase is green, run exactly one thin final command: `{{FINAL_VERIFY_COMMAND}}`.
+8. If it fails, isolate and fix the owning subphase, rerun that focused test, then allow one final-command rerun.
+9. Finish when scoped acceptance passes and no P0/P1 remains. Stop without unrelated cleanup.
+
+Do not add tests beyond the declared risk-tier package unless they reproduce a P0/P1 or an observed regression.
 
 ## Prohibited
 
@@ -43,6 +60,9 @@ Implement **{{PHASE_ID}} — {{PHASE_NAME}}** until its focused acceptance passe
 - do not perform repo-wide cleanup or block on P2/P3 perfection;
 - do not weaken/delete/skip frozen acceptance behavior;
 - do not overwrite unrelated user changes.
+- do not turn an inferred threshold, actor, transition, KPI formula, SLA or approval tier into company SOP;
+- do not mock the business rule, authorization, transaction or persistence path claimed as proof;
+- do not implement the next phase against an unfrozen shared interface.
 
 ## Time budget
 
@@ -62,3 +82,4 @@ Return concise results only:
 - final verification result;
 - P0/P1 remaining: must be zero;
 - P2/P3 backlog: record without blocking.
+- elapsed implementation/focused verification time and correction-cycle count.

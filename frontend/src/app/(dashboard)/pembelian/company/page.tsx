@@ -52,8 +52,8 @@ export default function CompanyProfilePage() {
     <DnaPageContainer>
       <DnaPageHeader
         title="Profil Perusahaan"
-        subtitle="Identitas badan hukum, sertifikasi CPKB/Halal, lokasi pabrik, dan rekening resmi invoice"
-        badge={<DnaBadge variant="green">Identitas Korporat</DnaBadge>}
+        description="Identitas badan hukum, sertifikasi CPKB/Halal, lokasi pabrik, dan rekening resmi invoice."
+        badge={<DnaBadge variant="neutral">SCR-050 / SYS-CMP</DnaBadge>}
         actions={
           <DnaButton variant="primary" size="sm" onClick={handleSave}>
             <Save className="w-4 h-4 mr-1.5" />

@@ -42,14 +42,6 @@ interface ArAgingItem {
   bucket: "Current" | "1-30" | "31-60" | "61-90" | ">90";
 }
 
-const FALLBACK_AR_ITEMS: ArAgingItem[] = [
-  { id: "1", customer: "PT Aura Kosmetika Cantik", invoiceNo: "AR-INV-2608-019", invoiceDate: "2026-08-20", dueDate: "2026-09-20", daysOverdue: 0, amount: 350000000, bucket: "Current" },
-  { id: "2", customer: "CV Glow Derma Skincare", invoiceNo: "AR-INV-2608-005", invoiceDate: "2026-07-30", dueDate: "2026-08-30", daysOverdue: 10, amount: 180000000, bucket: "1-30" },
-  { id: "3", customer: "PT Natural Herbal Nusantara", invoiceNo: "AR-INV-2607-042", invoiceDate: "2026-06-25", dueDate: "2026-07-25", daysOverdue: 46, amount: 220000000, bucket: "31-60" },
-  { id: "4", customer: "Klinik Estetika Dr. Vina", invoiceNo: "AR-INV-2606-012", invoiceDate: "2026-05-15", dueDate: "2026-06-15", daysOverdue: 86, amount: 150000000, bucket: "61-90" },
-  { id: "5", customer: "UD Cantik Berseri Makmur", invoiceNo: "AR-INV-2605-001", invoiceDate: "2026-04-10", dueDate: "2026-05-10", daysOverdue: 122, amount: 100000000, bucket: ">90" },
-];
-
 export default function ArAgingReportPage() {
   const toast = useDnaToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,19 +49,51 @@ export default function ArAgingReportPage() {
   const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
   const [selectedInvoice, setSelectedInvoice] = useState<ArAgingItem | null>(null);
 
-  const totalOutstanding = useMemo(() => FALLBACK_AR_ITEMS.reduce((acc, r) => acc + r.amount, 0), []);
-  const overdueAr = useMemo(() => FALLBACK_AR_ITEMS.filter((r) => r.daysOverdue > 0).reduce((acc, r) => acc + r.amount, 0), []);
-  const piutangLancar = useMemo(() => FALLBACK_AR_ITEMS.filter((r) => r.daysOverdue === 0).reduce((acc, r) => acc + r.amount, 0), []);
+  const { data: reportData, isLoading } = useQuery({
+    queryKey: ["reports-ar-aging", dateRange.end],
+    queryFn: async () => {
+      const res = await api.get("/reports/ar-aging", {
+        params: { asOfDate: dateRange.end },
+      });
+      return res.data;
+    },
+  });
+
+  const arItems: ArAgingItem[] = useMemo(() => {
+    const rawList = reportData?.data || [];
+    return rawList.map((it: any) => ({
+      id: it.id,
+      customer: it.customer || "Pelanggan",
+      invoiceNo: it.invoiceNo || it.id,
+      invoiceDate: it.invoiceDate ? it.invoiceDate.split("T")[0] : "",
+      dueDate: it.dueDate ? it.dueDate.split("T")[0] : "",
+      daysOverdue: it.daysOverdue || 0,
+      amount: it.outstandingAmount || it.totalAmount || 0,
+      bucket: it.bucket || "Current",
+    }));
+  }, [reportData]);
+
+  const summary = reportData?.summary || {
+    totalOutstanding: 0,
+    currentTotal: 0,
+    overdueTotal: 0,
+    overdue90Pct: 0,
+    isHealthy: true,
+  };
+
+  const totalOutstanding = summary.totalOutstanding;
+  const overdueAr = summary.overdueTotal;
+  const piutangLancar = summary.currentTotal;
 
   const filteredItems = useMemo(() => {
-    return FALLBACK_AR_ITEMS.filter((item) => {
+    return arItems.filter((item) => {
       const matchSearch =
         item.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.invoiceNo.toLowerCase().includes(searchQuery.toLowerCase());
       const matchBucket = bucketFilter === "ALL" || item.bucket === bucketFilter;
       return matchSearch && matchBucket;
     });
-  }, [searchQuery, bucketFilter]);
+  }, [arItems, searchQuery, bucketFilter]);
 
   const handleSendReminder = (customer: string, invoice: string) => {
     toast.success(`Surat Pengingat Tagihan ${invoice} telah dikirim ke WhatsApp / Email ${customer}`);
@@ -106,7 +130,7 @@ export default function ArAgingReportPage() {
           label="Total Outstanding AR"
           value={formatRupiah(totalOutstanding)}
           icon={<DollarSign className="w-5 h-5 text-blue-600" />}
-          delta={{ value: `${FALLBACK_AR_ITEMS.length} Faktur Aktif`, isPositive: true }}
+          delta={{ value: `${arItems.length} Faktur Aktif`, isPositive: true }}
           subtext="Total Piutang Belum Dilunasi Klien"
           variant="info"
         />

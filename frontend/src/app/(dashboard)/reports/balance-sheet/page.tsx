@@ -42,51 +42,27 @@ interface BalanceSheetData {
   isBalanced: boolean;
 }
 
-const FALLBACK_BALANCE_SHEET: BalanceSheetData = {
-  date: "2026-09-30",
-  assets: {
-    items: [
-      { id: "a1", code: "11100", name: "Kas Operasional Pabrik", type: "ASSET", reportGroup: "CURRENT_ASSET", parentId: null, balance: 85000000, debitBalance: 85000000, creditBalance: 0 },
-      { id: "a2", code: "11200", name: "Rekening Bank BCA Maklon", type: "ASSET", reportGroup: "CURRENT_ASSET", parentId: null, balance: 450000000, debitBalance: 450000000, creditBalance: 0 },
-      { id: "a3", code: "11210", name: "Rekening Bank Mandiri Payroll", type: "ASSET", reportGroup: "CURRENT_ASSET", parentId: null, balance: 185000000, debitBalance: 185000000, creditBalance: 0 },
-      { id: "a4", code: "11300", name: "Piutang Usaha Maklon", type: "ASSET", reportGroup: "CURRENT_ASSET", parentId: null, balance: 1000000000, debitBalance: 1000000000, creditBalance: 0 },
-      { id: "a5", code: "11400", name: "Persediaan Bahan Baku & Kemasan", type: "ASSET", reportGroup: "CURRENT_ASSET", parentId: null, balance: 1120000000, debitBalance: 1120000000, creditBalance: 0 },
-      { id: "a6", code: "12100", name: "Aset Tetap - Mesin & Peralatan Pabrik", type: "ASSET", reportGroup: "FIXED_ASSET", parentId: null, balance: 770000000, debitBalance: 770000000, creditBalance: 0 }
-    ],
-    total: 3610000000
-  },
-  liabilities: {
-    items: [
-      { id: "l1", code: "21100", name: "Hutang Usaha Supplier", type: "LIABILITY", reportGroup: "CURRENT_LIABILITY", parentId: null, balance: 690000000, debitBalance: 0, creditBalance: 690000000 },
-      { id: "l2", code: "21200", name: "Beban Akrual & Gaji Karyawan", type: "LIABILITY", reportGroup: "CURRENT_LIABILITY", parentId: null, balance: 145000000, debitBalance: 0, creditBalance: 145000000 }
-    ],
-    total: 835000000
-  },
-  equity: {
-    items: [
-      { id: "e1", code: "31100", name: "Modal Disetor Pemegang Saham", type: "EQUITY", reportGroup: "EQUITY", parentId: null, balance: 2000000000, debitBalance: 0, creditBalance: 2000000000 },
-      { id: "e2", code: "32100", name: "Laba Ditahan", type: "EQUITY", reportGroup: "EQUITY", parentId: null, balance: 284500000, debitBalance: 0, creditBalance: 284500000 }
-    ],
-    netIncome: 490500000,
-    total: 2775000000
-  },
-  totalLiabilitiesAndEquity: 3610000000,
-  isBalanced: true
-};
-
 export default function BalanceSheetPage() {
-  const [data, setData] = useState<BalanceSheetData>(FALLBACK_BALANCE_SHEET);
+  const [data, setData] = useState<BalanceSheetData | null>(null);
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await api.get("/finance/reports/balance-sheet", {
+      const res = await api.get("/reports/balance-sheet", {
         params: { date }
       });
-      if (res.data) setData(res.data);
-    } catch {
-      setData(FALLBACK_BALANCE_SHEET);
+      if (res.data) {
+        setData(res.data);
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || "Gagal memuat neraca keuangan live");
+      setData(null);
+    } finally {
+      setLoading(false);
     }
   }, [date]);
 
@@ -201,50 +177,62 @@ export default function BalanceSheetPage() {
           </DnaButton>
         </div>
 
-        {/* Balancing Banner at top */}
-        <div className={cn(
-          "p-5 rounded-2xl flex items-center justify-between border shadow-sm transition-all duration-500",
-          data?.isBalanced 
-            ? "bg-emerald-50 border-emerald-100 text-emerald-700" 
-            : "bg-rose-50 border-rose-100 text-rose-700"
-        )}>
-          <div className="flex items-center gap-4">
+        {!data && !loading && (
+          <DnaCard className="p-12 text-center">
+            <Info className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <h4 className="text-sm font-black uppercase text-slate-700 tracking-wider">Data Neraca Tidak Tersedia</h4>
+            <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+              {error || "Tidak ada transaksi keuangan tercatat untuk tanggal ini. Silakan periksa parameter tanggal dan coba lagi."}
+            </p>
+          </DnaCard>
+        )}
+
+        {data && (
+          <>
+            {/* Balancing Banner at top */}
             <div className={cn(
-              "p-3 rounded-2xl",
-              data?.isBalanced ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+              "p-5 rounded-2xl flex items-center justify-between border shadow-sm transition-all duration-500",
+              data.isBalanced 
+                ? "bg-emerald-50 border-emerald-100 text-emerald-700" 
+                : "bg-rose-50 border-rose-100 text-rose-700"
             )}>
-              {data?.isBalanced ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5 animate-pulse" />}
-            </div>
-            <div>
-              <h4 className="text-xs font-black uppercase tracking-wider">Status Neraca: {data?.isBalanced ? "SEIMBANG" : "TIDAK SEIMBANG"}</h4>
-              <p className="text-[10px] font-medium opacity-80 mt-1">
-                {data?.isBalanced 
-                  ? "Persamaan dasar akuntansi terpenuhi: Aset = Liabilitas + Ekuitas."
-                  : "Terdapat perbedaan nilai antara total Aktiva dan total Pasiva."}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-4 items-center">
-            <div className="text-right">
-              <p className="text-[8px] font-black uppercase opacity-60">Total Aset</p>
-              <p className="text-base font-black font-mono">{formatCurrency(data?.assets.total || 0)}</p>
-            </div>
-            <div className="w-px h-8 bg-slate-200 mx-1" />
-            <div className="text-right">
-              <p className="text-[8px] font-black uppercase opacity-60">Liabilitas + Ekuitas</p>
-              <p className="text-base font-black font-mono">{formatCurrency(data?.totalLiabilitiesAndEquity || 0)}</p>
-            </div>
-            {!data?.isBalanced && (
-              <>
-                <div className="w-px h-8 bg-rose-200 mx-1" />
-                <div className="text-right text-rose-600">
-                  <p className="text-[8px] font-black uppercase opacity-60">Selisih (Gap)</p>
-                  <p className="text-base font-black font-mono">{formatCurrency(Math.abs((data?.assets.total || 0) - (data?.totalLiabilitiesAndEquity || 0)))}</p>
+              <div className="flex items-center gap-4">
+                <div className={cn(
+                  "p-3 rounded-2xl",
+                  data.isBalanced ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+                )}>
+                  {data.isBalanced ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5 animate-pulse" />}
                 </div>
-              </>
-            )}
-          </div>
-        </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider">Status Neraca: {data.isBalanced ? "SEIMBANG" : "TIDAK SEIMBANG"}</h4>
+                  <p className="text-[10px] font-medium opacity-80 mt-1">
+                    {data.isBalanced 
+                      ? "Persamaan dasar akuntansi terpenuhi: Aset = Liabilitas + Ekuitas."
+                      : "Terdapat perbedaan nilai antara total Aktiva dan total Pasiva."}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-4 items-center">
+                <div className="text-right">
+                  <p className="text-[8px] font-black uppercase opacity-60">Total Aset</p>
+                  <p className="text-base font-black font-mono">{formatCurrency(data.assets.total || 0)}</p>
+                </div>
+                <div className="w-px h-8 bg-slate-200 mx-1" />
+                <div className="text-right">
+                  <p className="text-[8px] font-black uppercase opacity-60">Liabilitas + Ekuitas</p>
+                  <p className="text-base font-black font-mono">{formatCurrency(data.totalLiabilitiesAndEquity || 0)}</p>
+                </div>
+                {!data.isBalanced && (
+                  <>
+                    <div className="w-px h-8 bg-rose-200 mx-1" />
+                    <div className="text-right text-rose-600">
+                      <p className="text-[8px] font-black uppercase opacity-60">Selisih (Gap)</p>
+                      <p className="text-base font-black font-mono">{formatCurrency(Math.abs((data.assets.total || 0) - (data.totalLiabilitiesAndEquity || 0)))}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* ASSETS SIDE */}
@@ -344,6 +332,8 @@ export default function BalanceSheetPage() {
             </div>
           </div>
         </div>
+      </>
+    )}
 
         {/* Footer Actions */}
         <footer className="flex justify-center gap-4 pt-10 border-t border-slate-100">

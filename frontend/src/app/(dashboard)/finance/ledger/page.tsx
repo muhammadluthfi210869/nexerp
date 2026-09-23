@@ -29,9 +29,15 @@ import {
   DnaModal,
   formatRupiah,
   useDnaToast,
-  DnaInput
+  DnaInput,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
-import { DnaTable } from "@/components/dna";
 
 interface LedgerAccountSummary {
   accountCode: string;
@@ -130,12 +136,13 @@ export default function GeneralLedgerPage() {
         />
       </DnaKpiGrid>
 
-      {/* TABLE LIST FORMAT PERSIS LEGACY SCR-162 */}
+      {/* Main Table Card */}
       <DnaDataTableCard
-        title="Ringkasan Perubahan Buku Besar Seluruh Akun"
-        badge={<DnaBadge variant="purple">{filteredAccounts.length} Akun COA</DnaBadge>}
-        customToolbar={
-          <div className="flex flex-wrap items-center gap-2.5">
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari kode / nama COA...",
+          extraActions: (
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
               <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
               <DnaInput
@@ -152,66 +159,92 @@ export default function GeneralLedgerPage() {
                 className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
               />
             </div>
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <DnaInput
-                type="text"
-                placeholder="Cari kode / nama COA..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-        }
+          ),
+        }}
       >
-        <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">Kode CoA</th>
-                <th className="px-3.5 py-3">Nama CoA</th>
-                <th className="px-3.5 py-3 text-right">Opening (Rp)</th>
-                <th className="px-3.5 py-3 text-right">Debet (Rp)</th>
-                <th className="px-3.5 py-3 text-right">Kredit (Rp)</th>
-                <th className="px-3.5 py-3 text-right">Perubahan (Rp)</th>
-                <th className="px-3.5 py-3 text-right">Saldo (Rp)</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredAccounts.map((row) => (
-                <tr
-                  key={row.accountCode}
-                  onClick={() => setSelectedCode(row.accountCode)}
-                  className={`cursor-pointer transition-colors ${
-                    selectedCode === row.accountCode ? "bg-blue-50/60 font-semibold" : "hover:bg-slate-50/50"
-                  }`}
-                >
-                  <td className="px-3.5 py-2.5 font-mono text-blue-700 font-bold">{row.accountCode}</td>
-                  <td className="px-3.5 py-2.5 font-semibold text-slate-900">{row.accountName}</td>
-                  <td className="px-3.5 py-2.5 text-right font-medium text-slate-700">{formatRupiah(row.opening)}</td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-emerald-700">{formatRupiah(row.debit)}</td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">{formatRupiah(row.credit)}</td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-blue-700">+{formatRupiah(row.change)}</td>
-                  <td className="px-3.5 py-2.5 text-right font-black text-slate-900">{formatRupiah(row.saldo)}</td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedDrilldown(row);
-                      }}
-                      className="p-1 text-slate-400 hover:text-blue-600 rounded"
-                      title="Drilldown ke Jurnal Asli"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </DnaTable>
-        </div>
+        <DnaTable>
+          <DnaTableHead>
+            <tr>
+              <DnaTh className="w-[130px]">Kode CoA</DnaTh>
+              <DnaTh>Nama Akun CoA</DnaTh>
+              <DnaTh align="right" className="w-[140px]">Saldo Awal</DnaTh>
+              <DnaTh align="right" className="w-[140px]">Debet</DnaTh>
+              <DnaTh align="right" className="w-[140px]">Kredit</DnaTh>
+              <DnaTh align="right" className="w-[140px]">Perubahan</DnaTh>
+              <DnaTh align="right" className="w-[140px]">Saldo Akhir</DnaTh>
+              <DnaTh align="center" className="w-[70px]">Aksi</DnaTh>
+            </tr>
+          </DnaTableHead>
+          <DnaTableBody>
+            {filteredAccounts.map((row) => (
+              <DnaTableRow
+                key={row.accountCode}
+                onClick={() => setSelectedCode(row.accountCode)}
+                className={`cursor-pointer ${
+                  selectedCode === row.accountCode ? "bg-blue-50/60 font-semibold" : ""
+                }`}
+              >
+                {/* Kolom 1: Kode CoA */}
+                <DnaTd>
+                  <DnaCell.Code value={row.accountCode} />
+                </DnaTd>
+
+                {/* Kolom 2: Nama CoA */}
+                <DnaTd className="text-slate-900 font-medium truncate max-w-[240px]">
+                  {row.accountName}
+                </DnaTd>
+
+                {/* Kolom 3: Saldo Awal */}
+                <DnaTd align="right">
+                  <span className="text-slate-700 text-xs tabular-nums font-medium">
+                    {formatRupiah(row.opening)}
+                  </span>
+                </DnaTd>
+
+                {/* Kolom 4: Debet */}
+                <DnaTd align="right">
+                  <span className="font-semibold text-emerald-700 text-xs tabular-nums">
+                    {formatRupiah(row.debit)}
+                  </span>
+                </DnaTd>
+
+                {/* Kolom 5: Kredit */}
+                <DnaTd align="right">
+                  <span className="font-semibold text-rose-700 text-xs tabular-nums">
+                    {formatRupiah(row.credit)}
+                  </span>
+                </DnaTd>
+
+                {/* Kolom 6: Perubahan */}
+                <DnaTd align="right">
+                  <span className="font-semibold text-blue-700 text-xs tabular-nums">
+                    +{formatRupiah(row.change)}
+                  </span>
+                </DnaTd>
+
+                {/* Kolom 7: Saldo Akhir */}
+                <DnaTd align="right">
+                  <span className="font-bold text-slate-900 text-xs tabular-nums">
+                    {formatRupiah(row.saldo)}
+                  </span>
+                </DnaTd>
+
+                {/* Kolom 8: Aksi */}
+                <DnaTd align="center" onClick={(e) => e.stopPropagation()}>
+                  <DnaButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedDrilldown(row)}
+                    className="text-slate-400 hover:text-blue-600"
+                    title="Drilldown ke Jurnal Asli"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </DnaButton>
+                </DnaTd>
+              </DnaTableRow>
+            ))}
+          </DnaTableBody>
+        </DnaTable>
       </DnaDataTableCard>
 
       {/* DRILLDOWN MODAL KE JURNAL & SOURCE DOCUMENT (SCR-162) */}
@@ -233,24 +266,24 @@ export default function GeneralLedgerPage() {
             </div>
           </div>
           <DnaTable className="w-full text-left text-xs border border-slate-200 rounded-lg">
-            <thead className="bg-slate-50 text-slate-600">
-              <tr className="border-b border-slate-200">
-                <th className="p-2">Tgl</th>
-                <th className="p-2">No. Jurnal</th>
-                <th className="p-2">Source Document</th>
-                <th className="p-2 text-right">Debet</th>
-                <th className="p-2 text-right">Kredit</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+            <DnaTableHead>
               <tr>
-                <td className="p-2 text-slate-600">2026-09-08</td>
-                <td className="p-2 font-mono text-blue-700 font-semibold">DL-FIN-JRN-08092026-0001</td>
-                <td className="p-2 font-mono text-emerald-700">AR-INV-2609-01 (Faktur Maklon)</td>
-                <td className="p-2 text-right font-bold text-emerald-700">Rp 450.000.000</td>
-                <td className="p-2 text-right text-slate-400">-</td>
+                <DnaTh className="p-2">Tgl</DnaTh>
+                <DnaTh className="p-2">No. Jurnal</DnaTh>
+                <DnaTh className="p-2">Source Document</DnaTh>
+                <DnaTh align="right" className="p-2">Debet</DnaTh>
+                <DnaTh align="right" className="p-2">Kredit</DnaTh>
               </tr>
-            </tbody>
+            </DnaTableHead>
+            <DnaTableBody>
+              <DnaTableRow>
+                <DnaTd className="p-2 text-slate-600">2026-09-08</DnaTd>
+                <DnaTd className="p-2 text-blue-700 font-semibold tabular-nums">DL-FIN-JRN-08092026-0001</DnaTd>
+                <DnaTd className="p-2 text-emerald-700 font-medium tabular-nums">AR-INV-2609-01 (Faktur Maklon)</DnaTd>
+                <DnaTd align="right" className="p-2 font-bold tabular-nums text-emerald-700">Rp 450.000.000</DnaTd>
+                <DnaTd align="right" className="p-2 text-slate-400">-</DnaTd>
+              </DnaTableRow>
+            </DnaTableBody>
           </DnaTable>
           <div className="flex justify-end pt-2">
             <DnaButton variant="secondary" size="md" onClick={() => setSelectedDrilldown(null)}>

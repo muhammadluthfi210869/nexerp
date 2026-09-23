@@ -9,13 +9,15 @@ import {
   UpdatePurchaseReturnStatusDto,
 } from '../dto/purchase-return.dto';
 import { PurchaseReturnStatus } from '@prisma/client';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class PurchaseReturnsService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreatePurchaseReturnDto, userId?: string) {
-    const { items, ...returnData } = dto;
+    const { items, reason, ...returnData } = dto;
+    const notes = dto.notes || reason || '';
 
     return this.prisma.$transaction(async (tx) => {
       // 1. Validate Stock Availability for each item
@@ -36,19 +38,37 @@ export class PurchaseReturnsService {
         }
       }
 
-      // 2. Calculate Total Value
+      // 2. Ensure Warehouse ID
+      let warehouseId = returnData.warehouseId;
+      if (!warehouseId) {
+        const defaultWh = await tx.warehouse.findFirst();
+        if (defaultWh) {
+          warehouseId = defaultWh.id;
+        } else {
+          const newWh = await tx.warehouse.create({
+            data: {
+              name: 'Gudang Utama',
+            },
+          });
+          warehouseId = newWh.id;
+        }
+      }
+
+      // 3. Calculate Total Value
       const totalValue = items.reduce(
         (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
         0,
       );
 
-      // 3. Create Purchase Return
+      // 4. Create Purchase Return
       const purchaseReturn = await tx.purchaseReturn.create({
         data: {
           ...returnData,
+          warehouseId,
+          notes,
           returnNumber: await this.generateReturnNumber(tx),
           totalValue,
-          status: PurchaseReturnStatus.DRAFT,
+          status: PurchaseReturnStatus.WAITING_APPROVAL,
           ...(userId && { createdById: userId }),
           items: {
             create: items.map((i) => ({
@@ -70,7 +90,7 @@ export class PurchaseReturnsService {
     const now = new Date();
     const year = now.getFullYear().toString().slice(-2);
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const prefix = `RET-PUR-${year}${month}-`;
+    const prefix = `PRT-${year}${month}-`;
 
     const lastReturn = await tx.purchaseReturn.findFirst({
       where: { returnNumber: { startsWith: prefix } },
@@ -94,7 +114,7 @@ export class PurchaseReturnsService {
       if (!purchaseReturn)
         throw new NotFoundException('Purchase Return not found');
 
-      // Logic: When status moves to COMPLETED, reduce stock
+      // Logic: When status moves to COMPLETED, reduce stock and issue Debit Note
       if (
         dto.status === PurchaseReturnStatus.COMPLETED &&
         purchaseReturn.status !== PurchaseReturnStatus.COMPLETED
@@ -103,27 +123,46 @@ export class PurchaseReturnsService {
           await tx.materialItem.update({
             where: { id: item.materialId },
             data: {
-              stockQty: { decrement: item.quantity },
-            },
-          });
-
-          // Record Inventory Transaction
-          await tx.inventoryTransaction.create({
-            data: {
-              materialId: item.materialId,
-              type: 'OUTBOUND', // Or specific type if available
-              quantity: item.quantity,
-              referenceNo: purchaseReturn.returnNumber,
-              notes: `PURCHASE_RETURN: ${purchaseReturn.notes || ''}`,
-              warehouseId: purchaseReturn.warehouseId,
+              stockQty: { decrement: Number(item.quantity) },
             },
           });
         }
+
+        const debitNoteNumber = `DN-${purchaseReturn.returnNumber.replace(/^(PRT|RET-PUR)-/, '')}`;
+        const debitNoteAmount = purchaseReturn.totalValue;
+
+        const updated = await tx.purchaseReturn.update({
+          where: { id },
+          data: {
+            status: dto.status,
+            debitNoteNumber,
+            debitNoteAmount,
+          },
+          include: { items: { include: { material: true } }, supplier: true },
+        });
+
+        try {
+          await tx.auditLog.create({
+            data: {
+              entityType: 'PurchaseReturn',
+              entityId: id,
+              action: 'APPROVE',
+              source: 'SCM_PROCUREMENT',
+              correlationId: id,
+              actorPermissionSnapshot: { debitNoteNumber, debitNoteAmount },
+              actorUserId: purchaseReturn.createdById || null,
+              txId: randomUUID(),
+            },
+          });
+        } catch {}
+
+        return updated;
       }
 
       return tx.purchaseReturn.update({
         where: { id },
         data: { status: dto.status },
+        include: { items: true },
       });
     });
   }

@@ -17,9 +17,9 @@ import {
   Loader2
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/dna";
+import { Badge } from "@/components/dna";
+import { Button } from "@/components/dna";
 import { StatCard, SectionLabel, TableWrapper, DnaBadge, DnaInput } from "@/components/dna";
 
 interface QCAudit {

@@ -4,12 +4,13 @@ import {
   Post,
   Query,
   Body,
+  Headers,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { WaWebhookService } from './wa-webhook.service';
 
-@Controller('wa-webhook')
+@Controller(['wa-webhook', 'webhooks/whatsapp'])
 export class WaWebhookController {
   constructor(private readonly service: WaWebhookService) {}
 
@@ -35,7 +36,10 @@ export class WaWebhookController {
    */
   @Post()
   @HttpCode(HttpStatus.OK)
-  async incoming(@Body() body: any) {
-    return this.service.handleIncoming(body);
+  async incoming(
+    @Body() body: any,
+    @Headers('x-hub-signature-256') signature?: string,
+  ) {
+    return this.service.handleIncoming(body, signature);
   }
 }

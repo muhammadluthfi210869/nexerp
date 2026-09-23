@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Pipette,
   Search,
@@ -43,53 +46,7 @@ interface ScheduleFillingItem {
   notes?: string;
 }
 
-const INITIAL_SCHEDULES: ScheduleFillingItem[] = [
-  {
-    id: "SCH-FIL-001",
-    code: "SCH-FIL-2026-0001",
-    date: "2026-09-19",
-    batchRecord: "BR-2026-0001",
-    salesOrder: "SO-202609-000004",
-    customer: "Farah Derma Clinic",
-    product: "Day Cream SPF 30",
-    targetPcs: 3000,
-    primaryPackaging: "Pot Akrilik 15gr Putih",
-    packagingQty: 3050,
-    creator: "Super Admin",
-    status: "SCHEDULED",
-    notes: "Filling steril pot akrilik dengan toleransi overfill 0.2 gr"
-  },
-  {
-    id: "SCH-FIL-002",
-    code: "SCH-FIL-2026-0002",
-    date: "2026-09-20",
-    batchRecord: "BR-2026-0002",
-    salesOrder: "SO-202609-000005",
-    customer: "K-Skin Men",
-    product: "Facial Foam Charcoal 100ml",
-    targetPcs: 5000,
-    primaryPackaging: "Tube Plastik 100ml Matte",
-    packagingQty: 5100,
-    creator: "Super Admin",
-    status: "SCHEDULED",
-    notes: "Filling piston nozzle 4-head dan ultrasonic tube sealer"
-  },
-  {
-    id: "SCH-FIL-003",
-    code: "SCH-FIL-2026-0003",
-    date: "2026-09-15",
-    batchRecord: "BR-2026-0003",
-    salesOrder: "SO-202609-000008",
-    customer: "Anita Aesthetics",
-    product: "Moisturizer Gel Aloe 50gr",
-    targetPcs: 1500,
-    primaryPackaging: "Jar Kaca 50gr Frost",
-    packagingQty: 1520,
-    creator: "Operator Filling",
-    status: "COMPLETED",
-    notes: "Lolos uji kebocoran vacuum chamber"
-  }
-];
+const INITIAL_SCHEDULES: ScheduleFillingItem[] = [];
 
 export default function ScheduleFillingPage() {
   return (
@@ -105,7 +62,40 @@ function ScheduleFillingContent() {
   const actionParam = searchParams.get("action");
   const { toast } = useDnaToast();
 
-  const [schedules, setSchedules] = useState<ScheduleFillingItem[]>(INITIAL_SCHEDULES);
+  const { data: serverSchedules } = useQuery({
+    queryKey: ["production-schedules-filling"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/production/schedules?stage=FILLING");
+        const unwrapped = unwrapResponse(res);
+        if (Array.isArray(unwrapped)) {
+          return unwrapped.map((item: any, idx: number) => ({
+            id: item.id || `SCH-${idx}`,
+            code: item.scheduleNumber || `SCH-FIL-2026-${String(idx + 1).padStart(4, "0")}`,
+            date: item.startTime ? String(item.startTime).slice(0, 10) : new Date().toISOString().slice(0, 10),
+            batchRecord: item.workOrder?.woNumber || "BR-2026-0001",
+            salesOrder: item.workOrder?.lead?.clientName || "SO-202609-000004",
+            customer: item.workOrder?.lead?.clientName || "Farah Derma Clinic",
+            product: item.workOrder?.lead?.brandName || "Day Cream SPF 30",
+            targetPcs: Number(item.targetQty) || 3000,
+            primaryPackaging: item.notes || "Pot Akrilik 15gr Putih",
+            packagingQty: Number(item.targetQty) || 3050,
+            creator: "Operator Filling",
+            status: item.status || "SCHEDULED",
+            notes: item.notes || "",
+          }));
+        }
+      } catch (err) {
+        console.warn("Failed to fetch filling schedules", err);
+      }
+      return [];
+    },
+  });
+
+  const [localSchedules, setLocalSchedules] = useState<ScheduleFillingItem[]>([]);
+  const schedules = useMemo(() => {
+    return [...localSchedules, ...(serverSchedules || [])];
+  }, [localSchedules, serverSchedules]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -165,7 +155,7 @@ function ScheduleFillingContent() {
       notes: formData.notes
     };
 
-    setSchedules([newSch, ...schedules]);
+    setLocalSchedules([newSch, ...localSchedules]);
     setIsCreateOpen(false);
     toast({
       title: "Jadwal Filling Dibuat",

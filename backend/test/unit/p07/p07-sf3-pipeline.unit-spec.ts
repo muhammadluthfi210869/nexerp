@@ -36,15 +36,20 @@ describe('P07-SF3 pipeline legal transitions (real LeadService)', () => {
   let createdUserId: string | null = null;
   let createdStaffId: string | null = null;
   let createdLeadId: string | null = null;
+  let seedTenantId: string | null = null;
   let moduleRef: any = null;
 
   beforeAll(async () => {
+    const { AuditService } = await import('../../../src/platform/audit/audit.service');
+    const { OutboxService } = await import('../../../src/platform/outbox/outbox.service');
     const mod = await Test.createTestingModule({
       providers: [
         LeadService,
         PrismaService,
         EventEmitter2,
         { provide: IdGeneratorService, useValue: { generateId: async (prefix: string) => `${prefix}-${randomUUID().slice(0, 6)}` } },
+        { provide: AuditService, useFactory: (p: PrismaService) => new AuditService(p as any), inject: [PrismaService] },
+        { provide: OutboxService, useFactory: (p: PrismaService) => new OutboxService(p as any), inject: [PrismaService] },
       ],
     }).compile();
     moduleRef = mod;
@@ -92,14 +97,24 @@ describe('P07-SF3 pipeline legal transitions (real LeadService)', () => {
     });
     createdStaffId = staff.id;
 
-    const lead = await leadService.createLead({
-      clientName: `${NAMESPACE_TAG}-A`,
-      contactInfo: '+628000000001',
-      source: 'P07-SF3',
-      productInterest: 'Test Product',
-      estimatedValue: 1000000,
-      picId: staff.id,
-    } as any);
+    // The owning organization comes from the trusted actor context, never the DTO.
+    seedTenantId = randomUUID();
+    const lead = await leadService.createLead(
+      {
+        clientName: `${NAMESPACE_TAG}-A`,
+        contactInfo: '+628000000001',
+        source: 'P07-SF3',
+        productInterest: 'Test Product',
+        estimatedValue: 1000000,
+        picId: staff.id,
+      } as any,
+      {
+        userId,
+        organizationId: seedTenantId,
+        roles: ['COMMERCIAL'],
+        correlationId: randomUUID(),
+      },
+    );
     createdLeadId = lead.id;
   });
 
@@ -132,11 +147,105 @@ describe('P07-SF3 pipeline legal transitions (real LeadService)', () => {
 
   test('legal transition NEW_LEAD → CONTACTED → FOLLOW_UP_1 → SAMPLE_REQUESTED is permitted', async () => {
     expect(createdLeadId).toBeTruthy();
-    await leadService.advanceLeadStage(createdLeadId!, { newStatus: WorkflowStatus.CONTACTED, action: 'CONTACT', loggedBy: createdUserId! } as any);
-    await leadService.advanceLeadStage(createdLeadId!, { newStatus: WorkflowStatus.FOLLOW_UP_1, action: 'FOLLOWUP', loggedBy: createdUserId! } as any);
-    await leadService.advanceLeadStage(createdLeadId!, { newStatus: WorkflowStatus.SAMPLE_REQUESTED, action: 'SAMPLE', loggedBy: createdUserId! } as any);
+    const tenantId = randomUUID();
+    // Tenant scope the lead for the governed path.
+    await prisma.salesLead.update({ where: { id: createdLeadId! }, data: { organizationId: tenantId } });
+    const actor = {
+      userId: createdUserId!,
+      organizationId: tenantId,
+      roles: ['COMMERCIAL'],
+      correlationId: randomUUID(),
+    };
+    await leadService.advanceLeadStageGoverned(createdLeadId!, { newStatus: WorkflowStatus.CONTACTED, action: 'CONTACT', loggedBy: createdUserId! } as any, actor);
+    await leadService.advanceLeadStageGoverned(createdLeadId!, { newStatus: WorkflowStatus.FOLLOW_UP_1, action: 'FOLLOWUP', loggedBy: createdUserId! } as any, actor);
+    await leadService.advanceLeadStageGoverned(createdLeadId!, { newStatus: WorkflowStatus.SAMPLE_REQUESTED, action: 'SAMPLE', loggedBy: createdUserId! } as any, actor);
     const current = await prisma.salesLead.findUnique({ where: { id: createdLeadId! } });
     expect(current?.status).toBe(WorkflowStatus.SAMPLE_REQUESTED);
+  });
+
+  test('cross-tenant attempt via governed path is denied with zero side effects', async () => {
+    expect(createdLeadId).toBeTruthy();
+    const tenantId = randomUUID();
+    await prisma.salesLead.update({ where: { id: createdLeadId! }, data: { organizationId: tenantId } });
+    const auditBefore = await prisma.auditLog.count({ where: { entityId: createdLeadId! } });
+    const outboxBefore = await prisma.outboxEvent.count({ where: { aggregateId: createdLeadId! } });
+    const crossTenantActor = {
+      userId: createdUserId!,
+      organizationId: randomUUID(), // tenant B
+      roles: ['COMMERCIAL'],
+      correlationId: randomUUID(),
+    };
+    await expect(
+      leadService.advanceLeadStageGoverned(
+        createdLeadId!,
+        { newStatus: WorkflowStatus.CONTACTED, action: 'CONTACT', loggedBy: createdUserId! } as any,
+        crossTenantActor,
+      ),
+    ).rejects.toBeDefined();
+    const after = await prisma.salesLead.findUnique({ where: { id: createdLeadId! } });
+    expect(after?.status).toBe(WorkflowStatus.NEW_LEAD); // unchanged
+    const auditAfter = await prisma.auditLog.count({ where: { entityId: createdLeadId! } });
+    expect(auditAfter).toBe(auditBefore);
+    const outboxAfter = await prisma.outboxEvent.count({ where: { aggregateId: createdLeadId! } });
+    expect(outboxAfter).toBe(outboxBefore);
+  });
+
+  test('concurrent identical governed commands collapse to one business effect', async () => {
+    expect(createdLeadId).toBeTruthy();
+    const tenantId = randomUUID();
+    await prisma.salesLead.update({ where: { id: createdLeadId! }, data: { organizationId: tenantId } });
+    const idemKey = `idem-${randomUUID().slice(0, 8)}`;
+    const correlationId = randomUUID();
+    const actor = {
+      userId: createdUserId!,
+      organizationId: tenantId,
+      roles: ['COMMERCIAL'],
+      correlationId,
+      idempotencyKey: idemKey,
+    };
+    const dto = { newStatus: WorkflowStatus.CONTACTED, action: 'CONTACT', loggedBy: createdUserId! } as any;
+    const [r1, r2, r3] = await Promise.all([
+      leadService.advanceLeadStageGoverned(createdLeadId!, dto, actor),
+      leadService.advanceLeadStageGoverned(createdLeadId!, dto, actor),
+      leadService.advanceLeadStageGoverned(createdLeadId!, dto, actor),
+    ]);
+    expect(r1.id).toBe(r2.id);
+    expect(r2.id).toBe(r3.id);
+    // Exactly ONE audit + ONE outbox for the three concurrent calls.
+    const auditRows = await prisma.auditLog.count({
+      where: { entityId: createdLeadId!, idempotencyKey: idemKey, action: 'STAGE_ADVANCE' },
+    });
+    expect(auditRows).toBe(1);
+    const outboxRows = await prisma.outboxEvent.count({
+      where: { aggregateId: createdLeadId!, correlationId },
+    });
+    expect(outboxRows).toBe(1);
+  });
+
+  test('idempotency: same scope+key + different payload is rejected', async () => {
+    expect(createdLeadId).toBeTruthy();
+    const tenantId = randomUUID();
+    await prisma.salesLead.update({ where: { id: createdLeadId! }, data: { organizationId: tenantId } });
+    const idemKey = `idem-conflict-${randomUUID().slice(0, 8)}`;
+    const actor = {
+      userId: createdUserId!,
+      organizationId: tenantId,
+      roles: ['COMMERCIAL'],
+      correlationId: randomUUID(),
+      idempotencyKey: idemKey,
+    };
+    await leadService.advanceLeadStageGoverned(
+      createdLeadId!,
+      { newStatus: WorkflowStatus.CONTACTED, action: 'CONTACT', loggedBy: createdUserId! } as any,
+      actor,
+    );
+    await expect(
+      leadService.advanceLeadStageGoverned(
+        createdLeadId!,
+        { newStatus: WorkflowStatus.FOLLOW_UP_1, action: 'FOLLOWUP', loggedBy: createdUserId! } as any,
+        actor,
+      ),
+    ).rejects.toThrow(/IDEMPOTENCY_KEY_REUSED|Idempotency-Key telah dipakai/);
   });
 
   test('illegal transition NEW_LEAD → WON_DEAL is rejected', async () => {

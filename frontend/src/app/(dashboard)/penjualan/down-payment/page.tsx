@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   Plus,
   Eye,
@@ -22,10 +24,14 @@ import {
   DnaPageHeader,
   DnaKpiGrid,
   DnaDataTableCard,
+  DnaDetailDrawer,
   DnaCell,
   DnaModal,
   DnaButton,
   DnaInput,
+  DnaLoadingSkeleton,
+  DnaErrorState,
+  DnaEmptyState,
   useDnaToast,
 } from "@/components/dna";
 
@@ -47,134 +53,6 @@ interface DpRecord {
   notes?: string;
 }
 
-const INITIAL_DP_DATA: DpRecord[] = [
-  // Sample Tab
-  {
-    id: "dp-smp-01",
-    code: "DP-SMP-2026-001",
-    category: "sample",
-    date: "2026-03-05",
-    customerName: "PT Cantika Jelita Nusantara",
-    brandName: "C-Jelita Herbal",
-    refNumber: "SMP-2026-081",
-    bankAccount: "BCA Maklon (264-035-1589)",
-    amount: 1500000,
-    usedAmount: 0,
-    remainingAmount: 1500000,
-    status: "UNUSED",
-    notes: "DP 3 varian formulasi serum brightening Somethinc benchmark.",
-  },
-  {
-    id: "dp-smp-02",
-    code: "DP-SMP-2026-002",
-    category: "sample",
-    date: "2026-03-02",
-    customerName: "CV Aura Natural Skincare",
-    brandName: "AuraGlow Botanical",
-    refNumber: "SMP-2026-080",
-    bankAccount: "Mandiri Corp (137-00-9821-44)",
-    amount: 750000,
-    usedAmount: 750000,
-    remainingAmount: 0,
-    status: "FULL",
-    notes: "Biaya komitmen sample telah di-offset penuh ke PO SO-2026-003.",
-  },
-  {
-    id: "dp-smp-03",
-    code: "DP-SMP-2026-003",
-    category: "sample",
-    date: "2026-02-27",
-    customerName: "PT Derma Estetika Utama",
-    brandName: "DermaGleam Pro",
-    refNumber: "SMP-2026-079",
-    bankAccount: "BCA Maklon (264-035-1589)",
-    amount: 1000000,
-    usedAmount: 500000,
-    remainingAmount: 500000,
-    status: "PARTIAL",
-    notes: "Baru di-offset 50% untuk batch sunscreen perdana.",
-  },
-
-  // Legalitas Tab
-  {
-    id: "dp-leg-01",
-    code: "DP-LEG-2026-001",
-    category: "legalitas",
-    date: "2026-03-04",
-    customerName: "PT Cantika Jelita Nusantara",
-    brandName: "C-Jelita Herbal",
-    refNumber: "REG-BPOM-2026-012",
-    bankAccount: "BCA Maklon (264-035-1589)",
-    amount: 8500000,
-    usedAmount: 8500000,
-    remainingAmount: 0,
-    status: "FULL",
-    notes: "Uang muka pengurusan 2 Notifikasi BPOM & Pendaftaran Merk HAKI.",
-  },
-  {
-    id: "dp-leg-02",
-    code: "DP-LEG-2026-002",
-    category: "legalitas",
-    date: "2026-03-01",
-    customerName: "UD Berkah Ayu Sejahtera",
-    brandName: "AyuAura",
-    refNumber: "REG-BPOM-2026-009",
-    bankAccount: "Mandiri Corp (137-00-9821-44)",
-    amount: 4250000,
-    usedAmount: 0,
-    remainingAmount: 4250000,
-    status: "UNUSED",
-    notes: "Menunggu kelengkapan dokumen surat kuasa direktur.",
-  },
-
-  // Produksi Tab
-  {
-    id: "dp-prd-01",
-    code: "DP-PRD-2026-001",
-    category: "produksi",
-    date: "2026-03-06",
-    customerName: "PT Cantika Jelita Nusantara",
-    brandName: "C-Jelita Herbal",
-    refNumber: "SO-2026-001",
-    bankAccount: "BCA Maklon (264-035-1589)",
-    amount: 65000000,
-    usedAmount: 0,
-    remainingAmount: 65000000,
-    status: "UNUSED",
-    notes: "DP 50% Produksi 10.000 pcs Brightening Niacinamide Serum.",
-  },
-  {
-    id: "dp-prd-02",
-    code: "DP-PRD-2026-002",
-    category: "produksi",
-    date: "2026-03-03",
-    customerName: "CV Aura Natural Skincare",
-    brandName: "AuraGlow Botanical",
-    refNumber: "SO-2026-003",
-    bankAccount: "BCA Maklon (264-035-1589)",
-    amount: 32000000,
-    usedAmount: 32000000,
-    remainingAmount: 0,
-    status: "FULL",
-    notes: "Telah dialokasikan pemotong Tagihan Faktur FP-2026-008.",
-  },
-  {
-    id: "dp-prd-03",
-    code: "DP-PRD-2026-003",
-    category: "produksi",
-    date: "2026-02-25",
-    customerName: "PT Derma Estetika Utama",
-    brandName: "DermaGleam Pro",
-    refNumber: "SO-2026-004",
-    bankAccount: "Mandiri Corp (137-00-9821-44)",
-    amount: 45000000,
-    usedAmount: 20000000,
-    remainingAmount: 25000000,
-    status: "PARTIAL",
-    notes: "Alokasi termin 1 pengiriman partial kemasan primer.",
-  },
-];
-
 const statusBadgeConfig: Record<string, { status: "success" | "warning" | "info"; label: string }> = {
   FULL: { status: "success", label: "Terpakai Penuh" },
   PARTIAL: { status: "warning", label: "Terpakai Sebagian" },
@@ -183,9 +61,9 @@ const statusBadgeConfig: Record<string, { status: "success" | "warning" | "info"
 
 function DownPaymentContent() {
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<string>("sample");
-  const [records, setRecords] = useState<DpRecord[]>(INITIAL_DP_DATA);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<DpRecord | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -204,6 +82,58 @@ function DownPaymentContent() {
   const [formBank, setFormBank] = useState("BCA Maklon (264-035-1589)");
   const [formAmount, setFormAmount] = useState("");
   const [formNotes, setFormNotes] = useState("");
+
+  // Live Query for Down Payments
+  const {
+    data: records = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery<DpRecord[]>({
+    queryKey: ["commercial-down-payments"],
+    queryFn: async () => {
+      const resp = await api.get("/commercial/down-payments");
+      return (resp.data || []).map((dp: any) => {
+        const cat = (dp.category || "").toLowerCase() as DpCategory;
+        const validCat: DpCategory =
+          cat === "sample" || cat === "legalitas" || cat === "produksi" ? cat : "produksi";
+        const amt = Number(dp.amount) || 0;
+        const used = Number(dp.usedAmount) || 0;
+        const rem = Math.max(0, amt - used);
+        return {
+          id: dp.id,
+          code:
+            dp.dpNumber ||
+            `DP-${validCat.slice(0, 3).toUpperCase()}-${dp.id.slice(0, 6).toUpperCase()}`,
+          category: validCat,
+          date: dp.createdAt ? new Date(dp.createdAt).toISOString().split("T")[0] : "",
+          customerName: dp.salesOrder?.lead?.clientName || dp.customerName || "Pelanggan",
+          brandName: dp.salesOrder?.brandName || dp.brandName || "Brand",
+          refNumber: dp.salesOrder?.orderNumber || dp.referenceNumber || "-",
+          bankAccount: dp.bankAccount || "BCA Maklon (264-035-1589)",
+          amount: amt,
+          usedAmount: used,
+          remainingAmount: rem,
+          status: (used >= amt ? "FULL" : used > 0 ? "PARTIAL" : "UNUSED") as DpRecord["status"],
+          notes: dp.notes || "",
+        };
+      });
+    },
+  });
+
+  // Live Query for Sales Orders
+  const { data: salesOrders = [] } = useQuery({
+    queryKey: ["commercial-sales-orders-dropdown"],
+    queryFn: async () => {
+      try {
+        const resp = await api.get("/commercial/sales-orders");
+        return resp.data || [];
+      } catch {
+        return [];
+      }
+    },
+  });
 
   const filteredRecords = records.filter((r) => {
     const matchesTab = r.category === activeTab;
@@ -227,48 +157,56 @@ function DownPaymentContent() {
   const legalitasCount = records.filter((r) => r.category === "legalitas").length;
   const produksiCount = records.filter((r) => r.category === "produksi").length;
 
+  const createDpMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      return api.post("/commercial/down-payments", payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["commercial-down-payments"] });
+      toast.success("Uang Muka Diterima", "Penerimaan DP berhasil dicatat.");
+      setIsCreateOpen(false);
+
+      // Reset Form
+      setFormCustomer("");
+      setFormBrand("");
+      setFormRef("");
+      setFormAmount("");
+      setFormNotes("");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || err.message || "Gagal mencatat DP";
+      toast.error("Validasi Gagal", msg);
+    },
+  });
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formCustomer || !formAmount || Number(formAmount) <= 0) {
-      toast.error("Validasi Gagal", "Harap isi nama klien dan jumlah nominal DP dengan benar.");
+    if (!formAmount || Number(formAmount) <= 0) {
+      toast.error("Validasi Gagal", "Harap isi nominal DP dengan benar.");
       return;
     }
 
-    const newCode = `DP-${formCategory.slice(0, 3).toUpperCase()}-2026-00${records.length + 1}`;
-    const newRecord: DpRecord = {
-      id: `dp-${Date.now()}`,
-      code: newCode,
-      category: formCategory,
-      date: new Date().toISOString().split("T")[0],
-      customerName: formCustomer,
-      brandName: formBrand || "Private Label",
-      refNumber: formRef || (formCategory === "sample" ? "SMP-NEW" : formCategory === "legalitas" ? "REG-BPOM-NEW" : "SO-NEW"),
-      bankAccount: formBank,
+    const matchedSO = salesOrders.find(
+      (so: any) =>
+        so.orderNumber?.toLowerCase() === formRef.trim().toLowerCase() ||
+        so.lead?.clientName?.toLowerCase() === formCustomer.trim().toLowerCase()
+    );
+    const soId = matchedSO?.id || (salesOrders[0]?.id ?? "00000000-0000-0000-0000-000000000001");
+
+    createDpMutation.mutate({
+      soId,
+      category: formCategory.toUpperCase(),
       amount: Number(formAmount),
-      usedAmount: 0,
-      remainingAmount: Number(formAmount),
-      status: "UNUSED",
+      bankAccount: formBank,
       notes: formNotes,
-    };
-
-    setRecords([newRecord, ...records]);
-    toast.success("Uang Muka Diterima", `Penerimaan DP ${newCode} sebesar Rp ${Number(formAmount).toLocaleString("id-ID")} tercatat.`);
-    setIsCreateOpen(false);
-
-    // Reset Form
-    setFormCustomer("");
-    setFormBrand("");
-    setFormRef("");
-    setFormAmount("");
-    setFormNotes("");
+    });
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 space-y-6">
+    <div className="min-h-screen bg-[#F8FAFC] pb-20 text-slate-900 font-sans space-y-6">
       {/* Top Header with 3 Tabs per Requirement Poin 14 */}
       <DnaPageHeader
         title="UANG MUKA PENJUALAN (DOWN PAYMENT)"
-        description="Pusat administrasi saldo uang muka maklon kosmetik. Terintegrasi 3 alur tahap komersial: Sample Formulasi R&D, Pengurusan Legalitas BPOM/HAKI, dan Uang Muka Kontrak PO Produksi Massal."
         tabs={[
           { key: "sample", label: "1. DP Sample R&D", count: sampleCount },
           { key: "legalitas", label: "2. DP Legalitas (BPOM / HAKI)", count: legalitasCount },
@@ -276,154 +214,153 @@ function DownPaymentContent() {
         ]}
         activeTab={activeTab}
         onTabChange={(tab) => setActiveTab(tab as DpCategory)}
-        actions={
-          <DnaButton
-            variant="primary"
-            icon={<Plus className="w-4 h-4" />}
-            onClick={() => {
-              setFormCategory(activeTab as DpCategory);
-              setIsCreateOpen(true);
-            }}
-          >
-            Terima Uang Muka Baru
-          </DnaButton>
-        }
       />
 
       {/* KPI Summary Cards */}
       <DnaKpiGrid
-        items={[
+        cards={[
           {
-            label: `Total DP ${activeTab.toUpperCase()}`,
+            key: "TOTAL",
+            title: `TOTAL DP ${activeTab.toUpperCase()}`,
             value: `Rp ${(totalAmount / 1000000).toFixed(1)} Jt`,
-            subtitle: `${currentTabRecords.length} transaksi penerimaan`,
-            trend: "+18% bln ini",
-            icon: DollarSign,
-            variant: "blue",
+            deltaText: `${currentTabRecords.length} transaksi penerimaan`,
+            isDeltaPositive: true,
+            icon: <DollarSign className="w-4 h-4" />,
+            iconBg: "bg-blue-50",
+            iconColor: "text-blue-600",
           },
           {
-            label: "Sisa Saldo Unused",
+            key: "REMAINING",
+            title: "SISA SALDO UNUSED",
             value: `Rp ${(totalRemaining / 1000000).toFixed(1)} Jt`,
-            subtitle: "Dapat dialokasikan ke tagihan",
-            trend: "Siap kompensasi",
-            icon: Wallet,
-            variant: "amber",
+            deltaText: "Siap kompensasi ke faktur",
+            isDeltaPositive: true,
+            icon: <Wallet className="w-4 h-4" />,
+            iconBg: "bg-amber-50",
+            iconColor: "text-amber-600",
           },
           {
-            label: "DP Terpakai / Terpotong",
+            key: "USED",
+            title: "DP TERPAKAI / TERPOTONG",
             value: `Rp ${(totalUsed / 1000000).toFixed(1)} Jt`,
-            subtitle: "Telah di-offset ke faktur",
-            trend: "Terealisasi",
-            icon: CheckCircle2,
-            variant: "emerald",
+            deltaText: "Telah di-offset ke faktur",
+            isDeltaPositive: true,
+            icon: <CheckCircle2 className="w-4 h-4" />,
+            iconBg: "bg-emerald-50",
+            iconColor: "text-emerald-600",
           },
           {
-            label: "Rasio Realisasi Tagihan",
+            key: "CONVERSION",
+            title: "RASIO REALISASI",
             value: `${conversionRate}%`,
-            subtitle: "Tingkat pemotongan ke invoice",
-            trend: "Komitmen tinggi",
-            icon: TrendingUp,
-            variant: "purple",
+            deltaText: "Tingkat pemotongan tagihan",
+            isDeltaPositive: true,
+            icon: <TrendingUp className="w-4 h-4" />,
+            iconBg: "bg-purple-50",
+            iconColor: "text-purple-600",
           },
         ]}
       />
 
       {/* Main Table Card */}
-      <DnaDataTableCard
-        title={`Daftar Uang Muka: ${
-          activeTab === "sample"
-            ? "Biaya Riset & Formulasi Sample"
-            : activeTab === "legalitas"
-            ? "Pendaftaran BPOM & Notifikasi Kosmetik"
-            : "Komitmen Produksi Massal (PO Maklon)"
-        }`}
-        count={filteredRecords.length}
-        totalItems={currentTabRecords.length}
-        actions={
-          <div className="w-72">
-            <DnaInput
-              placeholder="Cari kode, klien, brand, ref..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              icon={<Search className="w-4 h-4 text-slate-400" />}
-            />
-          </div>
-        }
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      {isLoading ? (
+        <DnaLoadingSkeleton rows={5} />
+      ) : isError ? (
+        <DnaErrorState
+          title="Gagal Memuat Data Uang Muka"
+          message={(error as any)?.message || "Terjadi kesalahan saat memuat data DP."}
+          onRetry={() => refetch()}
+        />
+      ) : (
+        <DnaDataTableCard
+          toolbarProps={{
+            searchQuery: searchTerm,
+            onSearchChange: setSearchTerm,
+            searchPlaceholder: "Cari kode, klien, brand, ref...",
+            actionButton: {
+              label: "Terima Uang Muka Baru",
+              onClick: () => {
+                setFormCategory(activeTab as DpCategory);
+                setIsCreateOpen(true);
+              },
+            },
+          }}
+          paginationProps={{
+            currentPage: 1,
+            totalPages: 1,
+            totalEntries: filteredRecords.length,
+            pageSize: 10,
+            onPageChange: () => {},
+          }}
+        >
+          <table className="w-full text-left border-collapse text-[12px]">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-3">DP No</th>
-                <th className="py-3 px-3">Customer</th>
-                <th className="py-3 px-3 text-center">Kategori</th>
-                <th className="py-3 px-3">Date</th>
-                <th className="py-3 px-3 text-right">Amount</th>
-                <th className="py-3 px-3">Applied To</th>
-                <th className="py-3 px-3 text-right">Remaining Balance</th>
-                <th className="py-3 px-3 text-center">Status</th>
-                <th className="py-3 px-3 text-right">#</th>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold text-slate-600 tracking-wider">
+                <th className="p-3.5 w-10 text-center text-slate-400">#</th>
+                <th className="p-3.5 w-44">KODE DP & TANGGAL</th>
+                <th className="p-3.5">PELANGGAN & REFERENSI</th>
+                <th className="p-3.5 w-48 text-right">NOMINAL & SISA SALDO</th>
+                <th className="p-3.5 w-36 text-center">STATUS</th>
+                <th className="p-3.5 w-24 text-center">AKSI</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
+            <tbody className="divide-y divide-slate-100">
               {filteredRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-12 text-slate-400">
+                  <td colSpan={6} className="text-center py-12 text-slate-400">
                     <Wallet className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
                     <p className="font-semibold text-slate-600">Tidak ada data uang muka pada kategori ini</p>
                     <p className="text-xs text-slate-400">Pilih tab lain atau klik tombol Terima Uang Muka Baru.</p>
                   </td>
                 </tr>
               ) : (
-                filteredRecords.map((dp) => (
-                  <tr key={dp.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-3 font-mono font-semibold text-blue-600 text-xs whitespace-nowrap">
-                      {dp.code}
+                filteredRecords.map((dp, idx) => (
+                  <tr
+                    key={dp.id}
+                    onClick={() => setSelectedRecord(dp)}
+                    className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                  >
+                    <td className="p-3.5 text-center text-slate-400 tabular-nums">{idx + 1}</td>
+                    <td className="p-3.5">
+                      <div className="font-mono font-bold text-blue-600 hover:underline">{dp.code}</div>
+                      <div className="text-[11px] text-slate-400">{dp.date}</div>
                     </td>
-                    <td className="py-3.5 px-3 font-semibold text-slate-900 text-xs whitespace-nowrap">
-                      {dp.customerName}
+                    <td className="p-3.5">
+                      <div className="font-semibold text-slate-900">{dp.customerName}</div>
+                      <div className="text-[11px] text-slate-500">
+                        {dp.brandName} • <span className="font-mono text-slate-400">Ref: {dp.refNumber || "—"}</span>
+                      </div>
                     </td>
-                    <td className="py-3.5 px-3 text-center whitespace-nowrap">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 uppercase">
-                        {dp.category}
-                      </span>
+                    <td className="p-3.5 text-right">
+                      <div className="font-mono font-bold text-slate-900">Rp {dp.amount.toLocaleString("id-ID")}</div>
+                      <div className="text-[11px] font-bold text-emerald-600">
+                        Sisa: Rp {dp.remainingAmount.toLocaleString("id-ID")}
+                      </div>
                     </td>
-                    <td className="py-3.5 px-3 text-slate-600 text-xs whitespace-nowrap">
-                      {dp.date}
-                    </td>
-                    <td className="py-3.5 px-3 text-right font-mono font-bold text-slate-900 text-xs whitespace-nowrap">
-                      Rp {dp.amount.toLocaleString("id-ID")}
-                    </td>
-                    <td className="py-3.5 px-3 font-mono text-xs text-slate-700 whitespace-nowrap">
-                      {dp.refNumber || "—"}
-                    </td>
-                    <td className="py-3.5 px-3 text-right font-mono font-bold text-emerald-600 text-xs whitespace-nowrap">
-                      Rp {dp.remainingAmount.toLocaleString("id-ID")}
-                    </td>
-                    <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                    <td className="p-3.5 text-center">
                       <DnaCell.Badge
                         status={statusBadgeConfig[dp.status]?.status || "default"}
                         label={statusBadgeConfig[dp.status]?.label || dp.status}
                       />
                     </td>
-                    <td className="py-3.5 px-3 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1">
-                        <DnaButton
-                          variant="ghost"
-                          size="sm"
+                    <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
                           onClick={() => setSelectedRecord(dp)}
+                          className="px-2.5 py-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg text-xs font-semibold transition-colors"
                         >
-                          Lihat
-                        </DnaButton>
+                          Detail
+                        </button>
                         <button
                           type="button"
                           onClick={() => {
                             toast.info(
                               "Alokasi DP",
-                              `Alokasikan saldo ${dp.code} sebesar Rp ${dp.remainingAmount.toLocaleString("id-ID")} ke Faktur Penjualan.`
+                              `Saldo Rp ${dp.remainingAmount.toLocaleString("id-ID")} siap dialokasikan ke tagihan invoice.`
                             );
                           }}
-                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border-none bg-transparent cursor-pointer"
+                          className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-colors"
                           title="Alokasikan ke Faktur"
                         >
                           <ArrowUpRight className="w-3.5 h-3.5" />
@@ -435,98 +372,20 @@ function DownPaymentContent() {
               )}
             </tbody>
           </table>
-        </div>
-      </DnaDataTableCard>
+        </DnaDataTableCard>
+      )}
 
-      {/* Modal Detail Rekam DP */}
-      <DnaModal
+      {/* Drawer Detail Rekam DP */}
+      <DnaDetailDrawer
         isOpen={!!selectedRecord}
         onClose={() => setSelectedRecord(null)}
-        title="Rincian Uang Muka Penjualan"
-        size="md"
-      >
-        {selectedRecord && (
-          <div className="space-y-5 text-sm">
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Nomor Bukti DP
-                </span>
-                <h3 className="text-base font-bold text-slate-900">{selectedRecord.code}</h3>
-                <p className="text-xs text-slate-500">Tanggal Terima: {selectedRecord.date}</p>
-              </div>
-              <DnaCell.Badge
-                status={statusBadgeConfig[selectedRecord.status]?.status || "default"}
-                label={statusBadgeConfig[selectedRecord.status]?.label || selectedRecord.status}
-              />
-            </div>
-
-            <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <span className="text-xs text-slate-400 block">Kategori Alur</span>
-                  <span className="font-semibold text-slate-800 uppercase text-xs">
-                    {selectedRecord.category === "sample"
-                      ? "Sample R&D"
-                      : selectedRecord.category === "legalitas"
-                      ? "Legalitas BPOM"
-                      : "Produksi Massal"}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-xs text-slate-400 block">Nomor Referensi</span>
-                  <span className="font-mono font-semibold text-blue-600 text-xs">
-                    {selectedRecord.refNumber}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-xs text-slate-400 block">Klien Maklon</span>
-                  <span className="font-semibold text-slate-800 text-xs">{selectedRecord.customerName}</span>
-                </div>
-                <div>
-                  <span className="text-xs text-slate-400 block">Brand Kosmetik</span>
-                  <span className="font-semibold text-slate-800 text-xs">{selectedRecord.brandName}</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-xs text-slate-400 block">Kas / Bank Penerima</span>
-                  <span className="font-semibold text-slate-800 text-xs">{selectedRecord.bankAccount}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Rekapitulasi Saldo</h4>
-              <div className="flex justify-between items-center py-1 border-b border-slate-100">
-                <span className="text-slate-600">Total DP Diterima:</span>
-                <span className="font-bold text-slate-900">
-                  Rp {selectedRecord.amount.toLocaleString("id-ID")}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-1 border-b border-slate-100">
-                <span className="text-slate-600">Telah Dialokasikan / Terpotong:</span>
-                <span className="font-bold text-slate-600">
-                  Rp {selectedRecord.usedAmount.toLocaleString("id-ID")}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-1">
-                <span className="text-slate-800 font-bold">Sisa Saldo Unused:</span>
-                <span className="font-bold text-emerald-600 text-base">
-                  Rp {selectedRecord.remainingAmount.toLocaleString("id-ID")}
-                </span>
-              </div>
-            </div>
-
-            {selectedRecord.notes && (
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs text-slate-600">
-                <span className="font-bold block mb-1 text-slate-500">Catatan Transaksi:</span>
-                {selectedRecord.notes}
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <DnaButton variant="secondary" onClick={() => setSelectedRecord(null)}>
-                Tutup
-              </DnaButton>
+        title={selectedRecord ? `Uang Muka ${selectedRecord.code}` : "Detail Uang Muka"}
+        subtitle={selectedRecord ? `${selectedRecord.customerName} (${selectedRecord.brandName})` : undefined}
+        badge={selectedRecord ? statusBadgeConfig[selectedRecord.status]?.label || selectedRecord.status : undefined}
+        badgeVariant={selectedRecord?.status === "FULL" ? "success" : selectedRecord?.status === "PARTIAL" ? "warning" : "primary"}
+        actions={
+          selectedRecord && (
+            <>
               {selectedRecord.remainingAmount > 0 && (
                 <DnaButton
                   variant="primary"
@@ -535,13 +394,74 @@ function DownPaymentContent() {
                     setSelectedRecord(null);
                   }}
                 >
-                  Alokasikan ke Invoice
+                  Alokasikan ke Faktur
                 </DnaButton>
               )}
+              <DnaButton variant="outline" onClick={() => setSelectedRecord(null)}>
+                Tutup
+              </DnaButton>
+            </>
+          )
+        }
+      >
+        {selectedRecord && (
+          <div className="space-y-4 text-xs">
+            <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Tanggal Terima</span>
+                <p className="font-semibold text-slate-800">{selectedRecord.date}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Nomor Referensi</span>
+                <p className="font-mono font-semibold text-blue-600">{selectedRecord.refNumber}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Kategori Alur</span>
+                <p className="font-semibold text-slate-800 uppercase">
+                  {selectedRecord.category === "sample"
+                    ? "Sample R&D"
+                    : selectedRecord.category === "legalitas"
+                    ? "Legalitas BPOM"
+                    : "Produksi Massal"}
+                </p>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Rekening Bank</span>
+                <p className="font-semibold text-slate-800">{selectedRecord.bankAccount}</p>
+              </div>
             </div>
+
+            <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
+              <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Rekapitulasi Saldo</h4>
+              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                <span className="text-slate-600">Total DP Diterima:</span>
+                <span className="font-bold text-slate-900">
+                  Rp {selectedRecord.amount.toLocaleString("id-ID")}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                <span className="text-slate-600">Telah Dialokasikan / Terpotong:</span>
+                <span className="font-bold text-slate-600">
+                  Rp {selectedRecord.usedAmount.toLocaleString("id-ID")}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-slate-800 font-bold">Sisa Saldo Unused:</span>
+                <span className="font-bold text-emerald-600 text-sm">
+                  Rp {selectedRecord.remainingAmount.toLocaleString("id-ID")}
+                </span>
+              </div>
+            </div>
+
+            {selectedRecord.notes && (
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-slate-600">
+                <span className="font-bold block mb-1 text-slate-500">Catatan Transaksi:</span>
+                {selectedRecord.notes}
+              </div>
+            )}
           </div>
         )}
-      </DnaModal>
+      </DnaDetailDrawer>
 
       {/* Modal Terima Uang Muka Baru */}
       <DnaModal

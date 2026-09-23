@@ -31,6 +31,12 @@ import {
   DnaSelect,
   DnaModal,
   DnaCell,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
   useDnaToast,
 } from "@/components/dna";
 
@@ -238,90 +244,80 @@ function CostAllocationContent() {
       />
 
       <DnaDataTableCard
-        title="Daftar Aturan Alokasi Biaya Overhead Pabrik"
-        count={filteredRules.length}
-        totalItems={rules.length}
-        actions={
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="w-64">
-              <DnaInput
-                placeholder="Cari overhead pool, akun..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                icon={<Search className="w-4 h-4 text-slate-400" />}
-              />
-            </div>
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari overhead pool, akun...",
+          extraActions: (
             <select
               value={selectedBaseFilter}
               onChange={(e) => setSelectedBaseFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-500"
             >
               <option value="ALL">Semua Dasar Alokasi</option>
               <option value="Machine Hours">Machine Hours</option>
               <option value="Volume Produksi (L/Kg)">Volume Produksi (L/Kg)</option>
               <option value="Headcount Operator">Headcount Operator</option>
             </select>
-          </div>
-        }
+          ),
+        }}
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                <th className="p-3.5">OVERHEAD POOL</th>
-                <th className="p-3.5">ALLOCATION BASE</th>
-                <th className="p-3.5">FORMULA</th>
-                <th className="p-3.5 text-center">ACTIVE</th>
-                <th className="p-3.5 text-right">#</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredRules.map((rule) => (
-                <tr key={rule.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="p-3.5">
-                    <span className="font-semibold text-slate-800">{rule.poolName}</span>
-                  </td>
-                  <td className="p-3.5">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                      {rule.allocationBase}
-                    </span>
-                  </td>
-                  <td className="p-3.5 font-mono text-[11px] text-slate-600">
-                    {rule.formula}
-                  </td>
-                  <td className="p-3.5 text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleActive(rule.id)}
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
-                        rule.isActive
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-300"
-                          : "bg-slate-100 text-slate-500 border border-slate-200"
-                      }`}
-                    >
-                      {rule.isActive ? "Aktif" : "Nonaktif"}
-                    </button>
-                  </td>
-                  <td className="p-3.5 text-right">
-                    <DnaCell.Actions
-                      onView={() => {
-                        setEditingRule(rule);
-                        setIsTestModalOpen(true);
-                      }}
-                      onEdit={() => {
-                        setEditingRule(rule);
-                        setFormPoolName(rule.poolName);
-                        setFormFormula(rule.formula);
-                        setFormBase(rule.allocationBase);
-                        setIsCreateModalOpen(true);
-                      }}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DnaTable>
+          <DnaTableHead>
+            <tr>
+              <DnaTh>OVERHEAD POOL</DnaTh>
+              <DnaTh className="w-[180px]">ALLOCATION BASE</DnaTh>
+              <DnaTh>FORMULA</DnaTh>
+              <DnaTh align="center" className="w-[100px]">ACTIVE</DnaTh>
+              <DnaTh align="right" className="w-[80px]">#</DnaTh>
+            </tr>
+          </DnaTableHead>
+          <DnaTableBody>
+            {filteredRules.map((rule) => (
+              <DnaTableRow key={rule.id}>
+                <DnaTd>
+                  <span className="font-semibold text-slate-800">{rule.poolName}</span>
+                </DnaTd>
+                <DnaTd>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                    {rule.allocationBase}
+                  </span>
+                </DnaTd>
+                <DnaTd className="text-xs tabular-nums text-slate-600">
+                  {rule.formula}
+                </DnaTd>
+                <DnaTd align="center">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleActive(rule.id)}
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                      rule.isActive
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-300"
+                        : "bg-slate-100 text-slate-500 border border-slate-200"
+                    }`}
+                  >
+                    {rule.isActive ? "Aktif" : "Nonaktif"}
+                  </button>
+                </DnaTd>
+                <DnaTd align="right">
+                  <DnaCell.Actions
+                    onView={() => {
+                      setEditingRule(rule);
+                      setIsTestModalOpen(true);
+                    }}
+                    onEdit={() => {
+                      setEditingRule(rule);
+                      setFormPoolName(rule.poolName);
+                      setFormFormula(rule.formula);
+                      setFormBase(rule.allocationBase);
+                      setIsCreateModalOpen(true);
+                    }}
+                  />
+                </DnaTd>
+              </DnaTableRow>
+            ))}
+          </DnaTableBody>
+        </DnaTable>
       </DnaDataTableCard>
 
       {/* MODAL BUAT / EDIT ALLOCATION RULE */}
@@ -439,45 +435,45 @@ function CostAllocationContent() {
             <div className="text-slate-600 text-[11px]">
               Estimasi total overhead yang dibebankan ke batch ini berdasarkan 4 pool aktif:
             </div>
-            <div className="text-base font-black text-amber-700">Rp 12.450.000 (Rp 24.900 / Kg Curah)</div>
+            <div className="text-base font-bold tabular-nums text-amber-700">Rp 12.450.000 (Rp 24.900 / Kg Curah)</div>
           </div>
 
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 text-[11px] font-semibold text-slate-500">
-                <th className="py-2">Pool Overhead</th>
-                <th className="py-2">Dasar Alokasi</th>
-                <th className="py-2 text-right">Nilai Aktual</th>
-                <th className="py-2 text-right">Alokasi ke Batch</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
               <tr>
-                <td className="py-2 font-medium">Listrik Pabrik & Cleanroom</td>
-                <td className="py-2">12 Jam Mesin (kW)</td>
-                <td className="py-2 text-right font-mono">Rp 18.000.000</td>
-                <td className="py-2 text-right font-bold text-slate-800 font-mono">Rp 5.400.000</td>
+                <DnaTh>Pool Overhead</DnaTh>
+                <DnaTh>Dasar Alokasi</DnaTh>
+                <DnaTh align="right">Nilai Aktual</DnaTh>
+                <DnaTh align="right">Alokasi ke Batch</DnaTh>
               </tr>
-              <tr>
-                <td className="py-2 font-medium">Laboratorium QC Lab</td>
-                <td className="py-2">500 Kg Uji Curah</td>
-                <td className="py-2 text-right font-mono">Rp 10.000.000</td>
-                <td className="py-2 text-right font-bold text-slate-800 font-mono">Rp 3.250.000</td>
-              </tr>
-              <tr>
-                <td className="py-2 font-medium">Maintenance Mesin Filling</td>
-                <td className="py-2">8 Jam Filling</td>
-                <td className="py-2 text-right font-mono">Rp 8.500.000</td>
-                <td className="py-2 text-right font-bold text-slate-800 font-mono">Rp 2.100.000</td>
-              </tr>
-              <tr>
-                <td className="py-2 font-medium">Sanitasi & APD Operator</td>
-                <td className="py-2">4 Operator Shift</td>
-                <td className="py-2 text-right font-mono">Rp 6.000.000</td>
-                <td className="py-2 text-right font-bold text-slate-800 font-mono">Rp 1.700.000</td>
-              </tr>
-            </tbody>
-          </table>
+            </DnaTableHead>
+            <DnaTableBody>
+              <DnaTableRow>
+                <DnaTd className="font-medium text-slate-800">Listrik Pabrik & Cleanroom</DnaTd>
+                <DnaTd>12 Jam Mesin (kW)</DnaTd>
+                <DnaTd align="right" className="tabular-nums font-semibold text-slate-700">Rp 18.000.000</DnaTd>
+                <DnaTd align="right" className="font-bold text-slate-800 tabular-nums">Rp 5.400.000</DnaTd>
+              </DnaTableRow>
+              <DnaTableRow>
+                <DnaTd className="font-medium text-slate-800">Laboratorium QC Lab</DnaTd>
+                <DnaTd>500 Kg Uji Curah</DnaTd>
+                <DnaTd align="right" className="tabular-nums font-semibold text-slate-700">Rp 10.000.000</DnaTd>
+                <DnaTd align="right" className="font-bold text-slate-800 tabular-nums">Rp 3.250.000</DnaTd>
+              </DnaTableRow>
+              <DnaTableRow>
+                <DnaTd className="font-medium text-slate-800">Maintenance Mesin Filling</DnaTd>
+                <DnaTd>8 Jam Filling</DnaTd>
+                <DnaTd align="right" className="tabular-nums font-semibold text-slate-700">Rp 8.500.000</DnaTd>
+                <DnaTd align="right" className="font-bold text-slate-800 tabular-nums">Rp 2.100.000</DnaTd>
+              </DnaTableRow>
+              <DnaTableRow>
+                <DnaTd className="font-medium text-slate-800">Sanitasi & APD Operator</DnaTd>
+                <DnaTd>4 Operator Shift</DnaTd>
+                <DnaTd align="right" className="tabular-nums font-semibold text-slate-700">Rp 6.000.000</DnaTd>
+                <DnaTd align="right" className="font-bold text-slate-800 tabular-nums">Rp 1.700.000</DnaTd>
+              </DnaTableRow>
+            </DnaTableBody>
+          </DnaTable>
 
           <div className="pt-3 border-t border-slate-100 flex justify-end">
             <DnaButton
@@ -496,7 +492,7 @@ function CostAllocationContent() {
 
 export default function CostAllocationSetupPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400 font-mono text-xs">Memuat Cost Allocation Setup...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-slate-400 text-xs">Memuat Cost Allocation Setup...</div>}>
       <CostAllocationContent />
     </Suspense>
   );

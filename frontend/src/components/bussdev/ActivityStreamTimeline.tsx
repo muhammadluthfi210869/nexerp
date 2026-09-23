@@ -16,7 +16,7 @@ import {
   XCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/dna";
 
 interface ActivityStreamTimelineProps {
   leadId: string;

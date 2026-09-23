@@ -37,7 +37,11 @@ export class AuthService {
    */
   async validateUserSafe(email: string, password: string): Promise<{ id: string; mfaRequired: boolean } | null> {
     const dummyHash = '$2b$12$umqdDvLnBf2TfoTGNPZfmOeP8qPcYF2kjFKnSA.X9h0bjutAN82Gm';
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    let user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user && (email.endsWith('@dreamlab.com') || email.endsWith('@dreamlab.id'))) {
+      const altEmail = email.replace(/@dreamlab\.(com|id)$/, '@nexerp.id');
+      user = await this.prisma.user.findUnique({ where: { email: altEmail } });
+    }
     const hash = user?.passwordHash || dummyHash;
     const matches = await bcrypt.compare(password || '', hash);
     if (!user || !matches) return null;
@@ -47,7 +51,11 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const dummyHash = '$2b$12$umqdDvLnBf2TfoTGNPZfmOeP8qPcYF2kjFKnSA.X9h0bjutAN82Gm';
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    let user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user && (email.endsWith('@dreamlab.com') || email.endsWith('@dreamlab.id'))) {
+      const altEmail = email.replace(/@dreamlab\.(com|id)$/, '@nexerp.id');
+      user = await this.prisma.user.findUnique({ where: { email: altEmail } });
+    }
     const hash = user?.passwordHash || dummyHash;
     const matches = await bcrypt.compare(password || '', hash);
     if (!user || !matches) return null;
@@ -105,7 +113,13 @@ export class AuthService {
       refresh_token: session.refreshToken,
       refreshToken: session.refreshToken,
       session_id: session.id,
-      mfa_required: session.mfaPending
+      mfa_required: session.mfaPending,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        roles: user.roles || []
+      }
     };
   }
 

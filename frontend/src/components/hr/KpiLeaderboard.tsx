@@ -1,5 +1,5 @@
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/dna";
 import { cn } from "@/lib/utils";
 
 export async function KpiLeaderboard() {

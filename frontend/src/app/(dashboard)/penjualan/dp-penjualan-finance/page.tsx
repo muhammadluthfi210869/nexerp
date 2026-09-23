@@ -4,8 +4,8 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { ArrowDownCircle, Save, RotateCcw, Building2, User, Package, Hash, FileText, Upload, X, ReceiptText, ChevronDown, ChevronUp } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/dna";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/dna";
 import { DnaInput, DnaButton, DnaBadge } from "@/components/dna";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/components/dna";
 
 export default function DPPenjualanPage() {
   const queryClient = useQueryClient();

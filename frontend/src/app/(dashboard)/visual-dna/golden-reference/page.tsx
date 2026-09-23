@@ -281,6 +281,66 @@ const INITIAL_WORK_ORDERS: WorkOrder[] = [
 type FilterColumnType = "stage" | "klien" | "produk" | "pic" | "target" | "totalNilai";
 type FloatingWindowSize = "sm" | "md" | "lg" | "xl";
 
+export type TableColumnCount = 6 | 7 | 8 | 9 | 10 | 11;
+
+export const COLUMN_CONFIGS: Record<TableColumnCount, {
+  label: string;
+  badge: string;
+  badgeColor: string;
+  scrollStatus: "NONE" | "BORDERLINE" | "REQUIRED";
+  description: string;
+  breakdown: string;
+}> = {
+  6: {
+    label: "6 Kolom",
+    badge: "Strict 1 Kolom 1 Data (Paling Bersih & Lega)",
+    badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    scrollStatus: "NONE",
+    description: "Karena jumlah kolom hanya 6, ruang horizontal sangat berlimpah! Tidak ada alasan untuk menumpuk 2 data di sel manapun. Seluruh sel adalah 1 data murni, tinggi baris ramping, dan visual sangat lapang.",
+    breakdown: "1. WO # | 2. Produk | 3. Status | 4. Progress | 5. Total Nilai | 6. Aksi (100% Murni 1 Data)",
+  },
+  7: {
+    label: "7 Kolom",
+    badge: "Strict 1 Kolom 1 Data (+ Kolom Klien Mandiri)",
+    badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    scrollStatus: "NONE",
+    description: "Menambahkan kolom Klien secara independen tanpa digabung ke Produk. Seluruh kolom tetap 1 data murni (zero stacking), baris seragam ramping, dan 100% pas di layar laptop.",
+    breakdown: "1. WO # | 2. Produk | 3. Klien | 4. Status | 5. Progress | 6. Total Nilai | 7. Aksi (100% Murni 1 Data)",
+  },
+  8: {
+    label: "8 Kolom",
+    badge: "Mulai Butuh 1 Kolom 2 Data (Penyelamat Ramping)",
+    badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
+    scrollStatus: "NONE",
+    description: "Ketika atribut bertambah menjadi 8 kolom, tabel mulai terasa penuh jika semua dipisah. Menyatukan Produk & Klien menjadi 1 kolom 2 data bertindak sebagai 'penyelamat' agar tabel tetap ramping dan muat 1 layar laptop.",
+    breakdown: "1. WO # | 2. Produk & Klien (2 Data) | 3. Status | 4. Progress | 5. PIC | 6. Target | 7. Total Nilai | 8. Aksi",
+  },
+  9: {
+    label: "9 Kolom",
+    badge: "2 Kolom 2 Data (Kompak Menampung 11 Atribut)",
+    badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    scrollStatus: "NONE",
+    description: "Menampung 11 atribut data operasional dengan memadatkan 2 pasangan alami (WO+Ref PO dan Produk+Klien). Hasilnya tabel 9 kolom ini tetap muat di layar 1080p tanpa scrollbar samping.",
+    breakdown: "1. Dokumen & PO (2 Data) | 2. Produk & Klien (2 Data) | 3. Status | 4. Progress | 5. PIC | 6. Target | 7. Total Nilai | 8. Lini | 9. Aksi",
+  },
+  10: {
+    label: "10 Kolom",
+    badge: "2 Kolom 2 Data (Kompak & Ramping Seragam)",
+    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
+    scrollStatus: "BORDERLINE",
+    description: "Tinggi baris tetap seragam dan ramping (~48px) persis seperti pada 8 & 9 kolom. Hanya 2 pasang data alami yang disatukan (Dokumen & PO, Produk & Klien), sedangkan PIC, Lini Kerja, Target, HPP, dan Nilai memiliki kolom tersendiri dengan lebar terproteksi sehingga tidak ada teks yang tercekik atau terputus.",
+    breakdown: "1. Dokumen & PO (2 Data) | 2. Produk & Klien (2 Data) | 3. Status | 4. Progress | 5. PIC | 6. Lini Kerja | 7. Target | 8. HPP Satuan | 9. Total Nilai | 10. Aksi",
+  },
+  11: {
+    label: "11 Kolom",
+    badge: "2 Kolom 2 Data + # Urut (Standar Tabel Terlebar ERP)",
+    badgeColor: "bg-rose-50 text-rose-700 border-rose-200",
+    scrollStatus: "BORDERLINE",
+    description: "Representasi tabel kapasitas tertinggi di ERP (seperti SPB Material Requisition, Karantina QC, Laporan Mutasi Stok). Tetap ramping, proporsional, dan teratur dengan nomor urut, lebar kolom terproteksi, serta scroll horizontal mulus tanpa baris yang membengkak.",
+    breakdown: "1. # | 2. Dokumen & PO (2 Data) | 3. Produk & Klien (2 Data) | 4. Status | 5. Progress | 6. PIC | 7. Lini Kerja | 8. Target | 9. HPP Satuan | 10. Total Nilai | 11. Aksi",
+  },
+};
+
 export default function GoldenReferencePage() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>(INITIAL_WORK_ORDERS);
   const [activeTab, setActiveTab] = useState<"WORK_ORDERS" | "ANALYTICS">("WORK_ORDERS");
@@ -295,6 +355,9 @@ export default function GoldenReferencePage() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [showStateDemo, setShowStateDemo] = useState<"NONE" | "EMPTY" | "LOADING" | "ERROR">("NONE");
+
+  // ── TABLE COLUMN DENSITY VISUALIZER LAB (6, 7, 8, 9, 10, 11 KOLOM) ──
+  const [activeColumnCount, setActiveColumnCount] = useState<TableColumnCount>(8);
 
   // ── FLOATING DETAIL INSPECTION WINDOW STATE ──
   const [inspectingWo, setInspectingWo] = useState<WorkOrder | null>(null);
@@ -595,6 +658,138 @@ export default function GoldenReferencePage() {
         ]}
       />
 
+      {/* ── VISUAL DNA INTERACTIVE COLUMN DENSITY LAB (6 TO 11 COLUMNS) ── */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider">
+                Visual DNA Column Density Lab
+              </span>
+              <span
+                className={cn(
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                  activeColumnCount === 8
+                    ? "bg-blue-50 text-blue-700 border-blue-200"
+                    : activeColumnCount <= 7
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : activeColumnCount === 9
+                    ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                    : "bg-purple-50 text-purple-700 border-purple-200"
+                )}
+              >
+                {activeColumnCount} Kolom Aktif
+              </span>
+            </div>
+            <h3 className="text-[15px] font-black text-slate-900 mt-0.5">
+              Simulasi Lebar Tabel: 6, 7, 8, 9, 10, &amp; 11 Kolom
+            </h3>
+          </div>
+
+          {/* 6-Way Segmented Column Switcher */}
+          <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/70 self-start md:self-auto shrink-0 flex-wrap gap-1">
+            {([6, 7, 8, 9, 10, 11] as TableColumnCount[]).map((count) => {
+              const isSelected = activeColumnCount === count;
+              return (
+                <button
+                  key={count}
+                  onClick={() => setActiveColumnCount(count)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer",
+                    isSelected
+                      ? "bg-white text-blue-700 shadow-xs border border-blue-200"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
+                  )}
+                >
+                  <span>{count} Kolom</span>
+                  {count === 6 && (
+                    <span className="text-[9.5px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200/60">
+                      1 Data Murni
+                    </span>
+                  )}
+                  {count === 7 && (
+                    <span className="text-[9.5px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200/60">
+                      1 Data Murni
+                    </span>
+                  )}
+                  {count === 8 && (
+                    <span className="text-[9.5px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200/60">
+                      1 Kolom 2 Data
+                    </span>
+                  )}
+                  {count === 9 && (
+                    <span className="text-[9.5px] font-semibold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-200/60">
+                      2 Kolom 2 Data
+                    </span>
+                  )}
+                  {count === 10 && (
+                    <span className="text-[9.5px] font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200/60">
+                      2 Kolom 2 Data
+                    </span>
+                  )}
+                  {count === 11 && (
+                    <span className="text-[9.5px] font-semibold text-slate-700 bg-slate-200 px-1.5 py-0.2 rounded">
+                      Max ERP (11 Kolom)
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Dynamic Explainer Card for Active Column Count */}
+        <div
+          className={cn(
+            "p-3.5 rounded-xl border text-[12px] leading-relaxed transition-all",
+            activeColumnCount === 8
+              ? "bg-blue-50/50 border-blue-200 text-slate-700"
+              : activeColumnCount <= 7
+              ? "bg-amber-50/40 border-amber-200 text-slate-700"
+              : activeColumnCount === 9
+              ? "bg-indigo-50/40 border-indigo-200 text-slate-700"
+              : "bg-slate-50 border-slate-200 text-slate-700"
+          )}
+        >
+          <div className="flex items-start gap-2.5">
+            {activeColumnCount === 8 ? (
+              <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+            ) : activeColumnCount >= 10 ? (
+              <Info className="w-4 h-4 text-slate-600 shrink-0 mt-0.5" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            )}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <strong className="text-slate-900 font-semibold">
+                  {COLUMN_CONFIGS[activeColumnCount].label}: {COLUMN_CONFIGS[activeColumnCount].badge}
+                </strong>
+                <span
+                  className={cn(
+                    "text-[10px] font-bold px-2 py-0.2 rounded-full border",
+                    COLUMN_CONFIGS[activeColumnCount].scrollStatus === "NONE"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : COLUMN_CONFIGS[activeColumnCount].scrollStatus === "BORDERLINE"
+                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                      : "bg-rose-50 text-rose-700 border-rose-200"
+                  )}
+                >
+                  {COLUMN_CONFIGS[activeColumnCount].scrollStatus === "NONE" && "✅ Zero Scroll (100% Fit di Layar Laptop)"}
+                  {COLUMN_CONFIGS[activeColumnCount].scrollStatus === "BORDERLINE" && "⚠️ Borderline di Layar 1366px"}
+                  {COLUMN_CONFIGS[activeColumnCount].scrollStatus === "REQUIRED" && "🔄 Wajib Horizontal Scrollbar"}
+                </span>
+              </div>
+              <p className="text-slate-600">
+                {COLUMN_CONFIGS[activeColumnCount].description}
+              </p>
+              <div className="pt-1 text-[11px] font-mono text-slate-500 bg-white/70 px-2.5 py-1 rounded-lg border border-slate-200/60 inline-block">
+                Struktur Kolom: {COLUMN_CONFIGS[activeColumnCount].breakdown}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <DnaDataTableCard
         toolbarProps={{
           searchQuery,
@@ -623,50 +818,263 @@ export default function GoldenReferencePage() {
         }}
         paginationProps={{ currentPage: 1, totalPages: 1, totalEntries: filteredAndSortedData.length, pageSize: 10, onPageChange: () => {} }}
       >
-        <table className="w-full text-left border-collapse text-[12px]">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
-              <th className="p-3.5 w-10 text-center"><DnaCheckbox checked={selectedRowIds.length === filteredAndSortedData.length && filteredAndSortedData.length > 0} onChange={toggleSelectAll} /></th>
-              <th className="p-3.5 w-10 text-slate-400">#</th>
-              <th className="p-3.5 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("wo")}>WO #</th>
-              <th className="p-3.5">REF. PO</th>
-              <th className="p-3.5 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("produk")}>PRODUK</th>
-              <th className="p-3.5 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("klien")}>KLIEN</th>
-              <th className="p-3.5">STAGE</th>
-              <th className="p-3.5">PROGRESS</th>
-              <th className="p-3.5">PIC</th>
-              <th className="p-3.5 text-right">TARGET (PCS)</th>
-              <th className="p-3.5 text-right">NILAI (RP)</th>
-              <th className="p-3.5">CATATAN</th>
-              <th className="p-3.5 text-center">AKSI</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {filteredAndSortedData.map((wo, index) => (
-              <tr key={wo.id} className="hover:bg-slate-50/80">
-                <td className="p-3.5 text-center"><DnaCheckbox checked={selectedRowIds.includes(wo.id)} onChange={() => toggleSelectRow(wo.id)} /></td>
-                <td className="p-3.5 text-slate-400 tabular-nums">{index + 1}</td>
-                <td className="p-3.5"><DnaCell.Code value={wo.wo} onClick={() => setInspectingWo(wo)} /></td>
-                <td className="p-3.5 font-mono text-slate-400">{wo.refPo}</td>
-                <td className="p-3.5"><DnaCell.Text primary={wo.produk} /></td>
-                <td className="p-3.5"><DnaCell.Text primary={wo.klien} /></td>
-                <td className="p-3.5"><DnaCell.Badge status={wo.stage} /></td>
-                <td className="p-3.5"><DnaCell.Progress value={wo.progressPercent} colorClass={wo.progressColor} /></td>
-                <td className="p-3.5"><DnaCell.Avatar name={wo.pic} initial={wo.picInitial} avatarBg="bg-blue-50 text-blue-700" /></td>
-                <td className="p-3.5 text-right"><DnaCell.Number value={wo.target} /></td>
-                <td className="p-3.5 text-right"><DnaCell.Currency value={wo.totalNilai} /></td>
-                <td className="p-3.5 text-slate-500 break-words max-w-[150px]">{wo.notes}</td>
-                <td className="p-3.5 text-center">
-                  <div className="flex gap-1 justify-center">
-                    <button onClick={() => setInspectingWo(wo)} className="p-1.5 text-slate-400 hover:text-blue-600"><FileText className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => handleOpenEditModal(wo)} className="p-1.5 text-slate-400 hover:text-amber-600"><Edit3 className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => requestDeleteWo(wo)} className="p-1.5 text-slate-400 hover:text-rose-600"><Trash2 className="w-3.5 h-3.5" /></button>
-                  </div>
-                </td>
+        {activeColumnCount === 6 ? (
+          /* ── 6 KOLOM: STRICT 1 KOLOM 1 DATA (ZERO STACKING / LEGA & BERSIH) ── */
+          <table className="w-full text-left border-collapse text-[12px]">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                <th className="p-3.5 w-10 text-center"><DnaCheckbox checked={selectedRowIds.length === filteredAndSortedData.length && filteredAndSortedData.length > 0} onChange={toggleSelectAll} /></th>
+                <th className="p-3.5 w-36 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("wo")}>WO #</th>
+                <th className="p-3.5 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("produk")}>PRODUK</th>
+                <th className="p-3.5 w-36 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("stage")}>STATUS</th>
+                <th className="p-3.5 w-40">PROGRESS</th>
+                <th className="p-3.5 w-44 text-right cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("totalNilai")}>TOTAL NILAI</th>
+                <th className="p-3.5 text-center w-24">AKSI</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredAndSortedData.map((wo) => (
+                <tr key={wo.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="p-3.5 text-center"><DnaCheckbox checked={selectedRowIds.includes(wo.id)} onChange={() => toggleSelectRow(wo.id)} /></td>
+                  <td className="p-3.5"><DnaCell.Code value={wo.wo} onClick={() => setInspectingWo(wo)} /></td>
+                  <td className="p-3.5"><DnaCell.Text primary={wo.produk} /></td>
+                  <td className="p-3.5"><DnaCell.Badge status={wo.stage} /></td>
+                  <td className="p-3.5"><DnaCell.Progress value={wo.progressPercent} colorClass={wo.progressColor} /></td>
+                  <td className="p-3.5 text-right"><DnaCell.Currency value={wo.totalNilai} /></td>
+                  <td className="p-3.5 text-center">
+                    <div className="flex gap-1 justify-center">
+                      <button onClick={() => setInspectingWo(wo)} title="Inspeksi Detail" className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"><FileText className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => handleOpenEditModal(wo)} title="Edit Data" className="p-1.5 text-slate-400 hover:text-amber-600 rounded-md hover:bg-amber-50 transition-colors"><Edit3 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => requestDeleteWo(wo)} title="Hapus Data" className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : activeColumnCount === 7 ? (
+          /* ── 7 KOLOM: STRICT 1 KOLOM 1 DATA (+ KOLOM KLIEN MANDIRI) ── */
+          <table className="w-full text-left border-collapse text-[12px]">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                <th className="p-3.5 w-10 text-center"><DnaCheckbox checked={selectedRowIds.length === filteredAndSortedData.length && filteredAndSortedData.length > 0} onChange={toggleSelectAll} /></th>
+                <th className="p-3.5 w-32 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("wo")}>WO #</th>
+                <th className="p-3.5 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("produk")}>PRODUK</th>
+                <th className="p-3.5 w-44 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("klien")}>KLIEN</th>
+                <th className="p-3.5 w-36 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("stage")}>STATUS</th>
+                <th className="p-3.5 w-36">PROGRESS</th>
+                <th className="p-3.5 w-40 text-right cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("totalNilai")}>TOTAL NILAI</th>
+                <th className="p-3.5 text-center w-24">AKSI</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredAndSortedData.map((wo) => (
+                <tr key={wo.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="p-3.5 text-center"><DnaCheckbox checked={selectedRowIds.includes(wo.id)} onChange={() => toggleSelectRow(wo.id)} /></td>
+                  <td className="p-3.5"><DnaCell.Code value={wo.wo} onClick={() => setInspectingWo(wo)} /></td>
+                  <td className="p-3.5"><DnaCell.Text primary={wo.produk} /></td>
+                  <td className="p-3.5"><DnaCell.Text primary={wo.klien} /></td>
+                  <td className="p-3.5"><DnaCell.Badge status={wo.stage} /></td>
+                  <td className="p-3.5"><DnaCell.Progress value={wo.progressPercent} colorClass={wo.progressColor} /></td>
+                  <td className="p-3.5 text-right"><DnaCell.Currency value={wo.totalNilai} /></td>
+                  <td className="p-3.5 text-center">
+                    <div className="flex gap-1 justify-center">
+                      <button onClick={() => setInspectingWo(wo)} title="Inspeksi Detail" className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"><FileText className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => handleOpenEditModal(wo)} title="Edit Data" className="p-1.5 text-slate-400 hover:text-amber-600 rounded-md hover:bg-amber-50 transition-colors"><Edit3 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => requestDeleteWo(wo)} title="Hapus Data" className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : activeColumnCount === 8 ? (
+          /* ── 8 KOLOM: CLEAN LINEAR (STANDAR EMAS ERP - 1 KOLOM 2 DATA PENYELAMAT) ── */
+          <table className="w-full text-left border-collapse text-[12px]">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                <th className="p-3.5 w-10 text-center"><DnaCheckbox checked={selectedRowIds.length === filteredAndSortedData.length && filteredAndSortedData.length > 0} onChange={toggleSelectAll} /></th>
+                <th className="p-3.5 w-32 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("wo")}>WO #</th>
+                <th className="p-3.5 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("produk")}>PRODUK &amp; KLIEN</th>
+                <th className="p-3.5 w-36 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("stage")}>STATUS</th>
+                <th className="p-3.5 w-36">PROGRESS</th>
+                <th className="p-3.5 w-40 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("pic")}>PIC</th>
+                <th className="p-3.5 w-28 text-right cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("target")}>TARGET</th>
+                <th className="p-3.5 w-36 text-right cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("totalNilai")}>TOTAL NILAI</th>
+                <th className="p-3.5 text-center w-24">AKSI</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredAndSortedData.map((wo) => (
+                <tr key={wo.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="p-3.5 text-center"><DnaCheckbox checked={selectedRowIds.includes(wo.id)} onChange={() => toggleSelectRow(wo.id)} /></td>
+                  <td className="p-3.5"><DnaCell.Code value={wo.wo} onClick={() => setInspectingWo(wo)} /></td>
+                  <td className="p-3.5"><DnaCell.Text primary={wo.produk} secondary={wo.klien} /></td>
+                  <td className="p-3.5"><DnaCell.Badge status={wo.stage} /></td>
+                  <td className="p-3.5"><DnaCell.Progress value={wo.progressPercent} colorClass={wo.progressColor} /></td>
+                  <td className="p-3.5"><DnaCell.Avatar name={wo.pic} initial={wo.picInitial} avatarBg="bg-blue-50 text-blue-700" /></td>
+                  <td className="p-3.5 text-right">
+                    <span className="font-mono text-slate-800 font-semibold tabular-nums">{wo.target.toLocaleString("id-ID")}</span>
+                    <span className="text-[10.5px] text-slate-400 ml-1">Pcs</span>
+                  </td>
+                  <td className="p-3.5 text-right"><DnaCell.Currency value={wo.totalNilai} /></td>
+                  <td className="p-3.5 text-center">
+                    <div className="flex gap-1 justify-center">
+                      <button onClick={() => setInspectingWo(wo)} title="Inspeksi Detail" className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"><FileText className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => handleOpenEditModal(wo)} title="Edit Data" className="p-1.5 text-slate-400 hover:text-amber-600 rounded-md hover:bg-amber-50 transition-colors"><Edit3 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => requestDeleteWo(wo)} title="Hapus Data" className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : activeColumnCount === 9 ? (
+          /* ── 9 KOLOM: 2 KOLOM 2 DATA (MENAMPUNG 11 ATRIBUT SECARA EFISIEN) ── */
+          <table className="w-full text-left border-collapse text-[12px]">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                <th className="p-3.5 w-10 text-center"><DnaCheckbox checked={selectedRowIds.length === filteredAndSortedData.length && filteredAndSortedData.length > 0} onChange={toggleSelectAll} /></th>
+                <th className="p-3.5 w-32 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("wo")}>DOKUMEN &amp; PO</th>
+                <th className="p-3.5 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("produk")}>PRODUK &amp; KLIEN</th>
+                <th className="p-3.5 w-32 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("stage")}>STATUS</th>
+                <th className="p-3.5 w-32">PROGRESS</th>
+                <th className="p-3.5 w-36 cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("pic")}>PIC</th>
+                <th className="p-3.5 w-28 text-right cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("target")}>TARGET</th>
+                <th className="p-3.5 w-32 text-right cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("totalNilai")}>TOTAL NILAI</th>
+                <th className="p-3.5 w-36">LINI KERJA</th>
+                <th className="p-3.5 text-center w-24">AKSI</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredAndSortedData.map((wo) => (
+                <tr key={wo.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="p-3.5 text-center"><DnaCheckbox checked={selectedRowIds.includes(wo.id)} onChange={() => toggleSelectRow(wo.id)} /></td>
+                  <td className="p-3.5"><DnaCell.Code value={wo.wo} subtitle={`Ref: ${wo.refPo}`} onClick={() => setInspectingWo(wo)} /></td>
+                  <td className="p-3.5"><DnaCell.Text primary={wo.produk} secondary={wo.klien} /></td>
+                  <td className="p-3.5"><DnaCell.Badge status={wo.stage} /></td>
+                  <td className="p-3.5"><DnaCell.Progress value={wo.progressPercent} colorClass={wo.progressColor} /></td>
+                  <td className="p-3.5"><DnaCell.Avatar name={wo.pic} initial={wo.picInitial} avatarBg="bg-blue-50 text-blue-700" /></td>
+                  <td className="p-3.5 text-right">
+                    <span className="font-mono text-slate-800 font-semibold tabular-nums">{wo.target.toLocaleString("id-ID")}</span>
+                    <span className="text-[10.5px] text-slate-400 ml-1">Pcs</span>
+                  </td>
+                  <td className="p-3.5 text-right"><DnaCell.Currency value={wo.totalNilai} /></td>
+                  <td className="p-3.5">
+                    <span className="text-[11.5px] text-slate-600 truncate max-w-[150px] inline-block font-medium">
+                      {wo.line}
+                    </span>
+                  </td>
+                  <td className="p-3.5 text-center">
+                    <div className="flex gap-1 justify-center">
+                      <button onClick={() => setInspectingWo(wo)} title="Inspeksi Detail" className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"><FileText className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => handleOpenEditModal(wo)} title="Edit Data" className="p-1.5 text-slate-400 hover:text-amber-600 rounded-md hover:bg-amber-50 transition-colors"><Edit3 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => requestDeleteWo(wo)} title="Hapus Data" className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : activeColumnCount === 10 ? (
+          /* ── 10 KOLOM: 2 KOLOM 2 DATA (KOMPAK, RAMPING & LEBAR TERPROTEKSI) ── */
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1280px] text-left border-collapse text-[12px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                  <th className="p-3.5 w-10 text-center"><DnaCheckbox checked={selectedRowIds.length === filteredAndSortedData.length && filteredAndSortedData.length > 0} onChange={toggleSelectAll} /></th>
+                  <th className="p-3.5 w-36 min-w-[140px] cursor-pointer hover:bg-slate-100/60 whitespace-nowrap" onClick={() => handleHeaderSortToggle("wo")}>DOKUMEN &amp; PO</th>
+                  <th className="p-3.5 min-w-[240px] cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("produk")}>PRODUK &amp; KLIEN</th>
+                  <th className="p-3.5 w-32 min-w-[120px] cursor-pointer hover:bg-slate-100/60 whitespace-nowrap" onClick={() => handleHeaderSortToggle("stage")}>STATUS</th>
+                  <th className="p-3.5 w-32 min-w-[120px] whitespace-nowrap">PROGRESS</th>
+                  <th className="p-3.5 w-36 min-w-[140px] cursor-pointer hover:bg-slate-100/60 whitespace-nowrap" onClick={() => handleHeaderSortToggle("pic")}>PIC</th>
+                  <th className="p-3.5 w-40 min-w-[150px] whitespace-nowrap">LINI KERJA</th>
+                  <th className="p-3.5 w-28 min-w-[100px] text-right cursor-pointer hover:bg-slate-100/60 whitespace-nowrap" onClick={() => handleHeaderSortToggle("target")}>TARGET</th>
+                  <th className="p-3.5 w-32 min-w-[110px] text-right whitespace-nowrap">HPP SATUAN</th>
+                  <th className="p-3.5 w-36 min-w-[120px] text-right cursor-pointer hover:bg-slate-100/60 whitespace-nowrap" onClick={() => handleHeaderSortToggle("totalNilai")}>TOTAL NILAI</th>
+                  <th className="p-3.5 text-center w-24 whitespace-nowrap">AKSI</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredAndSortedData.map((wo) => (
+                  <tr key={wo.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-3.5 text-center"><DnaCheckbox checked={selectedRowIds.includes(wo.id)} onChange={() => toggleSelectRow(wo.id)} /></td>
+                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Code value={wo.wo} subtitle={`Ref: ${wo.refPo}`} onClick={() => setInspectingWo(wo)} /></td>
+                    <td className="p-3.5 min-w-[240px]"><DnaCell.Text primary={wo.produk} secondary={wo.klien} /></td>
+                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Badge status={wo.stage} /></td>
+                    <td className="p-3.5"><DnaCell.Progress value={wo.progressPercent} colorClass={wo.progressColor} /></td>
+                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Avatar name={wo.pic} initial={wo.picInitial} avatarBg="bg-blue-50 text-blue-700" /></td>
+                    <td className="p-3.5 whitespace-nowrap">
+                      <span className="text-[11.5px] text-slate-600 truncate max-w-[160px] inline-block font-medium">
+                        {wo.line}
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-right whitespace-nowrap"><DnaCell.Number value={wo.target} suffix="Pcs" /></td>
+                    <td className="p-3.5 text-right whitespace-nowrap"><DnaCell.Currency value={wo.hpp} /></td>
+                    <td className="p-3.5 text-right whitespace-nowrap"><DnaCell.Currency value={wo.totalNilai} /></td>
+                    <td className="p-3.5 text-center">
+                      <div className="flex gap-1 justify-center">
+                        <button onClick={() => setInspectingWo(wo)} title="Inspeksi Detail" className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"><FileText className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleOpenEditModal(wo)} title="Edit Data" className="p-1.5 text-slate-400 hover:text-amber-600 rounded-md hover:bg-amber-50 transition-colors"><Edit3 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => requestDeleteWo(wo)} title="Hapus Data" className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* ── 11 KOLOM: 2 KOLOM 2 DATA + # URUT (STANDAR TABEL TERLEBAR ERP) ── */
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1340px] text-left border-collapse text-[12px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                  <th className="p-3.5 w-10 text-center"><DnaCheckbox checked={selectedRowIds.length === filteredAndSortedData.length && filteredAndSortedData.length > 0} onChange={toggleSelectAll} /></th>
+                  <th className="p-3.5 w-10 text-slate-400 font-mono text-center">#</th>
+                  <th className="p-3.5 w-36 min-w-[140px] cursor-pointer hover:bg-slate-100/60 whitespace-nowrap" onClick={() => handleHeaderSortToggle("wo")}>DOKUMEN &amp; PO</th>
+                  <th className="p-3.5 min-w-[240px] cursor-pointer hover:bg-slate-100/60" onClick={() => handleHeaderSortToggle("produk")}>PRODUK &amp; KLIEN</th>
+                  <th className="p-3.5 w-32 min-w-[120px] cursor-pointer hover:bg-slate-100/60 whitespace-nowrap" onClick={() => handleHeaderSortToggle("stage")}>STATUS</th>
+                  <th className="p-3.5 w-32 min-w-[120px] whitespace-nowrap">PROGRESS</th>
+                  <th className="p-3.5 w-36 min-w-[140px] cursor-pointer hover:bg-slate-100/60 whitespace-nowrap" onClick={() => handleHeaderSortToggle("pic")}>PIC</th>
+                  <th className="p-3.5 w-40 min-w-[150px] whitespace-nowrap">LINI KERJA</th>
+                  <th className="p-3.5 w-28 min-w-[100px] text-right cursor-pointer hover:bg-slate-100/60 whitespace-nowrap" onClick={() => handleHeaderSortToggle("target")}>TARGET</th>
+                  <th className="p-3.5 w-32 min-w-[110px] text-right whitespace-nowrap">HPP SATUAN</th>
+                  <th className="p-3.5 w-36 min-w-[120px] text-right cursor-pointer hover:bg-slate-100/60 whitespace-nowrap" onClick={() => handleHeaderSortToggle("totalNilai")}>TOTAL NILAI</th>
+                  <th className="p-3.5 text-center w-24 whitespace-nowrap">AKSI</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredAndSortedData.map((wo, index) => (
+                  <tr key={wo.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-3.5 text-center"><DnaCheckbox checked={selectedRowIds.includes(wo.id)} onChange={() => toggleSelectRow(wo.id)} /></td>
+                    <td className="p-3.5 text-slate-400 font-mono text-[11px] tabular-nums text-center">{index + 1}</td>
+                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Code value={wo.wo} subtitle={`Ref: ${wo.refPo}`} onClick={() => setInspectingWo(wo)} /></td>
+                    <td className="p-3.5 min-w-[240px]"><DnaCell.Text primary={wo.produk} secondary={wo.klien} /></td>
+                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Badge status={wo.stage} /></td>
+                    <td className="p-3.5"><DnaCell.Progress value={wo.progressPercent} colorClass={wo.progressColor} /></td>
+                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Avatar name={wo.pic} initial={wo.picInitial} avatarBg="bg-blue-50 text-blue-700" /></td>
+                    <td className="p-3.5 whitespace-nowrap">
+                      <span className="text-[11.5px] text-slate-600 truncate max-w-[160px] inline-block font-medium">
+                        {wo.line}
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-right whitespace-nowrap"><DnaCell.Number value={wo.target} suffix="Pcs" /></td>
+                    <td className="p-3.5 text-right whitespace-nowrap"><DnaCell.Currency value={wo.hpp} /></td>
+                    <td className="p-3.5 text-right whitespace-nowrap"><DnaCell.Currency value={wo.totalNilai} /></td>
+                    <td className="p-3.5 text-center">
+                      <div className="flex gap-1 justify-center">
+                        <button onClick={() => setInspectingWo(wo)} title="Inspeksi Detail" className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"><FileText className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleOpenEditModal(wo)} title="Edit Data" className="p-1.5 text-slate-400 hover:text-amber-600 rounded-md hover:bg-amber-50 transition-colors"><Edit3 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => requestDeleteWo(wo)} title="Hapus Data" className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </DnaDataTableCard>
 
       {/* ── 05. MASTER FLOATING WINDOW DETAIL INSPECTION (CENTER FLOATING MODAL, BUKAN SIDE DRAWER) ── */}

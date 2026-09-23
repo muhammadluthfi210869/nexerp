@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/dna";
 import { DnaButton, DnaInput, DnaBadge } from "@/components/dna";
 import { Search, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";

@@ -143,17 +143,14 @@ export default function SalesApprovalPage() {
       header: "Nomor SO",
       accessor: "code",
       sortable: true,
-      render: (item) => <DnaCell.code>{item.code}</DnaCell.code>,
+      render: (item) => <DnaCell.Code value={item.code} />,
     },
     {
       header: "Pelanggan & Brand",
       accessor: "customer",
       sortable: true,
       render: (item) => (
-        <div>
-          <p className="font-semibold text-slate-800">{item.customer}</p>
-          <p className="text-[11px] text-blue-600 font-medium">{item.brand}</p>
-        </div>
+        <DnaCell.Text primary={item.customer} secondary={item.brand} />
       ),
     },
     {
@@ -191,11 +188,7 @@ export default function SalesApprovalPage() {
       accessor: "totalAmount",
       align: "right",
       sortable: true,
-      render: (item) => (
-        <span className="font-mono font-bold text-slate-900">
-          {formatRupiah(item.totalAmount)}
-        </span>
-      ),
+      render: (item) => <DnaCell.Currency value={item.totalAmount} />,
     },
     {
       header: "Status",

@@ -7,15 +7,15 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogFooter 
-} from "@/components/ui/dialog";
+} from "@/components/dna";
 import { 
   Select, 
   SelectContent, 
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/dna";
+import { Textarea } from "@/components/dna";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Palette, FileText, ShoppingBag, Zap } from "lucide-react";

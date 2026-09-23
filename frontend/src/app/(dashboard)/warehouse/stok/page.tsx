@@ -1,22 +1,23 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
-import { DnaInput } from "@/components/dna";
 import {
   Package,
   Layers,
   AlertTriangle,
   FileSpreadsheet,
   Printer,
-  Search,
-  Filter,
   DollarSign,
   Eye,
+  Warehouse,
+  ArrowRightLeft,
   CheckCircle2,
-  Building2
+  TrendingDown,
+  Clock,
+  Boxes
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -26,8 +27,8 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
-  DnaSelect,
   DnaTable,
+  DnaDetailDrawer,
   formatRupiah,
   useDnaToast
 } from "@/components/dna";
@@ -37,6 +38,7 @@ interface StockItem {
   itemCode: string;
   itemName: string;
   category: "Bahan Baku" | "Bahan Kemas" | "Barang Jadi";
+  typeCode: "RAW_MATERIAL" | "PACKAGING" | "FINISHED_GOODS";
   warehouse: string;
   rackLocation: string;
   unit: string;
@@ -47,53 +49,99 @@ interface StockItem {
   status: "AMAN" | "LOW_STOCK" | "OUT_OF_STOCK";
 }
 
-const FALLBACK_STOCKS: StockItem[] = [
-  { id: "1", itemCode: "RAW-NIC-01", itemName: "Niacinamide Pure Grade 99.8%", category: "Bahan Baku", warehouse: "Gudang Bahan Baku CPKB", rackLocation: "Rak A1-02", unit: "Kg", qtyOnHand: 250, safetyStock: 50, fifoUnitCost: 450000, totalValuation: 112500000, status: "AMAN" },
-  { id: "2", itemCode: "RAW-HYA-02", itemName: "Hyaluronic Acid Multi-Molecular", category: "Bahan Baku", warehouse: "Gudang Suhu Dingin", rackLocation: "Chiller B-01", unit: "Kg", qtyOnHand: 15, safetyStock: 25, fifoUnitCost: 3200000, totalValuation: 48000000, status: "LOW_STOCK" },
-  { id: "3", itemCode: "PCK-BOT-30", itemName: "Botol Kaca Serum 30ml Amber + Pipet", category: "Bahan Kemas", warehouse: "Gudang Kemasan", rackLocation: "Pallet C3", unit: "Pcs", qtyOnHand: 15000, safetyStock: 5000, fifoUnitCost: 3500, totalValuation: 52500000, status: "AMAN" },
-  { id: "4", itemCode: "FG-SRM-001", itemName: "Brightening Glow Serum 30ml (Selesai QC)", category: "Barang Jadi", warehouse: "Gudang Barang Jadi", rackLocation: "Karantina Rilis D", unit: "Pcs", qtyOnHand: 4800, safetyStock: 1000, fifoUnitCost: 28500, totalValuation: 136800000, status: "AMAN" },
-];
-
 export default function WarehouseStockReportPage() {
   const toast = useDnaToast();
-  const [warehouseFilter, setWarehouseFilter] = useState("ALL");
-  const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedItem, setSelectedItem] = useState<StockItem | null>(null);
 
-  const totalValuation = useMemo(() => FALLBACK_STOCKS.reduce((acc, r) => acc + r.totalValuation, 0), []);
-  const totalPhysicalQty = useMemo(() => FALLBACK_STOCKS.reduce((acc, r) => acc + r.qtyOnHand, 0), []);
-  const lowStockCount = useMemo(() => FALLBACK_STOCKS.filter((r) => r.status === "LOW_STOCK").length, []);
+  const { data: rawCatalog = [] } = useQuery({
+    queryKey: ["warehouse-catalog"],
+    queryFn: async () => {
+      const res = await api.get("/warehouse/catalog");
+      return (unwrapResponse(res.data) as any[]) || [];
+    },
+  });
+
+  const stockList: StockItem[] = useMemo(() => {
+    if (!Array.isArray(rawCatalog)) return [];
+    return rawCatalog.map((mat: any) => {
+      const stock = Number(mat.stockQty || 0);
+      const minLevel = Number(mat.minLevel || 0);
+      const unitPrice = Number(mat.unitPrice || 0);
+      const valuation = stock * unitPrice;
+      const status: "AMAN" | "LOW_STOCK" | "OUT_OF_STOCK" =
+        stock === 0 ? "OUT_OF_STOCK" : stock < minLevel ? "LOW_STOCK" : "AMAN";
+
+      const typeCode: "RAW_MATERIAL" | "PACKAGING" | "FINISHED_GOODS" =
+        mat.type === "RAW_MATERIAL" ? "RAW_MATERIAL" : mat.type === "PACKAGING" ? "PACKAGING" : "FINISHED_GOODS";
+
+      return {
+        id: mat.id,
+        itemCode: mat.code || mat.id.slice(0, 8),
+        itemName: mat.name,
+        category: (mat.type === "RAW_MATERIAL" ? "Bahan Baku" : mat.type === "PACKAGING" ? "Bahan Kemas" : "Barang Jadi") as any,
+        typeCode,
+        warehouse: mat.inventories?.[0]?.location?.warehouse?.name || "Gudang Utama CPKB",
+        rackLocation: mat.inventories?.[0]?.location?.name || "RACK-GEN",
+        unit: mat.unit || "Pcs",
+        qtyOnHand: stock,
+        safetyStock: minLevel,
+        fifoUnitCost: unitPrice,
+        totalValuation: valuation,
+        status,
+      };
+    });
+  }, [rawCatalog]);
+
+  const totalValuation = useMemo(() => stockList.reduce((acc, r) => acc + r.totalValuation, 0), [stockList]);
+  const totalPhysicalQty = useMemo(() => stockList.reduce((acc, r) => acc + r.qtyOnHand, 0), [stockList]);
+  const lowStockCount = useMemo(() => stockList.filter((r) => r.status === "LOW_STOCK" || r.status === "OUT_OF_STOCK").length, [stockList]);
 
   const filteredStocks = useMemo(() => {
-    return FALLBACK_STOCKS.filter((item) => {
+    return stockList.filter((item) => {
       const matchSearch =
         item.itemCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.warehouse.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.rackLocation.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchWh = warehouseFilter === "ALL" || item.warehouse === warehouseFilter;
-      const matchCat = categoryFilter === "ALL" || item.category === categoryFilter;
-      return matchSearch && matchWh && matchCat;
+
+      const matchTab =
+        activeTab === "ALL" ? true :
+        activeTab === "LOW_STOCK" ? (item.status === "LOW_STOCK" || item.status === "OUT_OF_STOCK") :
+        item.typeCode === activeTab;
+
+      return matchSearch && matchTab;
     });
-  }, [searchQuery, warehouseFilter, categoryFilter]);
+  }, [stockList, searchQuery, activeTab]);
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
-        title="Laporan Stok & Valuasi Persediaan (Inventory Valuation)"
+        title="Stok Barang & Valuasi Persediaan"
         description="Monitoring kuantitas fisik on-hand, lokasi rak gudang, safety stock threshold, dan valuasi persediaan metode FIFO."
         badge={
           <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 font-semibold">
             <Package className="w-3.5 h-3.5" />
-            <span>Spesifikasi SCR-168 & SCR-169: Multi-Warehouse Valuation</span>
+            <span>Multi-Warehouse FIFO Valuation</span>
           </div>
         }
+        tabs={[
+          { id: "ALL", label: "Semua Kategori", count: stockList.length },
+          { id: "RAW_MATERIAL", label: "Bahan Baku", count: stockList.filter((i) => i.typeCode === "RAW_MATERIAL").length },
+          { id: "PACKAGING", label: "Bahan Kemas", count: stockList.filter((i) => i.typeCode === "PACKAGING").length },
+          { id: "FINISHED_GOODS", label: "Barang Jadi", count: stockList.filter((i) => i.typeCode === "FINISHED_GOODS").length },
+          { id: "LOW_STOCK", label: "Perlu Reorder", count: lowStockCount },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         actions={
           <div className="flex items-center gap-2">
-            <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
+            <DnaButton variant="secondary" size="sm" onClick={() => window.print()}>
               <Printer className="w-4 h-4 mr-1.5" />
-              Cetak Laporan Stok
+              Cetak Laporan
             </DnaButton>
-            <DnaButton variant="primary" size="md" onClick={() => toast.success("Exporting Stok Persediaan ke Excel...")}>
+            <DnaButton variant="primary" size="sm" onClick={() => toast.success("Exporting Stok Persediaan ke Excel...")}>
               <FileSpreadsheet className="w-4 h-4 mr-1.5" />
               Export Excel
             </DnaButton>
@@ -101,128 +149,268 @@ export default function WarehouseStockReportPage() {
         }
       />
 
-      {/* KPI CARDS PERSIS SCR-168/169 */}
+      {/* KPI Cards */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
           label="Total Nilai Valuasi FIFO"
           value={formatRupiah(totalValuation)}
           icon={<DollarSign className="w-5 h-5 text-emerald-600" />}
           delta={{ value: "Metode FIFO Standar", isPositive: true }}
-          subtext="Total Nilai Aset Bahan & Produk"
+          subtext="Total Aset Bahan & Produk"
           variant="success"
         />
         <DnaStatCard
           label="Total SKU Terdaftar"
-          value={`${FALLBACK_STOCKS.length} SKU`}
+          value={`${stockList.length} SKU`}
           icon={<Package className="w-5 h-5 text-blue-600" />}
-          subtext="Bahan Baku, Kemas & FG"
+          subtext="Katalog Bahan & FG"
           variant="info"
         />
         <DnaStatCard
           label="Total Kuantitas Fisik"
-          value={`${totalPhysicalQty.toLocaleString()} Unit`}
+          value={`${totalPhysicalQty.toLocaleString("id-ID")} Unit`}
           icon={<Layers className="w-5 h-5 text-purple-600" />}
-          subtext="Akumulasi Stok Seluruh Gudang"
+          subtext="Akumulasi Seluruh Gudang"
           variant="purple"
         />
         <DnaStatCard
-          label="Stok di Bawah Batas Minimum"
+          label="Di Bawah Minimum"
           value={`${lowStockCount} SKU`}
           icon={<AlertTriangle className="w-5 h-5 text-amber-600" />}
           delta={{ value: "Reorder Required", isPositive: false }}
-          subtext="Segera Buat Permintaan PR"
+          subtext="Segera Buat PR Bahan"
           variant="warning"
         />
       </DnaKpiGrid>
 
-      {/* TABLE LIST FORMAT PERSIS SCR-168/169 */}
+      {/* Main Table Card (Rule 1: No title prop, Rule 4: Clean responsive columns) */}
       <DnaDataTableCard
-        title="Daftar Posisi Fisik & Valuasi Stok Gudang"
-        badge={<DnaBadge variant="default">{filteredStocks.length} Item</DnaBadge>}
-        customToolbar={
-          <div className="flex flex-wrap items-center gap-2.5">
-<DnaSelect 
-              value={warehouseFilter}
-              onChange={setWarehouseFilter}
-              className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Cari kode SKU, nama material/produk, lokasi rak..."
+      >
+        <DnaTable className="w-full text-left text-xs table-fixed">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+              <th className="px-4 py-3 w-[30%]">Barang & Kategori</th>
+              <th className="px-3 py-3 w-[20%]">Gudang & Rak</th>
+              <th className="px-3 py-3 w-[15%] text-right">Stok Fisik</th>
+              <th className="px-3 py-3 w-[18%] text-right">Valuasi FIFO</th>
+              <th className="px-3 py-3 w-[10%] text-center">Status</th>
+              <th className="px-4 py-3 w-[7%] text-right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredStocks.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <Package className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                  Tidak ada data persediaan barang yang sesuai filter.
+                </td>
+              </tr>
+            ) : (
+              filteredStocks.map((item) => (
+                <tr
+                  key={item.id}
+                  onClick={() => setSelectedItem(item)}
+                  className="hover:bg-slate-50/60 transition-colors cursor-pointer"
+                >
+                  {/* Kolom 1: Max 2 lines (Name bold + SKU/Category muted) */}
+                  <td className="px-4 py-2.5">
+                    <div className="font-semibold text-slate-900 truncate">{item.itemName}</div>
+                    <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5">
+                      <span className="text-blue-600 font-semibold">{item.itemCode}</span>
+                      <span>•</span>
+                      <span>{item.category}</span>
+                    </div>
+                  </td>
+
+                  {/* Kolom 2: Gudang & Rak */}
+                  <td className="px-3 py-2.5">
+                    <div className="font-medium text-slate-800 truncate">{item.warehouse}</div>
+                    <div className="text-[11px] text-slate-400 font-mono mt-0.5 flex items-center gap-1">
+                      <Warehouse className="w-3 h-3 text-slate-400" />
+                      <span>{item.rackLocation}</span>
+                    </div>
+                  </td>
+
+                  {/* Kolom 3: Stok Fisik & Safety */}
+                  <td className="px-3 py-2.5 text-right">
+                    <div className="font-bold text-slate-900 text-sm">
+                      {item.qtyOnHand.toLocaleString("id-ID")} <span className="text-xs font-normal text-slate-500">{item.unit}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">
+                      Min: {item.safetyStock.toLocaleString("id-ID")} {item.unit}
+                    </div>
+                  </td>
+
+                  {/* Kolom 4: Valuasi FIFO */}
+                  <td className="px-3 py-2.5 text-right">
+                    <div className="font-bold text-emerald-700">
+                      {formatRupiah(item.totalValuation)}
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                      @ {formatRupiah(item.fifoUnitCost)}
+                    </div>
+                  </td>
+
+                  {/* Kolom 5: Status */}
+                  <td className="px-3 py-2.5 text-center">
+                    <DnaBadge
+                      variant={
+                        item.status === "AMAN"
+                          ? "success"
+                          : item.status === "LOW_STOCK"
+                          ? "warning"
+                          : "critical"
+                      }
+                    >
+                      {item.status === "AMAN"
+                        ? "Aman"
+                        : item.status === "LOW_STOCK"
+                        ? "Low Stock"
+                        : "Habis"}
+                    </DnaBadge>
+                  </td>
+
+                  {/* Kolom 6: Aksi */}
+                  <td className="px-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                    <DnaButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedItem(item)}
+                      className="text-slate-500 hover:text-blue-600"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </DnaButton>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </DnaTable>
+      </DnaDataTableCard>
+
+      {/* Quick Peek Drawer (Rule 5) */}
+      <DnaDetailDrawer
+        isOpen={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        title={selectedItem?.itemName || "Detail Stok"}
+        subtitle={`SKU: ${selectedItem?.itemCode} • ${selectedItem?.category}`}
+        badge={
+          selectedItem && (
+            <DnaBadge
+              variant={
+                selectedItem.status === "AMAN"
+                  ? "success"
+                  : selectedItem.status === "LOW_STOCK"
+                  ? "warning"
+                  : "critical"
+              }
             >
-              <option value="ALL">Gudang: * (Semua Gudang)</option>
-              <option value="Gudang Bahan Baku CPKB">Gudang Bahan Baku CPKB</option>
-              <option value="Gudang Suhu Dingin">Gudang Suhu Dingin (Chiller)</option>
-              <option value="Gudang Kemasan">Gudang Kemasan</option>
-              <option value="Gudang Barang Jadi">Gudang Barang Jadi</option>
-            </DnaSelect>
-<DnaSelect 
-              value={categoryFilter}
-              onChange={setCategoryFilter}
-              className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
+              {selectedItem.status === "AMAN" ? "Stok Aman" : "Perlu Restock"}
+            </DnaBadge>
+          )
+        }
+        footerActions={
+          <div className="flex items-center gap-2">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                toast.info(`Membuka kartu mutasi untuk SKU ${selectedItem?.itemCode}`);
+                setSelectedItem(null);
+              }}
             >
-              <option value="ALL">Tampilkan: Semua Kategori</option>
-              <option value="Bahan Baku">Bahan Baku (Raw)</option>
-              <option value="Bahan Kemas">Bahan Kemas (Packaging)</option>
-              <option value="Barang Jadi">Barang Jadi (Finished Goods)</option>
-            </DnaSelect>
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <DnaInput
-                type="text"
-                placeholder="Cari SKU / nama / rak..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-52 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+              <ArrowRightLeft className="w-4 h-4 mr-1.5" />
+              Kartu Mutasi
+            </DnaButton>
+            {selectedItem && (selectedItem.status === "LOW_STOCK" || selectedItem.status === "OUT_OF_STOCK") && (
+              <DnaButton
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  toast.success(`Draf Permintaan Pembelian (PR) untuk ${selectedItem.itemName} dibuat`);
+                  setSelectedItem(null);
+                }}
+              >
+                Buat PR Pembelian
+              </DnaButton>
+            )}
           </div>
         }
       >
-        <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">Kode Barang</th>
-                <th className="px-3.5 py-3">Nama Barang</th>
-                <th className="px-3.5 py-3">Kategori</th>
-                <th className="px-3.5 py-3">Gudang & Lokasi Rak</th>
-                <th className="px-3.5 py-3 text-right">Stok Fisik</th>
-                <th className="px-3.5 py-3 text-right">Safety Stock</th>
-                <th className="px-3.5 py-3 text-right">Harga FIFO (Rp)</th>
-                <th className="px-3.5 py-3 text-right">Total Valuasi (Rp)</th>
-                <th className="px-3.5 py-3 text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredStocks.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 font-mono text-blue-700 font-bold">{item.itemCode}</td>
-                  <td className="px-3.5 py-2.5 font-semibold text-slate-900">{item.itemName}</td>
-                  <td className="px-3.5 py-2.5">
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 font-semibold text-slate-700">
-                      {item.category}
-                    </span>
-                  </td>
-                  <td className="px-3.5 py-2.5 text-slate-600 text-[11px]">
-                    <div>{item.warehouse}</div>
-                    <span className="font-mono text-slate-400 font-bold">{item.rackLocation}</span>
-                  </td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-slate-900">
-                    {item.qtyOnHand.toLocaleString()} {item.unit}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-right font-medium text-slate-500">
-                    {item.safetyStock.toLocaleString()} {item.unit}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-right font-medium text-slate-700">{formatRupiah(item.fifoUnitCost)}</td>
-                  <td className="px-3.5 py-2.5 text-right font-extrabold text-emerald-700">{formatRupiah(item.totalValuation)}</td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <DnaBadge variant={item.status === "AMAN" ? "success" : "warning"}>
-                      {item.status === "AMAN" ? "Aman" : "Low Stock"}
-                    </DnaBadge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </DnaTable>
-        </div>
-      </DnaDataTableCard>
+        {selectedItem && (
+          <div className="space-y-6">
+            {/* Inventory Valuation Card */}
+            <div className="p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-xl space-y-2">
+              <div className="text-xs font-semibold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                <DollarSign className="w-4 h-4" />
+                Valuasi Nilai Persediaan (FIFO)
+              </div>
+              <div className="text-2xl font-bold text-emerald-700">
+                {formatRupiah(selectedItem.totalValuation)}
+              </div>
+              <div className="text-xs text-emerald-600 flex items-center justify-between">
+                <span>Harga Pokok Satuan (HPP):</span>
+                <span className="font-semibold font-mono">{formatRupiah(selectedItem.fifoUnitCost)} / {selectedItem.unit}</span>
+              </div>
+            </div>
+
+            {/* Stock Level & Safety Comparison */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <div className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                <span>Posisi Kuantitas Fisik</span>
+                <span className="font-mono font-bold text-slate-900">
+                  {selectedItem.qtyOnHand.toLocaleString("id-ID")} {selectedItem.unit}
+                </span>
+              </div>
+              <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    selectedItem.qtyOnHand < selectedItem.safetyStock ? "bg-amber-500" : "bg-blue-600"
+                  }`}
+                  style={{
+                    width: `${Math.min(100, Math.round((selectedItem.qtyOnHand / (selectedItem.safetyStock * 2 || 1)) * 100))}%`,
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>Ambang Minimum (Safety Stock):</span>
+                <span className="font-semibold text-slate-700">{selectedItem.safetyStock.toLocaleString("id-ID")} {selectedItem.unit}</span>
+              </div>
+            </div>
+
+            {/* Storage Location Info */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                Lokasi Penyimpanan Gudang
+              </h4>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-white border border-slate-200 rounded-lg">
+                  <div className="text-slate-400">Gudang Utama</div>
+                  <div className="font-semibold text-slate-800 mt-1">{selectedItem.warehouse}</div>
+                </div>
+                <div className="p-3 bg-white border border-slate-200 rounded-lg">
+                  <div className="text-slate-400">Lokasi Bin / Rak</div>
+                  <div className="font-semibold text-slate-800 mt-1 font-mono">{selectedItem.rackLocation}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* CPKB Compliance & Traceability Notes */}
+            <div className="p-3.5 bg-blue-50/60 border border-blue-200/80 rounded-xl text-xs text-blue-800 space-y-1">
+              <div className="font-semibold flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                Standar Kepatuhan CPKB / BPOM
+              </div>
+              <p className="text-blue-700 text-[11px] leading-relaxed">
+                Stok material dicatat dengan nomor lot/batch dan tanggal kedaluwarsa. Sistem pengeluaran material ke proses produksi wajib memprioritaskan FEFO (First Expired First Out).
+              </p>
+            </div>
+          </div>
+        )}
+      </DnaDetailDrawer>
     </DnaPageContainer>
   );
 }

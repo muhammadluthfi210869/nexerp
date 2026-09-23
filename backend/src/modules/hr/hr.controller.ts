@@ -15,6 +15,7 @@ import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { ClockOutDto } from './dto/clock-out.dto';
 import { SubjectiveScoreDto } from './dto/subjective-score.dto';
+import { TicketStatus, TicketType } from '@prisma/client';
 
 @ApiTags('hr')
 @ApiBearerAuth()
@@ -54,6 +55,20 @@ export class HrController {
     return this.hrService.deleteEmployee(id);
   }
 
+  // --- CONTRACT EXPIRING AUDIT (BUS-RULE-071) ---
+
+  @Get('contracts/expiring')
+  @ApiOperation({ summary: 'List contracts expiring within 30 days' })
+  getExpiringContracts(@Query('days') days?: string) {
+    return this.hrService.getExpiringContracts(days ? parseInt(days) : 30);
+  }
+
+  @Get('contract-audit')
+  @ApiOperation({ summary: 'Get contract expiry audit' })
+  getContractAudit() {
+    return this.hrService.getContractAudit();
+  }
+
   // --- DASHBOARD ---
 
   @Get('dashboard')
@@ -80,12 +95,6 @@ export class HrController {
     return this.hrService.getDepartmentEmployees(division);
   }
 
-  @Get('contract-audit')
-  @ApiOperation({ summary: 'Get contract expiry audit' })
-  getContractAudit() {
-    return this.hrService.getContractAudit();
-  }
-
   // --- ATTENDANCE ---
 
   @Get('employees/:id/attendance')
@@ -104,6 +113,144 @@ export class HrController {
     return this.hrService.clockOut(dto.employeeId);
   }
 
+  // --- TICKETS (CUTI, IZIN, LEMBUR, REIMBURSE) (BUS-RULE-075) ---
+
+  @Post('tickets')
+  @ApiOperation({ summary: 'Create a request ticket (Leave, Overtime, Reimbursement)' })
+  createTicket(
+    @Body()
+    dto: {
+      employeeId: string;
+      type: TicketType;
+      reason: string;
+      startDate: string;
+      endDate?: string;
+      amount?: string;
+    },
+  ) {
+    return this.hrService.createTicket(dto);
+  }
+
+  @Get('tickets')
+  @ApiOperation({ summary: 'Get all tickets' })
+  getTickets(
+    @Query('employeeId') employeeId?: string,
+    @Query('status') status?: TicketStatus,
+    @Query('type') type?: TicketType,
+  ) {
+    return this.hrService.getTickets({ employeeId, status, type });
+  }
+
+  @Patch('tickets/:id/approve')
+  @ApiOperation({ summary: 'Approve a ticket' })
+  approveTicket(
+    @Param('id') id: string,
+    @Body('authorizedById') authorizedById: string,
+  ) {
+    return this.hrService.approveTicket(id, authorizedById);
+  }
+
+  @Patch('tickets/:id/reject')
+  @ApiOperation({ summary: 'Reject a ticket' })
+  rejectTicket(
+    @Param('id') id: string,
+    @Body('authorizedById') authorizedById: string,
+    @Body('reason') reason?: string,
+  ) {
+    return this.hrService.rejectTicket(id, authorizedById, reason);
+  }
+
+  // --- RECRUITMENT & CANDIDATES ATS (BUS-RULE-115) ---
+
+  @Post('candidates')
+  @ApiOperation({ summary: 'Create a recruitment candidate' })
+  createCandidate(
+    @Body()
+    dto: {
+      name: string;
+      department: string;
+      email: string;
+      phone?: string;
+      cvUrl?: string;
+      cvReviewScore?: number;
+      cvReviewNotes?: string;
+    },
+  ) {
+    return this.hrService.createCandidate(dto);
+  }
+
+  @Get('candidates')
+  @ApiOperation({ summary: 'Get all recruitment candidates' })
+  getCandidates(
+    @Query('stage') stage?: string,
+    @Query('status') status?: string,
+    @Query('department') department?: string,
+  ) {
+    return this.hrService.getCandidates({ stage, status, department });
+  }
+
+  @Get('candidates/:id')
+  @ApiOperation({ summary: 'Get candidate by ID' })
+  getCandidate(@Param('id') id: string) {
+    return this.hrService.getCandidateById(id);
+  }
+
+  @Patch('candidates/:id/stage')
+  @ApiOperation({ summary: 'Update candidate selection stage' })
+  updateCandidateStage(
+    @Param('id') id: string,
+    @Body('stage') stage: string,
+    @Body('rejectionReason') rejectionReason?: string,
+  ) {
+    return this.hrService.updateCandidateStage(id, stage, rejectionReason);
+  }
+
+  // --- TRAINING MANAGEMENT (BUS-RULE-116) ---
+
+  @Post('employees/:id/training')
+  @ApiOperation({ summary: 'Record employee training session' })
+  addEmployeeTraining(
+    @Param('id') id: string,
+    @Body()
+    dto: {
+      trainingType: string;
+      hours: number;
+      goal: string;
+      trainingDate: string;
+      certificateUrl?: string;
+    },
+  ) {
+    return this.hrService.addEmployeeTraining(id, dto);
+  }
+
+  @Get('employees/:id/trainings')
+  @ApiOperation({ summary: 'Get all trainings for an employee' })
+  getEmployeeTrainings(@Param('id') id: string) {
+    return this.hrService.getEmployeeTrainings(id);
+  }
+
+  // --- EMPLOYEE LOANS / KASBON (BUS-RULE-117) ---
+
+  @Post('loans')
+  @ApiOperation({ summary: 'Create an employee loan (kasbon)' })
+  createEmployeeLoan(
+    @Body()
+    dto: {
+      employeeId: string;
+      totalAmount: number;
+      monthlyDeduction: number;
+      reason?: string;
+    },
+  ) {
+    return this.hrService.createEmployeeLoan(dto);
+  }
+
+  @Get('loans')
+  @ApiOperation({ summary: 'Get all employee loans with remaining balance' })
+  getEmployeeLoans(@Query('employeeId') employeeId?: string) {
+    return this.hrService.getEmployeeLoans(employeeId);
+  }
+
   // --- KPI ---
 
   @Get('kpi/employee/:id')
@@ -120,11 +267,21 @@ export class HrController {
     );
   }
 
-  // --- PAYROLL ---
+  // --- PAYROLL & SALARY SLIP (BUS-RULE-117) ---
 
   @Post('payroll/generate')
   generatePayroll(@Body('period') period: string) {
     return this.hrService.generateDraftPayroll(period);
+  }
+
+  @Get('payroll/:id')
+  getPayrollById(@Param('id') id: string) {
+    return this.hrService.getPayrollById(id);
+  }
+
+  @Get('payroll/slip/:itemId')
+  getSalarySlip(@Param('itemId') itemId: string) {
+    return this.hrService.getSalarySlip(itemId);
   }
 
   @Post('payroll/authorize/:id')

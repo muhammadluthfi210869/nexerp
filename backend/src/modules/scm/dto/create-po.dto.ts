@@ -1,4 +1,4 @@
-﻿import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDateString,
   IsNotEmpty,
@@ -49,6 +49,42 @@ export class CreatePurchaseOrderDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @ApiPropertyOptional()
+  @IsUUID()
+  @IsOptional()
+  prId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  discountManual?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  discount?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  discountRounding?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  shippingCost?: number;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  signatureUrl?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  priceOverrideReason?: string;
+
+  @ApiPropertyOptional()
+  @IsUUID()
+  @IsOptional()
+  organizationId?: string;
 
   @ApiPropertyOptional()
   @IsString()

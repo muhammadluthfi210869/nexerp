@@ -82,3 +82,13 @@ export {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 export { DnaButton as Button } from "./DnaButton";
+export { buttonVariants } from "@/components/ui/button";
+export { badgeVariants } from "@/components/ui/badge";
+export { Slider } from "@/components/ui/slider";
+export { EmptyState, ErrorFallback } from "@/components/ui/empty-state";
+export { LoadingSkeleton, CardSkeleton } from "@/components/ui/loading-skeleton";
+export { Toaster } from "@/components/ui/sonner";
+export { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+export { InsightCallout } from "@/components/ui/InsightCallout";
+export { GlobalAlert } from "@/components/ui/GlobalAlert";
+export { StatusPill } from "@/components/ui/StatusPill";

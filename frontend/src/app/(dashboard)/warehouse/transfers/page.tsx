@@ -14,6 +14,7 @@ import {
   Trash2,
   Truck,
   Warehouse,
+  Loader2,
 } from "lucide-react";
 import {
   DnaInput,
@@ -31,11 +32,11 @@ import {
 } from "@/components/dna";
 import { toast } from "sonner";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Dialog } from "@/components/ui/dialog";
-import { DialogContent } from "@/components/ui/dialog";
-import { DialogFooter } from "@/components/ui/dialog";
-import { DialogHeader } from "@/components/ui/dialog";
-import { DialogTitle } from "@/components/ui/dialog";
+import { Dialog } from "@/components/dna";
+import { DialogContent } from "@/components/dna";
+import { DialogFooter } from "@/components/dna";
+import { DialogHeader } from "@/components/dna";
+import { DialogTitle } from "@/components/dna";
 
 export default function TransferOrdersPage() {
   const queryClient = useQueryClient();
@@ -450,31 +451,5 @@ export default function TransferOrdersPage() {
         </DialogContent>
       </Dialog>
     </DashboardShell>
-  );
-}
-
-function Loader2(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 2v4" />
-      <path d="m16.2 4.2 2.8 2.8" />
-      <path d="M18 12h4" />
-      <path d="m16.2 19.8 2.8-2.8" />
-      <path d="M12 18v4" />
-      <path d="m4.8 19.8 2.8-2.8" />
-      <path d="M2 12h4" />
-      <path d="m4.8 4.2 2.8 2.8" />
-    </svg>
   );
 }
