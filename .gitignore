@@ -31,6 +31,7 @@ omnicrm-*.zip
 *.log
 backend_error.txt
 backend_out.txt
+backend/logs/
 
 # IDE / Tooling
 .vscode/
