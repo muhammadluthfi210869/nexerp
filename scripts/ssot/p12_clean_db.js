@@ -30,7 +30,7 @@ const NAMESPACE_COLUMNS = [
   { schema: 'public', table: 'material_requisitions', column: 'reqNumber' },
   { schema: 'public', table: 'material_items', column: 'name' },
   { schema: 'public', table: 'sales_leads', column: 'clientName' },
-  { schema: 'public', table: 'bussdev_staff', column: 'name' },
+  { schema: 'public', table: 'bussdev_staffs', column: 'name' },
   { schema: 'public', table: 'sales_orders', column: 'orderNumber' },
   { schema: 'public', table: 'machines', column: 'name' },
   { schema: 'public', table: 'users', column: 'email' },
@@ -39,20 +39,24 @@ const NAMESPACE_COLUMNS = [
 async function countNamespaceRows(client) {
   let total = 0;
   const offenders = [];
+  const broken = [];
   for (const col of NAMESPACE_COLUMNS) {
+    const label = `${col.schema}.${col.table}.${col.column}`;
     try {
       const r = await client.query(
-        `SELECT count(*)::int AS n FROM ${col.schema}.${col.table} WHERE ${col.column} LIKE $1`,
+        `SELECT count(*)::int AS n FROM ${col.schema}.${col.table} WHERE "${col.column}" LIKE $1`,
         [NAMESPACE_PATTERN],
       );
       const n = r.rows[0]?.n ?? 0;
-      if (n > 0) offenders.push(`${col.schema}.${col.table}.${col.column}: ${n}`);
+      if (n > 0) offenders.push(`${label}: ${n}`);
       total += n;
-    } catch {
-      // Table or column absent in schema - skip silently
+    } catch (e) {
+      // A probe that cannot run reports nothing. Swallowing it lets this gate
+      // print "0 residue" while the rows it was watching stay in the table.
+      broken.push(`${label}: ${e.message}`);
     }
   }
-  return { total, offenders };
+  return { total, offenders, broken };
 }
 
 async function listDisposableDatabases(admin) {
@@ -61,8 +65,11 @@ async function listDisposableDatabases(admin) {
       `SELECT datname FROM pg_database WHERE datname LIKE 'nex_p12_%'`,
     );
     return r.rows.map((row) => row.datname);
-  } catch {
-    return [];
+  } catch (e) {
+    // Returning [] here would say "no disposable databases remain" about a
+    // catalogue we never managed to read. Report the failure and let the
+    // caller fail the gate.
+    throw new Error(`could not list disposable databases: ${e.message}`);
   }
 }
 
@@ -80,7 +87,13 @@ async function main() {
   const isApply = process.argv.includes('--apply');
 
   try {
-    const { total, offenders } = await countNamespaceRows(client);
+    const { total, offenders, broken } = await countNamespaceRows(client);
+
+    if (broken.length > 0) {
+      console.error(`P12 clean-db: FAIL - ${broken.length} probe(s) could not run, residue is UNKNOWN not zero`);
+      for (const b of broken) console.error(`  - ${b}`);
+      process.exit(1);
+    }
 
     const adminUrl = process.env.DATABASE_ADMIN_URL || url.replace(/\/[^/]+$/, '/postgres');
     adminClient = new Client({ connectionString: adminUrl });
@@ -89,7 +102,10 @@ async function main() {
       await adminClient.connect();
       disposableDbs = await listDisposableDatabases(adminClient);
     } catch (e) {
-      console.warn('P12 clean-db: could not connect admin client for DB-level check:', e.message);
+      // The server-level half of the answer was not obtained. Reporting a PASS
+      // here would claim a clean server on the strength of a probe that never ran.
+      console.error(`P12 clean-db: FAIL - server-level residue is UNKNOWN: ${e.message}`);
+      process.exit(1);
     }
 
     if (total === 0 && disposableDbs.length === 0) {
@@ -112,19 +128,36 @@ async function main() {
 
     // Apply cleanup
     console.log('P12 clean-db: cleaning up residue rows...');
-    await client.query(`DELETE FROM material_requisition_items WHERE id IN (SELECT id FROM material_requisition_items WHERE notes LIKE 'nex_p12_%')`).catch(() => {});
-    await client.query(`DELETE FROM material_requisition_headers WHERE reqNumber LIKE 'nex_p12_%'`).catch(() => {});
-    await client.query(`DELETE FROM production_step_details WHERE id IN (SELECT id FROM production_step_details WHERE notes LIKE 'nex_p12_%')`).catch(() => {});
-    await client.query(`DELETE FROM production_schedules WHERE scheduleNumber LIKE 'nex_p12_%'`).catch(() => {});
-    await client.query(`DELETE FROM material_requisitions WHERE reqNumber LIKE 'nex_p12_%'`).catch(() => {});
-    await client.query(`DELETE FROM work_orders WHERE woNumber LIKE 'nex_p12_%'`).catch(() => {});
-    await client.query(`DELETE FROM production_plans WHERE batchNo LIKE 'nex_p12_%'`).catch(() => {});
-    await client.query(`DELETE FROM machines WHERE name LIKE 'nex_p12_%'`).catch(() => {});
-    await client.query(`DELETE FROM material_items WHERE name LIKE 'nex_p12_%'`).catch(() => {});
-    await client.query(`DELETE FROM sales_orders WHERE orderNumber LIKE 'nex_p12_%'`).catch(() => {});
-    await client.query(`DELETE FROM sales_leads WHERE clientName LIKE 'nex_p12_%'`).catch(() => {});
-    await client.query(`DELETE FROM bussdev_staff WHERE name LIKE 'nex_p12_%'`).catch(() => {});
-    await client.query(`DELETE FROM users WHERE email LIKE 'nex_p12_%' OR email LIKE '%@nex-p12.test'`).catch(() => {});
+    const cleanupErrors = [];
+    const cleanup = [
+      `DELETE FROM material_requisition_items WHERE id IN (SELECT id FROM material_requisition_items WHERE notes LIKE 'nex_p12_%')`,
+      `DELETE FROM material_requisition_headers WHERE reqNumber LIKE 'nex_p12_%'`,
+      `DELETE FROM production_step_details WHERE id IN (SELECT id FROM production_step_details WHERE notes LIKE 'nex_p12_%')`,
+      `DELETE FROM production_schedules WHERE scheduleNumber LIKE 'nex_p12_%'`,
+      `DELETE FROM material_requisitions WHERE reqNumber LIKE 'nex_p12_%'`,
+      `DELETE FROM work_orders WHERE woNumber LIKE 'nex_p12_%'`,
+      `DELETE FROM production_plans WHERE batchNo LIKE 'nex_p12_%'`,
+      `DELETE FROM machines WHERE name LIKE 'nex_p12_%'`,
+      `DELETE FROM material_items WHERE name LIKE 'nex_p12_%'`,
+      `DELETE FROM sales_orders WHERE orderNumber LIKE 'nex_p12_%'`,
+      `DELETE FROM sales_leads WHERE clientName LIKE 'nex_p12_%'`,
+      `DELETE FROM bussdev_staffs WHERE name LIKE 'nex_p12_%'`,
+      `DELETE FROM users WHERE email LIKE 'nex_p12_%' OR email LIKE '%@nex-p12.test'`,
+    ];
+    for (const q of cleanup) {
+      try {
+        await client.query(q);
+      } catch (e) {
+        // A cleanup that did not run is residue the check above already reported.
+        // Swallowing it would let the gate exit 0 on a dirty database.
+        cleanupErrors.push(`${q.slice(0, 90)}… → ${e.message}`);
+      }
+    }
+    if (cleanupErrors.length > 0) {
+      console.error(`P12 clean-db: FAIL - ${cleanupErrors.length} cleanup statement(s) did not run`);
+      for (const e of cleanupErrors) console.error(`  - ${e}`);
+      process.exit(1);
+    }
 
     console.log('P12 clean-db: cleanup completed.');
     process.exit(0);

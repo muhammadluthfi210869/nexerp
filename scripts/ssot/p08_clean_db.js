@@ -54,20 +54,25 @@ const NAMESPACE_COLUMNS = [
 async function countNamespaceRows(client) {
   let total = 0;
   const offenders = [];
+  const broken = [];
   for (const col of NAMESPACE_COLUMNS) {
+    const label = `${col.schema}.${col.table}.${col.column}`;
     try {
       const r = await client.query(
-        `SELECT count(*)::int AS n FROM ${col.schema}.${col.table} WHERE ${col.column} LIKE $1`,
+        `SELECT count(*)::int AS n FROM ${col.schema}.${col.table} WHERE "${col.column}" LIKE $1`,
         [NAMESPACE_PATTERN],
       );
       const n = r.rows[0]?.n ?? 0;
-      if (n > 0) offenders.push(`${col.schema}.${col.table}.${col.column}: ${n}`);
+      if (n > 0) offenders.push(`${label}: ${n}`);
       total += n;
-    } catch {
-      // Table or column absent in the current schema — skip silently.
+    } catch (e) {
+      // A probe that cannot run reports nothing. Skipping it silently let this
+      // gate print "0 residue" while the row it was watching sat in the table.
+      // Record it and fail the gate instead.
+      broken.push(`${label}: ${e.message}`);
     }
   }
-  return { total, offenders };
+  return { total, offenders, broken };
 }
 
 async function listDisposableDatabases(admin) {
@@ -90,6 +95,12 @@ async function main() {
   await client.connect();
   const residue = await countNamespaceRows(client);
   await client.end();
+
+  if (residue.broken.length > 0) {
+    console.error(`[P08] FAIL: ${residue.broken.length} probe(s) could not run — residue is UNKNOWN, not zero`);
+    for (const b of residue.broken) console.error(`  - ${b}`);
+    process.exit(1);
+  }
 
   if (residue.total > 0) {
     console.error(`[P08] FAIL: ${residue.total} P08-namespace row(s) remain`);

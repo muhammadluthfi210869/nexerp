@@ -30,16 +30,16 @@ const PROTECTED = new Set([
 // is { schema, table, column }. Namespaced rows are deleted by the test
 // itself; this script only verifies the cleanup was complete.
 const NAMESPACE_COLUMNS = [
-  { schema: 'public', table: 'lead_captures', column: 'tracking_code' },
+  { schema: 'public', table: 'lead_captures', column: 'trackingCode' },
   { schema: 'public', table: 'lead_messages', column: 'phone' },
   { schema: 'public', table: 'lead_attributes', column: 'key' },
-  { schema: 'public', table: 'sales_leads', column: 'client_name' },
-  { schema: 'public', table: 'sales_leads', column: 'contact_info' },
+  { schema: 'public', table: 'sales_leads', column: 'clientName' },
+  { schema: 'public', table: 'sales_leads', column: 'contactInfo' },
   { schema: 'public', table: 'lead_activities', column: 'notes' },
   { schema: 'public', table: 'lead_timeline_logs', column: 'notes' },
   { schema: 'public', table: 'crm_leads', column: 'phone' },
-  { schema: 'public', table: 'crm_leads', column: 'email' },
-  { schema: 'public', table: 'guestbook_events', column: 'event_key' },
+  { schema: 'public', table: 'crm_leads', column: 'displayName' },
+  { schema: 'public', table: 'guestbook_events', column: 'approverNote' },
   { schema: 'public', table: 'marketing_tasks', column: 'title' },
   { schema: 'public', table: 'round_robin_agents', column: 'name' },
   { schema: 'public', table: 'users', column: 'email' },
@@ -49,22 +49,28 @@ async function countNamespaceRows(client) {
   const PATTERN = 'nex_p07_%';
   let total = 0;
   const offenders = [];
+  const broken = [];
   for (const col of NAMESPACE_COLUMNS) {
+    const label = `${col.schema}.${col.table}.${col.column}`;
     try {
       const r = await client.query(
-        `SELECT count(*)::int AS n FROM ${col.schema}.${col.table} WHERE ${col.column} LIKE $1`,
+        `SELECT count(*)::int AS n FROM ${col.schema}.${col.table} WHERE "${col.column}" LIKE $1`,
         [PATTERN],
       );
       const n = r.rows[0]?.n ?? 0;
       if (n > 0) {
-        offenders.push(`${col.schema}.${col.table}.${col.column}: ${n}`);
+        offenders.push(`${label}: ${n}`);
       }
       total += n;
-    } catch {
-      // Table missing in the current schema — skip silently.
+    } catch (e) {
+      // A probe that cannot run reports nothing. Swallowing it would let this
+      // gate print "0 residue" while the row it was watching sits in the table,
+      // which is exactly how a real `payrolls` leak passed for a whole phase.
+      // Record it and fail the gate instead.
+      broken.push(`${label}: ${e.message}`);
     }
   }
-  return { total, offenders };
+  return { total, offenders, broken };
 }
 
 async function listDisposableDatabases(admin) {
@@ -88,6 +94,12 @@ async function main() {
   const residue = await countNamespaceRows(client);
   await client.end();
 
+  if (residue.broken.length > 0) {
+    console.error(`[P07] FAIL: ${residue.broken.length} probe(s) could not run — residue is UNKNOWN, not zero`);
+    for (const b of residue.broken) console.error(`  - ${b}`);
+    process.exit(1);
+  }
+
   if (residue.total > 0) {
     console.error(`[P07] FAIL: ${residue.total} P07-namespace row(s) remain`);
     for (const o of residue.offenders) console.error(`  - ${o}`);
@@ -104,13 +116,16 @@ async function main() {
   await admin.end();
 
   if (dbs.length > 0) {
-    console.warn(`[P07] ${dbs.length} nex_p07_* database(s) exist on the server`);
-    for (const n of dbs) console.warn(`  - ${n}`);
-    console.warn(`[P07] These are NOT dropped by this script (may belong to other concurrent runs).`);
-  } else {
-    console.log(`[P07] server residue: 0 nex_p07_* databases`);
+    // A leftover disposable database is residue like any other. Warning and
+    // exiting 0 meant `verify:p07` could be green while the server kept the
+    // database the phase was supposed to have dropped.
+    console.error(`[P07] FAIL: ${dbs.length} nex_p07_* database(s) remain on the server`);
+    for (const n of dbs) console.error(`  - ${n}`);
+    console.error(`[P07] This script does not drop them (they may belong to a concurrent run) — drop or rename, then re-run.`);
+    process.exit(1);
   }
 
+  console.log(`[P07] server residue: 0 nex_p07_* databases`);
   console.log(`[P07] cleanup PASS`);
 }
 

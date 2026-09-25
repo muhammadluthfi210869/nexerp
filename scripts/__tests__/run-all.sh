@@ -52,9 +52,20 @@ run_test "db-snapshot-script-exists"                 "$SCRIPT_DIR/db-snapshot.te
 run_test "ci-has-ghcr-push-images"                   "$SCRIPT_DIR/ci-ghcr.test.sh"
 run_test "init-db-idempotent-on-restart"             "$SCRIPT_DIR/init-db-idempotency.test.sh"
 run_test "contracts-mgmt-task-and-routes"            "$SCRIPT_DIR/contracts-mgmt-task.test.sh"
+run_test "validate-env-ci-checkout-safe"             "$SCRIPT_DIR/validate-env-ci-checkout.test.sh"
 
 # Phase 5 — Top-level docs
 run_test "docs-link-integrity"                       "$SCRIPT_DIR/docs-link-integrity.test.sh"
+
+# Phase 6 — Phase-gate integrity (a gate that cannot detect residue is not a gate)
+run_test "clean-db-no-phantom-tables"                "$SCRIPT_DIR/clean-db-phantom-tables.test.sh"
+run_test "gate-tables-are-migration-created"          "$SCRIPT_DIR/gate-tables-are-migration-created.test.sh"
+# A residue gate that reports "clean" without having looked is worse than none.
+run_test "clean-db-gates-fail-closed"                 "$SCRIPT_DIR/clean-db-gates-fail-closed.test.sh"
+run_test "clean-db-admin-connection"                  "$SCRIPT_DIR/clean-db-admin-connection.test.sh"
+
+# Phase 2 — Fabrication guards (mock data cannot reappear silently)
+run_test "no-fabricated-mock-page-guards"            "$SCRIPT_DIR/fabrication-guards.test.sh"
 
 echo ""
 echo "═══════════════════════════════════════════════════════════════"

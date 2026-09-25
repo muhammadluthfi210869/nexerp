@@ -27,11 +27,11 @@ const NAMESPACE_PATTERN = 'nex_p10_%';
 const NAMESPACE_COLUMNS = [
   { schema: 'public', table: 'purchase_orders', column: 'poNumber' },
   { schema: 'public', table: 'purchase_requests', column: 'requestNumber' },
-  { schema: 'public', table: 'purchase_invoices', column: 'invoiceNumber' },
-  { schema: 'public', table: 'purchase_down_payments', column: 'dpNumber' },
-  { schema: 'public', table: 'purchase_payments', column: 'paymentNumber' },
+  { schema: 'public', table: 'bills', column: 'billNumber' },
+  { schema: 'public', table: 'down_payments', column: 'dpNumber' },
+  { schema: 'public', table: 'ap_payments', column: 'paymentNumber' },
   { schema: 'public', table: 'purchase_returns', column: 'returnNumber' },
-  { schema: 'public', table: 'inbound_shipments', column: 'inboundNumber' },
+  { schema: 'public', table: 'warehouse_inbounds', column: 'inboundNumber' },
   { schema: 'public', table: 'suppliers', column: 'name' },
   { schema: 'public', table: 'material_items', column: 'name' },
   { schema: 'public', table: 'warehouses', column: 'name' },
@@ -41,20 +41,24 @@ const NAMESPACE_COLUMNS = [
 async function countNamespaceRows(client) {
   let total = 0;
   const offenders = [];
+  const broken = [];
   for (const col of NAMESPACE_COLUMNS) {
+    const label = `${col.schema}.${col.table}.${col.column}`;
     try {
       const r = await client.query(
-        `SELECT count(*)::int AS n FROM ${col.schema}.${col.table} WHERE ${col.column} LIKE $1`,
+        `SELECT count(*)::int AS n FROM ${col.schema}.${col.table} WHERE "${col.column}" LIKE $1`,
         [NAMESPACE_PATTERN],
       );
       const n = r.rows[0]?.n ?? 0;
-      if (n > 0) offenders.push(`${col.schema}.${col.table}.${col.column}: ${n}`);
+      if (n > 0) offenders.push(`${label}: ${n}`);
       total += n;
-    } catch {
-      // Table or column absent in schema - skip silently
+    } catch (e) {
+      // A probe that cannot run reports nothing. Swallowing it lets this gate
+      // print "0 residue" while the rows it was watching stay in the table.
+      broken.push(`${label}: ${e.message}`);
     }
   }
-  return { total, offenders };
+  return { total, offenders, broken };
 }
 
 async function listDisposableDatabases(admin) {
@@ -63,8 +67,11 @@ async function listDisposableDatabases(admin) {
       `SELECT datname FROM pg_database WHERE datname LIKE 'nex_p10_%'`,
     );
     return r.rows.map((row) => row.datname);
-  } catch {
-    return [];
+  } catch (e) {
+    // Returning [] here would say "no disposable databases remain" about a
+    // catalogue we never managed to read. Report the failure and let the
+    // caller fail the gate.
+    throw new Error(`could not list disposable databases: ${e.message}`);
   }
 }
 
@@ -75,7 +82,7 @@ async function main() {
     process.exit(1);
   }
 
-  const applyClean = process.argv.includes('--apply') || process.argv.includes('--clean') || true;
+  const applyClean = process.argv.includes('--apply') || process.argv.includes('--clean');
 
   // 1. No namespace residue in test database.
   const client = new Client({ connectionString: url });
@@ -85,9 +92,9 @@ async function main() {
   if (applyClean) {
     const cleanupQueries = [
       // 1. Payment allocations & Payments
-      `DELETE FROM public.ap_payment_allocations WHERE "paymentId" IN (SELECT id FROM public.payments WHERE "reference" LIKE 'PAY-P10-%' OR "reference" LIKE 'nex_p10_%')`,
-      `DELETE FROM public.payments WHERE "reference" LIKE 'PAY-P10-%' OR "reference" LIKE 'nex_p10_%'`,
-      `DELETE FROM public.payments WHERE "invoiceId" IN (SELECT id FROM public.bills WHERE "vendorId" IN (SELECT id FROM public.suppliers WHERE "name" LIKE 'nex_p10_%'))`,
+      `DELETE FROM public.bill_allocations WHERE "paymentId" IN (SELECT id FROM public.ap_payments WHERE "paymentNumber" LIKE 'PAY-P10-%' OR "paymentNumber" LIKE 'nex_p10_%')`,
+      `DELETE FROM public.ap_payments WHERE "paymentNumber" LIKE 'PAY-P10-%' OR "paymentNumber" LIKE 'nex_p10_%'`,
+      `DELETE FROM public.ap_payments WHERE "vendorId" IN (SELECT id FROM public.suppliers WHERE "name" LIKE 'nex_p10_%')`,
 
       // 2. Down payments
       `DELETE FROM public.down_payments WHERE "dpNumber" LIKE 'DPB-P10-%' OR "dpNumber" LIKE 'nex_p10_%' OR "vendorId" IN (SELECT id FROM public.suppliers WHERE "name" LIKE 'nex_p10_%')`,
@@ -97,7 +104,7 @@ async function main() {
       `DELETE FROM public.purchase_returns WHERE "returnNumber" LIKE 'RET-P10-%' OR "returnNumber" LIKE 'nex_p10_%' OR "supplierId" IN (SELECT id FROM public.suppliers WHERE "name" LIKE 'nex_p10_%')`,
 
       // 4. Bills & Bill items
-      `DELETE FROM public.bill_items WHERE "billId" IN (SELECT id FROM public.bills WHERE "billNumber" LIKE 'INV-P10-%' OR "billNumber" LIKE 'nex_p10_%' OR "vendorId" IN (SELECT id FROM public.suppliers WHERE "name" LIKE 'nex_p10_%'))`,
+      `DELETE FROM public.bill_line_items WHERE "billId" IN (SELECT id FROM public.bills WHERE "billNumber" LIKE 'INV-P10-%' OR "billNumber" LIKE 'nex_p10_%' OR "vendorId" IN (SELECT id FROM public.suppliers WHERE "name" LIKE 'nex_p10_%'))`,
       `DELETE FROM public.bills WHERE "billNumber" LIKE 'INV-P10-%' OR "billNumber" LIKE 'nex_p10_%' OR "vendorId" IN (SELECT id FROM public.suppliers WHERE "name" LIKE 'nex_p10_%')`,
 
       // 5. Inbounds & Inbound items
@@ -127,17 +134,31 @@ async function main() {
       `DELETE FROM public.notifications WHERE "userId" IN (SELECT id FROM public.users WHERE "email" LIKE '%nex-p10.test' OR "email" LIKE 'nex_p10_%')`,
       `DELETE FROM public.users WHERE "email" LIKE '%nex-p10.test' OR "email" LIKE 'nex_p10_%'`,
     ];
+    const cleanupErrors = [];
     for (const q of cleanupQueries) {
       try {
         await client.query(q);
       } catch (e) {
-        // Silently continue for optional tables
+        // Not optional any more: a cleanup that did not run is residue the check
+        // below would then have to explain. Record it and fail instead.
+        cleanupErrors.push(`${q.slice(0, 90)}… → ${e.message}`);
       }
+    }
+    if (cleanupErrors.length > 0) {
+      console.error(`[P10] FAIL: ${cleanupErrors.length} cleanup statement(s) did not run`);
+      for (const e of cleanupErrors) console.error(`  - ${e}`);
+      process.exit(1);
     }
   }
 
   const residue = await countNamespaceRows(client);
   await client.end();
+
+  if (residue.broken.length > 0) {
+    console.error(`[P10] FAIL: ${residue.broken.length} probe(s) could not run — residue is UNKNOWN, not zero`);
+    for (const b of residue.broken) console.error(`  - ${b}`);
+    process.exit(1);
+  }
 
   if (residue.total > 0) {
     console.error(`[P10] FAIL: ${residue.total} P10-namespace row(s) remain`);
@@ -162,7 +183,10 @@ async function main() {
     }
     console.log('[P10] server residue: 0 nex_p10_* databases');
   } catch (e) {
-    console.log('[P10] server residue check skipped');
+    // The server-level half of the answer was not obtained. Continuing would
+    // print "cleanup verified" on the strength of a probe that never ran.
+    console.error(`[P10] FAIL: server residue is UNKNOWN — ${e.message}`);
+    process.exit(1);
   }
 
   console.log('[P10] cleanup verified: no namespace rows, no residue databases');
