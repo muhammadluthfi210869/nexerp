@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-26T15:59:43.815Z",
+  "generated_at": "2026-09-26T16:28:25.390Z",
   "phase": "P02",
   "passed_tests": 14,
   "total_tests": 14,
@@ -67,9 +67,9 @@
     "caller_import_registration_scan": {
       "status": "PASS",
       "backend_controllers_registered": 114,
-      "backend_services_registered": 144,
+      "backend_services_registered": 145,
       "backend_modules_registered": 77,
-      "reachable_count": 334,
+      "reachable_count": 335,
       "dead_count": 1,
       "errors": []
     },

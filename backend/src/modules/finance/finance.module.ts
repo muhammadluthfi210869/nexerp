@@ -1,5 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { FinanceService } from './finance.service';
+import { FinanceReportService } from './finance-report.service';
 import { FinanceController } from './finance.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { ValuationService } from './valuation.service';
@@ -74,7 +75,13 @@ import { BillMatchResultsModule } from './bill-match-results/bill-match-results.
     InventoryOwnershipsModule,
     BillMatchResultsModule,
   ],
-  providers: [FinanceService, ValuationService, CashService, JournalEngineService],
+  providers: [
+    FinanceService,
+    FinanceReportService,
+    ValuationService,
+    CashService,
+    JournalEngineService,
+  ],
   controllers: [FinanceController],
   exports: [
     FinanceService,

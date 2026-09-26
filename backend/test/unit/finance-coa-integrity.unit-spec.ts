@@ -23,6 +23,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Test, TestingModule } from '@nestjs/testing';
 import { FinanceService } from '../../src/modules/finance/finance.service';
+import { FinanceReportService } from '../../src/modules/finance/finance-report.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
 import { IdGeneratorService } from '../../src/modules/system/id-generator.service';
 import { ScmService } from '../../src/modules/scm/services/scm.service';
@@ -101,6 +102,10 @@ describe('FinanceService — COA integrity (Fase 2)', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FinanceService,
+        // Fase 3C: FinanceService delegates the six report methods here. The real
+        // class is provided (not a stub) so the getProfitLoss assertions below
+        // still run the actual statement builder against the mock prisma.
+        FinanceReportService,
         { provide: PrismaService, useValue: prisma },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
         { provide: IdGeneratorService, useValue: { generateId: jest.fn().mockResolvedValue('JRN-1') } },

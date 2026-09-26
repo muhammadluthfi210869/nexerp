@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FinanceService } from '../../src/modules/finance/finance.service';
+import { FinanceReportService } from '../../src/modules/finance/finance-report.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
 import { IdGeneratorService } from '../../src/modules/system/id-generator.service';
 import { ScmService } from '../../src/modules/scm/services/scm.service';
@@ -54,6 +55,7 @@ describe('FinanceService — Unit', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FinanceService,
+        FinanceReportService, // Fase 3C — the six report methods now live here
         { provide: PrismaService, useValue: mockPrisma },
         { provide: EventEmitter2, useValue: mockEventEmitter },
         { provide: IdGeneratorService, useValue: mockIdGenerator },

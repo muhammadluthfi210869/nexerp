@@ -55,8 +55,8 @@
       "backend_controllers": 114,
       "backend_controllers_reachable": 114,
       "backend_controllers_dead": 0,
-      "backend_services": 144,
-      "backend_services_reachable": 143,
+      "backend_services": 145,
+      "backend_services_reachable": 144,
       "backend_services_dead": 1,
       "backend_modules": 77,
       "backend_modules_reachable": 77,
@@ -34852,6 +34852,15 @@
     {
       "file": "backend/src/modules/finance/down-payments/down-payments.service.ts",
       "provider_symbol": "DownPaymentsService",
+      "domain": "finance",
+      "owner": "Finance Team",
+      "rationale": "Business service encapsulated in finance module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/finance/finance-report.service.ts",
+      "provider_symbol": "FinanceReportService",
       "domain": "finance",
       "owner": "Finance Team",
       "rationale": "Business service encapsulated in finance module.",
