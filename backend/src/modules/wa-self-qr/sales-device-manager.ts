@@ -305,7 +305,7 @@ export class SalesDeviceManager implements OnModuleInit {
     transport.on('authenticated', () => {
       dev.status = 'PAIRING';
     });
-    transport.on('ready', async () => {
+    const handleReady = async (): Promise<void> => {
       const wid = transport.getAuthenticatedWid();
       // Hard gate: SESSION_IDENTITY must equal the device's expected WID.
       const expected = `${dev.normalizedPhone}@c.us`;
@@ -334,6 +334,11 @@ export class SalesDeviceManager implements OnModuleInit {
           data: { status: 'READY', pairedAt: dev.pairedAt, lastReadyAt: new Date() },
         });
       }
+    };
+    // The listener signature returns void; the DB write stays awaited inside
+    // handleReady.
+    transport.on('ready', () => {
+      void handleReady();
     });
     transport.on('disconnected', (info: { reason: string }) => {
       dev.lastError = info.reason ?? 'disconnected';

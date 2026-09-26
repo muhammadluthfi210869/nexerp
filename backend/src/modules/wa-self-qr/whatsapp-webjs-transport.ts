@@ -104,17 +104,23 @@ export class WhatsappWebJsTransport extends EventEmitter {
     return all.filter((c: WwebChat) => !c.isGroup);
   }
 
+  // Persist QR to PNG for operator scan-with-WhatsApp-Business flow.
+  // PNG NEVER appears in HTTP response — only its PATH.
+  private async persistQr(qr: string): Promise<void> {
+    const outPath = this.opts.qrOutPath ?? path.join(this.opts.authDir, 'qr.png');
+    try {
+      await QRCode.toFile(outPath, qr);
+    } catch {
+      /* swallow */
+    }
+    this.emit('qr', { qr, qrPngPath: outPath });
+  }
+
   private wire(): void {
-    this.client.on('qr', async (qr: string) => {
-      // Persist QR to PNG for operator scan-with-WhatsApp-Business flow.
-      // PNG NEVER appears in HTTP response — only its PATH.
-      const outPath = this.opts.qrOutPath ?? path.join(this.opts.authDir, 'qr.png');
-      try {
-        await QRCode.toFile(outPath, qr);
-      } catch {
-        /* swallow */
-      }
-      this.emit('qr', { qr, qrPngPath: outPath });
+    // The listener signature returns void; the PNG write stays awaited inside
+    // persistQr so 'qr' is still emitted only after the file exists.
+    this.client.on('qr', (qr: string) => {
+      void this.persistQr(qr);
     });
 
     this.client.on('authenticated', () => {

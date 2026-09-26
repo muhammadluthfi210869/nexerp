@@ -82,6 +82,8 @@ run_test "lockfile-in-sync"                          "$SCRIPT_DIR/lockfile-in-sy
 run_test "ci-prisma-cwd"                             "$SCRIPT_DIR/ci-prisma-cwd.test.sh"
 # Backend reachability — one Nest root marks the whole WA self-QR tree as DEAD_CODE
 run_test "nest-multi-root-reachability"              "$SCRIPT_DIR/nest-multi-root-reachability.test.sh"
+# Backend lint — P03 refuses to certify over an eslint error, and CI only reaches it late
+run_test "backend-lint-clean"                        "$SCRIPT_DIR/backend-lint-clean.test.sh"
 
 echo ""
 echo "═══════════════════════════════════════════════════════════════"

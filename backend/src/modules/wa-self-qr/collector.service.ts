@@ -208,9 +208,9 @@ export class CollectorService implements OnModuleInit {
       unresolvedIdentityCount: await this.prisma.selfQrNormalizedEvent.count({
         where: { deviceId, identityStatus: 'UNRESOLVED_LID' },
       }),
-      oldestFound: oldestNewest._min.whatsappTimestamp as Date | null,
-      newestFound: oldestNewest._max.whatsappTimestamp as Date | null,
-      duplicateSuppressedCount: (dupCount._sum.duplicatesSkipped ?? 0) as number,
+      oldestFound: oldestNewest._min.whatsappTimestamp,
+      newestFound: oldestNewest._max.whatsappTimestamp,
+      duplicateSuppressedCount: dupCount._sum.duplicatesSkipped ?? 0,
       historySyncRunCount: runs.length,
     };
   }
