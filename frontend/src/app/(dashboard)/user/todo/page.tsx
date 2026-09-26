@@ -28,9 +28,9 @@ import {
   DnaTableRow,
   DnaTh,
   DnaTd,
+  DashboardCard,
 } from "@/components/dna";
 import { Badge } from "@/components/dna";
-import { DashboardCard } from "@/components/dna/DashboardCard";
 import {
   DropdownMenu,
   DropdownMenuContent,

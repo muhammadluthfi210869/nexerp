@@ -63,7 +63,6 @@ import {
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DataCard, TableWrapper, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
-import { KpiCard } from "@/components/dna/KpiCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/dna";
 import { Button } from "@/components/dna";
 import {
@@ -72,6 +71,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
+  KpiCard,
 } from "@/components/dna";
 
 

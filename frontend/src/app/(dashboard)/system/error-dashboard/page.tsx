@@ -11,6 +11,7 @@ import {
   DnaTableRow,
   DnaTh,
   DnaTd,
+  KpiCard,
 } from "@/components/dna";
 import {
   ShieldAlert,
@@ -29,7 +30,6 @@ import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
 import { DnaBadge, DnaButton, TableWrapper } from "@/components/dna";
-import { KpiCard } from "@/components/dna/KpiCard";
 
 const LEVEL_CONFIG: Record<string, { icon: any; color: string; bg: string; label: string }> = {
   fatal: { icon: ShieldAlert, color: "text-red-600", bg: "bg-red-50", label: "Fatal" },

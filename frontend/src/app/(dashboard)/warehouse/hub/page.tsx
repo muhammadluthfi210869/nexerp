@@ -11,6 +11,10 @@ import {
   DnaTableRow,
   DnaTh,
   DnaTd,
+  TableWrapper,
+  DnaBadge,
+  StatCard,
+  DataCard,
 } from "@/components/dna";
 import {
   Sheet,
@@ -35,10 +39,6 @@ import {
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DataField } from "./helpers";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { StatCard } from "@/components/dna/StatCard";
-import { DataCard } from "@/components/dna/DataCard";
 
 interface MaterialCatalogItem {
   id: string;

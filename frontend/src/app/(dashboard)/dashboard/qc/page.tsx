@@ -8,7 +8,9 @@ import {
   TableCell, 
   TableHead, 
   TableHeader, 
-  TableRow 
+  TableRow,
+  KpiCard,
+  DnaBadge,
 } from "@/components/dna";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/dna";
 import { Button } from "@/components/dna";
@@ -20,8 +22,6 @@ import {
   Target,
   Calendar
 } from "lucide-react";
-import { KpiCard } from "@/components/dna/KpiCard";
-import { DnaBadge } from "@/components/dna/DnaBadge";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/dna";

@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/dna";
 import { Card } from "@/components/dna";
 import { Input } from "@/components/dna";
-import { DnaBadge } from "@/components/dna/DnaBadge";
+import { DnaBadge } from "@/components/dna";
 
 export interface QcParameter {
   label: string;

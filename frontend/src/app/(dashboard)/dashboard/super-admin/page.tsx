@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { KpiCard } from "@/components/dna/KpiCard";
+import { KpiCard } from "@/components/dna";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/dna";
 import { Card } from "@/components/dna";
 import { Badge } from "@/components/dna";

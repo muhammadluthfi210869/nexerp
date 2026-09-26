@@ -12,6 +12,7 @@ import {
   DnaDialogTitle,
   DnaDialogFooter,
   DnaTabNav,
+  DnaBadge,
 } from "@/components/dna";
 import { 
   Truck, 
@@ -43,7 +44,6 @@ import {
   Box
 } from "lucide-react";
 
-import { DnaBadge } from "@/components/dna/DnaBadge";
 
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";

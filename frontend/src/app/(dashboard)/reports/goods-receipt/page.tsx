@@ -17,8 +17,8 @@ import {
   DnaTableRow,
   DnaTh,
   DnaTd,
+  DnaCell,
 } from "@/components/dna";
-import { DnaCell } from "@/components/dna/cells/DnaCell";
 import { PackageCheck, AlertTriangle, Gift, Calendar, FileSpreadsheet, Eye, Printer } from "lucide-react";
 
 interface GoodsReceiptReportItem {

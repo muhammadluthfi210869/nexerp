@@ -13,11 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DashboardCard } from "@/components/dna/DashboardCard";
-import { SectionLabel } from "@/components/dna/SectionLabel";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { StatCard } from "@/components/dna/StatCard";
-import { MetricRow } from "@/components/dna/MetricRow";
+import { DashboardCard, SectionLabel, DnaBadge, StatCard, MetricRow } from "@/components/dna";
 
 // Katalog roadmap otomasi (rencana fase, bukan status implementasi).
 // TIDAK ada kolom status: backend belum mengekspos status per-automation,

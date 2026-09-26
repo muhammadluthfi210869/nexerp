@@ -6,10 +6,9 @@ import { api } from "@/lib/api";
 import { LeadBoard } from "@/components/commercial/lead-board";
 import { MarketingForm } from "@/components/commercial/marketing-form";
 import { Zap, Target, Users, AlertTriangle, ShieldAlert } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/dna";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, KpiCard } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { RetentionRadar } from "@/components/commercial/retention-radar";
-import { KpiCard } from "@/components/dna/KpiCard";
 
 export default function CommercialDashboard() {
   useEffect(() => {

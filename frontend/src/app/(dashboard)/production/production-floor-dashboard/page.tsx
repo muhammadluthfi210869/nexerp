@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Card, CardContent, CardTitle, CardDescription } from "@/components/dna";
+import { Card, CardContent, CardTitle, CardDescription, KpiCard } from "@/components/dna";
 import { Badge } from "@/components/dna";
 import { Button } from "@/components/dna";
 import { 
@@ -17,7 +17,6 @@ import {
   Droplets,
   Package
 } from "lucide-react";
-import { KpiCard } from "@/components/dna/KpiCard";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/dna";

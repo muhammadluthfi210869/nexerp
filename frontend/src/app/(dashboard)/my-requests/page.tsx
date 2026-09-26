@@ -4,10 +4,6 @@ export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { DashboardCard } from "@/components/dna/DashboardCard";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { DnaBadge } from "@/components/dna/DnaBadge";
 import { 
   Plus, 
   Wallet, 
@@ -25,7 +21,11 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogTrigger,
-  DialogDescription 
+  DialogDescription,
+  DashboardCard,
+  DnaButton,
+  DnaInput,
+  DnaBadge,
 } from "@/components/dna";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/dna";
 import { FormShell } from "@/components/layout/FormShell";

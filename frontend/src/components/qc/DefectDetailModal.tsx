@@ -20,8 +20,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  DnaBadge,
 } from "@/components/dna";
-import { DnaBadge } from "@/components/dna/DnaBadge";
 
 const DEFECT_CATEGORIES = [
   "FISIK",

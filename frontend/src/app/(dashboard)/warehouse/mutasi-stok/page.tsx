@@ -34,8 +34,8 @@ import {
   DnaTableRow,
   DnaTh,
   DnaTd,
+  DnaCell,
 } from "@/components/dna";
-import { DnaCell } from "@/components/dna/cells/DnaCell";
 
 interface MutationItem {
   id: string;
