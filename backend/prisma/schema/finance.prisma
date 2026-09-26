@@ -55,6 +55,10 @@ model Account {
   lossAccounts          RejectExecution[] @relation("LossAccount")
   adjustmentAccounts    StockAdjustment[] @relation("AdjustmentAccount")
 
+  // Tree walking. The live chart of accounts is currently flat (every row has
+  // `parentId = NULL`), so this costs nothing today and is what makes a
+  // hierarchy usable once one exists.
+  @@index([parentId])
   @@map("accounts")
 }
 
@@ -136,6 +140,22 @@ model JournalEntry {
   bankTransactions BankTransaction[]
   lines            JournalLine[]
 
+  // Every one of the source-document columns above is a foreign key, and
+  // PostgreSQL does not index the referencing side of a foreign key. Without
+  // these, "show me the journals for this invoice/PO/payment" is a sequential
+  // scan of the whole ledger. Measured 2026-09-26: `journal_entries` had only
+  // its primary key.
+  @@index([soId])
+  @@index([poId])
+  @@index([paymentId])
+  @@index([adjustmentId])
+  @@index([returnId])
+  @@index([purchaseReturnId])
+  @@index([planId])
+  @@index([requisitionId])
+  @@index([invoiceId])
+  @@index([billId])
+  @@index([salesInvoiceId])
   @@map("journal_entries")
 }
 
@@ -151,6 +171,12 @@ model JournalLine {
   journal      JournalEntry @relation(fields: [journalId], references: [id], onDelete: Cascade)
   taxAccount   Account?     @relation("TaxAccount", fields: [taxAccountId], references: [id])
 
+  // The hot path for the trial balance and every ledger report: they join lines
+  // by `accountId` and read them by `journalId`. Measured 2026-09-26:
+  // `journal_lines` had only its primary key, so both were sequential scans.
+  @@index([journalId])
+  @@index([accountId])
+  @@index([taxAccountId])
   @@map("journal_lines")
 }
 

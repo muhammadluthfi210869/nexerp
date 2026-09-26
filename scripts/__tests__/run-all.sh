@@ -90,6 +90,9 @@ run_test "backend-route-uniqueness"                  "$SCRIPT_DIR/backend-route-
 run_test "finance-invoice-alias-contract"            "$SCRIPT_DIR/finance-invoice-alias-contract.test.sh"
 # Backend lint — P03 refuses to certify over an eslint error, and CI only reaches it late
 run_test "backend-lint-clean"                        "$SCRIPT_DIR/backend-lint-clean.test.sh"
+# Ledger foreign keys — Postgres indexes the referenced side only, and Prisma
+# adds nothing, so every FK on the ledger tables is a full scan by default
+run_test "finance-ledger-indexes"                    "$SCRIPT_DIR/finance-ledger-indexes.test.sh"
 
 echo ""
 echo "═══════════════════════════════════════════════════════════════"

@@ -37,6 +37,25 @@ import { ModuleRef } from '@nestjs/core';
 import { ScmService } from '../scm/services/scm.service';
 import { CreativeService } from '../creative/creative.service';
 
+/** One line of the profit-and-loss statement. */
+type ReportLine = {
+  id: string;
+  code: string;
+  name: string;
+  balance: number;
+};
+
+/** One section of the profit-and-loss statement. */
+type ReportBucket = {
+  groups: Record<string, ReportLine[]>;
+  total: number;
+};
+
+/** An account the statement could not place, kept so the omission is visible. */
+type UnplacedAccount = ReportLine & {
+  reason: 'REPORT_GROUP_NOT_MAPPED' | 'HEADER_ACCOUNT_HAS_OWN_LINES';
+};
+
 @Injectable()
 export class FinanceService {
   constructor(
@@ -54,42 +73,33 @@ export class FinanceService {
     return this.moduleRef.get(WarehouseService, { strict: false });
   }
 
+  /**
+   * Ensure every account the journal-posting code resolves actually exists.
+   *
+   * This used to open with `if (await account.count() > 0) return;`, so once any
+   * other COA seed had populated the table this became a permanent no-op — and
+   * the OR-fallbacks in this file then posted Work In Progress to
+   * `1401 Uang Muka Pembelian` and Finished Goods to `1400 PPN Masukan`, because
+   * `1153`/`1154` did not exist. It now upserts each required code, so it is
+   * both idempotent and able to repair a partially populated chart of accounts.
+   *
+   * `update: {}` on purpose: an account that already exists keeps its name and
+   * `reportGroup`. This adds missing codes; renaming or reclassifying a live
+   * account is a deliberate data migration, not a side effect of seeding.
+   */
   async seedInitialAccounts() {
-    const existing = await this.prisma.account.count();
-    if (existing > 0) return;
-
+    // Four entries were removed from this list rather than kept:
+    //   `1121` (a second bank account), `1132` (a second receivable),
+    //   `1153` and `1154` (a second WIP and a second Finished Goods).
+    // Each one duplicated an account that already exists and means the same
+    // thing — `1110`, `1200/1201`, `1302`, `1303` — and nothing referenced them
+    // once the posting chains above were pointed at the real accounts. Seeding
+    // them would have grown the chart of accounts by four rows that no report
+    // can distinguish from the four they shadow.
     const initialAccounts = [
-      {
-        code: '1121',
-        name: 'Bank BCA (2640351589)',
-        type: AccountType.ASSET,
-        normalBalance: NormalBalance.DEBIT,
-        reportGroup: ReportGroup.CURRENT_ASSET,
-      },
-      {
-        code: '1132',
-        name: 'Piutang Dagang - kosmetik',
-        type: AccountType.ASSET,
-        normalBalance: NormalBalance.DEBIT,
-        reportGroup: ReportGroup.CURRENT_ASSET,
-      },
       {
         code: '1151',
         name: 'Persediaan Bahan Baku',
-        type: AccountType.ASSET,
-        normalBalance: NormalBalance.DEBIT,
-        reportGroup: ReportGroup.CURRENT_ASSET,
-      },
-      {
-        code: '1153',
-        name: 'Persediaan Dalam Proses/ Barang Setengah Jadi',
-        type: AccountType.ASSET,
-        normalBalance: NormalBalance.DEBIT,
-        reportGroup: ReportGroup.CURRENT_ASSET,
-      },
-      {
-        code: '1154',
-        name: 'Persediaan Barang Jadi',
         type: AccountType.ASSET,
         normalBalance: NormalBalance.DEBIT,
         reportGroup: ReportGroup.CURRENT_ASSET,
@@ -145,9 +155,27 @@ export class FinanceService {
       },
     ];
 
+    const created: string[] = [];
+    const existing: string[] = [];
+
     for (const acc of initialAccounts) {
-      await this.prisma.account.create({ data: acc });
+      const already = await this.prisma.account.findFirst({
+        where: { code: acc.code },
+        select: { id: true },
+      });
+      if (already) {
+        existing.push(acc.code);
+        continue;
+      }
+      await this.prisma.account.upsert({
+        where: { code: acc.code },
+        update: {},
+        create: acc,
+      });
+      created.push(acc.code);
     }
+
+    return { created, existing, required: initialAccounts.length };
   }
 
   async createJournalEntry(dto: CreateJournalDto) {
@@ -318,10 +346,18 @@ export class FinanceService {
 
     if (totalCost <= 0) return;
 
-    // Accounts
+    // Accounts.
+    //
+    // `1153` used to lead the WIP chain but was never created by any seeder, so
+    // the chain silently resolved to `1401 Uang Muka Pembelian (Advance)` — a
+    // supplier advance posted to as work in progress. `1302` is the account that
+    // actually means WIP, and it exists in every environment.
     const wipAcc = await this.prisma.account.findFirst({
-      where: { OR: [{ code: '1153' }, { code: '1401' }] },
+      where: { OR: [{ code: '1302' }, { code: '1153' }, { code: '1401' }] },
     }); // WIP
+    // `1151` first, unchanged: it is the account the existing stock balances sit
+    // in, and `1300 Persediaan Bahan Baku` carries none. Preferring the better
+    // name over the account that holds the data would split inventory in two.
     const rmAcc = await this.prisma.account.findFirst({
       where: { OR: [{ code: '1151' }, { code: '1300' }] },
     }); // Raw Materials
@@ -389,13 +425,20 @@ export class FinanceService {
     const finalTotalHpp = totalHpp * wo.targetQty;
 
     // Multiply by batch size if needed, but usually formula is per batch/unit
-    // Post Journal: Debit Finished Goods / Credit Raw Materials
+    // Post Journal: Debit Finished Goods / Credit Raw Materials.
+    //
+    // `1154` and `1153` led these chains but were never created, so the HPP
+    // automator posted Finished Goods to `1400 PPN Masukan (Input Tax)` and WIP
+    // to `1401 Uang Muka Pembelian (Advance)` — both inside the asset section, so
+    // the balance sheet still balanced and nothing looked wrong. `1303` and
+    // `1302` are the accounts that mean Finished Goods and WIP; the dead codes
+    // stay behind them as a fallback for an environment that does define them.
     const fgAcc = await this.prisma.account.findFirst({
-      where: { OR: [{ code: '1154' }, { code: '1400' }] },
-    }); // Finished Goods (1154)
+      where: { OR: [{ code: '1303' }, { code: '1154' }, { code: '1400' }] },
+    }); // Finished Goods
     const wipAcc = await this.prisma.account.findFirst({
-      where: { OR: [{ code: '1153' }, { code: '1401' }] },
-    }); // WIP (1153)
+      where: { OR: [{ code: '1302' }, { code: '1153' }, { code: '1401' }] },
+    }); // WIP
 
     if (fgAcc && wipAcc && totalHpp > 0) {
       await this.prisma.journalEntry.create({
@@ -437,8 +480,12 @@ export class FinanceService {
       });
     }
 
+    // `1157` used to lead this chain but is never created by any seeder, so it
+    // could only ever resolve to the next code. It was removed rather than
+    // created: `6232` already carries the stock-opname losses, and introducing
+    // an empty account ahead of it would split the balance in two.
     let lossAcc = await this.prisma.account.findFirst({
-      where: { OR: [{ code: '1157' }, { code: '6232' }, { code: '6102' }] },
+      where: { OR: [{ code: '6232' }, { code: '6102' }] },
     });
     if (!lossAcc) {
       lossAcc = await this.prisma.account.create({
@@ -479,7 +526,7 @@ export class FinanceService {
       where: { OR: [{ code: '1151' }, { code: '1300' }] },
     });
     const wipAcc = await this.prisma.account.findFirst({
-      where: { OR: [{ code: '1153' }, { code: '1401' }] },
+      where: { OR: [{ code: '1302' }, { code: '1153' }, { code: '1401' }] },
     });
 
     if (!inventoryAcc || !wipAcc) {
@@ -513,15 +560,19 @@ export class FinanceService {
     platform: string;
     refId: string;
   }) {
+    // `1121` and `1120` led this chain and neither was ever created, so every ad
+    // spend debit landed on `1100 Kas & Bank` — the catch-all — instead of the
+    // operating bank account. `1110 Bank BCA (Operasional)` already exists and is
+    // the account that means what this code intends.
     const bankAcc = await this.prisma.account.findFirst({
-      where: { OR: [{ code: '1121' }, { code: '1120' }, { code: '1100' }] },
+      where: { OR: [{ code: '1110' }, { code: '1121' }, { code: '1100' }] },
     });
     const marketingAcc = await this.prisma.account.findFirst({
       where: { OR: [{ code: '6101' }, { code: '5101' }] },
     });
 
     if (!bankAcc || !marketingAcc) {
-      throw new Error('Finance Accounts (1121 or 6101) not configured.');
+      throw new Error('Finance Accounts (1110/1121 or 6101) not configured.');
     }
 
     return this.createJournalEntry({
@@ -2108,14 +2159,24 @@ export class FinanceService {
     const tb = await this.getTrialBalance(startDate, endDate);
 
     const report = {
-      operatingRevenue: { groups: {} as Record<string, any[]>, total: 0 },
-      cogs: { groups: {} as Record<string, any[]>, total: 0 },
-      operatingExpenses: { groups: {} as Record<string, any[]>, total: 0 },
-      otherIncome: { groups: {} as Record<string, any[]>, total: 0 },
-      otherExpenses: { groups: {} as Record<string, any[]>, total: 0 },
+      operatingRevenue: { groups: {} as Record<string, ReportLine[]>, total: 0 } as ReportBucket,
+      cogs: { groups: {} as Record<string, ReportLine[]>, total: 0 } as ReportBucket,
+      operatingExpenses: { groups: {} as Record<string, ReportLine[]>, total: 0 } as ReportBucket,
+      otherIncome: { groups: {} as Record<string, ReportLine[]>, total: 0 } as ReportBucket,
+      otherExpenses: { groups: {} as Record<string, ReportLine[]>, total: 0 } as ReportBucket,
       grossProfit: 0,
       operatingIncome: 0,
       netProfit: 0,
+    };
+
+    const unplacedAccounts: UnplacedAccount[] = [];
+
+    const bucketByReportGroup: Partial<Record<ReportGroup, ReportBucket>> = {
+      [ReportGroup.OPERATING_REVENUE]: report.operatingRevenue,
+      [ReportGroup.COGS]: report.cogs,
+      [ReportGroup.OPEX]: report.operatingExpenses,
+      [ReportGroup.OTHER_REVENUE]: report.otherIncome,
+      [ReportGroup.OTHER_EXPENSE]: report.otherExpenses,
     };
 
     allAccounts.forEach((acc) => {
@@ -2129,44 +2190,30 @@ export class FinanceService {
             ? Number(tbItem.debitBalance) - Number(tbItem.creditBalance)
             : 0;
 
-      // Only include accounts with activity or if they are parents
-      if (balance === 0 && !acc.children?.length) {
-        // We might want to show zero balances for specific accounts requested by user,
-        // but for now let's keep it to active ones or all requested ones.
-        // The user wants to "keluarkan semua data", so let's include all.
+      const item: ReportLine = { id: acc.id, code: acc.code, name: acc.name, balance };
+
+      const target = bucketByReportGroup[acc.reportGroup as ReportGroup];
+      if (!target) {
+        // Do not drop this silently. An account with no usable `reportGroup` is
+        // absent from the statement, and an absent account is indistinguishable
+        // from an account with no activity — which is how a misconfigured COA
+        // produces a plausible, entirely wrong report.
+        unplacedAccounts.push({ ...item, reason: 'REPORT_GROUP_NOT_MAPPED' });
+        return;
       }
 
-      const item = { id: acc.id, code: acc.code, name: acc.name, balance };
-
-      let target: any;
-      switch (acc.reportGroup) {
-        case ReportGroup.OPERATING_REVENUE:
-          target = report.operatingRevenue;
-          break;
-        case ReportGroup.COGS:
-          target = report.cogs;
-          break;
-        case ReportGroup.OPEX:
-          target = report.operatingExpenses;
-          break;
-        case ReportGroup.OTHER_REVENUE:
-          target = report.otherIncome;
-          break;
-        case ReportGroup.OTHER_EXPENSE:
-          target = report.otherExpenses;
-          break;
-        default:
-          return; // Skip if no report group
+      // A header account holds children and the children carry the amounts, so
+      // listing the header too would double-count. A parentless account is an
+      // ordinary leaf — the live COA is flat (every account has `parentId = NULL`),
+      // so dropping parentless accounts emptied the whole statement.
+      if ((acc.children?.length ?? 0) > 0) {
+        if (balance !== 0) {
+          unplacedAccounts.push({ ...item, reason: 'HEADER_ACCOUNT_HAS_OWN_LINES' });
+        }
+        return;
       }
 
-      // If account has a parent, use parent name as the group name
-      // If it's a top-level account (no parent), it might be a group itself or a standalone item
       const groupName = acc.parent ? acc.parent.name : 'LAINNYA';
-
-      // Special case: if it's a "Header" account (has children or is meant to be a group)
-      // For now, we use the requested structure: Group -> Leaf Items
-      if (!acc.parent) return; // Skip top-level headers from being listed as items, they are groups
-
       if (!target.groups[groupName]) {
         target.groups[groupName] = [];
       }
@@ -2202,6 +2249,9 @@ export class FinanceService {
       revenue,
       expenses,
       netIncome,
+      // Empty means every account was placed. Non-empty means the statement is
+      // incomplete and the caller must not present it as final.
+      unplacedAccounts,
       ...report,
     };
   }
