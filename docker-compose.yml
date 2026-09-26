@@ -132,6 +132,7 @@ services:
     depends_on:
       - frontend
       - backend
+      - wa-self-qr
 
   # ── Certbot (SSL Auto-Renew) ────────────────────────────────
   certbot:
@@ -143,5 +144,39 @@ services:
       - ./certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'"
 
+  # ── WA Self-QR Collector (Chromium + whatsapp-web.js) ─────────
+  wa-self-qr:
+    profiles: ["server", "self-qr"]
+    image: ghcr.io/muhammadluthfi210869/nexerp/wa-self-qr:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.self-qr
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-erp_user}:${DB_PASSWORD:-erp_password_secure}@db:5432/${DB_NAME:-erp_database}?schema=public
+      PORT: 3002
+      NODE_ENV: production
+      NODE_OPTIONS: ${SELF_QR_NODE_OPTIONS:---max-old-space-size=512}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di file .env}
+      SELF_QR_AUTH_ROOT: /app/storage/self-qr-auth
+      SELF_QR_ACTIVE_DEVICES: ${SELF_QR_ACTIVE_DEVICES:-SALES-JESSICA}
+      CHROME_EXECUTABLE_PATH: /usr/bin/chromium-browser
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
+    volumes:
+      - wa_self_qr_auth:/app/storage/self-qr-auth
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${SELF_QR_PORT:-3002}:3002"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider http://127.0.0.1:3002/v1/connect-whatsapp/health 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
 volumes:
   postgres_data:
+  wa_self_qr_auth:

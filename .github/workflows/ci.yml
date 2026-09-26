@@ -100,6 +100,15 @@ jobs:
             ':(exclude)docs/legacy-erp/generated/INPUT_OUTPUT_LINEAGE.md'
 
 
+      - name: "FE <-> BE Contract Parity Gate (G3)"
+        env:
+          DATABASE_URL: "postgresql://test_user:test_pass@localhost:5432/test_db?schema=public"
+        run: |
+          # Regenerate the backend contract from the real AppModule so the gate
+          # cannot be satisfied by a stale checked-in spec, then audit parity.
+          npm --prefix backend run swagger:generate
+          node scripts/ssot/audit_fe_be_parity.js
+
       - name: "Run All Regression & Contract Tests"
         run: |
           chmod +x scripts/*.sh scripts/__tests__/*.sh backend/init-db.sh
@@ -181,6 +190,13 @@ jobs:
           npm --prefix backend run prisma:generate
           npx --prefix backend prisma migrate deploy
 
+      - name: "FE <-> BE Contract Parity Gate (G3)"
+        env:
+          DATABASE_URL: "postgresql://test_user:test_pass@localhost:5432/test_db?schema=public"
+        run: |
+          npm --prefix backend run swagger:generate
+          node scripts/ssot/audit_fe_be_parity.js
+
       - name: "Production Build Verification"
         run: |
           npm --prefix backend run build
@@ -191,6 +207,29 @@ jobs:
         run: |
           chmod +x scripts/*.sh scripts/__tests__/*.sh backend/init-db.sh
           bash scripts/__tests__/run-all.sh
+
+      # G6: phase gates must run in CI or the P09-P19 numbers decay silently.
+      # Before this step, CI ran ZERO `verify:pNN` — the 11 phases without a
+      # phase auditor were green only on the developer's machine.
+      - name: "Phase Gates P09-P19 (G4)"
+        env:
+          DATABASE_URL: "postgresql://test_user:test_pass@localhost:5432/test_db?schema=public"
+        run: |
+          # Exit codes are recorded verbatim. A non-zero exit is a failure and
+          # is never reinterpreted. The loop continues so every phase reports,
+          # then the step fails if any phase failed.
+          fail=0
+          for p in 09 10 11 12 13 14 15 16 17 18 19; do
+            echo "::group::verify:p$p"
+            if npm run verify:p$p; then
+              echo "verify:p$p OK"
+            else
+              echo "verify:p$p FAILED (exit $?)"
+              fail=1
+            fi
+            echo "::endgroup::"
+          done
+          exit $fail
 
       - name: "Build Backend Image"
         uses: docker/build-push-action@v6
@@ -285,6 +324,39 @@ jobs:
           [ "$PROTO_CODE" = "404" ] || { echo "Pre-flight: prototype endpoint masih aktif (HTTP $PROTO_CODE)"; exit 1; }
           echo "Prototype endpoint non-aktif (HTTP 404)"
 
+      # The image is built and running, but a request-time dependency can still be missing from
+      # it — that is how PDF export shipped for months returning a one-line placeholder with
+      # HTTP 200 (no browser binary in the image, and the engine swallowed the render failure).
+      # /v1/health cannot see that. Only rendering a document can.
+      - name: "PDF Renderer Probe (gagal = fail closed)"
+        run: |
+          set -e
+          BASE="http://localhost:3001/v1"
+          TOKEN=$(curl -s -X POST "$BASE/auth/login" \
+            -H "Content-Type: application/json" \
+            -d '{"email":"revita@nexerp.id","password":"password123"}' \
+            | jq -r '.access_token // .accessToken // empty')
+          [ -n "$TOKEN" ] || { echo "PDF probe: login gagal"; exit 1; }
+
+          HTTP=$(curl -s -o /tmp/probe.pdf -w "%{http_code}" \
+            -X POST "$BASE/document-automation/pdf" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"documentType":"QUOTATION","documentNumber":"PROBE-CI-001","data":{"clientName":"CI Probe","items":[{"productName":"Probe Item","quantity":10,"unitPrice":25000,"subtotal":250000}]}}')
+          SIZE=$(wc -c < /tmp/probe.pdf | tr -d ' ')
+          echo "PDF probe: HTTP $HTTP, $SIZE bytes"
+
+          [ "$HTTP" = "200" ] || { echo "PDF probe: renderer tidak mengembalikan 200"; head -c 400 /tmp/probe.pdf; exit 1; }
+          head -c 5 /tmp/probe.pdf | grep -q "%PDF-" || { echo "PDF probe: keluaran bukan PDF"; exit 1; }
+          if grep -aq "Deterministic Document Snapshot" /tmp/probe.pdf; then
+            echo "PDF probe: placeholder deterministic terdeteksi — ini bukan dokumen"
+            exit 1
+          fi
+          # The stand-in is one text line (~700 bytes); a rendered document is tens of KB.
+          # Size is what separates the two, and it is what no earlier gate looked at.
+          [ "$SIZE" -gt 5000 ] || { echo "PDF probe: hanya $SIZE bytes — placeholder, bukan dokumen"; exit 1; }
+          echo "PDF renderer terverifikasi di dalam image"
+
       - name: "Push Backend Image ke GHCR"
         run: |
           docker push "${{ env.IMAGE_PREFIX }}/backend:${{ github.sha }}"
@@ -302,6 +374,18 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://nexerp.id/api' }}
             NEXT_PUBLIC_WA_PHONE=${{ vars.NEXT_PUBLIC_WA_PHONE || '6287793032556' }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: "Build & Push WA Self-QR Image ke GHCR"
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile.self-qr
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/wa-self-qr:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/wa-self-qr:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
