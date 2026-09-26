@@ -5,6 +5,8 @@ import { ProductionPlanningService } from '../../src/modules/production/producti
 import { ProductionActualsService } from '../../src/modules/production/production-actuals.service';
 import { ProductionExecutionService } from '../../src/modules/production/production-execution.service';
 import { ProductionAuditService } from '../../src/modules/production/production-audit.service';
+import { ProductionMachineService } from '../../src/modules/production/production-machine.service';
+import { ProductionQrContextService } from '../../src/modules/production/production-qr-context.service';
 import { ProductionAnalyticsService } from '../../src/modules/production/production-analytics.service';
 import { LegalityService } from '../../src/modules/legality/legality.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
@@ -28,6 +30,8 @@ describe('ProductionService — Unit (DI unresolved — $transaction mock)', () 
         ProductionActualsService, // Fase 3C — actuals cluster
         ProductionExecutionService, // Fase 3C — execution cluster
         ProductionAuditService, // Fase 3C — QC audit cluster
+        ProductionMachineService, // Fase 3C — machine registry
+        ProductionQrContextService, // Fase 3C — QR scan context
         ProductionAnalyticsService, // Fase 3C — getMicroFlowDiagnostics lives here
         { provide: PrismaService, useValue: prisma },
         {

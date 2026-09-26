@@ -16,6 +16,8 @@ import { ProductionPlanningService } from './production-planning.service';
 import { ProductionActualsService } from './production-actuals.service';
 import { ProductionExecutionService } from './production-execution.service';
 import { ProductionAuditService } from './production-audit.service';
+import { ProductionMachineService } from './production-machine.service';
+import { ProductionQrContextService } from './production-qr-context.service';
 
 @Injectable()
 export class ProductionService {
@@ -29,6 +31,8 @@ export class ProductionService {
     private actuals: ProductionActualsService,
     private execution: ProductionExecutionService,
     private audit: ProductionAuditService,
+    private machines: ProductionMachineService,
+    private qrContexts: ProductionQrContextService,
   ) {}
 
 
@@ -307,9 +311,18 @@ export class ProductionService {
     return this.audit.submitAudit(...args);
   }
 
-  async createMachine(dto: any) {
-    return await this.prisma.machine.create({ data: dto });
+  // --- MACHINE REGISTRY (extracted in Fase 3C, part 8) ---
+  //
+  // The bodies live in ProductionMachineService. Two of the three have no route
+  // and no caller anywhere — see the QA gate report §14.1. They are moved, not
+  // deleted: removing public surface is a decision, not a refactor step.
+  //
+  // `Parameters<...>` so the arity cannot drift from the real method.
+
+  createMachine(...args: Parameters<ProductionMachineService['createMachine']>) {
+    return this.machines.createMachine(...args);
   }
+
 
   async getAllRequisitions() {
     const reqs = await this.prisma.materialRequisition.findMany({
@@ -325,96 +338,23 @@ export class ProductionService {
     }));
   }
 
-  async getMachines(category?: string) {
-    return await this.prisma.machine.findMany({
-      where: category ? { type: category as any } : {},
-      orderBy: { name: 'asc' },
-    });
+  getMachines(...args: Parameters<ProductionMachineService['getMachines']>) {
+    return this.machines.getMachines(...args);
   }
 
-  async getActiveMachines() {
-    return await this.prisma.machine.findMany({
-      where: { isActive: true },
-      include: {
-        productionLogs: {
-          where: { goodQty: 0, rejectQty: 0 },
-          include: { workOrder: true },
-          take: 1,
-        },
-      },
-    });
+  getActiveMachines(...args: Parameters<ProductionMachineService['getActiveMachines']>) {
+    return this.machines.getActiveMachines(...args);
   }
-  async resolveQRContext(uuid: string) {
-    // 1. Check if it's a Production Log (Stage-specific: Mixing, Filling, Packing)
-    const log = await this.prisma.productionLog.findUnique({
-      where: { id: uuid },
-      include: { workOrder: { include: { lead: true } } },
-    });
-    if (log) {
-      return {
-        type: 'PRODUCTION_QC',
-        title: `QC Tahap: ${log.stage}`,
-        origin: log.workOrder?.lead?.brandName || 'Internal',
-        reference: log.id,
-        context: 'PRODUCTION',
-        stage: log.stage,
-        batchNo: log.logNumber,
-      };
-    }
 
-    // 2. Check if it's an Inbound Transaction
-    const inbound = await this.prisma.warehouseInbound.findUnique({
-      where: { id: uuid },
-      include: { po: { include: { supplier: true } } },
-    });
-    if (inbound) {
-      return {
-        type: 'INBOUND_QC',
-        title: 'QC Kedatangan Barang',
-        origin: inbound.po?.supplier?.name || 'Unknown Supplier',
-        reference: inbound.id,
-        context: 'WAREHOUSE',
-      };
-    }
+  // --- QR SCAN (extracted in Fase 3C, part 8) ---
+  //
+  // The body lives in ProductionQrContextService: one scan resolved into what
+  // QC should look at, fanning out to production, warehouse and material master.
 
-    // 3. Check if it's a Material Inventory Batch (Internal QR)
-    const inventory = await this.prisma.materialInventory.findFirst({
-      where: { OR: [{ id: uuid }, { internalQrCode: uuid }] },
-      include: { material: true, supplier: true },
-    });
-    if (inventory) {
-      return {
-        type: 'MATERIAL_QC',
-        title: `QC Material: ${inventory.material.name}`,
-        origin: inventory.supplier?.name || 'Unknown',
-        reference: inventory.id,
-        context: 'WAREHOUSE',
-        batchNumber: inventory.batchNumber,
-      };
-    }
-
-    // 4. Check if it's a Production Plan (Fallback)
-    const plan = await this.prisma.productionPlan.findUnique({
-      where: { id: uuid },
-      include: { so: { include: { lead: true } } },
-    });
-    if (plan) {
-      return {
-        type: 'PRODUCTION_QC',
-        title: `QC Produksi: ${plan.batchNo}`,
-        origin: plan.so?.lead?.brandName || 'Internal Batch',
-        reference: plan.id,
-        context: 'PRODUCTION',
-      };
-    }
-
-    // 5. Fallback/Manual Mode
-    return {
-      type: 'MANUAL_MODE',
-      title: 'Context Not Found',
-      message: 'QR Code tidak terdaftar. Masuk ke mode manual?',
-    };
+  resolveQRContext(...args: Parameters<ProductionQrContextService['resolveQRContext']>) {
+    return this.qrContexts.resolveQRContext(...args);
   }
+
 
   calculateCOPQ(...args: Parameters<ProductionExecutionService['calculateCOPQ']>) {
     return this.execution.calculateCOPQ(...args);

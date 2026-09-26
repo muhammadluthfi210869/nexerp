@@ -6,6 +6,8 @@ import { ProductionPlanningService } from './production-planning.service';
 import { ProductionActualsService } from './production-actuals.service';
 import { ProductionExecutionService } from './production-execution.service';
 import { ProductionAuditService } from './production-audit.service';
+import { ProductionMachineService } from './production-machine.service';
+import { ProductionQrContextService } from './production-qr-context.service';
 import { ProductionController } from './production.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
 
@@ -13,7 +15,7 @@ import { LegalityModule } from '../legality/legality.module';
 
 @Module({
   imports: [PrismaModule, LegalityModule],
-  providers: [ProductionService, ProductionAnalyticsService, ProductionBatchRecordService, ProductionPlanningService, ProductionActualsService, ProductionExecutionService, ProductionAuditService],
+  providers: [ProductionService, ProductionAnalyticsService, ProductionBatchRecordService, ProductionPlanningService, ProductionActualsService, ProductionExecutionService, ProductionAuditService, ProductionMachineService, ProductionQrContextService],
   controllers: [ProductionController],
 })
 export class ProductionModule {}
