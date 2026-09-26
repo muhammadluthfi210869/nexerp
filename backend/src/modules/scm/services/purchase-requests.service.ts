@@ -3,9 +3,11 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
+import { logBestEffort } from '../../../common/helpers/best-effort';
 import {
   CreatePurchaseRequestDto,
   UpdatePurchaseRequestStatusDto,
@@ -15,6 +17,8 @@ import { randomUUID } from 'crypto';
 
 @Injectable()
 export class PurchaseRequestsService {
+  private readonly logger = new Logger(PurchaseRequestsService.name);
+
   constructor(
     private prisma: PrismaService,
     private idGenerator: IdGeneratorService,
@@ -71,7 +75,9 @@ export class PurchaseRequestsService {
             txId: randomUUID(),
           },
         });
-      } catch {}
+      } catch (err) {
+        logBestEffort(this.logger, 'audit:PurchaseRequest:CREATE', err);
+      }
 
       return pr;
     });
@@ -163,7 +169,9 @@ export class PurchaseRequestsService {
             txId: randomUUID(),
           },
         });
-      } catch {}
+      } catch (err) {
+        logBestEffort(this.logger, 'audit:PurchaseRequest:APPROVE', err);
+      }
 
       return updated;
     });
@@ -199,7 +207,9 @@ export class PurchaseRequestsService {
             txId: randomUUID(),
           },
         });
-      } catch {}
+      } catch (err) {
+        logBestEffort(this.logger, 'audit:PurchaseRequest:REJECT', err);
+      }
 
       return updated;
     });

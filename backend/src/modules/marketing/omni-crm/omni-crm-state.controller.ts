@@ -1,6 +1,5 @@
 import {
   Body,
-  ConflictException,
   Controller,
   Get,
   Put,
@@ -47,18 +46,11 @@ export class OmniCrmStateController {
     @Req() req: { user: User },
     @Body() body: { state: unknown; version?: number },
   ) {
-    try {
-      const updated = await this.service.upsert(
-        req.user.id,
-        body.state,
-        body.version,
-      );
-      return { state: updated.state, version: updated.version };
-    } catch (e) {
-      if ((e as Error).message === 'VERSION_CONFLICT') {
-        throw new ConflictException('VERSION_CONFLICT');
-      }
-      throw e;
-    }
+    const updated = await this.service.upsert(
+      req.user.id,
+      body.state,
+      body.version,
+    );
+    return { state: updated.state, version: updated.version };
   }
 }

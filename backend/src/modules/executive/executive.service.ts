@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
+import { ResourceNotFoundException } from '../../common/exceptions/api-exception';
 import {
   InvoiceStatus,
   LifecycleStatus,
@@ -392,7 +393,7 @@ export class ExecutiveService {
     const period = await this.prisma.financialPeriod.findUnique({
       where: { id: periodId },
     });
-    if (!period) throw new Error('Financial Period not found');
+    if (!period) throw new ResourceNotFoundException('Financial Period', periodId);
 
     // 1. Calculate Total Revenue (Paid Receivables)
     const totalRevenue = await this.prisma.invoice.aggregate({

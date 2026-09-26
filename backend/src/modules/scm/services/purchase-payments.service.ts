@@ -2,9 +2,11 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
+import { logBestEffort } from '../../../common/helpers/best-effort';
 import {
   CreatePurchasePaymentDto,
   CreateDownPaymentDto,
@@ -14,6 +16,8 @@ import { randomUUID } from 'crypto';
 
 @Injectable()
 export class PurchasePaymentsService {
+  private readonly logger = new Logger(PurchasePaymentsService.name);
+
   constructor(
     private prisma: PrismaService,
     private idGenerator: IdGeneratorService,
@@ -142,7 +146,9 @@ export class PurchasePaymentsService {
               },
             });
           }
-        } catch {}
+        } catch (err) {
+          logBestEffort(this.logger, 'invoice-mirror:bill-paid-sync', err);
+        }
       }
 
       try {
@@ -158,7 +164,9 @@ export class PurchasePaymentsService {
             txId: randomUUID(),
           },
         });
-      } catch {}
+      } catch (err) {
+        logBestEffort(this.logger, 'audit:APPayment:CREATE', err);
+      }
 
       const result = await tx.aPPayment.findUnique({
         where: { id: apPayment.id },
@@ -216,7 +224,9 @@ export class PurchasePaymentsService {
                 },
               });
             }
-          } catch {}
+          } catch (err) {
+            logBestEffort(this.logger, 'invoice-mirror:bill-reverse-sync', err);
+          }
         }
       }
 
@@ -241,7 +251,9 @@ export class PurchasePaymentsService {
             txId: randomUUID(),
           },
         });
-      } catch {}
+      } catch (err) {
+        logBestEffort(this.logger, 'audit:APPayment:REVERSE', err);
+      }
 
       return updated;
     });
@@ -279,7 +291,9 @@ export class PurchasePaymentsService {
             txId: randomUUID(),
           },
         });
-      } catch {}
+      } catch (err) {
+        logBestEffort(this.logger, 'audit:DownPayment:CREATE', err);
+      }
 
       return dp;
     });

@@ -6,6 +6,7 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
+import { ResourceNotFoundException } from '../../common/exceptions/api-exception';
 import { CacheService } from '../../shared/cache.service';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { AdvanceLeadDto } from './dto/advance-lead.dto';
@@ -1572,7 +1573,7 @@ export class BussdevService {
       where: { id: guestId },
     });
 
-    if (!guest) throw new Error('Guest log not found');
+    if (!guest) throw new ResourceNotFoundException('Guest Log', guestId);
 
     // Resolve the Staff record for the BD User who logged the guest
     const staff = await this.prisma.bussdevStaff.findUnique({

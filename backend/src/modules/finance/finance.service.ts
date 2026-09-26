@@ -1,11 +1,13 @@
 import {
   Injectable,
   BadRequestException,
+  HttpStatus,
   NotFoundException,
   Inject,
   forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
+import { BusinessException } from '../../common/exceptions/api-exception';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ACTIVITY_EVENT } from '../activity-stream/events/activity.events';
 import {
@@ -572,7 +574,19 @@ export class FinanceService {
     });
 
     if (!bankAcc || !marketingAcc) {
-      throw new Error('Finance Accounts (1110/1121 or 6101) not configured.');
+      // Still a 500: the COA is ours to configure, not the caller's mistake. But it
+      // carries a stable code so ops can tell a missing seed from a crashed process.
+      throw new BusinessException(
+        'FINANCE_COA_NOT_CONFIGURED',
+        'Akun finance untuk posting iklan (1110/1100/1121 atau 6101/5101) belum ada di COA.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        {
+          missing: [
+            ...(bankAcc ? [] : ['1110/1100/1121']),
+            ...(marketingAcc ? [] : ['6101/5101']),
+          ],
+        },
+      );
     }
 
     return this.createJournalEntry({

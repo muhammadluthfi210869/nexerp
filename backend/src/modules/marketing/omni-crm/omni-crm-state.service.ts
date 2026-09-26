@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
+import { BusinessException } from '../../../common/exceptions/api-exception';
 
 @Injectable()
 export class OmniCrmStateService {
@@ -19,7 +20,12 @@ export class OmniCrmStateService {
       });
     }
     if (expectedVersion !== undefined && expectedVersion !== existing.version) {
-      throw new Error('VERSION_CONFLICT');
+      throw new BusinessException(
+        'VERSION_CONFLICT',
+        'State OmniCRM sudah diubah oleh sesi lain. Muat ulang lalu coba lagi.',
+        HttpStatus.CONFLICT,
+        { expectedVersion, currentVersion: existing.version },
+      );
     }
     return this.prisma.omniCrmState.update({
       where: { ownerId },

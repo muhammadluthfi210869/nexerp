@@ -13,12 +13,15 @@ import { CreatePurchaseOrderDto } from '../dto/create-po.dto';
 import { LegalityService } from '../../legality/legality.service';
 
 import { IdGeneratorService } from '../../system/id-generator.service';
+import { logBestEffort } from '../../../common/helpers/best-effort';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 
 @Injectable()
 export class PurchaseOrdersService {
+  private readonly logger = new Logger(PurchaseOrdersService.name);
+
   constructor(
     private prisma: PrismaService,
     @Inject(forwardRef(() => LegalityService))
@@ -201,7 +204,9 @@ export class PurchaseOrdersService {
             txId: randomUUID(),
           },
         });
-      } catch {}
+      } catch (err) {
+        logBestEffort(this.logger, 'audit:PurchaseOrder:CREATE', err);
+      }
 
       return po;
     });
@@ -295,7 +300,9 @@ export class PurchaseOrdersService {
             txId: randomUUID(),
           },
         });
-      } catch {}
+      } catch (err) {
+        logBestEffort(this.logger, 'audit:PurchaseOrder:APPROVE', err);
+      }
 
       return updated;
     });

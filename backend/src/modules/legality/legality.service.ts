@@ -17,6 +17,10 @@ import {
 } from '@prisma/client';
 
 import { BussdevService } from '../bussdev/bussdev.service';
+import {
+  BusinessRuleViolationException,
+  ResourceNotFoundException,
+} from '../../common/exceptions/api-exception';
 
 /**
  * BUS-RULE-115 — an artwork review is recorded against the artwork that exists.
@@ -431,9 +435,13 @@ export class LegalityService {
 
   async advanceHkiStage(id: string) {
     const record = await this.prisma.hkiRecord.findUnique({ where: { id } });
-    if (!record) throw new Error('HKI Record not found');
+    if (!record) throw new ResourceNotFoundException('HKI Record', id);
     if (record.status === LegalStatus.DONE)
-      throw new Error('Record is already completed');
+      throw new BusinessRuleViolationException(
+        'legality-already-completed',
+        'Record HKI sudah selesai dan tidak bisa dilanjutkan.',
+        { entity: 'HkiRecord', id, status: record.status },
+      );
 
     const stageOrder = [
       'DRAFT',
@@ -444,7 +452,11 @@ export class LegalityService {
     ];
     const currentIdx = stageOrder.indexOf(record.stage);
     if (currentIdx === -1 || currentIdx >= stageOrder.length - 1) {
-      throw new Error('Cannot advance from current stage');
+      throw new BusinessRuleViolationException(
+        'legality-no-next-stage',
+        `Stage HKI tidak bisa dilanjutkan dari "${record.stage}": sudah di stage terakhir.`,
+        { entity: 'HkiRecord', id, stage: record.stage, stageOrder },
+      );
     }
 
     const nextStage = stageOrder[currentIdx + 1];
@@ -500,9 +512,13 @@ export class LegalityService {
 
   async advanceBpomStage(id: string) {
     const record = await this.prisma.bpomRecord.findUnique({ where: { id } });
-    if (!record) throw new Error('BPOM Record not found');
+    if (!record) throw new ResourceNotFoundException('BPOM Record', id);
     if (record.status === LegalStatus.DONE)
-      throw new Error('Record is already completed');
+      throw new BusinessRuleViolationException(
+        'legality-already-completed',
+        'Record BPOM sudah selesai dan tidak bisa dilanjutkan.',
+        { entity: 'BpomRecord', id, status: record.status },
+      );
 
     const stageOrder = [
       'DRAFT',
@@ -513,7 +529,11 @@ export class LegalityService {
     ];
     const currentIdx = stageOrder.indexOf(record.stage);
     if (currentIdx === -1 || currentIdx >= stageOrder.length - 1) {
-      throw new Error('Cannot advance from current stage');
+      throw new BusinessRuleViolationException(
+        'legality-no-next-stage',
+        `Stage BPOM tidak bisa dilanjutkan dari "${record.stage}": sudah di stage terakhir.`,
+        { entity: 'BpomRecord', id, stage: record.stage, stageOrder },
+      );
     }
 
     const nextStage = stageOrder[currentIdx + 1];
@@ -569,14 +589,22 @@ export class LegalityService {
 
   async advanceHalalStage(id: string) {
     const record = await this.prisma.halalRecord.findUnique({ where: { id } });
-    if (!record) throw new Error('Halal Record not found');
+    if (!record) throw new ResourceNotFoundException('Halal Record', id);
     if (record.status === LegalStatus.DONE)
-      throw new Error('Record is already completed');
+      throw new BusinessRuleViolationException(
+        'legality-already-completed',
+        'Record Halal sudah selesai dan tidak bisa dilanjutkan.',
+        { entity: 'HalalRecord', id, status: record.status },
+      );
 
     const stageOrder = ['DRAFT', 'SUBMITTED', 'AUDIT', 'PUBLISHED'];
     const currentIdx = stageOrder.indexOf(record.stage);
     if (currentIdx === -1 || currentIdx >= stageOrder.length - 1) {
-      throw new Error('Cannot advance from current stage');
+      throw new BusinessRuleViolationException(
+        'legality-no-next-stage',
+        `Stage Halal tidak bisa dilanjutkan dari "${record.stage}": sudah di stage terakhir.`,
+        { entity: 'HalalRecord', id, stage: record.stage, stageOrder },
+      );
     }
 
     const nextStage = stageOrder[currentIdx + 1];
@@ -836,7 +864,7 @@ export class LegalityService {
       },
     });
 
-    if (!formula) throw new Error('Formula not found');
+    if (!formula) throw new ResourceNotFoundException('Formula');
 
     const violations = [];
     let riskScore: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
@@ -1046,7 +1074,7 @@ export class LegalityService {
     const current = await this.prisma.regulatoryPipeline.findUnique({
       where: { id },
     });
-    if (!current) throw new Error('Pipeline not found');
+    if (!current) throw new ResourceNotFoundException('Regulatory Pipeline', id);
 
     const { notes, ...updateData } = data;
     const history = (current.logHistory as any[]) || [];

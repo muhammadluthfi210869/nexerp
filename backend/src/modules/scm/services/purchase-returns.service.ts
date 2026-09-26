@@ -2,8 +2,10 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
+import { logBestEffort } from '../../../common/helpers/best-effort';
 import {
   CreatePurchaseReturnDto,
   UpdatePurchaseReturnStatusDto,
@@ -13,6 +15,8 @@ import { randomUUID } from 'crypto';
 
 @Injectable()
 export class PurchaseReturnsService {
+  private readonly logger = new Logger(PurchaseReturnsService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreatePurchaseReturnDto, userId?: string) {
@@ -154,7 +158,9 @@ export class PurchaseReturnsService {
               txId: randomUUID(),
             },
           });
-        } catch {}
+        } catch (err) {
+          logBestEffort(this.logger, 'audit:PurchaseReturn:APPROVE', err);
+        }
 
         return updated;
       }

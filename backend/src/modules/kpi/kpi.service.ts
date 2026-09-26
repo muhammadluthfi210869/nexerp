@@ -400,14 +400,6 @@ export class KpiService {
     return scores.sort((a, b) => b.score - a.score).slice(0, limit);
   }
 
-  // Convenience: pull current user from JWT, used by controller.
-  async computeSelf(period: Period = {}): Promise<PersonKpi> {
-    // Self is resolved by controller via req.user.sub; this is a placeholder.
-    throw new Error(
-      'computeSelf requires userId — use computePerson(req.user.sub)',
-    );
-  }
-
   // BUS-RULE-072 / P18: SSOT KPI Metric Catalog and Governance Registry
   getGovernanceRegistry(): { data: KpiMetricGovernanceDefinition[] } {
     return { data: KPI_GOVERNANCE_REGISTRY };

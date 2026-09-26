@@ -2,9 +2,11 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
+import { logBestEffort } from '../../../common/helpers/best-effort';
 import {
   CreatePurchaseInvoiceDto,
   PurchaseInvoiceLineItemDto,
@@ -13,6 +15,8 @@ import { InvoiceCategory, InvoiceType, InvoiceStatus, PaymentStatus } from '@pri
 
 @Injectable()
 export class PurchaseInvoicesService {
+  private readonly logger = new Logger(PurchaseInvoicesService.name);
+
   constructor(
     private prisma: PrismaService,
     private idGenerator: IdGeneratorService,
@@ -311,7 +315,9 @@ export class PurchaseInvoicesService {
             notes: dto.notes,
           },
         });
-      } catch {}
+      } catch (err) {
+        logBestEffort(this.logger, 'invoice-mirror:bill-create', err);
+      }
 
       return {
         ...bill,
