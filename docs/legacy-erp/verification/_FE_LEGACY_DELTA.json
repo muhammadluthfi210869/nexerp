@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-26T07:54:37.168Z",
+ "generated_at": "2026-09-26T10:15:46.008Z",
  "sources": {
   "legacy_crawl": "docs/legacy-erp/reference/kil_erp_full_inventory_v2.csv",
   "screen_contract": "docs/legacy-erp/contracts/06_SCREEN_CONTRACT.json",
@@ -892,8 +892,8 @@
    "route": "/finance/bills",
    "file": "frontend/src/app/(dashboard)/finance/bills/page.tsx",
    "segment": "bills",
-   "lines": 351,
-   "total_lines": 351,
+   "lines": 355,
+   "total_lines": 355,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],

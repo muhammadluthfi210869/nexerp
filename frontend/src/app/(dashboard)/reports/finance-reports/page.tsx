@@ -517,13 +517,25 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
   const fetchLedger = useCallback(() => {
     if (!selectedAccId) return;
     setLoading(true);
-    // Call /reports/general-ledger with fallback to /finance/reports/general-ledger/:id
-    api.get("/reports/general-ledger", { params: { coa_id: selectedAccId, startDate, endDate } })
-      .then(res => setLedgerData(res.data))
-      .catch(() => {
-        return api.get(`/finance/reports/general-ledger/${selectedAccId}`, { params: { startDate, endDate } })
-          .then(res => setLedgerData(res.data));
-      })
+    // `/finance/reports/general-ledger/:id` answers the shape this panel draws
+    // (`account`, `beginningBalance`, `endingBalance`); `/reports/general-ledger`
+    // answers 200 with `{"data":[]}` — no `account` — and the panel dereferences
+    // `ledgerData.account.name`. That threw, and because every tab mounts at once it
+    // took Laba Rugi, Neraca and Neraca Saldo down with the Buku Besar tab. So the
+    // finance route leads, the reports route is the fallback, and a body the panel
+    // cannot draw is never stored. Pinned by
+    // src/app/(dashboard)/__tests__/live-shape-crash-guards.behavior.test.tsx.
+    const applyLedger = (body: any) => {
+      if (body?.account) setLedgerData(body);
+    };
+    api.get(`/finance/reports/general-ledger/${selectedAccId}`, { params: { startDate, endDate } })
+      .then(res => applyLedger(res.data))
+      .catch(() =>
+        api
+          .get("/reports/general-ledger", { params: { coa_id: selectedAccId, startDate, endDate } })
+          .then(res => applyLedger(res.data))
+          .catch(() => setLedgerData(null)),
+      )
       .finally(() => setLoading(false));
   }, [selectedAccId, startDate, endDate]);
 

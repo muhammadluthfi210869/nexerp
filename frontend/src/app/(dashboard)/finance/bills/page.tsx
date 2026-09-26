@@ -80,7 +80,11 @@ export default function VendorBillsPage() {
       const resp = await api.get("/finance/bills");
       return (resp.data || []).map((b: any) => ({
         id: b.billNumber,
-        vendor: b.vendorName,
+        // An invoice whose supplierId is null — the live case for every row on
+        // 2026-09-26 — sends vendorName: null, and the search filter below calls
+        // .toLowerCase() on it. Without a string here the screen threw as soon as
+        // anyone searched for a vendor, which is what its placeholder invites.
+        vendor: b.vendorName || "Vendor tidak diketahui",
         date: new Date(b.createdAt).toISOString().split("T")[0],
         dueDate: new Date(b.dueDate).toISOString().split("T")[0],
         total: Number(b.totalAmount),

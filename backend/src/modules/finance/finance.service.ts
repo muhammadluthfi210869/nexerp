@@ -13,7 +13,6 @@ import {
   StreamEventType,
   AccountType,
   NormalBalance,
-  PaymentStatus,
   PeriodStatus,
   ReportGroup,
   RegStage,
@@ -1145,6 +1144,13 @@ export class FinanceService {
         inv.so?.lead?.clientName || inv.workOrder?.lead?.clientName || null,
       vendorName: inv.supplier?.name || null,
       billNumber: inv.invoiceNumber,
+      // The vendor-bill screens read `totalAmount`/`paidAmount`/`remaining`; the
+      // Invoice model has only `amountDue`/`outstandingAmount`. Without these the
+      // money columns render NaN — no error, just "NaN" where a rupiah figure
+      // belongs. Pinned by scripts/__tests__/finance-invoice-alias-contract.test.sh.
+      totalAmount: Number(inv.amountDue ?? 0),
+      paidAmount: Number(inv.amountDue ?? 0) - Number(inv.outstandingAmount ?? 0),
+      remaining: Number(inv.outstandingAmount ?? 0),
     }));
   }
 

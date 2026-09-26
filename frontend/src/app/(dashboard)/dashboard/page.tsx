@@ -98,13 +98,21 @@ export default function DashboardPage() {
   const { data: rawAudit, isLoading, isError } = useQuery<AuditData>({
     queryKey: ["marketing-audit"],
     queryFn: async () => {
-      try {
-        const res = await api.get("/dashboards/marketing");
-        return res.data;
-      } catch {
-        const res2 = await api.get("/analytics/executive");
-        return res2.data;
-      }
+      // Both endpoints answer 200, so a thrown request is not the interesting case:
+      // `GET /dashboards/marketing` returns `{data:{cards,freshness}}` — card counts,
+      // no `acquisition` block — and this screen draws the audit shape. Setting that
+      // as the audit data crashed the page on `audit.acquisition.revenue_mtd`, before
+      // a single section rendered. So the shape decides, not the status code.
+      // Pinned by src/app/(dashboard)/__tests__/live-shape-crash-guards.behavior.test.tsx.
+      const auditFrom = async (path: string) => {
+        const res = await api.get(path);
+        const body = res.data?.acquisition ? res.data : res.data?.data;
+        return body?.acquisition ? body : null;
+      };
+      return (
+        (await auditFrom("/dashboards/marketing").catch(() => null)) ??
+        (await auditFrom("/analytics/executive"))
+      );
     }
   });
 

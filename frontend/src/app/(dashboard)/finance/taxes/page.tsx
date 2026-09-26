@@ -52,7 +52,13 @@ export default function FinanceTaxesPage() {
     queryFn: async () => {
       const res = await api.get("/finance/taxes");
       const body = unwrapResponse(res);
-      return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+      const rows: any[] = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+      // `rate` is a Prisma Decimal, so it arrives as a JSON string ("11", "0.5") while
+      // this screen treats it as a number: `t.rate.toFixed(2)` threw for every row and
+      // took the page down. Coerced here, at the boundary, so the interface above is
+      // true for every reader. Pinned by
+      // src/app/(dashboard)/__tests__/live-shape-crash-guards.behavior.test.tsx.
+      return rows.map((t) => ({ ...t, rate: Number(t.rate) }));
     },
   });
 
