@@ -501,3 +501,71 @@ Satu hal yang **tidak** diklaim: bahwa slice batch record memberi nilai perilaku
 Ia tidak mengubah perilaku apa pun, dan memang tidak dimaksudkan. Yang ia beri
 adalah berkas 412 baris yang bisa diaudit sendirian, dan suite yang gagal kalau
 badan-badannya diam-diam kembali ke facade.
+
+---
+
+## 10. Slice keempat: production planning (`7a145418`)
+
+Slice pertama yang sumbunya bukan kemutakhiran dan bukan satu tipe record. Enam
+metode ini satu-satunya tempat di modul production yang memutuskan **kapan**
+pekerjaan berjalan — itu yang membuatnya domain, bukan pengelompokan praktis.
+
+| Slice | Sumbu | Baris keluar |
+|---|---|---|
+| finance-report | kemutakhiran | 527 |
+| production-analytics | kemutakhiran | 1187 |
+| batch record | satu tipe record | 412 |
+| **production planning** | **kapan pekerjaan berjalan** | **554** |
+
+Seam: baris **883-1391**, enam metode, bersebelahan, tidak ada anggota lain
+diselipkan. `this.X`: `prisma` (6), `eventEmitter` (5), `idGenerator` (1). Nol
+rujukan ke keenam nama di luar blok, dan nol panggilan dari blok ke metode
+`ProductionService` lain.
+
+Blok menyentuh database terutama lewat `tx` di dalam `$transaction` (empat biji),
+bukan lewat `this.prisma` — itu sebabnya `this.prisma` mencacah 6 sementara model
+yang disentuh 10. Transaction client adalah parameter callback, jadi hanya
+`$transaction` terluar yang perlu di-inject.
+
+`production.service.ts` **2128 → 1649** baris; `ProductionPlanningService` **554**.
+
+### 10.1 Dua kegagalan yang ditangkap di jalan
+
+**Sidik jari yang didiskualifikasi.** `STAGE_ORDER_VIOLATION` semula dipakai
+sebagai salah satu sidik jari, dan skrip menolaknya: string itu juga ada di
+metode yang **tinggal** di facade. String yang dipakai bersama kode yang tidak
+pindah tidak bisa membuktikan pemindahan apa pun — ia hanya membuktikan string
+itu ada. Diganti empat sidik jari yang unik ke blok. Aturan ini sekarang jadi
+asersi tetap di skrip, bukan pengecualian sekali pakai.
+
+**Skrip bukan compiler.** Skrip gagal-tertutup lulus semua asersinya sementara
+`rel(...)` di dalam blok tidak punya import di berkas baru — `tsc` yang
+menangkapnya, bukan skrip. Ini ditulis apa adanya karena pemeriksaan yang
+*terbaca* lebih kuat daripada kenyataannya lebih berbahaya daripada tidak ada
+pemeriksaan: asersi skrip menguji bentuk dan keterhubungan, kelengkapan nama
+tetap milik compiler.
+
+### 10.2 Verifikasi
+
+| Gate | Hasil |
+|---|---|
+| `tsc --noEmit` | rc 0 |
+| `npm run lint` | rc 0 |
+| `npm run test:unit` | **44/44 suite, 470/470 test** |
+| `bash scripts/__tests__/run-all.sh` | PASS 26, FAIL 0, SKIP 0 |
+| `node scripts/ssot/validate_ssot.js` | 19 pass, 0 fail, CERTIFIED |
+| `node scripts/ssot/audit_lifecycle_reconciliation.js` | 14/14 PASS |
+
+### 10.3 Verdict
+
+**BELUM SIAP KIRIM**, tidak berubah. Ketiga gate yang belum ada hasilnya tetap
+sama: smoke test live, rollback teruji, dan P03 (yang hasil terakhirnya merah di
+SHA `5de307db`, bukan di HEAD — lihat §9.5).
+
+Sisa `production.service.ts` 1649 baris: stage execution/QC (`startProduction`,
+`startStage`, `reportBreakdown`, `submitStageLog`, baris 40-348), step actuals
+(`updateScheduleResult`, `submitStepActuals`, ~470 baris), work order + material
+(`createWorkOrder`, `issueMaterial`, `flagShortage`, ~170 baris), dan ekor berkas
+(handler `@OnEvent` + formula adjustment, ~74 baris). Yang terakhir itu belum
+dikerjakan karena handler event punya dekorator dan urutan registrasinya
+load-bearing — bukan karena sulit dipotong.
