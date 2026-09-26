@@ -55,8 +55,8 @@
       "backend_controllers": 114,
       "backend_controllers_reachable": 114,
       "backend_controllers_dead": 0,
-      "backend_services": 148,
-      "backend_services_reachable": 147,
+      "backend_services": 149,
+      "backend_services_reachable": 148,
       "backend_services_dead": 1,
       "backend_modules": 77,
       "backend_modules_reachable": 77,
@@ -35309,6 +35309,15 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/production/production-actuals.service.ts",
+      "provider_symbol": "ProductionActualsService",
+      "domain": "production",
+      "owner": "Production Team",
+      "rationale": "Business service encapsulated in production module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
       "file": "backend/src/modules/production/production-analytics.service.ts",
       "provider_symbol": "ProductionAnalyticsService",
       "domain": "production",
@@ -37878,6 +37887,56 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/production/production-actuals.service.ts",
+      "provider_symbol": "ProductionActualsService",
+      "role": "PUBLISHER",
+      "event": "activity.logged",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event activity.logged",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-actuals.service.ts",
+      "provider_symbol": "ProductionActualsService",
+      "role": "PUBLISHER",
+      "event": "activity.logged",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event activity.logged",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-actuals.service.ts",
+      "provider_symbol": "ProductionActualsService",
+      "role": "PUBLISHER",
+      "event": "production.qc_gate_blocked",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event production.qc_gate_blocked",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-actuals.service.ts",
+      "provider_symbol": "ProductionActualsService",
+      "role": "PUBLISHER",
+      "event": "production.qc_interlock_triggered",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event production.qc_interlock_triggered",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-actuals.service.ts",
+      "provider_symbol": "ProductionActualsService",
+      "role": "PUBLISHER",
+      "event": "production.schedule_completed",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event production.schedule_completed",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
       "file": "backend/src/modules/production/production-batch-record.service.ts",
       "provider_symbol": "ProductionBatchRecordService",
       "role": "PUBLISHER",
@@ -38051,26 +38110,6 @@
       "file": "backend/src/modules/production/production.service.ts",
       "provider_symbol": "ProductionService",
       "role": "PUBLISHER",
-      "event": "activity.logged",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event activity.logged",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
-      "event": "activity.logged",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event activity.logged",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
       "event": "BATCH_COMPLETED",
       "owner": "Production Team",
       "rationale": "Event publisher for event BATCH_COMPLETED",
@@ -38131,39 +38170,9 @@
       "file": "backend/src/modules/production/production.service.ts",
       "provider_symbol": "ProductionService",
       "role": "PUBLISHER",
-      "event": "production.qc_gate_blocked",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event production.qc_gate_blocked",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
-      "event": "production.qc_interlock_triggered",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event production.qc_interlock_triggered",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
       "event": "production.qc_verified",
       "owner": "Production Team",
       "rationale": "Event publisher for event production.qc_verified",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
-      "event": "production.schedule_completed",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event production.schedule_completed",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "reachable": true
     },
