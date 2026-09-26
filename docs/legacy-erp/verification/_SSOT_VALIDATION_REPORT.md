@@ -2,7 +2,7 @@
 
 > GENERATED — DO NOT EDIT DIRECTLY. Run `node scripts/ssot/validate_ssot.js`.
 
-Generated: 2026-09-26T22:06:40.032Z
+Generated: 2026-09-26T22:36:05.668Z
 
 ## Result
 

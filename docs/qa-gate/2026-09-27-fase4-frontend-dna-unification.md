@@ -2,7 +2,7 @@
 
 Tanggal: 2026-09-27
 Branch: `feat/p08-contracts-subject-ownership`
-Slice: **4.1** — Dekomposisi `DnaInteractiveElements.tsx`
+Slice: **4.1 & 4.2** — Dekomposisi `DnaInteractiveElements.tsx` & Type-Safe API Client Adapter
 Status: **BELUM SIAP KIRIM** (live smoke test, rollback teruji, dan P03 pending deploy)
 
 ---
@@ -11,7 +11,8 @@ Status: **BELUM SIAP KIRIM** (live smoke test, rollback teruji, dan P03 pending 
 
 Fase 4 menangani skalabilitas dan kebersihan arsitektur frontend tanpa menyebabkan regresi visual atau merusak DNA design system.
 
-Slice 4.1 membongkar mega-file `frontend/src/components/dna/DnaInteractiveElements.tsx` (1.559 baris, 35 exported symbols) menjadi 6 sub-modul atomik di bawah `frontend/src/components/dna/dna-interactive/`:
+### Slice 4.1 — Dekomposisi `DnaInteractiveElements.tsx`
+Membongkar mega-file `frontend/src/components/dna/DnaInteractiveElements.tsx` (1.559 baris, 35 exported symbols) menjadi 6 sub-modul atomik di bawah `frontend/src/components/dna/dna-interactive/`:
 
 | Modul | Baris | Simbol Utama |
 |---|--:|---|
@@ -24,12 +25,25 @@ Slice 4.1 membongkar mega-file `frontend/src/components/dna/DnaInteractiveElemen
 | `index.ts` | 13 | Barrel re-export seluruh 6 modul |
 | `DnaInteractiveElements.tsx` | 10 | Fasad re-export 100% backward compatible |
 
+### Slice 4.2 — Type-Safe API Client Adapter & `useApiQuery` Adoption
+1. **Standarisasi Kontrak Respon & Client HTTP**:
+   - `frontend/src/lib/api-client.ts`: Memperkenalkan generic `ApiResponse<T>`, `ApiPaginatedResponse<T>`, `unwrapData<T>`, typed `apiClient` helper (`get`, `post`, `patch`, `put`, `delete`), dan hook factory `createApiQueryHook`.
+   - Unit test suite: `frontend/src/lib/__tests__/api-client.test.ts` (9 tests PASS).
+2. **Hardening `useApiQuery`**:
+   - Mengatur `retry: false` otomatis di lingkungan pengujian (`NODE_ENV === 'test'`) untuk mencegah test timeout pada skenario failure/error state.
+3. **Adopsi pada Rute Acuan Emas (Golden Reference Routes)**:
+   - `visual-dna/golden-reference/page.tsx`: Migrasi query `production-work-orders` dan `production-leads` ke `useApiQuery` + `unwrapData`.
+   - `creative/finalized/page.tsx`: Migrasi `creative/finalized` query ke `useApiQuery` + `unwrapData`.
+   - `penjualan/sales-orders/page.tsx`: Migrasi `commercial-sales-orders` dan `master-customers-dropdown` ke `useApiQuery` + `unwrapData`.
+4. **DNA Boundary Ratchet**:
+   - Berhasil menurunkan pelanggaran `@typescript-eslint/no-unused-vars` dari 807 menjadi 806 pada `scripts/dna-boundary-baseline.json`.
+
 ---
 
 ## 1. Zero Visual Drift & Kontrak Publik Terjaga
 
 - **100% Backward Compatible**: 109+ file yang mengimpor dari `@/components/dna` dan 2 file yang mengimpor langsung dari `DnaInteractiveElements` tidak mengalami perubahan path maupun signature.
-- **DNA Boundary Ratchet**: Berhasil menurunkan pelanggaran `no-restricted-imports` dari 16 menjadi 3 pada `scripts/dna-boundary-baseline.json`.
+- **DNA Boundary Ratchet**: Berhasil menurunkan pelanggaran `no-restricted-imports` dari 16 menjadi 3 dan `@typescript-eslint/no-unused-vars` dari 807 menjadi 806.
 - **Aturan Dashboard**: 13 dashboard departemen acuan (`old_erp/ACUAN_DASHBOARD`) tetap terjaga dengan styling Aureon Matrix dan tidak diubah ke komponen DNA operasional.
 
 ---
@@ -40,9 +54,12 @@ Slice 4.1 membongkar mega-file `frontend/src/components/dna/DnaInteractiveElemen
 |---|---|---|
 | Frontend Typecheck | `cd frontend && npx tsc --noEmit` | **rc 0** (0 error) |
 | Backend Typecheck | `cd backend && npm run typecheck` | **rc 0** (0 error) |
-| Frontend Vitest | `cd frontend && npm test -- --run` | **84/84 files PASS**, **679/679 tests PASS** |
+| Frontend Vitest (Unit) | `npm test -- src/lib/__tests__/api-client.test.ts` | **1/1 files PASS**, **9/9 tests PASS** |
+| Frontend Vitest (Decomposition) | `npm test -- src/components/dna/__tests__/dna-interactive-decomposition.test.tsx` | **1/1 files PASS**, **9/9 tests PASS** |
+| Frontend Vitest (Behavior) | `npm test -- 'src/app/(dashboard)/creative/finalized/__tests__/p08-live-flow.behavior.test.tsx'` | **1/1 files PASS**, **27/27 tests PASS** |
+| Frontend Vitest (Shape Guards) | `npm test -- 'src/app/(dashboard)/__tests__/live-shape-crash-guards.behavior.test.tsx'` | **1/1 files PASS**, **4/4 tests PASS** |
 | Frontend Linter | `cd frontend && npm run lint` | **rc 0** (0 error) |
-| DNA Boundary Gate | `node scripts/dna-boundary-gate.mjs` | **PASS (DNA boundary held)** |
+| DNA Boundary Gate | `node scripts/dna-boundary-gate.mjs` | **PASS (DNA boundary held, ratchet 806)** |
 | SSOT Validation | `node scripts/ssot/validate_ssot.js` | **19/19 PASS (CERTIFIED)** |
 | Lifecycle Audit | `node scripts/ssot/audit_lifecycle_reconciliation.js` | **14/14 PASS** |
 | Shell Test Suite | `bash scripts/__tests__/run-all.sh` | **26/26 PASS** |

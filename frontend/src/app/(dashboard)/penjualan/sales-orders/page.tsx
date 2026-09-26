@@ -18,8 +18,10 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { api } from "@/lib/api";
+import { unwrapData } from "@/lib/api-client";
 import {
   FileSpreadsheet,
   Plus,
@@ -135,11 +137,13 @@ function SalesOrdersContent() {
     isError,
     error,
     refetch,
-  } = useQuery<SalesOrderItem[]>({
-    queryKey: ["commercial-sales-orders"],
-    queryFn: async () => {
+  } = useApiQuery<SalesOrderItem[]>(
+    ["commercial-sales-orders"],
+    async () => {
       const resp = await api.get("/commercial/sales-orders");
-      return (resp.data || []).map((so: any) => ({
+      const raw = unwrapData<any[]>(resp.data);
+      const items = Array.isArray(raw) ? raw : [];
+      return items.map((so: any) => ({
         id: so.id,
         soCode: so.orderNumber,
         orderDate: so.orderDate
@@ -178,20 +182,21 @@ function SalesOrdersContent() {
         notes: so.notes || "",
       }));
     },
-  });
+  );
 
   // Query customers for leadId mapping if available
-  const { data: customers = [] } = useQuery({
-    queryKey: ["master-customers-dropdown"],
-    queryFn: async () => {
+  const { data: customers = [] } = useApiQuery<any[]>(
+    ["master-customers-dropdown"],
+    async () => {
       try {
         const resp = await api.get("/customers");
-        return resp.data || [];
+        const raw = unwrapData<any[]>(resp.data);
+        return Array.isArray(raw) ? raw : [];
       } catch {
         return [];
       }
     },
-  });
+  );
 
   // KPI calculations
   const totalOmzet = orders.reduce((sum, o) => sum + o.grandTotal, 0);

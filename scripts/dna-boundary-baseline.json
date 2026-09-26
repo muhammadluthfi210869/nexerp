@@ -1,7 +1,7 @@
 {
  "counts": {
   "no-restricted-syntax": 913,
-  "@typescript-eslint/no-unused-vars": 807,
+  "@typescript-eslint/no-unused-vars": 806,
   "local/no-raw-ui-import": 1458,
   "react-hooks/exhaustive-deps": 27,
   "no-restricted-imports": 3

@@ -16,10 +16,11 @@
  */
 
 import React, { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, History, Layers, RefreshCw, ShieldCheck } from "lucide-react";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { CheckCircle2, History, Layers, RefreshCw } from "lucide-react";
 
 import { api } from "@/lib/api";
+import { unwrapData } from "@/lib/api-client";
 import {
   DnaBadge,
   DnaButton,
@@ -98,22 +99,22 @@ const formatDate = (value: string) => {
 export default function FinalizedDesignsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["creative", "finalized"],
-    queryFn: async (): Promise<FinalizedResponse> => {
+  const { data, isLoading, isError, error, refetch } = useApiQuery<FinalizedResponse>(
+    ["creative", "finalized"],
+    async (): Promise<FinalizedResponse> => {
       const resp = await api.get("/creative/finalized");
       const body = resp.data;
       if (Array.isArray(body)) {
         return { data: body, total: body.length, page: 1, limit: body.length };
       }
       return {
-        data: body?.data ?? [],
+        data: unwrapData<FinalizedDesign[]>(body) ?? [],
         total: body?.total ?? 0,
         page: body?.page ?? 1,
         limit: body?.limit ?? 0,
       };
     },
-  });
+  );
 
   const designs = data?.data ?? [];
 

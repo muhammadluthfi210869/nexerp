@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { api } from "@/lib/api";
+import { unwrapData } from "@/lib/api-client";
 import { QueryLoading, QueryError } from "@/components/query-states";
 import {
   FileText,
@@ -213,24 +215,26 @@ export default function GoldenReferencePage() {
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
 
   // ── SUMBER DATA NYATA ──
-  const workOrdersQuery = useQuery<WorkOrder[]>({
-    queryKey: ["production-work-orders"],
-    queryFn: async () => {
+  const workOrdersQuery = useApiQuery<WorkOrder[]>(
+    ["production-work-orders"],
+    async () => {
       const res = await api.get("/production/work-orders");
-      const raw: any[] = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
-      return raw.map(toWorkOrder);
+      const raw = unwrapData<ApiWorkOrder[]>(res.data);
+      const items = Array.isArray(raw) ? raw : [];
+      return items.map(toWorkOrder);
     },
-    staleTime: 30_000,
-  });
+    { staleTime: 30_000 },
+  );
 
-  const leadsQuery = useQuery<ApiLead[]>({
-    queryKey: ["production-leads"],
-    queryFn: async () => {
+  const leadsQuery = useApiQuery<ApiLead[]>(
+    ["production-leads"],
+    async () => {
       const res = await api.get("/production/leads");
-      return Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+      const raw = unwrapData<ApiLead[]>(res.data);
+      return Array.isArray(raw) ? raw : [];
     },
-    staleTime: 60_000,
-  });
+    { staleTime: 60_000 },
+  );
 
   const workOrders = workOrdersQuery.data ?? [];
 
