@@ -1,9 +1,9 @@
 {
   "manifest_version": "1.0.0",
-  "generated_at": "2026-09-26T15:32:46.650Z",
+  "generated_at": "2026-09-26T15:59:25.431Z",
   "base_commit_sha": "9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb",
-  "candidate_commit_sha": "dc95efb3fd486dce799313269198704c9c3a38db",
-  "total_changed_paths": 1208,
+  "candidate_commit_sha": "80fbc76525e9a2a98541c21fda691fbe8232fa83",
+  "total_changed_paths": 1218,
   "paths": [
     {
       "path": ".github/PULL_REQUEST_TEMPLATE/ssot-change.md",
@@ -235,6 +235,10 @@
     },
     {
       "path": "backend/src/app.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/common/helpers/best-effort.ts",
       "applicable_analyzers": []
     },
     {
@@ -766,6 +770,10 @@
       "applicable_analyzers": []
     },
     {
+      "path": "backend/src/modules/marketing/landing-tracker.service.ts",
+      "applicable_analyzers": []
+    },
+    {
       "path": "backend/src/modules/marketing/marketing-command.controller.ts",
       "applicable_analyzers": []
     },
@@ -775,6 +783,14 @@
     },
     {
       "path": "backend/src/modules/marketing/marketing/marketing.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/marketing/omni-crm/omni-crm-state.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/marketing/omni-crm/omni-crm-state.service.ts",
       "applicable_analyzers": []
     },
     {
@@ -903,6 +919,10 @@
     },
     {
       "path": "backend/src/modules/production-planning/__tests__/production-planning.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/production-planning/services/production-plans.service.ts",
       "applicable_analyzers": []
     },
     {
@@ -1770,6 +1790,10 @@
       "applicable_analyzers": []
     },
     {
+      "path": "backend/test/unit/best-effort-audit-swallow.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
       "path": "backend/test/unit/bussdev.controller.unit-spec.ts",
       "applicable_analyzers": []
     },
@@ -1787,6 +1811,10 @@
     },
     {
       "path": "backend/test/unit/hr.service.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/legality.unit-spec.ts",
       "applicable_analyzers": []
     },
     {
@@ -1839,6 +1867,10 @@
     },
     {
       "path": "backend/test/unit/tenant-context.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/typed-http-exceptions.unit-spec.ts",
       "applicable_analyzers": []
     },
     {
@@ -2471,6 +2503,14 @@
     },
     {
       "path": "docs/qa-gate/2026-09-26-fase1-tenant-binding-dan-audit-trail.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-26-fase2-integritas-ledger-dan-coa.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-26-fase3-vokabulari-error.md",
       "applicable_analyzers": []
     },
     {
