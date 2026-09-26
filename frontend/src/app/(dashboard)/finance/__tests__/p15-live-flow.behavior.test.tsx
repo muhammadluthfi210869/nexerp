@@ -148,9 +148,12 @@ describe("P15 Acceptance — Live Finance, Escrow & Closing UI Flow", () => {
 
   describe("Live Data Rendering & Workflow Behavior", () => {
     it("renders ApAgingReportPage with empty state honestly when API returns empty bills", async () => {
+      // /reports/ap-aging is the page's primary source; /finance/bills is only its
+      // fallback when that call fails. A report endpoint that answers 200 with []
+      // never reaches the fallback, so the stub would assert nothing.
       reply = async (url) => {
-        if (url.includes("/finance/bills")) {
-          return { status: 200, body: [] };
+        if (url.includes("/reports/ap-aging")) {
+          return { status: 404, body: { message: "Report unavailable" } };
         }
         return { status: 200, body: [] };
       };
@@ -171,6 +174,11 @@ describe("P15 Acceptance — Live Finance, Escrow & Closing UI Flow", () => {
       const dH7 = new Date(now.getTime() + 6 * 86400000).toISOString();
 
       reply = async (url) => {
+        // Same fallback path as the empty-state case above: the aggregated report
+        // endpoint has to fail before the page reads individual bills.
+        if (url.includes("/reports/ap-aging")) {
+          return { status: 404, body: { message: "Report unavailable" } };
+        }
         if (url.includes("/finance/bills")) {
           return {
             status: 200,

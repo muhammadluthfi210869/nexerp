@@ -223,7 +223,9 @@ describe("P12 Acceptance — Live P12 PPIC & Production UI", () => {
       const sentinelProduct = "Hydrating Gel UV 50gr";
 
       reply = async (url) => {
-        if (url.includes("/production/schedules") && url.includes("stage=PACKAGING")) {
+        // ProdStage enum is BATCHING|MIXING|FILLING|PACKING — the pages ask for
+        // stage=PACKING, so this stub must match that or it replies [].
+        if (url.includes("/production/schedules") && url.includes("stage=PACKING")) {
           return {
             status: 200,
             body: [
