@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   NotFoundException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
@@ -20,9 +21,12 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { IdGeneratorService } from '../system/id-generator.service';
 import { StateTransitionService } from '../system/state-transition.service';
 import { ProductionAnalyticsService } from './production-analytics.service';
+import { logBestEffort } from '../../common/helpers/best-effort';
 
 @Injectable()
 export class ProductionService {
+  private readonly logger = new Logger(ProductionService.name);
+
   constructor(
     private prisma: PrismaService,
     private legality: LegalityService,
@@ -1581,12 +1585,19 @@ export class ProductionService {
             data: { stockQty: resultQty },
           });
         } else {
-          await tx.finishedGood.create({
-            data: {
-              woId: schedule.workOrderId,
-              stockQty: resultQty,
-            },
-          }).catch(() => {});
+          try {
+            await tx.finishedGood.create({
+              data: {
+                woId: schedule.workOrderId,
+                stockQty: resultQty,
+              },
+            });
+          } catch (err) {
+            // Best-effort mirror: the schedule result is the authoritative row
+            // and is already written, so a failed finished-good row must not
+            // roll it back. It must not vanish either.
+            logBestEffort(this.logger, 'production:finished-good-mirror', err);
+          }
         }
       }
 
@@ -1915,12 +1926,17 @@ export class ProductionService {
 
     const workOrderId = dto.workOrderId || dto.work_order_id;
     if (workOrderId) {
-      await this.prisma.workOrder
-        .update({
+      try {
+        await this.prisma.workOrder.update({
           where: { id: workOrderId },
           data: { planId: plan.id },
-        })
-        .catch(() => {});
+        });
+      } catch (err) {
+        // The batch record above is committed; linking it back to the work
+        // order is best-effort. A work order that silently keeps pointing at an
+        // old plan is exactly the kind of desync nobody can find later.
+        logBestEffort(this.logger, 'production:work-order-plan-link', err);
+      }
     }
 
     this.eventEmitter.emit('production.batch_record.created', {

@@ -92,7 +92,12 @@ export class RolesGuard implements CanActivate {
         return cls.toLowerCase();
       }
     } catch {
-      // fall through
+      // A Proxy or an exotic getter on `constructor`/`name` can throw. The
+      // label here is only used to name a role in a log line, so the default
+      // below is the answer either way — stated explicitly rather than left as
+      // a silent fall-through, because an empty catch is indistinguishable from
+      // a discarded failure to anyone reading it later.
+      return 'anonymous';
     }
     return 'anonymous';
   }

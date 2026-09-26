@@ -7,6 +7,7 @@
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { ModuleRef } from '@nestjs/core';
+import { logBestEffort } from '../../common/helpers/best-effort';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { ScmService } from '../scm/services/scm.service';
 import { LifecycleStatus } from '@prisma/client';
@@ -2128,8 +2129,11 @@ export class WarehouseService {
           });
         }
       }
-    } catch {
-      // Silent fail for secondary concern
+    } catch (err) {
+      // Secondary concern, so it must not fail the caller — but a stock-shortage
+      // alert that never fired is a purchasing decision nobody gets to make, and
+      // "silent fail" made it indistinguishable from "no shortage".
+      logBestEffort(this.logger, 'warehouse:stock-shortage-alert', err);
     }
   }
 

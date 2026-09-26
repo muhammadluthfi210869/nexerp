@@ -20,10 +20,12 @@
  * those client methods.
  */
 
+import { Logger } from '@nestjs/common';
 import { EventEmitter } from 'events';
 import { Client, LocalAuth, Message as WwebMessage, Chat as WwebChat } from 'whatsapp-web.js';
 import * as QRCode from 'qrcode';
 import * as path from 'path';
+import { logBestEffort } from '../../common/helpers/best-effort';
 
 export interface WhatsappWebJsTransportOpts {
   authDir: string;     // absolute path; LocalAuth dataPath (no trailing slash needed)
@@ -33,6 +35,7 @@ export interface WhatsappWebJsTransportOpts {
 }
 
 export class WhatsappWebJsTransport extends EventEmitter {
+  private readonly logger = new Logger(WhatsappWebJsTransport.name);
   // PRIVATE: name `client` (not `sock`) to satisfy
   // collector-public-boundary.spec.ts source-text regex forbidding
   // public accessors that return `this.sock`.
@@ -81,8 +84,10 @@ export class WhatsappWebJsTransport extends EventEmitter {
   async stop(): Promise<void> {
     try {
       await this.client.destroy();
-    } catch {
-      /* swallow */
+    } catch (err) {
+      // Shutdown is best-effort: a destroy failure must not block `stop()`. It
+      // does mean a browser process may still be alive, which is worth knowing.
+      logBestEffort(this.logger, 'wa-self-qr:client-destroy', err);
     }
     this.started = false;
   }
@@ -106,12 +111,17 @@ export class WhatsappWebJsTransport extends EventEmitter {
 
   // Persist QR to PNG for operator scan-with-WhatsApp-Business flow.
   // PNG NEVER appears in HTTP response — only its PATH.
+  //
+  // The write is best-effort: the base64 `qr` still goes out in the payload, so
+  // a consumer that renders the code directly keeps working. What it must not do
+  // is fail in silence, because `qrPngPath` is emitted either way and a missing
+  // file then looks like a broken operator flow rather than a failed write.
   private async persistQr(qr: string): Promise<void> {
     const outPath = this.opts.qrOutPath ?? path.join(this.opts.authDir, 'qr.png');
     try {
       await QRCode.toFile(outPath, qr);
-    } catch {
-      /* swallow */
+    } catch (err) {
+      logBestEffort(this.logger, 'wa-self-qr:qr-png-persist', err);
     }
     this.emit('qr', { qr, qrPngPath: outPath });
   }

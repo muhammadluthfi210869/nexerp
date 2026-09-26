@@ -9,6 +9,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { createCipheriv, createHash, randomBytes } from 'node:crypto';
+import { logBestEffort } from '../../../common/helpers/best-effort';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import {
   AttachmentMetadataDto,
@@ -860,15 +861,20 @@ export class CanonicalMarketingService implements OnModuleInit {
       },
     });
     if (member.userId) {
-      await this.prisma.user
-        .update({
+      try {
+        await this.prisma.user.update({
           where: { id: member.userId },
           data: {
             ...(dto.name ? { fullName: dto.name.trim() } : {}),
             ...(dto.email ? { email: dto.email.trim() } : {}),
           },
-        })
-        .catch(() => {});
+        });
+      } catch (err) {
+        // The marketing member row above is authoritative and committed; the
+        // user row is a best-effort mirror of name/email. Without this log the
+        // two records drift apart with nothing anywhere to say so.
+        logBestEffort(this.logger, 'marketing:member-user-mirror', err);
+      }
     }
     return {
       id: updated.id,

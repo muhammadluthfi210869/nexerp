@@ -7,6 +7,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { logBestEffort } from '../../common/helpers/best-effort';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { LEAD_VALIDATION_EVENTS, SelfQrEventPersistedPayload } from '../lead-capture/lead-validation.events';
 import type {
@@ -170,8 +171,11 @@ export class StorageService {
         select: { normalizedPhone: true },
       });
       destinationPhone = dev?.normalizedPhone ?? null;
-    } catch {
-      /* swallow */
+    } catch (err) {
+      // The reply cannot be routed without this, so the failure is not cosmetic
+      // — but the inbound event is already persisted and losing it would be
+      // worse than answering nobody. Logged, not rethrown.
+      logBestEffort(this.logger, 'wa-self-qr:destination-phone-lookup', err);
     }
 
     const ac = new AbortController();
