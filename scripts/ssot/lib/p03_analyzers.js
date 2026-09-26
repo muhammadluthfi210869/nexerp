@@ -835,14 +835,21 @@ function checkCiRequiredChecks(root, overrides = {}) {
   const hasLint = (fastStepRuns.includes('npm --prefix backend run lint') || pushStepRuns.includes('npm --prefix backend run lint')) &&
     (fastStepRuns.includes('npm --prefix frontend run lint') || pushStepRuns.includes('npm --prefix frontend run lint'));
   const hasUnit = hasPhaseRunner || fastStepRuns.includes('test:unit');
-  const hasMigration = fastStepRuns.includes('prisma validate') && fastStepRuns.includes('prisma migrate deploy');
+  // The migration gate must both validate the schema and apply migrations. Only
+  // the intent is pinned, so either spelling counts: the direct CLI form and the
+  // backend npm scripts (`prisma:validate` / `prisma:migrate:deploy`) that exist
+  // because `npx --prefix backend prisma ...` keeps the repo-root CWD and finds no
+  // schema. A CI with neither form still fails below.
+  const hasPrismaValidate = /prisma[: ]validate/.test(fastStepRuns);
+  const hasPrismaMigrate = /prisma:migrate:deploy|prisma migrate deploy/.test(fastStepRuns);
+  const hasMigration = hasPrismaValidate && hasPrismaMigrate;
   const hasBuildVerif = hasPhaseRunner || fastStepRuns.includes('verify_clean_checkout_build.js');
   const hasArchGate = hasPhaseRunner || fastStepRuns.includes('audit_p03_architecture_gates.js');
   const hasNegativeGate = hasPhaseRunner || fastStepRuns.includes('test_p03_architecture_gates_negative.js');
 
   const hasPostgresService = pushImages.services && pushImages.services.postgres &&
     pushImages.services.postgres.image && pushImages.services.postgres.image.includes('postgres:15-alpine');
-  const hasPushMigration = pushStepRuns.includes('prisma migrate deploy');
+  const hasPushMigration = /prisma:migrate:deploy|prisma migrate deploy/.test(pushStepRuns);
   const hasBackendStart = pushStepRuns.includes('nexerp-backend-test') && pushStepRuns.includes('/v1/health');
 
   const envNodeOptions = (ciDoc.env && ciDoc.env.NODE_OPTIONS) || '';
@@ -1300,6 +1307,23 @@ function checkOrphanObjects(root, overrides = {}) {
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * Base paths declared by a `@Controller(...)`: one string, or an array of aliases.
+ * The single-string form used to be the only one read, which left every array-form
+ * controller with an empty base and made its routes look like another controller's.
+ */
+function controllerBasePaths(code) {
+  const decl = code.match(/@Controller\(([\s\S]*?)\)/);
+  if (!decl) return [];
+  const arg = decl[1].trim();
+  const cleaned = (p) => p.replace(/^\/+|\/+$/g, '');
+  if (arg.startsWith('[')) {
+    return [...arg.matchAll(/['"]([^'"]*)['"]/g)].map(m => cleaned(m[1]));
+  }
+  const single = arg.match(/^['"]([^'"]*)['"]/);
+  return single ? [cleaned(single[1])] : [];
+}
+
 // Gate 12: checkDuplicateCode (Real token clone detector + route collisions)
 // -----------------------------------------------------------------------------
 function checkDuplicateCode(root, overrides = {}) {
@@ -1325,28 +1349,38 @@ function checkDuplicateCode(root, overrides = {}) {
     const code = fs.readFileSync(c, 'utf8');
     const rel = normalizePath(path.relative(root, c));
 
-    const ctrlMatch = code.match(/@Controller\(['"]([^'"]*)['"]\)/);
-    const base = ctrlMatch ? ctrlMatch[1].replace(/^\/+|\/+$/g, '') : '';
+    // A controller may declare one path or an array of aliases. Reading only the
+    // single-string form left every array-form controller with an empty base, so
+    // distinct routes such as finance/fixed-assets/:id and
+    // finance/job-order-costings/:id both collapsed to /:id and were reported as
+    // collisions that do not exist.
+    const bases = controllerBasePaths(code);
 
-    if (base.includes('api/v1/api/v1') || base.includes('v1/v1')) {
-      collisions.push({ file: rel, error: `Double prefix detected in controller: ${base}` });
+    for (const basePath of bases) {
+      if (basePath.includes('api/v1/api/v1') || basePath.includes('v1/v1')) {
+        collisions.push({ file: rel, error: `Double prefix detected in controller: ${basePath}` });
+      }
     }
 
     const methodMatches = [...code.matchAll(/@(Get|Post|Put|Delete|Patch)\(['"]([^'"]*)['"]\)/g)];
-    for (const m of methodMatches) {
-      const verb = m[1].toUpperCase();
-      const sub = m[2].replace(/^\/+|\/+$/g, '');
-      const full = `/${base}${sub ? '/' + sub : ''}`.replace(/\/+/g, '/');
+    // Every declared alias serves the same handlers, so each one is registered:
+    // a collision on an alias is as real as one on the primary path.
+    for (const basePath of bases.length ? bases : ['']) {
+      for (const m of methodMatches) {
+        const verb = m[1].toUpperCase();
+        const sub = m[2].replace(/^\/+|\/+$/g, '');
+        const full = `/${basePath}${sub ? '/' + sub : ''}`.replace(/\/+/g, '/');
 
-      if (full.includes('/api/v1/api/v1') || full.includes('/v1/v1')) {
-        collisions.push({ file: rel, error: `Double prefix detected in endpoint: ${full}` });
-      }
+        if (full.includes('/api/v1/api/v1') || full.includes('/v1/v1')) {
+          collisions.push({ file: rel, error: `Double prefix detected in endpoint: ${full}` });
+        }
 
-      const key = `${verb} ${full}`;
-      if (routeRegistry[key] && routeRegistry[key] !== rel) {
-        collisions.push({ file: rel, error: `Duplicate route collision: ${key} already defined in ${routeRegistry[key]}` });
-      } else {
-        routeRegistry[key] = rel;
+        const key = `${verb} ${full}`;
+        if (routeRegistry[key] && routeRegistry[key] !== rel) {
+          collisions.push({ file: rel, error: `Duplicate route collision: ${key} already defined in ${routeRegistry[key]}` });
+        } else {
+          routeRegistry[key] = rel;
+        }
       }
     }
   }
