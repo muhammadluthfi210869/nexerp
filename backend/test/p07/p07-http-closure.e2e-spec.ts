@@ -803,11 +803,7 @@ describe('P07 HTTP closure (real Nest app, disposable PostgreSQL)', () => {
         await prisma.marketingIdempotencyKey.count({ where: { scope: { contains: rollbackLeadId } } }),
       ).toBe(0);
     } finally {
-      try {
-        await altApp.close();
-      } catch (e) {
-        throw new Error(`altApp close failed (rollback proof): ${(e as Error).message}`);
-      }
+      await altApp.close();
     }
   }, 120000);
 });

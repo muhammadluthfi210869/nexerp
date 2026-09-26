@@ -76,4 +76,49 @@ export class GoodsRequirementService {
       data: { status: dto.status },
     });
   }
+
+  async getSummary() {
+    const items = await this.prisma.goodsRequirementItem.findMany({
+      include: {
+        requirement: true,
+      },
+      orderBy: { id: 'asc' },
+    });
+
+    const materialIds = [...new Set(items.map((i) => i.materialId))];
+    const materials = await this.prisma.materialItem.findMany({
+      where: { id: { in: materialIds } },
+    });
+    const matMap = new Map(materials.map((m) => [m.id, m]));
+
+    // Aggregate by material
+    const summaryMap = new Map<string, any>();
+    for (const item of items) {
+      const mat = matMap.get(item.materialId);
+      const existing = summaryMap.get(item.materialId) || {
+        id: item.materialId,
+        materialId: item.materialId,
+        kode: mat?.code || 'MAT-GEN',
+        nama: mat?.name || 'Material Bahan',
+        kategori: mat?.type || 'RAW_MATERIAL',
+        totalKebutuhan: 0,
+        stokGudang: Number(mat?.stockQty || 0),
+        satuan: mat?.unit || 'KG',
+        hargaEstimasi: Number(mat?.unitPrice || 0),
+        prioritas: 'MEDIUM',
+        soList: [] as string[],
+      };
+
+      existing.totalKebutuhan += Number(item.qty);
+      if (item.requirement?.salesOrderId && !existing.soList.includes(item.requirement.salesOrderId)) {
+        existing.soList.push(item.requirement.salesOrderId);
+      }
+      summaryMap.set(item.materialId, existing);
+    }
+
+    return Array.from(summaryMap.values()).map((row) => ({
+      ...row,
+      selisih: Math.max(0, row.totalKebutuhan - row.stokGudang),
+    }));
+  }
 }

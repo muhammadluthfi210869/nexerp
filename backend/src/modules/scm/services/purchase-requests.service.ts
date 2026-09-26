@@ -221,7 +221,7 @@ export class PurchaseRequestsService {
     salesOrderId?: string;
     items?: Array<{ materialId: string; requiredQty: number }>;
   }) {
-    let materialNeeds: Array<{ materialId: string; requiredQty: number }> = [];
+    const materialNeeds: Array<{ materialId: string; requiredQty: number }> = [];
 
     if (params.salesOrderId) {
       // Find goods requirements or BOM from sales order

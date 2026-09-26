@@ -37,6 +37,27 @@ export class PurchaseOrdersController {
     return this.poService.create(req.user.id, dto);
   }
 
+  @Post('from-requirement')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.SCM)
+  @ApiOperation({ summary: 'Create PO from Goods Requirement' })
+  createFromRequirement(
+    @Request() req: { user: User },
+    @Body() dto: { materialId: string; supplierId: string; qty: number; unitPrice: number },
+  ) {
+    return this.poService.create(req.user.id, {
+      supplierId: dto.supplierId,
+      totalAmount: dto.qty * dto.unitPrice,
+      items: [
+        {
+          materialId: dto.materialId,
+          qty: dto.qty,
+          unitPrice: dto.unitPrice,
+          totalPrice: dto.qty * dto.unitPrice,
+        },
+      ],
+    });
+  }
+
   @Get()
   @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.SCM, UserRole.FINANCE, UserRole.DIRECTOR)
   @ApiOperation({ summary: 'Get all Purchase Orders' })

@@ -107,6 +107,22 @@ export class AnalyticsService {
           (acc, curr) => acc + curr.profileVisits,
           0,
         ),
+        total_likes: latestHealth.reduce(
+          (acc, curr) => acc + curr.likesCount,
+          0,
+        ),
+        total_comments: latestHealth.reduce(
+          (acc, curr) => acc + curr.commentsCount,
+          0,
+        ),
+        total_shares: latestHealth.reduce(
+          (acc, curr) => acc + curr.sharesCount,
+          0,
+        ),
+        total_saves: latestHealth.reduce(
+          (acc, curr) => acc + curr.savesCount,
+          0,
+        ),
       },
       platform_audit: platformAudit,
       lead_ranking: leadSources.map((s) => ({

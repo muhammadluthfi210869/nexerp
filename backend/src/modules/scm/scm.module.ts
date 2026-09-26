@@ -17,6 +17,8 @@ import { SupplierScoreService } from './services/supplier-score.service';
 import { PurchasePaymentsController, PurchaseDownPaymentsController } from './controllers/purchase-payments.controller';
 import { PurchaseRequestsService } from './services/purchase-requests.service';
 import { PurchaseRequestsController, MrpShortageController } from './controllers/purchase-requests.controller';
+import { GoodsRequirementController } from './controllers/goods-requirement.controller';
+import { GoodsRequirementService } from './services/goods-requirement.service';
 
 import { LegalityModule } from '../legality/legality.module';
 
@@ -32,6 +34,7 @@ import { LegalityModule } from '../legality/legality.module';
     PurchaseInvoicesService,
     PurchasePaymentsService,
     SupplierScoreService,
+    GoodsRequirementService,
   ],
   controllers: [
     PurchaseOrdersController,
@@ -44,6 +47,7 @@ import { LegalityModule } from '../legality/legality.module';
     PurchaseInvoicesController,
     PurchasePaymentsController,
     PurchaseDownPaymentsController,
+    GoodsRequirementController,
   ],
   exports: [ScmService, SupplierScoreService, PurchaseRequestsService, PurchaseOrdersService, PurchasePaymentsService],
 })

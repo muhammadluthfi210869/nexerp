@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
-import { RndService } from '../rnd.service';
+import { Controller, Get, Post, Body, Param, Req, UseGuards } from '@nestjs/common';
+import { RndService, rndActorFromRequest } from '../rnd.service';
 import { CreateNPFDto } from '../dto/create-npf.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
@@ -13,19 +13,19 @@ export class NpfController {
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL)
-  create(@Body() createNPFDto: CreateNPFDto) {
-    return this.rndService.createNPF(createNPFDto);
+  create(@Body() createNPFDto: CreateNPFDto, @Req() req: any) {
+    return this.rndService.createNPF(createNPFDto, rndActorFromRequest(req));
   }
 
   @Get()
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL, UserRole.RND)
-  findAll() {
-    return this.rndService.getNPFs();
+  findAll(@Req() req: any) {
+    return this.rndService.getNPFs(rndActorFromRequest(req));
   }
 
   @Get(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMMERCIAL, UserRole.RND)
-  findOne(@Param('id') id: string) {
-    return this.rndService.getNPF(id);
+  findOne(@Param('id') id: string, @Req() req: any) {
+    return this.rndService.getNPF(id, rndActorFromRequest(req));
   }
 }

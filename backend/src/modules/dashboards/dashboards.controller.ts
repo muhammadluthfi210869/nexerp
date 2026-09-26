@@ -14,6 +14,13 @@ export class DashboardsController {
   constructor(private readonly dashboardsService: DashboardsService) {}
 
 
+  @Get('executive')
+  @ApiOperation({ summary: 'Executive dashboard rollup' })
+  @Roles(UserRole.SUPER_ADMIN, UserRole.DIRECTOR, UserRole.HEAD_OPS)
+  getExecutiveDashboard() {
+    return this.dashboardsService.getExecutiveDashboard();
+  }
+
   @Get('finance')
   @ApiOperation({ summary: 'Finance dashboard rollup' })
   @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.HEAD_OPS)

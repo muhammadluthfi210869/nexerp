@@ -17,7 +17,7 @@ import {
 
 @ApiTags('finance/fixed-assets')
 @ApiBearerAuth()
-@Controller('finance/fixed-assets')
+@Controller(['finance/fixed-assets', 'finance/assets'])
 export class FixedAssetsController {
   constructor(private service: FixedAssetsService) {}
 

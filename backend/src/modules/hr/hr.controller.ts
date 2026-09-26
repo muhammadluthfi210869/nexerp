@@ -97,6 +97,15 @@ export class HrController {
 
   // --- ATTENDANCE ---
 
+  @Get('attendance')
+  @ApiOperation({ summary: 'Get all attendance records for date' })
+  getAttendanceRecords(
+    @Query('date') date?: string,
+    @Query('employeeId') employeeId?: string,
+  ) {
+    return this.hrService.getAttendanceRecords(date, employeeId);
+  }
+
   @Get('employees/:id/attendance')
   @ApiOperation({ summary: 'Get attendance stats for an employee' })
   getEmployeeAttendance(@Param('id') id: string, @Query('days') days: string) {
@@ -253,6 +262,36 @@ export class HrController {
 
   // --- KPI ---
 
+  @Get('kpi/departments')
+  @ApiOperation({ summary: 'Get all department KPIs with governance & employee aggregation' })
+  getKpiDepartments() {
+    return this.hrService.getKpiDepartments();
+  }
+
+  @Get('kpi/departments/:id')
+  @ApiOperation({ summary: 'Get department KPI detail' })
+  getKpiDepartmentById(@Param('id') id: string) {
+    return this.hrService.getKpiDepartmentById(id);
+  }
+
+  @Get('kpi/department/:id')
+  @ApiOperation({ summary: 'Get department KPI detail alias' })
+  getKpiDepartmentByIdAlias(@Param('id') id: string) {
+    return this.hrService.getKpiDepartmentById(id);
+  }
+
+  @Get('kpi/employees')
+  @ApiOperation({ summary: 'Get all employee individual KPIs' })
+  getKpiEmployees() {
+    return this.hrService.getKpiEmployees();
+  }
+
+  @Get('kpi/individual/:id')
+  @ApiOperation({ summary: 'Get individual employee KPI detail' })
+  getKpiIndividualById(@Param('id') id: string) {
+    return this.hrService.getKpiIndividualById(id);
+  }
+
   @Get('kpi/employee/:id')
   getEmployeeKPI(@Param('id') id: string, @Query('period') period: string) {
     return this.hrService.calculateEmployeeKPI(id, period);
@@ -268,6 +307,12 @@ export class HrController {
   }
 
   // --- PAYROLL & SALARY SLIP (BUS-RULE-117) ---
+
+  @Get('payrolls')
+  @ApiOperation({ summary: 'Get all payroll records' })
+  getAllPayrolls() {
+    return this.hrService.getAllPayrolls();
+  }
 
   @Post('payroll/generate')
   generatePayroll(@Body('period') period: string) {

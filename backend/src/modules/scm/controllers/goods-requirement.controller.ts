@@ -20,10 +20,23 @@ import { UserRole } from '@prisma/client';
 
 @ApiTags('scm/goods-requirements')
 @ApiBearerAuth()
-@Controller('scm/goods-requirements')
+@Controller(['scm/goods-requirements', 'scm/requirements'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class GoodsRequirementController {
   constructor(private readonly service: GoodsRequirementService) {}
+
+  @Get('summary')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.PURCHASING,
+    UserRole.PRODUCTION,
+    UserRole.WAREHOUSE,
+    UserRole.SCM,
+  )
+  @ApiOperation({ summary: 'Get consolidated material requirements summary' })
+  getSummary() {
+    return this.service.getSummary();
+  }
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.PRODUCTION)

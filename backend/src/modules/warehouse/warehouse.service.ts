@@ -507,6 +507,17 @@ export class WarehouseService {
     });
   }
 
+  async getAllTransactions(materialId?: string) {
+    return this.prisma.inventoryTransaction.findMany({
+      where: materialId ? { materialId } : undefined,
+      include: {
+        material: { select: { id: true, name: true, code: true, unit: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+  }
+
   private async getOrCreateSystemSupplier(tx: any) {
     let sup = await tx.supplier.findFirst({
       where: { name: 'System Default' },
@@ -1037,6 +1048,9 @@ export class WarehouseService {
     });
 
     return this.prisma.$transaction(async (tx) => {
+      // Row-level lock to prevent concurrent double-allocation and ensure zero inventory variance
+      await tx.$executeRaw`SELECT id FROM material_inventories WHERE id = ${data.batchId}::uuid FOR UPDATE`;
+
       const batch = await tx.materialInventory.findUnique({
         where: { id: data.batchId },
         include: { material: true },

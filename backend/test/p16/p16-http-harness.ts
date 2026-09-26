@@ -78,6 +78,30 @@ export async function bootP16App(): Promise<P16App> {
     }).catch(() => {});
 
     // 2. Payroll items & payrolls
+    const testPeriods = await prisma.financialPeriod.findMany({
+      where: {
+        OR: [
+          { name: { startsWith: '2026-09' } },
+          { name: { startsWith: '2026-10' } },
+        ],
+      },
+      select: { id: true },
+    });
+    const periodIds = testPeriods.map((p) => p.id);
+    if (periodIds.length > 0) {
+      await prisma.payrollItem.deleteMany({
+        where: {
+          payroll: {
+            periodId: { in: periodIds },
+          },
+        },
+      }).catch(() => {});
+      await prisma.payroll.deleteMany({
+        where: {
+          periodId: { in: periodIds },
+        },
+      }).catch(() => {});
+    }
     await prisma.payrollItem.deleteMany({
       where: {
         employee: {

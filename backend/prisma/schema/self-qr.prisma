@@ -1,0 +1,116 @@
+/**
+ * self-qr.prisma — NEX ERP Batch 1: Self-Hosted WhatsApp QR Collector
+ * STAGING / EVIDENCE layer only. No operational ERP data is mutated here.
+ * Hard rules:
+ * - Unique dedup key: (deviceId, externalMessageId)
+ * - whatsappTimestamp / receivedAt / persistedAt are stored separately.
+ * - Internal Sales/device phones are protected (see internal-phone set in code,
+ * DB stores identityStatus = 'INTERNAL_DEVICE' when matched).
+ * - No FK to LeadCapture / Customer — staging must remain isolated.
+ */
+
+enum SelfQrDeviceStatus {
+  UNPAIRED
+  CONNECTING
+  PAIRING_CODE_READY
+  PAIRING
+  CONNECTED
+  SYNCING_HISTORY
+  READY
+  RECONNECTING
+  LOGGED_OUT
+  ERROR
+  SUSPENDED
+}
+
+enum SelfQrEventSource {
+  HISTORY
+  REALTIME
+  CATCHUP
+  EXPORT
+}
+
+enum SelfQrIdentityStatus {
+  RESOLVED_PHONE
+  RESOLVED_LID
+  UNRESOLVED_LID
+  INTERNAL_DEVICE
+}
+
+enum SelfQrTimestampStatus {
+  OK
+  SUSPECT
+  MISSING
+}
+
+model SelfQrDevice {
+  id              String             @id @default(uuid()) @db.Uuid
+  internalCode    String             @unique @db.VarChar(40)
+  displayName     String             @db.VarChar(120)
+  normalizedPhone String             @db.VarChar(20)
+  provider        String             @default("baileys") @db.VarChar(20)
+  providerId      String?            @db.VarChar(80)
+  status          SelfQrDeviceStatus @default(UNPAIRED)
+  phoneLast4      String?            @db.VarChar(4)
+  authStatePath   String?            @db.VarChar(255)
+  salesIdentity   String?            @db.VarChar(120)
+  enabled         Boolean            @default(true)
+  pairedAt        DateTime?
+  lastReadyAt     DateTime?
+  disconnectedAt  DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  events SelfQrNormalizedEvent[]
+  runs   SelfQrHistoryRun[]
+
+  @@index([status])
+  @@map("self_qr_devices")
+}
+
+model SelfQrNormalizedEvent {
+  id                String                @id @default(uuid()) @db.Uuid
+  deviceId          String                @db.Uuid
+  device            SelfQrDevice          @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  dedupHash         String                @db.VarChar(64)
+  externalMessageId String                @db.VarChar(120)
+  provider          String                @db.VarChar(20)
+  customerPhone     String?               @db.VarChar(20)
+  customerLid       String?               @db.VarChar(120)
+  identityStatus    SelfQrIdentityStatus
+  remoteJid         String                @db.VarChar(160)
+  remoteJidAlt      String?               @db.VarChar(160)
+  fromMe            Boolean
+  direction         String                @db.VarChar(10)
+  whatsappTimestamp DateTime
+  receivedAt        DateTime              @default(now())
+  persistedAt       DateTime              @default(now())
+  messageType       String                @db.VarChar(30)
+  textBody          String?               @db.Text
+  source            SelfQrEventSource
+  rawPayloadHash    String?               @db.VarChar(64)
+  timestampStatus   SelfQrTimestampStatus @default(OK)
+  createdAt         DateTime              @default(now())
+
+  @@unique([deviceId, externalMessageId], name: "device_msg_unique")
+  @@index([deviceId, whatsappTimestamp])
+  @@index([deviceId, identityStatus])
+  @@map("self_qr_normalized_events")
+}
+
+model SelfQrHistoryRun {
+  id                String       @id @default(uuid()) @db.Uuid
+  deviceId          String       @db.Uuid
+  device            SelfQrDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  kind              String       @db.VarChar(20)
+  startedAt         DateTime     @default(now())
+  finishedAt        DateTime?
+  outcome           String?      @db.VarChar(30)
+  requestedFrom     DateTime?
+  requestedTo       DateTime?
+  messagesCollected Int          @default(0)
+  duplicatesSkipped Int          @default(0)
+
+  @@index([deviceId, kind])
+  @@map("self_qr_history_runs")
+}

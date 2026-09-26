@@ -26,6 +26,26 @@ export class MarketingController {
     return this.marketingService.createDailyAds(data);
   }
 
+  @Post('metrics')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.MARKETING,
+    UserRole.DIGIMAR,
+    UserRole.COMMERCIAL,
+  )
+  createMetrics(@Body() data: any) {
+    return this.marketingService.createDailyAds({
+      date: data.date,
+      platform: data.platform || 'IG_ADS',
+      campaignName: data.campaignName || data.notes || 'General',
+      spend: data.ad_spend ?? data.spend ?? 0,
+      impressions: data.impressions ?? 0,
+      reach: data.reach ?? 0,
+      clicks: data.clicks ?? 0,
+      leadsGenerated: data.leadsGenerated ?? data.leads ?? 0,
+    });
+  }
+
   @Post('weekly-organic')
   @Roles(UserRole.SUPER_ADMIN, UserRole.MARKETING, UserRole.DIGIMAR)
   createWeeklyOrganic(@Body() data: any) {

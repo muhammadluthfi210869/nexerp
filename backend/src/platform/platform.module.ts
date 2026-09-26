@@ -11,10 +11,12 @@ import { OutboxService } from './outbox/outbox.service';
 import { CommunicationAclService } from './communication/acl.adapter';
 import { CanonicalErrorFilter } from './errors/error.filter';
 import { PolicyGuard } from './policy/policy.guard';
+import { DecisionController } from './approval/decision.controller';
 
 @Global()
 @Module({
   imports: [PrismaModule, PlatformConfigModule],
+  controllers: [DecisionController],
   providers: [
     SessionService,
     MfaService,

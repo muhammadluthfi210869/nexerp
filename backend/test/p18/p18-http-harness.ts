@@ -165,8 +165,14 @@ export async function bootP18App(): Promise<P18App> {
       },
     }).catch(() => {});
 
-    // 8. Customers
+    // 8. Customers & Suppliers
     await prisma.customer.deleteMany({
+      where: {
+        name: { contains: 'P18' },
+      },
+    }).catch(() => {});
+
+    await prisma.supplier.deleteMany({
       where: {
         name: { contains: 'P18' },
       },

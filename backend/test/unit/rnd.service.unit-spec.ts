@@ -4,6 +4,8 @@ import { PrismaService } from '../../src/prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IdGeneratorService } from '../../src/modules/system/id-generator.service';
 import { StateTransitionService } from '../../src/modules/system/state-transition.service';
+import { AuditService } from '../../src/platform/audit/audit.service';
+import { OutboxService } from '../../src/platform/outbox/outbox.service';
 import { TestModule } from '../utilities/test-module';
 import { SampleStage } from '@prisma/client';
 
@@ -29,6 +31,14 @@ describe('RndService — Unit', () => {
             validateTransition: jest.fn(),
             executeTransition: jest.fn(),
           },
+        },
+        {
+          provide: AuditService,
+          useValue: { log: jest.fn(), record: jest.fn() },
+        },
+        {
+          provide: OutboxService,
+          useValue: { enqueue: jest.fn(), publish: jest.fn() },
         },
       ],
     }).compile();

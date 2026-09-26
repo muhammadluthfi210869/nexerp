@@ -40,6 +40,14 @@ import {
 const RUN_ID = randomUUID().slice(0, 8);
 const TAG = `nex_p08_s2_${RUN_ID}`;
 
+/**
+ * Fase 3a (DEC-2026-09-20-059 LOCKED): the P08 tenant is the parent Lead's
+ * `organizationId`, carried in the verified JWT claim. Every fixture below and
+ * every token must name the SAME tenant or the fail-closed service refuses the
+ * request with TENANT_UNRESOLVED (400).
+ */
+const TENANT = randomUUID();
+
 /** 20% @ 100 + 80% @ 100 → exactly 100.00% and a 100 per-gram HPP. */
 const ITEMS = [
   { materialId: null, dosagePercentage: 20, costSnapshot: 100 },
@@ -152,11 +160,13 @@ describe('P08-S2 formulation integrity (real HTTP, real PostgreSQL)', () => {
     rnd = await mkUser('rnd', ['RND']);
     finance = await mkUser('finance', ['FINANCE']);
     headOps = await mkUser('head-ops', ['HEAD_OPS']);
-    tokenRnd = ctx.tokenFor(rnd);
-    tokenFinance = ctx.tokenFor(finance);
-    tokenHeadOps = ctx.tokenFor(headOps);
+    tokenRnd = ctx.tokenFor(rnd, TENANT);
+    tokenFinance = ctx.tokenFor(finance, TENANT);
+    tokenHeadOps = ctx.tokenFor(headOps, TENANT);
 
-    const staff = await prisma.bussdevStaff.create({ data: { name: `${TAG} Staff` } });
+    const staff = await prisma.bussdevStaff.create({
+      data: { name: `${TAG} Staff`, organizationId: TENANT },
+    });
     const lead = await prisma.salesLead.create({
       data: {
         clientName: `${TAG} Corp`,
@@ -164,6 +174,7 @@ describe('P08-S2 formulation integrity (real HTTP, real PostgreSQL)', () => {
         source: 'GOOGLE',
         productInterest: 'P08 S2 HTTP',
         picId: staff.id,
+        organizationId: TENANT,
       },
     });
     leadId = lead.id;

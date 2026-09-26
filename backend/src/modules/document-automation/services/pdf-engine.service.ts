@@ -1,4 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 
 @Injectable()
 export class PdfEngineService {
@@ -491,10 +495,17 @@ startxref
   }
 
   private async htmlToPdf(html: string): Promise<Buffer> {
+    // The deterministic engine is a test stand-in, and only that: it emits one line of text,
+    // so a caller receiving one has been handed a placeholder, not their document. It is
+    // opt-in by FAST_PDF alone. It used to also fire on NODE_ENV === 'test', and the fallback
+    // below used to hide render failures behind it — which is how every "Download PDF" on the
+    // server returned HTTP 200 and a one-line PDF while the production image had no browser.
+    if (process.env.FAST_PDF === '1') {
+      return this.createDeterministicPdf('NEX ERP Deterministic Document Snapshot');
+    }
+
+    let pdfBuffer: Buffer;
     try {
-      if (process.env.NODE_ENV === 'test' || process.env.FAST_PDF === '1') {
-        return this.createDeterministicPdf('NEX ERP Deterministic Document Snapshot');
-      }
       const htmlPdfNode = await import('html-pdf-node');
       const file = { content: html };
       const options = {
@@ -502,11 +513,20 @@ startxref
         margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
         printBackground: true,
       };
-      const pdfBuffer = await htmlPdfNode.default.generatePdf(file, options);
-      return pdfBuffer;
+      pdfBuffer = await htmlPdfNode.default.generatePdf(file, options);
     } catch (error) {
-      this.logger.warn(`PDF generation fallback to deterministic engine: ${error}`);
-      return this.createDeterministicPdf('NEX ERP Fallback Document Snapshot');
+      this.logger.error(`PDF render failed: ${error}`);
+      throw new ServiceUnavailableException(
+        'PDF renderer unavailable — dokumen tidak dapat dibuat. Hubungi administrator (cek Chromium di server).',
+      );
     }
+
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      this.logger.error('PDF renderer returned an empty buffer');
+      throw new ServiceUnavailableException(
+        'PDF renderer returned no document — dokumen tidak dapat dibuat.',
+      );
+    }
+    return pdfBuffer;
   }
 }

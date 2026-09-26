@@ -15,7 +15,7 @@ describe('P14-S2: 4-Phase QC Inspections & Parameter Validation with Supervisor 
   let testLeadId: string;
   let testStaffId: string;
   let testMaterialId: string;
-  let supervisorPin = '778899';
+  const supervisorPin = '778899';
 
   beforeAll(async () => {
     p14 = await bootP14App();

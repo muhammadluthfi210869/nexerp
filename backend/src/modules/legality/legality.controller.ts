@@ -218,6 +218,15 @@ export class LegalityController {
     return this.legalityService.getPermits();
   }
 
+  @Patch('permits/:id/status')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPLIANCE)
+  async updatePermitStatus(
+    @Param('id') id: string,
+    @Body() body: { status: string; notes?: string },
+  ) {
+    return this.legalityService.updatePermitStatus(id, body.status, body.notes);
+  }
+
   // --- MASTER INCI MANAGEMENT ---
 
   @Get('master-inci')

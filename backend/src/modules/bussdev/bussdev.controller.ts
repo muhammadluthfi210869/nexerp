@@ -25,6 +25,7 @@ import { extname } from 'path';
 
 import { BussdevService } from './bussdev.service';
 import { LeadService, P07ActorContext } from './services/lead.service';
+import { PipelineService } from './services/pipeline.service';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { AdvanceLeadDto } from './dto/advance-lead.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -41,7 +42,22 @@ export class BussdevController {
   constructor(
     private readonly bussdevService: BussdevService,
     private readonly leadService: LeadService,
+    private readonly pipelineService: PipelineService,
   ) {}
+
+  @Get('pipeline-v2/audit')
+  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Get pipeline audit log' })
+  getPipelineV2Audit() {
+    return this.pipelineService.getPipelineV2Audit();
+  }
+
+  @Get('pipeline-v2/leads')
+  @Roles(UserRole.COMMERCIAL, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Get pipeline v2 active leads' })
+  getPipelineV2Leads() {
+    return this.pipelineService.getPipelineV2Leads();
+  }
 
   // P07: the ONLY source of the trusted actor context. Tenant, roles,
   // correlation and idempotency all come from the verified request, never

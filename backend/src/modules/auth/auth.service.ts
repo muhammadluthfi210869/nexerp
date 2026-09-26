@@ -68,6 +68,26 @@ export class AuthService {
     return Boolean(mfaRec.confirmedAt || mfaRec.required);
   }
 
+  /**
+   * Fase 3a — the tenant a login is scoped to, read from `tenant_scopes` (the
+   * membership table `platform/scope/scope.service.ts` already uses). The primary
+   * scope wins; an expired row never counts. Returns undefined when the user has
+   * no membership at all, which is deliberate: a missing claim fail-closes at the
+   * guards, while a fabricated default would silently grant access to one tenant.
+   */
+  private async resolvePrimaryTenant(userId: string): Promise<string | undefined> {
+    const now = new Date();
+    const scope = await this.prisma.tenantScope.findFirst({
+      where: {
+        userId,
+        OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }],
+      },
+      orderBy: [{ primary: 'desc' }, { effectiveFrom: 'desc' }],
+      select: { organizationId: true },
+    });
+    return scope?.organizationId;
+  }
+
   private async resolveLoginUser(userOrEmail: any, password?: string): Promise<any> {
     if (typeof userOrEmail === 'string' && password !== undefined) {
       return await this.validateUser(userOrEmail, password);
@@ -99,11 +119,21 @@ export class AuthService {
       familyId: randomUUID()
     });
 
+    // The membership the session is scoped to, from the server only. A user with
+    // no active `tenant_scopes` row yields no claim — the guards then fail closed
+    // rather than treating the session as belonging to every organization.
+    const tenantId = await this.resolvePrimaryTenant(user.id);
+
     const payload = {
       sub: user.id,
       email: user.email,
       roles: user.roles || [],
-      sessionId: session.id
+      sessionId: session.id,
+      // Fase 3a — the tenant a session belongs to. Without this claim every real
+      // login reached the P07/P08 fail-closed guards with `organizationId ===
+      // undefined` and was refused with TENANT_UNRESOLVED. `jwt.strategy.ts:60`
+      // already reads this field; nothing consumes it from the request body.
+      ...(tenantId ? { organizationId: tenantId, tenantId } : {})
     };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
 

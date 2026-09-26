@@ -184,7 +184,7 @@ export class FinanceService {
     });
     const accountMap = new Map(accounts.map((a) => [a.id, a]));
 
-    if (!dto.sourceDocumentType || (dto.sourceDocumentType as string) === 'MANUAL') {
+    if (!dto.sourceDocumentType || (dto.sourceDocumentType) === 'MANUAL') {
       for (const l of dto.lines) {
         const acc = accountMap.get(l.accountId);
         if (acc && acc.allowManualJournal === false) {
@@ -2335,9 +2335,63 @@ export class FinanceService {
     });
   }
 
+  async createTax(dto: { name: string; rate: number; description?: string }) {
+    return this.prisma.taxRate.create({
+      data: {
+        name: dto.name,
+        rate: dto.rate,
+        description: dto.description,
+      },
+    });
+  }
+
+  async updateTax(id: string, dto: { name?: string; rate?: number; description?: string; isActive?: boolean }) {
+    return this.prisma.taxRate.update({
+      where: { id },
+      data: dto,
+    });
+  }
+
+  async deleteTax(id: string) {
+    return this.prisma.taxRate.delete({
+      where: { id },
+    });
+  }
+
   async getCurrencies() {
     return this.prisma.currency.findMany({
       orderBy: { code: 'asc' },
+    });
+  }
+
+  async createCurrency(dto: { code: string; symbol?: string; exchangeRate?: number; isMain?: boolean }) {
+    return this.prisma.currency.create({
+      data: {
+        code: dto.code.toUpperCase(),
+        symbol: dto.symbol,
+        exchangeRate: dto.exchangeRate ?? 1.0,
+        isMain: dto.isMain ?? false,
+      },
+    });
+  }
+
+  async updateCurrency(id: string, dto: { code?: string; symbol?: string; exchangeRate?: number; isMain?: boolean }) {
+    return this.prisma.currency.update({
+      where: { id },
+      data: dto,
+    });
+  }
+
+  async deleteCurrency(id: string) {
+    return this.prisma.currency.delete({
+      where: { id },
+    });
+  }
+
+  async updateExchangeRate(id: string, rate: number) {
+    return this.prisma.currency.update({
+      where: { id },
+      data: { exchangeRate: rate },
     });
   }
 
@@ -2465,5 +2519,39 @@ export class FinanceService {
         rejectAmount,
       },
     };
+  }
+
+  async getAutoJournalConfigs() {
+    return this.prisma.autoJournalConfig.findMany({
+      orderBy: { transactionType: 'asc' },
+    });
+  }
+
+  async upsertAutoJournalConfig(dto: {
+    transactionType: string;
+    coaDebetId: string;
+    coaCreditId: string;
+    description?: string;
+  }) {
+    return this.prisma.autoJournalConfig.upsert({
+      where: { transactionType: dto.transactionType },
+      update: {
+        coaDebetId: dto.coaDebetId,
+        coaCreditId: dto.coaCreditId,
+        description: dto.description,
+      },
+      create: {
+        transactionType: dto.transactionType,
+        coaDebetId: dto.coaDebetId,
+        coaCreditId: dto.coaCreditId,
+        description: dto.description,
+      },
+    });
+  }
+
+  async deleteAutoJournalConfig(transactionType: string) {
+    return this.prisma.autoJournalConfig.delete({
+      where: { transactionType },
+    });
   }
 }

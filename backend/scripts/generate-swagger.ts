@@ -7,7 +7,8 @@ import * as path from 'path';
 async function generate() {
   console.log('🚀 Generating Swagger specification...');
   const app = await NestFactory.create(AppModule, { logger: false });
-  
+  app.setGlobalPrefix('v1');
+
   const config = new DocumentBuilder()
     .setTitle('Porto Aureon ERP API')
     .setDescription('The ultimate manufacturing ERP system API documentation')

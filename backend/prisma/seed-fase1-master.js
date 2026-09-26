@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
-const rootDir = 'c:/GAWE/Web Dev/Porto Aureon/ERP FROM ZERO';
+// Derived from this file, not pinned to one machine's absolute path.
+const rootDir = path.resolve(__dirname, '..', '..');
 const { parse } = require(path.join(rootDir, 'backend/node_modules/csv-parse/dist/cjs/sync.cjs'));
 const bcrypt = require(path.join(rootDir, 'backend/node_modules/bcrypt'));
 
@@ -15,25 +17,39 @@ envText.split('\n').forEach(line => {
   }
 });
 
+// The parsed .env was never published to process.env, so SEED_DEFAULT_PASSWORD= in .env was
+// silently ignored and each run hashed a fresh random password nobody could ever learn.
+if (env.SEED_DEFAULT_PASSWORD && !process.env.SEED_DEFAULT_PASSWORD) {
+  process.env.SEED_DEFAULT_PASSWORD = env.SEED_DEFAULT_PASSWORD;
+}
+
 const { Pool } = require(path.join(rootDir, 'backend/node_modules/pg'));
 const { PrismaPg } = require(path.join(rootDir, 'backend/node_modules/@prisma/adapter-pg'));
 const { PrismaClient } = require(path.join(rootDir, 'backend/node_modules/@prisma/client'));
 
-const CSV_DIR = path.join(rootDir, 'docs', 'legacy-erp', 'MASTER_DATA');
+// The real directory: docs/legacy-erp/data/master/MASTER_DATA. The old value omitted
+// `data/master`, so every readCsv warned "CSV not found" and returned [] — and the run still
+// finished with "ALL FASE 1 MASTER DATA SEEDING COMPLETE" and 0 rows written.
+const CSV_DIR = path.join(rootDir, 'docs', 'legacy-erp', 'data', 'master', 'MASTER_DATA');
 
 function readCsv(filename) {
   const filePath = path.join(CSV_DIR, filename);
   if (!fs.existsSync(filePath)) {
-    console.warn('CSV not found:', filePath);
-    return [];
+    // Fail closed: a missing source file must not look like a successful empty seed.
+    throw new Error(`CSV tidak ditemukan: ${filePath}`);
   }
-  const content = fs.readFileSync(filePath, 'utf-8').replace(/^\uFEFF/, '');
+  const raw = fs.readFileSync(filePath, 'utf-8');
+  // Strip a leading BOM by code point. A literal BOM in a regex matches, but it is invisible
+  // in the source and the next person to touch this line cannot see what it does.
+  const content = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
   return parse(content, { columns: true, skip_empty_lines: true, trim: true });
 }
 
 async function main() {
   console.log('🚀 Starting FASE 1 MASTER DATA SEEDER...');
-  console.log('Target DB:', env.DATABASE_URL);
+  // Never the connection string itself: this output lands in shell history and CI logs.
+  const dbTarget = (env.DATABASE_URL || '').replace(/^(.*@)?([^@/]+)\/([^?]*).*$/, '$2/$3');
+  console.log('Target DB:', dbTarget || '(tidak diketahui)');
 
   const pool = new Pool({ connectionString: env.DATABASE_URL });
   const adapter = new PrismaPg(pool);
@@ -66,6 +82,7 @@ async function main() {
   console.log('\n--- 2. Seeding Categories from KATEGORI-BARANG.csv ---');
   const catRows = readCsv('KATEGORI-BARANG.csv');
   const categoryMap = new Map();
+  let catCount = 0;
   for (const r of catRows) {
     if (!r.kode) continue;
     const cat = await prisma.masterCategory.upsert({
@@ -81,15 +98,18 @@ async function main() {
     });
     categoryMap.set(r.kode, cat.id);
     categoryMap.set(r.kategori.toLowerCase(), cat.id);
+    catCount++;
   }
-  console.log(`✅ ${catRows.length} Categories seeded.`);
+  console.log(`✅ ${catCount} Categories seeded (dari ${catRows.length} baris).`);
 
   // 3. GUDANG (16 rows)
   console.log('\n--- 3. Seeding Warehouses from GUDANG.csv ---');
   const whRows = readCsv('GUDANG.csv');
+  let whCount = 0;
   for (const r of whRows) {
     if (!r.gudang) continue;
     const existing = await prisma.warehouse.findFirst({ where: { name: r.gudang } });
+    whCount++;
     if (!existing) {
       await prisma.warehouse.create({
         data: {
@@ -102,7 +122,7 @@ async function main() {
       });
     }
   }
-  console.log(`✅ ${whRows.length} Warehouses seeded.`);
+  console.log(`✅ ${whCount} Warehouses seeded (dari ${whRows.length} baris).`);
 
   // 4. CHART OF ACCOUNTS (CoA)
   console.log('\n--- 4. Seeding Chart of Accounts (CoA) ---');
@@ -280,7 +300,15 @@ async function main() {
   for (let i = 0; i < custRows.length; i++) {
     const r = custRows[i];
     if (!r.nama) continue;
-    const custCode = `CUST-${String(i + 1).padStart(4, '0')}`;
+    // Derived from the row itself, not from its position. The old `CUST-${i+1}` was stable only
+    // as long as the CSV never changed: inserting one PELANGGAN row re-pointed every later code
+    // at a different person, and the update branch then overwrote that person's record.
+    const custCode = `CUST-${crypto
+      .createHash('sha1')
+      .update(`${r.nama}|${r.phone || ''}`)
+      .digest('hex')
+      .slice(0, 8)
+      .toUpperCase()}`;
     const existing = await prisma.customer.findUnique({ where: { code: custCode } });
     const data = {
       code: custCode,
@@ -301,17 +329,118 @@ async function main() {
   }
   console.log(`✅ ${custCount} Customers seeded.`);
 
+  // 9b. SALES LEADS — the same PELANGGAN rows, into the table the lead-facing screens read.
+  // `customer` (finance) and `salesLead` (bussdev) are two entities, not one table read twice:
+  // SampleRequest.leadId, WorkOrder.leadId and NewProductForm.leadId all point at sales_leads,
+  // so CustomerSelect — which fills `leadId` in samples/npf — must hand back a SalesLead id.
+  // Seeding only `customer` left Master → Customers and that dropdown empty (0 rows) while
+  // finance reported 806, which reads exactly like "the seed did nothing".
+  console.log('\n--- 9b. Seeding Sales Leads from PELANGGAN.csv ---');
+  const staff = await prisma.bussdevStaff.findMany({
+    orderBy: { name: 'asc' },
+    select: { id: true, name: true },
+  });
+  if (staff.length === 0) {
+    // Fail closed: `picId` is required and points at BussdevStaff. With no staff there is no
+    // honest id, and inventing one produces leads nobody owns.
+    throw new Error('BussdevStaff kosong — seed bussdev dulu (picId wajib di SalesLead).');
+  }
+  const defaultPicId = staff[0].id;
+  const picByName = new Map(staff.map((s) => [s.name.toLowerCase(), s.id]));
+  // Returns null when nothing matches, so the caller can count it. The legacy CSV carries 16
+  // PIC names and bussdev_staff holds a handful, so most rows cannot be matched — and silently
+  // parking every one of them on the default PIC is the same defect class as a swallowed error.
+  const resolvePicId = (penginput) => {
+    if (!penginput) return null;
+    const name = String(penginput).trim().toLowerCase();
+    if (picByName.has(name)) return picByName.get(name);
+    // The CSV writes "Diaz Muhammad Irsyadi" for staff "Diaz"; match on the first token.
+    const first = name.split(/\s+/)[0];
+    for (const s of staff) if (s.name.toLowerCase().startsWith(first)) return s.id;
+    return null;
+  };
+
+  const unmatchedPics = new Map();
+  // "400,299,500.00" — commas are thousands separators here, so Number() gives NaN and every
+  // legacy order value would quietly become 0.
+  const parseRupiah = (v) => {
+    const n = Number(String(v || '').replace(/,/g, ''));
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  let leadCount = 0;
+  for (const r of custRows) {
+    if (!r.nama) continue;
+    // Same stable code as the `customer` row above, so the AR record and the lead record for
+    // one PELANGGAN line can be lined up by code instead of by name.
+    const leadCode = `CUST-${crypto
+      .createHash('sha1')
+      .update(`${r.nama}|${r.phone || ''}`)
+      .digest('hex')
+      .slice(0, 8)
+      .toUpperCase()}`;
+    const soSample = Number(r.so_sample) || 0;
+    const soProduk = Number(r.so_produk) || 0;
+    const matchedPicId = resolvePicId(r.penginput);
+    if (!matchedPicId) {
+      const label = r.penginput || '(kosong)';
+      unmatchedPics.set(label, (unmatchedPics.get(label) || 0) + 1);
+    }
+    const leadData = {
+      clientName: r.nama,
+      contactInfo: r.phone || '-',
+      city: r.kota || null,
+      source: 'LEGACY_KIL_IMPORT',
+      // No CSV column carries this. Empty rather than an invented category.
+      productInterest: '',
+      // WON_DEAL, not the NEW_LEAD column default: these are parties the legacy system already
+      // sold to. NEW_LEAD would drop 806 existing customers into the new-lead pipeline and
+      // misreport every funnel count built on it.
+      status: 'WON_DEAL',
+      picId: matchedPicId || defaultPicId,
+      estimatedValue: parseRupiah(r.nominal_so_produk),
+      orderCount: soSample + soProduk,
+      // Master → Customers parses exactly this shape (page.tsx:159-160). It also holds the one
+      // place the real legacy PIC name survives, which is why the fallback above is not a loss.
+      notes: `Kategori: ${r.kategori || '-'} | Penginput: ${r.penginput || '-'}`,
+    };
+    await prisma.salesLead.upsert({
+      where: { brandCode: leadCode },
+      update: leadData,
+      create: { brandCode: leadCode, ...leadData },
+    });
+    leadCount++;
+  }
+  console.log(`✅ ${leadCount} Sales Leads seeded.`);
+  if (unmatchedPics.size > 0) {
+    // Loud on purpose: an unmatched PIC is not an error, but 816 rows silently parked on one
+    // person is indistinguishable from a working mapping unless the run says so.
+    const rows = [...unmatchedPics.values()].reduce((a, b) => a + b, 0);
+    console.log(
+      `⚠️  ${rows} lead tanpa PIC yang cocok di bussdev_staff — dipetakan ke "${staff[0].name}".`,
+    );
+    console.log('   Nama PIC asli tetap tersimpan di notes (kolom Penginput di Master → Customers).');
+    for (const [name, n] of [...unmatchedPics.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5)) {
+      console.log(`     - ${name}: ${n} baris`);
+    }
+  }
+
   // 10. MATERIAL ITEMS (2,795 rows from BARANG.csv)
   console.log('\n--- 10. Seeding 2,795 Material Items from BARANG.csv ---');
   const itemRows = readCsv('BARANG.csv');
   let itemCount = 0;
+  let itemSkipped = 0;
+  let itemErrors = 0;
 
   // Process in chunks of 100 for maximum performance
   const chunkSize = 100;
   for (let i = 0; i < itemRows.length; i += chunkSize) {
     const chunk = itemRows.slice(i, i + chunkSize);
     for (const r of chunk) {
-      if (!r.kode || !r.barang) continue;
+      if (!r.kode || !r.barang) {
+        itemSkipped++;
+        continue;
+      }
       const catId = categoryMap.get(r.kode.substring(0, 3)) || categoryMap.get(r.kategori?.toLowerCase()) || null;
       const price = parseFloat((r.harga_beli || '0').replace(/,/g, '')) || 0;
       const isPkg = (r.kategori || '').includes('Kemas') || (r.sub_kategori || '').includes('Kemasan');
@@ -346,7 +475,12 @@ async function main() {
         });
         itemCount++;
       } catch (err) {
-        // Skip occasional malformed line
+        // Counted and reported, not swallowed: a silent catch here is what let a partially
+        // seeded catalog look like a complete one.
+        itemErrors++;
+        if (itemErrors <= 5) {
+          console.error(`  ✗ ${r.kode}: ${String(err.message).split('\n')[0]}`);
+        }
       }
     }
     if ((i + chunkSize) % 500 === 0 || i + chunkSize >= itemRows.length) {
@@ -354,6 +488,39 @@ async function main() {
     }
   }
   console.log(`✅ ${itemCount} Material Items seeded successfully!`);
+  if (itemSkipped > 0) {
+    console.warn(`⚠️  ${itemSkipped} baris BARANG dilewati (kode/barang kosong).`);
+  }
+  if (itemErrors > 0) {
+    throw new Error(
+      `${itemErrors} baris BARANG gagal di-seed (${itemCount}/${itemRows.length} berhasil) — lihat log di atas.`,
+    );
+  }
+  if (itemCount !== itemRows.length - itemSkipped) {
+    throw new Error(
+      `Jumlah tidak cocok: ${itemRows.length} baris CSV, ${itemCount} tersimpan, ${itemSkipped} dilewati.`,
+    );
+  }
+
+  // Printed before the completion banner, and a hard stop if any entity came out empty:
+  // "ALL ... COMPLETE" used to print over a run that had written nothing at all.
+  const summary = [
+    ['master_categories', catCount, catRows.length],
+    ['warehouses', whCount, whRows.length],
+    ['users', userCount, userRows.length],
+    ['suppliers', suppCount, suppRows.length],
+    ['customers', custCount, custRows.length],
+    ['sales_leads', leadCount, custRows.length],
+    ['material_items', itemCount, itemRows.length],
+  ];
+  console.log('\n--- Ringkasan seed (tersimpan / baris CSV) ---');
+  for (const [name, got, total] of summary) {
+    console.log(`  ${name.padEnd(20)} ${got} / ${total}`);
+  }
+  const emptyEntities = summary.filter(([, got]) => got === 0).map(([name]) => name);
+  if (emptyEntities.length > 0) {
+    throw new Error(`Seed tidak menulis apa pun untuk: ${emptyEntities.join(', ')}`);
+  }
 
   console.log('\n🎉 ALL FASE 1 MASTER DATA SEEDING COMPLETE!');
   await prisma.$disconnect();

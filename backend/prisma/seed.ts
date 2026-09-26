@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { seedPersonnel } from './seeders/personnel.seeder';
 import { seedKpiMetrics } from './seeders/kpi-metrics.seeder';
 import { seedKpiScores } from './seeders/kpi-scores.seeder';
+import { runGoldenShowcaseSeed } from './seed-golden-showcase';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -114,6 +115,10 @@ async function main() {
     });
     console.log(`  ✅ Marketing Team: ${u.fullName} (${u.email}) — ${roleName}`);
   }
+
+  console.log('');
+  console.log('🌱 FASE 6: Seeding Golden Flow Manufacturing & QC Showcase...');
+  await runGoldenShowcaseSeed();
 
   console.log('');
   console.log('💎 SEEDING COMPLETE.');

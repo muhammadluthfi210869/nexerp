@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { CreateSampleRequestDto } from './dto/create-sample-request.dto';
@@ -34,6 +35,50 @@ export const SAMPLE_NOT_AWAITING_FINANCE = 'SAMPLE_NOT_AWAITING_FINANCE';
 export const EVENT_SAMPLE_PAYMENT_REQUESTED = 'sample.payment_requested';
 export const EVENT_SAMPLE_PAYMENT_VERIFIED = 'sample.payment_verified';
 export const EVENT_SAMPLE_PAYMENT_REJECTED = 'sample.payment_rejected';
+
+/**
+ * Fase 3a — P08 tenant scope (DEC-2026-09-20-059 LOCKED).
+ *
+ * The P08 tables carry no `organizationId` column, and none is added: the
+ * canonically locked rule is that the P08 chain's tenant is read through its
+ * PARENT LEAD. `SampleRequest.lead` is a required relation and
+ * `SalesLead.organizationId` exists, so `where: { lead: { organizationId } }`
+ * filters the P08 slice with zero DDL.
+ *
+ * The actor's tenant is the trusted `req.user.organizationId` (from the verified
+ * JWT, `jwt.strategy.ts:60`). It is NEVER read from the body, query or headers.
+ */
+export interface RndActorContext {
+  userId?: string;
+  organizationId?: string;
+  roles?: string[];
+  /**
+   * `true` on every context built from a verified HTTP request; absent for the
+   * in-process callers (`test/*.e2e-spec.ts`, seeds, jobs) that hold no tenant
+   * identity. It gates ONLY the `TENANT_UNRESOLVED` refusal on the blanket
+   * reads — never the tenant predicate. A context that carries a tenant is
+   * always scoped, enforced or not.
+   */
+  enforce?: boolean;
+}
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * The trusted actor context of a request, built only from `req.user`.
+ * Mirrors `P07ActorContext` in `bussdev/services/lead.service.ts` so both
+ * modules resolve tenant identity the same way.
+ */
+export function rndActorFromRequest(req: any): RndActorContext {
+  const user = req?.user ?? {};
+  return {
+    userId: user.id,
+    organizationId: user.organizationId || user.tenantId,
+    roles: Array.isArray(user.roles) ? user.roles : [],
+    enforce: true,
+  };
+}
 
 @Injectable()
 export class RndService {
@@ -67,9 +112,166 @@ export class RndService {
     }
   }
 
-  async createSample(dto: CreateSampleRequestDto) {
+  // ── Tenant scope (Fase 3a / DEC-2026-09-20-059) ─────────────────────────────
+
+  /**
+   * Resolves the caller's tenant from the server-side context only.
+   *
+   * An unresolved tenant is NOT treated as "every tenant" — that fail-open is
+   * exactly the shape this guards against. A missing claim is a bad request
+   * (`TENANT_UNRESOLVED`), so the caller learns its context is incomplete
+   * instead of silently reading across organizations.
+   *
+   * There is deliberately no "allocate a fresh tenant" branch: a P08 row has no
+   * `organizationId` of its own, so a made-up tenant could never match its
+   * parent Lead and every create would be dead on arrival.
+   */
+  private resolveTenant(actor: RndActorContext | undefined): string {
+    const orgId = actor?.organizationId;
+    if (typeof orgId === 'string' && UUID_RE.test(orgId)) return orgId;
+    throw new BadRequestException({
+      code: 'TENANT_UNRESOLVED',
+      message: 'Tenant wajib diisi dari konteks server.',
+    });
+  }
+
+  /**
+   * The tenant predicate for a request, or `{}` when the caller carries no
+   * tenant at all.
+   *
+   * `{}` is not fail-open by accident: Prisma drops an empty `where`, which is
+   * exactly the pre-Fase-3a behaviour, and the only callers without a tenant are
+   * in-process ones that never crossed the HTTP boundary. A request with a
+   * tenant claim is always scoped — `enforce` cannot loosen that.
+   */
+  private scopeWhere(actor: RndActorContext | undefined): Record<string, any> {
+    const orgId = actor?.organizationId;
+    if (typeof orgId === 'string' && UUID_RE.test(orgId)) {
+      return this.tenantWhere(orgId);
+    }
+    if (actor?.enforce) this.resolveTenant(actor);
+    return {};
+  }
+
+  /** Refuses a read that a verified request cannot be trusted to scope. */
+  private assertTenantResolved(actor: RndActorContext | undefined): void {
+    if (actor?.enforce) this.resolveTenant(actor);
+  }
+
+  /** The Prisma predicate that scopes a P08 row to its parent Lead's tenant. */
+  private tenantWhere(organizationId: string) {
+    return { lead: { organizationId } };
+  }
+
+  /** `scopeWhere` re-rooted at a related model the caller is keyed by. */
+  private scopeWhereAt(
+    actor: RndActorContext | undefined,
+    root: 'sampleRequest' | 'formula',
+  ): Record<string, any> {
+    const lead = this.scopeWhere(actor);
+    if (Object.keys(lead).length === 0) return {};
+    return root === 'sampleRequest'
+      ? { sampleRequest: lead }
+      : { formula: { sampleRequest: lead } };
+  }
+
+  /** Non-disclosing refusal: cross-tenant reads and writes look alike. */
+  private refuseCrossTenant(): never {
+    throw new ForbiddenException({
+      code: 'TENANT_ISOLATION_VIOLATION',
+      message: 'Tenant isolation violation',
+    });
+  }
+
+  /**
+   * Loads one P08 row under the actor's tenant, refusing cross-tenant access.
+   *
+   * `loader` is called with the tenant predicate merged in, so a foreign bare id
+   * simply does not match — the same query that returns the owner's row returns
+   * nothing for tenant B, and the refusal discloses nothing about existence.
+   */
+  private async readScopedByLead<T>(
+    actor: RndActorContext | undefined,
+    loader: (where: any) => Promise<T | null>,
+  ): Promise<T | null> {
+    const scoped = await loader(this.scopeWhere(actor));
+    if (!scoped && actor?.organizationId) this.refuseCrossTenant();
+    return scoped;
+  }
+
+  /** Refuses a read of a child collection whose parent Sample is another tenant's. */
+  private async assertParentSampleVisible(
+    sampleId: string,
+    actor: RndActorContext | undefined,
+  ): Promise<void> {
+    const scope = this.scopeWhere(actor);
+    if (Object.keys(scope).length === 0) return;
+    const own = await this.prisma.sampleRequest.findFirst({
+      where: { id: sampleId, ...scope },
+      select: { id: true },
+    });
+    if (!own) this.refuseCrossTenant();
+  }
+
+  /** Asserts a P08 row's parent Lead belongs to the actor's tenant. */
+  private async assertSampleInTenant(
+    tx: any,
+    sample: { id: string; leadId: string } | null,
+    actor: RndActorContext | undefined,
+  ) {
+    if (!sample) throw new NotFoundException('Sample request not found');
+    const orgId = actor?.organizationId;
+    if (!(typeof orgId === 'string' && UUID_RE.test(orgId))) {
+      this.assertTenantResolved(actor);
+      return;
+    }
+    const lead = await tx.salesLead.findFirst({
+      where: { id: sample.leadId, organizationId: orgId },
+      select: { id: true },
+    });
+    if (!lead) this.refuseCrossTenant();
+  }
+
+  /** Asserts a formula's owning sample belongs to the actor's tenant. */
+  private async assertFormulaInTenant(
+    tx: any,
+    formula: { id: string } | null,
+    actor: RndActorContext | undefined,
+  ) {
+    if (!formula) throw new NotFoundException('Formula not found');
+    const orgId = actor?.organizationId;
+    if (!(typeof orgId === 'string' && UUID_RE.test(orgId))) {
+      this.assertTenantResolved(actor);
+      return;
+    }
+    const owned = await tx.formula.findFirst({
+      where: { id: formula.id, sampleRequest: this.tenantWhere(orgId) },
+      select: { id: true },
+    });
+    if (!owned) this.refuseCrossTenant();
+  }
+
+  async createSample(dto: CreateSampleRequestDto, actor?: RndActorContext) {
     const sampleCode = await this.idGenerator.generateId('SMP');
     return this.prisma.$transaction(async (tx) => {
+      // The tenant of a P08 row is its parent Lead's, so a create can only be
+      // honoured when the Lead belongs to the caller's organization. Without
+      // this, any caller could plant a sample on another tenant's Lead.
+      //
+      // In-process callers with no actor (the gated P08 golden thread, seeds)
+      // keep the pre-Fase-3a path: there is no tenant to check against, and the
+      // HTTP boundary already refuses such a request with TENANT_UNRESOLVED.
+      const orgId = actor?.organizationId;
+      if (typeof orgId === 'string' && UUID_RE.test(orgId)) {
+        const lead = await tx.salesLead.findFirst({
+          where: { id: dto.leadId, organizationId: orgId },
+          select: { id: true },
+        });
+        if (!lead) this.refuseCrossTenant();
+      } else {
+        this.assertTenantResolved(actor);
+      }
+
       const sample = await tx.sampleRequest.create({
         data: {
           sampleCode: sampleCode,
@@ -119,7 +321,7 @@ export class RndService {
     });
   }
 
-  async createFormulationSample(dto: CreateSampleDto) {
+  async createFormulationSample(dto: CreateSampleDto, actor?: RndActorContext) {
     if (dto.rndId === '00000000-0000-0000-0000-000000000000') {
       const rndUser = await this.prisma.user.findFirst({
         where: { roles: { has: UserRole.RND } },
@@ -137,6 +339,12 @@ export class RndService {
         `NPF ${dto.npfId} not found or has no associated lead. Cannot create sample without a valid lead.`,
       );
     }
+
+    await this.assertSampleInTenant(
+      this.prisma,
+      { id: dto.npfId, leadId: npf.leadId },
+      actor,
+    );
 
     const sampleCode = await this.idGenerator.generateId('SMP');
 
@@ -164,7 +372,14 @@ export class RndService {
     });
   }
 
-  async createNPF(dto: CreateNPFDto) {
+  async createNPF(dto: CreateNPFDto, actor?: RndActorContext) {
+    const orgId = this.resolveTenant(actor);
+    const lead = await this.prisma.salesLead.findFirst({
+      where: { id: dto.leadId, organizationId: orgId },
+      select: { id: true },
+    });
+    if (!lead) this.refuseCrossTenant();
+
     const npf = await this.prisma.newProductForm.create({
       data: {
         productName: dto.productName,
@@ -199,27 +414,36 @@ export class RndService {
     return npf;
   }
 
-  async getNPFs() {
+  async getNPFs(actor?: RndActorContext) {
     return this.prisma.newProductForm.findMany({
+      where: this.scopeWhere(actor),
       include: { lead: { select: { clientName: true } } },
       orderBy: { productName: 'asc' },
     });
   }
 
-  async getNPF(id: string) {
-    return this.prisma.newProductForm.findUnique({
-      where: { id },
-      include: { lead: true, samples: true },
-    });
+  async getNPF(id: string, actor?: RndActorContext) {
+    this.assertTenantResolved(actor);
+    return this.readScopedByLead(actor, (where: any) =>
+      this.prisma.newProductForm.findFirst({
+        where: { id, ...where },
+        include: { lead: true, samples: true },
+      }),
+    );
   }
 
-  async acceptSample(sampleId: string, actorId?: string) {
+  async acceptSample(
+    sampleId: string,
+    actorId?: string,
+    actor?: RndActorContext,
+  ) {
     return this.prisma.$transaction(async (tx) => {
       const sample = await tx.sampleRequest.findUnique({
         where: { id: sampleId },
       });
 
       if (!sample) throw new NotFoundException('Sample request not found');
+      await this.assertSampleInTenant(tx, sample, actor);
 
       // BUS-RULE-107 / DEC-2026-09-20-051. The previous "Auto-approve payment on
       // acceptance (dev mode)" block was removed, not flagged: it fabricated the
@@ -305,10 +529,16 @@ export class RndService {
    * R&D hands the sample fee to Finance for verification.
    * SUBMITTED -> WAITING_FINANCE (03_WORKFLOW_STATE_MACHINE.yaml, sales_pipeline).
    */
-  async requestSamplePayment(sampleId: string, actorId?: string, proofUrl?: string) {
+  async requestSamplePayment(
+    sampleId: string,
+    actorId?: string,
+    proofUrl?: string,
+    actor?: RndActorContext,
+  ) {
     return this.prisma.$transaction(async (tx) => {
       const sample = await tx.sampleRequest.findUnique({ where: { id: sampleId } });
       if (!sample) throw new NotFoundException('Sample request not found');
+      await this.assertSampleInTenant(tx, sample, actor);
 
       if (sample.stage === SampleStage.WAITING_FINANCE) {
         // Already awaiting Finance; treat as the same single business effect.
@@ -374,10 +604,12 @@ export class RndService {
     actorId: string,
     note?: string,
     proofUrl?: string,
+    actor?: RndActorContext,
   ) {
     return this.prisma.$transaction(async (tx) => {
       const sample = await tx.sampleRequest.findUnique({ where: { id: sampleId } });
       if (!sample) throw new NotFoundException('Sample request not found');
+      await this.assertSampleInTenant(tx, sample, actor);
 
       if (sample.stage !== SampleStage.WAITING_FINANCE) {
         throw new ConflictException({
@@ -466,10 +698,16 @@ export class RndService {
   }
 
   /** Finance records that the sample fee was not received. WAITING_FINANCE -> REJECTED. */
-  async rejectSamplePayment(sampleId: string, actorId: string, reason: string) {
+  async rejectSamplePayment(
+    sampleId: string,
+    actorId: string,
+    reason: string,
+    actor?: RndActorContext,
+  ) {
     return this.prisma.$transaction(async (tx) => {
       const sample = await tx.sampleRequest.findUnique({ where: { id: sampleId } });
       if (!sample) throw new NotFoundException('Sample request not found');
+      await this.assertSampleInTenant(tx, sample, actor);
 
       if (sample.stage !== SampleStage.WAITING_FINANCE) {
         throw new ConflictException({
@@ -549,13 +787,18 @@ export class RndService {
       [SampleStage.CANCELLED]: [],
     };
 
-  async advanceSampleStage(sampleId: string, dto: AdvanceSampleDto) {
+  async advanceSampleStage(
+    sampleId: string,
+    dto: AdvanceSampleDto,
+    actor?: RndActorContext,
+  ) {
     return this.prisma.$transaction(async (tx) => {
       const current = await tx.sampleRequest.findUnique({
         where: { id: sampleId },
       });
 
       if (!current) throw new NotFoundException('Sample request not found');
+      await this.assertSampleInTenant(tx, current, actor);
 
       // BUS-RULE-107: the shared transition path is the one place every caller
       // routes through, so the fee gate lives here rather than being re-checked
@@ -653,9 +896,10 @@ export class RndService {
     });
   }
 
-  async getDashboardMetrics() {
+  async getDashboardMetrics(actor?: RndActorContext) {
     const [allSamples, staffs] = await Promise.all([
       this.prisma.sampleRequest.findMany({
+        where: this.scopeWhere(actor),
         take: 200,
         orderBy: { createdAt: 'desc' },
         include: {
@@ -850,28 +1094,32 @@ export class RndService {
     };
   }
 
-  async getSample(id: string) {
-    return this.prisma.sampleRequest.findUnique({
-      where: { id },
-      include: {
-        lead: { include: { pic: true } },
-        pic: true,
-        stageLogs: { orderBy: { enteredAt: 'desc' }, take: 1 },
-        formulas: {
-          orderBy: { version: 'desc' },
-          include: {
-            phases: { include: { items: true } },
+  async getSample(id: string, actor?: RndActorContext) {
+    this.assertTenantResolved(actor);
+    return this.readScopedByLead(actor, (where: any) =>
+      this.prisma.sampleRequest.findFirst({
+        where: { id, ...where },
+        include: {
+          lead: { include: { pic: true } },
+          pic: true,
+          stageLogs: { orderBy: { enteredAt: 'desc' }, take: 1 },
+          formulas: {
+            orderBy: { version: 'desc' },
+            include: {
+              phases: { include: { items: true } },
+            },
           },
+          feedbacks: { orderBy: { createdAt: 'desc' } },
         },
-        feedbacks: { orderBy: { createdAt: 'desc' } },
-      },
-    });
+      }),
+    );
   }
 
-  async getInboxSamples() {
+  async getInboxSamples(actor?: RndActorContext) {
     return this.prisma.sampleRequest.findMany({
       where: {
         stage: SampleStage.QUEUE,
+        ...this.scopeWhere(actor),
       },
       include: {
         lead: { include: { pic: true } },
@@ -881,8 +1129,9 @@ export class RndService {
     });
   }
 
-  async getSamples() {
+  async getSamples(actor?: RndActorContext) {
     return this.prisma.sampleRequest.findMany({
+      where: this.scopeWhere(actor),
       include: {
         lead: { include: { pic: true } },
         pic: true,
@@ -910,16 +1159,22 @@ export class RndService {
     });
   }
 
-  async assignPIC(id: string, picId: string) {
-    return this.prisma.sampleRequest.update({
-      where: { id },
-      data: { picId },
+  async assignPIC(id: string, picId: string, actor?: RndActorContext) {
+    return this.prisma.$transaction(async (tx) => {
+      const sample = await tx.sampleRequest.findUnique({ where: { id } });
+      await this.assertSampleInTenant(tx, sample, actor);
+      return tx.sampleRequest.update({
+        where: { id },
+        data: { picId },
+      });
     });
   }
 
-  async getVersions(sampleId: string) {
+  async getVersions(sampleId: string, actor?: RndActorContext) {
+    this.assertTenantResolved(actor);
+    await this.assertParentSampleVisible(sampleId, actor);
     return this.prisma.formula.findMany({
-      where: { sampleRequestId: sampleId },
+      where: { sampleRequestId: sampleId, ...this.scopeWhereAt(actor, 'sampleRequest') },
       orderBy: { version: 'desc' },
       select: {
         id: true,
@@ -930,35 +1185,44 @@ export class RndService {
     });
   }
 
-  async getFeedback(sampleId: string) {
+  async getFeedback(sampleId: string, actor?: RndActorContext) {
+    this.assertTenantResolved(actor);
+    await this.assertParentSampleVisible(sampleId, actor);
     return this.prisma.sampleFeedback.findMany({
-      where: { sampleRequestId: sampleId },
+      where: { sampleRequestId: sampleId, ...this.scopeWhereAt(actor, 'sampleRequest') },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async getLabTestResults(formulaId: string) {
+  async getLabTestResults(formulaId: string, actor?: RndActorContext) {
+    this.assertTenantResolved(actor);
+    await this.assertFormulaInTenant(this.prisma, { id: formulaId }, actor);
     return this.prisma.labTestResult.findMany({
-      where: { formulaId },
+      where: { formulaId, ...this.scopeWhereAt(actor, 'formula') },
       include: { tester: { select: { fullName: true } } },
       orderBy: { testDate: 'desc' },
     });
   }
 
-  async createLabTestResult(dto: {
-    formulaId: string;
-    testerId: string;
-    actualPh?: string;
-    actualViscosity?: string;
-    actualDensity?: string;
-    colorResult?: string;
-    aromaResult?: string;
-    textureResult?: string;
-    stability40C?: string;
-    stabilityRT?: string;
-    stability4C?: string;
-    notes?: string;
-  }) {
+  async createLabTestResult(
+    dto: {
+      formulaId: string;
+      testerId: string;
+      actualPh?: string;
+      actualViscosity?: string;
+      actualDensity?: string;
+      colorResult?: string;
+      aromaResult?: string;
+      textureResult?: string;
+      stability40C?: string;
+      stabilityRT?: string;
+      stability4C?: string;
+      notes?: string;
+    },
+    actor?: RndActorContext,
+  ) {
+    this.assertTenantResolved(actor);
+    await this.assertFormulaInTenant(this.prisma, { id: dto.formulaId }, actor);
     return this.prisma.labTestResult.create({
       data: {
         formulaId: dto.formulaId,
@@ -986,12 +1250,14 @@ export class RndService {
       targetAroma?: string;
       appearance?: string;
     },
+    actor?: RndActorContext,
   ) {
     const formula = await this.prisma.formula.findUnique({
       where: { id: formulaId },
     });
 
     if (!formula) throw new NotFoundException('Formula not found');
+    await this.assertFormulaInTenant(this.prisma, formula, actor);
 
     return this.prisma.qCParameter.upsert({
       where: { formulaId },
@@ -1015,12 +1281,13 @@ export class RndService {
 
   // --- REVISION TRACKER ---
 
-  async getRevisions() {
+  async getRevisions(actor?: RndActorContext) {
     return this.prisma.sampleRequest.findMany({
       where: {
         revisionStatus: {
           in: [RevisionStatus.NOT_STARTED, RevisionStatus.IN_PROGRESS],
         },
+        ...this.scopeWhere(actor),
       },
       include: {
         lead: { select: { clientName: true, brandName: true } },
@@ -1035,12 +1302,13 @@ export class RndService {
     });
   }
 
-  async getRevisionHistory() {
+  async getRevisionHistory(actor?: RndActorContext) {
     return this.prisma.sampleRequest.findMany({
       where: {
         revisionStatus: {
           in: [RevisionStatus.DONE, RevisionStatus.CANCELLED],
         },
+        ...this.scopeWhere(actor),
       },
       include: {
         lead: { select: { clientName: true, brandName: true } },
@@ -1055,38 +1323,36 @@ export class RndService {
     });
   }
 
-  async startRevision(id: string) {
-    const sample = await this.prisma.sampleRequest.findUnique({
-      where: { id },
-    });
-    if (!sample) throw new NotFoundException('Sample not found');
-
-    return this.prisma.sampleRequest.update({
-      where: { id },
-      data: {
-        revisionStatus: RevisionStatus.IN_PROGRESS,
-        latestRevisionDate: new Date(),
-      },
+  private async updateRevisionScoped(
+    id: string,
+    data: Record<string, any>,
+    actor?: RndActorContext,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const sample = await tx.sampleRequest.findUnique({ where: { id } });
+      await this.assertSampleInTenant(tx, sample, actor);
+      return tx.sampleRequest.update({ where: { id }, data });
     });
   }
 
-  async completeRevision(id: string) {
-    const sample = await this.prisma.sampleRequest.findUnique({
-      where: { id },
-    });
-    if (!sample) throw new NotFoundException('Sample not found');
-
-    return this.prisma.sampleRequest.update({
-      where: { id },
-      data: {
-        revisionStatus: RevisionStatus.DONE,
-        completedAt: new Date(),
-      },
-    });
+  async startRevision(id: string, actor?: RndActorContext) {
+    return this.updateRevisionScoped(
+      id,
+      { revisionStatus: RevisionStatus.IN_PROGRESS, latestRevisionDate: new Date() },
+      actor,
+    );
   }
 
-  async getAllLabTestResults(type?: string) {
-    const where: any = {};
+  async completeRevision(id: string, actor?: RndActorContext) {
+    return this.updateRevisionScoped(
+      id,
+      { revisionStatus: RevisionStatus.DONE, completedAt: new Date() },
+      actor,
+    );
+  }
+
+  async getAllLabTestResults(type?: string, actor?: RndActorContext) {
+    const where: any = this.scopeWhereAt(actor, 'formula');
     if (type === 'stability') {
       where.stability40C = { not: null };
     }
@@ -1120,8 +1386,9 @@ export class RndService {
       );
   }
 
-  async getFormulas() {
+  async getFormulas(actor?: RndActorContext) {
     return this.prisma.formula.findMany({
+      where: this.scopeWhereAt(actor, 'formula'),
       include: {
         sampleRequest: {
           select: {
@@ -1148,8 +1415,9 @@ export class RndService {
     });
   }
 
-  async getPipeline() {
+  async getPipeline(actor?: RndActorContext) {
     return this.prisma.sampleRequest.findMany({
+      where: this.scopeWhere(actor),
       include: {
         formulas: {
           include: { phases: true },

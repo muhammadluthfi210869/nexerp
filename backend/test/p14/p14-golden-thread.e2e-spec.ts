@@ -41,7 +41,7 @@ describe('P14 Golden Thread: End-to-End QC, Release & Traceability on Real DB (A
   let mixScheduleId: string;
   let fillScheduleId: string;
   let packScheduleId: string;
-  let supervisorPin = '889900';
+  const supervisorPin = '889900';
   let goldenBatchCode: string;
   let stepLogId: string;
 

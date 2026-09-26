@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BussdevController } from '../../src/modules/bussdev/bussdev.controller';
 import { BussdevService } from '../../src/modules/bussdev/bussdev.service';
 import { LeadService } from '../../src/modules/bussdev/services/lead.service';
+import { PipelineService } from '../../src/modules/bussdev/services/pipeline.service';
 import { JwtAuthGuard } from '../../src/modules/auth/jwt-auth.guard';
 import { RolesGuard } from '../../src/modules/auth/roles.guard';
 import { UserRole, WorkflowStatus } from '@prisma/client';
@@ -66,12 +67,18 @@ describe('BussdevController — Unit', () => {
     triggerRetentionCheck: jest.fn(),
   } as any;
 
+  const mockPipelineService = {
+    getPipelineV2Audit: jest.fn(),
+    getPipelineV2Leads: jest.fn(),
+  } as any;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BussdevController],
       providers: [
         { provide: BussdevService, useValue: mockService },
         { provide: LeadService, useValue: mockLeadService },
+        { provide: PipelineService, useValue: mockPipelineService },
       ],
     })
       .overrideGuard(JwtAuthGuard)

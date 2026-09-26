@@ -68,6 +68,12 @@ export class WarehouseController {
     return this.warehouseService.getActiveWarehouses();
   }
 
+  @Get('transactions')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async getTransactions(@Query('materialId') materialId?: string) {
+    return this.warehouseService.getAllTransactions(materialId);
+  }
+
   @Get('history/:materialId')
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async getHistory(@Param('materialId') materialId: string) {
@@ -246,12 +252,31 @@ export class WarehouseController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async approveAdjustment(
     @Param('id') id: string,
-    @Body() body: { status: string; userId: string },
+    @Body() body: { status?: string; userId?: string },
+    @Request() req?: any,
   ) {
+    const userId = body?.userId || req?.user?.id || req?.user?.sub || 'SYSTEM';
     return this.warehouseService.approveAdjustment(
       id,
-      body.status,
-      body.userId,
+      body?.status || 'APPROVED',
+      userId,
+    );
+  }
+
+  @Post('adjustments/:id/reject')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async rejectAdjustment(
+    @Param('id') id: string,
+    @Body() body: { notes?: string; userId?: string },
+    @Request() req?: any,
+  ) {
+    const userId = body?.userId || req?.user?.id || req?.user?.sub || 'SYSTEM';
+    return this.warehouseService.approveAdjustment(
+      id,
+      'REJECTED',
+      userId,
     );
   }
 
@@ -386,7 +411,7 @@ export class WarehouseController {
     UserRole.PURCHASING,
     UserRole.DIRECTOR,
   )
-  async getStockSummary(@Query('groupBy') groupBy?: string) {
+  async getStockSummary(@Query('groupBy') _groupBy?: string) {
     return this.warehouseService.getStockSummaryByBahanType();
   }
 }

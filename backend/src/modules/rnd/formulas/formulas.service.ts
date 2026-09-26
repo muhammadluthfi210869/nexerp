@@ -10,6 +10,7 @@ import { UpdateFormulaV4Dto } from '../dto/update-formula-v4.dto';
 import { FormulaStatus, Prisma, RevisionStatus } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
+import type { RndActorContext } from '../rnd.service';
 import { LegalityService } from '../../legality/legality.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
 import { AuditService } from '../../../platform/audit/audit.service';
@@ -21,6 +22,48 @@ export const FORMULA_LOCKED = 'FORMULA_LOCKED';
 export const COMPOSITION_TOTAL_INVALID = 'COMPOSITION_TOTAL_INVALID';
 /** Declared in 08_INTEGRATION_EVENT_CONTRACT.yaml `rnd_events`. */
 export const EVENT_FORMULA_LOCKED = 'rnd.formulation.locked';
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * Fase 3a (DEC-2026-09-20-059 LOCKED) — the same rule `rnd.service.ts` applies to
+ * the `/rnd` surface, applied to `/rnd/formulas` so the formula routes cannot be
+ * the way around it. A formula's tenant is its parent `sampleRequest.lead`'s
+ * `organizationId`; no P08 table gains a column for this.
+ *
+ * Returns a Prisma `where` fragment that is either tenant-scoped or empty:
+ * - a UUID tenant in the actor → scope to it
+ * - no tenant, in-process caller (`enforce` unset) → `{}`, the pre-3a path
+ * - no tenant at the HTTP boundary (`enforce: true`) → 400 TENANT_UNRESOLVED
+ */
+export function formulaTenantWhere(actor?: RndActorContext): Record<string, any> {
+  const orgId = actor?.organizationId;
+  if (typeof orgId === 'string' && UUID_RE.test(orgId)) {
+    return { sampleRequest: { lead: { organizationId: orgId } } };
+  }
+  if (actor?.enforce) {
+    throw new BadRequestException({
+      code: 'TENANT_UNRESOLVED',
+      message: 'Tenant wajib diisi dari konteks server.',
+    });
+  }
+  return {};
+}
+
+/** The refusal every cross-tenant formula access shares. */
+function refuseCrossTenant(): never {
+  throw new ForbiddenException({
+    code: 'TENANT_ISOLATION_VIOLATION',
+    message: 'Sumber daya milik tenant lain.',
+  });
+}
+
+/** True when the actor carries a usable tenant UUID. */
+function hasTenant(actor?: RndActorContext): boolean {
+  const orgId = actor?.organizationId;
+  return typeof orgId === 'string' && UUID_RE.test(orgId);
+}
 
 /**
  * BUS-RULE-109 / 02_DATA_OWNERSHIP.yaml:1253 (`condition: formulation.status in
@@ -97,6 +140,24 @@ export class FormulasService {
     }
   }
 
+  /**
+   * Fase 3a — a formula the actor's tenant cannot see must not be written to,
+   * read from, or confirmed to exist. Used by the routes that only need the row
+   * checked, not loaded.
+   */
+  private async assertFormulaVisible(
+    id: string,
+    actor?: RndActorContext,
+  ): Promise<void> {
+    const scoped = formulaTenantWhere(actor);
+    const own = await this.prisma.formula.findFirst({
+      where: { id, ...scoped },
+      select: { id: true },
+    });
+    if (!own && hasTenant(actor)) refuseCrossTenant();
+    if (!own) throw new NotFoundException('Formula not found');
+  }
+
   private async generateFormulaCode(client?: Prisma.TransactionClient): Promise<string> {
     const db = client ?? this.prisma;
     const now = new Date();
@@ -121,8 +182,20 @@ export class FormulasService {
     return `${prefix}${seq.toString().padStart(3, '0')}`;
   }
 
-  async create(createFormulaDto: CreateFormulaDto) {
+  async create(createFormulaDto: CreateFormulaDto, actor?: RndActorContext) {
     const { items, ...formulaData } = createFormulaDto;
+
+    // Fase 3a — the parent sample decides the tenant. Without this, a foreign
+    // actor could attach a formula to another tenant's sample by posting its id.
+    // The predicate is on the SAMPLE, so it is `lead`, not `sampleRequest.lead`.
+    const orgId = actor?.organizationId as string;
+    if (hasTenant(actor)) {
+      const parent = await this.prisma.sampleRequest.findFirst({
+        where: { id: formulaData.sampleRequestId, lead: { organizationId: orgId } },
+        select: { id: true },
+      });
+      if (!parent) refuseCrossTenant();
+    }
 
     const formulaCode = await this.generateFormulaCode();
 
@@ -212,11 +285,21 @@ export class FormulasService {
    * `client` exists so a caller inside a transaction reads its own uncommitted
    * rows. Reading through `this.prisma` from inside an open transaction blocks on
    * the row locks that same transaction holds.
+   *
+   * `actor` is the Fase 3a tenant gate. It is absent on the in-transaction call
+   * from `updateFormulaV4` (the row is already known-owned there) and on the
+   * in-process callers in `test/`; when present and non-matching, the row is a
+   * 404 rather than a disclosure — the caller learns nothing about its existence.
    */
-  async getFormulaDetails(id: string, client?: Prisma.TransactionClient) {
+  async getFormulaDetails(
+    id: string,
+    client?: Prisma.TransactionClient,
+    actor?: RndActorContext,
+  ) {
     const db = client ?? this.prisma;
-    return db.formula.findUnique({
-      where: { id },
+    const scoped = formulaTenantWhere(actor);
+    const formula = await db.formula.findFirst({
+      where: { id, ...scoped },
       include: {
         phases: {
           orderBy: { order: 'asc' },
@@ -237,15 +320,25 @@ export class FormulasService {
         },
       },
     });
+    if (!formula && actor?.organizationId) refuseCrossTenant();
+    return formula;
   }
 
-  async updateFormulaV4(id: string, dto: UpdateFormulaV4Dto, actorId?: string) {
+  async updateFormulaV4(
+    id: string,
+    dto: UpdateFormulaV4Dto,
+    actorId?: string,
+    actor?: RndActorContext,
+  ) {
     // 0. [BUS-RULE-109] a locked or superseded formula rejects every mutation.
     // Rework goes through createRevision (BUS-RULE-114), never through a rewrite.
-    const existing = await this.prisma.formula.findUnique({
-      where: { id },
+    // The tenant predicate is part of the SAME lookup: a foreign formula must not
+    // reach `assertMutable`, whose FORMULA_LOCKED answer would confirm it exists.
+    const existing = await this.prisma.formula.findFirst({
+      where: { id, ...formulaTenantWhere(actor) },
       select: { formulaCode: true, status: true },
     });
+    if (!existing && actor?.organizationId) refuseCrossTenant();
     this.assertMutable(existing);
 
     // 1. [Hukum Mutlak 100%] — BUS-RULE-108
@@ -335,9 +428,9 @@ export class FormulasService {
           entityType: 'Formula',
           entityId: id,
           action: 'UPDATE_FORMULA_COMPOSITION',
-          beforeSnapshot: { status: existing!.status },
+          beforeSnapshot: { status: existing.status },
           afterSnapshot: {
-            formula_code: existing!.formulaCode,
+            formula_code: existing.formulaCode,
             target_yield_gram: Number(dto.targetYieldGram),
             composition_total_percent: totalDosage,
           },
@@ -354,10 +447,10 @@ export class FormulasService {
    * `old_formulation.marked_superseded`). Revising a locked parent is allowed —
    * it is the only sanctioned way to change one (BUS-RULE-109).
    */
-  async createRevision(id: string, actorId?: string) {
+  async createRevision(id: string, actorId?: string, actor?: RndActorContext) {
     return this.prisma.$transaction(async (tx) => {
-      const source = await tx.formula.findUnique({
-        where: { id },
+      const source = await tx.formula.findFirst({
+        where: { id, ...formulaTenantWhere(actor) },
         include: {
           phases: {
             include: { items: true },
@@ -366,7 +459,10 @@ export class FormulasService {
         },
       });
 
-      if (!source) throw new NotFoundException('Source formula not found');
+      if (!source) {
+        if (hasTenant(actor)) refuseCrossTenant();
+        throw new NotFoundException('Source formula not found');
+      }
 
       // 1. Mark previous versions as SUPERSEDED
       await tx.formula.updateMany({
@@ -491,11 +587,12 @@ export class FormulasService {
    * [BUS-RULE-113] The submit is recorded with the acting user, exactly like the
    * approve and lock transitions.
    */
-  async requestApproval(id: string, actorId?: string) {
-    const existing = await this.prisma.formula.findUnique({
-      where: { id },
+  async requestApproval(id: string, actorId?: string, actor?: RndActorContext) {
+    const existing = await this.prisma.formula.findFirst({
+      where: { id, ...formulaTenantWhere(actor) },
       select: { formulaCode: true, status: true },
     });
+    if (!existing && hasTenant(actor)) refuseCrossTenant();
     this.assertMutable(existing);
 
     const updated = await this.prisma.$transaction((tx) =>
@@ -507,7 +604,7 @@ export class FormulasService {
           entityType: 'Formula',
           entityId: id,
           action: 'SUBMIT_FORMULA_APPROVAL',
-          beforeSnapshot: { status: existing!.status },
+          beforeSnapshot: { status: existing.status },
           afterSnapshot: { status: FormulaStatus.WAITING_APPROVAL, submitted_by: actorId ?? null },
         },
         async () =>
@@ -521,7 +618,7 @@ export class FormulasService {
     this.eventEmitter.emit('state.transition', {
       entityType: 'FORMULA',
       entityId: id,
-      fromState: existing!.status,
+      fromState: existing.status,
       toState: 'WAITING_APPROVAL',
       changedById: actorId ?? null,
       reason: 'Formula submitted for approval',
@@ -530,11 +627,12 @@ export class FormulasService {
     return updated;
   }
 
-  async approveFormula(id: string, userId: string) {
-    const existing = await this.prisma.formula.findUnique({
-      where: { id },
+  async approveFormula(id: string, userId: string, actor?: RndActorContext) {
+    const existing = await this.prisma.formula.findFirst({
+      where: { id, ...formulaTenantWhere(actor) },
       select: { status: true, formulaCode: true },
     });
+    if (!existing && hasTenant(actor)) refuseCrossTenant();
     if (!existing) throw new NotFoundException('Formula not found');
     // A formula already at or past this lock is returned untouched: re-approving
     // must not mint a second lock effect (BUS-RULE-113 "exactly once").
@@ -595,13 +693,16 @@ export class FormulasService {
     return formula;
   }
 
-  async lockProduction(id: string, userId: string) {
-    const formula = await this.prisma.formula.findUnique({
-      where: { id },
+  async lockProduction(id: string, userId: string, actor?: RndActorContext) {
+    const formula = await this.prisma.formula.findFirst({
+      where: { id, ...formulaTenantWhere(actor) },
       include: { phases: { include: { items: true } } },
     });
 
-    if (!formula) throw new NotFoundException('Formula not found');
+    if (!formula) {
+      if (hasTenant(actor)) refuseCrossTenant();
+      throw new NotFoundException('Formula not found');
+    }
 
     // Production Gate: Materials must exist and be valid
     const items = formula.phases.flatMap((p) => p.items);
@@ -687,7 +788,10 @@ export class FormulasService {
     return updated;
   }
 
-  async recordLabTest(formulaId: string, data: any) {
+  async recordLabTest(formulaId: string, data: any, actor?: RndActorContext) {
+    // The formula must be visible before a result may be attached to it —
+    // otherwise a foreign actor writes rows into another tenant's lab history.
+    await this.assertFormulaVisible(formulaId, actor);
     return this.prisma.labTestResult.create({
       data: {
         formulaId,
@@ -696,7 +800,8 @@ export class FormulasService {
     });
   }
 
-  async getLabTests(formulaId: string) {
+  async getLabTests(formulaId: string, actor?: RndActorContext) {
+    await this.assertFormulaVisible(formulaId, actor);
     return this.prisma.labTestResult.findMany({
       where: { formulaId },
       orderBy: { testDate: 'desc' },
@@ -704,8 +809,9 @@ export class FormulasService {
     });
   }
 
-  async findAll(status?: string) {
-    const where = status ? { status: status as any } : {};
+  async findAll(status?: string, actor?: RndActorContext) {
+    const scoped = formulaTenantWhere(actor);
+    const where = status ? { ...scoped, status: status as any } : scoped;
     return this.prisma.formula.findMany({
       where,
       include: {
@@ -717,9 +823,9 @@ export class FormulasService {
     });
   }
 
-  async generateInci(id: string) {
-    const formula = await this.prisma.formula.findUnique({
-      where: { id },
+  async generateInci(id: string, actor?: RndActorContext) {
+    const formula = await this.prisma.formula.findFirst({
+      where: { id, ...formulaTenantWhere(actor) },
       include: {
         phases: {
           include: {
@@ -731,7 +837,10 @@ export class FormulasService {
       },
     });
 
-    if (!formula) throw new NotFoundException('Formula not found');
+    if (!formula) {
+      if (actor?.organizationId) refuseCrossTenant();
+      throw new NotFoundException('Formula not found');
+    }
 
     const allItems = formula.phases.flatMap((p) => p.items);
     const sortedItems = allItems.sort(

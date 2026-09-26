@@ -751,6 +751,73 @@ export class LegalityService {
     return permits.sort((a, b) => a.status.localeCompare(b.status));
   }
 
+  async updatePermitStatus(id: string, status: string, notes?: string) {
+    const bpom = await this.prisma.bpomRecord.findFirst({
+      where: { OR: [{ id }, { bpomId: id }] },
+    });
+    if (bpom) {
+      if (notes) {
+        await this.addLog({
+          recordId: bpom.id,
+          recordType: 'BPOM',
+          action: 'STATUS_UPDATE',
+          notes,
+          staffName: 'SYSTEM',
+        });
+      }
+      return this.prisma.bpomRecord.update({
+        where: { id: bpom.id },
+        data: {
+          status: status as any,
+        },
+      });
+    }
+
+    const hki = await this.prisma.hkiRecord.findFirst({
+      where: { OR: [{ id }, { hkiId: id }] },
+    });
+    if (hki) {
+      if (notes) {
+        await this.addLog({
+          recordId: hki.id,
+          recordType: 'HKI',
+          action: 'STATUS_UPDATE',
+          notes,
+          staffName: 'SYSTEM',
+        });
+      }
+      return this.prisma.hkiRecord.update({
+        where: { id: hki.id },
+        data: {
+          status: status as any,
+        },
+      });
+    }
+
+    const halal = await this.prisma.halalRecord.findFirst({
+      where: { OR: [{ id }, { halalId: id }] },
+    });
+    if (halal) {
+      if (notes) {
+        await this.addLog({
+          recordId: halal.id,
+          recordType: 'HALAL',
+          action: 'STATUS_UPDATE',
+          notes,
+          staffName: 'SYSTEM',
+        });
+      }
+      return this.prisma.halalRecord.update({
+        where: { id: halal.id },
+        data: {
+          status: status as any,
+        },
+      });
+    }
+
+    throw new NotFoundException(`Permit ${id} not found`);
+  }
+
   // --- V4 REGULATORY ENGINE ---
 
   async validateFormula(formulaId: string) {

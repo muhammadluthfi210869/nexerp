@@ -3,6 +3,7 @@
   "rootDir": ".",
   "testEnvironment": "node",
   "maxWorkers": 1,
+  "setupFiles": ["<rootDir>/setup-fast-pdf.cjs"],
   "testRegex": ".unit-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", { "diagnostics": false }]

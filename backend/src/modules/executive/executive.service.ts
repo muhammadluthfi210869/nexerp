@@ -483,7 +483,7 @@ export class ExecutiveService {
       entity: a.entityType || 'General',
       entityId: a.entityId || a.id,
       user: a.user?.fullName || a.user?.email || 'System',
-      ipAddress: a.ip || '127.0.0.1',
+      ipAddress: a.ip || '',
       timestamp: a.createdAt.toISOString(),
       status: 'SUCCESS',
       details: a.metadata

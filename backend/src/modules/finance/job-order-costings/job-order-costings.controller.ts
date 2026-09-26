@@ -17,7 +17,7 @@ import {
 
 @ApiTags('finance/job-order-costings')
 @ApiBearerAuth()
-@Controller('finance/job-order-costings')
+@Controller(['finance/job-order-costings', 'finance/cogs-requests'])
 export class JobOrderCostingsController {
   constructor(private service: JobOrderCostingsService) {}
 

@@ -13,8 +13,15 @@ import { Prisma } from '@prisma/client';
 import { randomUUID, createHash } from 'crypto';
 import { parse } from 'csv-parse/sync';
 
-export interface ImportOptions {
-  dryRun?: boolean;
+/**
+ * Legacy opening stock arrives with no real supplier, but
+ * `MaterialInventory.supplierId` is NOT NULL. Every imported opening batch is
+ * parked on this one canonical system supplier instead of being silently
+ * attributed to a real vendor.
+ */
+const OPENING_STOCK_SUPPLIER = 'OPENING-BALANCE (SYSTEM)';
+
+export interface ImportOptions {  dryRun?: boolean;
   tenantId?: string;
   actor?: PolicyActor;
   idempotencyKey?: string;
@@ -341,6 +348,35 @@ export class ImportExportService {
         if (!row.name || typeof row.name !== 'string' || row.name.trim() === '') {
           errors.push({ row: rowNum, field: 'name', message: 'Warehouse name is required' });
         }
+      } else if (entLower === 'openingbalance' || entLower === 'openingbalances' || entLower === 'coabalance') {
+        const accountCode = row.code ?? row.accountCode;
+        if (!accountCode || String(accountCode).trim() === '') {
+          errors.push({ row: rowNum, field: 'code', message: 'Account code is required' });
+        }
+        const debit = Number(row.debit ?? 0);
+        const credit = Number(row.credit ?? 0);
+        if (!Number.isFinite(debit) || !Number.isFinite(credit)) {
+          errors.push({ row: rowNum, field: 'debit', message: 'debit/credit must be numeric' });
+        } else if (debit < 0 || credit < 0) {
+          errors.push({ row: rowNum, field: 'debit', message: 'debit/credit must not be negative' });
+        } else if (debit === 0 && credit === 0) {
+          errors.push({ row: rowNum, field: 'debit', message: 'Either debit or credit must be non-zero' });
+        }
+        if (row.date !== undefined && Number.isNaN(Date.parse(String(row.date)))) {
+          errors.push({ row: rowNum, field: 'date', message: 'date must be a parseable date (YYYY-MM-DD)' });
+        }
+      } else if (entLower === 'openingstock' || entLower === 'openingstocks' || entLower === 'warehousestock') {
+        const materialCode = row.code ?? row.materialCode;
+        if (!materialCode || String(materialCode).trim() === '') {
+          errors.push({ row: rowNum, field: 'code', message: 'Material code is required' });
+        }
+        const qty = Number(row.quantity ?? row.qty);
+        if (!Number.isFinite(qty) || qty <= 0) {
+          errors.push({ row: rowNum, field: 'quantity', message: 'quantity must be a positive number' });
+        }
+        if (row.expDate !== undefined && row.expDate !== '' && Number.isNaN(Date.parse(String(row.expDate)))) {
+          errors.push({ row: rowNum, field: 'expDate', message: 'expDate must be a parseable date (YYYY-MM-DD)' });
+        }
       } else {
         if (!row.code || typeof row.code !== 'string' || row.code.trim() === '') {
           errors.push({ row: rowNum, field: 'code', message: 'Code is required' });
@@ -350,6 +386,41 @@ export class ImportExportService {
         }
       }
     });
+
+    // ── Batch-internal duplicate codes ──
+    // A batch listing the same code twice is ambiguous: `upsert` would silently
+    // collapse it to one row and hide the client's keying error. Reject instead.
+    const CODE_KEYED_ENTITIES = new Set([
+      'unit', 'units', 'masterunit',
+      'category', 'categories', 'mastercategory',
+      'material', 'materials', 'materialitem', 'goods',
+      'openingbalance', 'openingbalances', 'coabalance',
+      'openingstock', 'openingstocks', 'warehousestock',
+    ]);
+    if (CODE_KEYED_ENTITIES.has(entLower)) {
+      // Opening stock legitimately lists one material several times (once per
+      // batch), so its identity is material + batch, not material alone.
+      const openingStockEntities = new Set(['openingstock', 'openingstocks', 'warehousestock']);
+      const firstSeenAt = new Map<string, number>();
+      rows.forEach((row, idx) => {
+        const raw = row?.code ?? row?.accountCode ?? row?.materialCode;
+        if (raw === undefined || raw === null || String(raw).trim() === '') return;
+        const codeKey = String(raw).trim().toUpperCase();
+        const key = openingStockEntities.has(entLower)
+          ? `${codeKey}::${String(row?.batchNumber ?? '').trim().toUpperCase()}`
+          : codeKey;
+        const first = firstSeenAt.get(key);
+        if (first !== undefined) {
+          errors.push({
+            row: idx + 1,
+            field: 'code',
+            message: `DUPLICATE_CODE_IN_BATCH: code "${key}" already used on row ${first}`,
+          });
+        } else {
+          firstSeenAt.set(key, idx + 1);
+        }
+      });
+    }
 
     // P06-R4-B4: any validation failure throws canonical 400 — never returns
     // a "success: false" transport success. Row-level diagnostics are preserved
@@ -362,6 +433,98 @@ export class ImportExportService {
         totalRows: rows.length,
         errors,
       });
+    }
+
+    const isOpeningBalance =
+      entLower === 'openingbalance' || entLower === 'openingbalances' || entLower === 'coabalance';
+    const isOpeningStock =
+      entLower === 'openingstock' || entLower === 'openingstocks' || entLower === 'warehousestock';
+
+    // ── Reference validation: every referenced master must already exist ──
+    // Runs before `dryRun` so a dry run is a real rehearsal, and before the
+    // write transaction so an unmapped reference can never half-apply a batch.
+    const accountIdByCode = new Map<string, string>();
+    const materialByCode = new Map<string, { id: string }>();
+    let openingBalanceDate = new Date();
+
+    if (isOpeningBalance) {
+      const codes = Array.from(
+        new Set(rows.map((r) => String(r.code ?? r.accountCode ?? '').trim().toUpperCase()).filter(Boolean))
+      );
+      const found = await this.prisma.account.findMany({
+        where: { code: { in: codes } },
+        select: { id: true, code: true },
+      });
+      for (const acc of found) accountIdByCode.set(acc.code.toUpperCase(), acc.id);
+
+      const missing = codes.filter((c) => !accountIdByCode.has(c));
+      if (missing.length > 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: 'IMPORT_VALIDATION_FAILED',
+          message: `COA_NOT_REGISTERED: ${missing.length} account code(s) are not registered in the chart of accounts`,
+          totalRows: rows.length,
+          errors: missing.map((c) => ({
+            row: 0,
+            field: 'code',
+            message: `Account code ${c} is not registered in COA`,
+          })),
+        });
+      }
+
+      const totalDebit = rows.reduce((sum, r) => sum + Number(r.debit ?? 0), 0);
+      const totalCredit = rows.reduce((sum, r) => sum + Number(r.credit ?? 0), 0);
+      if (Math.abs(totalDebit - totalCredit) > 0.01) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: 'IMPORT_VALIDATION_FAILED',
+          message: `OPENING_BALANCE_UNBALANCED: total debit ${totalDebit} != total credit ${totalCredit}`,
+          totalRows: rows.length,
+          errors: [{ row: 0, field: 'batch', message: 'Opening balance batch must balance (debit == credit)' }],
+        });
+      }
+
+      const rowDates = Array.from(
+        new Set(rows.filter((r) => r.date !== undefined).map((r) => new Date(String(r.date)).toISOString().slice(0, 10)))
+      );
+      if (rowDates.length > 1) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: 'IMPORT_VALIDATION_FAILED',
+          message: `OPENING_BALANCE_MIXED_DATES: batch spans ${rowDates.length} distinct dates; split it per date`,
+          totalRows: rows.length,
+          errors: [{ row: 0, field: 'date', message: `Distinct dates: ${rowDates.join(', ')}` }],
+        });
+      }
+      if (rowDates.length === 1) openingBalanceDate = new Date(`${rowDates[0]}T00:00:00.000Z`);
+    }
+
+    if (isOpeningStock) {
+      const codes = Array.from(
+        new Set(rows.map((r) => String(r.code ?? r.materialCode ?? '').trim().toUpperCase()).filter(Boolean))
+      );
+      const found = await this.prisma.materialItem.findMany({
+        where: { code: { in: codes } },
+        select: { id: true, code: true },
+      });
+      for (const mat of found) {
+        if (mat.code) materialByCode.set(mat.code.toUpperCase(), { id: mat.id });
+      }
+
+      const missing = codes.filter((c) => !materialByCode.has(c));
+      if (missing.length > 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: 'IMPORT_VALIDATION_FAILED',
+          message: `MATERIAL_NOT_REGISTERED: ${missing.length} material code(s) do not exist — import the master first`,
+          totalRows: rows.length,
+          errors: missing.map((c) => ({
+            row: 0,
+            field: 'code',
+            message: `Material code ${c} is not registered`,
+          })),
+        });
+      }
     }
 
     if (options.dryRun) {
@@ -380,9 +543,11 @@ export class ImportExportService {
     // outbox run inside one tx. Two concurrent identical requests serialize at
     // the advisory lock, and the second transaction observes the first's
     // committed SUCCEEDED row before attempting the master mutation.
-    return await this.prisma.$transaction(async (tx) => {
-      if (options.idempotencyKey) {
-        const lockHash = createHash('sha256')
+    // 10k-row batches run one upsert per row inside this transaction: the 5s
+    // Prisma default would abort a legitimate master-data load mid-flight.
+    return await this.prisma.$transaction(
+      async (tx) => {
+      if (options.idempotencyKey) {        const lockHash = createHash('sha256')
           .update(`${resolvedTenant}|${entLower}|${options.idempotencyKey}`)
           .digest();
         const lockInt = lockHash.readUInt32BE(0) % 0x7FFFFFFE;
@@ -409,7 +574,11 @@ export class ImportExportService {
         }
       }
 
+      const batchId = randomUUID();
       let importedCount = 0;
+      // Opening balances land as ONE balanced journal for the whole batch, so
+      // the lines accumulate here and the entry is written after the loop.
+      const openingBalanceLines: Array<{ accountId: string; debit: number; credit: number }> = [];
       for (const row of rows) {
         const code = row.code ? String(row.code).trim().toUpperCase() : undefined;
         const name = row.name ? String(row.name).trim() : undefined;
@@ -570,10 +739,113 @@ export class ImportExportService {
             break;
           }
 
+          case 'openingbalance':
+          case 'openingbalances':
+          case 'coabalance': {
+            const accountCode = String(row.code ?? row.accountCode ?? '').trim().toUpperCase();
+            const accountId = accountIdByCode.get(accountCode);
+            if (!accountId) {
+              throw new BadRequestException(
+                `VALIDATION_FAILED: Account code ${accountCode} was not resolved before the import transaction`
+              );
+            }
+            openingBalanceLines.push({
+              accountId,
+              debit: Number(row.debit ?? 0),
+              credit: Number(row.credit ?? 0),
+            });
+            break;
+          }
+
+          case 'openingstock':
+          case 'openingstocks':
+          case 'warehousestock': {
+            const materialCode = String(row.code ?? row.materialCode ?? '').trim().toUpperCase();
+            const material = materialByCode.get(materialCode);
+            if (!material) {
+              throw new BadRequestException(
+                `VALIDATION_FAILED: Material code ${materialCode} was not resolved before the import transaction`
+              );
+            }
+            const qty = Number(row.quantity ?? row.qty ?? 0);
+            const unitPrice = Number(row.unitPrice ?? 0);
+
+            let destLocId: string | null = null;
+            if (row.warehouse) {
+              const loc = await tx.warehouseLocation.findFirst({
+                where: { name: String(row.warehouse).trim() },
+                select: { id: true },
+              });
+              if (!loc) {
+                throw new BadRequestException(
+                  `VALIDATION_FAILED: Warehouse location "${row.warehouse}" does not exist`
+                );
+              }
+              destLocId = loc.id;
+            }
+
+            // Legacy opening stock has no real supplier; park it on one canonical
+            // system supplier so MaterialInventory.supplierId (NOT NULL) holds.
+            const existingSupplier = await tx.supplier.findFirst({
+              where: { name: OPENING_STOCK_SUPPLIER },
+              select: { id: true },
+            });
+            const supplierId =
+              existingSupplier?.id ??
+              (await tx.supplier.create({ data: { name: OPENING_STOCK_SUPPLIER, contact: 'SYSTEM' } })).id;
+
+            const inventory = await tx.materialInventory.create({
+              data: {
+                materialId: material.id,
+                supplierId,
+                batchNumber: String(row.batchNumber || `OPEN-${materialCode}-${batchId.slice(0, 8)}`),
+                currentStock: qty,
+                qcStatus: 'GOOD',
+                receivingDate: openingBalanceDate,
+                expDate: row.expDate ? new Date(String(row.expDate)) : null,
+                notes: `OPENING STOCK IMPORT ${batchId}`,
+              },
+            });
+
+            await tx.inventoryTransaction.create({
+              data: {
+                materialId: material.id,
+                type: 'INBOUND',
+                quantity: qty,
+                referenceNo: String(row.referenceNo || `OPEN-${batchId.slice(0, 8)}`),
+                notes: `OPENING STOCK IMPORT ${batchId}`,
+                inventoryId: inventory.id,
+                unitValueAtTransaction: unitPrice,
+                actorId: options.actor!.id,
+                destLocId,
+              },
+            });
+
+            await tx.materialItem.update({
+              where: { id: material.id },
+              data: { stockQty: { increment: qty } },
+            });
+            break;
+          }
+
           default:
             throw new BadRequestException('Unsupported entity for import: ' + entity);
         }
         importedCount++;
+      }
+
+      if (openingBalanceLines.length > 0) {
+        // Pre-validated to balance (debit == credit, tolerance 0.01) before the
+        // transaction opened; the PrismaService journal guard re-checks here.
+        await tx.journalEntry.create({
+          data: {
+            date: openingBalanceDate,
+            reference: `OPENING-BALANCE-${batchId.slice(0, 8)}`,
+            description: `Opening balance import (${openingBalanceLines.length} lines) key=${options.idempotencyKey ?? batchId}`,
+            sourceDocumentType: 'MANUAL',
+            lines: { create: openingBalanceLines },
+          },
+        });
       }
 
       const successResult: ImportResult = {
@@ -602,7 +874,6 @@ export class ImportExportService {
       }
 
       // ── Atomic Audit and Outbox (fails transaction if either fails) ──
-      const batchId = randomUUID();
       const correlationId = randomUUID();
 
       await this.auditService.withAudit(
@@ -635,6 +906,8 @@ export class ImportExportService {
       );
 
       return successResult;
-    });
+    },
+      { maxWait: 60_000, timeout: 600_000 }
+    );
   }
 }

@@ -4,10 +4,10 @@ import {
   Post,
   Body,
   Param,
+  Req,
   UseGuards,
-  Request,
 } from '@nestjs/common';
-import { RndService } from '../rnd.service';
+import { RndService, rndActorFromRequest } from '../rnd.service';
 import { CreateSampleDto } from '../dto/create-sample.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
@@ -21,19 +21,22 @@ export class SamplesController {
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
-  create(@Body() createSampleDto: CreateSampleDto) {
-    return this.rndService.createFormulationSample(createSampleDto);
+  create(@Body() createSampleDto: CreateSampleDto, @Req() req: any) {
+    return this.rndService.createFormulationSample(
+      createSampleDto,
+      rndActorFromRequest(req),
+    );
   }
 
   @Get()
   @Roles(UserRole.SUPER_ADMIN, UserRole.RND, UserRole.COMMERCIAL)
-  findAll() {
-    return this.rndService.getSamples();
+  findAll(@Req() req: any) {
+    return this.rndService.getSamples(rndActorFromRequest(req));
   }
 
   @Get(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.RND, UserRole.COMMERCIAL)
-  findOne(@Param('id') id: string) {
-    return this.rndService.getSample(id);
+  findOne(@Param('id') id: string, @Req() req: any) {
+    return this.rndService.getSample(id, rndActorFromRequest(req));
   }
 }

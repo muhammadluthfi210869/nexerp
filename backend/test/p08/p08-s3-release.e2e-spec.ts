@@ -42,6 +42,13 @@ import { FORMULA_LOCKED } from '../../src/modules/rnd/formulas/formulas.service'
 const RUN_ID = randomUUID().slice(0, 8);
 const TAG = `nex_p08_s3_${RUN_ID}`;
 const APJ_PIN = '7712';
+
+/**
+ * Fase 3a (DEC-2026-09-20-059 LOCKED): the P08 tenant is the parent Lead's
+ * `organizationId`, carried in the verified JWT claim. The `/rnd` legs of this
+ * suite need a token and a Lead that name the same tenant.
+ */
+const TENANT = randomUUID();
 const UPLOADS = path.resolve(__dirname, '..', '..', 'uploads', 'creative_assets');
 
 describe('P08-S3 lineage, design bound and permit expiry (real HTTP, real PostgreSQL)', () => {
@@ -179,13 +186,15 @@ describe('P08-S3 lineage, design bound and permit expiry (real HTTP, real Postgr
     compliance = await mkUser('compliance', ['COMPLIANCE']);
     rnd = await mkUser('rnd', ['RND']);
 
-    tDirector = ctx.tokenFor(director);
-    tApj = ctx.tokenFor(apj);
-    tCommercial = ctx.tokenFor(commercial);
-    tCompliance = ctx.tokenFor(compliance);
-    tRnd = ctx.tokenFor(rnd);
+    tDirector = ctx.tokenFor(director, TENANT);
+    tApj = ctx.tokenFor(apj, TENANT);
+    tCommercial = ctx.tokenFor(commercial, TENANT);
+    tCompliance = ctx.tokenFor(compliance, TENANT);
+    tRnd = ctx.tokenFor(rnd, TENANT);
 
-    const staff = await prisma.bussdevStaff.create({ data: { name: `${TAG} Staff` } });
+    const staff = await prisma.bussdevStaff.create({
+      data: { name: `${TAG} Staff`, organizationId: TENANT },
+    });
     lead = await prisma.salesLead.create({
       data: {
         clientName: `${TAG} Corp`,
@@ -193,6 +202,7 @@ describe('P08-S3 lineage, design bound and permit expiry (real HTTP, real Postgr
         source: 'GOOGLE',
         productInterest: 'P08 S3 HTTP',
         picId: staff.id,
+        organizationId: TENANT,
       },
     });
     leadId = lead.id;
@@ -828,7 +838,9 @@ describe('P08-S3 rollback: a provider failure between the write and the commit',
     tokenRnd = ctxToken(rnd);
     tokenFinance = ctxToken(finance);
 
-    const staff = await prisma.bussdevStaff.create({ data: { name: `${tag} Staff` } });
+    const staff = await prisma.bussdevStaff.create({
+      data: { name: `${tag} Staff`, organizationId: TENANT },
+    });
     const lead = await prisma.salesLead.create({
       data: {
         clientName: `${tag} Corp`,
@@ -836,6 +848,7 @@ describe('P08-S3 rollback: a provider failure between the write and the commit',
         source: 'GOOGLE',
         productInterest: 'P08 S3 rollback',
         picId: staff.id,
+        organizationId: TENANT,
       },
     });
     leadId = lead.id;
@@ -856,7 +869,7 @@ describe('P08-S3 rollback: a provider failure between the write and the commit',
 
     function ctxToken(user: any) {
       return jwt.sign(
-        { sub: user.id, email: user.email, roles: user.roles },
+        { sub: user.id, email: user.email, roles: user.roles, organizationId: TENANT },
         process.env.JWT_SECRET!,
       );
     }
@@ -866,10 +879,10 @@ describe('P08-S3 rollback: a provider failure between the write and the commit',
     try {
       const tag = `nex_p08_s3rb_${RUN_ID}`;
       await prisma.outboxEvent.deleteMany({
-        where: { aggregateId: { in: [sampleId, leadId].filter(Boolean) as string[] } },
+        where: { aggregateId: { in: [sampleId, leadId].filter(Boolean) } },
       });
-      await prisma.sampleStageLog.deleteMany({ where: { sampleRequestId: { in: [sampleId].filter(Boolean) as string[] } } });
-      await prisma.sampleRequest.deleteMany({ where: { id: { in: [sampleId].filter(Boolean) as string[] } } });
+      await prisma.sampleStageLog.deleteMany({ where: { sampleRequestId: { in: [sampleId].filter(Boolean) } } });
+      await prisma.sampleRequest.deleteMany({ where: { id: { in: [sampleId].filter(Boolean) } } });
       // Filters are never left `undefined`: that would widen them to "every row".
       await prisma.salesLead.deleteMany({ where: { clientName: `${tag} Corp` } });
       await prisma.bussdevStaff.deleteMany({ where: { name: `${tag} Staff` } });

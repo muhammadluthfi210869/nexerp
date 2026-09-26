@@ -66,7 +66,7 @@ const DB_NAME_PATTERN = /^nex_p06_[a-z0-9_]+$/;
 function redactSecrets(s: string): string {
   return String(s)
     .replace(/postgres(?:ql)?:\/\/[^\s"'`<>]+/gi, '[REDACTED_URL]')
-    .replace(/([a-zA-Z0-9+.-]+:\/\/)[^@\/\s]+@/g, '$1[REDACTED]@');
+    .replace(/([a-zA-Z0-9+.-]+:\/\/)[^@/\s]+@/g, '$1[REDACTED]@');
 }
 
 function parsePostgresUrl(raw: string): URL {
@@ -384,7 +384,7 @@ describe('P06 Real Application-Path Security & Transaction Invariants (E2E)', ()
       const check = await pgProbeMasterUnit(code);
       expect(check).toBeNull();
     } finally {
-      try { await altApp.close(); } catch (e) { throw new Error(`altApp close failed (Invariant 7): ${(e as Error).message}`); }
+      await altApp.close();
     }
   });
 
@@ -412,7 +412,7 @@ describe('P06 Real Application-Path Security & Transaction Invariants (E2E)', ()
       const check = await pgProbeMasterUnit(code);
       expect(check).toBeNull();
     } finally {
-      try { await altApp.close(); } catch (e) { throw new Error(`altApp close failed (Invariant 8): ${(e as Error).message}`); }
+      await altApp.close();
     }
   });
 
@@ -542,7 +542,7 @@ describe('P06 Real Application-Path Security & Transaction Invariants (E2E)', ()
       // Close fresh graph resources.
       await freshPrisma.$disconnect().catch(() => {});
     } finally {
-      try { await freshPool.end(); } catch (e) { throw new Error(`fresh pool close failed: ${(e as Error).message}`); }
+      await freshPool.end();
     }
   }, 180000);
 
@@ -582,7 +582,7 @@ describe('P06 Real Application-Path Security & Transaction Invariants (E2E)', ()
       .set('Authorization', `Bearer ${tokenA}`)
       .send({ idempotencyKey: idempKey, rows: [{ code: codeA, name: 'Initial' }] });
     if (res1.status !== 201) {
-      // eslint-disable-next-line no-console
+       
       console.log('Invariant 10 first-call status', res1.status, res1.body);
     }
     expect(res1.status).toBe(201);

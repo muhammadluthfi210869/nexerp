@@ -36,6 +36,33 @@ export class CustomersService {
     });
   }
 
+  // The dropdown shape CustomerSelect expects. Mirrors MaterialsService.findActive, and the
+  // route that calls it must sit above `:id` for the same reason.
+  async findActive(search?: string) {
+    const where = search
+      ? {
+          OR: [
+            { clientName: { contains: search, mode: 'insensitive' as const } },
+            { brandName: { contains: search, mode: 'insensitive' as const } },
+            { contactInfo: { contains: search, mode: 'insensitive' as const } },
+          ],
+        }
+      : {};
+
+    return this.prisma.salesLead.findMany({
+      where,
+      select: {
+        id: true,
+        clientName: true,
+        brandName: true,
+        contactInfo: true,
+        city: true,
+      },
+      orderBy: { clientName: 'asc' },
+      take: 500,
+    });
+  }
+
   async findOne(id: string) {
     const customer = await this.prisma.salesLead.findUnique({
       where: { id },

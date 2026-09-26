@@ -112,6 +112,26 @@ export class QcController {
     return this.releaseService.getReleaseBatches();
   }
 
+  @Get('apj-releases')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.APJ, UserRole.DIRECTOR)
+  @ApiOperation({ summary: 'Get APJ release records' })
+  getApjReleases() {
+    return this.releaseService.getReleaseBatches();
+  }
+
+  @Post('apj-releases')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.APJ, UserRole.DIRECTOR)
+  @ApiOperation({ summary: 'Submit APJ release record' })
+  createApjRelease(
+    @Request() req: { user: User },
+    @Body() dto: ExecuteReleaseDto,
+  ) {
+    return this.releaseService.executeRelease(
+      { id: req.user.id, roles: req.user.roles, fullName: req.user.fullName },
+      dto,
+    );
+  }
+
   // --- Partial Dispositions & Retest ---
 
   @Post('disposition/partial')

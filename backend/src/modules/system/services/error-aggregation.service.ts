@@ -105,14 +105,14 @@ export class ErrorAggregationService {
         this.prisma.errorLog.groupBy({
           by: ['route'],
           where: { lastSeenAt: { gte: since } },
-          _count: true,
+          _count: { id: true },
           orderBy: { _count: { id: 'desc' } },
           take: 10,
         }),
         this.prisma.errorLog.groupBy({
           by: ['level'],
           where: { lastSeenAt: { gte: since } },
-          _count: true,
+          _count: { id: true },
         }),
         this.prisma.errorLog.findMany({
           where: { lastSeenAt: { gte: since } },
@@ -135,13 +135,13 @@ export class ErrorAggregationService {
     return {
       totalErrors: allErrors,
       criticalErrors,
-      byRoute: byRoute.map((r: { route: string; _count: number }) => ({
+      byRoute: byRoute.map((r: any) => ({
         route: r.route,
-        count: r._count,
+        count: typeof r._count === 'number' ? r._count : (r._count?.id ?? r._count?._all ?? 0),
       })),
-      byLevel: byLevel.map((l: { level: string; _count: number }) => ({
+      byLevel: byLevel.map((l: any) => ({
         level: l.level,
-        count: l._count,
+        count: typeof l._count === 'number' ? l._count : (l._count?.id ?? l._count?._all ?? 0),
       })),
       recentErrors,
     };

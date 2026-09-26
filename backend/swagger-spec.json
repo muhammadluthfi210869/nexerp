@@ -29,6 +29,29 @@
         ]
       }
     },
+    "/v1/decision/{id}/resolve": {
+      "post": {
+        "operationId": "DecisionController_resolveDecision",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Decision"
+        ]
+      }
+    },
     "/v1/auth/login": {
       "post": {
         "operationId": "AuthController_login",
@@ -70,6 +93,20 @@
     "/v1/marketing/daily-ads": {
       "post": {
         "operationId": "MarketingController_createDailyAds",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Marketing"
+        ]
+      }
+    },
+    "/v1/marketing/metrics": {
+      "post": {
+        "operationId": "MarketingController_createMetrics",
         "parameters": [],
         "responses": {
           "201": {
@@ -626,6 +663,83 @@
         },
         "tags": [
           "Marketing"
+        ]
+      }
+    },
+    "/v1/marketing-command/overview": {
+      "get": {
+        "operationId": "MarketingCommandController_getOverview",
+        "parameters": [
+          {
+            "name": "days",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingCommand"
+        ]
+      }
+    },
+    "/v1/marketing-command/sync": {
+      "post": {
+        "operationId": "MarketingCommandController_syncAll",
+        "parameters": [
+          {
+            "name": "days",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingCommand"
+        ]
+      }
+    },
+    "/v1/marketing-command/sync/{provider}": {
+      "post": {
+        "operationId": "MarketingCommandController_syncProvider",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "days",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MarketingCommand"
         ]
       }
     },
@@ -1819,6 +1933,316 @@
         },
         "tags": [
           "CanonicalMarketing"
+        ]
+      }
+    },
+    "/v1/marketing/landing-tracker": {
+      "get": {
+        "operationId": "LandingTrackerController_handleWidgetGet",
+        "parameters": [
+          {
+            "name": "action",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      },
+      "post": {
+        "operationId": "LandingTrackerController_handleWidgetPost",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      }
+    },
+    "/v1/marketing/landing-tracker/sales": {
+      "get": {
+        "operationId": "LandingTrackerController_getSales",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      },
+      "post": {
+        "operationId": "LandingTrackerController_saveSales",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      }
+    },
+    "/v1/marketing/landing-tracker/sales/reset-counter": {
+      "post": {
+        "operationId": "LandingTrackerController_resetRotationCounter",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      }
+    },
+    "/v1/marketing/landing-tracker/track": {
+      "post": {
+        "operationId": "LandingTrackerController_createVisit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVisitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      }
+    },
+    "/v1/marketing/landing-tracker/conversion": {
+      "post": {
+        "operationId": "LandingTrackerController_createConversion",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateConversionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      }
+    },
+    "/v1/marketing/landing-tracker/visits": {
+      "get": {
+        "operationId": "LandingTrackerController_getVisits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      }
+    },
+    "/v1/marketing/landing-tracker/conversions": {
+      "get": {
+        "operationId": "LandingTrackerController_getConversions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      },
+      "delete": {
+        "operationId": "LandingTrackerController_clearAllConversions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      }
+    },
+    "/v1/marketing/landing-tracker/stats": {
+      "get": {
+        "operationId": "LandingTrackerController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      }
+    },
+    "/v1/marketing/landing-tracker/recent": {
+      "get": {
+        "operationId": "LandingTrackerController_getRecentVisits",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      }
+    },
+    "/v1/marketing/landing-tracker/conversions/{id}/status": {
+      "put": {
+        "operationId": "LandingTrackerController_updateConversionStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      }
+    },
+    "/v1/marketing/landing-tracker/conversions/{id}": {
+      "delete": {
+        "operationId": "LandingTrackerController_deleteConversion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LandingTracker"
+        ]
+      }
+    },
+    "/v1/marketing/vercel/connect": {
+      "post": {
+        "operationId": "VercelTrackerController_connectProject",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "VercelTracker"
+        ]
+      }
+    },
+    "/v1/marketing/vercel/disconnect/{projectId}": {
+      "delete": {
+        "operationId": "VercelTrackerController_disconnectProject",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "VercelTracker"
+        ]
+      }
+    },
+    "/v1/marketing/vercel/projects": {
+      "get": {
+        "operationId": "VercelTrackerController_getProjects",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "VercelTracker"
         ]
       }
     },
@@ -3809,6 +4233,29 @@
         ]
       }
     },
+    "/v1/legality/permits/{id}/status": {
+      "patch": {
+        "operationId": "LegalityController_updatePermitStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Legality"
+        ]
+      }
+    },
     "/v1/legality/master-inci": {
       "get": {
         "operationId": "LegalityController_getMasterIncis",
@@ -3907,6 +4354,46 @@
         },
         "tags": [
           "Legality"
+        ]
+      }
+    },
+    "/v1/bussdev/pipeline-v2/audit": {
+      "get": {
+        "operationId": "BussdevController_getPipelineV2Audit",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get pipeline audit log",
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/pipeline-v2/leads": {
+      "get": {
+        "operationId": "BussdevController_getPipelineV2Leads",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get pipeline v2 active leads",
+        "tags": [
+          "bussdev"
         ]
       }
     },
@@ -4824,6 +5311,46 @@
           }
         ],
         "summary": "Get all Purchase Orders",
+        "tags": [
+          "purchase"
+        ]
+      }
+    },
+    "/v1/purchase/orders/from-requirement": {
+      "post": {
+        "operationId": "PurchaseOrdersController_createFromRequirement[0]",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create PO from Goods Requirement",
+        "tags": [
+          "purchase"
+        ]
+      }
+    },
+    "/v1/scm/purchase-orders/from-requirement": {
+      "post": {
+        "operationId": "PurchaseOrdersController_createFromRequirement[1]",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create PO from Goods Requirement",
         "tags": [
           "purchase"
         ]
@@ -6689,6 +7216,462 @@
         ]
       }
     },
+    "/v1/scm/goods-requirements/summary": {
+      "get": {
+        "operationId": "GoodsRequirementController_getSummary[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get consolidated material requirements summary",
+        "tags": [
+          "scm/goods-requirements"
+        ]
+      }
+    },
+    "/v1/scm/requirements/summary": {
+      "get": {
+        "operationId": "GoodsRequirementController_getSummary[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get consolidated material requirements summary",
+        "tags": [
+          "scm/goods-requirements"
+        ]
+      }
+    },
+    "/v1/scm/goods-requirements": {
+      "post": {
+        "operationId": "GoodsRequirementController_create[0]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGoodsRequirementDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create goods requirement (MRP)",
+        "tags": [
+          "scm/goods-requirements"
+        ]
+      },
+      "get": {
+        "operationId": "GoodsRequirementController_findAll[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all goods requirements",
+        "tags": [
+          "scm/goods-requirements"
+        ]
+      }
+    },
+    "/v1/scm/requirements": {
+      "post": {
+        "operationId": "GoodsRequirementController_create[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGoodsRequirementDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create goods requirement (MRP)",
+        "tags": [
+          "scm/goods-requirements"
+        ]
+      },
+      "get": {
+        "operationId": "GoodsRequirementController_findAll[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all goods requirements",
+        "tags": [
+          "scm/goods-requirements"
+        ]
+      }
+    },
+    "/v1/scm/goods-requirements/{id}": {
+      "get": {
+        "operationId": "GoodsRequirementController_findOne[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get goods requirement by ID",
+        "tags": [
+          "scm/goods-requirements"
+        ]
+      }
+    },
+    "/v1/scm/requirements/{id}": {
+      "get": {
+        "operationId": "GoodsRequirementController_findOne[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get goods requirement by ID",
+        "tags": [
+          "scm/goods-requirements"
+        ]
+      }
+    },
+    "/v1/scm/goods-requirements/{id}/status": {
+      "patch": {
+        "operationId": "GoodsRequirementController_updateStatus[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGoodsRequirementStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update goods requirement status",
+        "tags": [
+          "scm/goods-requirements"
+        ]
+      }
+    },
+    "/v1/scm/requirements/{id}/status": {
+      "patch": {
+        "operationId": "GoodsRequirementController_updateStatus[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGoodsRequirementStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update goods requirement status",
+        "tags": [
+          "scm/goods-requirements"
+        ]
+      }
+    },
+    "/v1/legality/audits": {
+      "get": {
+        "operationId": "AuditsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all internal audits",
+        "tags": [
+          "legality/audits"
+        ]
+      },
+      "post": {
+        "operationId": "AuditsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new internal audit",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/legality/audits/{id}": {
+      "get": {
+        "operationId": "AuditsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get internal audit by ID",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/legality/audits/{id}/checklist": {
+      "patch": {
+        "operationId": "AuditsController_updateChecklist",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAuditChecklistDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update CPKB/CARA checklist for an audit",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/legality/audits/{id}/status": {
+      "patch": {
+        "operationId": "AuditsController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update audit status",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/legality/audits/{id}/finding": {
+      "post": {
+        "operationId": "AuditsController_addFinding",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddFindingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Append a finding to an audit",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
     "/v1/bussdev/returns": {
       "get": {
         "operationId": "ReturnsController_findAll",
@@ -7099,6 +8082,595 @@
         },
         "tags": [
           "LostDeals"
+        ]
+      }
+    },
+    "/v1/crm/leads": {
+      "get": {
+        "operationId": "LeadsController_list",
+        "parameters": [
+          {
+            "name": "stage",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LEADS_MASUK",
+                "FOLLOW_UP",
+                "INTERESTED",
+                "DEAL_NEGOTIATION",
+                "DEAL_WON",
+                "DEAL_LOST",
+                "NURTURING"
+              ]
+            }
+          },
+          {
+            "name": "assignedToId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bukuTamuStatus",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List CRM leads with filters (RBAC auto-scoped for DIGIMAR)",
+        "tags": [
+          "crm/leads"
+        ]
+      }
+    },
+    "/v1/crm/leads/live": {
+      "get": {
+        "operationId": "LeadsController_listLive",
+        "parameters": [
+          {
+            "name": "stage",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LEADS_MASUK",
+                "FOLLOW_UP",
+                "INTERESTED",
+                "DEAL_NEGOTIATION",
+                "DEAL_WON",
+                "DEAL_LOST",
+                "NURTURING"
+              ]
+            }
+          },
+          {
+            "name": "assignedToId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bukuTamuStatus",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Live capture feed: CrmLead joined with GuestbookEvent",
+        "tags": [
+          "crm/leads"
+        ]
+      }
+    },
+    "/v1/crm/leads/{id}": {
+      "get": {
+        "operationId": "LeadsController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get single CrmLead by ID",
+        "tags": [
+          "crm/leads"
+        ]
+      }
+    },
+    "/v1/crm/leads/{id}/stage": {
+      "patch": {
+        "operationId": "LeadsController_updateStage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Advance or transition lead stage",
+        "tags": [
+          "crm/leads"
+        ]
+      }
+    },
+    "/v1/crm/leads/{id}/displayName": {
+      "patch": {
+        "operationId": "LeadsController_updateDisplayName",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDisplayNameDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update customer display name",
+        "tags": [
+          "crm/leads"
+        ]
+      }
+    },
+    "/v1/crm/leads/{id}/assign": {
+      "post": {
+        "operationId": "LeadsController_assign",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Assign lead to sales representative",
+        "tags": [
+          "crm/leads"
+        ]
+      }
+    },
+    "/v1/crm/leads/{id}/messages": {
+      "get": {
+        "operationId": "LeadsController_getMessages",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get chat timeline messages for a lead",
+        "tags": [
+          "crm/leads"
+        ]
+      }
+    },
+    "/v1/crm/guestbook/events": {
+      "get": {
+        "operationId": "GuestbookController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assignedToId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List Buku Tamu guestbook events",
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/v1/crm/guestbook/events/{id}": {
+      "get": {
+        "operationId": "GuestbookController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get single guestbook event",
+        "tags": [
+          "crm"
+        ]
+      },
+      "post": {
+        "operationId": "GuestbookController_decideDirect",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Decide on Buku Tamu event directly",
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/v1/crm/guestbook/events/{id}/approve": {
+      "post": {
+        "operationId": "GuestbookController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveGuestbookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve Buku Tamu event",
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/v1/crm/guestbook/events/{id}/reject": {
+      "post": {
+        "operationId": "GuestbookController_reject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveGuestbookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reject Buku Tamu event",
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/v1/crm/kpi/summary": {
+      "get": {
+        "operationId": "KpiController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get CRM KPI summary tiles and performance aggregates",
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/v1/crm/busdevs": {
+      "get": {
+        "operationId": "BusDevsController_list",
+        "parameters": [
+          {
+            "name": "isActive",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List active business development staff for assignment",
+        "tags": [
+          "crm"
         ]
       }
     },
@@ -7793,6 +9365,29 @@
         ]
       }
     },
+    "/v1/warehouse/transactions": {
+      "get": {
+        "operationId": "WarehouseController_getTransactions",
+        "parameters": [
+          {
+            "name": "materialId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
     "/v1/warehouse/history/{materialId}": {
       "get": {
         "operationId": "WarehouseController_getHistory",
@@ -8126,6 +9721,29 @@
     "/v1/warehouse/adjustments/{id}/approve": {
       "post": {
         "operationId": "WarehouseController_approveAdjustment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/adjustments/{id}/reject": {
+      "post": {
+        "operationId": "WarehouseController_rejectAdjustment",
         "parameters": [
           {
             "name": "id",
@@ -9513,12 +11131,182 @@
         "tags": [
           "finance"
         ]
+      },
+      "post": {
+        "operationId": "FinanceController_createTax",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/v1/finance/taxes/{id}": {
+      "patch": {
+        "operationId": "FinanceController_updateTax",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      },
+      "delete": {
+        "operationId": "FinanceController_deleteTax",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
       }
     },
     "/v1/finance/currencies": {
       "get": {
         "operationId": "FinanceController_getCurrencies",
         "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      },
+      "post": {
+        "operationId": "FinanceController_createCurrency",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/v1/finance/currencies/{id}": {
+      "patch": {
+        "operationId": "FinanceController_updateCurrency",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      },
+      "delete": {
+        "operationId": "FinanceController_deleteCurrency",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/v1/finance/currencies/{id}/exchange-rate": {
+      "put": {
+        "operationId": "FinanceController_updateExchangeRate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -9585,6 +11373,73 @@
           }
         ],
         "summary": "Soft-delete a COA account (set isActive=false)",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/v1/finance/auto-journal-configs": {
+      "get": {
+        "operationId": "FinanceController_getAutoJournalConfigs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all auto-journal configuration rules",
+        "tags": [
+          "finance"
+        ]
+      },
+      "post": {
+        "operationId": "FinanceController_upsertAutoJournalConfig",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or update auto-journal configuration rule",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/v1/finance/auto-journal-configs/{transactionType}": {
+      "delete": {
+        "operationId": "FinanceController_deleteAutoJournalConfig",
+        "parameters": [
+          {
+            "name": "transactionType",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete auto-journal configuration rule",
         "tags": [
           "finance"
         ]
@@ -12013,7 +13868,7 @@
     },
     "/v1/finance/fixed-assets": {
       "get": {
-        "operationId": "FixedAssetsController_findAll",
+        "operationId": "FixedAssetsController_findAll[0]",
         "parameters": [
           {
             "name": "status",
@@ -12048,7 +13903,72 @@
         ]
       },
       "post": {
-        "operationId": "FixedAssetsController_create",
+        "operationId": "FixedAssetsController_create[0]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFixedAssetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register a new fixed asset",
+        "tags": [
+          "finance/fixed-assets"
+        ]
+      }
+    },
+    "/v1/finance/assets": {
+      "get": {
+        "operationId": "FixedAssetsController_findAll[1]",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List fixed assets (filter by status, category)",
+        "tags": [
+          "finance/fixed-assets"
+        ]
+      },
+      "post": {
+        "operationId": "FixedAssetsController_create[1]",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -12078,7 +13998,7 @@
     },
     "/v1/finance/fixed-assets/{id}": {
       "get": {
-        "operationId": "FixedAssetsController_findOne",
+        "operationId": "FixedAssetsController_findOne[0]",
         "parameters": [
           {
             "name": "id",
@@ -12105,7 +14025,73 @@
         ]
       },
       "patch": {
-        "operationId": "FixedAssetsController_update",
+        "operationId": "FixedAssetsController_update[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFixedAssetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update fixed asset metadata (not cost — use reversal)",
+        "tags": [
+          "finance/fixed-assets"
+        ]
+      }
+    },
+    "/v1/finance/assets/{id}": {
+      "get": {
+        "operationId": "FixedAssetsController_findOne[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get fixed asset by ID (with schedules, transfers, disposals)",
+        "tags": [
+          "finance/fixed-assets"
+        ]
+      },
+      "patch": {
+        "operationId": "FixedAssetsController_update[1]",
         "parameters": [
           {
             "name": "id",
@@ -12144,7 +14130,36 @@
     },
     "/v1/finance/fixed-assets/{id}/book-value": {
       "get": {
-        "operationId": "FixedAssetsController_bookValue",
+        "operationId": "FixedAssetsController_bookValue[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current accumulated depreciation + book value",
+        "tags": [
+          "finance/fixed-assets"
+        ]
+      }
+    },
+    "/v1/finance/assets/{id}/book-value": {
+      "get": {
+        "operationId": "FixedAssetsController_bookValue[1]",
         "parameters": [
           {
             "name": "id",
@@ -13282,7 +15297,7 @@
     },
     "/v1/finance/job-order-costings": {
       "get": {
-        "operationId": "JobOrderCostingsController_findAll",
+        "operationId": "JobOrderCostingsController_findAll[0]",
         "parameters": [
           {
             "name": "closed",
@@ -13309,7 +15324,64 @@
         ]
       },
       "post": {
-        "operationId": "JobOrderCostingsController_create",
+        "operationId": "JobOrderCostingsController_create[0]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJobOrderCostingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a new job order costing",
+        "tags": [
+          "finance/job-order-costings"
+        ]
+      }
+    },
+    "/v1/finance/cogs-requests": {
+      "get": {
+        "operationId": "JobOrderCostingsController_findAll[1]",
+        "parameters": [
+          {
+            "name": "closed",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List job order costings (filter open/closed)",
+        "tags": [
+          "finance/job-order-costings"
+        ]
+      },
+      "post": {
+        "operationId": "JobOrderCostingsController_create[1]",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -13339,7 +15411,7 @@
     },
     "/v1/finance/job-order-costings/{id}": {
       "get": {
-        "operationId": "JobOrderCostingsController_findOne",
+        "operationId": "JobOrderCostingsController_findOne[0]",
         "parameters": [
           {
             "name": "id",
@@ -13366,7 +15438,73 @@
         ]
       },
       "patch": {
-        "operationId": "JobOrderCostingsController_update",
+        "operationId": "JobOrderCostingsController_update[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateJobOrderTotalsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update job order cost/revenue totals (open only)",
+        "tags": [
+          "finance/job-order-costings"
+        ]
+      }
+    },
+    "/v1/finance/cogs-requests/{id}": {
+      "get": {
+        "operationId": "JobOrderCostingsController_findOne[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get job order costing by ID",
+        "tags": [
+          "finance/job-order-costings"
+        ]
+      },
+      "patch": {
+        "operationId": "JobOrderCostingsController_update[1]",
         "parameters": [
           {
             "name": "id",
@@ -13405,7 +15543,36 @@
     },
     "/v1/finance/job-order-costings/{id}/profitability": {
       "get": {
-        "operationId": "JobOrderCostingsController_profitability",
+        "operationId": "JobOrderCostingsController_profitability[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get profitability breakdown for a job order (cost/revenue/profit/margin)",
+        "tags": [
+          "finance/job-order-costings"
+        ]
+      }
+    },
+    "/v1/finance/cogs-requests/{id}/profitability": {
+      "get": {
+        "operationId": "JobOrderCostingsController_profitability[1]",
         "parameters": [
           {
             "name": "id",
@@ -13434,7 +15601,36 @@
     },
     "/v1/finance/job-order-costings/{id}/close": {
       "post": {
-        "operationId": "JobOrderCostingsController_close",
+        "operationId": "JobOrderCostingsController_close[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Close job order (no more adjustments)",
+        "tags": [
+          "finance/job-order-costings"
+        ]
+      }
+    },
+    "/v1/finance/cogs-requests/{id}/close": {
+      "post": {
+        "operationId": "JobOrderCostingsController_close[1]",
         "parameters": [
           {
             "name": "id",
@@ -13463,7 +15659,36 @@
     },
     "/v1/finance/job-order-costings/{id}/reopen": {
       "post": {
-        "operationId": "JobOrderCostingsController_reopen",
+        "operationId": "JobOrderCostingsController_reopen[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reopen a closed job order",
+        "tags": [
+          "finance/job-order-costings"
+        ]
+      }
+    },
+    "/v1/finance/cogs-requests/{id}/reopen": {
+      "post": {
+        "operationId": "JobOrderCostingsController_reopen[1]",
         "parameters": [
           {
             "name": "id",
@@ -14479,6 +16704,44 @@
         ]
       }
     },
+    "/v1/qc/apj-releases": {
+      "get": {
+        "operationId": "QcController_getApjReleases",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get APJ release records",
+        "tags": [
+          "qc"
+        ]
+      },
+      "post": {
+        "operationId": "QcController_createApjRelease",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Submit APJ release record",
+        "tags": [
+          "qc"
+        ]
+      }
+    },
     "/v1/qc/disposition/partial": {
       "post": {
         "operationId": "QcController_executePartialDisposition",
@@ -14732,6 +16995,26 @@
           }
         ],
         "summary": "List completed checklists",
+        "tags": [
+          "qc"
+        ]
+      }
+    },
+    "/v1/qc/checklists/categories": {
+      "get": {
+        "operationId": "QCChecklistsController_getCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List checklist categories",
         "tags": [
           "qc"
         ]
@@ -16320,6 +18603,43 @@
         ]
       }
     },
+    "/v1/hr/attendance": {
+      "get": {
+        "operationId": "HrController_getAttendanceRecords",
+        "parameters": [
+          {
+            "name": "date",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "employeeId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all attendance records for date",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
     "/v1/hr/employees/{id}/attendance": {
       "get": {
         "operationId": "HrController_getEmployeeAttendance",
@@ -16407,8 +18727,18 @@
     },
     "/v1/hr/tickets": {
       "post": {
-        "operationId": "HrController_createTicket",
+        "operationId": "TicketsController_create",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTicketDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -16419,16 +18749,16 @@
             "bearer": []
           }
         ],
-        "summary": "Create a request ticket (Leave, Overtime, Reimbursement)",
+        "summary": "Create a new HR ticket",
         "tags": [
-          "hr"
+          "hr/tickets"
         ]
       },
       "get": {
-        "operationId": "HrController_getTickets",
+        "operationId": "TicketsController_findAll",
         "parameters": [
           {
-            "name": "employeeId",
+            "name": "status",
             "required": true,
             "in": "query",
             "schema": {
@@ -16436,30 +18766,11 @@
             }
           },
           {
-            "name": "status",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "PENDING",
-                "APPROVED",
-                "REJECTED",
-                "DISBURSED"
-              ]
-            }
-          },
-          {
             "name": "type",
             "required": true,
             "in": "query",
             "schema": {
-              "type": "string",
-              "enum": [
-                "LEAVE",
-                "OVERTIME",
-                "REIMBURSE"
-              ]
+              "type": "string"
             }
           }
         ],
@@ -16473,9 +18784,9 @@
             "bearer": []
           }
         ],
-        "summary": "Get all tickets",
+        "summary": "List all HR tickets (filter by status/type)",
         "tags": [
-          "hr"
+          "hr/tickets"
         ]
       }
     },
@@ -16763,6 +19074,133 @@
         ]
       }
     },
+    "/v1/hr/kpi/departments": {
+      "get": {
+        "operationId": "HrController_getKpiDepartments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all department KPIs with governance & employee aggregation",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/v1/hr/kpi/departments/{id}": {
+      "get": {
+        "operationId": "HrController_getKpiDepartmentById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get department KPI detail",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/v1/hr/kpi/department/{id}": {
+      "get": {
+        "operationId": "HrController_getKpiDepartmentByIdAlias",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get department KPI detail alias",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/v1/hr/kpi/employees": {
+      "get": {
+        "operationId": "HrController_getKpiEmployees",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all employee individual KPIs",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/v1/hr/kpi/individual/{id}": {
+      "get": {
+        "operationId": "HrController_getKpiIndividualById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get individual employee KPI detail",
+        "tags": [
+          "hr"
+        ]
+      }
+    },
     "/v1/hr/kpi/employee/{id}": {
       "get": {
         "operationId": "HrController_getEmployeeKPI",
@@ -16823,6 +19261,26 @@
             "bearer": []
           }
         ],
+        "tags": [
+          "hr"
+        ]
+      }
+    },
+    "/v1/hr/payrolls": {
+      "get": {
+        "operationId": "HrController_getAllPayrolls",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all payroll records",
         "tags": [
           "hr"
         ]
@@ -16928,6 +19386,99 @@
         ],
         "tags": [
           "hr"
+        ]
+      }
+    },
+    "/v1/hr/tickets/{id}": {
+      "get": {
+        "operationId": "TicketsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get ticket by ID",
+        "tags": [
+          "hr/tickets"
+        ]
+      },
+      "patch": {
+        "operationId": "TicketsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTicketDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update/approve/reject a ticket",
+        "tags": [
+          "hr/tickets"
+        ]
+      },
+      "delete": {
+        "operationId": "TicketsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a ticket",
+        "tags": [
+          "hr/tickets"
         ]
       }
     },
@@ -17332,24 +19883,21 @@
     },
     "/v1/dashboards/executive": {
       "get": {
-        "operationId": "ExecutiveController_getExecutiveDashboard[0]",
-        "parameters": [
-          {
-            "name": "period",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "DashboardsController_getExecutiveDashboard",
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Executive dashboard rollup",
         "tags": [
-          "Executive"
+          "dashboards"
         ]
       }
     },
@@ -18701,6 +21249,52 @@
         ]
       }
     },
+    "/v1/master/suppliers/active": {
+      "get": {
+        "operationId": "SuppliersController_findActive[0]",
+        "parameters": [
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Suppliers"
+        ]
+      }
+    },
+    "/v1/suppliers/active": {
+      "get": {
+        "operationId": "SuppliersController_findActive[1]",
+        "parameters": [
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Suppliers"
+        ]
+      }
+    },
     "/v1/master/suppliers/{id}": {
       "get": {
         "operationId": "SuppliersController_findOne[0]",
@@ -19144,6 +21738,64 @@
           }
         ],
         "summary": "Create a customer",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/v1/master/customers/active": {
+      "get": {
+        "operationId": "CustomersController_findActive[0]",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List customers for dropdown/searchable select",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/v1/customers/active": {
+      "get": {
+        "operationId": "CustomersController_findActive[1]",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List customers for dropdown/searchable select",
         "tags": [
           "Master Data"
         ]
@@ -20218,6 +22870,215 @@
         "parameters": [],
         "responses": {
           "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/system/change-requests": {
+      "get": {
+        "operationId": "SystemController_getChangeRequests",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      },
+      "post": {
+        "operationId": "SystemController_createChangeRequestPlural",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/system/change-requests/all": {
+      "get": {
+        "operationId": "SystemController_getAllChangeRequests",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/system/change-request": {
+      "post": {
+        "operationId": "SystemController_createChangeRequest",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/system/change-request/{id}": {
+      "patch": {
+        "operationId": "SystemController_updateChangeRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/system/change-requests/{id}": {
+      "patch": {
+        "operationId": "SystemController_updateChangeRequestPlural",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/system/errors/summary": {
+      "get": {
+        "operationId": "SystemController_getErrorSummary",
+        "parameters": [
+          {
+            "name": "hours",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/system/errors/timeline": {
+      "get": {
+        "operationId": "SystemController_getErrorTimeline",
+        "parameters": [
+          {
+            "name": "hours",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/system/errors/ingest": {
+      "post": {
+        "operationId": "SystemController_ingestError",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/system/errors/{id}/resolve": {
+      "patch": {
+        "operationId": "SystemController_resolveError",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/system/configs": {
+      "get": {
+        "operationId": "SystemController_getSystemConfigs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      },
+      "post": {
+        "operationId": "SystemController_setSystemConfigs",
+        "parameters": [],
+        "responses": {
+          "201": {
             "description": ""
           }
         },
@@ -22117,6 +24978,14 @@
         "type": "object",
         "properties": {}
       },
+      "CreateVisitDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateConversionDto": {
+        "type": "object",
+        "properties": {}
+      },
       "TrackDto": {
         "type": "object",
         "properties": {}
@@ -22591,11 +25460,43 @@
           "amount"
         ]
       },
+      "CreateGoodsRequirementDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateGoodsRequirementStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateAuditDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateAuditChecklistDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AddFindingDto": {
+        "type": "object",
+        "properties": {}
+      },
       "CreateReturnDto": {
         "type": "object",
         "properties": {}
       },
       "CreateLostDealDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateStageDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateDisplayNameDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ApproveGuestbookDto": {
         "type": "object",
         "properties": {}
       },
@@ -24198,6 +27099,14 @@
         "properties": {}
       },
       "SubjectiveScoreDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateTicketDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateTicketDto": {
         "type": "object",
         "properties": {}
       },
