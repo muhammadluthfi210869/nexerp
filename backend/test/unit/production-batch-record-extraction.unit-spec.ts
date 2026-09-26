@@ -84,6 +84,7 @@ const buildFacade = (batchRecords: unknown) =>
     {} as never, // analytics
     batchRecords as never,
     {} as never, // planning
+    {} as never, // actuals
   );
 
 describe('Fase 3C — batch records live in their own service', () => {

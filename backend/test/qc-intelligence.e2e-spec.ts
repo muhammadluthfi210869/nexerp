@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { ProductionService } from '../src/modules/production/production.service';
 import { ProductionBatchRecordService } from '../src/modules/production/production-batch-record.service';
 import { ProductionPlanningService } from '../src/modules/production/production-planning.service';
+import { ProductionActualsService } from '../src/modules/production/production-actuals.service';
 import { WarehouseService } from '../src/modules/warehouse/warehouse.service';
 import { PurchaseOrdersService } from '../src/modules/scm/services/purchase-orders.service';
 import { PrismaService } from '../src/prisma/prisma/prisma.service';
@@ -35,6 +36,7 @@ describe('QC Intelligence & Audit Automation (Phase 4 Verification)', () => {
         ProductionService,
         ProductionBatchRecordService, // Fase 3C — batch-record cluster
         ProductionPlanningService, // Fase 3C — planning cluster
+        ProductionActualsService, // Fase 3C — actuals cluster
         WarehouseService,
         PurchaseOrdersService,
         FinanceService,
