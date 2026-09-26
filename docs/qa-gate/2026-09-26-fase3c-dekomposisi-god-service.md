@@ -762,3 +762,113 @@ Dua pertanyaan yang belum dijawab dan akan menentukan bentuk slice berikutnya:
 apakah `submitAudit` punya pemanggil lain selain dirinya sendiri, dan apakah
 `verifyStageQC` menyentuh `calculateNextStage` juga (kalau ya, batas antar-slice
 harus digeser). Keduanya diukur dulu, tidak ditebak.
+
+Jawabannya, diukur di §13: `submitAudit` **tidak** punya pemanggil lain, dan
+`verifyStageQC` **tidak** menyentuh `calculateNextStage`. Tapi ada satu pemanggil
+yang lolos dari pertanyaan itu — lihat §13.1.
+
+---
+
+## 13. Slice ketujuh: antrean audit QC (`5bdbc06f`)
+
+Sumbu slice ini adalah **keputusan yang diambil supervisor**: log mana yang
+menunggu diperiksa, satu tulis yang menutup pemeriksaan itu, dan kalkulator
+satu-baris yang menentukan stage berikutnya.
+
+| Slice | Sumbu | Rentang | Baris keluar |
+|---|---|---|---|
+| finance-report | kemutakhiran | satu | 527 |
+| production-analytics | kemutakhiran | satu | 1187 |
+| batch record | satu tipe record | satu | 412 |
+| production planning | kapan pekerjaan berjalan | satu | 554 |
+| schedule actuals | mencatat hasil | satu | 458 |
+| stage execution | lantai produksi | dua | 377 |
+| **QC audit** | **keputusan supervisor** | **satu** | **107** |
+
+Baris 292-398, tiga metode bersebelahan, tidak ada anggota lain diselipkan.
+`this.X` di dalam blok: `prisma` (4) dan `calculateNextStage` (1, ikut pindah).
+Nol rujukan ke ketiga nama itu di sisa facade.
+
+`production.service.ts` **830 → 739** baris; `ProductionAuditService` **144**.
+
+Dua hal yang membuat slice ini berbeda dari enam sebelumnya:
+
+1. **Satu kolaborator saja.** Blok ini tidak mengirim event, tidak memakai
+   `IdGeneratorService`, tidak menulis log. `ProductionAuditService` hanya butuh
+   `PrismaService`. Ini service pertama hasil dekomposisi yang bisa berdiri dengan
+   satu dependensi.
+2. **Satu anggota keluar tanpa delegator.** `calculateNextStage` adalah `private`
+   dan dipanggil dari tepat satu tempat — di dalam `submitAudit`, di dalam blok
+   yang sama. Enam slice sebelumnya selalu menyisakan delegator untuk setiap nama
+   yang pindah, karena selalu ada pemanggil di luar. Di sini delegator justru akan
+   menjadi kode mati, jadi ia tidak dibuat — dan spec §13 menegaskannya sebagai
+   asersi, bukan membiarkannya sebagai kebetulan.
+
+`submitAudit` menyimpan satu-satunya `this.prisma.$transaction` di blok: baris
+audit dan status log ditulis bersama, atau tidak sama sekali. Itu sebabnya ia satu
+slice, bukan dipecah lagi per model.
+
+### 13.1 Satu konsumen yang lolos dari sensus
+
+Sensus pra-pindah mengatakan "nol rujukan ke ketiga nama di luar blok". Itu benar
+— **di dalam berkas itu**. `test/unit/production.unit-spec.ts:141` melakukan
+`jest.spyOn(service as any, 'calculateNextStage').mockReturnValue('FILLING')`.
+Sebuah metode `private` tetap bisa disondir dari spec lewat `as any`, dan sensus
+yang hanya membaca satu berkas tidak akan pernah melihatnya. Unit spec menemukannya
+sebagai 3 test merah — bukan sensusnya.
+
+Ini kelas yang sama dengan catatan lama di proyek ini: cacah nama di satu berkas
+bukan cacah konsumen. Yang membedakan sekarang adalah spec itu menjalankannya,
+jadi tidak ada klaim yang bertahan lama setelah keliru.
+
+Perbaikannya yang paling kecil, bukan memindahkan spy: **spy-nya dihapus**. Ia
+mengembalikan `'FILLING'` untuk log `'MIXING'` — nilai yang sama dengan pemetaan
+aslinya — dan tak satu pun dari tiga asersi di blok itu membaca stage berikutnya
+(`result.status`, stage `REWORK`, dan `BadRequestException`). Jadi spy itu tidak
+mengubah apa pun kecuali membuat test bergantung pada sesuatu yang tidak diuji.
+Setelah dihapus, ketiga test itu menguji kalkulator yang sebenarnya.
+
+Census ulang di seluruh `test/` dan `src/` untuk pola `spyOn(service..., '<nama>')`
+menghasilkan tiga baris: dua di `legality.unit-spec.ts` (`checkScmGate`,
+`checkProductionGate` — milik `LegalityService`, tidak tersentuh slice ini) dan
+yang satu ini. Kelasnya tertutup.
+
+### 13.2 Verifikasi
+
+| Gate | Hasil |
+|---|---|
+| `tsc --noEmit` | rc 0 |
+| `eslint src/modules/production/**` | 0 error, 865 warning (pra-eksisting, tidak berubah) |
+| `eslint test/unit/production*extraction.unit-spec.ts` | 0 masalah |
+| `npm run test:unit` | **47/47 suite, 546/546 test** |
+| `bash scripts/__tests__/run-all.sh` | PASS 26, FAIL 0, SKIP 0 |
+| `node scripts/ssot/validate_ssot.js` | 19 pass, 0 fail, CERTIFIED |
+| `node scripts/ssot/audit_lifecycle_reconciliation.js` | 14/14 PASS |
+
+Lifecycle audit pertama kali **merah** setelah pindah — `caller_import_registration_scan:
+Missing service in registry: production-audit.service.ts`. Itu bukan regresi: registry
+adalah keluaran yang dihasilkan (`generate_lifecycle_registry.js`), dan berkas baru
+belum ada di dalamnya sampai dijalankan ulang. Setelah regenerate: 14/14 PASS.
+
+### 13.3 Verdict
+
+**BELUM SIAP KIRIM**, tidak berubah. Tiga gate minimum CLAUDE.md yang belum punya
+hasil tetap sama sejak §9.5: smoke test live, rollback teruji, dan P03 — merah di
+SHA `5de307db` dengan `base_sha` `9229478d`, bukan di HEAD.
+
+Sisa `production.service.ts` **739 baris**:
+
+- work order + material — `createWorkOrder`, `issueMaterial`, `flagShortage`
+- machine + QR — `createMachine`, `getAllRequisitions`, `getMachines`,
+  `getActiveMachines`, `resolveQRContext` (klaster `machine` mendominasi: 3 metode
+  menyentuh `machine`, satu di antaranya menulis; `resolveQRContext` membaca
+  `productionLog` / `warehouseInbound` / `materialInventory` / `productionPlan`)
+- QC + costing + formula — `verifyStageQC`, `returnMaterial`,
+  `finalizeWorkOrderCosting`, `assignFormulaToPlan`
+- ekor berkas — handler `@OnEvent` + formula adjustment, masih ditunda karena
+  urutan registrasi handler event load-bearing
+
+Nama untuk klaster machine + QR belum diputuskan — `ProductionMachineService`
+jujur untuk empat dari lima metodenya, tapi `resolveQRContext` adalah titik masuk
+operator, bukan mesin. Keputusan itu diambil setelah bloknya diukur sendiri,
+bukan diwarisi dari daftar ini.
