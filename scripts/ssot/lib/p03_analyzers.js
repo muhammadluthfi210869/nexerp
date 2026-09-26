@@ -911,17 +911,20 @@ function checkModuleBoundaries(root, overrides = {}) {
       ts.forEachChild(sf, node => {
         if (ts.isImportDeclaration(node)) {
           const spec = node.moduleSpecifier.text;
-          for (const otherMod of moduleDirs) {
-            if (otherMod === mod) continue;
-            if (
-              (spec.includes(`/modules/${otherMod}/`) || spec.includes(`/${otherMod}/`) || spec.startsWith(`../${otherMod}/`)) &&
-              spec.includes('.controller')
-            ) {
-              violations.push({
-                file: normalizePath(path.relative(root, f)),
-                reason: `Illegal cross-module controller import: ${spec}`
-              });
-            }
+          if (!spec.includes('.controller')) return;
+          if (!spec.startsWith('.')) return;
+          // Resolve the relative specifier against the importing file so a
+          // nested `./kpi/kpi.controller` inside module `crm` is not mistaken
+          // for an import of the top-level `kpi` module.
+          const resolved = normalizePath(path.resolve(path.dirname(f), spec));
+          const modulesRoot = normalizePath(modulesDir);
+          if (!resolved.startsWith(modulesRoot + '/')) return;
+          const targetMod = resolved.slice(modulesRoot.length + 1).split('/')[0];
+          if (targetMod !== mod) {
+            violations.push({
+              file: normalizePath(path.relative(root, f)),
+              reason: `Illegal cross-module controller import: ${spec}`
+            });
           }
         }
       });

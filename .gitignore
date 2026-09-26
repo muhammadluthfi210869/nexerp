@@ -38,7 +38,10 @@ evidence/dr-rehearsal/
 scripts/.be-routes-all.txt
 scripts/.be-t2.txt
 scripts/.parity-check.txt
-backend/scripts/.t2-imp.txt
+scripts/.report-check.txt
+scripts/.t2-*
+scripts/.t3-*
+backend/scripts/.t2-*
 evidence/uat-preflight/artifacts/.last-run.json
 
 # Logs

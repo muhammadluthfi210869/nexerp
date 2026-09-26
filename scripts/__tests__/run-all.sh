@@ -67,6 +67,16 @@ run_test "clean-db-admin-connection"                  "$SCRIPT_DIR/clean-db-admi
 # Phase 2 — Fabrication guards (mock data cannot reappear silently)
 run_test "no-fabricated-mock-page-guards"            "$SCRIPT_DIR/fabrication-guards.test.sh"
 
+# Phase 7 — P21 migration & disaster recovery (canonical names + fail-closed)
+run_test "p21-dr-tooling-contract"                   "$SCRIPT_DIR/p21-disaster-recovery.test.sh"
+
+# Fase 5/P22 — UAT pre-flight browser gate (a sweep must not report on a foreign build)
+run_test "p22-uat-preflight-gate-fail-closed"        "$SCRIPT_DIR/p22-uat-preflight.test.sh"
+# Fase 5/P22 — PDF live probe must reject a 200 that is only a placeholder
+run_test "p22-pdf-live-probe-fail-closed"            "$SCRIPT_DIR/p22-pdf-live-probe.test.sh"
+# Master data — the seeder must not report success over a CSV directory it never read
+run_test "master-seed-fail-closed"                   "$SCRIPT_DIR/master-seed-guard.test.sh"
+
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
 echo "  PASS: $PASS   FAIL: $FAIL   SKIP: $SKIP"

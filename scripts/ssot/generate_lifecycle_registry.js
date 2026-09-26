@@ -169,7 +169,15 @@ const canonicalModelMappingDefinitions = {
   Comment: { implementation_models: ['CommunicationThreadReply'], domain: 'communication', notes: 'Realized as CommunicationThreadReply in communication.prisma.' },
   Attachment: { implementation_models: ['CommunicationAttachment'], domain: 'communication', notes: 'Realized as CommunicationAttachment in communication.prisma.' },
   Notification: { implementation_models: ['Notification'], domain: 'system', notes: 'Exact match.' },
-  ActivityLog: { implementation_models: ['ActivityLog'], domain: 'activity', notes: 'Exact match.' }
+  ActivityLog: { implementation_models: ['ActivityLog'], domain: 'activity', notes: 'Exact match.' },
+  LegalStaff: { implementation_models: ['LegalStaff'], domain: 'legal', notes: 'Exact match in legal.prisma.' },
+  HkiRecord: { implementation_models: ['HkiRecord'], domain: 'legal', notes: 'Exact match in legal.prisma.' },
+  BpomRecord: { implementation_models: ['BpomRecord'], domain: 'legal', notes: 'Exact match in legal.prisma.' },
+  HalalRecord: { implementation_models: ['HalalRecord'], domain: 'legal', notes: 'Exact match in legal.prisma.' },
+  LegalTimelineLog: { implementation_models: ['LegalTimelineLog'], domain: 'legal', notes: 'Exact match in legal.prisma.' },
+  DesignTask: { implementation_models: ['DesignTask'], domain: 'creative', notes: 'Exact match in creative.prisma.' },
+  DesignVersion: { implementation_models: ['DesignVersion'], domain: 'creative', notes: 'Exact match in creative.prisma.' },
+  DesignFeedback: { implementation_models: ['DesignFeedback'], domain: 'creative', notes: 'Exact match in creative.prisma.' }
 };
 
 // Build Canonical Model Reconciliation Records

@@ -110,11 +110,12 @@ function runValidation() {
   const gitignoreErrors = checkGitIgnore();
   allErrors = allErrors.concat(gitignoreErrors);
 
-  // 2. Validate .env syntax if it exists
+  // 2. Validate .env syntax IF IT EXISTS. `.env` is a gitignored local secret,
+  //    so a clean CI checkout and a fresh clone legitimately have none — only a
+  //    present-but-malformed file is an error. Absence is reported by
+  //    validateEnvFile() as a bare array of strings.
   const envResult = validateEnvFile('.env');
-  if (Array.isArray(envResult)) {
-    allErrors = allErrors.concat(envResult);
-  } else {
+  if (!Array.isArray(envResult)) {
     allErrors = allErrors.concat(envResult.errors);
   }
 

@@ -54,7 +54,7 @@ for (const file of pageFiles) {
 
   // Check if page renders an unstyled / raw detached table
   const hasRawTable = /<table(?:\s+[^>]*)?>/.test(content);
-  const hasDnaTableWrapper = /DnaDataTableCard|DnaDataTable|TableWrapper|<Card|DashboardCard|DataCard|rounded-\[24px\]|rounded-2xl|rounded-xl/.test(content);
+  const hasDnaTableWrapper = /DnaDataTableCard|DnaDataTable|TableWrapper|<Card|DashboardCard|DataCard|DashboardShell|rounded-\[24px\]|rounded-2xl|rounded-xl/.test(content);
 
   if (hasRawTable && !hasDnaTableWrapper) {
     detachedTables.push(relPath);

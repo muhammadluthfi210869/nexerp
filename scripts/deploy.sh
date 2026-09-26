@@ -71,12 +71,12 @@ echo "   (asumsi: 'docker login ghcr.io' sudah dilakukan SEKALI di VPS — lihat
 export IMAGE_TAG="$DEPLOY_SHA"
 
 REPO_PREFIX="ghcr.io/muhammadluthfi210869/nexerp"
-for img in backend frontend; do
+for img in backend frontend wa-self-qr; do
   if [ "$DEPLOY_SHA" != "latest" ] && docker image inspect "${REPO_PREFIX}/${img}:${DEPLOY_SHA}" >/dev/null 2>&1; then
     echo "  ✅ Image ${img}:${DEPLOY_SHA} sudah cached di VPS, skip pull"
   else
     echo "  ⬇️  Pulling ${img}:${DEPLOY_SHA}..."
-    docker compose -p "$COMPOSE_PROJECT" --profile server pull "${img}"
+    docker compose -p "$COMPOSE_PROJECT" --profile server pull "${img}" || echo "  ⚠️ Pull ${img} skipped/failed (continuing)"
   fi
 done
 docker compose -p "$COMPOSE_PROJECT" config --quiet   # validasi compose + env

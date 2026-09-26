@@ -14,8 +14,38 @@ function walkFiles(dir, filter, results = []) {
   return results;
 }
 
-const pages = walkFiles(FRONTEND_ROOT, f => f.endsWith('page.tsx'));
-console.log(`Analyzing ${pages.length} dashboard pages...`);
+// Scan route entries (`page.tsx`) AND the `*Client.tsx` siblings this repo uses
+// for data-bearing client shells. A `*Client.tsx` is a first-class scan target:
+// `executive/dashboard/NotificationHubClient.tsx` shipped six hardcoded diagnostic
+// groups while its `page.tsx` looked wired, and the old page-only walk missed it.
+const pages = walkFiles(
+  FRONTEND_ROOT,
+  f => f.endsWith('page.tsx') || /Client\.tsx$/.test(f),
+);
+console.log(`Analyzing ${pages.length} dashboard pages/clients...`);
+
+/** Local relative imports of a file, resolved to absolute paths (1 hop is not
+ *  enough — `page.tsx` imports a `*Client.tsx` which imports its own parts). */
+function localImports(absFile) {
+  const code = fs.readFileSync(absFile, 'utf8');
+  const out = [];
+  for (const m of code.matchAll(/from\s+["'](\.[^"']+)["']/g)) {
+    const base = path.resolve(path.dirname(absFile), m[1]);
+    for (const ext of ['.tsx', '.ts', '/index.tsx', '/index.ts']) {
+      if (fs.existsSync(base + ext)) { out.push(base + ext); break; }
+    }
+  }
+  return out;
+}
+
+/** Does this file, or anything it locally imports (transitively), touch an API? */
+function closureHasApi(absFile, seen = new Set()) {
+  if (seen.has(absFile)) return false;
+  seen.add(absFile);
+  const code = fs.readFileSync(absFile, 'utf8');
+  if (/use(Query|Mutation)|api\.|\bfetch\(|\baxios/.test(code)) return true;
+  return localImports(absFile).some(dep => closureHasApi(dep, seen));
+}
 
 const findings = [];
 
@@ -41,8 +71,21 @@ for (const p of pages) {
   const isClient = code.includes("'use client'") || code.includes('"use client"');
 
   if (isClient && !hasReactQuery && !hasFetch && !hasAxios && lines.length > 50) {
-    // Might be purely static presentation or hardcoded mock page
-    findings.push({ file: rel, line: 1, type: 'NO_API_INTEGRATION', detail: `Client page (${lines.length} lines) with zero API/React-Query calls` });
+    // A thin shell that delegates to a wired child is NOT a finding — follow
+    // the local import graph before reporting. Two live false positives this
+    // filter was built for: `executive/dashboard/page.tsx` (renders
+    // `ExecutiveDashboardClient`, which calls /executive/metrics) and
+    // `marketing/management-task/page.tsx` (a pure redirect, no data at all).
+    if (closureHasApi(p)) continue;
+    const isRedirect = /router\.(replace|push)\(/.test(code);
+    findings.push({
+      file: rel,
+      line: 1,
+      type: isRedirect ? 'ROUTING_SHELL' : 'NO_API_INTEGRATION',
+      detail: isRedirect
+        ? `Client page (${lines.length} lines) that only redirects — no data surface`
+        : `Client page (${lines.length} lines) with zero API/React-Query calls, incl. transitively imported children`,
+    });
   }
 }
 
