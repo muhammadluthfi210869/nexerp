@@ -50,6 +50,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: "Setup Node.js 22"
         uses: actions/setup-node@v4
@@ -74,6 +76,11 @@ jobs:
           npm --prefix backend run prisma:validate
           npm --prefix backend run prisma:generate
           npm --prefix backend run prisma:migrate:deploy
+
+      - name: "Lifecycle Registry Automated Validation"
+        run: |
+          node scripts/ssot/generate_lifecycle_registry.js
+          git diff --exit-code docs/legacy-erp/verification/_LIFECYCLE_REGISTRY.json || (echo "ERROR: _LIFECYCLE_REGISTRY.json is out of date. Run 'node scripts/ssot/generate_lifecycle_registry.js' and commit." && exit 1)
 
       - name: "P03 Phase Certification & Architecture Gates"
         run: |

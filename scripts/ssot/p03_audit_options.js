@@ -14,7 +14,36 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '../..');
-const PHASE_BASE_SHA = '9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb';
+const FALLBACK_PHASE_BASE_SHA = '9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb';
+
+function isValidCommitSha(ref) {
+  if (!ref || typeof ref !== 'string') return false;
+  try {
+    const fullSha = execSync(`git rev-parse --verify ${ref.trim()}^{commit}`, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
+    return fullSha.length === 40 ? fullSha : false;
+  } catch (_) {
+    return false;
+  }
+}
+
+function resolvePhaseBaseSha() {
+  if (process.env.P03_BASE_SHA) {
+    const verified = isValidCommitSha(process.env.P03_BASE_SHA);
+    if (verified) return verified;
+  }
+  try {
+    const mb = execSync('git merge-base origin/main HEAD', { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
+    const verified = isValidCommitSha(mb);
+    if (verified) return verified;
+  } catch (_) {}
+  try {
+    const mb = execSync('git merge-base main HEAD', { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
+    const verified = isValidCommitSha(mb);
+    if (verified) return verified;
+  } catch (_) {}
+  return FALLBACK_PHASE_BASE_SHA;
+}
+
 const LEDGER_PATH = path.join(ROOT, 'docs/legacy-erp/verification/evidence/P03_CHANGE_SCOPE_LEDGER.md');
 const MANIFEST_PATH = path.join(ROOT, 'docs/legacy-erp/verification/evidence/P03_CHANGE_SCOPE_MANIFEST.json');
 
@@ -48,8 +77,9 @@ function gitRev(args) {
   return p.toString().replace(/\r\n/g, '\n').replace(/\n$/, '');
 }
 
-function readGitDiffFiles() {
-  const out = gitRev(['diff', '--name-only', PHASE_BASE_SHA, 'HEAD']);
+function readGitDiffFiles(baseSha) {
+  const base = baseSha || resolvePhaseBaseSha();
+  const out = gitRev(['diff', '--name-only', base, 'HEAD']);
   return out.split('\n').map(s => s.trim()).filter(Boolean);
 }
 
@@ -61,8 +91,8 @@ function isCodeFile(filePath) {
   return p.endsWith('.ts') || p.endsWith('.tsx');
 }
 
-function readChangedCodeFiles() {
-  return readGitDiffFiles().filter(isCodeFile);
+function readChangedCodeFiles(baseSha) {
+  return readGitDiffFiles(baseSha).filter(isCodeFile);
 }
 
 /**
@@ -76,16 +106,17 @@ function readChangedCodeFiles() {
  *                              Overrides are NOT applied to production calls.
  */
 function buildP03AuditOptions(overrides = {}) {
-  const diffFiles = overrides.changedFiles || readGitDiffFiles();
+  const base = overrides.baseSha || resolvePhaseBaseSha();
+  const diffFiles = overrides.changedFiles || readGitDiffFiles(base);
   // filtered: only .ts/.tsx (excluding test/spec/d.ts) so audit gates that
   // scan changed source code (`checkDuplicateCode`, `checkCyclomaticComplexity`,
   // and any gate that defaults to changedFiles) operate on real source code
   // rather than dragged in .js seed files or scripts/ssot/ infrastructure.
-  const codeFiles = (overrides.codeFiles || readChangedCodeFiles());
+  const codeFiles = (overrides.codeFiles || readChangedCodeFiles(base));
 
   const options = {
     root: ROOT,
-    baseSha: PHASE_BASE_SHA,
+    baseSha: base,
     requireValidLedger: true,
     changedFiles: diffFiles,
     codeFiles: codeFiles,
@@ -130,7 +161,10 @@ function findDisallowedTrackedDirty() {
 }
 
 module.exports = {
-  PHASE_BASE_SHA,
+  get PHASE_BASE_SHA() {
+    return resolvePhaseBaseSha();
+  },
+  resolvePhaseBaseSha,
   LEDGER_PATH,
   MANIFEST_PATH,
   GENERATED_OUTPUT_ALLOWLIST,

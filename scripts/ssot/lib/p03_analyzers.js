@@ -58,13 +58,16 @@ function validateDiffBase(root, baseSha) {
 function resolveDiffBase(root, explicitBase) {
   root = root || process.cwd();
   if (explicitBase) return explicitBase;
-  try {
-    const headParent = execSync('git rev-parse HEAD~1', { cwd: root, stdio: 'pipe' }).toString().trim();
-    if (headParent && validateDiffBase(root, headParent)) return headParent;
-  } catch (_) {}
+  if (process.env.P03_BASE_SHA && validateDiffBase(root, process.env.P03_BASE_SHA)) {
+    return process.env.P03_BASE_SHA;
+  }
   try {
     const originMainBase = execSync('git merge-base origin/main HEAD', { cwd: root, stdio: 'pipe' }).toString().trim();
     if (originMainBase && validateDiffBase(root, originMainBase)) return originMainBase;
+  } catch (_) {}
+  try {
+    const mainBase = execSync('git merge-base main HEAD', { cwd: root, stdio: 'pipe' }).toString().trim();
+    if (mainBase && validateDiffBase(root, mainBase)) return mainBase;
   } catch (_) {}
   return '9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb';
 }
