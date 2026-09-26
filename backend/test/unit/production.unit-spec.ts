@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductionService } from '../../src/modules/production/production.service';
+import { ProductionBatchRecordService } from '../../src/modules/production/production-batch-record.service';
 import { ProductionAnalyticsService } from '../../src/modules/production/production-analytics.service';
 import { LegalityService } from '../../src/modules/legality/legality.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
@@ -18,6 +19,7 @@ describe('ProductionService — Unit (DI unresolved — $transaction mock)', () 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductionService,
+        ProductionBatchRecordService, // Fase 3C — batch-record cluster
         ProductionAnalyticsService, // Fase 3C — getMicroFlowDiagnostics lives here
         { provide: PrismaService, useValue: prisma },
         {

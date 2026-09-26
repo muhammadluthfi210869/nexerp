@@ -6,7 +6,6 @@ import {
   ConflictException,
   Logger,
 } from '@nestjs/common';
-import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { LifecycleStatus, Prisma } from '@prisma/client';
 
@@ -21,6 +20,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { IdGeneratorService } from '../system/id-generator.service';
 import { StateTransitionService } from '../system/state-transition.service';
 import { ProductionAnalyticsService } from './production-analytics.service';
+import { ProductionBatchRecordService } from './production-batch-record.service';
 import { logBestEffort } from '../../common/helpers/best-effort';
 
 @Injectable()
@@ -34,6 +34,7 @@ export class ProductionService {
     private idGenerator: IdGeneratorService,
     private stateTransition: StateTransitionService,
     private analytics: ProductionAnalyticsService,
+    private batchRecords: ProductionBatchRecordService,
   ) {}
 
   async startProduction(
@@ -1848,374 +1849,42 @@ export class ProductionService {
     });
   }
 
-  // === PHASE 3: Batch Records ===
+  // --- BATCH RECORDS (extracted in Fase 3C) ---
+  //
+  // The bodies live in ProductionBatchRecordService. These seven stay here
+  // because they are the call sites' contract: production.controller.ts binds
+  // all seven to this service. Nothing outside the production module reads
+  // them — the same-named strings in the Swagger spec, metadata.ts and the
+  // generated frontend types are descriptive, not call sites.
+  //
+  // `Parameters<...>` so the arity cannot drift from the real method.
 
-  async getBatchRecordDetail(batchNo: string) {
-    const plan = await this.prisma.productionPlan.findFirst({
-      where: { batchNo },
-      include: {
-        so: { include: { lead: true } },
-        workOrders: {
-          include: {
-            schedules: {
-              include: {
-                stepDetails: { include: { material: true } },
-                machine: true,
-              },
-            },
-            logs: { orderBy: { loggedAt: 'desc' } },
-            requisitions: { include: { material: true } },
-          },
-        },
-        logs: { orderBy: { loggedAt: 'desc' } },
-      },
-    });
-    if (!plan) throw new NotFoundException(`Batch record ${batchNo} not found`);
-    return {
-      ...plan,
-      status: plan.apjSignatureUrl || plan.status,
-    };
+  getBatchRecordDetail(...args: Parameters<ProductionBatchRecordService['getBatchRecordDetail']>) {
+    return this.batchRecords.getBatchRecordDetail(...args);
   }
 
-  async createBatchRecord(dto: any, user: any) {
-    const salesOrderId = dto.salesOrderId || dto.sales_order_id || dto.soId;
-    if (!salesOrderId) {
-      throw new BadRequestException({
-        code: 'SALES_ORDER_REQUIRED',
-        message: 'sales_order_id bridge is required (BUS-RULE-028)',
-      });
-    }
-
-    const so = await this.prisma.salesOrder.findUnique({
-      where: { id: salesOrderId },
-      include: { lead: true },
-    });
-    if (!so) {
-      throw new BadRequestException(`Sales order ${salesOrderId} not found`);
-    }
-
-    const batchNo =
-      dto.batchNo ||
-      `BMR-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${randomUUID().slice(0, 4).toUpperCase()}`;
-
-    const formulaId =
-      dto.formulaId || dto.formulationId || dto.formulation_id || null;
-
-    let adminId = user?.id;
-    if (!adminId) {
-      const defaultUser = await this.prisma.user.findFirst();
-      adminId = defaultUser?.id;
-    }
-
-    const plan = await this.prisma.productionPlan.create({
-      data: {
-        batchNo,
-        soId: salesOrderId,
-        adminId,
-        formulaId,
-        status: 'PLANNING' as any,
-        apjSignatureUrl: 'PLANNING',
-        apjNotes: dto.note || dto.notes || null,
-      },
-      include: {
-        so: { include: { lead: true } },
-        formula: true,
-        workOrders: true,
-      },
-    });
-
-    const workOrderId = dto.workOrderId || dto.work_order_id;
-    if (workOrderId) {
-      try {
-        await this.prisma.workOrder.update({
-          where: { id: workOrderId },
-          data: { planId: plan.id },
-        });
-      } catch (err) {
-        // The batch record above is committed; linking it back to the work
-        // order is best-effort. A work order that silently keeps pointing at an
-        // old plan is exactly the kind of desync nobody can find later.
-        logBestEffort(this.logger, 'production:work-order-plan-link', err);
-      }
-    }
-
-    this.eventEmitter.emit('production.batch_record.created', {
-      batchRecordId: plan.id,
-      batchNo: plan.batchNo,
-      salesOrderId,
-      actorId: user?.id,
-    });
-
-    return {
-      data: {
-        ...plan,
-        status: plan.apjSignatureUrl || plan.status,
-      },
-    };
+  createBatchRecord(...args: Parameters<ProductionBatchRecordService['createBatchRecord']>) {
+    return this.batchRecords.createBatchRecord(...args);
   }
 
-  async getBatchRecord(id: string) {
-    const isUuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        id,
-      );
-    const plan = await this.prisma.productionPlan.findFirst({
-      where: isUuid ? { OR: [{ id }, { batchNo: id }] } : { batchNo: id },
-      include: {
-        so: { include: { lead: true } },
-        formula: true,
-        workOrders: {
-          include: {
-            schedules: {
-              include: {
-                stepDetails: { include: { material: true } },
-                machine: true,
-              },
-            },
-            logs: { orderBy: { loggedAt: 'desc' } },
-            requisitions: { include: { material: true } },
-          },
-        },
-        logs: { orderBy: { loggedAt: 'desc' } },
-      },
-    });
-    if (!plan) throw new NotFoundException(`Batch record ${id} not found`);
-    return {
-      data: {
-        ...plan,
-        status: plan.apjSignatureUrl || plan.status,
-      },
-    };
+  getBatchRecord(...args: Parameters<ProductionBatchRecordService['getBatchRecord']>) {
+    return this.batchRecords.getBatchRecord(...args);
   }
 
-  async updateBatchRecord(id: string, dto: any, user: any) {
-    const isUuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        id,
-      );
-    const plan = await this.prisma.productionPlan.findFirst({
-      where: isUuid ? { OR: [{ id }, { batchNo: id }] } : { batchNo: id },
-    });
-    if (!plan) throw new NotFoundException(`Batch record ${id} not found`);
-
-    const updated = await this.prisma.productionPlan.update({
-      where: { id: plan.id },
-      data: {
-        apjNotes:
-          dto.note !== undefined
-            ? dto.note
-            : dto.notes !== undefined
-              ? dto.notes
-              : plan.apjNotes,
-        formulaId: dto.formulaId || dto.formulationId || plan.formulaId,
-      },
-      include: { so: true, formula: true, workOrders: true },
-    });
-    return {
-      data: {
-        ...updated,
-        status: updated.apjSignatureUrl || updated.status,
-      },
-    };
+  updateBatchRecord(...args: Parameters<ProductionBatchRecordService['updateBatchRecord']>) {
+    return this.batchRecords.updateBatchRecord(...args);
   }
 
-  async deleteBatchRecord(id: string, user: any) {
-    const isUuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        id,
-      );
-    const plan = await this.prisma.productionPlan.findFirst({
-      where: isUuid ? { OR: [{ id }, { batchNo: id }] } : { batchNo: id },
-    });
-    if (!plan) throw new NotFoundException(`Batch record ${id} not found`);
-
-    await this.prisma.productionPlan.delete({ where: { id: plan.id } });
-    return { success: true };
+  deleteBatchRecord(...args: Parameters<ProductionBatchRecordService['deleteBatchRecord']>) {
+    return this.batchRecords.deleteBatchRecord(...args);
   }
 
-  async transitionBatchRecord(
-    id: string,
-    toStatus: string,
-    user: any,
-    notes?: string,
-  ) {
-    const isUuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        id,
-      );
-    const plan = await this.prisma.productionPlan.findFirst({
-      where: isUuid ? { OR: [{ id }, { batchNo: id }] } : { batchNo: id },
-      include: {
-        formula: true,
-        workOrders: {
-          include: {
-            schedules: true,
-          },
-        },
-      },
-    });
-
-    if (!plan) throw new NotFoundException(`Batch record ${id} not found`);
-
-    const currentStatus =
-      plan.apjSignatureUrl || (plan.status as string) || 'PLANNING';
-    const normalizedTarget = toStatus?.toUpperCase();
-
-    // Map allowable transitions per 03_WORKFLOW_STATE_MACHINE.yaml:
-    // DRAFT (PLANNING) -> APPROVED -> LOCKED -> IN_PROGRESS -> COMPLETED
-    const validTransitions: Record<string, string[]> = {
-      PLANNING: ['APPROVED'],
-      DRAFT: ['APPROVED'],
-      APPROVED: ['LOCKED'],
-      LOCKED: ['IN_PROGRESS'],
-      IN_PROGRESS: ['COMPLETED'],
-      COMPLETED: [],
-    };
-
-    const allowed = validTransitions[currentStatus] || [];
-    if (!allowed.includes(normalizedTarget)) {
-      throw new BadRequestException({
-        code: 'INVALID_TRANSITION',
-        message: `Tidak bisa transisi status dari ${currentStatus} ke ${normalizedTarget}. Harus berurutan: DRAFT -> APPROVED -> LOCKED -> IN_PROGRESS -> COMPLETED.`,
-      });
-    }
-
-    // Preconditions
-    if (normalizedTarget === 'APPROVED') {
-      if (!plan.formulaId && !plan.formula) {
-        throw new BadRequestException({
-          code: 'FORMULA_REQUIRED',
-          message:
-            'Batch Record wajib terhubung dengan formula sebelum di-approve.',
-        });
-      }
-    } else if (normalizedTarget === 'LOCKED') {
-      const totalSchedules = plan.workOrders.reduce(
-        (sum, wo) => sum + wo.schedules.length,
-        0,
-      );
-      if (totalSchedules === 0) {
-        throw new BadRequestException({
-          code: 'SCHEDULES_REQUIRED',
-          message:
-            'Seluruh jadwal (Mixing/Filling/Packaging) wajib dibuat sebelum batch di-lock.',
-        });
-      }
-    } else if (normalizedTarget === 'COMPLETED') {
-      const allSchedules = plan.workOrders.flatMap((wo) => wo.schedules);
-      const packagingSchedule = allSchedules.find(
-        (s) =>
-          (s.stage as string) === 'PACKAGING' ||
-          (s.stage as string) === 'PACKING',
-      );
-      if (!packagingSchedule || packagingSchedule.status !== 'COMPLETED') {
-        throw new BadRequestException({
-          code: 'PACKAGING_NOT_COMPLETED',
-          message:
-            'Tahap Packaging wajib berstatus COMPLETED sebelum Batch Record dapat diselesaikan.',
-        });
-      }
-    }
-
-    let dbLifecycleStatus: LifecycleStatus = plan.status;
-    let dbApjStatus = plan.apjStatus;
-
-    if (normalizedTarget === 'APPROVED') {
-      dbApjStatus = 'APPROVED' as any;
-      dbLifecycleStatus = 'READY_TO_PRODUCE' as any;
-    } else if (normalizedTarget === 'LOCKED') {
-      dbLifecycleStatus = 'READY_TO_PRODUCE' as any;
-    } else if (normalizedTarget === 'IN_PROGRESS') {
-      dbLifecycleStatus = 'MIXING' as any;
-    } else if (normalizedTarget === 'COMPLETED') {
-      dbLifecycleStatus = 'FINISHED_GOODS' as any;
-    } else if (normalizedTarget === 'PLANNING' || normalizedTarget === 'DRAFT') {
-      dbLifecycleStatus = 'PLANNING' as any;
-    }
-
-    try {
-      const updated = await this.prisma.productionPlan.update({
-        where: { id: plan.id },
-        data: {
-          status: dbLifecycleStatus,
-          apjStatus: dbApjStatus,
-          apjSignatureUrl: normalizedTarget,
-          apjNotes: notes || plan.apjNotes,
-        },
-        include: {
-          so: { include: { lead: true } },
-          formula: true,
-          workOrders: { include: { schedules: true } },
-        },
-      });
-
-      this.eventEmitter.emit('production.batch_record.transitioned', {
-        batchRecordId: plan.id,
-        fromStatus: currentStatus,
-        toStatus: normalizedTarget,
-        actorId: user?.id,
-      });
-
-      return {
-        data: {
-          ...updated,
-          status: normalizedTarget,
-        },
-      };
-    } catch (err: any) {
-      console.error('transitionBatchRecord update failed:', err);
-      throw err;
-    }
+  transitionBatchRecord(...args: Parameters<ProductionBatchRecordService['transitionBatchRecord']>) {
+    return this.batchRecords.transitionBatchRecord(...args);
   }
 
-  async getBatchRecords() {
-    const plans = await this.prisma.productionPlan.findMany({
-      include: {
-        so: { include: { lead: true } },
-        workOrders: {
-          include: {
-            schedules: {
-              include: {
-                stepDetails: { include: { material: true } },
-                machine: true,
-              },
-            },
-            logs: { orderBy: { loggedAt: 'desc' }, take: 1 },
-          },
-        },
-      },
-      orderBy: { apjReleasedAt: 'desc' },
-    });
-    return plans.map((p) => ({
-      id: p.id,
-      batchNo: p.batchNo,
-      targetQty: p.workOrders.reduce((s, wo) => s + wo.targetQty, 0),
-      stage: p.status,
-      createdAt: p.apjReleasedAt || p.so?.createdAt,
-      lead: p.so?.lead
-        ? {
-            brandName: p.so.lead.brandName,
-            productInterest: p.so.lead.productInterest,
-            clientName: p.so.lead.clientName,
-          }
-        : null,
-      schedules: p.workOrders.flatMap((wo) =>
-        wo.schedules.map((sch) => ({
-          id: sch.id,
-          stage: sch.stage,
-          scheduleNumber: sch.scheduleNumber,
-          targetQty: sch.targetQty,
-          resultQty: sch.resultQty,
-          machine: sch.machine ? { name: sch.machine.name } : null,
-          stepDetails: sch.stepDetails.map((det) => ({
-            id: det.id,
-            qtyTheoretical: Number(det.qtyTheoretical),
-            qtyActual: det.qtyActual ? Number(det.qtyActual) : null,
-            material: det.material ? { name: det.material.name } : null,
-          })),
-        })),
-      ),
-    }));
+  getBatchRecords(...args: Parameters<ProductionBatchRecordService['getBatchRecords']>) {
+    return this.batchRecords.getBatchRecords(...args);
   }
 
   async verifyStageQC(userId: string, dto: any) {

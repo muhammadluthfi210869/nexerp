@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { ProductionService } from '../src/modules/production/production.service';
+import { ProductionBatchRecordService } from '../src/modules/production/production-batch-record.service';
 import { WarehouseService } from '../src/modules/warehouse/warehouse.service';
 import { FinanceService } from '../src/modules/finance/finance.service';
 import { ArPaymentType } from '../src/modules/finance/dto/verify-ar-payment.dto';
@@ -27,6 +28,7 @@ describe('V4 System Validation: Unified Communication Protocol', () => {
       imports: [EventEmitterModule.forRoot(), PrismaModule, SystemModule],
       providers: [
         ProductionService,
+        ProductionBatchRecordService, // Fase 3C — batch-record cluster
         WarehouseService,
         FinanceService,
         StockLedgerService,

@@ -73,6 +73,7 @@ const buildFacade = (analytics: unknown) =>
     {} as never, // idGenerator
     {} as never, // stateTransition
     analytics as never,
+    {} as never, // batchRecords
   );
 
 describe('Fase 3C — production analytics live in their own service', () => {
@@ -144,13 +145,19 @@ describe('Fase 3C — production analytics live in their own service', () => {
 
     it('still keeps the write path', () => {
       // The split must not have taken anything that mutates with it.
+      //
+      // `transitionBatchRecord` was in this list until Fase 3C part 3 moved the
+      // batch-record cluster out; it is a delegator now, and `typeof` cannot
+      // tell a delegator from a body, so leaving it here would have read as a
+      // pass while asserting less. `startStage` replaces it. The batch-record
+      // suite is the one that checks bodies, by fingerprint.
       for (const method of [
         'startProduction',
+        'startStage',
         'submitStageLog',
         'issueMaterial',
         'createBatchSchedule',
         'updateScheduleResult',
-        'transitionBatchRecord',
         'verifyStageQC',
         'finalizeWorkOrderCosting',
       ]) {

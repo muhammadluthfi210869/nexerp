@@ -55,8 +55,8 @@
       "backend_controllers": 114,
       "backend_controllers_reachable": 114,
       "backend_controllers_dead": 0,
-      "backend_services": 146,
-      "backend_services_reachable": 145,
+      "backend_services": 147,
+      "backend_services_reachable": 146,
       "backend_services_dead": 1,
       "backend_modules": 77,
       "backend_modules_reachable": 77,
@@ -35318,6 +35318,15 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/production/production-batch-record.service.ts",
+      "provider_symbol": "ProductionBatchRecordService",
+      "domain": "production",
+      "owner": "Production Team",
+      "rationale": "Business service encapsulated in production module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
       "file": "backend/src/modules/production/production.service.ts",
       "provider_symbol": "ProductionService",
       "domain": "production",
@@ -37860,6 +37869,26 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/production/production-batch-record.service.ts",
+      "provider_symbol": "ProductionBatchRecordService",
+      "role": "PUBLISHER",
+      "event": "production.batch_record.created",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event production.batch_record.created",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-batch-record.service.ts",
+      "provider_symbol": "ProductionBatchRecordService",
+      "role": "PUBLISHER",
+      "event": "production.batch_record.transitioned",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event production.batch_record.transitioned",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
       "file": "backend/src/modules/production/production.service.ts",
       "provider_symbol": "ProductionService",
       "role": "PUBLISHER",
@@ -38006,26 +38035,6 @@
       "event": "BATCH_COMPLETED",
       "owner": "Production Team",
       "rationale": "Event publisher for event BATCH_COMPLETED",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
-      "event": "production.batch_record.created",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event production.batch_record.created",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
-      "event": "production.batch_record.transitioned",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event production.batch_record.transitioned",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "reachable": true
     },
@@ -40749,7 +40758,7 @@
       "version": "7.10.0",
       "domain": "backend-runtime",
       "owner": "Backend Platform Team",
-      "rationale": "Runtime/CLI infrastructure dependency required by backend execution environment.",
+      "rationale": "Direct production dependency imported in NestJS backend.",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "reachable": true
     },
