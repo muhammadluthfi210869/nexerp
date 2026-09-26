@@ -917,8 +917,53 @@ Sensus komprehensif `backend/src` dan `backend/test` menemukan fakta menarik:
 
 **BELUM SIAP KIRIM**, konsisten dengan aturan CLAUDE.md QA Gate. Smoke test live, rollback teruji, dan P03 masih belum diverifikasi di production environment.
 
-Sisa `production.service.ts` kini **680 baris**:
+Sisa `production.service.ts` kini **680 baris** (lihat §15 untuk pemindahan klaster work order & material requisition):
 - Work order & material requisition: `createWorkOrder`, `issueMaterial`, `flagShortage`, `getAllRequisitions`
 - QC, costing & formula assignment: `verifyStageQC`, `returnMaterial`, `finalizeWorkOrderCosting`, `assignFormulaToPlan`
 - Ekor berkas: event listeners `@OnEvent` (`handleStockAdjusted`, `handleInboundReceived`) dan penyesuaian formula (`getFormulaAdjustments`, `createFormulaAdjustment`) ditunda hingga dekomposisi inti selesai.
+
+---
+
+## 15. Slice 9 — Work Orders & Material Requisitions
+
+Dipisahkan pada 2026-09-27. Ini adalah slice kesembilan Fase 3C, yang memindahkan seluruh siklus hidup pembuatan Work Order dan pemenuhan kebutuhan material (material requisitions):
+
+| Berkas | Baris sebelum | Baris sesudah | Tanggung jawab |
+|---|---|---|---|
+| `production-work-order.service.ts` | — | 196 | Siklus hidup Work Order & pemenuhan Material Requisition |
+| `production.service.ts` (fasad) | 680 | **517** | Fasad delegasi tipis |
+
+Metode yang dipindahkan:
+- `createWorkOrder` (Range 1: 127-179): Pembuatan work order dan inisialisasi baris `materialRequisition` otomatis berdasarkan BOM dari sample yang disetujui.
+- `issueMaterial` (Range 1: 182-265): Validasi ketersediaan stok material, pengurangan stok fisik (`materialItem.stockQty`), pencatatan transaksi mutasi keluar (`inventoryTransaction.OUTBOUND`), pembaruan status requisition menjadi `ISSUED`, dan penerbitan log produksi pelepasan material.
+- `flagShortage` (Range 1: 267-296): Penandaan status `SHORTAGE` pada requisition dan eskalasi stage work order ke `WAITING_PROCUREMENT`.
+- `getAllRequisitions` (Range 2: 327-339): Pengambilan daftar seluruh material requisition beserta relasi work order dan material.
+
+### 15.1 Dampak Pembersihan Fasad
+
+1. **Model `materialRequisition` 100% keluar dari fasad**: Sebelum slice ini, `production.service.ts` mengakses model `materialRequisition` di 5 baris berbeda. Sekarang fasad memiliki **0 rujukan** ke `materialRequisition`.
+2. **Pembersihan helper `rel()`**: Helper `rel()` dari `../../common/helpers/prisma.helper` sebelumnya hanya digunakan pada baris pembuatan log produksi di `issueMaterial`. Dengan keluarnya metode ini, impor `rel` dihapus seluruhnya dari fasad.
+3. **Penyusutan ukuran fasad**: Dari awal 3.532 baris, kini `production.service.ts` menyusut hingga **517 baris** (berkurang 85,3% dari ukuran awal).
+
+### 15.2 Verifikasi
+
+| Gate | Hasil |
+|---|---|
+| `tsc --noEmit` | rc 0 |
+| `eslint src/modules/production/**` | 0 error, 865 warning (pra-eksisting, tidak bertambah) |
+| `eslint test/unit/production*extraction.unit-spec.ts` | 0 masalah |
+| `npm run test:unit` | **49/49 suite, 605/605 test PASS** |
+| `bash scripts/__tests__/run-all.sh` | PASS 26, FAIL 0, SKIP 0 |
+| `node scripts/ssot/validate_ssot.js` | 19 pass, 0 fail, CERTIFIED |
+| `node scripts/ssot/audit_lifecycle_reconciliation.js` | 14/14 PASS (setelah regenerasi registry) |
+
+### 15.3 Verdict
+
+**BELUM SIAP KIRIM**, konsisten dengan aturan CLAUDE.md QA Gate. Smoke test live, rollback teruji, dan P03 masih belum diverifikasi di production environment.
+
+Sisa `production.service.ts` kini **517 baris**:
+- QC, costing & formula assignment: `verifyStageQC`, `returnMaterial`, `finalizeWorkOrderCosting`, `assignFormulaToPlan` (~160 baris logika murni)
+- Ekor berkas: event listeners `@OnEvent` (`handleStockAdjusted`, `handleInboundReceived`) dan penyesuaian formula (`getFormulaAdjustments`, `createFormulaAdjustment`) (~75 baris)
+- Selebihnya adalah blok delegator tipis untuk 9 servis terpisah yang telah diekstrak.
+
 
