@@ -650,3 +650,115 @@ material (`createWorkOrder`, `issueMaterial`, `flagShortage`, ~170 baris), blok
 audit + machine (`596-880`, 285 baris — punya satu rujukan ke luar,
 `calculateCOPQ`), dan ekor berkas (`@OnEvent` + formula adjustment, ~74 baris;
 ditunda karena urutan registrasi handler event load-bearing).
+
+---
+
+## 12. Slice keenam: stage execution (`e735316b`)
+
+Slice ini yang sejak awal dinamai rencana refactor — `ProductionExecutionService`.
+Isinya seluruh lantai produksi: memulai work order, memulai dan menutup stage,
+melaporkan breakdown, mengirim stage log, dan angka cost-of-poor-quality yang
+diturunkan dari qty reject log tersebut.
+
+Ia juga slice pertama yang **bukan satu rentang bersebelahan**. Empat metode
+eksekusi ada di baris 42-350; `calculateCOPQ` — satu-satunya metode yang mereka
+panggil pada dirinya sendiri — sendirian di 814-881.
+
+| Slice | Sumbu | Rentang | Baris keluar |
+|---|---|---|---|
+| finance-report | kemutakhiran | satu | 527 |
+| production-analytics | kemutakhiran | satu | 1187 |
+| batch record | satu tipe record | satu | 412 |
+| production planning | kapan pekerjaan berjalan | satu | 554 |
+| schedule actuals | mencatat hasil | satu | 458 |
+| **stage execution** | **lantai produksi** | **dua** | **377** |
+
+Memindahkan metode melintasi celah 460 baris hanya aman karena satu pengukuran:
+`calculateCOPQ` punya **tepat satu** pemanggil di luar badannya — baris 293, di
+dalam `submitStageLog`. Dua pemanggil, dan slice ini harus ikut membawa yang
+kedua. Skrip extractor sekarang mengasersikan pemanggilan tunggal itu, jadi
+rentang kedua hanya ikut pindah selama alasannya masih berlaku.
+
+Seam: dua rentang, tidak ada anggota lain di dalam keduanya. `this.X`: `prisma`
+(6), `idGenerator` (3), `eventEmitter` (6), `legality` (1), `stateTransition` (1),
+`calculateCOPQ` (1, diri sendiri, ikut pindah). Nol rujukan ke kelima nama di luar
+rentang. Nol pemakaian `Logger` — service baru tidak diberi logger.
+
+`production.service.ts` **1200 → 829** baris; `ProductionExecutionService` **438**.
+
+### 12.1 Empat hal yang ikut keluar karena jadi mati
+
+Pemindahan ini mengosongkan lebih dari satu hal di facade, dan masing-masing
+dihapus — bukan dibiarkan sebagai kabel mati:
+
+1. parameter konstruktor `legality` dan `stateTransition` — dipakai
+   `submitStageLog` dan tidak ada lagi di kelas 1200 baris itu;
+2. `import { LifecycleStatus, Prisma } from '@prisma/client'` — `LifecycleStatus`
+   hanya dipakai di dalam blok yang pindah, dan `Prisma` sudah mati sebelumnya;
+3. `private readonly logger = new Logger(ProductionService.name)`.
+
+Yang ketiga itu **mati sejak slice sebelumnya**, bukan sejak slice ini: slice
+actuals (§11) memindahkan satu-satunya `logBestEffort(this.logger, …)`, dan
+akibatnya tidak terlihat waktu itu karena `tsc` tidak mengeluh dan lint hanya
+menaikkan *warning*, bukan *error*. Ia ditemukan sekarang karena `tsc` melaporkan
+`'logger' is declared but its value is never read` setelah baris bergeser. Ini
+ditulis apa adanya: satu slice sebelumnya meninggalkan kabel mati yang tidak
+dilaporkan, dan laporan ini tidak mengklaim sebaliknya.
+
+Tiga kabel mati **pra-eksisting** tetap dibiarkan karena bukan akibat slice ini:
+`userId` yang tak dipakai di `returnMaterial`, `payload` di `handleInboundReceived`,
+dan field `formulaAdjustments`.
+
+### 12.2 Satu asersi extractor yang salah bentuk
+
+Skrip berhenti dengan `ABORT: calculateCOPQ declared 2 times inside the union`.
+Asersinya mencacah kemunculan **nama**, sementara nama itu muncul dua kali karena
+alasan yang justru menjadi dasar slice ini: sekali sebagai deklarasi, sekali
+sebagai pemanggilan internal di baris 293. Dua slice sebelumnya aman karena
+metodenya tidak saling memanggil — jadi cacah nama dan cacah deklarasi kebetulan
+sama.
+
+Diperbaiki dengan memisahkan keduanya: jumlah **deklarasi** dihitung dengan regex
+anggota kelas (dan daftar nama di dalam union diasersikan persis sama dengan yang
+diharapkan), sementara rujukan di luar rentang tetap harus nol. Lalu ditambah
+asersi positif yang menjadi alasan rentang kedua ikut pindah: tepat satu
+`this.calculateCOPQ(` di dalam union. Skrip berhenti sebelum menulis apa pun.
+
+Pelajaran yang sama seperti §11.1 dan §10.1, sekali lagi: asersi yang terbaca
+lebih kuat daripada kenyataannya adalah asersi yang paling perlu dicurigai, dan
+yang membuatnya aman adalah urutan — semua pemeriksaan sebelum write.
+
+### 12.3 Verifikasi
+
+| Gate | Hasil |
+|---|---|
+| `tsc --noEmit` | rc 0 |
+| `npm run lint` (modul production) | 0 error, 865 warning (pra-eksisting) |
+| `npm run test:unit` | **46/46 suite, 522/522 test** |
+| `bash scripts/__tests__/run-all.sh` | PASS 26, FAIL 0, SKIP 0 |
+| `node scripts/ssot/validate_ssot.js` | 19 pass, 0 fail, CERTIFIED |
+| `node scripts/ssot/audit_lifecycle_reconciliation.js` | 14/14 PASS |
+
+### 12.4 Verdict
+
+**BELUM SIAP KIRIM**, tidak berubah. Tiga gate minimum CLAUDE.md yang belum punya
+hasil tetap sama sejak §9.5: smoke test live, rollback teruji, dan P03 — merah di
+SHA `5de307db` dengan `base_sha` `9229478d`, bukan di HEAD.
+
+Sisa `production.service.ts` **829 baris**, dan nomor barisnya harus diukur ulang
+karena sudah bergeser dua kali. Klaster yang masih ada:
+
+- work order + material — `createWorkOrder`, `issueMaterial`, `flagShortage`
+- audit + machine — `getPendingAudits`, `submitAudit`, `calculateNextStage`,
+  `createMachine`, `getAllRequisitions`, `getMachines`, `getActiveMachines`,
+  `resolveQRContext` (`calculateNextStage` dipanggil `submitAudit`, jadi keduanya
+  harus satu slice — persis pola `calculateCOPQ` di §12)
+- QC + costing + formula — `verifyStageQC`, `returnMaterial`,
+  `finalizeWorkOrderCosting`, `assignFormulaToPlan`
+- ekor berkas — handler `@OnEvent` + formula adjustment, masih ditunda karena
+  urutan registrasi handler event load-bearing
+
+Dua pertanyaan yang belum dijawab dan akan menentukan bentuk slice berikutnya:
+apakah `submitAudit` punya pemanggil lain selain dirinya sendiri, dan apakah
+`verifyStageQC` menyentuh `calculateNextStage` juga (kalau ya, batas antar-slice
+harus digeser). Keduanya diukur dulu, tidak ditebak.
