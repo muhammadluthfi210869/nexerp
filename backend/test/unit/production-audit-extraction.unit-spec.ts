@@ -84,6 +84,7 @@ const buildFacade = (audit: unknown) =>
     audit as never,
     {} as never, // machines
     {} as never, // qrContexts
+    {} as never, // workOrders
   );
 
 describe('Fase 3C — the QC audit queue lives in its own service', () => {

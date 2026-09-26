@@ -87,6 +87,7 @@ const buildFacade = (batchRecords: unknown) =>
     {} as never, // audit
     {} as never, // machines
     {} as never, // qrContexts
+    {} as never, // workOrders
   );
 
 describe('Fase 3C — batch records live in their own service', () => {

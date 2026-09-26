@@ -8,6 +8,7 @@ import { ProductionExecutionService } from '../src/modules/production/production
 import { ProductionAuditService } from '../src/modules/production/production-audit.service';
 import { ProductionMachineService } from '../src/modules/production/production-machine.service';
 import { ProductionQrContextService } from '../src/modules/production/production-qr-context.service';
+import { ProductionWorkOrderService } from '../src/modules/production/production-work-order.service';
 import { PrismaService } from '../src/prisma/prisma/prisma.service';
 import { ScmService } from '../src/modules/scm/services/scm.service';
 import { FinanceService } from '../src/modules/finance/finance.service';
@@ -31,6 +32,7 @@ describe('Phase 2: Supply Chain Integrity & Valuation', () => {
         ProductionAuditService, // Fase 3C — QC audit cluster
         ProductionMachineService, // Fase 3C — machine registry
         ProductionQrContextService, // Fase 3C — QR scan context
+        ProductionWorkOrderService, // Fase 3C — work orders & requisitions
         PrismaService,
         ScmService,
         FinanceService,

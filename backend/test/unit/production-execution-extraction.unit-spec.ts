@@ -85,6 +85,7 @@ const buildFacade = (execution: unknown) =>
     {} as never, // audit,
     {} as never, // machines
     {} as never, // qrContexts
+    {} as never, // workOrders
   );
 
 describe('Fase 3C — stage execution lives in its own service', () => {

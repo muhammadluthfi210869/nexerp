@@ -83,6 +83,7 @@ const buildFacade = (actuals: unknown) =>
     {} as never, // audit
     {} as never, // machines
     {} as never, // qrContexts
+    {} as never, // workOrders
   );
 
 describe('Fase 3C — schedule actuals live in their own service', () => {

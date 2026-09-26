@@ -78,6 +78,7 @@ const buildFacade = (analytics: unknown) =>
     {} as never, // audit
     {} as never, // machines
     {} as never, // qrContexts
+    {} as never, // workOrders
   );
 
 describe('Fase 3C — production analytics live in their own service', () => {

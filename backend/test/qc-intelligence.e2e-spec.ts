@@ -8,6 +8,7 @@ import { ProductionExecutionService } from '../src/modules/production/production
 import { ProductionAuditService } from '../src/modules/production/production-audit.service';
 import { ProductionMachineService } from '../src/modules/production/production-machine.service';
 import { ProductionQrContextService } from '../src/modules/production/production-qr-context.service';
+import { ProductionWorkOrderService } from '../src/modules/production/production-work-order.service';
 import { WarehouseService } from '../src/modules/warehouse/warehouse.service';
 import { PurchaseOrdersService } from '../src/modules/scm/services/purchase-orders.service';
 import { PrismaService } from '../src/prisma/prisma/prisma.service';
@@ -45,6 +46,7 @@ describe('QC Intelligence & Audit Automation (Phase 4 Verification)', () => {
         ProductionAuditService, // Fase 3C — QC audit cluster
         ProductionMachineService, // Fase 3C — machine registry
         ProductionQrContextService, // Fase 3C — QR scan context
+        ProductionWorkOrderService, // Fase 3C — work orders & requisitions
         WarehouseService,
         PurchaseOrdersService,
         FinanceService,

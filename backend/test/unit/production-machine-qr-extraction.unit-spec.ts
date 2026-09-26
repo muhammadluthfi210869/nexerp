@@ -96,6 +96,7 @@ const buildFacade = (machines: unknown, qrContexts: unknown) =>
     {} as never, // audit
     machines as never,
     qrContexts as never,
+    {} as never, // workOrders
   );
 
 describe('Fase 3C — machines and QR scan resolution live in their own services', () => {
@@ -173,13 +174,12 @@ describe('Fase 3C — machines and QR scan resolution live in their own services
       expect(facade.split('\n').length).toBeLessThan(700);
     });
 
-    it('left the requisition list behind, where it belongs', () => {
-      // It sits between the two machine ranges and did not move: the same
-      // resource issueMaterial and flagShortage write to.
+    it('did not move the requisition list into machines', () => {
+      // It sits between the two machine ranges and did not move with machines: the same
+      // resource issueMaterial and flagShortage write to (extracted in part 9).
       expect(typeof methodsOf(ProductionService.prototype)['getAllRequisitions']).toBe(
         'function',
       );
-      expect(facade).toContain('this.prisma.materialRequisition.');
       expect(facade).not.toContain('this.machines.getAllRequisitions(');
     });
 

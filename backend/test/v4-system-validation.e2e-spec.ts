@@ -8,6 +8,7 @@ import { ProductionExecutionService } from '../src/modules/production/production
 import { ProductionAuditService } from '../src/modules/production/production-audit.service';
 import { ProductionMachineService } from '../src/modules/production/production-machine.service';
 import { ProductionQrContextService } from '../src/modules/production/production-qr-context.service';
+import { ProductionWorkOrderService } from '../src/modules/production/production-work-order.service';
 import { WarehouseService } from '../src/modules/warehouse/warehouse.service';
 import { FinanceService } from '../src/modules/finance/finance.service';
 import { ArPaymentType } from '../src/modules/finance/dto/verify-ar-payment.dto';
@@ -41,6 +42,7 @@ describe('V4 System Validation: Unified Communication Protocol', () => {
         ProductionAuditService, // Fase 3C — QC audit cluster
         ProductionMachineService, // Fase 3C — machine registry
         ProductionQrContextService, // Fase 3C — QR scan context
+        ProductionWorkOrderService, // Fase 3C — work orders & requisitions
         WarehouseService,
         FinanceService,
         StockLedgerService,
