@@ -55,8 +55,8 @@
       "backend_controllers": 114,
       "backend_controllers_reachable": 114,
       "backend_controllers_dead": 0,
-      "backend_services": 149,
-      "backend_services_reachable": 148,
+      "backend_services": 150,
+      "backend_services_reachable": 149,
       "backend_services_dead": 1,
       "backend_modules": 77,
       "backend_modules_reachable": 77,
@@ -35336,6 +35336,15 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/production/production-execution.service.ts",
+      "provider_symbol": "ProductionExecutionService",
+      "domain": "production",
+      "owner": "Production Team",
+      "rationale": "Business service encapsulated in production module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
       "file": "backend/src/modules/production/production-planning.service.ts",
       "provider_symbol": "ProductionPlanningService",
       "domain": "production",
@@ -37957,6 +37966,66 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/production/production-execution.service.ts",
+      "provider_symbol": "ProductionExecutionService",
+      "role": "PUBLISHER",
+      "event": "activity.logged",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event activity.logged",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-execution.service.ts",
+      "provider_symbol": "ProductionExecutionService",
+      "role": "PUBLISHER",
+      "event": "activity.logged",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event activity.logged",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-execution.service.ts",
+      "provider_symbol": "ProductionExecutionService",
+      "role": "PUBLISHER",
+      "event": "activity.logged",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event activity.logged",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-execution.service.ts",
+      "provider_symbol": "ProductionExecutionService",
+      "role": "PUBLISHER",
+      "event": "production.breakdown.reported",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event production.breakdown.reported",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-execution.service.ts",
+      "provider_symbol": "ProductionExecutionService",
+      "role": "PUBLISHER",
+      "event": "production.stage.completed",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event production.stage.completed",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-execution.service.ts",
+      "provider_symbol": "ProductionExecutionService",
+      "role": "PUBLISHER",
+      "event": "production.work_order.started",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event production.work_order.started",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
       "file": "backend/src/modules/production/production-planning.service.ts",
       "provider_symbol": "ProductionPlanningService",
       "role": "PUBLISHER",
@@ -38080,49 +38149,9 @@
       "file": "backend/src/modules/production/production.service.ts",
       "provider_symbol": "ProductionService",
       "role": "PUBLISHER",
-      "event": "activity.logged",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event activity.logged",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
-      "event": "activity.logged",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event activity.logged",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
-      "event": "activity.logged",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event activity.logged",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
       "event": "BATCH_COMPLETED",
       "owner": "Production Team",
       "rationale": "Event publisher for event BATCH_COMPLETED",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
-      "event": "production.breakdown.reported",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event production.breakdown.reported",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "reachable": true
     },
@@ -38180,29 +38209,9 @@
       "file": "backend/src/modules/production/production.service.ts",
       "provider_symbol": "ProductionService",
       "role": "PUBLISHER",
-      "event": "production.stage.completed",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event production.stage.completed",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
       "event": "production.work_order.created",
       "owner": "Production Team",
       "rationale": "Event publisher for event production.work_order.created",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
-      "event": "production.work_order.started",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event production.work_order.started",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "reachable": true
     },
