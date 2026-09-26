@@ -3,9 +3,9 @@
 ## Scope Ledger Metadata
 
 - **Base Commit SHA:** `9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb`
-- **Candidate Commit SHA:** `43adc69781a96b0cf4849b26f2384bd90a953298`
+- **Candidate Commit SHA:** `7cb1ab70c00024ef401183a86f86270b3bef070c`
 - **Total Changed Paths in Git Diff:** 1195
-- **Generated At:** 2026-09-26T10:45:06.659Z
+- **Generated At:** 2026-09-26T11:01:35.404Z
 
 ## Path Index
 

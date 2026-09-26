@@ -2,7 +2,7 @@
 
 - Tanggal: 2026-09-26
 - Branch: `feat/p08-contracts-subject-ownership`
-- Status: **BELUM SIAP KIRIM** (smoke live produksi `nexerp.id` dan rollback teruji VPS belum dijalankan)
+- Status: **BELUM SIAP KIRIM** (sertifikasi P03 produksi MERAH: 16/21; lihat bagian 8)
 
 Lanjutan dari `2026-09-26-tahap5-dashboards-marketing.md`.
 
@@ -19,6 +19,9 @@ Tiga kelas cacat, semuanya "hijau di CI, mati di layar":
    ditulis manusia.
 3. **Tiga layar mati** oleh respons 200 yang bentuknya salah. Ditemukan oleh sweep browser P22,
    bukan oleh test unit mana pun.
+4. **Gerbang P03 melaporkan hijau secara hampa.** CLI audit yang dijalankan manusia mengukur
+   satu commit terakhir, bukan basis fase, dan mencetak `21/21 PASS` dengan 0 berkas dipindai
+   sementara runner CI gagal di atas pohon yang sama. Bagian 8.
 
 Ketiganya kini punya gerbang sendiri yang terbukti merah lebih dulu.
 
@@ -165,20 +168,82 @@ terbaca dari `tail`, bukan dari `npm` — perhitungan exit code sekarang tanpa p
 | Build frontend | `npm run build` (Turbopack) | EXIT 0 |
 | Typecheck backend | `npx tsc --noEmit` | EXIT 0 |
 | Build backend | `npm run build` | EXIT 0 — 592 berkas (SWC, 811 ms) |
-| Audit P03 | `node scripts/ssot/audit_p03_architecture_gates.js` | EXIT 0 — **21/21 PASS**, VERDICT: PASS |
+| Audit P03 | `node scripts/ssot/audit_p03_architecture_gates.js` | ⚠️ Angka lama BATAL — lihat bagian 8. CLI ini mengukur satu commit, bukan fase |
+| Sertifikasi P03 (produksi) | `node scripts/ssot/certify_p03_phase.js` | **EXIT 1 — 16/21 FAIL** (5 gerbang merah, semuanya warisan cabang; lihat bagian 8) |
+| Batas impor DNA | gerbang `dna_import_boundary_ast` | subpath 25 → **0** |
 | Ratchet batas DNA | `node scripts/dna-boundary-gate.mjs` | EXIT 0 — `DNA boundary held` |
+| Suite negatif P03 | `node scripts/ssot/test_p03_architecture_gates_negative.js` | EXIT 0 |
 | Suite shell penuh | `bash scripts/__tests__/run-all.sh` | EXIT 0 — PASS 25 / FAIL 0 / SKIP 0 (termasuk 2 gerbang baru) |
 | Smoke integrasi live | `bash scripts/test-deploy.sh http://127.0.0.1:3002/v1` | EXIT 0 — 6/6 |
 | Sweep browser P22 | `bash scripts/test-browser-agent.sh` | EXIT 0 — **7/7 lulus, 264 rute bersih** (sebelumnya 6 pesan di 3 halaman) |
 | Rantai paritas | `legacy-fe-delta` + `parity-crosscheck` + `build-fe-legacy-report` | EXIT 0 |
+| Typecheck frontend (setelah 25 perbaikan impor) | `npx tsc --noEmit` | EXIT 0 |
 
-## 8. Gate yang BELUM Dijalankan (Sebab Status BELUM SIAP KIRIM)
+## 8. Koreksi Penting: "P03 21/21 PASS" Itu Hijau Hampa
 
-1. Smoke test live `https://nexerp.id` pada lingkungan VPS produksi.
-2. Pengujian prosedur rollback (`bash scripts/rollback.sh <sha>`).
-3. Produksi masih menjalankan SHA `7a449e0a` (2026-09-16); tidak satu pun perbaikan hari ini
+Saat menulis laporan ini saya menjalankan sertifikasi produksi, bukan CLI audit, dan
+hasilnya **FAIL 16/21**. Penelusurannya menemukan cacat gerbang, bukan cacat kode:
+
+`scripts/ssot/audit_p03_architecture_gates.js` — CLI yang saya (dan siapa pun) jalankan
+lokal — memanggil `runAudit()` **tanpa** `baseSha`. Akibatnya `resolveDiffBase` jatuh ke
+`HEAD~1`, dan gerbang duplikasi memindai **satu commit terakhir**. Buktinya ada di
+artefak yang saya commit sebelumnya:
+
+```
+"base_sha": "43adc697...",        <- HEAD~1, bukan basis fase
+"changed_files_scanned": 0,
+"total_tokens": 0,
+"duplication_percent": 0          <- dan gerbang ini PASS
+```
+
+Nol berkas dipindai, jadi hasilnya PASS. Runner yang dipakai CI
+(`certify_p03_phase.js`) memakai bundel ketat dari `buildP03AuditOptions()` dengan basis
+fase `9229478d`, memindai 595 berkas, dan gagal. Itulah sebabnya empat push CI terakhir
+di cabang ini merah sementara laporan lokal hijau. Klaim "21/21 PASS" di versi awal
+laporan ini berasal dari jalur yang hampa itu, dan **dibatalkan**.
+
+Perbaikannya ada di commit `7cb1ab70`: CLI kini memanggil `runProductionAudit`, yaitu
+bundel ketat yang sama dengan CI — persis seperti yang sudah diklaim docstring modul itu
+sendiri sejak awal.
+
+### 8.1 Lima Gerbang Merah (semuanya warisan cabang, bukan dari perubahan hari ini)
+
+| Gerbang | Angka | Sebab | Yang dibutuhkan |
+|---|---|---|---|
+| `duplicate_code_scan` | 121.056 / 544.590 token = **22,23%** (batas 1%), 57.696 klon di 594 berkas | Seluruh cabang P07–P22 adalah kode baru; ambang 1% dirancang untuk perubahan tambahan, bukan untuk cabang yang isinya seluruh basis kode | Refactor berskala fase, atau keputusan pemilik atas cakupan pengukuran |
+| `changed_complexity_check` | **588** fungsi di atas kompleksitas 15, **305** di rentang 11–15 tanpa `@complexity-rationale` | Sama: 595 berkas "berubah" = seluruh basis kode | Refactor berskala fase |
+| `dna_import_boundary_ast` | 25 → **0** ✅ | 25 layar mengimpor subpath `@/components/dna/*` | **SELESAI** di commit `e77b4b49` |
+| `dna_native_interactive_scan` | **65** berkas memakai elemen interaktif mentah tanpa pengecualian terdaftar | Migrasi DNA yang oleh registry sendiri dijadwalkan ke P19 | Konversi ke `DnaButton`/`DnaInput`/`DnaSelect`, atau pengecualian yang disetujui dewan arsitektur |
+| `dna_hardcoded_visual_scan` | **22** berkas memakai gaya/warna mentah tanpa pengecualian | Sama | Sama |
+
+`frontend/src/components/dna/dna-exceptions.yaml` sudah memuat pengecualian ber-id
+`DNA-EXC-nnn` dengan `approved_by: architecture_review_board`, `expires_at: 2026-12-31`,
+dan `dna_extension_issue: P19-STRICT-DNA-MIGRATION`. **87 berkas tidak ada di sana.**
+Menambahkan 87 "persetujuan" tanpa dewan yang menyetujuinya adalah pemalsuan governance,
+jadi tidak dilakukan. Yang 87 berkas ini juga **bukan** 13 dashboard departemen yang
+sudah ditandatangani (hanya 1 dari 65 dan 4 dari 22 yang berupa dashboard); mayoritas
+adalah workspace marketing, `samples/social-tracker`, dan `samples/omni-crm`.
+
+### 8.2 Satu Cacat Input yang Diperbaiki (bukan ambang yang dilonggarkan)
+
+97,6% dari angka duplikasi lama (155.488 dari 159.337 token) berasal dari **satu berkas
+generated**: `frontend/src/types/api.ts`, keluaran `openapi-typescript` atas
+`backend/swagger-spec.json`. Ia kini dikeluarkan dari pemindaian klon lewat daftar path
+eksplisit, sehingga angkanya turun dari 27,04% ke **22,23%** — gerbangnya **tetap merah**.
+Ambang tidak disentuh; hanya masukan palsu yang dibuang.
+
+Sesuai aturan wajib CLAUDE.md: ada gerbang yang belum dijalankan → **BELUM SIAP KIRIM**.
+
+## 9. Gate yang BELUM Dijalankan
+
+1. **Sertifikasi P03 produksi** (`node scripts/ssot/certify_p03_phase.js`) — merah 16/21;
+   rincian di bagian 8.1. CI di cabang ini merah sejak empat push sebelum hari ini.
+2. Smoke test live `https://nexerp.id` pada lingkungan VPS produksi.
+3. Pengujian prosedur rollback (`bash scripts/rollback.sh <sha>`).
+4. Produksi masih menjalankan SHA `7a449e0a` (2026-09-16); tidak satu pun perbaikan hari ini
    (maupun P07–P19) sudah ter-deploy. Deploy hanya boleh lewat `main` → GHCR → `deploy.sh <sha>`.
-4. Bentuk respons `/reports/general-ledger` (stub `{"data":[]}`) belum diselaraskan di backend.
-5. Keputusan pemilik produk atas ≈3025 baris kode marketing yatim (bagian 6 laporan sebelumnya).
+   Catatan: CI di `main` juga merah pada run terakhirnya (`c0d46de3`, 2026-09-20).
+5. Bentuk respons `/reports/general-ledger` (stub `{"data":[]}`) belum diselaraskan di backend.
+6. Keputusan pemilik produk atas ≈3025 baris kode marketing yatim (bagian 6 laporan sebelumnya).
 
 Sesuai aturan wajib CLAUDE.md: ada gerbang yang belum dijalankan → **BELUM SIAP KIRIM**.
