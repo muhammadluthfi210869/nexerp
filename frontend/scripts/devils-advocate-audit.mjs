@@ -40,9 +40,11 @@ walk(APP_DIR, (fp) => {
     stats.fakeDnaAdoption.push(rel);
   }
 
-  // 3. 1 Column 3 Data heuristic: e.g. <p>...</p><p>...</p><p>...</p> inside a render cell or table cell
-  if (/<(td|DnaTd)[^>]*>[\s\S]*?<p[^>]*>[\s\S]*?<\/p>[\s\S]*?<p[^>]*>[\s\S]*?<\/p>[\s\S]*?<p[^>]*>[\s\S]*?<\/p>[\s\S]*?<\/(td|DnaTd)>/i.test(code) ||
-      /render:\s*\([^)]*\)\s*=>\s*\(?[\s\S]*?<p[^>]*>[\s\S]*?<\/p>[\s\S]*?<p[^>]*>[\s\S]*?<\/p>[\s\S]*?<p[^>]*>[\s\S]*?<\/p>/i.test(code)) {
+  // 3. 1 Column 3 Data heuristic: e.g. <p>...</p><p>...</p><p>...</p> inside a single render cell or table cell
+  const singleCell3P = /<(?:td|DnaTd)[^>]*>(?:(?!<\/?(?:td|DnaTd))[\s\S])*?<p[^>]*>[\s\S]*?<\/p>(?:(?!<\/?(?:td|DnaTd))[\s\S])*?<p[^>]*>[\s\S]*?<\/p>(?:(?!<\/?(?:td|DnaTd))[\s\S])*?<p[^>]*>[\s\S]*?<\/p>(?:(?!<\/?(?:td|DnaTd))[\s\S])*?<\/(?:td|DnaTd)>/i;
+  const renderCell3P = /render:\s*\([^)]*\)\s*=>\s*\(?(?:(?!render:)[\s\S])*?<p[^>]*>[\s\S]*?<\/p>(?:(?!render:)[\s\S])*?<p[^>]*>[\s\S]*?<\/p>(?:(?!render:)[\s\S])*?<p[^>]*>[\s\S]*?<\/p>/i;
+
+  if (singleCell3P.test(code) || renderCell3P.test(code)) {
     stats.threeDataCells.push(rel);
   }
 

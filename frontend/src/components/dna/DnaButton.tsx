@@ -2,7 +2,7 @@ import React from "react"
 import { cn } from "@/lib/utils"
 
 interface DnaButtonProps {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "link" | "default" | "destructive"
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "link" | "default" | "destructive" | "critical"
   size?: "sm" | "md" | "lg" | "icon"
   icon?: React.ReactNode
   children?: React.ReactNode
@@ -29,6 +29,8 @@ const variantClasses: Record<string, string> = {
   danger:
     "bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-600 hover:text-white shadow-sm hover:shadow-md",
   destructive:
+    "bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-600 hover:text-white shadow-sm hover:shadow-md",
+  critical:
     "bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-600 hover:text-white shadow-sm hover:shadow-md",
 }
 

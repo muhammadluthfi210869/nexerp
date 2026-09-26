@@ -367,16 +367,19 @@ export function DnaToolbar({
 export function DnaEmptyState({
   title = "Tidak ada data",
   description = "Belum ada entri yang tercatat.",
+  icon,
   actionButton,
   className,
 }: {
   title?: string;
   description?: string;
+  icon?: React.ReactNode;
   actionButton?: React.ReactNode;
   className?: string;
 }) {
   return (
     <div className={cn("p-12 text-center text-slate-400 space-y-3", className)}>
+      {icon && <div className="flex justify-center">{icon}</div>}
       <p className="font-semibold text-slate-600 text-[13px]">{title}</p>
       <p className="text-[11px] mt-1">{description}</p>
       {actionButton && <div className="pt-2">{actionButton}</div>}

@@ -25,6 +25,7 @@ export interface DnaPageHeaderProps {
   backHref?: string;
   backText?: string;
   badge?: React.ReactNode;
+  badgeText?: string;
   breadcrumbs?: any[];
   breadcrumbItems?: any[];
   tabs?: DnaPageTabItem[];
@@ -36,6 +37,7 @@ export interface DnaPageHeaderProps {
   extraActions?: React.ReactNode;
   action?: React.ReactNode;
   actions?: React.ReactNode;
+  actionButtons?: React.ReactNode;
   className?: string;
 }
 
@@ -48,6 +50,7 @@ export function DnaPageHeader({
   backHref,
   backText,
   badge,
+  badgeText,
   breadcrumbs,
   tabs,
   activeTab,
@@ -58,11 +61,13 @@ export function DnaPageHeader({
   extraActions,
   action,
   actions,
+  actionButtons,
   className,
 }: DnaPageHeaderProps) {
   const effectiveBackLink = backLink || (backHref ? { href: backHref, label: backText || "Kembali" } : undefined);
   const effectiveSubtitle = subtitle || description;
-  const rightActions = action || actions || extraActions;
+  const effectiveBadge = badge || (badgeText ? <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/80">{badgeText}</span> : undefined);
+  const rightActions = action || actions || actionButtons || extraActions;
   return (
     <div
       className={cn(
@@ -84,7 +89,7 @@ export function DnaPageHeader({
           <h1 className="text-[26px] md:text-[28px] font-black text-slate-900 tracking-tight uppercase">
             {title} {titleAccent && <span className="text-amber-500 font-serif lowercase italic font-normal ml-1.5">{titleAccent}</span>}
           </h1>
-          {badge}
+          {effectiveBadge}
         </div>
         {effectiveSubtitle && (
           <p className="text-[12px] text-slate-500 mt-0.5">

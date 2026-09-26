@@ -10,7 +10,7 @@
 // impact preview text is server-derived once the recommendation engine
 // lands; for v1 we surface the entity label + decision type.
 
-import React, { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DnaDialog,
   DnaDialogContent,
@@ -18,7 +18,6 @@ import {
   DnaDialogTitle,
   DnaDialogDescription,
   DnaDialogFooter,
-  DnaDialogClose,
 } from "./DnaDialog";
 import { DnaButton } from "./DnaButton";
 import { DnaSelect } from "./DnaSelect";
@@ -74,7 +73,7 @@ export function DnaDecisionModal({
     }
     setSubmitting(true);
     try {
-      await api.post(`/v1/decision/${encodeURIComponent(decisionId)}/resolve`, {
+      await api.post(`/decision/${encodeURIComponent(decisionId)}/resolve`, {
         action,
         rationale: rationale.trim(),
       });

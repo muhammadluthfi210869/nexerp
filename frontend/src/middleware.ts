@@ -12,6 +12,7 @@ const publicPaths = [
   "/manifest.json",
   "/nexerp-logo.jpeg",
   "/api",
+  "/v1/wa-webhook",
 ];
 
 const staticFilePattern = /\.(jpe?g|png|gif|webp|svg|ico|css|js|woff2?|ttf|eot)$/i;

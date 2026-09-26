@@ -31,6 +31,14 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+
+    /* UAT pre-flight: a screenshot of the broken page is the review artifact */
+    screenshot: 'only-on-failure',
+
+    /* Bound every action. The default is no timeout, so one action that can
+       never settle (an element that disables itself or navigates away
+       mid-click) burns the whole test budget and reports itself as the defect. */
+    actionTimeout: 15_000,
   },
 
   /* Configure projects for major browsers */
@@ -71,11 +79,16 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
+  /* Serve a production build on :3003 — the same thing scripts/test-browser-agent.sh does,
+     for the case where someone runs `npx playwright test` directly. It used to be
+     `npm run dev`, which compiles each route on first request, one at a time: a 264-route
+     sweep over the dev server takes ~10 minutes and can only ever time out, and the dev
+     error overlay changes what the assertions see. `next start` needs a build — run
+     `npm run build` first, or use the runner, which builds and guards the port for you. */
   webServer: {
-    command: 'npm run dev -- -p 3003',
+    command: 'npx next start -p 3003',
     url: 'http://localhost:3003',
     reuseExistingServer: true,
-    timeout: 120000, // Wait up to 2 mins for dev server
+    timeout: 120000,
   },
 });

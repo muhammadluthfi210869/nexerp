@@ -47,10 +47,11 @@ export interface DnaCellTextProps {
   subtitle?: string;
   className?: string;
   maxWidth?: string;
+  children?: React.ReactNode;
 }
 
-export function DnaCellText({ primary, text, title, secondary, subtitle, className, maxWidth }: DnaCellTextProps) {
-  const displayPrimary = primary ?? text ?? title ?? "";
+export function DnaCellText({ primary, text, title, secondary, subtitle, className, maxWidth, children }: DnaCellTextProps) {
+  const displayPrimary = children !== undefined ? children : (primary ?? text ?? title ?? "");
   const displaySecondary = secondary ?? subtitle;
   return (
     <div className={cn("flex flex-col min-w-0 break-words whitespace-normal leading-tight", maxWidth || "max-w-[280px]", className)}>
@@ -187,14 +188,16 @@ export interface DnaCellNumberProps {
   value: number;
   suffix?: string;
   unit?: string;
+  prefix?: string;
   colorClass?: string;
   className?: string;
 }
 
-export function DnaCellNumber({ value, suffix, unit, colorClass, className }: DnaCellNumberProps) {
+export function DnaCellNumber({ value, suffix, unit, prefix, colorClass, className }: DnaCellNumberProps) {
   const displaySuffix = suffix ?? unit;
   return (
     <div className={cn("text-right tabular-nums text-[12px] font-medium text-slate-700", colorClass, className)}>
+      {prefix && <span className="text-[10px] text-slate-400 mr-1 font-normal">{prefix}</span>}
       <span>{Number(value || 0).toLocaleString("id-ID")}</span>
       {displaySuffix && <span className="text-[10px] text-slate-400 ml-1 font-normal">{displaySuffix}</span>}
     </div>
@@ -312,6 +315,8 @@ export const DnaCell = Object.assign(DnaCellText, {
   text: DnaCellText,
   DoubleText: DnaCellText,
   doubleText: DnaCellText,
+  NaturalPair: DnaCellText,
+  naturalPair: DnaCellText,
   Badge: DnaCellBadge,
   badge: DnaCellBadge,
   Status: DnaCellBadge,

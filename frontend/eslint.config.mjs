@@ -54,6 +54,9 @@ const eslintConfig = defineConfig([
       "react-hooks/immutability": "off",
       "react-hooks/refs": "off",
       "react-hooks/purity": "off",
+      // Advisory React Compiler diagnostics: the compiler declining to preserve a
+      // hand-written useMemo is a perf hint, not a correctness error.
+      "react-hooks/preserve-manual-memoization": "off",
       "react/display-name": "off",
       "react/no-children-prop": "off",
       "no-use-before-define": "off",
