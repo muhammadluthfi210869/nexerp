@@ -63,7 +63,7 @@
       "backend_modules_dead": 0,
       "jobs_schedulers": 3,
       "published_subscribed_events": 238,
-      "migrations": 53,
+      "migrations": 54,
       "barrel_exports": 4,
       "backend_dependencies": 40,
       "frontend_dependencies": 26,
@@ -40436,6 +40436,14 @@
       "file": "backend/prisma/migrations/20260925140000_self_qr_tables/migration.sql",
       "owner": "Database Architecture Team",
       "rationale": "Idempotent database migration script 20260925140000_self_qr_tables.",
+      "status": "EXECUTED_MIGRATION",
+      "reachable": true
+    },
+    {
+      "dir": "backend/prisma/migrations/20260926100000_user_tenant_binding",
+      "file": "backend/prisma/migrations/20260926100000_user_tenant_binding/migration.sql",
+      "owner": "Database Architecture Team",
+      "rationale": "Idempotent database migration script 20260926100000_user_tenant_binding.",
       "status": "EXECUTED_MIGRATION",
       "reachable": true
     },

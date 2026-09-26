@@ -154,6 +154,7 @@ model TenantScope {
   primary       Boolean   @default(false)
 
   @@index([userId, organizationId, effectiveTo])
+  @@index([organizationId])
   @@map("tenant_scopes")
 }
 

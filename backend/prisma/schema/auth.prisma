@@ -5,6 +5,12 @@ model User {
   passwordHash            String?
   roles                   UserRole[]
   status                  UserStatus                  @default(ACTIVE)
+  // Fase 1 — tenant binding on the User row itself. Nullable: a user with no
+  // scope still exists (auth.service.ts fail-closes on a missing claim), but the
+  // column makes the tenant an attribute of the identity rather than something
+  // only reachable through a join. FK to tenant_scopes, not to an organization
+  // table (none exists).
+  organizationId          String?                     @db.Uuid
   managerPin              String? // Phase 2: Escalation PIN
   approvalPin             String? // Internal E-Signature PIN (APJ/Legal)
   createdAt               DateTime                    @default(now())

@@ -4,6 +4,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { validateEnv } from './common/config/env.validation';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { TenantMiddleware } from './platform/tenant/tenant.middleware';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -145,5 +146,9 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     // Apply correlation ID to all routes
     consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+    // Fase 1 — publish the request's tenant into AsyncLocalStorage so services
+    // reached from this request can read it without threading Request through.
+    // Runs after correlation-id so both are available together.
+    consumer.apply(TenantMiddleware).forRoutes('*');
   }
 }
