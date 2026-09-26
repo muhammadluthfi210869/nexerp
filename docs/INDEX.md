@@ -19,6 +19,7 @@
 ## 🧭 Navigasi Kerja ERP
 | Folder | Isi |
 |---|---|
+| [ROADMAP-6-FASE-GO-LIVE-ZERO-ERROR.md](ROADMAP-6-FASE-GO-LIVE-ZERO-ERROR.md) | 🎯 ROADMAP UTAMA: 6 Fase menuju 100% siap operasional klien (Zero Fatal Error) |
 | [plan/](plan/) | Perencanaan phase & backlog |
 | [design/](design/) | Spec desain / Binary Audit Vision |
 | [marketing/](marketing/) | Spec divisi marketing (digital, toribio, management-task) |

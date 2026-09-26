@@ -114,6 +114,39 @@ Untuk memantau performa VPS Biznet dan mendiagnosis error tanpa perlu login SSH 
 
 ---
 
+### E. Urutan Wajib: Deploy Dulu, DR Drill Kemudian
+
+Dua operasi go-live sering dianggap bisa ditukar. Tidak bisa — urutannya salah
+membuat drill menguji skrip versi lama.
+
+**Operasi A — menghapus deploy drift** (`bash scripts/deploy.sh <sha>`, di VPS)
+
+1. Feature branch → PR → CI build+test → merge `main` → GHCR dapat image per-SHA.
+2. Di VPS: `bash scripts/deploy.sh <sha>`. Skrip mengambil snapshot dulu, lalu
+   me-recreate container. Volume `postgres_data` **tidak disentuh** — tidak ada
+   data hilang. Downtime nyata 5–15 detik (restart container, bukan rebuild).
+3. Health poll `/v1/health` harus hijau. Kalau tidak: `bash scripts/rollback.sh <sha>`
+   (image lama masih di GHCR; rollback tidak butuh build).
+
+**Operasi B — DR live drill** (`bash scripts/dr-drill.sh`, di VPS)
+
+1. **Snapshot segar tepat sebelum drill** — `bash scripts/db-snapshot.sh`. Apa pun
+   yang ditulis setelah snapshot terakhir akan hilang, karena langkah berikutnya
+   menghapus database.
+2. Drill: stack turun → `erp_database` di-drop & dibuat ulang → restore dari
+   snapshot → stack naik → cek health + jumlah baris.
+3. **Downtime total 1–3 menit.** Wajib di maintenance window yang disetujui owner
+   (aplikasi mati selama drill, bukan hanya lambat).
+4. Lulus = `RTO < 900s` tercatat dan jumlah tabel/baris sesuai. Gagal = jangan
+   diulang tanpa membaca log drill dulu.
+
+**Kenapa A dulu:** `dr-drill.sh` di VPS adalah file dari commit yang sedang
+berjalan di sana. Live masih di `7a449e0a`; perbaikan compose-file dan port di
+skrip drill belum ikut ter-deploy. Drill dengan skrip lama gagal di langkah 2
+dan lulusnya tidak membuktikan apa pun.
+
+---
+
 ## 🌿 4. Disiplin & Penataan Git Branch
 
 Untuk menjaga repositori tetap bersih dan menghindari kode hilang saat berpindah cabang:

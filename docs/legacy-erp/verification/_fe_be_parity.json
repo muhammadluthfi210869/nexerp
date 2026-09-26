@@ -1,0 +1,2797 @@
+{
+  "generated_at": "2026-09-25T01:58:55.367Z",
+  "sources": {
+    "backend_swagger": {
+      "path": "backend/swagger-spec.json",
+      "ops": 991,
+      "note": "ground truth — emitted by NestJS at boot"
+    },
+    "backend_source_parse": {
+      "ops": 991,
+      "files_with_multiple_controllers": [
+        "backend/src/modules/notification/notification.controller.ts",
+        "backend/src/modules/scm/controllers/purchase-payments.controller.ts",
+        "backend/src/modules/scm/controllers/purchase-requests.controller.ts"
+      ]
+    },
+    "frontend_calls": 420,
+    "screen_contract": {
+      "total_screens": 184,
+      "screens_with_data_source": 164,
+      "ops": 146
+    }
+  },
+  "parser_validation": {
+    "source_routes_not_in_swagger_explained": 0,
+    "source_routes_not_in_swagger_unexplained": [],
+    "swagger_routes_not_in_source": [],
+    "ok": true
+  },
+  "dead_controllers": {
+    "unserved_controller_files": [],
+    "unreachable_modules": [],
+    "reachable_modules": 75,
+    "total_modules": 75
+  },
+  "violations": {
+    "fe_calls_with_no_backend_route": [],
+    "fe_method_mismatch": [],
+    "screen_data_source_with_no_backend_route": [
+      {
+        "route": "GET activity-logs",
+        "screens": [
+          "SCR-149"
+        ]
+      },
+      {
+        "route": "GET activity-logs/:p",
+        "screens": [
+          "SCR-150"
+        ]
+      },
+      {
+        "route": "GET api-tokens",
+        "screens": [
+          "SCR-SYS-003"
+        ]
+      },
+      {
+        "route": "GET audit/logs",
+        "screens": [
+          "SCR-146"
+        ]
+      },
+      {
+        "route": "GET audit/logs/:p",
+        "screens": [
+          "SCR-147"
+        ]
+      },
+      {
+        "route": "GET auth/reset-password/validate",
+        "screens": [
+          "SCR-003"
+        ]
+      },
+      {
+        "route": "GET checklist/categories",
+        "screens": [
+          "SCR-117"
+        ]
+      },
+      {
+        "route": "GET checklist/categories/:p",
+        "screens": [
+          "SCR-118"
+        ]
+      },
+      {
+        "route": "GET checklists",
+        "screens": [
+          "SCR-119"
+        ]
+      },
+      {
+        "route": "GET checklists/:p",
+        "screens": [
+          "SCR-120"
+        ]
+      },
+      {
+        "route": "GET checklists/:p/progress",
+        "screens": [
+          "SCR-121"
+        ]
+      },
+      {
+        "route": "GET coa",
+        "screens": [
+          "SCR-101"
+        ]
+      },
+      {
+        "route": "GET coa-auto",
+        "screens": [
+          "SCR-104"
+        ]
+      },
+      {
+        "route": "GET coa-auto/:p",
+        "screens": [
+          "SCR-105"
+        ]
+      },
+      {
+        "route": "GET coa/:p",
+        "screens": [
+          "SCR-102",
+          "SCR-103"
+        ]
+      },
+      {
+        "route": "GET customer-categories",
+        "screens": [
+          "SCR-013",
+          "SCR-049"
+        ]
+      },
+      {
+        "route": "GET customer-categories/:p",
+        "screens": [
+          "SCR-014"
+        ]
+      },
+      {
+        "route": "GET employees/:p/kpi",
+        "screens": [
+          "SCR-179"
+        ]
+      },
+      {
+        "route": "GET feature-flags",
+        "screens": [
+          "SCR-SYS-008"
+        ]
+      },
+      {
+        "route": "GET finance/cash-banks",
+        "screens": [
+          "SCR-106"
+        ]
+      },
+      {
+        "route": "GET finance/cash-banks/:p",
+        "screens": [
+          "SCR-107"
+        ]
+      },
+      {
+        "route": "GET finance/journal-entries",
+        "screens": [
+          "SCR-108"
+        ]
+      },
+      {
+        "route": "GET finance/journal-entries/:p",
+        "screens": [
+          "SCR-110",
+          "SCR-111",
+          "SCR-112",
+          "SCR-113"
+        ]
+      },
+      {
+        "route": "GET finance/tax-setup",
+        "screens": [
+          "SCR-114"
+        ]
+      },
+      {
+        "route": "GET finance/tax-setup/:p",
+        "screens": [
+          "SCR-115"
+        ]
+      },
+      {
+        "route": "GET goods",
+        "screens": [
+          "SCR-019"
+        ]
+      },
+      {
+        "route": "GET goods-categories",
+        "screens": [
+          "SCR-021"
+        ]
+      },
+      {
+        "route": "GET goods/:p",
+        "screens": [
+          "SCR-020"
+        ]
+      },
+      {
+        "route": "GET i18n/translations",
+        "screens": [
+          "SCR-SYS-014"
+        ]
+      },
+      {
+        "route": "GET integrations",
+        "screens": [
+          "SCR-SYS-005"
+        ]
+      },
+      {
+        "route": "GET production/delivery-out",
+        "screens": [
+          "SCR-072"
+        ]
+      },
+      {
+        "route": "GET production/delivery-out/:p",
+        "screens": [
+          "SCR-073"
+        ]
+      },
+      {
+        "route": "GET production/production-filling",
+        "screens": [
+          "SCR-084"
+        ]
+      },
+      {
+        "route": "GET production/production-mixing",
+        "screens": [
+          "SCR-083"
+        ]
+      },
+      {
+        "route": "GET production/production-packaging",
+        "screens": [
+          "SCR-085"
+        ]
+      },
+      {
+        "route": "GET production/qc-inspections",
+        "screens": [
+          "SCR-086"
+        ]
+      },
+      {
+        "route": "GET production/schedule-mixing/:p",
+        "screens": [
+          "SCR-080"
+        ]
+      },
+      {
+        "route": "GET profile",
+        "screens": [
+          "SCR-004",
+          "SCR-SYS-002"
+        ]
+      },
+      {
+        "route": "GET public/delivery-outs/verify/:p",
+        "screens": [
+          "SCR-074"
+        ]
+      },
+      {
+        "route": "GET purchase/goods-receipts/:p",
+        "screens": [
+          "SCR-060"
+        ]
+      },
+      {
+        "route": "GET purchase/return-out",
+        "screens": [
+          "SCR-068"
+        ]
+      },
+      {
+        "route": "GET purchase/return-out/:p",
+        "screens": [
+          "SCR-069"
+        ]
+      },
+      {
+        "route": "GET rnd/request-cogs",
+        "screens": [
+          "SCR-070"
+        ]
+      },
+      {
+        "route": "GET rnd/request-cogs/:p",
+        "screens": [
+          "SCR-071"
+        ]
+      },
+      {
+        "route": "GET sales/down-payments",
+        "screens": [
+          "SCR-036"
+        ]
+      },
+      {
+        "route": "GET sales/leads",
+        "screens": [
+          "SCR-025"
+        ]
+      },
+      {
+        "route": "GET sales/leads/:p",
+        "screens": [
+          "SCR-026"
+        ]
+      },
+      {
+        "route": "GET sales/sales-invoices",
+        "screens": [
+          "SCR-038"
+        ]
+      },
+      {
+        "route": "GET sales/sales-orders",
+        "screens": [
+          "SCR-032",
+          "SCR-035"
+        ]
+      },
+      {
+        "route": "GET sales/sales-orders/:p",
+        "screens": [
+          "SCR-034"
+        ]
+      },
+      {
+        "route": "GET sales/sales-payments",
+        "screens": [
+          "SCR-040"
+        ]
+      },
+      {
+        "route": "GET sales/sales-return-in",
+        "screens": [
+          "SCR-045"
+        ]
+      },
+      {
+        "route": "GET sales/sales-return-in/:p",
+        "screens": [
+          "SCR-046"
+        ]
+      },
+      {
+        "route": "GET sales/sales-returns",
+        "screens": [
+          "SCR-042",
+          "SCR-044"
+        ]
+      },
+      {
+        "route": "GET sales/sales-returns/:p",
+        "screens": [
+          "SCR-043"
+        ]
+      },
+      {
+        "route": "GET sales/sales-targets",
+        "screens": [
+          "SCR-047"
+        ]
+      },
+      {
+        "route": "GET sales/sales-targets/:p",
+        "screens": [
+          "SCR-048"
+        ]
+      },
+      {
+        "route": "GET sales/samples",
+        "screens": [
+          "SCR-027",
+          "SCR-029"
+        ]
+      },
+      {
+        "route": "GET sales/samples/:p",
+        "screens": [
+          "SCR-028"
+        ]
+      },
+      {
+        "route": "GET sales/samples/:p/payments",
+        "screens": [
+          "SCR-030"
+        ]
+      },
+      {
+        "route": "GET settings/backup",
+        "screens": [
+          "SCR-SYS-006"
+        ]
+      },
+      {
+        "route": "GET settings/general",
+        "screens": [
+          "SCR-SYS-001"
+        ]
+      },
+      {
+        "route": "GET settings/license",
+        "screens": [
+          "SCR-SYS-009"
+        ]
+      },
+      {
+        "route": "GET supplier-categories",
+        "screens": [
+          "SCR-017"
+        ]
+      },
+      {
+        "route": "GET supplier-categories/:p",
+        "screens": [
+          "SCR-018"
+        ]
+      },
+      {
+        "route": "GET system/about",
+        "screens": [
+          "SCR-SYS-010"
+        ]
+      },
+      {
+        "route": "GET system/cache",
+        "screens": [
+          "SCR-SYS-015"
+        ]
+      },
+      {
+        "route": "GET warehouse-access",
+        "screens": [
+          "SCR-024"
+        ]
+      },
+      {
+        "route": "GET warehouse/goods-transfer",
+        "screens": [
+          "SCR-087"
+        ]
+      },
+      {
+        "route": "GET warehouse/goods-transfer/:p",
+        "screens": [
+          "SCR-089"
+        ]
+      },
+      {
+        "route": "GET warehouse/stock-adjustment",
+        "screens": [
+          "SCR-092"
+        ]
+      },
+      {
+        "route": "GET warehouse/stock-opname",
+        "screens": [
+          "SCR-090"
+        ]
+      },
+      {
+        "route": "GET warehouse/stock-opname/:p",
+        "screens": [
+          "SCR-091",
+          "SCR-094"
+        ]
+      },
+      {
+        "route": "GET warehouses",
+        "screens": [
+          "SCR-022"
+        ]
+      },
+      {
+        "route": "GET warehouses/:p",
+        "screens": [
+          "SCR-023"
+        ]
+      },
+      {
+        "route": "GET webhooks",
+        "screens": [
+          "SCR-SYS-004"
+        ]
+      }
+    ],
+    "screen_data_source_never_called_by_frontend": [
+      {
+        "route": "GET activity-logs",
+        "screens": [
+          "SCR-149"
+        ]
+      },
+      {
+        "route": "GET activity-logs/:p",
+        "screens": [
+          "SCR-150"
+        ]
+      },
+      {
+        "route": "GET api-tokens",
+        "screens": [
+          "SCR-SYS-003"
+        ]
+      },
+      {
+        "route": "GET audit/logs",
+        "screens": [
+          "SCR-146"
+        ]
+      },
+      {
+        "route": "GET audit/logs/:p",
+        "screens": [
+          "SCR-147"
+        ]
+      },
+      {
+        "route": "GET auth/reset-password/validate",
+        "screens": [
+          "SCR-003"
+        ]
+      },
+      {
+        "route": "GET checklist/categories",
+        "screens": [
+          "SCR-117"
+        ]
+      },
+      {
+        "route": "GET checklist/categories/:p",
+        "screens": [
+          "SCR-118"
+        ]
+      },
+      {
+        "route": "GET checklists",
+        "screens": [
+          "SCR-119"
+        ]
+      },
+      {
+        "route": "GET checklists/:p",
+        "screens": [
+          "SCR-120"
+        ]
+      },
+      {
+        "route": "GET checklists/:p/progress",
+        "screens": [
+          "SCR-121"
+        ]
+      },
+      {
+        "route": "GET coa",
+        "screens": [
+          "SCR-101"
+        ]
+      },
+      {
+        "route": "GET coa-auto",
+        "screens": [
+          "SCR-104"
+        ]
+      },
+      {
+        "route": "GET coa-auto/:p",
+        "screens": [
+          "SCR-105"
+        ]
+      },
+      {
+        "route": "GET coa/:p",
+        "screens": [
+          "SCR-102",
+          "SCR-103"
+        ]
+      },
+      {
+        "route": "GET customer-categories",
+        "screens": [
+          "SCR-013",
+          "SCR-049"
+        ]
+      },
+      {
+        "route": "GET customer-categories/:p",
+        "screens": [
+          "SCR-014"
+        ]
+      },
+      {
+        "route": "GET customers/:p",
+        "screens": [
+          "SCR-012"
+        ]
+      },
+      {
+        "route": "GET dashboards/busdev",
+        "screens": [
+          "SCR-DASH-003"
+        ]
+      },
+      {
+        "route": "GET dashboards/executive",
+        "screens": [
+          "SCR-DASH-001"
+        ]
+      },
+      {
+        "route": "GET dashboards/finance",
+        "screens": [
+          "SCR-DASH-002"
+        ]
+      },
+      {
+        "route": "GET dashboards/hr",
+        "screens": [
+          "SCR-DASH-009"
+        ]
+      },
+      {
+        "route": "GET dashboards/legality",
+        "screens": [
+          "SCR-DASH-010"
+        ]
+      },
+      {
+        "route": "GET dashboards/marketing",
+        "screens": [
+          "SCR-DASH-008"
+        ]
+      },
+      {
+        "route": "GET dashboards/notifications",
+        "screens": [
+          "SCR-DASH-011"
+        ]
+      },
+      {
+        "route": "GET dashboards/procurement",
+        "screens": [
+          "SCR-DASH-013"
+        ]
+      },
+      {
+        "route": "GET dashboards/production",
+        "screens": [
+          "SCR-DASH-004"
+        ]
+      },
+      {
+        "route": "GET dashboards/qc",
+        "screens": [
+          "SCR-DASH-006"
+        ]
+      },
+      {
+        "route": "GET dashboards/rnd",
+        "screens": [
+          "SCR-DASH-007"
+        ]
+      },
+      {
+        "route": "GET dashboards/system-errors",
+        "screens": [
+          "SCR-DASH-012"
+        ]
+      },
+      {
+        "route": "GET dashboards/warehouse",
+        "screens": [
+          "SCR-DASH-005"
+        ]
+      },
+      {
+        "route": "GET document-templates",
+        "screens": [
+          "SCR-SYS-013"
+        ]
+      },
+      {
+        "route": "GET email-templates",
+        "screens": [
+          "SCR-SYS-011"
+        ]
+      },
+      {
+        "route": "GET employees/:p/kpi",
+        "screens": [
+          "SCR-179"
+        ]
+      },
+      {
+        "route": "GET entities/:p/:p/attachments",
+        "screens": [
+          "SCR-141"
+        ]
+      },
+      {
+        "route": "GET entities/:p/:p/comments",
+        "screens": [
+          "SCR-140"
+        ]
+      },
+      {
+        "route": "GET entities/:p/:p/notes",
+        "screens": [
+          "SCR-139"
+        ]
+      },
+      {
+        "route": "GET entities/:p/:p/tags",
+        "screens": [
+          "SCR-142"
+        ]
+      },
+      {
+        "route": "GET entities/:p/:p/transitions",
+        "screens": [
+          "SCR-143"
+        ]
+      },
+      {
+        "route": "GET feature-flags",
+        "screens": [
+          "SCR-SYS-008"
+        ]
+      },
+      {
+        "route": "GET finance/cash-banks",
+        "screens": [
+          "SCR-106"
+        ]
+      },
+      {
+        "route": "GET finance/cash-banks/:p",
+        "screens": [
+          "SCR-107"
+        ]
+      },
+      {
+        "route": "GET finance/fixed-assets",
+        "screens": [
+          "SCR-116"
+        ]
+      },
+      {
+        "route": "GET finance/journal-entries",
+        "screens": [
+          "SCR-108"
+        ]
+      },
+      {
+        "route": "GET finance/journal-entries/:p",
+        "screens": [
+          "SCR-110",
+          "SCR-111",
+          "SCR-112",
+          "SCR-113"
+        ]
+      },
+      {
+        "route": "GET finance/tax-setup",
+        "screens": [
+          "SCR-114"
+        ]
+      },
+      {
+        "route": "GET finance/tax-setup/:p",
+        "screens": [
+          "SCR-115"
+        ]
+      },
+      {
+        "route": "GET goods",
+        "screens": [
+          "SCR-019"
+        ]
+      },
+      {
+        "route": "GET goods-categories",
+        "screens": [
+          "SCR-021"
+        ]
+      },
+      {
+        "route": "GET goods/:p",
+        "screens": [
+          "SCR-020"
+        ]
+      },
+      {
+        "route": "GET i18n/translations",
+        "screens": [
+          "SCR-SYS-014"
+        ]
+      },
+      {
+        "route": "GET integrations",
+        "screens": [
+          "SCR-SYS-005"
+        ]
+      },
+      {
+        "route": "GET production/batch-records/:p",
+        "screens": [
+          "SCR-077",
+          "SCR-078"
+        ]
+      },
+      {
+        "route": "GET production/delivery-out",
+        "screens": [
+          "SCR-072"
+        ]
+      },
+      {
+        "route": "GET production/delivery-out/:p",
+        "screens": [
+          "SCR-073"
+        ]
+      },
+      {
+        "route": "GET production/production-filling",
+        "screens": [
+          "SCR-084"
+        ]
+      },
+      {
+        "route": "GET production/production-mixing",
+        "screens": [
+          "SCR-083"
+        ]
+      },
+      {
+        "route": "GET production/production-packaging",
+        "screens": [
+          "SCR-085"
+        ]
+      },
+      {
+        "route": "GET production/qc-inspections",
+        "screens": [
+          "SCR-086"
+        ]
+      },
+      {
+        "route": "GET production/schedule-filling",
+        "screens": [
+          "SCR-081"
+        ]
+      },
+      {
+        "route": "GET production/schedule-mixing",
+        "screens": [
+          "SCR-079"
+        ]
+      },
+      {
+        "route": "GET production/schedule-mixing/:p",
+        "screens": [
+          "SCR-080"
+        ]
+      },
+      {
+        "route": "GET production/schedule-packaging",
+        "screens": [
+          "SCR-082"
+        ]
+      },
+      {
+        "route": "GET profile",
+        "screens": [
+          "SCR-004",
+          "SCR-SYS-002"
+        ]
+      },
+      {
+        "route": "GET public/delivery-outs/verify/:p",
+        "screens": [
+          "SCR-074"
+        ]
+      },
+      {
+        "route": "GET purchase/goods-receipts/:p",
+        "screens": [
+          "SCR-060"
+        ]
+      },
+      {
+        "route": "GET purchase/orders/:p",
+        "screens": [
+          "SCR-055"
+        ]
+      },
+      {
+        "route": "GET purchase/payments",
+        "screens": [
+          "SCR-063"
+        ]
+      },
+      {
+        "route": "GET purchase/requests/:p",
+        "screens": [
+          "SCR-051"
+        ]
+      },
+      {
+        "route": "GET purchase/return-out",
+        "screens": [
+          "SCR-068"
+        ]
+      },
+      {
+        "route": "GET purchase/return-out/:p",
+        "screens": [
+          "SCR-069"
+        ]
+      },
+      {
+        "route": "GET purchase/returns/:p",
+        "screens": [
+          "SCR-066"
+        ]
+      },
+      {
+        "route": "GET reports/ap-aging",
+        "screens": [
+          "SCR-132"
+        ]
+      },
+      {
+        "route": "GET reports/budget-vs-actual",
+        "screens": [
+          "SCR-135"
+        ]
+      },
+      {
+        "route": "GET reports/cash-flow",
+        "screens": [
+          "SCR-133"
+        ]
+      },
+      {
+        "route": "GET reports/general-ledger",
+        "screens": [
+          "SCR-125"
+        ]
+      },
+      {
+        "route": "GET reports/mutation-goods",
+        "screens": [
+          "SCR-128"
+        ]
+      },
+      {
+        "route": "GET reports/profit-loss",
+        "screens": [
+          "SCR-122"
+        ]
+      },
+      {
+        "route": "GET reports/trial-balance",
+        "screens": [
+          "SCR-124"
+        ]
+      },
+      {
+        "route": "GET rnd/formulations",
+        "screens": [
+          "SCR-095"
+        ]
+      },
+      {
+        "route": "GET rnd/formulations/:p",
+        "screens": [
+          "SCR-097",
+          "SCR-098",
+          "SCR-099",
+          "SCR-100"
+        ]
+      },
+      {
+        "route": "GET rnd/request-cogs",
+        "screens": [
+          "SCR-070"
+        ]
+      },
+      {
+        "route": "GET rnd/request-cogs/:p",
+        "screens": [
+          "SCR-071"
+        ]
+      },
+      {
+        "route": "GET roles",
+        "screens": [
+          "SCR-009"
+        ]
+      },
+      {
+        "route": "GET sales/down-payments",
+        "screens": [
+          "SCR-036"
+        ]
+      },
+      {
+        "route": "GET sales/leads",
+        "screens": [
+          "SCR-025"
+        ]
+      },
+      {
+        "route": "GET sales/leads/:p",
+        "screens": [
+          "SCR-026"
+        ]
+      },
+      {
+        "route": "GET sales/sales-invoices",
+        "screens": [
+          "SCR-038"
+        ]
+      },
+      {
+        "route": "GET sales/sales-orders",
+        "screens": [
+          "SCR-032",
+          "SCR-035"
+        ]
+      },
+      {
+        "route": "GET sales/sales-orders/:p",
+        "screens": [
+          "SCR-034"
+        ]
+      },
+      {
+        "route": "GET sales/sales-payments",
+        "screens": [
+          "SCR-040"
+        ]
+      },
+      {
+        "route": "GET sales/sales-return-in",
+        "screens": [
+          "SCR-045"
+        ]
+      },
+      {
+        "route": "GET sales/sales-return-in/:p",
+        "screens": [
+          "SCR-046"
+        ]
+      },
+      {
+        "route": "GET sales/sales-returns",
+        "screens": [
+          "SCR-042",
+          "SCR-044"
+        ]
+      },
+      {
+        "route": "GET sales/sales-returns/:p",
+        "screens": [
+          "SCR-043"
+        ]
+      },
+      {
+        "route": "GET sales/sales-targets",
+        "screens": [
+          "SCR-047"
+        ]
+      },
+      {
+        "route": "GET sales/sales-targets/:p",
+        "screens": [
+          "SCR-048"
+        ]
+      },
+      {
+        "route": "GET sales/samples",
+        "screens": [
+          "SCR-027",
+          "SCR-029"
+        ]
+      },
+      {
+        "route": "GET sales/samples/:p",
+        "screens": [
+          "SCR-028"
+        ]
+      },
+      {
+        "route": "GET sales/samples/:p/payments",
+        "screens": [
+          "SCR-030"
+        ]
+      },
+      {
+        "route": "GET settings/backup",
+        "screens": [
+          "SCR-SYS-006"
+        ]
+      },
+      {
+        "route": "GET settings/general",
+        "screens": [
+          "SCR-SYS-001"
+        ]
+      },
+      {
+        "route": "GET settings/license",
+        "screens": [
+          "SCR-SYS-009"
+        ]
+      },
+      {
+        "route": "GET sms-templates",
+        "screens": [
+          "SCR-SYS-012"
+        ]
+      },
+      {
+        "route": "GET supplier-categories",
+        "screens": [
+          "SCR-017"
+        ]
+      },
+      {
+        "route": "GET supplier-categories/:p",
+        "screens": [
+          "SCR-018"
+        ]
+      },
+      {
+        "route": "GET suppliers",
+        "screens": [
+          "SCR-015"
+        ]
+      },
+      {
+        "route": "GET suppliers/:p",
+        "screens": [
+          "SCR-016"
+        ]
+      },
+      {
+        "route": "GET system/about",
+        "screens": [
+          "SCR-SYS-010"
+        ]
+      },
+      {
+        "route": "GET system/cache",
+        "screens": [
+          "SCR-SYS-015"
+        ]
+      },
+      {
+        "route": "GET templates",
+        "screens": [
+          "SCR-145"
+        ]
+      },
+      {
+        "route": "GET users/:p",
+        "screens": [
+          "SCR-008"
+        ]
+      },
+      {
+        "route": "GET warehouse-access",
+        "screens": [
+          "SCR-024"
+        ]
+      },
+      {
+        "route": "GET warehouse/goods-transfer",
+        "screens": [
+          "SCR-087"
+        ]
+      },
+      {
+        "route": "GET warehouse/goods-transfer/:p",
+        "screens": [
+          "SCR-089"
+        ]
+      },
+      {
+        "route": "GET warehouse/stock-adjustment",
+        "screens": [
+          "SCR-092"
+        ]
+      },
+      {
+        "route": "GET warehouse/stock-opname",
+        "screens": [
+          "SCR-090"
+        ]
+      },
+      {
+        "route": "GET warehouse/stock-opname/:p",
+        "screens": [
+          "SCR-091",
+          "SCR-094"
+        ]
+      },
+      {
+        "route": "GET warehouses",
+        "screens": [
+          "SCR-022"
+        ]
+      },
+      {
+        "route": "GET warehouses/:p",
+        "screens": [
+          "SCR-023"
+        ]
+      },
+      {
+        "route": "GET webhooks",
+        "screens": [
+          "SCR-SYS-004"
+        ]
+      }
+    ]
+  },
+  "screen_contract_reconciliation": {
+    "classified": [
+      {
+        "route": "GET activity-logs",
+        "status": "RENAMED",
+        "target": "GET /v1/system/audit-logs",
+        "note": null,
+        "screens": [
+          "SCR-149"
+        ]
+      },
+      {
+        "route": "GET activity-logs/:p",
+        "status": "ABSENT",
+        "target": null,
+        "note": "audit log has no per-id live route",
+        "screens": [
+          "SCR-150"
+        ]
+      },
+      {
+        "route": "GET api-tokens",
+        "status": "ABSENT",
+        "target": null,
+        "note": "no token-management surface in the rebuild",
+        "screens": [
+          "SCR-SYS-003"
+        ]
+      },
+      {
+        "route": "GET audit/logs",
+        "status": "RENAMED",
+        "target": "GET /v1/system/audit-logs",
+        "note": null,
+        "screens": [
+          "SCR-146"
+        ]
+      },
+      {
+        "route": "GET audit/logs/:p",
+        "status": "ABSENT",
+        "target": null,
+        "note": "audit log has no per-id live route",
+        "screens": [
+          "SCR-147"
+        ]
+      },
+      {
+        "route": "GET auth/reset-password/validate",
+        "status": "ABSENT",
+        "target": null,
+        "note": "reset flow is token-in-link, no validate endpoint",
+        "screens": [
+          "SCR-003"
+        ]
+      },
+      {
+        "route": "GET checklist/categories",
+        "status": "RENAMED",
+        "target": "GET /v1/qc/checklists/categories",
+        "note": null,
+        "screens": [
+          "SCR-117"
+        ]
+      },
+      {
+        "route": "GET checklist/categories/:p",
+        "status": "RENAMED",
+        "target": "GET /v1/qc/checklists/categories",
+        "note": null,
+        "screens": [
+          "SCR-118"
+        ]
+      },
+      {
+        "route": "GET checklists",
+        "status": "RENAMED",
+        "target": "GET /v1/qc/checklists",
+        "note": null,
+        "screens": [
+          "SCR-119"
+        ]
+      },
+      {
+        "route": "GET checklists/:p",
+        "status": "RENAMED",
+        "target": "GET /v1/qc/checklists/{id}",
+        "note": null,
+        "screens": [
+          "SCR-120"
+        ]
+      },
+      {
+        "route": "GET checklists/:p/progress",
+        "status": "ABSENT",
+        "target": null,
+        "note": "no per-checklist progress route",
+        "screens": [
+          "SCR-121"
+        ]
+      },
+      {
+        "route": "GET coa",
+        "status": "RENAMED",
+        "target": "GET /v1/finance/accounts",
+        "note": null,
+        "screens": [
+          "SCR-101"
+        ]
+      },
+      {
+        "route": "GET coa-auto",
+        "status": "ABSENT",
+        "target": null,
+        "note": "auto-journal configs exist, COA-auto mapping does not",
+        "screens": [
+          "SCR-104"
+        ]
+      },
+      {
+        "route": "GET coa-auto/:p",
+        "status": "ABSENT",
+        "target": null,
+        "note": "auto-journal configs exist, COA-auto mapping does not",
+        "screens": [
+          "SCR-105"
+        ]
+      },
+      {
+        "route": "GET coa/:p",
+        "status": "ABSENT",
+        "target": null,
+        "note": "finance accounts expose list + patch, no per-id GET",
+        "screens": [
+          "SCR-102",
+          "SCR-103"
+        ]
+      },
+      {
+        "route": "GET customer-categories",
+        "status": "RENAMED",
+        "target": "GET /v1/master/categories",
+        "note": null,
+        "screens": [
+          "SCR-013",
+          "SCR-049"
+        ]
+      },
+      {
+        "route": "GET customer-categories/:p",
+        "status": "RENAMED",
+        "target": "GET /v1/master/categories/{id}",
+        "note": null,
+        "screens": [
+          "SCR-014"
+        ]
+      },
+      {
+        "route": "GET employees/:p/kpi",
+        "status": "RENAMED",
+        "target": "GET /v1/hr/kpi/employees",
+        "note": null,
+        "screens": [
+          "SCR-179"
+        ]
+      },
+      {
+        "route": "GET feature-flags",
+        "status": "ABSENT",
+        "target": null,
+        "note": "no feature-flag surface in the rebuild",
+        "screens": [
+          "SCR-SYS-008"
+        ]
+      },
+      {
+        "route": "GET finance/cash-banks",
+        "status": "RENAMED",
+        "target": "GET /v1/finance/bank-accounts",
+        "note": null,
+        "screens": [
+          "SCR-106"
+        ]
+      },
+      {
+        "route": "GET finance/cash-banks/:p",
+        "status": "RENAMED",
+        "target": "GET /v1/finance/bank-accounts/{id}",
+        "note": null,
+        "screens": [
+          "SCR-107"
+        ]
+      },
+      {
+        "route": "GET finance/journal-entries",
+        "status": "RENAMED",
+        "target": "GET /v1/finance/journal",
+        "note": null,
+        "screens": [
+          "SCR-108"
+        ]
+      },
+      {
+        "route": "GET finance/journal-entries/:p",
+        "status": "ABSENT",
+        "target": null,
+        "note": "journal exposes list + reverse, no per-id GET",
+        "screens": [
+          "SCR-110",
+          "SCR-111",
+          "SCR-112",
+          "SCR-113"
+        ]
+      },
+      {
+        "route": "GET finance/tax-setup",
+        "status": "RENAMED",
+        "target": "GET /v1/finance/taxes",
+        "note": null,
+        "screens": [
+          "SCR-114"
+        ]
+      },
+      {
+        "route": "GET finance/tax-setup/:p",
+        "status": "ABSENT",
+        "target": null,
+        "note": "taxes expose list + PATCH/DELETE, no per-id GET",
+        "screens": [
+          "SCR-115"
+        ]
+      },
+      {
+        "route": "GET goods",
+        "status": "RENAMED",
+        "target": "GET /v1/master/materials",
+        "note": null,
+        "screens": [
+          "SCR-019"
+        ]
+      },
+      {
+        "route": "GET goods-categories",
+        "status": "RENAMED",
+        "target": "GET /v1/master/categories",
+        "note": null,
+        "screens": [
+          "SCR-021"
+        ]
+      },
+      {
+        "route": "GET goods/:p",
+        "status": "RENAMED",
+        "target": "GET /v1/master/materials/{id}",
+        "note": null,
+        "screens": [
+          "SCR-020"
+        ]
+      },
+      {
+        "route": "GET i18n/translations",
+        "status": "ABSENT",
+        "target": null,
+        "note": "no i18n/translation surface in the rebuild",
+        "screens": [
+          "SCR-SYS-014"
+        ]
+      },
+      {
+        "route": "GET integrations",
+        "status": "RENAMED",
+        "target": "GET /v1/marketing/social/integrations",
+        "note": null,
+        "screens": [
+          "SCR-SYS-005"
+        ]
+      },
+      {
+        "route": "GET production/delivery-out",
+        "status": "ABSENT",
+        "target": null,
+        "note": "delivery-out lives on commercial sales-orders, not production",
+        "screens": [
+          "SCR-072"
+        ]
+      },
+      {
+        "route": "GET production/delivery-out/:p",
+        "status": "ABSENT",
+        "target": null,
+        "note": "delivery-out lives on commercial sales-orders, not production",
+        "screens": [
+          "SCR-073"
+        ]
+      },
+      {
+        "route": "GET production/production-filling",
+        "status": "RENAMED",
+        "target": "GET /v1/production/schedule-filling",
+        "note": null,
+        "screens": [
+          "SCR-084"
+        ]
+      },
+      {
+        "route": "GET production/production-mixing",
+        "status": "RENAMED",
+        "target": "GET /v1/production/schedule-mixing",
+        "note": null,
+        "screens": [
+          "SCR-083"
+        ]
+      },
+      {
+        "route": "GET production/production-packaging",
+        "status": "RENAMED",
+        "target": "GET /v1/production/schedule-packaging",
+        "note": null,
+        "screens": [
+          "SCR-085"
+        ]
+      },
+      {
+        "route": "GET production/qc-inspections",
+        "status": "RENAMED",
+        "target": "GET /v1/production/qc/pending",
+        "note": null,
+        "screens": [
+          "SCR-086"
+        ]
+      },
+      {
+        "route": "GET production/schedule-mixing/:p",
+        "status": "RENAMED",
+        "target": "GET /v1/production/schedule-mixing",
+        "note": null,
+        "screens": [
+          "SCR-080"
+        ]
+      },
+      {
+        "route": "GET profile",
+        "status": "RENAMED",
+        "target": "GET /v1/auth/profile",
+        "note": null,
+        "screens": [
+          "SCR-004",
+          "SCR-SYS-002"
+        ]
+      },
+      {
+        "route": "GET public/delivery-outs/verify/:p",
+        "status": "OUT_OF_SCOPE",
+        "target": null,
+        "note": "public unauthenticated verify surface not carried into the rebuild",
+        "screens": [
+          "SCR-074"
+        ]
+      },
+      {
+        "route": "GET purchase/goods-receipts/:p",
+        "status": "ABSENT",
+        "target": null,
+        "note": "goods receipts expose list + status/QC actions, no per-id GET",
+        "screens": [
+          "SCR-060"
+        ]
+      },
+      {
+        "route": "GET purchase/return-out",
+        "status": "RENAMED",
+        "target": "GET /v1/purchase/returns",
+        "note": null,
+        "screens": [
+          "SCR-068"
+        ]
+      },
+      {
+        "route": "GET purchase/return-out/:p",
+        "status": "RENAMED",
+        "target": "GET /v1/purchase/returns/{id}",
+        "note": null,
+        "screens": [
+          "SCR-069"
+        ]
+      },
+      {
+        "route": "GET rnd/request-cogs",
+        "status": "RENAMED",
+        "target": "GET /v1/finance/cogs-requests",
+        "note": null,
+        "screens": [
+          "SCR-070"
+        ]
+      },
+      {
+        "route": "GET rnd/request-cogs/:p",
+        "status": "RENAMED",
+        "target": "GET /v1/finance/cogs-requests/{id}",
+        "note": null,
+        "screens": [
+          "SCR-071"
+        ]
+      },
+      {
+        "route": "GET sales/down-payments",
+        "status": "RENAMED",
+        "target": "GET /v1/commercial/down-payments",
+        "note": null,
+        "screens": [
+          "SCR-036"
+        ]
+      },
+      {
+        "route": "GET sales/leads",
+        "status": "RENAMED",
+        "target": "GET /v1/crm/leads",
+        "note": null,
+        "screens": [
+          "SCR-025"
+        ]
+      },
+      {
+        "route": "GET sales/leads/:p",
+        "status": "RENAMED",
+        "target": "GET /v1/crm/leads/{id}",
+        "note": null,
+        "screens": [
+          "SCR-026"
+        ]
+      },
+      {
+        "route": "GET sales/sales-invoices",
+        "status": "RENAMED",
+        "target": "GET /v1/commercial/invoices",
+        "note": null,
+        "screens": [
+          "SCR-038"
+        ]
+      },
+      {
+        "route": "GET sales/sales-orders",
+        "status": "RENAMED",
+        "target": "GET /v1/commercial/sales-orders",
+        "note": null,
+        "screens": [
+          "SCR-032",
+          "SCR-035"
+        ]
+      },
+      {
+        "route": "GET sales/sales-orders/:p",
+        "status": "RENAMED",
+        "target": "GET /v1/commercial/sales-orders/{id}",
+        "note": null,
+        "screens": [
+          "SCR-034"
+        ]
+      },
+      {
+        "route": "GET sales/sales-payments",
+        "status": "RENAMED",
+        "target": "GET /v1/commercial/payments",
+        "note": null,
+        "screens": [
+          "SCR-040"
+        ]
+      },
+      {
+        "route": "GET sales/sales-return-in",
+        "status": "ABSENT",
+        "target": null,
+        "note": "no sales-return-in route in the rebuild",
+        "screens": [
+          "SCR-045"
+        ]
+      },
+      {
+        "route": "GET sales/sales-return-in/:p",
+        "status": "ABSENT",
+        "target": null,
+        "note": "no sales-return-in route in the rebuild",
+        "screens": [
+          "SCR-046"
+        ]
+      },
+      {
+        "route": "GET sales/sales-returns",
+        "status": "ABSENT",
+        "target": null,
+        "note": "sales returns exist for purchase only; no commercial equivalent",
+        "screens": [
+          "SCR-042",
+          "SCR-044"
+        ]
+      },
+      {
+        "route": "GET sales/sales-returns/:p",
+        "status": "ABSENT",
+        "target": null,
+        "note": "sales returns exist for purchase only; no commercial equivalent",
+        "screens": [
+          "SCR-043"
+        ]
+      },
+      {
+        "route": "GET sales/sales-targets",
+        "status": "RENAMED",
+        "target": "GET /v1/marketing/targets",
+        "note": null,
+        "screens": [
+          "SCR-047"
+        ]
+      },
+      {
+        "route": "GET sales/sales-targets/:p",
+        "status": "ABSENT",
+        "target": null,
+        "note": "targets expose list + create, no per-id GET",
+        "screens": [
+          "SCR-048"
+        ]
+      },
+      {
+        "route": "GET sales/samples",
+        "status": "RENAMED",
+        "target": "GET /v1/rnd/samples",
+        "note": null,
+        "screens": [
+          "SCR-027",
+          "SCR-029"
+        ]
+      },
+      {
+        "route": "GET sales/samples/:p",
+        "status": "RENAMED",
+        "target": "GET /v1/rnd/samples/{id}",
+        "note": null,
+        "screens": [
+          "SCR-028"
+        ]
+      },
+      {
+        "route": "GET sales/samples/:p/payments",
+        "status": "ABSENT",
+        "target": null,
+        "note": "sample payments are actions on /v1/rnd/sample/{id}/*, not a list route",
+        "screens": [
+          "SCR-030"
+        ]
+      },
+      {
+        "route": "GET settings/backup",
+        "status": "ABSENT",
+        "target": null,
+        "note": "no backup surface in the rebuild",
+        "screens": [
+          "SCR-SYS-006"
+        ]
+      },
+      {
+        "route": "GET settings/general",
+        "status": "RENAMED",
+        "target": "GET /v1/system/config",
+        "note": null,
+        "screens": [
+          "SCR-SYS-001"
+        ]
+      },
+      {
+        "route": "GET settings/license",
+        "status": "ABSENT",
+        "target": null,
+        "note": "no license surface in the rebuild",
+        "screens": [
+          "SCR-SYS-009"
+        ]
+      },
+      {
+        "route": "GET supplier-categories",
+        "status": "RENAMED",
+        "target": "GET /v1/master/categories",
+        "note": null,
+        "screens": [
+          "SCR-017"
+        ]
+      },
+      {
+        "route": "GET supplier-categories/:p",
+        "status": "RENAMED",
+        "target": "GET /v1/master/categories/{id}",
+        "note": null,
+        "screens": [
+          "SCR-018"
+        ]
+      },
+      {
+        "route": "GET system/about",
+        "status": "RENAMED",
+        "target": "GET /v1/system/config",
+        "note": null,
+        "screens": [
+          "SCR-SYS-010"
+        ]
+      },
+      {
+        "route": "GET system/cache",
+        "status": "ABSENT",
+        "target": null,
+        "note": "digimar exposes cache invalidate only, no cache read",
+        "screens": [
+          "SCR-SYS-015"
+        ]
+      },
+      {
+        "route": "GET warehouse-access",
+        "status": "RENAMED",
+        "target": "GET /v1/warehouse/warehouses/{id}/check-access",
+        "note": null,
+        "screens": [
+          "SCR-024"
+        ]
+      },
+      {
+        "route": "GET warehouse/goods-transfer",
+        "status": "RENAMED",
+        "target": "GET /v1/warehouse/transfers",
+        "note": null,
+        "screens": [
+          "SCR-087"
+        ]
+      },
+      {
+        "route": "GET warehouse/goods-transfer/:p",
+        "status": "ABSENT",
+        "target": null,
+        "note": "transfers expose list + execute, no per-id GET",
+        "screens": [
+          "SCR-089"
+        ]
+      },
+      {
+        "route": "GET warehouse/stock-adjustment",
+        "status": "RENAMED",
+        "target": "GET /v1/warehouse/adjustments",
+        "note": null,
+        "screens": [
+          "SCR-092"
+        ]
+      },
+      {
+        "route": "GET warehouse/stock-opname",
+        "status": "RENAMED",
+        "target": "GET /v1/warehouse/opname",
+        "note": null,
+        "screens": [
+          "SCR-090"
+        ]
+      },
+      {
+        "route": "GET warehouse/stock-opname/:p",
+        "status": "ABSENT",
+        "target": null,
+        "note": "opname exposes list + approve, no per-id GET",
+        "screens": [
+          "SCR-091",
+          "SCR-094"
+        ]
+      },
+      {
+        "route": "GET warehouses",
+        "status": "RENAMED",
+        "target": "GET /v1/warehouse/warehouses",
+        "note": null,
+        "screens": [
+          "SCR-022"
+        ]
+      },
+      {
+        "route": "GET warehouses/:p",
+        "status": "RENAMED",
+        "target": "GET /v1/master/warehouses/{id}",
+        "note": null,
+        "screens": [
+          "SCR-023"
+        ]
+      },
+      {
+        "route": "GET webhooks",
+        "status": "RENAMED",
+        "target": "GET /v1/webhooks/whatsapp",
+        "note": null,
+        "screens": [
+          "SCR-SYS-004"
+        ]
+      }
+    ],
+    "unclassified": [],
+    "bad_target": [],
+    "absent": [
+      {
+        "route": "GET activity-logs/:p",
+        "note": "audit log has no per-id live route",
+        "screens": [
+          "SCR-150"
+        ]
+      },
+      {
+        "route": "GET api-tokens",
+        "note": "no token-management surface in the rebuild",
+        "screens": [
+          "SCR-SYS-003"
+        ]
+      },
+      {
+        "route": "GET audit/logs/:p",
+        "note": "audit log has no per-id live route",
+        "screens": [
+          "SCR-147"
+        ]
+      },
+      {
+        "route": "GET auth/reset-password/validate",
+        "note": "reset flow is token-in-link, no validate endpoint",
+        "screens": [
+          "SCR-003"
+        ]
+      },
+      {
+        "route": "GET checklists/:p/progress",
+        "note": "no per-checklist progress route",
+        "screens": [
+          "SCR-121"
+        ]
+      },
+      {
+        "route": "GET coa-auto",
+        "note": "auto-journal configs exist, COA-auto mapping does not",
+        "screens": [
+          "SCR-104"
+        ]
+      },
+      {
+        "route": "GET coa-auto/:p",
+        "note": "auto-journal configs exist, COA-auto mapping does not",
+        "screens": [
+          "SCR-105"
+        ]
+      },
+      {
+        "route": "GET coa/:p",
+        "note": "finance accounts expose list + patch, no per-id GET",
+        "screens": [
+          "SCR-102",
+          "SCR-103"
+        ]
+      },
+      {
+        "route": "GET feature-flags",
+        "note": "no feature-flag surface in the rebuild",
+        "screens": [
+          "SCR-SYS-008"
+        ]
+      },
+      {
+        "route": "GET finance/journal-entries/:p",
+        "note": "journal exposes list + reverse, no per-id GET",
+        "screens": [
+          "SCR-110",
+          "SCR-111",
+          "SCR-112",
+          "SCR-113"
+        ]
+      },
+      {
+        "route": "GET finance/tax-setup/:p",
+        "note": "taxes expose list + PATCH/DELETE, no per-id GET",
+        "screens": [
+          "SCR-115"
+        ]
+      },
+      {
+        "route": "GET i18n/translations",
+        "note": "no i18n/translation surface in the rebuild",
+        "screens": [
+          "SCR-SYS-014"
+        ]
+      },
+      {
+        "route": "GET production/delivery-out",
+        "note": "delivery-out lives on commercial sales-orders, not production",
+        "screens": [
+          "SCR-072"
+        ]
+      },
+      {
+        "route": "GET production/delivery-out/:p",
+        "note": "delivery-out lives on commercial sales-orders, not production",
+        "screens": [
+          "SCR-073"
+        ]
+      },
+      {
+        "route": "GET purchase/goods-receipts/:p",
+        "note": "goods receipts expose list + status/QC actions, no per-id GET",
+        "screens": [
+          "SCR-060"
+        ]
+      },
+      {
+        "route": "GET sales/sales-return-in",
+        "note": "no sales-return-in route in the rebuild",
+        "screens": [
+          "SCR-045"
+        ]
+      },
+      {
+        "route": "GET sales/sales-return-in/:p",
+        "note": "no sales-return-in route in the rebuild",
+        "screens": [
+          "SCR-046"
+        ]
+      },
+      {
+        "route": "GET sales/sales-returns",
+        "note": "sales returns exist for purchase only; no commercial equivalent",
+        "screens": [
+          "SCR-042",
+          "SCR-044"
+        ]
+      },
+      {
+        "route": "GET sales/sales-returns/:p",
+        "note": "sales returns exist for purchase only; no commercial equivalent",
+        "screens": [
+          "SCR-043"
+        ]
+      },
+      {
+        "route": "GET sales/sales-targets/:p",
+        "note": "targets expose list + create, no per-id GET",
+        "screens": [
+          "SCR-048"
+        ]
+      },
+      {
+        "route": "GET sales/samples/:p/payments",
+        "note": "sample payments are actions on /v1/rnd/sample/{id}/*, not a list route",
+        "screens": [
+          "SCR-030"
+        ]
+      },
+      {
+        "route": "GET settings/backup",
+        "note": "no backup surface in the rebuild",
+        "screens": [
+          "SCR-SYS-006"
+        ]
+      },
+      {
+        "route": "GET settings/license",
+        "note": "no license surface in the rebuild",
+        "screens": [
+          "SCR-SYS-009"
+        ]
+      },
+      {
+        "route": "GET system/cache",
+        "note": "digimar exposes cache invalidate only, no cache read",
+        "screens": [
+          "SCR-SYS-015"
+        ]
+      },
+      {
+        "route": "GET warehouse/goods-transfer/:p",
+        "note": "transfers expose list + execute, no per-id GET",
+        "screens": [
+          "SCR-089"
+        ]
+      },
+      {
+        "route": "GET warehouse/stock-opname/:p",
+        "note": "opname exposes list + approve, no per-id GET",
+        "screens": [
+          "SCR-091",
+          "SCR-094"
+        ]
+      }
+    ],
+    "out_of_scope": [
+      {
+        "route": "GET public/delivery-outs/verify/:p",
+        "note": "public unauthenticated verify surface not carried into the rebuild",
+        "screens": [
+          "SCR-074"
+        ]
+      }
+    ],
+    "renamed": [
+      {
+        "route": "GET activity-logs",
+        "target": "GET /v1/system/audit-logs",
+        "screens": [
+          "SCR-149"
+        ]
+      },
+      {
+        "route": "GET audit/logs",
+        "target": "GET /v1/system/audit-logs",
+        "screens": [
+          "SCR-146"
+        ]
+      },
+      {
+        "route": "GET checklist/categories",
+        "target": "GET /v1/qc/checklists/categories",
+        "screens": [
+          "SCR-117"
+        ]
+      },
+      {
+        "route": "GET checklist/categories/:p",
+        "target": "GET /v1/qc/checklists/categories",
+        "screens": [
+          "SCR-118"
+        ]
+      },
+      {
+        "route": "GET checklists",
+        "target": "GET /v1/qc/checklists",
+        "screens": [
+          "SCR-119"
+        ]
+      },
+      {
+        "route": "GET checklists/:p",
+        "target": "GET /v1/qc/checklists/{id}",
+        "screens": [
+          "SCR-120"
+        ]
+      },
+      {
+        "route": "GET coa",
+        "target": "GET /v1/finance/accounts",
+        "screens": [
+          "SCR-101"
+        ]
+      },
+      {
+        "route": "GET customer-categories",
+        "target": "GET /v1/master/categories",
+        "screens": [
+          "SCR-013",
+          "SCR-049"
+        ]
+      },
+      {
+        "route": "GET customer-categories/:p",
+        "target": "GET /v1/master/categories/{id}",
+        "screens": [
+          "SCR-014"
+        ]
+      },
+      {
+        "route": "GET employees/:p/kpi",
+        "target": "GET /v1/hr/kpi/employees",
+        "screens": [
+          "SCR-179"
+        ]
+      },
+      {
+        "route": "GET finance/cash-banks",
+        "target": "GET /v1/finance/bank-accounts",
+        "screens": [
+          "SCR-106"
+        ]
+      },
+      {
+        "route": "GET finance/cash-banks/:p",
+        "target": "GET /v1/finance/bank-accounts/{id}",
+        "screens": [
+          "SCR-107"
+        ]
+      },
+      {
+        "route": "GET finance/journal-entries",
+        "target": "GET /v1/finance/journal",
+        "screens": [
+          "SCR-108"
+        ]
+      },
+      {
+        "route": "GET finance/tax-setup",
+        "target": "GET /v1/finance/taxes",
+        "screens": [
+          "SCR-114"
+        ]
+      },
+      {
+        "route": "GET goods",
+        "target": "GET /v1/master/materials",
+        "screens": [
+          "SCR-019"
+        ]
+      },
+      {
+        "route": "GET goods-categories",
+        "target": "GET /v1/master/categories",
+        "screens": [
+          "SCR-021"
+        ]
+      },
+      {
+        "route": "GET goods/:p",
+        "target": "GET /v1/master/materials/{id}",
+        "screens": [
+          "SCR-020"
+        ]
+      },
+      {
+        "route": "GET integrations",
+        "target": "GET /v1/marketing/social/integrations",
+        "screens": [
+          "SCR-SYS-005"
+        ]
+      },
+      {
+        "route": "GET production/production-filling",
+        "target": "GET /v1/production/schedule-filling",
+        "screens": [
+          "SCR-084"
+        ]
+      },
+      {
+        "route": "GET production/production-mixing",
+        "target": "GET /v1/production/schedule-mixing",
+        "screens": [
+          "SCR-083"
+        ]
+      },
+      {
+        "route": "GET production/production-packaging",
+        "target": "GET /v1/production/schedule-packaging",
+        "screens": [
+          "SCR-085"
+        ]
+      },
+      {
+        "route": "GET production/qc-inspections",
+        "target": "GET /v1/production/qc/pending",
+        "screens": [
+          "SCR-086"
+        ]
+      },
+      {
+        "route": "GET production/schedule-mixing/:p",
+        "target": "GET /v1/production/schedule-mixing",
+        "screens": [
+          "SCR-080"
+        ]
+      },
+      {
+        "route": "GET profile",
+        "target": "GET /v1/auth/profile",
+        "screens": [
+          "SCR-004",
+          "SCR-SYS-002"
+        ]
+      },
+      {
+        "route": "GET purchase/return-out",
+        "target": "GET /v1/purchase/returns",
+        "screens": [
+          "SCR-068"
+        ]
+      },
+      {
+        "route": "GET purchase/return-out/:p",
+        "target": "GET /v1/purchase/returns/{id}",
+        "screens": [
+          "SCR-069"
+        ]
+      },
+      {
+        "route": "GET rnd/request-cogs",
+        "target": "GET /v1/finance/cogs-requests",
+        "screens": [
+          "SCR-070"
+        ]
+      },
+      {
+        "route": "GET rnd/request-cogs/:p",
+        "target": "GET /v1/finance/cogs-requests/{id}",
+        "screens": [
+          "SCR-071"
+        ]
+      },
+      {
+        "route": "GET sales/down-payments",
+        "target": "GET /v1/commercial/down-payments",
+        "screens": [
+          "SCR-036"
+        ]
+      },
+      {
+        "route": "GET sales/leads",
+        "target": "GET /v1/crm/leads",
+        "screens": [
+          "SCR-025"
+        ]
+      },
+      {
+        "route": "GET sales/leads/:p",
+        "target": "GET /v1/crm/leads/{id}",
+        "screens": [
+          "SCR-026"
+        ]
+      },
+      {
+        "route": "GET sales/sales-invoices",
+        "target": "GET /v1/commercial/invoices",
+        "screens": [
+          "SCR-038"
+        ]
+      },
+      {
+        "route": "GET sales/sales-orders",
+        "target": "GET /v1/commercial/sales-orders",
+        "screens": [
+          "SCR-032",
+          "SCR-035"
+        ]
+      },
+      {
+        "route": "GET sales/sales-orders/:p",
+        "target": "GET /v1/commercial/sales-orders/{id}",
+        "screens": [
+          "SCR-034"
+        ]
+      },
+      {
+        "route": "GET sales/sales-payments",
+        "target": "GET /v1/commercial/payments",
+        "screens": [
+          "SCR-040"
+        ]
+      },
+      {
+        "route": "GET sales/sales-targets",
+        "target": "GET /v1/marketing/targets",
+        "screens": [
+          "SCR-047"
+        ]
+      },
+      {
+        "route": "GET sales/samples",
+        "target": "GET /v1/rnd/samples",
+        "screens": [
+          "SCR-027",
+          "SCR-029"
+        ]
+      },
+      {
+        "route": "GET sales/samples/:p",
+        "target": "GET /v1/rnd/samples/{id}",
+        "screens": [
+          "SCR-028"
+        ]
+      },
+      {
+        "route": "GET settings/general",
+        "target": "GET /v1/system/config",
+        "screens": [
+          "SCR-SYS-001"
+        ]
+      },
+      {
+        "route": "GET supplier-categories",
+        "target": "GET /v1/master/categories",
+        "screens": [
+          "SCR-017"
+        ]
+      },
+      {
+        "route": "GET supplier-categories/:p",
+        "target": "GET /v1/master/categories/{id}",
+        "screens": [
+          "SCR-018"
+        ]
+      },
+      {
+        "route": "GET system/about",
+        "target": "GET /v1/system/config",
+        "screens": [
+          "SCR-SYS-010"
+        ]
+      },
+      {
+        "route": "GET warehouse-access",
+        "target": "GET /v1/warehouse/warehouses/{id}/check-access",
+        "screens": [
+          "SCR-024"
+        ]
+      },
+      {
+        "route": "GET warehouse/goods-transfer",
+        "target": "GET /v1/warehouse/transfers",
+        "screens": [
+          "SCR-087"
+        ]
+      },
+      {
+        "route": "GET warehouse/stock-adjustment",
+        "target": "GET /v1/warehouse/adjustments",
+        "screens": [
+          "SCR-092"
+        ]
+      },
+      {
+        "route": "GET warehouse/stock-opname",
+        "target": "GET /v1/warehouse/opname",
+        "screens": [
+          "SCR-090"
+        ]
+      },
+      {
+        "route": "GET warehouses",
+        "target": "GET /v1/warehouse/warehouses",
+        "screens": [
+          "SCR-022"
+        ]
+      },
+      {
+        "route": "GET warehouses/:p",
+        "target": "GET /v1/master/warehouses/{id}",
+        "screens": [
+          "SCR-023"
+        ]
+      },
+      {
+        "route": "GET webhooks",
+        "target": "GET /v1/webhooks/whatsapp",
+        "screens": [
+          "SCR-SYS-004"
+        ]
+      }
+    ],
+    "never_called_breakdown": {
+      "absent": 26,
+      "renamed": 49,
+      "out_of_scope": 1,
+      "live_but_unwired": [
+        {
+          "route": "GET customers/:p",
+          "screens": [
+            "SCR-012"
+          ]
+        },
+        {
+          "route": "GET dashboards/busdev",
+          "screens": [
+            "SCR-DASH-003"
+          ]
+        },
+        {
+          "route": "GET dashboards/executive",
+          "screens": [
+            "SCR-DASH-001"
+          ]
+        },
+        {
+          "route": "GET dashboards/finance",
+          "screens": [
+            "SCR-DASH-002"
+          ]
+        },
+        {
+          "route": "GET dashboards/hr",
+          "screens": [
+            "SCR-DASH-009"
+          ]
+        },
+        {
+          "route": "GET dashboards/legality",
+          "screens": [
+            "SCR-DASH-010"
+          ]
+        },
+        {
+          "route": "GET dashboards/marketing",
+          "screens": [
+            "SCR-DASH-008"
+          ]
+        },
+        {
+          "route": "GET dashboards/notifications",
+          "screens": [
+            "SCR-DASH-011"
+          ]
+        },
+        {
+          "route": "GET dashboards/procurement",
+          "screens": [
+            "SCR-DASH-013"
+          ]
+        },
+        {
+          "route": "GET dashboards/production",
+          "screens": [
+            "SCR-DASH-004"
+          ]
+        },
+        {
+          "route": "GET dashboards/qc",
+          "screens": [
+            "SCR-DASH-006"
+          ]
+        },
+        {
+          "route": "GET dashboards/rnd",
+          "screens": [
+            "SCR-DASH-007"
+          ]
+        },
+        {
+          "route": "GET dashboards/system-errors",
+          "screens": [
+            "SCR-DASH-012"
+          ]
+        },
+        {
+          "route": "GET dashboards/warehouse",
+          "screens": [
+            "SCR-DASH-005"
+          ]
+        },
+        {
+          "route": "GET document-templates",
+          "screens": [
+            "SCR-SYS-013"
+          ]
+        },
+        {
+          "route": "GET email-templates",
+          "screens": [
+            "SCR-SYS-011"
+          ]
+        },
+        {
+          "route": "GET entities/:p/:p/attachments",
+          "screens": [
+            "SCR-141"
+          ]
+        },
+        {
+          "route": "GET entities/:p/:p/comments",
+          "screens": [
+            "SCR-140"
+          ]
+        },
+        {
+          "route": "GET entities/:p/:p/notes",
+          "screens": [
+            "SCR-139"
+          ]
+        },
+        {
+          "route": "GET entities/:p/:p/tags",
+          "screens": [
+            "SCR-142"
+          ]
+        },
+        {
+          "route": "GET entities/:p/:p/transitions",
+          "screens": [
+            "SCR-143"
+          ]
+        },
+        {
+          "route": "GET finance/fixed-assets",
+          "screens": [
+            "SCR-116"
+          ]
+        },
+        {
+          "route": "GET production/batch-records/:p",
+          "screens": [
+            "SCR-077",
+            "SCR-078"
+          ]
+        },
+        {
+          "route": "GET production/schedule-filling",
+          "screens": [
+            "SCR-081"
+          ]
+        },
+        {
+          "route": "GET production/schedule-mixing",
+          "screens": [
+            "SCR-079"
+          ]
+        },
+        {
+          "route": "GET production/schedule-packaging",
+          "screens": [
+            "SCR-082"
+          ]
+        },
+        {
+          "route": "GET purchase/orders/:p",
+          "screens": [
+            "SCR-055"
+          ]
+        },
+        {
+          "route": "GET purchase/payments",
+          "screens": [
+            "SCR-063"
+          ]
+        },
+        {
+          "route": "GET purchase/requests/:p",
+          "screens": [
+            "SCR-051"
+          ]
+        },
+        {
+          "route": "GET purchase/returns/:p",
+          "screens": [
+            "SCR-066"
+          ]
+        },
+        {
+          "route": "GET reports/ap-aging",
+          "screens": [
+            "SCR-132"
+          ]
+        },
+        {
+          "route": "GET reports/budget-vs-actual",
+          "screens": [
+            "SCR-135"
+          ]
+        },
+        {
+          "route": "GET reports/cash-flow",
+          "screens": [
+            "SCR-133"
+          ]
+        },
+        {
+          "route": "GET reports/general-ledger",
+          "screens": [
+            "SCR-125"
+          ]
+        },
+        {
+          "route": "GET reports/mutation-goods",
+          "screens": [
+            "SCR-128"
+          ]
+        },
+        {
+          "route": "GET reports/profit-loss",
+          "screens": [
+            "SCR-122"
+          ]
+        },
+        {
+          "route": "GET reports/trial-balance",
+          "screens": [
+            "SCR-124"
+          ]
+        },
+        {
+          "route": "GET rnd/formulations",
+          "screens": [
+            "SCR-095"
+          ]
+        },
+        {
+          "route": "GET rnd/formulations/:p",
+          "screens": [
+            "SCR-097",
+            "SCR-098",
+            "SCR-099",
+            "SCR-100"
+          ]
+        },
+        {
+          "route": "GET roles",
+          "screens": [
+            "SCR-009"
+          ]
+        },
+        {
+          "route": "GET sms-templates",
+          "screens": [
+            "SCR-SYS-012"
+          ]
+        },
+        {
+          "route": "GET suppliers",
+          "screens": [
+            "SCR-015"
+          ]
+        },
+        {
+          "route": "GET suppliers/:p",
+          "screens": [
+            "SCR-016"
+          ]
+        },
+        {
+          "route": "GET templates",
+          "screens": [
+            "SCR-145"
+          ]
+        },
+        {
+          "route": "GET users/:p",
+          "screens": [
+            "SCR-008"
+          ]
+        }
+      ]
+    }
+  },
+  "counts": {
+    "fe_calls_unmatched": 0,
+    "fe_calls_unmatched_dead_controller": 0,
+    "fe_method_mismatch": 0,
+    "unserved_controller_files": 0,
+    "unreachable_modules": 0,
+    "screen_ops_unmatched": 76,
+    "screen_ops_unmatched_unclassified": 0,
+    "screen_ops_unmatched_bad_target": 0,
+    "screen_ops_renamed": 49,
+    "screen_ops_absent": 26,
+    "screen_ops_out_of_scope": 1,
+    "screen_ops_never_called": 121,
+    "screen_ops_never_called_absent": 26,
+    "screen_ops_never_called_renamed": 49,
+    "screen_ops_never_called_oos": 1,
+    "screen_ops_live_but_unwired": 45
+  }
+}
