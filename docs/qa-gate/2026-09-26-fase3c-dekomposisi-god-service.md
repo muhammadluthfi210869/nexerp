@@ -871,4 +871,54 @@ Sisa `production.service.ts` **739 baris**:
 Nama untuk klaster machine + QR belum diputuskan — `ProductionMachineService`
 jujur untuk empat dari lima metodenya, tapi `resolveQRContext` adalah titik masuk
 operator, bukan mesin. Keputusan itu diambil setelah bloknya diukur sendiri,
-bukan diwarisi dari daftar ini.
+bukan diwarisi dari daftar ini (lihat §14: dipecah menjadi dua servis independen).
+
+---
+
+## 14. Slice 8 — Machine Registry & QR Scan Resolver
+
+Dipisahkan pada 2026-09-27. Ini adalah slice kedelapan Fase 3C, dan pertama kalinya satu slice menghasilkan **dua** servis baru sekaligus:
+
+| Berkas | Baris sebelum | Baris sesudah | Tanggung jawab |
+|---|---|---|---|
+| `production-machine.service.ts` | — | 62 | Pendaftaran & status aset mesin (`machine`) |
+| `production-qr-context.service.ts` | — | 104 | Resolusi pemindaian QR ke konteks inspeksi QC |
+| `production.service.ts` (fasad) | 739 | **680** | Fasad delegasi tipis |
+
+Dua servis terpisah karena pertanyaannya berbeda: inventaris mesin adalah pencatatan aset lantai produksi, sedangkan resolusi QR adalah gerbang pemeriksaan QC yang bercabang ke lintas modul (log produksi, penerimaan gudang, inventaris material, atau rencana produksi). Menggabungkannya ke satu tempat akan memaksakan konsep yang tidak kohesif.
+
+Rentang yang dipindahkan:
+- `createMachine` (310-312) → `ProductionMachineService`
+- `getMachines`, `getActiveMachines` (328-346) → `ProductionMachineService`
+- `resolveQRContext` (347-417) → `ProductionQrContextService`
+- **`getAllRequisitions` (314-326) TIDAK DIPINDAHKAN**: Berada persis di antara kedua rentang mesin, namun mengelola sumber daya `materialRequisition`. Requisition akan dipindahkan bersama klaster work order & material issue/shortage.
+
+### 14.1 Temuan Sensus: Dua Metode Publik Tanpa Pemanggil
+
+Sensus komprehensif `backend/src` dan `backend/test` menemukan fakta menarik:
+- `createMachine` dan `getActiveMachines` memiliki 0 rujukan di `backend/src`, tidak memiliki endpoint/rute di `production.controller.ts`, dan tidak digunakan di frontend maupun skema OpenAPI. Masing-masing hanya disentuh oleh 1 unit test pra-eksisting.
+- Satu-satunya rute aktif terkait mesin adalah `GET /production/machines` (`getMachines`).
+
+**Keputusan arsitektur**: Metode-metode ini **dipindahkan, bukan dihapus**. Menghapus API publik yang mungkin disiapkan untuk fitur masa depan adalah keputusan fungsional, bukan bagian dari refactoring dekomposisi struktur. Status ini didokumentasikan dan dipantau oleh test di `test/unit/production-machine-qr-extraction.unit-spec.ts`.
+
+### 14.2 Verifikasi
+
+| Gate | Hasil |
+|---|---|
+| `tsc --noEmit` | rc 0 |
+| `eslint src/modules/production/**` | 0 error, 865 warning (pra-eksisting, tidak bertambah) |
+| `eslint test/unit/production*extraction.unit-spec.ts` | 0 masalah |
+| `npm run test:unit` | **48/48 suite, 580/580 test PASS** |
+| `bash scripts/__tests__/run-all.sh` | PASS 26, FAIL 0, SKIP 0 |
+| `node scripts/ssot/validate_ssot.js` | 19 pass, 0 fail, CERTIFIED |
+| `node scripts/ssot/audit_lifecycle_reconciliation.js` | 14/14 PASS (setelah regenerasi registry) |
+
+### 14.3 Verdict
+
+**BELUM SIAP KIRIM**, konsisten dengan aturan CLAUDE.md QA Gate. Smoke test live, rollback teruji, dan P03 masih belum diverifikasi di production environment.
+
+Sisa `production.service.ts` kini **680 baris**:
+- Work order & material requisition: `createWorkOrder`, `issueMaterial`, `flagShortage`, `getAllRequisitions`
+- QC, costing & formula assignment: `verifyStageQC`, `returnMaterial`, `finalizeWorkOrderCosting`, `assignFormulaToPlan`
+- Ekor berkas: event listeners `@OnEvent` (`handleStockAdjusted`, `handleInboundReceived`) dan penyesuaian formula (`getFormulaAdjustments`, `createFormulaAdjustment`) ditunda hingga dekomposisi inti selesai.
+
