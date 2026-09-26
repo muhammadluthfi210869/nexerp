@@ -518,24 +518,21 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
     if (!selectedAccId) return;
     setLoading(true);
     // `/finance/reports/general-ledger/:id` answers the shape this panel draws
-    // (`account`, `beginningBalance`, `endingBalance`); `/reports/general-ledger`
-    // answers 200 with `{"data":[]}` — no `account` — and the panel dereferences
-    // `ledgerData.account.name`. That threw, and because every tab mounts at once it
-    // took Laba Rugi, Neraca and Neraca Saldo down with the Buku Besar tab. So the
-    // finance route leads, the reports route is the fallback, and a body the panel
-    // cannot draw is never stored. Pinned by
+    // (`account`, `beginningBalance`, `endingBalance`). `/reports/general-ledger`
+    // answers a flat cross-account journal listing — `{"data":[{account_code,
+    // debit, credit, ...}]}`, no `account` — so `applyLedger` could never store it,
+    // and chaining it as a fallback was a second request that could not change what
+    // was drawn. Deleted. (It was also the shape that threw
+    // "Cannot read properties of undefined (reading 'name')" and, because every tab
+    // mounts at once, took Laba Rugi, Neraca and Neraca Saldo down with the Buku
+    // Besar tab.) Pinned by
     // src/app/(dashboard)/__tests__/live-shape-crash-guards.behavior.test.tsx.
     const applyLedger = (body: any) => {
       if (body?.account) setLedgerData(body);
     };
     api.get(`/finance/reports/general-ledger/${selectedAccId}`, { params: { startDate, endDate } })
       .then(res => applyLedger(res.data))
-      .catch(() =>
-        api
-          .get("/reports/general-ledger", { params: { coa_id: selectedAccId, startDate, endDate } })
-          .then(res => applyLedger(res.data))
-          .catch(() => setLedgerData(null)),
-      )
+      .catch(() => setLedgerData(null))
       .finally(() => setLoading(false));
   }, [selectedAccId, startDate, endDate]);
 

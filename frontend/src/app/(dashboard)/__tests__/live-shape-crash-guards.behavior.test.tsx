@@ -57,8 +57,61 @@ let reply: (url: string, method?: string) => Promise<Reply>;
 const calls: string[] = [];
 let originalAdapter: unknown;
 
-function renderWithClient(ui: React.ReactElement) {
-  const queryClient = new QueryClient({
+// Verbatim from `GET /v1/finance/accounts` and
+// `GET /v1/finance/reports/general-ledger/:id` (2026-09-26) — the shapes the panel draws.
+const accounts = [
+  { id: "2dfd4372-7347-4853-81d9-162b8b66b22d", code: "1100", name: "Kas & Bank", type: "ASSET", normalBalance: "DEBIT", isActive: true },
+];
+const financeLedger = {
+  account: { code: "1100", name: "Kas & Bank (Aset Lancar)", normalBalance: "DEBIT" },
+  period: { startDate: "2026-01-01T00:00:00.000Z", endDate: "2026-12-31T00:00:00.000Z" },
+  beginningBalance: 0,
+  transactions: [],
+  endingBalance: 0,
+};
+
+// Every endpoint `/reports/finance-reports` mounts, answering with its live shape
+// (verified 2026-09-26 — `assets.items` is what `buildTree` walks, and live sends
+// `{items, total}` for assets, liabilities and equity). `financeLedgerStatus` makes
+// only the finance ledger route fail, so a test can watch what the panel does next
+// without disturbing anything else it fetches.
+function financeReportsReply(
+  { financeLedgerStatus = 200, reportsLedgerBody = { data: [] } }: { financeLedgerStatus?: number; reportsLedgerBody?: unknown } = {},
+): (url: string) => Promise<Reply> {
+  return async (url) => {
+    if (url.includes("/finance/accounts")) return { status: 200, body: accounts };
+    if (url.includes("/reports/general-ledger/")) {
+      return financeLedgerStatus === 200
+        ? { status: 200, body: financeLedger }
+        : { status: financeLedgerStatus, body: { message: "Not Found" } };
+    }
+    if (url.includes("/reports/general-ledger")) return { status: 200, body: reportsLedgerBody };
+    if (url.includes("/trial-balance/detailed")) return { status: 200, body: { data: [], totals: {}, isBalanced: true } };
+    if (url.includes("/profit-loss")) {
+      return {
+        status: 200,
+        body: { operatingIncome: 0, netProfit: 0, operatingRevenue: { total: 0, groups: {} }, cogs: { total: 0, groups: {} }, operatingExpenses: { total: 0, groups: {} }, otherIncome: { total: 0, groups: {} } },
+      };
+    }
+    if (url.includes("/balance-sheet")) {
+      return {
+        status: 200,
+        body: {
+          assets: { items: [], total: 0 },
+          liabilities: { items: [], total: 0 },
+          equity: { items: [], total: 0 },
+          totalLiabilitiesAndEquity: 0,
+          isBalanced: true,
+        },
+      };
+    }
+    if (url.includes("/budget-vs-actual")) return { status: 200, body: { rows: [] } };
+    if (url.includes("/project-budgeting")) return { status: 200, body: { projects: [] } };
+    return { status: 200, body: [] };
+  };
+}
+
+function renderWithClient(ui: React.ReactElement) {  const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
@@ -158,48 +211,7 @@ describe("pages survive the shapes the live endpoints actually send", () => {
   });
 
   it("/reports/finance-reports renders the ledger when /reports/general-ledger sends no account", async () => {
-    const accounts = [
-      { id: "2dfd4372-7347-4853-81d9-162b8b66b22d", code: "1100", name: "Kas & Bank", type: "ASSET", normalBalance: "DEBIT", isActive: true },
-    ];
-    // Verbatim from `GET /v1/reports/general-ledger?coa_id=...` (2026-09-26): a 200
-    // with no `account`, which the panel dereferences.
-    const reportsLedger = { data: [] };
-    // Verbatim from `GET /v1/finance/reports/general-ledger/:id` — the shape the panel draws.
-    const financeLedger = {
-      account: { code: "1100", name: "Kas & Bank (Aset Lancar)", normalBalance: "DEBIT" },
-      period: { startDate: "2026-01-01T00:00:00.000Z", endDate: "2026-12-31T00:00:00.000Z" },
-      beginningBalance: 0,
-      transactions: [],
-      endingBalance: 0,
-    };
-
-    reply = async (url) => {
-      if (url.includes("/finance/accounts")) return { status: 200, body: accounts };
-      if (url.includes("/reports/general-ledger/")) return { status: 200, body: financeLedger };
-      if (url.includes("/reports/general-ledger")) return { status: 200, body: reportsLedger };
-      if (url.includes("/trial-balance/detailed")) return { status: 200, body: { data: [], totals: {}, isBalanced: true } };
-      if (url.includes("/profit-loss"))
-        return {
-          status: 200,
-          body: { operatingIncome: 0, netProfit: 0, operatingRevenue: { total: 0, groups: {} }, cogs: { total: 0, groups: {} }, operatingExpenses: { total: 0, groups: {} }, otherIncome: { total: 0, groups: {} } },
-        };
-      if (url.includes("/balance-sheet"))
-        // `assets.items` is what `buildTree` walks; live sends `{items, total}` for
-        // assets, liabilities and equity (verified 2026-09-26).
-        return {
-          status: 200,
-          body: {
-            assets: { items: [], total: 0 },
-            liabilities: { items: [], total: 0 },
-            equity: { items: [], total: 0 },
-            totalLiabilitiesAndEquity: 0,
-            isBalanced: true,
-          },
-        };
-      if (url.includes("/budget-vs-actual")) return { status: 200, body: { rows: [] } };
-      if (url.includes("/project-budgeting")) return { status: 200, body: { projects: [] } };
-      return { status: 200, body: [] };
-    };
+    reply = financeReportsReply();
 
     renderWithClient(<FinanceReportsPage />);
 
@@ -212,5 +224,20 @@ describe("pages survive the shapes the live endpoints actually send", () => {
       { timeout: 5000 },
     );
     expect(document.body.textContent).not.toContain("undefined");
+  });
+
+  it("/reports/finance-reports does not fall back to /reports/general-ledger when the finance ledger fails", async () => {
+    // The reports route answers a flat cross-account journal listing
+    // (`{data: [{account_code, debit, credit, ...}]}`). `applyLedger` stores a body
+    // only when it carries `account`, which only the finance route sends — so a
+    // fallback request there could never change what the panel draws. Here the
+    // reports route is handed the finance shape, i.e. the one body that WOULD be
+    // drawn if the fallback still existed; the point is that it is never asked.
+    reply = financeReportsReply({ financeLedgerStatus: 404, reportsLedgerBody: financeLedger });
+
+    renderWithClient(<FinanceReportsPage />);
+
+    await waitFor(() => expect(calls.some((c) => c.includes("general-ledger"))).toBe(true), { timeout: 5000 });
+    expect(calls.some((c) => c.includes("general-ledger") && !c.includes("/finance/"))).toBe(false);
   });
 });
