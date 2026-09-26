@@ -569,3 +569,84 @@ Sisa `production.service.ts` 1649 baris: stage execution/QC (`startProduction`,
 (handler `@OnEvent` + formula adjustment, ~74 baris). Yang terakhir itu belum
 dikerjakan karena handler event punya dekorator dan urutan registrasinya
 load-bearing — bukan karena sulit dipotong.
+
+---
+
+## 11. Slice kelima: schedule actuals (`1bba1f22`)
+
+Slice §10 menyebut blok ini ~470 baris; pengukuran tepatnya **458** (baris
+914-1371). Sumbunya kelima dan berbeda lagi: **mencatat hasil**. Dua metode ini
+mengambil schedule yang sudah ada lalu menuliskan apa yang dihasilkannya — qty
+output aktual, konsumsi aktual per step — berikut gerbang interlock yang menolak
+angka mustahil sebelum tersimpan.
+
+| Slice | Sumbu | Baris keluar |
+|---|---|---|
+| finance-report | kemutakhiran | 527 |
+| production-analytics | kemutakhiran | 1187 |
+| batch record | satu tipe record | 412 |
+| production planning | kapan pekerjaan berjalan | 554 |
+| **schedule actuals** | **mencatat hasil** | **458** |
+
+Seam: dua metode, bersebelahan, tidak ada anggota lain diselipkan. `this.X`:
+`prisma` (2), `eventEmitter` (5), `logger` (1), `idGenerator` (1). Nol rujukan ke
+kedua nama di luar blok. Keduanya menyentuh database lewat `tx` di dalam
+`$transaction` sendiri (dua biji), jadi `this.prisma` mencacah 2 sementara model
+yang disentuh sembilan.
+
+`production.service.ts` **1649 → 1200** baris; `ProductionActualsService` **509**.
+
+### 11.1 Tiga hal yang ditangkap sebelum sempat jadi salah
+
+**Daftar sidik jari dibangun dari pengukuran.** Sembilan string masing-masing
+dikonfirmasi "di dalam 1, di luar 0" lebih dulu. `STAGE_ORDER_VIOLATION` di blok
+ini justru terukur unik (dalam 2, luar 0) — tapi tetap **tidak** dipakai: ia
+string yang di §10.1 harus didiskualifikasi, dan sembilan string yang terbukti
+unik sudah cukup tanpa memakai ulang satu yang butuh penjelasan.
+
+**Nama model ditebak, lalu dikoreksi sebelum pindah.** Draf pertama asersi
+kepemilikan model menulis `tx.productionStepLog.`; nama sebenarnya
+`tx.productionLog.`. Asersi ditulis ulang terhadap sensus terukur
+(`productionSchedule` 6, `finishedGood` 3, `productionStepDetail` 3,
+`productionLog` 2, `materialInventory` 2, `requisitionFulfillment` 2, `qCAudit` 1,
+`workOrder` 1, `user` 1). Ini kesalahan yang sama yang harus diperbaiki suite
+batch-record sebelum pemindahannya — bedanya kali ini gagal di draf, bukan di
+suite yang merah.
+
+**Satu asersi skrip extractor salah dan menembak.** Ia mencacah `logBestEffort`
+di luar blok tanpa mengecualikan baris import — baris import itu sendiri ada di
+luar blok. Skrip berhenti (`ABORT: logBestEffort still used outside the block`)
+sebelum menulis apa pun. Itu memang gunanya menaruh semua asersi sebelum write:
+satu pemeriksaan yang salah bentuk berhenti sebagai pesan, bukan sebagai diff.
+
+Yang **tidak** dilakukan: tidak ada perilaku yang berubah, tidak ada rute
+controller yang disentuh, tidak ada tes lama yang diubah selain menambah argumen
+kesembilan pada `buildFacade` di tiga suite extraction dan provider asli di enam
+modul `Testing`.
+
+### 11.2 Verifikasi
+
+| Gate | Hasil |
+|---|---|
+| `tsc --noEmit` | rc 0 |
+| `npm run lint` (modul production + spec baru) | 0 error, 866 warning (pra-eksisting) |
+| `npm run test:unit` | **45/45 suite, 493/493 test** |
+| `bash scripts/__tests__/run-all.sh` | PASS 26, FAIL 0, SKIP 0 |
+| `node scripts/ssot/validate_ssot.js` | 19 pass, 0 fail, CERTIFIED |
+| `node scripts/ssot/audit_lifecycle_reconciliation.js` | 14/14 PASS |
+
+### 11.3 Verdict
+
+**BELUM SIAP KIRIM**, tidak berubah. Tiga gate minimum CLAUDE.md yang belum
+punya hasil tetap sama seperti §9.5 dan §10.3: smoke test live, rollback teruji,
+dan P03 — yang hasil terakhirnya merah di SHA `5de307db` dengan `base_sha`
+`9229478d`, bukan di HEAD, dan berkas buktinya memotong array
+`clones`/`violations` sehingga menjalankannya ulang menghasilkan angka baru tanpa
+mengubah kesimpulan.
+
+Sisa `production.service.ts` **1200 baris**: stage execution/QC (`startProduction`,
+`startStage`, `reportBreakdown`, `submitStageLog`, baris 40-348), work order +
+material (`createWorkOrder`, `issueMaterial`, `flagShortage`, ~170 baris), blok
+audit + machine (`596-880`, 285 baris — punya satu rujukan ke luar,
+`calculateCOPQ`), dan ekor berkas (`@OnEvent` + formula adjustment, ~74 baris;
+ditunda karena urutan registrasi handler event load-bearing).
