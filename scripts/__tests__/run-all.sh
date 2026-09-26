@@ -76,6 +76,8 @@ run_test "p22-uat-preflight-gate-fail-closed"        "$SCRIPT_DIR/p22-uat-prefli
 run_test "p22-pdf-live-probe-fail-closed"            "$SCRIPT_DIR/p22-pdf-live-probe.test.sh"
 # Master data — the seeder must not report success over a CSV directory it never read
 run_test "master-seed-fail-closed"                   "$SCRIPT_DIR/master-seed-guard.test.sh"
+# Deterministic install — a lock file out of sync passes locally and dies only in CI
+run_test "lockfile-in-sync"                          "$SCRIPT_DIR/lockfile-in-sync.test.sh"
 
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
