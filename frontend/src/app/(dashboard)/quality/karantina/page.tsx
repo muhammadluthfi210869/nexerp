@@ -209,6 +209,7 @@ function QuarantineContent() {
 
       {/* DATA TABLE */}
       <DnaDataTableCard
+        title="Daftar Antrean & Riwayat Barang Karantina"
         toolbarProps={{
           searchQuery,
           onSearchChange: setSearchQuery,
@@ -226,7 +227,7 @@ function QuarantineContent() {
           <DnaTable className="min-w-[1250px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
-                <th className="p-3.5 w-10 text-slate-400 font-mono text-center">#</th>
+                <th className="p-3.5 w-10 text-slate-400 tabular-nums text-center">#</th>
                 <th className="p-3.5 w-36 min-w-[130px] whitespace-nowrap">NO. KARANTINA</th>
                 <th className="p-3.5 w-28 min-w-[110px] whitespace-nowrap">TANGGAL</th>
                 <th className="p-3.5 w-32 min-w-[120px] whitespace-nowrap">BATCH / LOT REF</th>
@@ -248,7 +249,7 @@ function QuarantineContent() {
               ) : (
                 activeQuarantineList.map((item, idx) => (
                   <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3.5 text-slate-400 font-mono text-[11px] tabular-nums text-center">{idx + 1}</td>
+                    <td className="p-3.5 text-slate-400 tabular-nums text-[11px] tabular-nums text-center">{idx + 1}</td>
                     <td className="p-3.5 whitespace-nowrap">
                       <DnaCell.Code
                         value={item.code}
@@ -350,7 +351,7 @@ function QuarantineContent() {
                     });
                   }
                 }}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-mono font-bold"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white tabular-nums font-bold"
               >
                 {quarantineItems.filter((q: any) => q.status === "QUARANTINE").map((q: any) => (
                   <option key={q.id} value={q.code}>

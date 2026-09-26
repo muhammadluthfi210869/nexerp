@@ -28,7 +28,12 @@ import {
   DnaTable,
   DnaDetailDrawer,
   DnaCell,
-  useDnaToast
+  useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface ArchivedFormula {
@@ -202,56 +207,56 @@ export default function RndRepositoryPage() {
         }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1250px] text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
-                <th className="p-3.5 w-36 min-w-[130px] whitespace-nowrap">FORMULA ID</th>
-                <th className="p-3.5 w-28 min-w-[110px] whitespace-nowrap">TGL RILIS</th>
-                <th className="p-3.5 min-w-[220px]">NAMA PRODUK</th>
-                <th className="p-3.5 w-24 min-w-[90px] whitespace-nowrap">VERSI</th>
-                <th className="p-3.5 w-32 min-w-[110px] whitespace-nowrap">KATEGORI</th>
-                <th className="p-3.5 w-32 min-w-[120px] whitespace-nowrap">SAMPLE REF</th>
-                <th className="p-3.5 w-40 min-w-[150px] whitespace-nowrap">FORMULATOR</th>
-                <th className="p-3.5 w-32 min-w-[110px] text-center whitespace-nowrap">UJI STABILITAS</th>
-                <th className="p-3.5 w-28 min-w-[100px] text-center whitespace-nowrap">STATUS</th>
-                <th className="p-3.5 text-center w-20 whitespace-nowrap">AKSI</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="p-3.5 w-36 min-w-[130px] whitespace-nowrap">FORMULA ID</DnaTh>
+                <DnaTh className="p-3.5 w-28 min-w-[110px] whitespace-nowrap">TGL RILIS</DnaTh>
+                <DnaTh className="p-3.5 min-w-[220px]">NAMA PRODUK</DnaTh>
+                <DnaTh className="p-3.5 w-24 min-w-[90px] whitespace-nowrap">VERSI</DnaTh>
+                <DnaTh className="p-3.5 w-32 min-w-[110px] whitespace-nowrap">KATEGORI</DnaTh>
+                <DnaTh className="p-3.5 w-32 min-w-[120px] whitespace-nowrap">SAMPLE REF</DnaTh>
+                <DnaTh className="p-3.5 w-40 min-w-[150px] whitespace-nowrap">FORMULATOR</DnaTh>
+                <DnaTh className="p-3.5 w-32 min-w-[110px] text-center whitespace-nowrap">UJI STABILITAS</DnaTh>
+                <DnaTh className="p-3.5 w-28 min-w-[100px] text-center whitespace-nowrap">STATUS</DnaTh>
+                <DnaTh className="p-3.5 text-center w-20 whitespace-nowrap">AKSI</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredFormulas.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={10} className="py-12 text-center text-slate-400">
                     <FlaskConical className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada formula arsip yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredFormulas.map((formula) => (
-                  <tr
+                  <DnaTableRow
                     key={formula.id}
                     onClick={() => setSelectedFormula(formula)}
                     className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                   >
-                    <td className="p-3.5 whitespace-nowrap">
+                    <DnaTd className="p-3.5 whitespace-nowrap">
                       <DnaCell.Code value={formula.id} onClick={() => setSelectedFormula(formula)} />
-                    </td>
-                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Date value={formula.releasedAt} /></td>
-                    <td className="p-3.5 min-w-[220px]"><DnaCell.Text primary={formula.name} /></td>
-                    <td className="p-3.5 whitespace-nowrap">
-                      <span className="font-mono text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200/60">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap"><DnaCell.Date value={formula.releasedAt} /></DnaTd>
+                    <DnaTd className="p-3.5 min-w-[220px]"><DnaCell.Text primary={formula.name} /></DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap">
+                      <span className="tabular-nums text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200/60">
                         {formula.activeVersion}
                       </span>
-                    </td>
-                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Badge status={formula.category} /></td>
-                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Code value={formula.sampleCode} /></td>
-                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Avatar name={formula.createdBy} /></td>
-                    <td className="p-3.5 text-center whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap"><DnaCell.Badge status={formula.category} /></DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap"><DnaCell.Code value={formula.sampleCode} /></DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap"><DnaCell.Avatar name={formula.createdBy} /></DnaTd>
+                    <DnaTd className="p-3.5 text-center whitespace-nowrap">
                       <DnaCell.Badge status={formula.stability === "STABLE" ? "Stable" : "Unstable"} />
-                    </td>
-                    <td className="p-3.5 text-center whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center whitespace-nowrap">
                       <DnaCell.Badge status={formula.status} />
-                    </td>
-                    <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
                       <button
                         type="button"
                         onClick={() => setSelectedFormula(formula)}
@@ -260,12 +265,12 @@ export default function RndRepositoryPage() {
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </button>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -328,7 +333,7 @@ export default function RndRepositoryPage() {
                 </div>
                 <div>
                   <span className="text-slate-400 block">Tanggal Rilis:</span>
-                  <span className="font-mono text-slate-800">{selectedFormula.releasedAt}</span>
+                  <span className="tabular-nums text-slate-800">{selectedFormula.releasedAt}</span>
                 </div>
               </div>
             </div>

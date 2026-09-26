@@ -16,6 +16,12 @@ import {
   DnaBadge,
   DnaButton,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { api } from "@/lib/api";
 
@@ -132,20 +138,20 @@ export default function TemplatesPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs uppercase bg-muted/50 text-muted-foreground border-b">
-                <tr>
-                  <th className="px-4 py-3">Nama Template</th>
-                  <th className="px-4 py-3">Kode / Tipe</th>
-                  <th className="px-4 py-3">Kanal / Format</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh className="px-4 py-3">Nama Template</DnaTh>
+                  <DnaTh className="px-4 py-3">Kode / Tipe</DnaTh>
+                  <DnaTh className="px-4 py-3">Kanal / Format</DnaTh>
+                  <DnaTh className="px-4 py-3">Status</DnaTh>
+                  <DnaTh className="px-4 py-3 text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {templates.map((t) => (
-                  <tr key={t.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium text-foreground">
+                  <DnaTableRow key={t.id} className="hover:bg-muted/30 transition-colors">
+                    <DnaTd className="px-4 py-3 font-medium text-foreground">
                       {t.name || t.title}
                       {t.subject && (
                         <span className="block text-xs text-muted-foreground font-normal mt-0.5">
@@ -157,22 +163,22 @@ export default function TemplatesPage() {
                           Isi: {t.body}
                         </span>
                       )}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-3 tabular-nums text-xs">
                       {t.type || t.id}
-                    </td>
-                    <td className="px-4 py-3">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-3">
                       <DnaBadge variant="info">
                         {t.format || t.channel || "STANDARD"}
                       </DnaBadge>
-                    </td>
-                    <td className="px-4 py-3">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-3">
                       <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium">
                         <CheckCircle className="w-3.5 h-3.5" />
                         Aktif
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-3 text-right">
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -186,11 +192,11 @@ export default function TemplatesPage() {
                         <Eye className="w-4 h-4 mr-1" />
                         Lihat
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         )}
       </DashboardCard>

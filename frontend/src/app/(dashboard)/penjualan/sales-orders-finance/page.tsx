@@ -157,7 +157,7 @@ export default function SalesOrderPage() {
 
                 <DnaTd>
                   <div className="flex flex-col">
-                    <span className="font-black text-slate-900 text-sm tracking-tighter font-mono tabular-nums">{formatCurrency(Number(order.totalAmount))}</span>
+                    <span className="font-black text-slate-900 text-sm tracking-tighter tabular-nums tabular-nums">{formatCurrency(Number(order.totalAmount))}</span>
                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight mt-0.5">MOQ: {order.quantity.toLocaleString()} Pcs</span>
                   </div>
                 </DnaTd>
@@ -236,11 +236,11 @@ export default function SalesOrderPage() {
                <div className="grid grid-cols-2 gap-8">
                   <div className="space-y-1">
                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Total Transaction</p>
-                     <p className="text-2xl font-black text-slate-900 tracking-tighter italic font-mono tabular-nums">{formatCurrency(Number(selectedOrder?.totalAmount || 0))}</p>
+                     <p className="text-2xl font-black text-slate-900 tracking-tighter italic tabular-nums tabular-nums">{formatCurrency(Number(selectedOrder?.totalAmount || 0))}</p>
                   </div>
                   <div className="space-y-1">
                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Expected DP (30%)</p>
-                     <p className="text-2xl font-black text-emerald-600 tracking-tighter italic font-mono tabular-nums">{formatCurrency(Number(selectedOrder?.totalAmount || 0) * 0.3)}</p>
+                     <p className="text-2xl font-black text-emerald-600 tracking-tighter italic tabular-nums tabular-nums">{formatCurrency(Number(selectedOrder?.totalAmount || 0) * 0.3)}</p>
                   </div>
                </div>
 

@@ -25,6 +25,12 @@ import {
   DnaDetailDrawer,
   DnaLoadingSkeleton,
   DnaEmptyState,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 export default function VendorPerformancePage() {
@@ -134,49 +140,49 @@ export default function VendorPerformancePage() {
           searchPlaceholder="Cari nama supplier, kode..."
         >
           <div className="w-full">
-            <table className="w-full text-left border-collapse table-fixed text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider select-none">
-                <tr>
-                  <th className="py-3 px-4 w-[32%]">ENTITAS PEMASOK</th>
-                  <th className="py-3 px-4 text-center w-[18%]">SKOR KOMPOSIT</th>
-                  <th className="py-3 px-4 text-center w-[20%]">MUTU BAHAN</th>
-                  <th className="py-3 px-4 text-center w-[18%]">PENGIRIMAN (OTD)</th>
-                  <th className="py-3 px-4 text-right w-[12%]">TIER & AKSI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-normal">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh className="py-3 px-4 w-[32%]">ENTITAS PEMASOK</DnaTh>
+                  <DnaTh className="py-3 px-4 text-center w-[18%]">SKOR KOMPOSIT</DnaTh>
+                  <DnaTh className="py-3 px-4 text-center w-[20%]">MUTU BAHAN</DnaTh>
+                  <DnaTh className="py-3 px-4 text-center w-[18%]">PENGIRIMAN (OTD)</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[12%]">TIER & AKSI</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredVendors.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center">
+                  <DnaTableRow>
+                    <DnaTd colSpan={5} className="py-8 text-center">
                       <DnaEmptyState
                         title="Belum Ada Data Pemasok"
                         description="Tidak ada data supplier yang sesuai filter ini."
                       />
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredVendors.map((vendor: any) => (
-                    <tr
+                    <DnaTableRow
                       key={vendor.id}
                       onClick={() => setSelectedVendor(vendor)}
                       className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                     >
-                      <td className="py-3 px-4">
+                      <DnaTd className="py-3 px-4">
                         <span className="font-semibold text-slate-900 block truncate">
                           {vendor.name}
                         </span>
-                        <span className="text-[11px] font-mono text-slate-500 block truncate">
+                        <span className="text-[11px] tabular-nums text-slate-500 block truncate">
                           ID: {vendor.id} • NPWP Terverifikasi
                         </span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className="inline-flex items-center justify-center font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg px-2.5 py-1 text-xs">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
+                        <span className="inline-flex items-center justify-center tabular-nums font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg px-2.5 py-1 text-xs">
                           {vendor.score} Poin
                         </span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
                         <div className="flex flex-col items-center">
-                          <span className="font-bold text-emerald-700 font-mono text-xs">
+                          <span className="font-bold text-emerald-700 tabular-nums text-xs">
                             {vendor.quality}%
                           </span>
                           <div className="w-24 bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
@@ -186,10 +192,10 @@ export default function VendorPerformancePage() {
                             />
                           </div>
                         </div>
-                      </td>
-                      <td className="py-3 px-4 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
                         <div className="flex flex-col items-center">
-                          <span className="font-bold text-amber-700 font-mono text-xs">
+                          <span className="font-bold text-amber-700 tabular-nums text-xs">
                             {vendor.delivery}%
                           </span>
                           <div className="w-24 bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
@@ -199,8 +205,8 @@ export default function VendorPerformancePage() {
                             />
                           </div>
                         </div>
-                      </td>
-                      <td className="py-3 px-4 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                           <DnaBadge
                             variant={
@@ -222,12 +228,12 @@ export default function VendorPerformancePage() {
                             Detail
                           </DnaButton>
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}
@@ -268,15 +274,15 @@ export default function VendorPerformancePage() {
             <div className="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
               <div>
                 <span className="text-slate-500 block text-[11px]">Skor Komposit</span>
-                <span className="font-bold text-indigo-700 font-mono text-lg block">{selectedVendor.score}</span>
+                <span className="font-bold text-indigo-700 tabular-nums text-lg block">{selectedVendor.score}</span>
               </div>
               <div>
                 <span className="text-slate-500 block text-[11px]">Kualitas Mutu</span>
-                <span className="font-bold text-emerald-700 font-mono text-lg block">{selectedVendor.quality}%</span>
+                <span className="font-bold text-emerald-700 tabular-nums text-lg block">{selectedVendor.quality}%</span>
               </div>
               <div>
                 <span className="text-slate-500 block text-[11px]">Ketepatan Waktu</span>
-                <span className="font-bold text-amber-700 font-mono text-lg block">{selectedVendor.delivery}%</span>
+                <span className="font-bold text-amber-700 tabular-nums text-lg block">{selectedVendor.delivery}%</span>
               </div>
             </div>
 

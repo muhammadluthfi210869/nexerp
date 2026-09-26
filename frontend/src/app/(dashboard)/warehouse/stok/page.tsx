@@ -30,7 +30,12 @@ import {
   DnaTable,
   DnaDetailDrawer,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface StockItem {
@@ -190,72 +195,72 @@ export default function WarehouseStockReportPage() {
         searchPlaceholder="Cari kode SKU, nama material/produk, lokasi rak..."
       >
         <DnaTable className="w-full text-left text-xs table-fixed">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-              <th className="px-4 py-3 w-[30%]">Barang & Kategori</th>
-              <th className="px-3 py-3 w-[20%]">Gudang & Rak</th>
-              <th className="px-3 py-3 w-[15%] text-right">Stok Fisik</th>
-              <th className="px-3 py-3 w-[18%] text-right">Valuasi FIFO</th>
-              <th className="px-3 py-3 w-[10%] text-center">Status</th>
-              <th className="px-4 py-3 w-[7%] text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
+          <DnaTableHead>
+            <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+              <DnaTh className="px-4 py-3 w-[30%]">Barang & Kategori</DnaTh>
+              <DnaTh className="px-3 py-3 w-[20%]">Gudang & Rak</DnaTh>
+              <DnaTh className="px-3 py-3 w-[15%] text-right">Stok Fisik</DnaTh>
+              <DnaTh className="px-3 py-3 w-[18%] text-right">Valuasi FIFO</DnaTh>
+              <DnaTh className="px-3 py-3 w-[10%] text-center">Status</DnaTh>
+              <DnaTh className="px-4 py-3 w-[7%] text-right">Aksi</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {filteredStocks.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-12 text-center text-slate-400">
+              <DnaTableRow>
+                <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                   <Package className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                   Tidak ada data persediaan barang yang sesuai filter.
-                </td>
-              </tr>
+                </DnaTd>
+              </DnaTableRow>
             ) : (
               filteredStocks.map((item) => (
-                <tr
+                <DnaTableRow
                   key={item.id}
                   onClick={() => setSelectedItem(item)}
                   className="hover:bg-slate-50/60 transition-colors cursor-pointer"
                 >
                   {/* Kolom 1: Max 2 lines (Name bold + SKU/Category muted) */}
-                  <td className="px-4 py-2.5">
+                  <DnaTd className="px-4 py-2.5">
                     <div className="font-semibold text-slate-900 truncate">{item.itemName}</div>
-                    <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5">
+                    <div className="text-[11px] text-slate-400 tabular-nums flex items-center gap-1.5 mt-0.5">
                       <span className="text-blue-600 font-semibold">{item.itemCode}</span>
                       <span>•</span>
                       <span>{item.category}</span>
                     </div>
-                  </td>
+                  </DnaTd>
 
                   {/* Kolom 2: Gudang & Rak */}
-                  <td className="px-3 py-2.5">
+                  <DnaTd className="px-3 py-2.5">
                     <div className="font-medium text-slate-800 truncate">{item.warehouse}</div>
-                    <div className="text-[11px] text-slate-400 font-mono mt-0.5 flex items-center gap-1">
+                    <div className="text-[11px] text-slate-400 tabular-nums mt-0.5 flex items-center gap-1">
                       <Warehouse className="w-3 h-3 text-slate-400" />
                       <span>{item.rackLocation}</span>
                     </div>
-                  </td>
+                  </DnaTd>
 
                   {/* Kolom 3: Stok Fisik & Safety */}
-                  <td className="px-3 py-2.5 text-right">
+                  <DnaTd className="px-3 py-2.5 text-right">
                     <div className="font-bold text-slate-900 text-sm">
                       {item.qtyOnHand.toLocaleString("id-ID")} <span className="text-xs font-normal text-slate-500">{item.unit}</span>
                     </div>
                     <div className="text-[11px] text-slate-400 mt-0.5">
                       Min: {item.safetyStock.toLocaleString("id-ID")} {item.unit}
                     </div>
-                  </td>
+                  </DnaTd>
 
                   {/* Kolom 4: Valuasi FIFO */}
-                  <td className="px-3 py-2.5 text-right">
+                  <DnaTd className="px-3 py-2.5 text-right">
                     <div className="font-bold text-emerald-700">
                       {formatRupiah(item.totalValuation)}
                     </div>
-                    <div className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                    <div className="text-[11px] text-slate-400 mt-0.5 tabular-nums">
                       @ {formatRupiah(item.fifoUnitCost)}
                     </div>
-                  </td>
+                  </DnaTd>
 
                   {/* Kolom 5: Status */}
-                  <td className="px-3 py-2.5 text-center">
+                  <DnaTd className="px-3 py-2.5 text-center">
                     <DnaBadge
                       variant={
                         item.status === "AMAN"
@@ -271,10 +276,10 @@ export default function WarehouseStockReportPage() {
                         ? "Low Stock"
                         : "Habis"}
                     </DnaBadge>
-                  </td>
+                  </DnaTd>
 
                   {/* Kolom 6: Aksi */}
-                  <td className="px-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                  <DnaTd className="px-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
                     <DnaButton
                       variant="ghost"
                       size="sm"
@@ -283,11 +288,11 @@ export default function WarehouseStockReportPage() {
                     >
                       <Eye className="w-4 h-4" />
                     </DnaButton>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))
             )}
-          </tbody>
+          </DnaTableBody>
         </DnaTable>
       </DnaDataTableCard>
 
@@ -353,7 +358,7 @@ export default function WarehouseStockReportPage() {
               </div>
               <div className="text-xs text-emerald-600 flex items-center justify-between">
                 <span>Harga Pokok Satuan (HPP):</span>
-                <span className="font-semibold font-mono">{formatRupiah(selectedItem.fifoUnitCost)} / {selectedItem.unit}</span>
+                <span className="font-semibold tabular-nums">{formatRupiah(selectedItem.fifoUnitCost)} / {selectedItem.unit}</span>
               </div>
             </div>
 
@@ -361,7 +366,7 @@ export default function WarehouseStockReportPage() {
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
               <div className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center justify-between">
                 <span>Posisi Kuantitas Fisik</span>
-                <span className="font-mono font-bold text-slate-900">
+                <span className="tabular-nums font-bold text-slate-900">
                   {selectedItem.qtyOnHand.toLocaleString("id-ID")} {selectedItem.unit}
                 </span>
               </div>
@@ -393,7 +398,7 @@ export default function WarehouseStockReportPage() {
                 </div>
                 <div className="p-3 bg-white border border-slate-200 rounded-lg">
                   <div className="text-slate-400">Lokasi Bin / Rak</div>
-                  <div className="font-semibold text-slate-800 mt-1 font-mono">{selectedItem.rackLocation}</div>
+                  <div className="font-semibold text-slate-800 mt-1 tabular-nums">{selectedItem.rackLocation}</div>
                 </div>
               </div>
             </div>

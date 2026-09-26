@@ -51,8 +51,13 @@ import {
   DnaDetailDrawer,
   DnaTable,
   useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
-import { api } from "@/lib/api";
+import { api, extractApiError } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 
 // ── Types ──
@@ -88,6 +93,7 @@ function MasterSuppliersContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
 
   const tabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<string>(
@@ -159,6 +165,82 @@ function MasterSuppliersContent() {
     }
   }, [apiSuppliers, isLoadingSuppliers, isErrorSuppliers]);
 
+  // ── Mutations ──
+  // These four writes used to be local-state only with a "berhasil" toast, so a refresh silently
+  // discarded the record. They now go to POST/PATCH/DELETE /master/suppliers and refetch.
+  const invalidateSuppliers = () =>
+    queryClient.invalidateQueries({ queryKey: ["master-suppliers"] });
+
+  const saveSupplierMut = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        name: supplierForm.nama.trim(),
+        contact: supplierForm.pic.trim(),
+        phone: supplierForm.phone.trim(),
+        email: supplierForm.email.trim() || undefined,
+        address: supplierForm.alamatLengkap.trim() || undefined,
+        city: supplierForm.kota.trim() || undefined,
+        province: supplierForm.provinsi.trim() || undefined,
+        termOfPayment: Number(supplierForm.paymentTerm.replace(/\D/g, "")) || 0,
+      };
+      // ponytail: `categoryId` is a UUID on the backend but this form only carries a category
+      // LABEL ("Bahan Baku"), and no supplier-category list route exists yet. Sending the label
+      // would 400 on @IsUUID, so it is omitted and the category stays a display-only column.
+      // Add when GET /master/supplier-categories lands.
+      const res = editingSupplier
+        ? await api.patch(`/master/suppliers/${editingSupplier.id}`, payload)
+        : await api.post("/master/suppliers", payload);
+      return unwrapResponse(res);
+    },
+    onSuccess: () => {
+      toast.success(
+        editingSupplier
+          ? `Data supplier ${supplierForm.nama} berhasil diperbarui.`
+          : `Supplier baru ${supplierForm.nama} berhasil ditambahkan.`,
+      );
+      setIsSupplierModalOpen(false);
+      setEditingSupplier(null);
+      invalidateSuppliers();
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
+  const deleteSupplierMut = useMutation({
+    mutationFn: async (id: string) => unwrapResponse(await api.delete(`/master/suppliers/${id}`)),
+    onSuccess: () => {
+      toast.success(`Supplier ${supplierToDelete?.nama} berhasil dihapus.`);
+      setSupplierToDelete(null);
+      invalidateSuppliers();
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
+  const importSuppliersMut = useMutation({
+    mutationFn: async (csvContent: string) =>
+      unwrapResponse(
+        await api.post("/master/suppliers/import", {
+          csvContent,
+          idempotencyKey: `supplier-import-${Date.now()}`,
+        }),
+      ),
+    onSuccess: (result: any) => {
+      // Backend ImportResult: { success, totalRows, importedRows, dryRun, errors[] }.
+      const n = result?.importedRows ?? 0;
+      const rejected = result?.errors?.length ?? 0;
+      if (result?.success === false || (n === 0 && rejected > 0)) {
+        toast.error(`Import gagal: ${rejected} baris ditolak.`);
+        return;
+      }
+      toast.success(
+        `${n} dari ${result?.totalRows ?? n} baris diimpor${rejected ? `, ${rejected} ditolak` : ""}.`
+      );
+      setIsImportModalOpen(false);
+      setImportFile(null);
+      invalidateSuppliers();
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
   // Sorting
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -174,6 +256,7 @@ function MasterSuppliersContent() {
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
   const [selectedSupplier, setSelectedSupplier] = useState<MasterSupplierItem | null>(null);
   const [editingSupplier, setEditingSupplier] = useState<MasterSupplierItem | null>(null);
   const [supplierToDelete, setSupplierToDelete] = useState<MasterSupplierItem | null>(null);
@@ -384,28 +467,12 @@ function MasterSuppliersContent() {
       toast.error("Nama supplier, PIC, dan nomor telepon wajib diisi!");
       return;
     }
-
-    if (editingSupplier) {
-      setSuppliersList((prev) =>
-        prev.map((s) => (s.id === editingSupplier.id ? { ...s, ...supplierForm } : s))
-      );
-      toast.success(`Data supplier ${supplierForm.nama} berhasil diperbarui.`);
-    } else {
-      const newSupplier: MasterSupplierItem = {
-        id: `sup-${Date.now()}`,
-        ...supplierForm,
-      };
-      setSuppliersList((prev) => [newSupplier, ...prev]);
-      toast.success(`Supplier baru ${newSupplier.nama} berhasil ditambahkan.`);
-    }
-    setIsSupplierModalOpen(false);
+    saveSupplierMut.mutate();
   };
 
   const handleDeleteSupplier = () => {
     if (!supplierToDelete) return;
-    setSuppliersList((prev) => prev.filter((s) => s.id !== supplierToDelete.id));
-    toast.success(`Supplier ${supplierToDelete.nama} berhasil dihapus.`);
-    setSupplierToDelete(null);
+    deleteSupplierMut.mutate(supplierToDelete.id);
   };
 
   const handleExportExcel = () => {
@@ -455,7 +522,49 @@ function MasterSuppliersContent() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success("Export Excel master supplier selesai.");
+    toast.success("Export master supplier selesai (CSV).");
+  };
+
+  // ── Import & Template ──
+  // Headers are the exact keys the backend import reads (import-export.service.ts, supplier case:
+  // name, contact, phone, email, address, city). A different label would be silently ignored.
+  const IMPORT_HEADERS = ["name", "contact", "phone", "email", "address", "city"];
+
+  // ponytail: only CSV can be read in the browser with no dependency — .xlsx needs a parser we do
+  // not ship. The modal now says CSV and accepts .csv only, instead of advertising .xlsx and
+  // toasting a fake success. Add when an xlsx reader is worth its bundle size.
+  const handleDownloadTemplate = () => {
+    const sample = [
+      "PT Contoh Supplier",
+      "Ibu Contoh",
+      "081200000000",
+      "kontak@contoh.co.id",
+      "Jalan Industri No. 1",
+      "Surabaya",
+    ];
+    const csv = [IMPORT_HEADERS.join(","), sample.map((v) => `"${v}"`).join(",")].join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "template_import_supplier.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Template import supplier diunduh (CSV).");
+  };
+
+  const handleStartImport = async () => {
+    if (!importFile) {
+      toast.error("Pilih file CSV terlebih dahulu.");
+      return;
+    }
+    try {
+      const csvContent = await importFile.text();
+      importSuppliersMut.mutate(csvContent);
+    } catch {
+      toast.error("Gagal membaca file. Pastikan file CSV yang dipilih valid.");
+    }
   };
 
   return (
@@ -606,51 +715,51 @@ function MasterSuppliersContent() {
             }}
           >
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1200px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 font-bold uppercase tracking-wider text-[11px] select-none">
-                  <th className="px-4 py-2.5 w-[140px]">Kode Vendor</th>
-                  <th className="px-4 py-2.5 min-w-[180px]">Nama Perusahaan</th>
-                  <th className="px-4 py-2.5 w-[140px]">PIC Vendor</th>
-                  <th className="px-4 py-2.5 w-[140px]">No. WhatsApp</th>
-                  <th className="px-4 py-2.5 w-[130px]">Kota Domisili</th>
-                  <th className="px-4 py-2.5 w-[150px]">Kategori Bahan</th>
-                  <th className="px-4 py-2.5 w-[120px] text-center">Status Pajak</th>
-                  <th className="px-4 py-2.5 w-[120px] text-center">Termin Bayar</th>
-                  <th className="pr-4 py-2.5 w-[80px] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 font-bold uppercase tracking-wider text-[11px] select-none">
+                  <DnaTh className="px-4 py-2.5 w-[140px]">Kode Vendor</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Nama Perusahaan</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px]">PIC Vendor</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px]">No. WhatsApp</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[130px]">Kota Domisili</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[150px]">Kategori Bahan</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px] text-center">Status Pajak</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px] text-center">Termin Bayar</DnaTh>
+                  <DnaTh className="pr-4 py-2.5 w-[80px] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {isLoadingSuppliers ? (
-                  <tr>
-                    <td colSpan={9} className="p-12 text-center text-slate-400 font-medium">
+                  <DnaTableRow>
+                    <DnaTd colSpan={9} className="p-12 text-center text-slate-400 font-medium">
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                         <span>Memuat data supplier...</span>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : isErrorSuppliers ? (
-                  <tr>
-                    <td colSpan={9} className="p-12 text-center text-rose-500 font-medium">
+                  <DnaTableRow>
+                    <DnaTd colSpan={9} className="p-12 text-center text-rose-500 font-medium">
                       <div className="flex flex-col items-center gap-2">
                         <span>{(suppliersError as any)?.message || "Gagal memuat data supplier dari server"}</span>
                         <DnaButton size="sm" variant="secondary" onClick={() => refetchSuppliers()}>
                           Coba Lagi
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : paginatedSuppliers.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="p-8 text-center text-slate-400">
+                  <DnaTableRow>
+                    <DnaTd colSpan={9} className="p-8 text-center text-slate-400">
                       Tidak ada data supplier yang sesuai filter.
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   paginatedSuppliers.map((sup) => {
                     return (
-                      <tr
+                      <DnaTableRow
                         key={sup.id}
                         className="h-[48px] hover:bg-slate-50/60 transition-colors cursor-pointer group"
                         onClick={() => {
@@ -658,35 +767,35 @@ function MasterSuppliersContent() {
                           setIsDetailModalOpen(true);
                         }}
                       >
-                        <td className="px-4 py-2.5">
+                        <DnaTd className="px-4 py-2.5">
                           <DnaCell.Code code={sup.vendorCode} />
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <span className="text-[12px] font-medium text-slate-900 line-clamp-1">{sup.nama}</span>
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <span className="text-[12px] font-medium text-slate-700 line-clamp-1">{sup.pic}</span>
-                        </td>
-                        <td className="px-4 py-2.5 font-mono text-[11.5px] text-emerald-700">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 tabular-nums text-[11.5px] text-emerald-700">
                           {sup.phone}
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <DnaCell.Text text={sup.kota} />
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <span className="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                             {sup.kategoriBahan}
                           </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center">
                           <DnaBadge variant={sup.isPkp ? "success" : "neutral"}>
                             {sup.isPkp ? "PKP 11%" : "NON-PKP"}
                           </DnaBadge>
-                        </td>
-                        <td className="px-4 py-2.5 text-center font-mono text-[11.5px] text-blue-700 font-semibold">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center tabular-nums text-[11.5px] text-blue-700 font-semibold">
                           {sup.paymentTerm}
-                        </td>
-                        <td className="pr-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                        </DnaTd>
+                        <DnaTd className="pr-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
                             <DnaButton
                               variant="ghost"
@@ -708,13 +817,13 @@ function MasterSuppliersContent() {
                               <Edit2 className="w-3.5 h-3.5" />
                             </DnaButton>
                           </div>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
           </DnaDataTableCard>
         </div>
@@ -736,32 +845,32 @@ function MasterSuppliersContent() {
               },
             }}
           >
-            <table className="w-full text-left border-collapse text-[12px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                  <th className="p-3.5 w-12 text-slate-400">#</th>
-                  <th className="p-3.5 min-w-[120px]">KODE PREFIX</th>
-                  <th className="p-3.5 min-w-[200px]">NAMA KATEGORI</th>
-                  <th className="p-3.5 min-w-[300px]">DESKRIPSI & RUANG LINGKUP</th>
-                  <th className="p-3.5 text-center min-w-[140px]">JUMLAH REKANAN</th>
-                  <th className="p-3.5 text-center w-24">AKSI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+                  <DnaTh className="p-3.5 w-12 text-slate-400">#</DnaTh>
+                  <DnaTh className="p-3.5 min-w-[120px]">KODE PREFIX</DnaTh>
+                  <DnaTh className="p-3.5 min-w-[200px]">NAMA KATEGORI</DnaTh>
+                  <DnaTh className="p-3.5 min-w-[300px]">DESKRIPSI & RUANG LINGKUP</DnaTh>
+                  <DnaTh className="p-3.5 text-center min-w-[140px]">JUMLAH REKANAN</DnaTh>
+                  <DnaTh className="p-3.5 text-center w-24">AKSI</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {categoriesList.map((cat, idx) => (
-                  <tr key={cat.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3.5 text-slate-400 tabular-nums">{idx + 1}</td>
-                    <td className="p-3.5">
+                  <DnaTableRow key={cat.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="p-3.5 text-slate-400 tabular-nums">{idx + 1}</DnaTd>
+                    <DnaTd className="p-3.5">
                       <DnaCell.Code value={cat.kode} />
-                    </td>
-                    <td className="p-3.5 font-bold text-slate-900 uppercase">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 font-bold text-slate-900 uppercase">
                       {cat.kategori}
-                    </td>
-                    <td className="p-3.5 text-slate-600">{cat.deskripsi}</td>
-                    <td className="p-3.5 text-center">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-slate-600">{cat.deskripsi}</DnaTd>
+                    <DnaTd className="p-3.5 text-center">
                       <DnaCell.Badge label={`${cat.totalSupplier} Vendor`} status="info" />
-                    </td>
-                    <td className="p-3.5 text-center">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center">
                       <DnaCell.Actions
                         onEdit={() => {
                           setEditingCategory(cat);
@@ -773,11 +882,11 @@ function MasterSuppliersContent() {
                           setIsCategoryModalOpen(true);
                         }}
                       />
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </DnaDataTableCard>
         </div>
       )}
@@ -945,7 +1054,7 @@ function MasterSuppliersContent() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <span className="text-slate-400 block text-[11px]">Kode Vendor:</span>
-                      <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                      <span className="tabular-nums font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                         {selectedSupplier.vendorCode}
                       </span>
                     </div>
@@ -965,7 +1074,7 @@ function MasterSuppliersContent() {
                         href={`https://wa.me/${selectedSupplier.phone.replace(/^0/, "62")}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="font-mono font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 mt-0.5"
+                        className="tabular-nums font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 mt-0.5"
                       >
                         <Phone className="w-3.5 h-3.5 text-emerald-500" />
                         {selectedSupplier.phone}
@@ -987,13 +1096,13 @@ function MasterSuppliersContent() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-white border border-slate-200 rounded-xl">
                     <span className="text-slate-400 block text-[11px]">Rekening Bank Pembayaran:</span>
-                    <span className="font-mono font-bold text-slate-900 text-xs block mt-1">
+                    <span className="tabular-nums font-bold text-slate-900 text-xs block mt-1">
                       {selectedSupplier.bankAccount}
                     </span>
                   </div>
                   <div className="p-3 bg-white border border-slate-200 rounded-xl">
                     <span className="text-slate-400 block text-[11px]">Nomor NPWP Perusahaan:</span>
-                    <span className="font-mono font-bold text-slate-900 text-xs block mt-1">
+                    <span className="tabular-nums font-bold text-slate-900 text-xs block mt-1">
                       {selectedSupplier.npwp || "Belum Terdaftar"}
                     </span>
                   </div>
@@ -1017,13 +1126,13 @@ function MasterSuppliersContent() {
                     </div>
                     <div>
                       <span className="text-slate-400 block text-[11px]">Term of Payment (TOP):</span>
-                      <strong className="text-blue-700 font-mono text-sm">{selectedSupplier.paymentTerm}</strong>
+                      <strong className="text-blue-700 tabular-nums text-sm">{selectedSupplier.paymentTerm}</strong>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 border-t border-slate-200 pt-2">
                     <div>
                       <span className="text-slate-400 block text-[11px]">Tarif PPN Faktur Pajak:</span>
-                      <span className="font-mono font-bold text-slate-900">
+                      <span className="tabular-nums font-bold text-slate-900">
                         {selectedSupplier.pajakPersen}% ({selectedSupplier.isPkp ? "Faktur Standar PKP" : "Non-PKP"})
                       </span>
                     </div>
@@ -1073,42 +1182,48 @@ function MasterSuppliersContent() {
         size="md"
       >
         <div className="space-y-4 py-2 text-xs">
-          <div className="p-6 border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl bg-slate-50/70 text-center space-y-3 transition-colors cursor-pointer">
+          <div className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 space-y-3">
             <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
               <Upload className="w-6 h-6" />
             </div>
-            <div>
-              <p className="font-bold text-slate-800">Seret file template Excel ke sini atau klik untuk memilih</p>
-              <p className="text-[11px] text-slate-500">Mendukung format .xlsx, .xls, .csv (Maksimal 10MB)</p>
-            </div>
+            <DnaInput
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
+            />
+            <p className="text-[11px] text-slate-500 text-center">
+              {importFile ? importFile.name : "Belum ada file dipilih"} — format .csv, maksimal 10MB
+            </p>
           </div>
 
           <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-[11px] text-slate-600 space-y-1">
             <strong className="text-slate-800">Catatan Validasi Sistem:</strong>
-            <p>1. Kolom wajib: <code>Nama Supplier</code>, <code>PIC</code>, <code>Nomor Telepon</code>, <code>Kategori Bahan</code>.</p>
-            <p>2. Format Pajak diisi <code>11</code> (PKP) atau <code>0</code> (Non-PKP).</p>
-            <p>3. Kode vendor otomatis dibuat jika kolom dikosongkan.</p>
+            <p>1. Kolom wajib: <code>name</code>. Kolom opsional: <code>contact</code>, <code>phone</code>, <code>email</code>, <code>address</code>, <code>city</code>.</p>
+            <p>2. Baris tanpa <code>name</code> ditolak; baris lain tetap diimpor dan dilaporkan.</p>
+            <p>3. Email harus format email valid, atau dikosongkan.</p>
           </div>
 
           <div className="flex justify-between items-center pt-2 border-t border-slate-100">
             <button
-              onClick={() => {
-                toast.info("Mengunduh template_import_supplier.xlsx...");
-              }}
+              onClick={handleDownloadTemplate}
               className="text-blue-600 hover:underline font-bold text-[11px]"
             >
-              Unduh Format Template Excel (.xlsx)
+              Unduh Format Template CSV
             </button>
             <div className="flex gap-2">
-              <DnaButton variant="ghost" onClick={() => setIsImportModalOpen(false)}>
+              <DnaButton
+                variant="ghost"
+                onClick={() => {
+                  setIsImportModalOpen(false);
+                  setImportFile(null);
+                }}
+              >
                 Batal
               </DnaButton>
               <DnaButton
                 variant="primary"
-                onClick={() => {
-                  toast.success("12 Rekanan Supplier berhasil diimpor dari Excel.");
-                  setIsImportModalOpen(false);
-                }}
+                loading={importSuppliersMut.isPending}
+                onClick={handleStartImport}
               >
                 Mulai Import
               </DnaButton>

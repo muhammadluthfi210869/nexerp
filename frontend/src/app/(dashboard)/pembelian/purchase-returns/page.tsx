@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, extractApiError } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   RotateCcw,
@@ -30,6 +30,12 @@ import {
   DnaLoadingSkeleton,
   DnaErrorState,
   DnaEmptyState,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface ReturnItem {
@@ -54,7 +60,10 @@ interface PurchaseReturn {
   compensationType: "POTONG_TAGIHAN" | "GANTI_BARANG" | "REFUND_DANA";
   totalQty: number;
   totalAmount: number;
-  status: "PENDING_VENDOR" | "APPROVED" | "COMPLETED" | "REJECTED";
+  // Mirrors the backend `PurchaseReturnStatus` enum (purchase-return.dto.ts) exactly. There is
+  // no APPROVED and no REJECTED state on the server; the old UI vocabulary invented both and
+  // rendered DRAFT/CANCELLED rows as "Disetujui Vendor".
+  status: "DRAFT" | "WAITING_APPROVAL" | "COMPLETED" | "CANCELLED";
   pic: string;
   notes?: string;
   items: ReturnItem[];
@@ -122,7 +131,9 @@ function PurchaseReturnsContent() {
       compensationType: "POTONG_TAGIHAN",
       totalQty: (r.items || []).reduce((sum: number, it: any) => sum + Number(it.quantity || 0), 0),
       totalAmount: Number(r.totalValue || r.debitNoteAmount || 0),
-      status: r.status === "COMPLETED" ? "COMPLETED" : r.status === "WAITING_APPROVAL" ? "PENDING_VENDOR" : "APPROVED",
+      status: (["DRAFT", "WAITING_APPROVAL", "COMPLETED", "CANCELLED"] as const).includes(r.status)
+        ? r.status
+        : "DRAFT",
       pic: r.creator?.fullName || "SCM Staff",
       notes: r.notes || "",
       items: (r.items || []).map((it: any) => ({
@@ -174,8 +185,8 @@ function PurchaseReturnsContent() {
     const list = dataList;
     const total = list.length;
     const totalValue = list.reduce((sum, r) => sum + r.totalAmount, 0);
-    const pending = list.filter((r) => r.status === "PENDING_VENDOR").length;
-    const approved = list.filter((r) => r.status === "APPROVED" || r.status === "COMPLETED").length;
+    const pending = list.filter((r) => r.status === "WAITING_APPROVAL").length;
+    const approved = list.filter((r) => r.status === "COMPLETED").length;
 
     return {
       total,
@@ -194,18 +205,7 @@ function PurchaseReturnsContent() {
         item.grnNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.vendorName.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchTab =
-        activeTab === "ALL"
-          ? true
-          : activeTab === "PENDING_VENDOR"
-          ? item.status === "PENDING_VENDOR"
-          : activeTab === "APPROVED"
-          ? item.status === "APPROVED"
-          : activeTab === "COMPLETED"
-          ? item.status === "COMPLETED"
-          : activeTab === "REJECTED"
-          ? item.status === "REJECTED"
-          : true;
+      const matchTab = activeTab === "ALL" ? true : item.status === activeTab;
 
       const matchComp = compensationFilter === "ALL" ? true : item.compensationType === compensationFilter;
 
@@ -308,32 +308,43 @@ function PurchaseReturnsContent() {
     });
   };
 
-  const handleApproveVendor = (id: string) => {
-    queryClient.invalidateQueries({ queryKey: ["purchase-returns"] });
-    if (selectedReturn && selectedReturn.id === id) {
-      setSelectedReturn({ ...selectedReturn, status: "APPROVED" });
-    }
-    toast.success("Supplier telah menyetujui klaim retur (Debit Note diterbitkan).");
-  };
+  // POST /purchase/returns/:id/approve. The backend moves the return to COMPLETED (there is no
+  // APPROVED state), so the toast says what actually happened rather than "Disetujui Vendor".
+  const approveReturnMut = useMutation({
+    mutationFn: async (id: string) => unwrapResponse(await api.post(`/purchase/returns/${id}/approve`)),
+    onSuccess: (_data, id) => {
+      toast.success("Klaim retur disetujui & ditutup (Debit Note diterbitkan).");
+      if (selectedReturn?.id === id) setSelectedReturn(null);
+      queryClient.invalidateQueries({ queryKey: ["purchase-returns"] });
+    },
+    onError: (e) => toast.error(extractApiError(e).message),
+  });
 
-  const handleCompleteReturn = (id: string) => {
-    queryClient.invalidateQueries({ queryKey: ["purchase-returns"] });
-    if (selectedReturn && selectedReturn.id === id) {
-      setSelectedReturn({ ...selectedReturn, status: "COMPLETED" });
-    }
-    toast.success("Kompensasi retur selesai (Barang pengganti diterima / Tagihan dipotong).");
-  };
+  // PATCH /purchase/returns/:id/status { status: "COMPLETED" }.
+  const completeReturnMut = useMutation({
+    mutationFn: async (id: string) =>
+      unwrapResponse(await api.patch(`/purchase/returns/${id}/status`, { status: "COMPLETED" })),
+    onSuccess: (_data, id) => {
+      toast.success("Kompensasi retur selesai (Barang pengganti diterima / Tagihan dipotong).");
+      if (selectedReturn?.id === id) setSelectedReturn(null);
+      queryClient.invalidateQueries({ queryKey: ["purchase-returns"] });
+    },
+    onError: (e) => toast.error(extractApiError(e).message),
+  });
+
+  const handleApproveVendor = (id: string) => approveReturnMut.mutate(id);
+  const handleCompleteReturn = (id: string) => completeReturnMut.mutate(id);
 
   const getStatusBadge = (status: PurchaseReturn["status"]) => {
     switch (status) {
-      case "PENDING_VENDOR":
-        return <DnaBadge variant="warning">Menunggu Vendor</DnaBadge>;
-      case "APPROVED":
-        return <DnaBadge variant="info">Disetujui Vendor</DnaBadge>;
+      case "DRAFT":
+        return <DnaBadge variant="neutral">Draft</DnaBadge>;
+      case "WAITING_APPROVAL":
+        return <DnaBadge variant="warning">Menunggu Persetujuan</DnaBadge>;
       case "COMPLETED":
         return <DnaBadge variant="success">Selesai Kompensasi</DnaBadge>;
-      case "REJECTED":
-        return <DnaBadge variant="critical">Klaim Ditolak</DnaBadge>;
+      case "CANCELLED":
+        return <DnaBadge variant="critical">Dibatalkan</DnaBadge>;
     }
   };
 
@@ -357,10 +368,10 @@ function PurchaseReturnsContent() {
         badge={<DnaBadge variant="neutral">SCR-042 / SCM-PUR-RET</DnaBadge>}
         tabs={[
           { key: "ALL", label: "Semua", count: dataList.length },
-          { key: "PENDING_VENDOR", label: "Menunggu Vendor", count: dataList.filter((d) => d.status === "PENDING_VENDOR").length },
-          { key: "APPROVED", label: "Disetujui", count: dataList.filter((d) => d.status === "APPROVED").length },
+          { key: "DRAFT", label: "Draft", count: dataList.filter((d) => d.status === "DRAFT").length },
+          { key: "WAITING_APPROVAL", label: "Menunggu Persetujuan", count: dataList.filter((d) => d.status === "WAITING_APPROVAL").length },
           { key: "COMPLETED", label: "Selesai", count: dataList.filter((d) => d.status === "COMPLETED").length },
-          { key: "REJECTED", label: "Ditolak", count: dataList.filter((d) => d.status === "REJECTED").length },
+          { key: "CANCELLED", label: "Dibatalkan", count: dataList.filter((d) => d.status === "CANCELLED").length },
         ]}
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -447,66 +458,66 @@ function PurchaseReturnsContent() {
           }
         >
           <div className="w-full">
-            <table className="w-full text-left border-collapse table-fixed text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider select-none">
-                <tr>
-                  <th className="py-3 px-4 w-[20%]">NO. RETUR & TANGGAL</th>
-                  <th className="py-3 px-4 w-[24%]">SUPPLIER & REF (PO/GRN)</th>
-                  <th className="py-3 px-4 w-[16%]">KUANTITAS & KOMPENSASI</th>
-                  <th className="py-3 px-4 text-right w-[16%]">NILAI KLAIM (DEBIT NOTE)</th>
-                  <th className="py-3 px-4 text-center w-[14%]">STATUS</th>
-                  <th className="py-3 px-4 text-right w-[10%]">AKSI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-normal">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh className="py-3 px-4 w-[20%]">NO. RETUR & TANGGAL</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[24%]">SUPPLIER & REF (PO/GRN)</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[16%]">KUANTITAS & KOMPENSASI</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[16%]">NILAI KLAIM (DEBIT NOTE)</DnaTh>
+                  <DnaTh className="py-3 px-4 text-center w-[14%]">STATUS</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[10%]">AKSI</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredList.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center">
+                  <DnaTableRow>
+                    <DnaTd colSpan={6} className="py-8 text-center">
                       <DnaEmptyState
                         title="Tidak Ada Retur Pembelian"
                         description="Belum ada data retur pembelian atau tidak ada hasil yang sesuai dengan filter."
                       />
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredList.map((row) => (
-                    <tr
+                    <DnaTableRow
                       key={row.id}
                       onClick={() => setSelectedReturn(row)}
                       className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                     >
-                      <td className="py-3 px-4">
-                        <span className="font-mono font-bold text-indigo-600 block truncate">
+                      <DnaTd className="py-3 px-4">
+                        <span className="tabular-nums font-bold text-indigo-600 block truncate">
                           {row.returnNumber}
                         </span>
-                        <span className="text-[11px] font-mono text-slate-500 block truncate">
+                        <span className="text-[11px] tabular-nums text-slate-500 block truncate">
                           {row.returnDate}
                         </span>
-                      </td>
-                      <td className="py-3 px-4">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4">
                         <span className="font-semibold text-slate-900 block truncate">
                           {row.vendorName}
                         </span>
-                        <span className="text-[11px] font-mono text-slate-500 block truncate">
+                        <span className="text-[11px] tabular-nums text-slate-500 block truncate">
                           {row.poNumber} • {row.grnNumber}
                         </span>
-                      </td>
-                      <td className="py-3 px-4">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4">
                         <span className="font-semibold text-slate-800 block text-xs">
                           {row.totalQty.toLocaleString("id-ID")} Item
                         </span>
                         <div className="mt-0.5">{getCompensationBadge(row.compensationType)}</div>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <span className="font-mono font-bold text-red-600 block text-xs">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
+                        <span className="tabular-nums font-bold text-red-600 block text-xs">
                           Rp {row.totalAmount.toLocaleString("id-ID")}
                         </span>
                         <span className="text-[10px] text-slate-500 block">Pengurang Hutang</span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
                         {getStatusBadge(row.status)}
-                      </td>
-                      <td className="py-3 px-4 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                           <DnaButton
                             variant="ghost"
@@ -516,10 +527,11 @@ function PurchaseReturnsContent() {
                           >
                             Detail
                           </DnaButton>
-                          {row.status === "PENDING_VENDOR" && (
+                          {row.status === "WAITING_APPROVAL" && (
                             <DnaButton
                               variant="primary"
                               size="sm"
+                              loading={approveReturnMut.isPending}
                               icon={<CheckCircle2 className="w-3.5 h-3.5" />}
                               onClick={() => handleApproveVendor(row.id)}
                             >
@@ -527,12 +539,12 @@ function PurchaseReturnsContent() {
                             </DnaButton>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}
@@ -550,30 +562,26 @@ function PurchaseReturnsContent() {
               PIC Pengajuan: <span className="font-semibold text-slate-700">{selectedReturn?.pic}</span>
             </div>
             <div className="flex items-center gap-2">
-              {selectedReturn?.status === "PENDING_VENDOR" && (
+              {selectedReturn?.status === "WAITING_APPROVAL" && (
                 <DnaButton
                   variant="primary"
                   size="sm"
+                  loading={approveReturnMut.isPending}
                   icon={<CheckCircle2 className="w-4 h-4" />}
-                  onClick={() => {
-                    handleApproveVendor(selectedReturn.id);
-                    setSelectedReturn(null);
-                  }}
+                  onClick={() => handleApproveVendor(selectedReturn.id)}
                 >
-                  Konfirmasi Disetujui Vendor
+                  Setujui Klaim Retur
                 </DnaButton>
               )}
-              {selectedReturn?.status === "APPROVED" && (
+              {selectedReturn?.status === "DRAFT" && (
                 <DnaButton
                   variant="primary"
                   size="sm"
+                  loading={completeReturnMut.isPending}
                   icon={<CheckCircle2 className="w-4 h-4" />}
-                  onClick={() => {
-                    handleCompleteReturn(selectedReturn.id);
-                    setSelectedReturn(null);
-                  }}
+                  onClick={() => handleCompleteReturn(selectedReturn.id)}
                 >
-                  Kompensasi Selesai
+                  Tandai Kompensasi Selesai
                 </DnaButton>
               )}
               <DnaButton variant="outline" size="sm" onClick={() => setSelectedReturn(null)}>
@@ -589,12 +597,12 @@ function PurchaseReturnsContent() {
             <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
                 <span className="text-slate-500 block text-[11px]">Referensi Inbound</span>
-                <span className="font-bold text-slate-900 font-mono text-xs block">{selectedReturn.poNumber}</span>
+                <span className="font-bold text-slate-900 tabular-nums text-xs block">{selectedReturn.poNumber}</span>
                 <span className="text-slate-500 text-[11px] mt-0.5">GRN: {selectedReturn.grnNumber}</span>
               </div>
               <div className="text-right">
                 <span className="text-slate-500 block text-[11px]">Total Nilai Debit Note</span>
-                <span className="font-bold text-red-600 font-mono text-sm block">
+                <span className="font-bold text-red-600 tabular-nums text-sm block">
                   Rp {selectedReturn.totalAmount.toLocaleString("id-ID")}
                 </span>
                 <div className="mt-0.5">{getCompensationBadge(selectedReturn.compensationType)}</div>
@@ -607,37 +615,37 @@ function PurchaseReturnsContent() {
                 Daftar Barang yang Diretur ({selectedReturn.items.length} Item)
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-left text-xs text-slate-600">
-                  <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700 text-[10px] uppercase">
-                    <tr>
-                      <th className="py-2.5 px-3">Kode</th>
-                      <th className="py-2.5 px-3">Nama Barang</th>
-                      <th className="py-2.5 px-3 text-right">Qty</th>
-                      <th className="py-2.5 px-3 text-right">Harga</th>
-                      <th className="py-2.5 px-3 text-right">Total Nilai</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3">Kode</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Nama Barang</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Qty</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Harga</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Total Nilai</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedReturn.items.map((it) => (
-                      <tr key={it.id} className="hover:bg-slate-50">
-                        <td className="py-2.5 px-3 text-indigo-600 font-medium">{it.itemCode}</td>
-                        <td className="py-2.5 px-3 font-sans font-semibold text-slate-800">
+                      <DnaTableRow key={it.id} className="hover:bg-slate-50">
+                        <DnaTd className="py-2.5 px-3 text-indigo-600 font-medium">{it.itemCode}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 font-sans font-semibold text-slate-800">
                           {it.itemName}
                           <p className="text-[10px] text-rose-600 font-normal font-sans">{it.rejectReason}</p>
-                        </td>
-                        <td className="py-2.5 px-3 text-right text-slate-700">
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right text-slate-700">
                           {it.qtyReturned} {it.unit}
-                        </td>
-                        <td className="py-2.5 px-3 text-right text-slate-600">
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right text-slate-600">
                           Rp {it.unitPrice.toLocaleString("id-ID")}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-red-600">
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right font-bold text-red-600">
                           Rp {it.totalPrice.toLocaleString("id-ID")}
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
           </div>
@@ -686,7 +694,7 @@ function PurchaseReturnsContent() {
                 type="date"
                 value={returnDate}
                 onChange={(e) => setReturnDate(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 tabular-nums"
               />
             </div>
           </div>
@@ -766,7 +774,7 @@ function PurchaseReturnsContent() {
                         placeholder="Kode"
                         value={item.itemCode}
                         onChange={(e) => handleUpdateItem(idx, "itemCode", e.target.value)}
-                        className="w-full text-xs border border-slate-200 rounded p-1.5 font-mono"
+                        className="w-full text-xs border border-slate-200 rounded p-1.5 tabular-nums"
                       />
                     </div>
                     <div className="flex-1">
@@ -783,7 +791,7 @@ function PurchaseReturnsContent() {
                         placeholder="Qty"
                         value={item.qtyReturned}
                         onChange={(e) => handleUpdateItem(idx, "qtyReturned", Number(e.target.value))}
-                        className="w-full text-xs border border-slate-200 rounded p-1.5 text-right font-mono"
+                        className="w-full text-xs border border-slate-200 rounded p-1.5 text-right tabular-nums"
                       />
                     </div>
                     <div className="w-24">
@@ -792,10 +800,10 @@ function PurchaseReturnsContent() {
                         placeholder="Harga"
                         value={item.unitPrice}
                         onChange={(e) => handleUpdateItem(idx, "unitPrice", Number(e.target.value))}
-                        className="w-full text-xs border border-slate-200 rounded p-1.5 text-right font-mono"
+                        className="w-full text-xs border border-slate-200 rounded p-1.5 text-right tabular-nums"
                       />
                     </div>
-                    <div className="w-24 text-right font-bold text-red-600 font-mono text-[11px]">
+                    <div className="w-24 text-right font-bold text-red-600 tabular-nums text-[11px]">
                       Rp {item.totalPrice.toLocaleString("id-ID")}
                     </div>
                     <button
@@ -820,7 +828,7 @@ function PurchaseReturnsContent() {
 
             <div className="flex justify-between items-center pt-2 border-t border-slate-200 text-xs">
               <span className="font-bold text-slate-600">Total Nilai Debit Note:</span>
-              <span className="text-sm font-bold text-red-600 font-mono">
+              <span className="text-sm font-bold text-red-600 tabular-nums">
                 Rp {formTotalAmount.toLocaleString("id-ID")}
               </span>
             </div>

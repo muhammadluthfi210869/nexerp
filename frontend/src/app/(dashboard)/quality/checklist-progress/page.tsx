@@ -37,7 +37,7 @@ interface ChecklistProgress {
 
 export default function ChecklistProgressPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-500 font-mono text-xs">Memuat Progres Checklist...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-slate-500 tabular-nums text-xs">Memuat Progres Checklist...</div>}>
       <ChecklistProgressContent />
     </Suspense>
   );
@@ -71,64 +71,7 @@ function ChecklistProgressContent() {
           bpomIssuedDate: c.bpomIssuedDate || "2026-09-02",
         }));
       } catch {
-        return [
-          {
-            id: "chk-001",
-            code: "QC-CHK-2026-001",
-            category: "Ruahan / Bulk",
-            name: "Inspeksi Kelulusan Bulk Day Cream SPF 30",
-            pic: "Ratna Sari",
-            progress: 100,
-            status: "Completed",
-            deadline: "2026-09-05",
-            totalItems: 8,
-            completedItems: 8,
-            bpomRegNumber: "NA18260109281",
-            bpomIssuedDate: "2026-09-02",
-          },
-          {
-            id: "chk-002",
-            code: "QC-CHK-2026-002",
-            category: "Packaging Primer",
-            name: "Kebocoran & Dropper Serum Retinol",
-            pic: "Budi Santoso",
-            progress: 65,
-            status: "Process",
-            deadline: "2026-09-08",
-            totalItems: 10,
-            completedItems: 6,
-            bpomRegNumber: "NA18260109281",
-            bpomIssuedDate: "2026-09-02",
-          },
-          {
-            id: "chk-003",
-            code: "QC-CHK-2026-003",
-            category: "Microbiology",
-            name: "Uji ALT/AKG & Angka Lempeng Total",
-            pic: "Dr. Hendra",
-            progress: 25,
-            status: "Process",
-            deadline: "2026-09-10",
-            totalItems: 12,
-            completedItems: 3,
-            bpomRegNumber: "NA18260109285",
-            bpomIssuedDate: "2026-09-03",
-          },
-          {
-            id: "chk-004",
-            code: "QC-CHK-2026-004",
-            category: "Sekunder & Box",
-            name: "Verifikasi Barcode BPOM & Hologram Box",
-            pic: "Siti Rahma",
-            progress: 0,
-            status: "Pending",
-            deadline: "2026-09-12",
-            totalItems: 6,
-            completedItems: 0,
-            bpomRegNumber: "NA18260109282",
-            bpomIssuedDate: "2026-09-04",
-          },
-        ];
+        return [];
       }
     },
   });
@@ -299,7 +242,7 @@ function ChecklistProgressContent() {
             ) : (
               paginatedData.map((item, idx) => (
                 <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="p-3.5 text-center text-slate-400 font-mono text-[11px] tabular-nums">
+                  <td className="p-3.5 text-center text-slate-400 tabular-nums text-[11px] tabular-nums">
                     {(currentPage - 1) * pageSize + idx + 1}
                   </td>
                   <td className="p-3.5">
@@ -332,7 +275,7 @@ function ChecklistProgressContent() {
                   <td className="p-3.5">
                     <DnaCell.Date value={item.deadline || "—"} />
                   </td>
-                  <td className="p-3.5 font-mono text-[11.5px] text-slate-600">
+                  <td className="p-3.5 tabular-nums text-[11.5px] text-slate-600">
                     {item.bpomRegNumber || "—"}
                   </td>
                 </tr>

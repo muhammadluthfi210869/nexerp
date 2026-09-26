@@ -29,6 +29,13 @@ import {
   useDnaToast,
   DnaLoadingSkeleton,
   DnaEmptyState,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
 
 export default function ReceivingPage() {
@@ -229,60 +236,60 @@ function ReceivingContent() {
           }}
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1200px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
-                  <th className="px-4 py-2.5 w-[160px]">No. GRN</th>
-                  <th className="px-4 py-2.5 w-[150px]">No. Purchase Order</th>
-                  <th className="px-4 py-2.5 w-[110px]">Tgl Terima</th>
-                  <th className="px-4 py-2.5 min-w-[180px]">Supplier / Vendor</th>
-                  <th className="px-4 py-2.5 w-[120px] text-right">Qty Bagus</th>
-                  <th className="px-4 py-2.5 w-[110px] text-right">Qty Reject</th>
-                  <th className="px-4 py-2.5 w-[120px] text-center">Status QC</th>
-                  <th className="px-4 py-2.5 w-[120px] text-center">Status Siklus</th>
-                  <th className="pr-4 py-2.5 w-[70px] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
+                  <DnaTh className="px-4 py-2.5 w-[160px]">No. GRN</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[150px]">No. Purchase Order</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Tgl Terima</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Supplier / Vendor</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px] text-right">Qty Bagus</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px] text-right">Qty Reject</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px] text-center">Status QC</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px] text-center">Status Siklus</DnaTh>
+                  <DnaTh className="pr-4 py-2.5 w-[70px] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredReceipts.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="py-8 text-center">
+                  <DnaTableRow>
+                    <DnaTd colSpan={9} className="py-8 text-center">
                       <DnaEmptyState
                         title="Belum Ada Penerimaan Barang"
                         description="Belum ada barang yang diterima pada filter ini."
                       />
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredReceipts.map((row: any) => (
-                    <tr
+                    <DnaTableRow
                       key={row.id}
                       onClick={() => setSelectedReceipt(row)}
                       className="h-[48px] hover:bg-slate-50/60 transition-colors cursor-pointer"
                     >
-                      <td className="px-4 py-2.5">
+                      <DnaTd className="px-4 py-2.5">
                         <DnaCell.Code code={row.id} />
-                      </td>
-                      <td className="px-4 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5">
                         <DnaCell.Code code={row.poId} />
-                      </td>
-                      <td className="px-4 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5">
                         <DnaCell.Text text={row.date} />
-                      </td>
-                      <td className="px-4 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5">
                         <span className="text-[12px] font-medium text-slate-900 line-clamp-1">{row.vendor}</span>
-                      </td>
-                      <td className="px-4 py-2.5 text-right font-mono tabular-nums">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5 text-right tabular-nums tabular-nums">
                         <span className="text-[12px] font-semibold text-emerald-700">
                           {row.qtyBagus.toLocaleString("id-ID")}
                         </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-right font-mono tabular-nums">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5 text-right tabular-nums tabular-nums">
                         <span className={`text-[12px] font-semibold ${row.qtyReject > 0 ? "text-rose-600" : "text-slate-400"}`}>
                           {row.qtyReject.toLocaleString("id-ID")}
                         </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5 text-center">
                         <DnaBadge
                           variant={
                             row.qc === "PASSED"
@@ -294,13 +301,13 @@ function ReceivingContent() {
                         >
                           {row.qc === "PASSED" ? "Lolos QC" : row.qc === "WAITING" ? "Menunggu QC" : "Gagal QC"}
                         </DnaBadge>
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5 text-center">
                         <DnaBadge variant={row.status === "VERIFIED" ? "info" : "neutral"}>
                           {row.status === "VERIFIED" ? "Terverifikasi" : "Pending"}
                         </DnaBadge>
-                      </td>
-                      <td className="pr-4 py-2.5 text-right">
+                      </DnaTd>
+                      <DnaTd className="pr-4 py-2.5 text-right">
                         <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                           <DnaButton
                             variant="ghost"
@@ -311,12 +318,12 @@ function ReceivingContent() {
                             <Eye className="w-3.5 h-3.5" />
                           </DnaButton>
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}
@@ -349,15 +356,15 @@ function ReceivingContent() {
             <div className="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div className="text-center">
                 <span className="text-slate-500 block text-[11px]">Bagus (Lolos QC)</span>
-                <span className="font-bold text-emerald-700 font-mono text-lg">{selectedReceipt.qtyBagus}</span>
+                <span className="font-bold text-emerald-700 tabular-nums text-lg">{selectedReceipt.qtyBagus}</span>
               </div>
               <div className="text-center">
                 <span className="text-slate-500 block text-[11px]">Reject (Cacat)</span>
-                <span className="font-bold text-rose-700 font-mono text-lg">{selectedReceipt.qtyReject}</span>
+                <span className="font-bold text-rose-700 tabular-nums text-lg">{selectedReceipt.qtyReject}</span>
               </div>
               <div className="text-center">
                 <span className="text-slate-500 block text-[11px]">Free (Bonus HPP 0)</span>
-                <span className="font-bold text-amber-700 font-mono text-lg">{selectedReceipt.qtyFree}</span>
+                <span className="font-bold text-amber-700 tabular-nums text-lg">{selectedReceipt.qtyFree}</span>
               </div>
             </div>
 
@@ -367,28 +374,28 @@ function ReceivingContent() {
                 Item Material Diterima
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-left text-xs text-slate-600">
-                  <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700 text-[10px] uppercase">
-                    <tr>
-                      <th className="py-2.5 px-3">Nama Material</th>
-                      <th className="py-2.5 px-3 text-right">Qty Aktual</th>
-                      <th className="py-2.5 px-3 text-center">Status QC</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3">Nama Material</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Qty Aktual</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-center">Status QC</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {(selectedReceipt.items || []).map((it: any, idx: number) => (
-                      <tr key={idx} className="hover:bg-slate-50">
-                        <td className="py-2 px-3 font-sans font-medium text-slate-800">{it.name}</td>
-                        <td className="py-2 px-3 text-right font-bold text-slate-900">{it.qtyActual}</td>
-                        <td className="py-2 px-3 text-center">
+                      <DnaTableRow key={idx} className="hover:bg-slate-50">
+                        <DnaTd className="py-2 px-3 font-sans font-medium text-slate-800">{it.name}</DnaTd>
+                        <DnaTd className="py-2 px-3 text-right font-bold text-slate-900">{it.qtyActual}</DnaTd>
+                        <DnaTd className="py-2 px-3 text-center">
                           <DnaBadge variant={it.qcStatus === "GOOD" ? "success" : "warning"}>
                             {it.qcStatus}
                           </DnaBadge>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
           </div>

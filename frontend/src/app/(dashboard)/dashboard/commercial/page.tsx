@@ -21,7 +21,7 @@ export default function CommercialDashboard() {
   const { data: leads, isLoading: leadsLoading } = useQuery({
     queryKey: ["leads"],
     queryFn: async () => {
-      const res = await api.get("/leads");
+      const res = await api.get("/bussdev/leads");
       return res.data;
     }
   });

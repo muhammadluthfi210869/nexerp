@@ -9,6 +9,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import {
   DnaDialog,
@@ -237,36 +243,36 @@ export function PipelineContent() {
         </div>
 
         <TableWrapper>
-          <table className="w-full">
-            <thead>
-              <tr className="bg-slate-50/50">
-                <th className="py-4 px-4 text-table-header text-slate-400 text-left">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="bg-slate-50/50">
+                <DnaTh className="py-4 px-4 text-table-header text-slate-400 text-left">
                   Sample
-                </th>
-                <th className="py-4 px-4 text-table-header text-slate-400 text-center">
+                </DnaTh>
+                <DnaTh className="py-4 px-4 text-table-header text-slate-400 text-center">
                   Stage
-                </th>
-                <th className="py-4 px-4 text-table-header text-slate-400 text-center">
+                </DnaTh>
+                <DnaTh className="py-4 px-4 text-table-header text-slate-400 text-center">
                   Revision Status
-                </th>
-                <th className="py-4 px-4 text-table-header text-slate-400 text-center">
+                </DnaTh>
+                <DnaTh className="py-4 px-4 text-table-header text-slate-400 text-center">
                   Aging
-                </th>
-                <th className="py-4 px-4 text-table-header text-slate-400 text-right">
+                </DnaTh>
+                <DnaTh className="py-4 px-4 text-table-header text-slate-400 text-right">
                   Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+                </DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredSamples.length === 0 ? (
-                <tr>
-                  <td
+                <DnaTableRow>
+                  <DnaTd
                     colSpan={5}
                     className="h-32 text-center text-slate-400 text-sm italic"
                   >
                     No samples in this stage.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredSamples.map((sample) => {
                   const config = STAGE_CONFIG[sample.stage] || STAGE_CONFIG.QUEUE;
@@ -276,11 +282,11 @@ export function PipelineContent() {
                   const isTerminal = validStages.length === 0;
 
                   return (
-                    <tr
+                    <DnaTableRow
                       key={sample.id}
                       className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50"
                     >
-                      <td className="py-4 px-4">
+                      <DnaTd className="py-4 px-4">
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-8 rounded bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-sm">
                             {sample.productName?.charAt(0) || "?"}
@@ -295,9 +301,9 @@ export function PipelineContent() {
                             </p>
                           </div>
                         </div>
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-4 px-4 text-center">
+                      <DnaTd className="py-4 px-4 text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
@@ -337,9 +343,9 @@ export function PipelineContent() {
                             )}
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-4 px-4 text-center">
+                      <DnaTd className="py-4 px-4 text-center">
                         {sample.revisionStatus ? (
                           <span
                             className={cn(
@@ -354,9 +360,9 @@ export function PipelineContent() {
                         ) : (
                           <span className="text-[11px] font-black text-slate-300">—</span>
                         )}
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-4 px-4 text-center">
+                      <DnaTd className="py-4 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <Clock
                             className={cn(
@@ -373,9 +379,9 @@ export function PipelineContent() {
                             {aging}d
                           </span>
                         </div>
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-4 px-4 text-right">
+                      <DnaTd className="py-4 px-4 text-right">
                         {!isTerminal && (
                           <DnaButton
                             variant="primary"
@@ -389,13 +395,13 @@ export function PipelineContent() {
                             Advance
                           </DnaButton>
                         )}
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   );
                 })
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </TableWrapper>
       </DnaCard>
 

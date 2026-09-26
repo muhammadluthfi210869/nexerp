@@ -127,7 +127,7 @@ export default function LeadDetailPage() {
       <header className="flex flex-col gap-2">
         <h1 className="text-[32px] leading-[40px] font-bold text-slate-900">{lead.displayName ?? "(belum ada nama)"}</h1>
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          <span className="font-mono text-xs">{lead.trackingCode ?? lead.id}</span>
+          <span className="tabular-nums text-xs">{lead.trackingCode ?? lead.id}</span>
           <DnaBadge status="default">{lead.source}</DnaBadge>
           <DnaBadge status={lead.stage === "CLIENT_DEAL" ? "default" : lead.stage === "JUNK_LEADS" || lead.stage === "CLOSED_LOST" ? "warning" : "default"}>
             {lead.stage.replace(/_/g, " ")}

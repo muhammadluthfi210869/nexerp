@@ -368,7 +368,7 @@ export default function MaterialRequisitionPage() {
                       setIsDetailDrawerOpen(true);
                     }}
                   >
-                    <td className="p-3.5 text-center text-slate-400 font-mono text-[11px] tabular-nums">
+                    <td className="p-3.5 text-center text-slate-400 tabular-nums text-[11px] tabular-nums">
                       {(currentPage - 1) * pageSize + idx + 1}
                     </td>
                     <td className="p-3.5">
@@ -377,10 +377,10 @@ export default function MaterialRequisitionPage() {
                     <td className="p-3.5">
                       <DnaCell.Date value={item.date} />
                     </td>
-                    <td className="p-3.5 font-mono text-[11.5px] font-semibold text-blue-700">
+                    <td className="p-3.5 tabular-nums text-[11.5px] font-semibold text-blue-700">
                       {item.spkCode}
                     </td>
-                    <td className="p-3.5 font-mono text-[11.5px] text-slate-600">
+                    <td className="p-3.5 tabular-nums text-[11.5px] text-slate-600">
                       {item.batchNumber}
                     </td>
                     <td className="p-3.5">
@@ -536,8 +536,8 @@ export default function MaterialRequisitionPage() {
               <div className="space-y-4 text-xs">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-mono font-bold text-slate-900">{detailModalItem.code}</span>
-                    <span className="font-mono text-slate-500">{detailModalItem.date}</span>
+                    <span className="tabular-nums font-bold text-slate-900">{detailModalItem.code}</span>
+                    <span className="tabular-nums text-slate-500">{detailModalItem.date}</span>
                   </div>
                   <p className="font-bold text-slate-900 text-sm">{detailModalItem.productName}</p>
                   <p className="text-slate-600">{detailModalItem.customerName} ({detailModalItem.brandName})</p>
@@ -558,7 +558,7 @@ export default function MaterialRequisitionPage() {
 
                 <div className="p-3 bg-white rounded-lg border border-slate-200 space-y-1">
                   <span className="font-bold text-slate-700">Rincian Item Material:</span>
-                  <p className="text-slate-800 leading-relaxed font-mono">{detailModalItem.itemsSummary}</p>
+                  <p className="text-slate-800 leading-relaxed tabular-nums">{detailModalItem.itemsSummary}</p>
                 </div>
               </div>
             ) : null,

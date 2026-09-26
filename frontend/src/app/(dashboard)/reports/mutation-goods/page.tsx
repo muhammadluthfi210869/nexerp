@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   ArrowRightLeft,
-  Search,
-  Warehouse,
   Download,
-  Calendar,
   ArrowDownRight,
   ArrowUpRight,
   RefreshCw,
@@ -19,6 +18,12 @@ import {
   DnaButton,
   DnaBadge,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { DnaCell } from "@/components/dna/cells/DnaCell";
 
@@ -26,8 +31,7 @@ interface MutationRecord {
   id: string;
   date: string;
   docNumber: string;
-  type: "INBOUND" | "OUTBOUND" | "TRANSFER" | "ADJUSTMENT" | "RETURN";
-  warehouse: string;
+  type: string;
   materialName: string;
   qtyIn: number;
   qtyOut: number;
@@ -36,131 +40,88 @@ interface MutationRecord {
   notes: string;
 }
 
-const INITIAL_MUTATIONS: MutationRecord[] = [
-  {
-    id: "MUT-001",
-    date: "2026-09-01",
-    docNumber: "GRN-2026-0001",
-    type: "INBOUND",
-    warehouse: "Gudang Bahan Baku",
-    materialName: "Hairdensyl Complex",
-    qtyIn: 500,
-    qtyOut: 0,
-    balance: 500,
-    unit: "gr",
-    notes: "Penerimaan PO-2026-0001 dari BASF Care"
-  },
-  {
-    id: "MUT-002",
-    date: "2026-09-02",
-    docNumber: "TRF-2026-0001",
-    type: "TRANSFER",
-    warehouse: "Gudang Bahan Baku",
-    materialName: "Hairdensyl Complex",
-    qtyIn: 0,
-    qtyOut: 50,
-    balance: 450,
-    unit: "gr",
-    notes: "Mutasi keluar ke Gudang Kemasan"
-  },
-  {
-    id: "MUT-003",
-    date: "2026-09-02",
-    docNumber: "TRF-2026-0001",
-    type: "TRANSFER",
-    warehouse: "Gudang Kemasan",
-    materialName: "Hairdensyl Complex",
-    qtyIn: 50,
-    qtyOut: 0,
-    balance: 50,
-    unit: "gr",
-    notes: "Mutasi masuk dari Gudang Bahan Baku"
-  },
-  {
-    id: "MUT-004",
-    date: "2026-09-03",
-    docNumber: "DO-2026-0001",
-    type: "OUTBOUND",
-    warehouse: "Gudang Barang Jadi",
-    materialName: "Day Cream SPF 30 (Farah Derma)",
-    qtyIn: 0,
-    qtyOut: 3000,
-    balance: 0,
-    unit: "pcs",
-    notes: "Surat jalan DO ke klien Farah Derma Clinic"
-  },
-  {
-    id: "MUT-005",
-    date: "2026-09-04",
-    docNumber: "ADJ-2026-0001",
-    type: "ADJUSTMENT",
-    warehouse: "Gudang Bahan Baku",
-    materialName: "Hairdensyl Complex",
-    qtyIn: 0,
-    qtyOut: 2.5,
-    balance: 447.5,
-    unit: "gr",
-    notes: "Penyesuaian susut panas mixing"
-  },
-  {
-    id: "MUT-006",
-    date: "2026-09-06",
-    docNumber: "GRN-2026-0002",
-    type: "INBOUND",
-    warehouse: "Gudang Kemasan",
-    materialName: "IPM (Isopropyl Myristate)",
-    qtyIn: 1000,
-    qtyOut: 0,
-    balance: 1000,
-    unit: "gr",
-    notes: "Penerimaan PO-2026-0002 supplier Croda"
-  },
-  {
-    id: "MUT-007",
-    date: "2026-09-09",
-    docNumber: "ADJ-2026-0002",
-    type: "ADJUSTMENT",
-    warehouse: "Gudang Kemasan",
-    materialName: "IPM (Isopropyl Myristate)",
-    qtyIn: 0,
-    qtyOut: 15,
-    balance: 985,
-    unit: "gr",
-    notes: "Pecah fisik kemasan luar"
-  },
-  {
-    id: "MUT-008",
-    date: "2026-09-13",
-    docNumber: "ADJ-2026-0003",
-    type: "ADJUSTMENT",
-    warehouse: "Gudang Barang Jadi",
-    materialName: "Niacinamide PC Grade",
-    qtyIn: 5,
-    qtyOut: 0,
-    balance: 105,
-    unit: "gr",
-    notes: "Bonus sampel gratis dari supplier"
-  }
-];
+const TYPE_LABEL: Record<string, string> = {
+  INBOUND: "Masuk (Inbound)",
+  OUTBOUND: "Keluar (Outbound)",
+  INTERNAL_MOVE: "Mutasi Antar Gudang",
+  ADJUSTMENT: "Penyesuaian Stok",
+  DISPOSAL: "Pemusnahan",
+  RETURN: "Retur Barang",
+};
 
 export default function ReportMutationGoodsPage() {
   const { toast } = useDnaToast();
-  const [mutations] = useState<MutationRecord[]>(INITIAL_MUTATIONS);
   const [searchTerm, setSearchTerm] = useState("");
-  const [warehouseFilter, setWarehouseFilter] = useState("ALL");
   const [typeFilter, setTypeFilter] = useState("ALL");
 
-  const filteredData = useMemo(() => {
-    return mutations.filter(item => {
-      const matchSearch =
-        item.docNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.materialName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.notes.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchWh = warehouseFilter === "ALL" || item.warehouse === warehouseFilter;
-      const matchType = typeFilter === "ALL" || item.type === typeFilter;
-      return matchSearch && matchWh && matchType;
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["reports-mutation-goods"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/reports/mutation-goods");
+        return res.data;
+      } catch {
+        const res2 = await api.get("/warehouse/transactions");
+        return res2.data;
+      }
+    },
+  });
+
+  // ponytail: running balance derived per material from the transaction list.
+  // Ceiling: only the 100 most recent transactions the API returns.
+  // Upgrade path: a per-material ledger endpoint (GET /warehouse/history/:materialId).
+  const mutations: MutationRecord[] = useMemo(() => {
+    const raw = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
+
+    const ordered = [...raw].sort(
+      (a: any, b: any) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+
+    const running: Record<string, number> = {};
+    const withBalance = ordered.map((t: any) => {
+      const materialId = t.materialId || "UNKNOWN";
+      const qty = Number(t.quantity ?? 0);
+      const isOut =
+        t.type === "OUTBOUND" || t.type === "DISPOSAL";
+      running[materialId] = (running[materialId] ?? 0) + (isOut ? -qty : qty);
+      return { t, balance: running[materialId] };
     });
-  }, [mutations, searchTerm, warehouseFilter, typeFilter]);
+
+    return withBalance
+      .map(({ t, balance }) => {
+        const qty = Number(t.quantity ?? 0);
+        const isOut = t.type === "OUTBOUND" || t.type === "DISPOSAL";
+        return {
+          id: t.id,
+          date: t.createdAt ? String(t.createdAt).split("T")[0] : "-",
+          docNumber: t.referenceNo || "-",
+          type: t.type || "UNKNOWN",
+          materialName: t.material?.name || "-",
+          qtyIn: isOut ? 0 : qty,
+          qtyOut: isOut ? qty : 0,
+          balance,
+          unit: t.material?.unit || "",
+          notes: t.notes || "-",
+        };
+      })
+      .reverse();
+  }, [data]);
+
+  const typeOptions = useMemo(
+    () => Array.from(new Set(mutations.map((m) => m.type))).sort(),
+    [mutations],
+  );
+
+  const filteredData = mutations.filter((item) => {
+    const q = searchTerm.toLowerCase();
+    const matchSearch =
+      item.docNumber.toLowerCase().includes(q) ||
+      item.materialName.toLowerCase().includes(q) ||
+      item.notes.toLowerCase().includes(q);
+    const matchType = typeFilter === "ALL" || item.type === typeFilter;
+    return matchSearch && matchType;
+  });
 
   const totalIn = filteredData.reduce((sum, m) => sum + m.qtyIn, 0);
   const totalOut = filteredData.reduce((sum, m) => sum + m.qtyOut, 0);
@@ -168,26 +129,26 @@ export default function ReportMutationGoodsPage() {
   const getTypeBadge = (type: string) => {
     switch (type) {
       case "INBOUND":
-        return <DnaBadge status="success">Masuk (Inbound)</DnaBadge>;
+        return <DnaBadge variant="success">{TYPE_LABEL[type]}</DnaBadge>;
       case "OUTBOUND":
-        return <DnaBadge status="danger">Keluar (Outbound)</DnaBadge>;
-      case "TRANSFER":
-        return <DnaBadge status="info">Mutasi Antar Gudang</DnaBadge>;
+      case "DISPOSAL":
+        return <DnaBadge variant="critical">{TYPE_LABEL[type]}</DnaBadge>;
+      case "INTERNAL_MOVE":
+        return <DnaBadge variant="info">{TYPE_LABEL[type]}</DnaBadge>;
       case "ADJUSTMENT":
-        return <DnaBadge status="warning">Penyesuaian Stok</DnaBadge>;
+        return <DnaBadge variant="warning">{TYPE_LABEL[type]}</DnaBadge>;
       case "RETURN":
-        return <DnaBadge status="danger">Retur Barang</DnaBadge>;
+        return <DnaBadge variant="critical">{TYPE_LABEL[type]}</DnaBadge>;
       default:
-        return <DnaBadge status="default">{type}</DnaBadge>;
+        return <DnaBadge variant="default">{type}</DnaBadge>;
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <DnaPageHeader
         title="Laporan Mutasi Keluar & Masuk Barang"
-        description="Buku jurnal riwayat pergerakan stok, transfer internal, penerimaan bahan, dan pengiriman barang jadi"
+        description="Buku jurnal riwayat pergerakan stok, transfer internal, penerimaan bahan, dan pengiriman barang jadi dari ledger transaksi gudang"
         actions={
           <DnaButton
             variant="outline"
@@ -205,7 +166,6 @@ export default function ReportMutationGoodsPage() {
         }
       />
 
-      {/* KPI Cards */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
           label="Total Transaksi Mutasi"
@@ -219,7 +179,7 @@ export default function ReportMutationGoodsPage() {
           value={totalIn.toLocaleString("id-ID")}
           icon={<ArrowDownRight className="w-5 h-5 text-emerald-600" />}
           variant="success"
-          subtext="Inbound & transfer masuk"
+          subtext="Inbound, retur & transfer masuk"
         />
         <DnaStatCard
           label="Total Kuantitas Keluar"
@@ -229,15 +189,14 @@ export default function ReportMutationGoodsPage() {
           subtext="Outbound & pemakaian produksi"
         />
         <DnaStatCard
-          label="Audit Trail Status"
-          value="Tervalidasi"
+          label="Barang Bergerak"
+          value={`${new Set(filteredData.map((m) => m.materialName)).size} Item`}
           icon={<RefreshCw className="w-5 h-5 text-blue-600" />}
           variant="info"
-          subtext="Terhubung ke dokumen transaksi"
+          subtext="Material unik dalam periode"
         />
       </DnaKpiGrid>
 
-      {/* Main Table Card (Rule 1: No title prop, Rule 4: Clean responsive columns) */}
       <DnaDataTableCard
         toolbarProps={{
           searchQuery: searchTerm,
@@ -246,124 +205,115 @@ export default function ReportMutationGoodsPage() {
           extraActions: (
             <div className="flex items-center gap-2">
               <select
-                value={warehouseFilter}
-                onChange={(e) => setWarehouseFilter(e.target.value)}
-                className="text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="ALL">Semua Gudang</option>
-                <option value="Gudang Bahan Baku">Gudang Bahan Baku</option>
-                <option value="Gudang Kemasan">Gudang Kemasan</option>
-                <option value="Gudang Barang Jadi">Gudang Barang Jadi</option>
-                <option value="Gudang Surabaya">Gudang Surabaya</option>
-              </select>
-              <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="ALL">Semua Tipe Transaksi</option>
-                <option value="INBOUND">Penerimaan (Inbound)</option>
-                <option value="OUTBOUND">Pengeluaran (Outbound)</option>
-                <option value="TRANSFER">Mutasi Antar Gudang</option>
-                <option value="ADJUSTMENT">Penyesuaian Stok</option>
+                {typeOptions.map((t) => (
+                  <option key={t} value={t}>
+                    {TYPE_LABEL[t] || t}
+                  </option>
+                ))}
               </select>
             </div>
           ),
         }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-[12px] min-w-[1250px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
-                <th className="px-4 py-3 h-[40px] w-[110px]">Tanggal</th>
-                <th className="px-3 py-3 h-[40px] w-[140px]">No. Dokumen</th>
-                <th className="px-3 py-3 h-[40px] text-center w-[130px]">Tipe Transaksi</th>
-                <th className="px-3 py-3 h-[40px]">Gudang</th>
-                <th className="px-3 py-3 h-[40px]">Barang</th>
-                <th className="px-3 py-3 h-[40px] text-right w-[110px]">Masuk</th>
-                <th className="px-3 py-3 h-[40px] text-right w-[110px]">Keluar</th>
-                <th className="px-3 py-3 h-[40px] text-right w-[120px]">Saldo Akhir</th>
-                <th className="px-4 py-3 h-[40px]">Keterangan</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="px-4 py-3 h-[40px] w-[110px]">Tanggal</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[150px]">No. Dokumen</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-center w-[170px]">Tipe Transaksi</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Barang</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[110px]">Masuk</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[110px]">Keluar</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[120px]">Saldo Berjalan</DnaTh>
+                <DnaTh className="px-4 py-3 h-[40px]">Keterangan</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
+              {isLoading ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={8} className="py-12 text-center text-slate-400">
+                    Memuat data mutasi barang...
+                  </DnaTd>
+                </DnaTableRow>
+              ) : isError ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={8} className="py-12 text-center">
+                    <p className="text-rose-600 mb-3">Gagal memuat laporan mutasi barang dari server.</p>
+                    <DnaButton variant="secondary" size="sm" onClick={() => refetch()}>
+                      Coba Lagi
+                    </DnaButton>
+                  </DnaTd>
+                </DnaTableRow>
+              ) : filteredData.length === 0 ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={8} className="py-12 text-center text-slate-400">
                     <ArrowRightLeft className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada transaksi mutasi sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredData.map((item) => (
-                  <tr
+                  <DnaTableRow
                     key={item.id}
                     className="hover:bg-slate-50/60 transition-colors group h-[48px]"
                   >
-                    {/* Kolom 1: Tanggal */}
-                    <td className="px-4 py-2 text-slate-600 whitespace-nowrap">
+                    <DnaTd className="px-4 py-2 text-slate-600 whitespace-nowrap">
                       {item.date}
-                    </td>
+                    </DnaTd>
 
-                    {/* Kolom 2: No. Dokumen */}
-                    <td className="px-3 py-2">
+                    <DnaTd className="px-3 py-2">
                       <DnaCell.Code value={item.docNumber} />
-                    </td>
+                    </DnaTd>
 
-                    {/* Kolom 3: Tipe Transaksi */}
-                    <td className="px-3 py-2 text-center">
+                    <DnaTd className="px-3 py-2 text-center">
                       {getTypeBadge(item.type)}
-                    </td>
+                    </DnaTd>
 
-                    {/* Kolom 4: Gudang */}
-                    <td className="px-3 py-2 text-slate-700 truncate max-w-[150px]">
-                      {item.warehouse}
-                    </td>
-
-                    {/* Kolom 5: Barang */}
-                    <td className="px-3 py-2 text-slate-900 font-medium truncate max-w-[180px]">
+                    <DnaTd className="px-3 py-2 text-slate-900 font-medium truncate max-w-[200px]">
                       {item.materialName}
-                    </td>
+                    </DnaTd>
 
-                    {/* Kolom 6: Masuk */}
-                    <td className="px-3 py-2 text-right">
+                    <DnaTd className="px-3 py-2 text-right">
                       {item.qtyIn > 0 ? (
-                        <span className="font-semibold text-emerald-700 font-mono text-[12px]">
+                        <span className="font-semibold text-emerald-700 tabular-nums text-[12px]">
                           +{item.qtyIn.toLocaleString("id-ID")} {item.unit}
                         </span>
                       ) : (
                         <span className="text-slate-400 font-normal">-</span>
                       )}
-                    </td>
+                    </DnaTd>
 
-                    {/* Kolom 7: Keluar */}
-                    <td className="px-3 py-2 text-right">
+                    <DnaTd className="px-3 py-2 text-right">
                       {item.qtyOut > 0 ? (
-                        <span className="font-semibold text-rose-700 font-mono text-[12px]">
+                        <span className="font-semibold text-rose-700 tabular-nums text-[12px]">
                           -{item.qtyOut.toLocaleString("id-ID")} {item.unit}
                         </span>
                       ) : (
                         <span className="text-slate-400 font-normal">-</span>
                       )}
-                    </td>
+                    </DnaTd>
 
-                    {/* Kolom 8: Saldo Akhir */}
-                    <td className="px-3 py-2 text-right">
+                    <DnaTd className="px-3 py-2 text-right">
                       <DnaCell.Number
                         value={item.balance}
                         unit={item.unit}
                       />
-                    </td>
+                    </DnaTd>
 
-                    {/* Kolom 9: Keterangan */}
-                    <td className="px-4 py-2 text-slate-600 truncate max-w-[200px]">
+                    <DnaTd className="px-4 py-2 text-slate-600 truncate max-w-[200px]">
                       {item.notes}
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
     </div>

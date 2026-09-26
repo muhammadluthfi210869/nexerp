@@ -104,24 +104,24 @@ function TrialBalanceTab({ startDate, endDate }: { startDate: string, endDate: s
               <DnaTableRow key={`${item.id}-${index}`} className="hover:bg-slate-50/30 transition-all duration-300 group">
                 <DnaTd className="px-4 py-3 text-left font-black font-sans text-blue-600">{item.code}</DnaTd>
                 <DnaTd className="px-4 py-3 text-left font-medium text-slate-700">{item.name}</DnaTd>
-                <DnaTd className="px-4 py-3 text-right font-mono tabular-nums text-[11px] text-slate-500 border-l border-slate-50">{item.awalDebit > 0 ? formatCurrency(item.awalDebit) : "-"}</DnaTd>
-                <DnaTd className="px-4 py-3 text-right font-mono tabular-nums text-[11px] text-slate-500">{item.awalCredit > 0 ? formatCurrency(item.awalCredit) : "-"}</DnaTd>
-                <DnaTd className="px-4 py-3 text-right font-mono tabular-nums text-[11px] text-slate-600 border-l border-slate-100">{item.perubahanDebit > 0 ? formatCurrency(item.perubahanDebit) : "-"}</DnaTd>
-                <DnaTd className="px-4 py-3 text-right font-mono tabular-nums text-[11px] text-slate-600">{item.perubahanCredit > 0 ? formatCurrency(item.perubahanCredit) : "-"}</DnaTd>
-                <DnaTd className="px-4 py-3 text-right font-mono tabular-nums text-[11px] font-black text-slate-900 border-l border-slate-200">{item.akhirDebit > 0 ? formatCurrency(item.akhirDebit) : "-"}</DnaTd>
-                <DnaTd className="px-4 py-3 text-right font-mono tabular-nums text-[11px] font-black text-slate-900">{item.akhirCredit > 0 ? formatCurrency(item.akhirCredit) : "-"}</DnaTd>
+                <DnaTd className="px-4 py-3 text-right tabular-nums tabular-nums text-[11px] text-slate-500 border-l border-slate-50">{item.awalDebit > 0 ? formatCurrency(item.awalDebit) : "-"}</DnaTd>
+                <DnaTd className="px-4 py-3 text-right tabular-nums tabular-nums text-[11px] text-slate-500">{item.awalCredit > 0 ? formatCurrency(item.awalCredit) : "-"}</DnaTd>
+                <DnaTd className="px-4 py-3 text-right tabular-nums tabular-nums text-[11px] text-slate-600 border-l border-slate-100">{item.perubahanDebit > 0 ? formatCurrency(item.perubahanDebit) : "-"}</DnaTd>
+                <DnaTd className="px-4 py-3 text-right tabular-nums tabular-nums text-[11px] text-slate-600">{item.perubahanCredit > 0 ? formatCurrency(item.perubahanCredit) : "-"}</DnaTd>
+                <DnaTd className="px-4 py-3 text-right tabular-nums tabular-nums text-[11px] font-black text-slate-900 border-l border-slate-200">{item.akhirDebit > 0 ? formatCurrency(item.akhirDebit) : "-"}</DnaTd>
+                <DnaTd className="px-4 py-3 text-right tabular-nums tabular-nums text-[11px] font-black text-slate-900">{item.akhirCredit > 0 ? formatCurrency(item.akhirCredit) : "-"}</DnaTd>
               </DnaTableRow>
             ))}
           </DnaTableBody>
           <tfoot className="bg-slate-900 text-white font-black uppercase text-[10px]">
             <tr>
               <td colSpan={2} className="px-4 py-4 text-xs italic text-left pl-6">Total Konsolidasi</td>
-              <td className="px-4 py-4 text-right text-xs text-slate-300 font-mono border-l border-slate-700">{formatCurrency(totals?.awalDebit || 0)}</td>
-              <td className="px-4 py-4 text-right text-xs text-slate-300 font-mono">{formatCurrency(totals?.awalCredit || 0)}</td>
-              <td className="px-4 py-4 text-right text-xs text-amber-300 font-mono border-l border-slate-700">{formatCurrency(totals?.perubahanDebit || 0)}</td>
-              <td className="px-4 py-4 text-right text-xs text-amber-300 font-mono">{formatCurrency(totals?.perubahanCredit || 0)}</td>
-              <td className="px-4 py-4 text-right text-xs text-emerald-300 font-mono border-l border-slate-700">{formatCurrency(totals?.akhirDebit || 0)}</td>
-              <td className="px-4 py-4 text-right text-xs text-emerald-300 font-mono">{formatCurrency(totals?.akhirCredit || 0)}</td>
+              <td className="px-4 py-4 text-right text-xs text-slate-300 tabular-nums border-l border-slate-700">{formatCurrency(totals?.awalDebit || 0)}</td>
+              <td className="px-4 py-4 text-right text-xs text-slate-300 tabular-nums">{formatCurrency(totals?.awalCredit || 0)}</td>
+              <td className="px-4 py-4 text-right text-xs text-amber-300 tabular-nums border-l border-slate-700">{formatCurrency(totals?.perubahanDebit || 0)}</td>
+              <td className="px-4 py-4 text-right text-xs text-amber-300 tabular-nums">{formatCurrency(totals?.perubahanCredit || 0)}</td>
+              <td className="px-4 py-4 text-right text-xs text-emerald-300 tabular-nums border-l border-slate-700">{formatCurrency(totals?.akhirDebit || 0)}</td>
+              <td className="px-4 py-4 text-right text-xs text-emerald-300 tabular-nums">{formatCurrency(totals?.akhirCredit || 0)}</td>
             </tr>
           </tfoot>
         </DnaTable>
@@ -140,7 +140,6 @@ function ProfitLossTab({ startDate, endDate }: { startDate: string, endDate: str
 
   if (!report) return <div className="p-20 text-center animate-pulse font-black text-xs text-slate-400">MEMUAT LAPORAN LABA RUGI...</div>;
 
-  const grossMargin = ((report.grossProfit / (report.operatingRevenue.total || 1)) * 100).toFixed(1);
   const operatingMargin = ((report.operatingIncome / (report.operatingRevenue.total || 1)) * 100).toFixed(1);
   const netMargin = ((report.netProfit / (report.operatingRevenue.total || 1)) * 100).toFixed(1);
 
@@ -150,7 +149,7 @@ function ProfitLossTab({ startDate, endDate }: { startDate: string, endDate: str
       <DnaCard title={title} dotColor={dotColor}>
         <div className="flex justify-between items-end border-b border-slate-100 pb-3">
           <span className="text-[10px] font-black uppercase text-slate-400">Total Group</span>
-          <span className={cn("text-sm font-black font-mono", isNegative ? "text-rose-600" : "text-emerald-600")}>
+          <span className={cn("text-sm font-black tabular-nums", isNegative ? "text-rose-600" : "text-emerald-600")}>
             {isNegative && total > 0 ? "-" : ""}{formatCurrency(Math.abs(total))}
           </span>
         </div>
@@ -169,7 +168,7 @@ function ProfitLossTab({ startDate, endDate }: { startDate: string, endDate: str
                       </span>
                       <span className="font-semibold text-slate-700">{acc.name}</span>
                     </div>
-                    <span className="font-mono font-semibold text-slate-600">{formatCurrency(acc.balance)}</span>
+                    <span className="tabular-nums font-semibold text-slate-600">{formatCurrency(acc.balance)}</span>
                   </div>
                 ))}
               </div>
@@ -259,7 +258,7 @@ function ProfitLossTab({ startDate, endDate }: { startDate: string, endDate: str
             <p className="text-[10px] font-medium text-white/70 uppercase tracking-[0.3em] mt-2">NET PROFIT/LOSS (Before Tax)</p>
           </div>
           <div className="text-right relative z-10">
-            <span className="text-3xl font-black text-white drop-shadow-sm font-mono">{formatCurrency(report.netProfit)}</span>
+            <span className="text-3xl font-black text-white drop-shadow-sm tabular-nums">{formatCurrency(report.netProfit)}</span>
           </div>
         </div>
       </div>
@@ -324,7 +323,7 @@ function RenderAccountRow({ acc, level = 0, formatCurrency }: { acc: any, level?
         </div>
         <div className="text-right">
           <p className={cn(
-            "text-xs font-black font-mono tabular-nums",
+            "text-xs font-black tabular-nums tabular-nums",
             level === 0 ? "text-slate-900" : "text-slate-600",
             acc.balance < 0 ? "text-rose-500" : ""
           )}>
@@ -379,19 +378,19 @@ function BalanceSheetTab({ endDate }: { endDate: string }) {
         <div className="flex gap-4 items-center">
           <div className="text-right">
             <p className="text-[8px] font-black uppercase opacity-60">Total Aset</p>
-            <p className="text-base font-black font-mono">{formatCurrency(data.assets.total || 0)}</p>
+            <p className="text-base font-black tabular-nums">{formatCurrency(data.assets.total || 0)}</p>
           </div>
           <div className="w-px h-8 bg-slate-200 mx-1" />
           <div className="text-right">
             <p className="text-[8px] font-black uppercase opacity-60">Liabilitas + Ekuitas</p>
-            <p className="text-base font-black font-mono">{formatCurrency(data.totalLiabilitiesAndEquity || 0)}</p>
+            <p className="text-base font-black tabular-nums">{formatCurrency(data.totalLiabilitiesAndEquity || 0)}</p>
           </div>
           {!data.isBalanced && (
             <>
               <div className="w-px h-8 bg-rose-200 mx-1" />
               <div className="text-right text-rose-600">
                 <p className="text-[8px] font-black uppercase opacity-60">Selisih (Gap)</p>
-                <p className="text-base font-black font-mono">{formatCurrency(balanceDiff)}</p>
+                <p className="text-base font-black tabular-nums">{formatCurrency(balanceDiff)}</p>
               </div>
             </>
           )}
@@ -427,7 +426,7 @@ function BalanceSheetTab({ endDate }: { endDate: string }) {
                 <span className="text-[9px] font-black uppercase tracking-wider text-blue-200 block mb-0.5">Grand Total</span>
                 <span className="text-xs font-black uppercase tracking-tight">TOTAL AKTIVA</span>
               </div>
-              <span className="text-lg font-black text-emerald-300 font-mono tabular-nums">{formatCurrency(data.assets.total || 0)}</span>
+              <span className="text-lg font-black text-emerald-300 tabular-nums tabular-nums">{formatCurrency(data.assets.total || 0)}</span>
             </div>
           </DnaCard>
         </div>
@@ -451,7 +450,7 @@ function BalanceSheetTab({ endDate }: { endDate: string }) {
               </div>
               <div className="mt-4 p-3 bg-slate-50 rounded-xl flex justify-between items-center border border-slate-100">
                 <span className="text-[10px] font-bold uppercase text-slate-500 italic">Subtotal Liabilities</span>
-                <span className="text-sm font-black text-slate-950 font-mono">{formatCurrency(data.liabilities.total || 0)}</span>
+                <span className="text-sm font-black text-slate-950 tabular-nums">{formatCurrency(data.liabilities.total || 0)}</span>
               </div>
             </DnaCard>
           </div>
@@ -481,7 +480,7 @@ function BalanceSheetTab({ endDate }: { endDate: string }) {
                       <p className="text-[8px] font-medium text-blue-400 uppercase mt-0.5">Net Income (Current Year)</p>
                     </div>
                   </div>
-                  <span className="text-sm font-black text-blue-700 font-mono">{formatCurrency(data.equity.netIncome || 0)}</span>
+                  <span className="text-sm font-black text-blue-700 tabular-nums">{formatCurrency(data.equity.netIncome || 0)}</span>
                 </div>
               </div>
               <div className="mt-4 p-5 bg-blue-950 rounded-xl text-white flex justify-between items-center shadow-sm">
@@ -489,7 +488,7 @@ function BalanceSheetTab({ endDate }: { endDate: string }) {
                   <span className="text-[9px] font-black uppercase tracking-wider text-blue-300 block mb-0.5">Grand Total</span>
                   <span className="text-xs font-black uppercase tracking-tight">TOTAL PASIVA</span>
                 </div>
-                <span className="text-lg font-black text-amber-400 font-mono">{formatCurrency(data.totalLiabilitiesAndEquity || 0)}</span>
+                <span className="text-lg font-black text-amber-400 tabular-nums">{formatCurrency(data.totalLiabilitiesAndEquity || 0)}</span>
               </div>
             </DnaCard>
           </div>
@@ -518,8 +517,13 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
   const fetchLedger = useCallback(() => {
     if (!selectedAccId) return;
     setLoading(true);
-    api.get(`/finance/reports/general-ledger/${selectedAccId}`, { params: { startDate, endDate } })
+    // Call /reports/general-ledger with fallback to /finance/reports/general-ledger/:id
+    api.get("/reports/general-ledger", { params: { coa_id: selectedAccId, startDate, endDate } })
       .then(res => setLedgerData(res.data))
+      .catch(() => {
+        return api.get(`/finance/reports/general-ledger/${selectedAccId}`, { params: { startDate, endDate } })
+          .then(res => setLedgerData(res.data));
+      })
       .finally(() => setLoading(false));
   }, [selectedAccId, startDate, endDate]);
 
@@ -566,7 +570,7 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
                     )}
                   >
                     <span className={cn(
-                      "text-[9px] font-mono tracking-wider",
+                      "text-[9px] tabular-nums tracking-wider",
                       isActive ? "text-blue-200" : "text-blue-600 font-bold"
                     )}>
                       {a.code}
@@ -660,13 +664,13 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
                         <p className="text-xs font-semibold text-slate-700">{t.description}</p>
                         <p className="text-[9px] font-black text-slate-300 uppercase mt-0.5 tracking-wider">{t.reference}</p>
                       </DnaTd>
-                      <DnaTd className="px-6 py-4 text-right text-xs font-semibold text-slate-900 font-mono tabular-nums">
+                      <DnaTd className="px-6 py-4 text-right text-xs font-semibold text-slate-900 tabular-nums tabular-nums">
                         {t.debit > 0 ? formatCurrency(t.debit) : "-"}
                       </DnaTd>
-                      <DnaTd className="px-6 py-4 text-right text-xs font-semibold text-slate-900 font-mono tabular-nums">
+                      <DnaTd className="px-6 py-4 text-right text-xs font-semibold text-slate-900 tabular-nums tabular-nums">
                         {t.credit > 0 ? formatCurrency(t.credit) : "-"}
                       </DnaTd>
-                      <DnaTd className="px-6 py-4 text-right text-xs font-black text-blue-600 font-mono tabular-nums">
+                      <DnaTd className="px-6 py-4 text-right text-xs font-black text-blue-600 tabular-nums tabular-nums">
                         {formatCurrency(t.balance)}
                         {t.attachmentUrls?.length > 0 && (
                           <div className="mt-2 flex justify-end gap-1">
@@ -691,7 +695,7 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
                 <tfoot className="bg-slate-900 text-white font-black uppercase text-[10px]">
                   <tr>
                     <td colSpan={4} className="px-6 py-4 text-xs italic text-left pl-8">Saldo Akhir Per Periode</td>
-                    <td className="px-6 py-4 text-right text-sm text-emerald-300 font-mono">{formatCurrency(ledgerData.endingBalance)}</td>
+                    <td className="px-6 py-4 text-right text-sm text-emerald-300 tabular-nums">{formatCurrency(ledgerData.endingBalance)}</td>
                   </tr>
                 </tfoot>
               </DnaTable>
@@ -703,17 +707,26 @@ function GeneralLedgerTab({ startDate, endDate }: { startDate: string, endDate: 
   );
 }
 
-function ProjectBudgetingTab() {
+function ProjectBudgetingTab({ startDate, endDate }: { startDate?: string, endDate?: string }) {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    api.get("/finance/reports/project-budgeting")
-      .then(res => setData(Array.isArray(res.data) ? res.data : (res.data?.data || [])))
-      .catch(() => setData([]))
+    // Call live /reports/budget-vs-actual with fallback to /finance/reports/project-budgeting
+    const period = startDate ? startDate.slice(0, 7) : new Date().toISOString().slice(0, 7);
+    api.get("/reports/budget-vs-actual", { params: { period } })
+      .then(res => {
+        const body = res.data?.data || res.data || [];
+        setData(Array.isArray(body) ? body : []);
+      })
+      .catch(() => {
+        return api.get("/finance/reports/project-budgeting")
+          .then(res => setData(Array.isArray(res.data) ? res.data : (res.data?.data || [])))
+          .catch(() => setData([]));
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [startDate, endDate]);
 
   if (loading) return <div className="p-20 text-center animate-pulse font-black text-xs text-slate-400">ANALYZING PROJECT BUDGETS...</div>;
 
@@ -768,11 +781,11 @@ function ProjectBudgetingTab() {
                     <p className="text-xs font-black text-slate-900 uppercase">{item.project}</p>
                     <p className="text-[9px] font-medium text-slate-400 uppercase mt-1">{item.product}</p>
                   </DnaTd>
-                  <DnaTd className="px-6 py-5 text-right text-xs font-medium text-slate-600 font-mono tabular-nums">{formatCurrency(item.budget)}</DnaTd>
-                  <DnaTd className="px-6 py-5 text-right text-xs font-medium text-rose-500 font-mono tabular-nums">{formatCurrency(item.spent)}</DnaTd>
+                  <DnaTd className="px-6 py-5 text-right text-xs font-medium text-slate-600 tabular-nums tabular-nums">{formatCurrency(item.budget)}</DnaTd>
+                  <DnaTd className="px-6 py-5 text-right text-xs font-medium text-rose-500 tabular-nums tabular-nums">{formatCurrency(item.spent)}</DnaTd>
                   <DnaTd className="px-6 py-5 text-center">
                     <div className="flex flex-col items-center gap-1">
-                      <span className={cn("text-xs font-mono", burnRateColor)}>
+                      <span className={cn("text-xs tabular-nums", burnRateColor)}>
                         {burnRate.toFixed(1)}%
                       </span>
                       <div className="w-20 h-1 bg-slate-100 rounded-full overflow-hidden">
@@ -787,7 +800,7 @@ function ProjectBudgetingTab() {
                   </DnaTd>
                   <DnaTd className="px-6 py-5 text-right pr-10">
                     <div className="flex flex-col items-end">
-                      <span className={cn("text-xs font-black font-mono", item.marginPercent > 30 ? "text-emerald-500" : "text-rose-500")}>
+                      <span className={cn("text-xs font-black tabular-nums", item.marginPercent > 30 ? "text-emerald-500" : "text-rose-500")}>
                         {item.marginPercent.toFixed(1)}%
                       </span>
                       <div className="w-20 h-1 bg-slate-100 rounded-full mt-1 overflow-hidden">

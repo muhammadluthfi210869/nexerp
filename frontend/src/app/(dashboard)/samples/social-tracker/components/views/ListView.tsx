@@ -85,7 +85,7 @@ export const ListView: React.FC<ListViewProps> = ({
             </div>
 
             <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
-              <span className="flex items-center gap-1 font-mono text-[10px]">
+              <span className="flex items-center gap-1 tabular-nums text-[10px]">
                 <Clock className="w-3 h-3 text-slate-400" />
                 {formatDateIndonesian(post.scheduledDate)}
               </span>
@@ -102,7 +102,7 @@ export const ListView: React.FC<ListViewProps> = ({
           </span>
 
           {post.performance?.reach ? (
-            <div className="flex items-center gap-1 font-mono text-emerald-700 text-[11px] font-bold tabular-nums">
+            <div className="flex items-center gap-1 tabular-nums text-emerald-700 text-[11px] font-bold tabular-nums">
               <Eye className="w-3.5 h-3.5" />
               <span>{formatNumber(post.performance.reach)}</span>
             </div>
@@ -142,11 +142,11 @@ export const ListView: React.FC<ListViewProps> = ({
                       <span>🗓️</span>
                       <span>{group.monthName}</span>
                     </span>
-                    <span className="text-[10px] text-slate-600 font-mono bg-slate-200/80 px-2 py-0.5 rounded-full font-bold">
+                    <span className="text-[10px] text-slate-600 tabular-nums bg-slate-200/80 px-2 py-0.5 rounded-full font-bold">
                       {group.count} konten
                     </span>
                     {group.totalReach > 0 && (
-                      <span className="hidden sm:inline-block text-[11px] text-emerald-700 font-mono font-bold">
+                      <span className="hidden sm:inline-block text-[11px] text-emerald-700 tabular-nums font-bold">
                         • {formatNumber(group.totalReach)} reach
                       </span>
                     )}

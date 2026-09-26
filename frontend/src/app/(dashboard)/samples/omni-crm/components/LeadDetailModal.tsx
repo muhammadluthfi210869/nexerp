@@ -82,7 +82,7 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
         <div className="flex items-start justify-between pb-3 border-b border-slate-200">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold text-blue-700">
+              <span className="text-xs tabular-nums font-bold text-blue-700">
                 {lead.id}
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold border border-slate-200">
@@ -90,7 +90,7 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
               </span>
             </div>
             <h2 className="text-lg font-extrabold text-slate-900 mt-1">{lead.name}</h2>
-            <div className="flex items-center gap-4 mt-1 text-xs text-slate-500 font-mono">
+            <div className="flex items-center gap-4 mt-1 text-xs text-slate-500 tabular-nums">
               <span className="flex items-center gap-1">
                 <Phone className="w-3.5 h-3.5 text-slate-400" />
                 +{lead.phone}
@@ -143,7 +143,7 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                     {assignedBusDev ? assignedBusDev.name : 'Unassigned'}
                   </span>
                   {assignedBusDev && (
-                    <span className="text-[10px] text-slate-500 font-mono">
+                    <span className="text-[10px] text-slate-500 tabular-nums">
                       📱 {assignedBusDev.formattedPhone || assignedBusDev.phone}
                     </span>
                   )}
@@ -186,7 +186,7 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                           : 'mr-auto bg-white border border-slate-200 text-slate-900 shadow-2xs'
                       }`}
                     >
-                      <div className="text-[10px] opacity-80 mb-0.5 flex items-center justify-between gap-4 font-mono">
+                      <div className="text-[10px] opacity-80 mb-0.5 flex items-center justify-between gap-4 tabular-nums">
                         <span>{m.senderName}</span>
                         <span>{new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>

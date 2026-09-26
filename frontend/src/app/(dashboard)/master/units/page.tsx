@@ -24,6 +24,11 @@ import {
   DnaInput,
   DnaTextarea,
   useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -212,31 +217,31 @@ export default function MasterUnitsPage() {
         }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[900px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold tracking-wider uppercase select-none">
-                <th className="px-3.5 py-2.5 w-12 text-center text-slate-400">#</th>
-                <th className="px-3.5 py-2.5 w-[130px]">Kode Satuan</th>
-                <th className="px-3.5 py-2.5 w-[110px]">Simbol</th>
-                <th className="px-3.5 py-2.5">Nama Lengkap</th>
-                <th className="px-3.5 py-2.5">Deskripsi</th>
-                <th className="px-3.5 py-2.5 text-center w-[120px]">Status</th>
-                <th className="px-3.5 py-2.5 text-center w-[120px] whitespace-nowrap">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold tracking-wider uppercase select-none">
+                <DnaTh className="px-3.5 py-2.5 w-12 text-center text-slate-400">#</DnaTh>
+                <DnaTh className="px-3.5 py-2.5 w-[130px]">Kode Satuan</DnaTh>
+                <DnaTh className="px-3.5 py-2.5 w-[110px]">Simbol</DnaTh>
+                <DnaTh className="px-3.5 py-2.5">Nama Lengkap</DnaTh>
+                <DnaTh className="px-3.5 py-2.5">Deskripsi</DnaTh>
+                <DnaTh className="px-3.5 py-2.5 text-center w-[120px]">Status</DnaTh>
+                <DnaTh className="px-3.5 py-2.5 text-center w-[120px] whitespace-nowrap">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={7} className="px-3.5 py-8 text-center text-xs text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="px-3.5 py-8 text-center text-xs text-slate-400">
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                       <span>Memuat data satuan...</span>
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : isError ? (
-                <tr>
-                  <td colSpan={7} className="px-3.5 py-8 text-center text-xs text-rose-500">
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="px-3.5 py-8 text-center text-xs text-rose-500">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <span>Gagal memuat data satuan: {(unitsError as any)?.message || "Terjadi kesalahan"}</span>
                       <button
@@ -247,17 +252,17 @@ export default function MasterUnitsPage() {
                         Coba Lagi
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : filteredUnits.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-3.5 py-8 text-center text-xs text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="px-3.5 py-8 text-center text-xs text-slate-400">
                     Belum ada satuan yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredUnits.map((u, idx) => (
-                  <tr
+                  <DnaTableRow
                     key={u.id}
                     className="h-[48px] hover:bg-slate-50/80 transition-colors cursor-pointer"
                     onClick={() => {
@@ -265,31 +270,31 @@ export default function MasterUnitsPage() {
                       setIsDetailDrawerOpen(true);
                     }}
                   >
-                    <td className="px-3.5 py-2.5 text-center font-mono text-slate-400 text-[11px] tabular-nums">
+                    <DnaTd className="px-3.5 py-2.5 text-center tabular-nums text-slate-400 text-[11px] tabular-nums">
                       {idx + 1}
-                    </td>
-                    <td className="px-3.5 py-2.5">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5">
                       <DnaCell.Code>{u.code}</DnaCell.Code>
-                    </td>
-                    <td className="px-3.5 py-2.5">
-                      <DnaCell.Text className="font-mono text-[11.5px] text-slate-600 font-semibold">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5">
+                      <DnaCell.Text className="tabular-nums text-[11.5px] text-slate-600 font-semibold">
                         {u.symbol || "-"}
                       </DnaCell.Text>
-                    </td>
-                    <td className="px-3.5 py-2.5">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5">
                       <DnaCell.Text className="font-semibold text-slate-900">{u.name}</DnaCell.Text>
-                    </td>
-                    <td className="px-3.5 py-2.5">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5">
                       <DnaCell.Text className="text-slate-600">
                         {u.description || <span className="text-slate-300">-</span>}
                       </DnaCell.Text>
-                    </td>
-                    <td className="px-3.5 py-2.5 text-center">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5 text-center">
                       <DnaBadge variant={u.isActive ? "success" : "neutral"}>
                         {u.isActive ? "AKTIF" : "NON-AKTIF"}
                       </DnaBadge>
-                    </td>
-                    <td className="px-3.5 py-2.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-1">
                         <DnaButton
                           variant="ghost"
@@ -322,12 +327,12 @@ export default function MasterUnitsPage() {
                           <Power className="w-3.5 h-3.5" />
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -353,11 +358,11 @@ export default function MasterUnitsPage() {
                 <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 grid grid-cols-2 gap-3">
                   <div>
                     <span className="text-slate-500 block text-[11px]">Kode Singkat Satuan</span>
-                    <span className="font-mono font-bold text-blue-600 text-sm">{selectedUnit.code}</span>
+                    <span className="tabular-nums font-bold text-blue-600 text-sm">{selectedUnit.code}</span>
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">Simbol Representasi</span>
-                    <span className="font-mono font-semibold text-slate-800 text-sm">
+                    <span className="tabular-nums font-semibold text-slate-800 text-sm">
                       {selectedUnit.symbol || "-"}
                     </span>
                   </div>

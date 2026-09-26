@@ -35,6 +35,7 @@ import {
   DnaInput,
   DnaSelect,
   DnaTextarea,
+  DnaErrorState,
   useDnaToast,
 } from "@/components/dna";
 
@@ -79,6 +80,15 @@ export default function LegalityPermitsPage() {
       return resp.data || [];
     },
   });
+
+  // P08 acceptance 5: the denied and error states are visible on the page, not
+  // collapsed into the empty state. Everything on this page comes from the API.
+  const errStatus = (error as { response?: { status?: number } })?.response?.status;
+  const denied = errStatus === 401 || errStatus === 403;
+  const errorMessage =
+    (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+    (error as { message?: string })?.message ??
+    "Gagal memuat daftar perizinan.";
 
   const advanceMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
@@ -247,29 +257,28 @@ export default function LegalityPermitsPage() {
                 <td colSpan={6} className="p-8 text-center text-xs text-slate-400">
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                    <span>Memuat buku perizinan edar...</span>
+                    <span>Syncing regulatory registry...</span>
                   </div>
                 </td>
               </tr>
             ) : isError ? (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-xs text-rose-500">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <span>Gagal memuat registry perizinan: {(error as any)?.message || "Terjadi kesalahan"}</span>
-                    <button
-                      type="button"
-                      onClick={() => refetch()}
-                      className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors"
-                    >
-                      Coba Lagi
-                    </button>
-                  </div>
+                <td colSpan={6} className="p-6">
+                  <DnaErrorState
+                    title={denied ? "Akses ditolak" : "Gagal memuat data"}
+                    message={
+                      denied
+                        ? "Anda tidak memiliki akses ke registry perizinan."
+                        : errorMessage
+                    }
+                    onRetry={() => refetch()}
+                  />
                 </td>
               </tr>
             ) : filteredPermits.length === 0 ? (
               <tr>
                 <td colSpan={6} className="p-8 text-center text-xs text-slate-400">
-                  Tidak ada dokumen perizinan yang sesuai kriteria filter.
+                  Tidak ada data berkas perizinan yang ditemukan
                 </td>
               </tr>
             ) : (
@@ -282,20 +291,20 @@ export default function LegalityPermitsPage() {
                     setIsDetailDrawerOpen(true);
                   }}
                 >
-                  <td className="p-3 text-slate-400 font-mono text-[11px] tabular-nums">
+                  <td className="p-3 text-slate-400 tabular-nums text-[11px] tabular-nums">
                     {idx + 1}
                   </td>
                   <td className="p-3">
                     <div className="font-bold text-slate-900 truncate uppercase">{permit.name}</div>
-                    <div className="font-mono text-[11px] text-blue-600 font-semibold">{permit.id}</div>
+                    <div className="tabular-nums text-[11px] text-blue-600 font-semibold">{permit.id}</div>
                   </td>
                   <td className="p-3">
                     <div className="font-semibold text-slate-800 truncate">{permit.issuer}</div>
-                    <div className="text-[11px] text-slate-500 font-mono">{permit.type}</div>
+                    <div className="text-[11px] text-slate-500 tabular-nums">{permit.type}</div>
                   </td>
                   <td className="p-3">
                     <div className="font-medium text-slate-800 text-xs">{permit.expiry || "—"}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">Batas Akhir Izin</div>
+                    <div className="text-[10px] text-slate-400 tabular-nums">Batas Akhir Izin</div>
                   </td>
                   <td className="p-3 text-center">
                     <DnaBadge
@@ -376,7 +385,7 @@ export default function LegalityPermitsPage() {
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">Nomor Surat Keputusan (SK)</span>
-                    <span className="font-mono font-bold text-blue-600 text-sm">{selectedPermit.id}</span>
+                    <span className="tabular-nums font-bold text-blue-600 text-sm">{selectedPermit.id}</span>
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">Instansi Penerbit</span>
@@ -384,11 +393,11 @@ export default function LegalityPermitsPage() {
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">Kategori Dokumen</span>
-                    <span className="font-mono text-slate-700">{selectedPermit.type}</span>
+                    <span className="tabular-nums text-slate-700">{selectedPermit.type}</span>
                   </div>
                   <div className="col-span-2">
                     <span className="text-slate-500 block text-[11px]">Batas Akhir Berlaku (Expiry Date)</span>
-                    <span className="font-mono font-bold text-slate-900 text-sm">{selectedPermit.expiry || "—"}</span>
+                    <span className="tabular-nums font-bold text-slate-900 text-sm">{selectedPermit.expiry || "—"}</span>
                   </div>
                 </div>
 

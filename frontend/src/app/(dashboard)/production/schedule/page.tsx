@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
@@ -27,7 +27,13 @@ import {
   DnaDetailDrawer,
   DnaModal,
   DnaInput,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import Link from "next/link";
 
@@ -51,84 +57,25 @@ interface ProductionScheduleItem {
   notes: string;
 }
 
-const FALLBACK_SCHEDULES: ProductionScheduleItem[] = [
-  {
-    id: "sch-1",
-    code: "SCH-MIX-089",
-    spkCode: "SPK-2026-0043",
-    batchNumber: "BATCH-AURA-0910",
-    customerName: "CV Aura Skin Estetika",
-    brandName: "AuraGlow",
-    productName: "Centella Asiatica Soothing Gel Cream",
-    stage: "MIXING",
-    machineName: "Homogenizer Vessel 500L (MIX-01)",
-    startDate: "2026-09-09",
-    endDate: "2026-09-10",
-    targetQty: 157.5,
-    unit: "Kg",
-    operator: "Hendra Wijaya",
-    progressPct: 45,
-    status: "IN_PROGRESS",
-    notes: "Tahap pemanasan fase minyak 75°C sebelum emulsi."
-  },
-  {
-    id: "sch-2",
-    code: "SCH-FIL-104",
-    spkCode: "SPK-2026-0042",
-    batchNumber: "BATCH-GLW-0909",
-    customerName: "PT Cantika Jelita Nusantara",
-    brandName: "GlowGoddess",
-    productName: "Niacinamide 10% Brightening Serum",
-    stage: "FILLING",
-    machineName: "Rotary Auto Filling Line 2 (FIL-02)",
-    startDate: "2026-09-09",
-    endDate: "2026-09-11",
-    targetQty: 5000,
-    unit: "PCS",
-    operator: "Budi Santoso",
-    progressPct: 60,
-    status: "IN_PROGRESS",
-    notes: "Pengisian botol pipet 30ml, cek bobot berkala tiap 30 menit."
-  },
-  {
-    id: "sch-3",
-    code: "SCH-PCK-077",
-    spkCode: "SPK-2026-0040",
-    batchNumber: "BATCH-ELX-0905",
-    customerName: "PT Elixir Botanika Internasional",
-    brandName: "ElixirHerb",
-    productName: "Rosemary Purifying Hair Tonic",
-    stage: "PACKAGING",
-    machineName: "Conveyor Line 1 + Shrink Tunnel (PCK-01)",
-    startDate: "2026-09-08",
-    endDate: "2026-09-09",
-    targetQty: 10000,
-    unit: "PCS",
-    operator: "Rina Marlina",
-    progressPct: 90,
-    status: "IN_PROGRESS",
-    notes: "Packing sekunder box + hologram segel ke master box 48 pcs."
-  },
-  {
-    id: "sch-4",
-    code: "SCH-MIX-090",
-    spkCode: "SPK-2026-0044",
-    batchNumber: "BATCH-VELV-0912",
-    customerName: "PT Velvet Beauty Kreasi",
-    brandName: "VelvetLips",
-    productName: "Matte Velvet Lip Cream Shade 04",
-    stage: "MIXING",
-    machineName: "High Shear Mixer 200L (MIX-03)",
-    startDate: "2026-09-11",
-    endDate: "2026-09-12",
-    targetQty: 29.7,
-    unit: "Kg",
-    operator: "Hendra Wijaya",
-    progressPct: 0,
-    status: "SCHEDULED",
-    notes: "Menunggu rilis bahan baku pigmen warna dari gudang."
-  }
-];
+const mapToItem = (s: any, idx: number): ProductionScheduleItem => ({
+  id: s.id,
+  code: s.scheduleCode || `SCH-${s.stage?.slice(0, 3) || "PRD"}-${String(idx + 1).padStart(3, "0")}`,
+  spkCode: s.workOrder?.woNumber || "SPK-PROD",
+  batchNumber: s.batchRecord?.batchNo || s.workOrder?.woNumber || `BATCH-${s.id.slice(0, 6)}`,
+  customerName: s.workOrder?.lead?.clientName || "Klien Maklon",
+  brandName: s.workOrder?.lead?.brandName || "Brand",
+  productName: s.workOrder?.productName || "Produk",
+  stage: (s.stage === "FILLING" ? "FILLING" : (s.stage === "PACKAGING" || s.stage === "PACKING" ? "PACKAGING" : "MIXING")),
+  machineName: s.machine?.name || "Mesin Standar",
+  startDate: s.startTime ? s.startTime.slice(0, 10) : "-",
+  endDate: s.endTime ? s.endTime.slice(0, 10) : "-",
+  targetQty: Number(s.targetQty) || 0,
+  unit: s.stage === "MIXING" ? "Kg" : "PCS",
+  operator: s.operatorName || "Operator Produksi",
+  progressPct: s.status === "COMPLETED" ? 100 : (s.status === "IN_PROGRESS" ? 50 : 0),
+  status: s.status || "SCHEDULED",
+  notes: s.notes || "",
+});
 
 const STAGE_CONFIG: Record<string, { label: string; badge: "info" | "purple" | "warning"; icon: any }> = {
   MIXING: { label: "Mixing", badge: "info", icon: FlaskConical },
@@ -138,6 +85,7 @@ const STAGE_CONFIG: Record<string, { label: string; badge: "info" | "purple" | "
 
 export default function ProductionSchedulePage() {
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"GANTT" | "TABLE">("GANTT");
@@ -146,8 +94,11 @@ export default function ProductionSchedulePage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [detailItem, setDetailItem] = useState<ProductionScheduleItem | null>(null);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form states
+  const [formWorkOrderId, setFormWorkOrderId] = useState("");
+  const [formMachineId, setFormMachineId] = useState("");
   const [formSpk, setFormSpk] = useState("");
   const [formProduct, setFormProduct] = useState("");
   const [formStage, setFormStage] = useState<"MIXING" | "FILLING" | "PACKAGING">("MIXING");
@@ -159,45 +110,48 @@ export default function ProductionSchedulePage() {
   const [formTargetQty, setFormTargetQty] = useState<number>(5000);
   const [formOperator, setFormOperator] = useState("Hendra Wijaya");
   const [formNotes, setFormNotes] = useState("");
-  const [localSchedules, setLocalSchedules] = useState<ProductionScheduleItem[]>(FALLBACK_SCHEDULES);
 
-  const { data: serverSchedules, isLoading } = useQuery({
+  const { data: serverSchedules = [], isLoading } = useQuery({
     queryKey: ["production-schedules"],
     queryFn: async () => {
       try {
-        const res = await api.get("/production/step-logs");
+        const res = await api.get("/production/schedules");
         const unwrapped = unwrapResponse(res);
-        if (Array.isArray(unwrapped) && unwrapped.length > 0) {
-          const mapped: ProductionScheduleItem[] = unwrapped.map((item, idx) => ({
-            id: item.id || `sch-${idx}`,
-            code: item.code || `SCH-MIX-${String(idx + 80).padStart(3, "0")}`,
-            spkCode: item.spkCode || item.woCode || "SPK-2026-0042",
-            batchNumber: item.batchNumber || `BATCH-${idx}`,
-            customerName: item.customerName || "PT Cantika Jelita",
-            brandName: item.brandName || "GlowGoddess",
-            productName: item.productName || "Brightening Serum",
-            stage: (item.stage || "MIXING") as any,
-            machineName: item.machineName || "Homogenizer 500L",
-            startDate: item.startDate ? item.startDate.slice(0, 10) : "2026-09-09",
-            endDate: item.endDate ? item.endDate.slice(0, 10) : "2026-09-11",
-            targetQty: Number(item.targetQty) || 5000,
-            unit: item.unit || "PCS",
-            operator: item.operator || "Operator Produksi",
-            progressPct: Number(item.progressPct) || 50,
-            status: (item.status || "IN_PROGRESS") as any,
-            notes: item.notes || ""
-          }));
-          setLocalSchedules(mapped);
-          return mapped;
+        if (Array.isArray(unwrapped)) {
+          return unwrapped.map(mapToItem);
         }
+        return [];
       } catch (err) {
-        console.warn("Using fallback schedules", err);
+        return [];
       }
-      return FALLBACK_SCHEDULES;
     }
   });
 
-  const schedules = localSchedules;
+  const { data: machines = [] } = useQuery({
+    queryKey: ["production-schedule-machines"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/production/machines");
+        return unwrapResponse(res) || [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const { data: workOrders = [] } = useQuery({
+    queryKey: ["production-schedule-wos"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/production/work-orders");
+        return unwrapResponse(res) || [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const schedules = serverSchedules;
 
   const filteredSchedules = useMemo(() => {
     return schedules.filter((sch) => {
@@ -221,37 +175,43 @@ export default function ProductionSchedulePage() {
   const fillingCount = schedules.filter((s) => s.stage === "FILLING").length;
   const packingCount = schedules.filter((s) => s.stage === "PACKAGING").length;
 
-  const handleCreateSchedule = (e: React.FormEvent) => {
+  const handleCreateSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formSpk || !formProduct) {
-      toast.error("Validasi Gagal", "Harap lengkapi No. SPK dan nama produk.");
+    const wo = workOrders.find((w: any) => w.id === formWorkOrderId || w.woNumber === formSpk);
+    const workOrderId = wo?.id || formWorkOrderId || (workOrders[0]?.id || "");
+    const machine = machines.find((m: any) => m.id === formMachineId || m.name === formMachine);
+    const machineId = machine?.id || formMachineId || (machines[0]?.id || "");
+
+    if (!workOrderId || !machineId) {
+      toast.error("Validasi Gagal", "Pilih Work Order / SPK dan Mesin produksi yang valid.");
       return;
     }
 
-    const prefix = formStage === "MIXING" ? "MIX" : formStage === "FILLING" ? "FIL" : "PCK";
-    const newSch: ProductionScheduleItem = {
-      id: `sch-${Date.now()}`,
-      code: `SCH-${prefix}-${String(schedules.length + 110).padStart(3, "0")}`,
-      spkCode: formSpk,
-      batchNumber: `BATCH-${String(Date.now()).slice(-6)}`,
-      customerName: "Klien Maklon Terdaftar",
-      brandName: "Brand Kosmetik",
-      productName: formProduct,
-      stage: formStage,
-      machineName: formMachine,
-      startDate: formStartDate,
-      endDate: formEndDate,
-      targetQty: Number(formTargetQty),
-      unit: formStage === "MIXING" ? "Kg" : "PCS",
-      operator: formOperator,
-      progressPct: 0,
-      status: "SCHEDULED",
-      notes: formNotes || ""
-    };
+    try {
+      setIsSubmitting(true);
+      const startParsed = new Date(formStartDate);
+      const validStart = isNaN(startParsed.getTime()) ? new Date() : startParsed;
+      const endParsed = new Date(formEndDate);
+      const validEnd = isNaN(endParsed.getTime()) ? new Date(validStart.getTime() + 4 * 3600 * 1000) : endParsed;
 
-    setLocalSchedules([newSch, ...schedules]);
-    setIsCreateModalOpen(false);
-    toast.success("Jadwal Berhasil Diterbitkan", `Jadwal ${newSch.code} untuk lini ${newSch.stage} telah diagendakan.`);
+      await api.post("/production/schedules", {
+        workOrderId,
+        machineId,
+        stage: formStage,
+        startTime: validStart.toISOString(),
+        endTime: validEnd.toISOString(),
+        targetQty: Number(formTargetQty) || 1000,
+        notes: formNotes || undefined,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["production-schedules"] });
+      setIsCreateModalOpen(false);
+      toast.success("Jadwal Berhasil Diterbitkan", `Jadwal ${formStage} telah diagendakan ke sistem.`);
+    } catch (err: any) {
+      toast.error("Gagal Menerbitkan Jadwal", err?.response?.data?.message || "Terjadi kesalahan pada server.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -359,22 +319,22 @@ export default function ProductionSchedulePage() {
                           {config.label}
                         </DnaBadge>
                         <span className="font-bold text-xs text-slate-900">{item.code}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">({item.spkCode})</span>
+                        <span className="text-[10px] text-slate-400 tabular-nums">({item.spkCode})</span>
                       </div>
                       <div className="font-semibold text-xs text-slate-900">{item.productName}</div>
                       <div className="text-[11px] text-slate-500 font-medium">
-                        {item.brandName} • <span className="text-indigo-600 font-mono">{item.machineName}</span>
+                        {item.brandName} • <span className="text-indigo-600 tabular-nums">{item.machineName}</span>
                       </div>
                     </div>
 
                     {/* Middle Timeline & Progress */}
                     <div className="flex-1 max-w-md space-y-1.5">
                       <div className="flex justify-between text-[11px] font-semibold text-slate-600">
-                        <span className="flex items-center gap-1 font-mono">
+                        <span className="flex items-center gap-1 tabular-nums">
                           <Calendar className="w-3 h-3 text-slate-400" />
                           {item.startDate} s/d {item.endDate}
                         </span>
-                        <span className="font-mono">{item.progressPct}% • {item.targetQty.toLocaleString()} {item.unit}</span>
+                        <span className="tabular-nums">{item.progressPct}% • {item.targetQty.toLocaleString()} {item.unit}</span>
                       </div>
                       <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                         <div
@@ -430,60 +390,68 @@ export default function ProductionSchedulePage() {
         ) : (
           /* TABLE VIEW */
           <div className="w-full">
-            <table className="w-full text-left text-xs table-fixed">
-              <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-                <tr>
-                  <th className="py-3 px-4 w-[18%]">No. Jadwal & SPK</th>
-                  <th className="py-3 px-4 w-[24%]">Tahap & Mesin</th>
-                  <th className="py-3 px-4 w-[26%]">Produk & Brand</th>
-                  <th className="py-3 px-4 w-[18%]">Periode & Operator</th>
-                  <th className="py-3 px-4 w-[10%]">Target & Output</th>
-                  <th className="py-3 px-4 w-[4%] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredSchedules.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-mono text-xs font-bold text-slate-900 truncate">{item.code}</p>
-                      <p className="text-[11px] text-slate-500 font-mono truncate">{item.spkCode}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
-                      <DnaBadge variant={STAGE_CONFIG[item.stage]?.badge || "info"}>
-                        {STAGE_CONFIG[item.stage]?.label}
-                      </DnaBadge>
-                      <p className="text-[11px] text-slate-500 font-mono truncate mt-0.5">{item.machineName}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-semibold text-slate-900 text-xs truncate">{item.productName}</p>
-                      <p className="text-[11px] text-slate-500 truncate">{item.brandName}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-mono text-xs text-slate-700 truncate">{item.startDate} s/d {item.endDate}</p>
-                      <p className="text-[11px] text-slate-400 truncate">{item.operator}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-mono font-bold text-slate-900 text-xs truncate">
-                        {item.targetQty.toLocaleString()} {item.unit}
-                      </p>
-                      <p className="text-[11px] text-indigo-600 font-mono truncate">{item.progressPct}% Selesai</p>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <DnaButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setDetailItem(item);
-                          setIsDetailDrawerOpen(true);
-                        }}
-                      >
-                        <Eye className="w-4 h-4 text-slate-600" />
-                      </DnaButton>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh className="py-3 px-4 w-[18%]">No. Jadwal & SPK</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[24%]">Tahap & Mesin</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[26%]">Produk & Brand</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[18%]">Periode & Operator</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[10%]">Target & Output</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[4%] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
+                {filteredSchedules.length === 0 ? (
+                  <DnaTableRow>
+                    <DnaTd colSpan={6} className="py-12 text-center text-xs text-slate-400">
+                      Tidak ada jadwal produksi yang cocok dengan filter.
+                    </DnaTd>
+                  </DnaTableRow>
+                ) : (
+                  filteredSchedules.map((item) => (
+                    <DnaTableRow key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="tabular-nums text-xs font-bold text-slate-900 truncate">{item.code}</p>
+                        <p className="text-[11px] text-slate-500 tabular-nums truncate">{item.spkCode}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <DnaBadge variant={STAGE_CONFIG[item.stage]?.badge || "info"}>
+                          {STAGE_CONFIG[item.stage]?.label}
+                        </DnaBadge>
+                        <p className="text-[11px] text-slate-500 tabular-nums truncate mt-0.5">{item.machineName}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="font-semibold text-slate-900 text-xs truncate">{item.productName}</p>
+                        <p className="text-[11px] text-slate-500 truncate">{item.brandName}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="tabular-nums text-xs text-slate-700 truncate">{item.startDate} s/d {item.endDate}</p>
+                        <p className="text-[11px] text-slate-400 truncate">{item.operator}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="tabular-nums font-bold text-slate-900 text-xs truncate">
+                          {item.targetQty.toLocaleString()} {item.unit}
+                        </p>
+                        <p className="text-[11px] text-indigo-600 tabular-nums truncate">{item.progressPct}% Selesai</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setDetailItem(item);
+                            setIsDetailDrawerOpen(true);
+                          }}
+                        >
+                          <Eye className="w-4 h-4 text-slate-600" />
+                        </DnaButton>
+                      </DnaTd>
+                    </DnaTableRow>
+                  ))
+                )}
+              </DnaTableBody>
+            </DnaTable>
           </div>
         )}
       </DnaDataTableCard>
@@ -499,13 +467,40 @@ export default function ProductionSchedulePage() {
             <DnaButton variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" onClick={handleCreateSchedule}>
-              Simpan Jadwal
+            <DnaButton variant="primary" onClick={handleCreateSchedule} disabled={isSubmitting}>
+              {isSubmitting ? "Menyimpan..." : "Simpan Jadwal"}
             </DnaButton>
           </div>
         }
       >
         <form onSubmit={handleCreateSchedule} className="space-y-3 text-xs">
+          {workOrders.length > 0 && (
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Pilih Work Order / SPK</label>
+              <select
+                aria-label="Pilih Work Order / SPK"
+                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold text-slate-800"
+                value={formWorkOrderId}
+                onChange={(e) => {
+                  const wo = workOrders.find((w: any) => w.id === e.target.value);
+                  setFormWorkOrderId(e.target.value);
+                  if (wo) {
+                    setFormSpk(wo.woNumber);
+                    setFormProduct(wo.productName || "");
+                    if (wo.targetQty) setFormTargetQty(Number(wo.targetQty));
+                  }
+                }}
+              >
+                <option value="">-- Pilih Work Order --</option>
+                {workOrders.map((wo: any) => (
+                  <option key={wo.id} value={wo.id}>
+                    {wo.woNumber} - {wo.productName} ({wo.targetQty} Pcs)
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="font-bold text-slate-700 uppercase">
@@ -533,6 +528,7 @@ export default function ProductionSchedulePage() {
             <div className="space-y-1">
               <label className="font-bold text-slate-700 uppercase">Tahapan Produksi</label>
               <select
+                aria-label="Tahapan Produksi"
                 value={formStage}
                 onChange={(e) => setFormStage(e.target.value as any)}
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold text-slate-800"
@@ -544,10 +540,30 @@ export default function ProductionSchedulePage() {
             </div>
             <div className="space-y-1">
               <label className="font-bold text-slate-700 uppercase">Mesin / Line</label>
-              <DnaInput
-                value={formMachine}
-                onChange={(e) => setFormMachine(e.target.value)}
-              />
+              {machines.length > 0 ? (
+                <select
+                  aria-label="Mesin / Line"
+                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold text-slate-800"
+                  value={formMachineId}
+                  onChange={(e) => {
+                    const m = machines.find((item: any) => item.id === e.target.value);
+                    setFormMachineId(e.target.value);
+                    if (m) setFormMachine(m.name);
+                  }}
+                >
+                  <option value="">-- Pilih Mesin --</option>
+                  {machines.map((m: any) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.machineCode})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <DnaInput
+                  value={formMachine}
+                  onChange={(e) => setFormMachine(e.target.value)}
+                />
+              )}
             </div>
           </div>
 
@@ -614,8 +630,8 @@ export default function ProductionSchedulePage() {
               <div className="space-y-4 text-xs">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-mono font-bold text-slate-900">{detailItem.code}</span>
-                    <span className="font-mono text-slate-500">{detailItem.spkCode}</span>
+                    <span className="tabular-nums font-bold text-slate-900">{detailItem.code}</span>
+                    <span className="tabular-nums text-slate-500">{detailItem.spkCode}</span>
                   </div>
                   <p className="font-bold text-slate-900 text-sm">{detailItem.productName}</p>
                   <p className="text-slate-600">{detailItem.customerName} ({detailItem.brandName})</p>
@@ -624,7 +640,7 @@ export default function ProductionSchedulePage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Target Produksi</span>
-                    <p className="font-mono font-bold text-slate-900 text-sm">{detailItem.targetQty.toLocaleString()} {detailItem.unit}</p>
+                    <p className="tabular-nums font-bold text-slate-900 text-sm">{detailItem.targetQty.toLocaleString()} {detailItem.unit}</p>
                     <span className="text-[10px] text-slate-400">Progress: {detailItem.progressPct}%</span>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
@@ -636,7 +652,7 @@ export default function ProductionSchedulePage() {
 
                 <div className="p-3 bg-white rounded-lg border border-slate-200 space-y-1">
                   <span className="text-slate-500 block">Jadwal Pelaksanaan</span>
-                  <div className="flex justify-between font-mono text-slate-800">
+                  <div className="flex justify-between tabular-nums text-slate-800">
                     <span>Mulai: {detailItem.startDate}</span>
                     <span>Selesai: {detailItem.endDate}</span>
                   </div>

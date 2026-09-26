@@ -4,7 +4,20 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/dna";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import { DnaButton, DnaInput, DnaBadge } from "@/components/dna";
 import { Search, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -47,51 +60,51 @@ export default function RequestListPage() {
       </div>
 
       <div className="border border-slate-200 rounded-2xl overflow-hidden">
-        <Table>
-          <TableHeader className="bg-slate-50/50">
-            <TableRow>
-              <TableHead className="text-[9px] font-black uppercase text-slate-400">Judul</TableHead>
-              <TableHead className="text-[9px] font-black uppercase text-slate-400">User</TableHead>
-              <TableHead className="text-[9px] font-black uppercase text-slate-400">Prioritas</TableHead>
-              <TableHead className="text-[9px] font-black uppercase text-slate-400">Tanggal</TableHead>
-              <TableHead className="text-[9px] font-black uppercase text-slate-400 text-center">Status</TableHead>
-              <TableHead className="text-[9px] font-black uppercase text-slate-400 text-right pr-6">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <DnaTable>
+          <DnaTableHead className="bg-slate-50/50">
+            <DnaTableRow>
+              <DnaTh className="text-[9px] font-black uppercase text-slate-400">Judul</DnaTh>
+              <DnaTh className="text-[9px] font-black uppercase text-slate-400">User</DnaTh>
+              <DnaTh className="text-[9px] font-black uppercase text-slate-400">Prioritas</DnaTh>
+              <DnaTh className="text-[9px] font-black uppercase text-slate-400">Tanggal</DnaTh>
+              <DnaTh className="text-[9px] font-black uppercase text-slate-400 text-center">Status</DnaTh>
+              <DnaTh className="text-[9px] font-black uppercase text-slate-400 text-right pr-6">Aksi</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {isLoading ? (
               [...Array(3)].map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell colSpan={6}><div className="h-12 bg-slate-50 rounded animate-pulse" /></TableCell>
-                </TableRow>
+                <DnaTableRow key={i}>
+                  <DnaTd colSpan={6}><div className="h-12 bg-slate-50 rounded animate-pulse" /></DnaTd>
+                </DnaTableRow>
               ))
             ) : !filtered?.length ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-16 text-center text-slate-400 font-medium">
+              <DnaTableRow>
+                <DnaTd colSpan={6} className="py-16 text-center text-slate-400 font-medium">
                   Belum ada permintaan
-                </TableCell>
-              </TableRow>
+                </DnaTd>
+              </DnaTableRow>
             ) : (
               filtered.map((req: any) => (
-                <TableRow key={req.id} className="hover:bg-slate-50/30">
-                  <TableCell className="font-black text-xs uppercase">{req.title}</TableCell>
-                  <TableCell className="text-xs text-slate-500">{req.createdBy || "-"}</TableCell>
-                  <TableCell>
-                    <DnaBadge status={
+                <DnaTableRow key={req.id} className="hover:bg-slate-50/30">
+                  <DnaTd className="font-black text-xs uppercase">{req.title}</DnaTd>
+                  <DnaTd className="text-xs text-slate-500">{req.createdBy || "-"}</DnaTd>
+                  <DnaTd>
+                    <DnaBadge variant={
                       req.priority === "CRITICAL" ? "critical" :
                       req.priority === "HIGH" ? "warning" :
                       "default"
                     }>{req.priority || "MEDIUM"}</DnaBadge>
-                  </TableCell>
-                  <TableCell className="text-xs text-slate-500">{req.createdAt}</TableCell>
-                  <TableCell className="text-center">
-                    <DnaBadge status={
+                  </DnaTd>
+                  <DnaTd className="text-xs text-slate-500">{req.createdAt}</DnaTd>
+                  <DnaTd className="text-center">
+                    <DnaBadge variant={
                       req.status === "APPROVED" ? "success" :
                       req.status === "REJECTED" ? "critical" :
                       "warning"
                     }>{req.status || "PENDING"}</DnaBadge>
-                  </TableCell>
-                  <TableCell className="text-right pr-6">
+                  </DnaTd>
+                  <DnaTd className="text-right pr-6">
                     <div className="flex justify-end gap-2">
                       <DnaButton
                         variant="danger"
@@ -110,12 +123,12 @@ export default function RequestListPage() {
                         <CheckCircle2 className="w-3 h-3" />
                       </DnaButton>
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </DnaTd>
+                </DnaTableRow>
               ))
             )}
-          </TableBody>
-        </Table>
+          </DnaTableBody>
+        </DnaTable>
       </div>
     </DashboardShell>
   );

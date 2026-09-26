@@ -60,8 +60,13 @@ import {
   DnaDetailDrawer,
   DnaTable,
   useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
-import { api } from "@/lib/api";
+import { api, extractApiError } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 
 // ── Types ──
@@ -98,6 +103,7 @@ function MasterGoodsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
 
   const tabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<string>(
@@ -220,6 +226,98 @@ function MasterGoodsContent() {
       setCategoriesList([]);
     }
   }, [categoriesApiResponse, isLoadingCategories, isErrorCategories]);
+
+  // ── Mutations ──
+  // The barang and category writes used to edit `goodsList`/`categoriesList` and toast "berhasil",
+  // so a refresh lost them. They now hit /master/materials and /master/categories.
+  const invalidateGoods = () => {
+    queryClient.invalidateQueries({ queryKey: ["master-materials"] });
+    queryClient.invalidateQueries({ queryKey: ["master-categories"] });
+  };
+
+  // The form carries a category CODE ("BBK") and a display label; the backend needs MaterialType.
+  // Category codes are free text in this DB, so the enum is derived from the label, which is the
+  // only field with a known vocabulary. `ponytail:` a category whose code is unknown and whose name
+  // matches nothing falls back to RAW_MATERIAL; teach this table if new categories appear.
+  const materialTypeFor = (kategori: string, kode: string): "RAW_MATERIAL" | "PACKAGING" | "LABEL" | "BOX" => {
+    const s = `${kategori} ${kode}`.toLowerCase();
+    if (s.includes("label")) return "LABEL";
+    if (s.includes("box") || s.includes("kardus") || s.includes("dus")) return "BOX";
+    if (s.includes("kemasan") || s.includes("packaging") || s.includes("kpr") || s.includes("ksr")) return "PACKAGING";
+    return "RAW_MATERIAL";
+  };
+
+  const saveBarangMut = useMutation({
+    mutationFn: async () => {
+      const category = categoriesList.find((c) => c.kode === barangForm.kategoriKode);
+      const payload: Record<string, unknown> = {
+        name: barangForm.nama.trim(),
+        code: barangForm.kode.trim() || undefined,
+        type: materialTypeFor(barangForm.kategori, barangForm.kategoriKode),
+        unit: barangForm.satuan.trim(),
+        unitPrice: Number(barangForm.hargaBeli) || 0,
+        reorderPoint: Number(barangForm.stokMin) || 0,
+        minLevel: Number(barangForm.stokMin) || 0,
+        physicalForm: barangForm.wujudFisik.trim() || undefined,
+        ...(category?.id ? { categoryId: category.id } : {}),
+      };
+      // ponytail: `stockQty` is deliberately NOT sent. Writing it here would set on-hand stock with
+      // no inventory ledger entry, desyncing this page from the stock cards. On-hand starts at 0 and
+      // moves only through goods receipt / opening balance. Add when this form owns that flow.
+      const res = editingBarang
+        ? await api.patch(`/master/materials/${editingBarang.id}`, payload)
+        : await api.post("/master/materials", payload);
+      return unwrapResponse(res);
+    },
+    onSuccess: () => {
+      toast.success(
+        editingBarang
+          ? `Barang ${barangForm.kode} berhasil diperbarui.`
+          : `Barang baru ${barangForm.kode} berhasil ditambahkan.`,
+      );
+      setIsBarangModalOpen(false);
+      setEditingBarang(null);
+      invalidateGoods();
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
+  const deleteBarangMut = useMutation({
+    mutationFn: async (id: string) => unwrapResponse(await api.delete(`/master/materials/${id}`)),
+    onSuccess: () => {
+      toast.success(`Barang ${barangToDelete?.kode} berhasil dihapus.`);
+      setBarangToDelete(null);
+      invalidateGoods();
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
+  const saveCategoryMut = useMutation({
+    mutationFn: async () => {
+      // CategoryType is GOODS/SUPPLIER/CUSTOMER; this page only owns goods categories.
+      const payload = {
+        name: categoryForm.kategori.trim(),
+        code: categoryForm.kode.trim() || undefined,
+        description: categoryForm.deskripsi.trim() || undefined,
+        type: "GOODS" as const,
+      };
+      const res = editingCategory
+        ? await api.patch(`/master/categories/${editingCategory.id}`, payload)
+        : await api.post("/master/categories", payload);
+      return unwrapResponse(res);
+    },
+    onSuccess: () => {
+      toast.success(
+        editingCategory
+          ? `Kategori ${categoryForm.kode} berhasil diperbarui.`
+          : `Kategori baru ${categoryForm.kode} berhasil ditambahkan.`,
+      );
+      setIsCategoryModalOpen(false);
+      setEditingCategory(null);
+      invalidateGoods();
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
 
   // Unique lists
   const uniqueSuppliers = useMemo(() => Array.from(new Set(goodsList.map((g) => g.supplierAsal))), [goodsList]);
@@ -411,35 +509,12 @@ function MasterGoodsContent() {
       toast.error("Nama barang dan kode wajib diisi!");
       return;
     }
-
-    if (editingBarang) {
-      setGoodsList((prev) =>
-        prev.map((g) =>
-          g.id === editingBarang.id
-            ? {
-                ...g,
-                ...barangForm,
-              }
-            : g
-        )
-      );
-      toast.success(`Barang ${barangForm.kode} berhasil diperbarui.`);
-    } else {
-      const newItem: MasterBarangItem = {
-        id: `brg-${Date.now()}`,
-        ...barangForm,
-      };
-      setGoodsList((prev) => [newItem, ...prev]);
-      toast.success(`Barang baru ${newItem.kode} berhasil ditambahkan.`);
-    }
-    setIsBarangModalOpen(false);
+    saveBarangMut.mutate();
   };
 
   const handleDeleteBarang = () => {
     if (!barangToDelete) return;
-    setGoodsList((prev) => prev.filter((g) => g.id !== barangToDelete.id));
-    toast.success(`Barang ${barangToDelete.kode} berhasil dihapus.`);
-    setBarangToDelete(null);
+    deleteBarangMut.mutate(barangToDelete.id);
   };
 
   // ── Handlers Kategori ──
@@ -472,24 +547,7 @@ function MasterGoodsContent() {
       toast.error("Kode prefix dan nama kategori wajib diisi!");
       return;
     }
-
-    if (editingCategory) {
-      setCategoriesList((prev) =>
-        prev.map((c) =>
-          c.id === editingCategory.id ? { ...c, ...categoryForm } : c
-        )
-      );
-      toast.success(`Kategori ${categoryForm.kode} berhasil diperbarui.`);
-    } else {
-      const newCat: KategoriBarangItem = {
-        id: `cat-${Date.now()}`,
-        totalSku: 0,
-        ...categoryForm,
-      };
-      setCategoriesList((prev) => [...prev, newCat]);
-      toast.success(`Kategori baru ${newCat.kode} berhasil ditambahkan.`);
-    }
-    setIsCategoryModalOpen(false);
+    saveCategoryMut.mutate();
   };
 
   return (
@@ -604,34 +662,34 @@ function MasterGoodsContent() {
             }}
           >
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1250px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 font-bold uppercase tracking-wider text-[11px] select-none">
-                  <th className="px-4 py-2.5 w-[140px]">Kode Barang</th>
-                  <th className="px-4 py-2.5 min-w-[180px]">Nama Barang</th>
-                  <th className="px-4 py-2.5 w-[140px]">Kategori</th>
-                  <th className="px-4 py-2.5 w-[140px]">Sub Kategori</th>
-                  <th className="px-4 py-2.5 w-[100px] text-center">Satuan</th>
-                  <th className="px-4 py-2.5 w-[110px] text-center">Wujud Fisik</th>
-                  <th className="px-4 py-2.5 w-[120px] text-right">Stok Aktual</th>
-                  <th className="px-4 py-2.5 w-[110px] text-right">Min. Stok</th>
-                  <th className="px-4 py-2.5 w-[140px] text-right">Harga Beli</th>
-                  <th className="pr-4 py-2.5 w-[80px] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 font-bold uppercase tracking-wider text-[11px] select-none">
+                  <DnaTh className="px-4 py-2.5 w-[140px]">Kode Barang</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Nama Barang</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px]">Kategori</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px]">Sub Kategori</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[100px] text-center">Satuan</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px] text-center">Wujud Fisik</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px] text-right">Stok Aktual</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px] text-right">Min. Stok</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px] text-right">Harga Beli</DnaTh>
+                  <DnaTh className="pr-4 py-2.5 w-[80px] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {isLoadingMaterials ? (
-                  <tr>
-                    <td colSpan={10} className="p-8 text-center text-slate-500">
+                  <DnaTableRow>
+                    <DnaTd colSpan={10} className="p-8 text-center text-slate-500">
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                         <span>Memuat data barang...</span>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : isErrorMaterials ? (
-                  <tr>
-                    <td colSpan={10} className="p-8 text-center text-rose-500">
+                  <DnaTableRow>
+                    <DnaTd colSpan={10} className="p-8 text-center text-rose-500">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <span>Gagal memuat data barang: {(materialsError as any)?.message || "Terjadi kesalahan"}</span>
                         <DnaButton
@@ -642,19 +700,19 @@ function MasterGoodsContent() {
                           Coba Lagi
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : paginatedGoods.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="p-8 text-center text-slate-400">
+                  <DnaTableRow>
+                    <DnaTd colSpan={10} className="p-8 text-center text-slate-400">
                       Tidak ada barang yang sesuai dengan kriteria filter saat ini.
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   paginatedGoods.map((item) => {
                     const isCritical = item.realStok <= item.stokMin;
                     return (
-                      <tr
+                      <DnaTableRow
                         key={item.id}
                         className="h-[48px] hover:bg-slate-50/60 transition-colors group cursor-pointer"
                         onClick={() => {
@@ -662,38 +720,38 @@ function MasterGoodsContent() {
                           setIsDetailModalOpen(true);
                         }}
                       >
-                        <td className="px-4 py-2.5">
+                        <DnaTd className="px-4 py-2.5">
                           <DnaCell.Code code={item.kode} />
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <span className="text-[12px] font-medium text-slate-900 line-clamp-1">{item.nama}</span>
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <span className="text-[12px] font-medium text-slate-800 line-clamp-1">{item.kategori}</span>
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <DnaCell.Text text={item.subKategori || "-"} />
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center">
                           <DnaCell.Text text={item.satuan} />
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center">
                           <span className="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                             {item.wujudFisik || "-"}
                           </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-right font-mono tabular-nums">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-right tabular-nums tabular-nums">
                           <span className={`text-[12px] font-semibold ${isCritical ? "text-rose-600" : "text-slate-800"}`}>
                             {item.realStok.toLocaleString("id-ID")}
                           </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-right font-mono tabular-nums text-slate-500">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-right tabular-nums tabular-nums text-slate-500">
                           {item.stokMin.toLocaleString("id-ID")}
-                        </td>
-                        <td className="px-4 py-2.5 text-right">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-right">
                           <DnaCell.Numeric value={item.hargaBeli} prefix="Rp " />
-                        </td>
-                        <td className="pr-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                        </DnaTd>
+                        <DnaTd className="pr-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
                             <DnaButton
                               variant="ghost"
@@ -715,13 +773,13 @@ function MasterGoodsContent() {
                               <Edit2 className="w-3.5 h-3.5" />
                             </DnaButton>
                           </div>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
           </DnaDataTableCard>
         </div>
@@ -740,28 +798,28 @@ function MasterGoodsContent() {
             }}
           >
             <DnaTable className="w-full text-xs text-left table-fixed">
-              <thead>
-                <tr className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
-                  <th className="p-3 w-[20%]">Kode Prefix</th>
-                  <th className="p-3 w-[25%]">Kategori Barang</th>
-                  <th className="p-3 w-[35%]">Deskripsi Pemetaan</th>
-                  <th className="p-3 w-[10%] text-center">Total SKU</th>
-                  <th className="p-3 w-[10%] text-right pr-4">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+              <DnaTableHead>
+                <DnaTableRow className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
+                  <DnaTh className="p-3 w-[20%]">Kode Prefix</DnaTh>
+                  <DnaTh className="p-3 w-[25%]">Kategori Barang</DnaTh>
+                  <DnaTh className="p-3 w-[35%]">Deskripsi Pemetaan</DnaTh>
+                  <DnaTh className="p-3 w-[10%] text-center">Total SKU</DnaTh>
+                  <DnaTh className="p-3 w-[10%] text-right pr-4">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {isLoadingCategories ? (
-                  <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-500">
+                  <DnaTableRow>
+                    <DnaTd colSpan={5} className="p-8 text-center text-slate-500">
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                         <span>Memuat data kategori...</span>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : isErrorCategories ? (
-                  <tr>
-                    <td colSpan={5} className="p-8 text-center text-rose-500">
+                  <DnaTableRow>
+                    <DnaTd colSpan={5} className="p-8 text-center text-rose-500">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <span>Gagal memuat data kategori: {(categoriesError as any)?.message || "Terjadi kesalahan"}</span>
                         <DnaButton
@@ -772,28 +830,28 @@ function MasterGoodsContent() {
                           Coba Lagi
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : categoriesList.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-400">
+                  <DnaTableRow>
+                    <DnaTd colSpan={5} className="p-8 text-center text-slate-400">
                       Tidak ada data kategori.
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   categoriesList.map((cat) => (
-                    <tr key={cat.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="p-3">
-                        <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                    <DnaTableRow key={cat.id} className="hover:bg-slate-50/80 transition-colors">
+                      <DnaTd className="p-3">
+                        <span className="tabular-nums font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                           {cat.kode}
                         </span>
-                      </td>
-                      <td className="p-3 font-bold text-slate-900 uppercase">{cat.kategori}</td>
-                      <td className="p-3 text-slate-600 truncate">{cat.deskripsi}</td>
-                      <td className="p-3 text-center font-mono font-semibold text-slate-700">
+                      </DnaTd>
+                      <DnaTd className="p-3 font-bold text-slate-900 uppercase">{cat.kategori}</DnaTd>
+                      <DnaTd className="p-3 text-slate-600 truncate">{cat.deskripsi}</DnaTd>
+                      <DnaTd className="p-3 text-center tabular-nums font-semibold text-slate-700">
                         {cat.totalSku} SKU
-                      </td>
-                      <td className="p-3 text-right pr-4">
+                      </DnaTd>
+                      <DnaTd className="p-3 text-right pr-4">
                         <DnaButton
                           variant="outline"
                           size="sm"
@@ -803,11 +861,11 @@ function MasterGoodsContent() {
                           <Edit2 className="w-3.5 h-3.5 mr-1" />
                           Sunting
                         </DnaButton>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
+              </DnaTableBody>
             </DnaTable>
           </DnaDataTableCard>
         </div>
@@ -959,7 +1017,7 @@ function MasterGoodsContent() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <span className="text-slate-400 block text-[11px]">Kode Unik SKU:</span>
-                      <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                      <span className="tabular-nums font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                         {selectedBarang.kode}
                       </span>
                     </div>
@@ -986,13 +1044,13 @@ function MasterGoodsContent() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-white border border-slate-200 rounded-xl">
                     <span className="text-slate-400 block text-[11px]">Harga Beli Pokok Standar:</span>
-                    <span className="font-mono font-bold text-slate-900 text-sm">
+                    <span className="tabular-nums font-bold text-slate-900 text-sm">
                       Rp {selectedBarang.hargaBeli.toLocaleString("id-ID")} / {selectedBarang.satuan}
                     </span>
                   </div>
                   <div className="p-3 bg-white border border-slate-200 rounded-xl">
                     <span className="text-slate-400 block text-[11px]">Estimasi Umur Simpan (Aging):</span>
-                    <span className="font-mono font-bold text-amber-700 text-sm">
+                    <span className="tabular-nums font-bold text-amber-700 text-sm">
                       {selectedBarang.agingHari} Hari di Gudang
                     </span>
                   </div>
@@ -1012,20 +1070,20 @@ function MasterGoodsContent() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <span className="text-slate-400 block text-[11px]">Real Stok Saat Ini:</span>
-                      <span className="font-mono font-black text-slate-900 text-sm">
+                      <span className="tabular-nums font-black text-slate-900 text-sm">
                         {selectedBarang.realStok.toLocaleString("id-ID")} {selectedBarang.satuan}
                       </span>
                     </div>
                     <div>
                       <span className="text-slate-400 block text-[11px]">Batas Reorder Point (ROP):</span>
-                      <span className="font-mono font-bold text-rose-600 text-sm">
+                      <span className="tabular-nums font-bold text-rose-600 text-sm">
                         {selectedBarang.stokMin.toLocaleString("id-ID")} {selectedBarang.satuan}
                       </span>
                     </div>
                   </div>
                   <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">Total Nilai Valuasi Persediaan:</span>
-                    <span className="font-mono font-bold text-emerald-700 text-sm">
+                    <span className="tabular-nums font-bold text-emerald-700 text-sm">
                       Rp {(selectedBarang.hargaBeli * selectedBarang.realStok).toLocaleString("id-ID")}
                     </span>
                   </div>
@@ -1039,11 +1097,11 @@ function MasterGoodsContent() {
                   <div className="grid grid-cols-2 gap-3 pt-1">
                     <div>
                       <span className="text-slate-400 block text-[11px]">Akun Persediaan (Asset):</span>
-                      <span className="font-mono font-bold text-slate-800">{selectedBarang.akunPersediaan}</span>
+                      <span className="tabular-nums font-bold text-slate-800">{selectedBarang.akunPersediaan}</span>
                     </div>
                     <div>
                       <span className="text-slate-400 block text-[11px]">Akun Beban Pokok (COGS):</span>
-                      <span className="font-mono font-bold text-slate-800">{selectedBarang.akunCogs}</span>
+                      <span className="tabular-nums font-bold text-slate-800">{selectedBarang.akunCogs}</span>
                     </div>
                   </div>
                 </div>

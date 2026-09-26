@@ -136,7 +136,7 @@ export default function BalanceSheetPage() {
           </div>
           <div className="text-right">
             <p className={cn(
-              "text-xs font-black font-mono tabular-nums",
+              "text-xs font-black tabular-nums tabular-nums",
               level === 0 ? "text-slate-900" : "text-slate-600",
               acc.balance < 0 ? "text-rose-500" : ""
             )}>
@@ -215,19 +215,19 @@ export default function BalanceSheetPage() {
               <div className="flex gap-4 items-center">
                 <div className="text-right">
                   <p className="text-[8px] font-black uppercase opacity-60">Total Aset</p>
-                  <p className="text-base font-black font-mono">{formatCurrency(data.assets.total || 0)}</p>
+                  <p className="text-base font-black tabular-nums">{formatCurrency(data.assets.total || 0)}</p>
                 </div>
                 <div className="w-px h-8 bg-slate-200 mx-1" />
                 <div className="text-right">
                   <p className="text-[8px] font-black uppercase opacity-60">Liabilitas + Ekuitas</p>
-                  <p className="text-base font-black font-mono">{formatCurrency(data.totalLiabilitiesAndEquity || 0)}</p>
+                  <p className="text-base font-black tabular-nums">{formatCurrency(data.totalLiabilitiesAndEquity || 0)}</p>
                 </div>
                 {!data.isBalanced && (
                   <>
                     <div className="w-px h-8 bg-rose-200 mx-1" />
                     <div className="text-right text-rose-600">
                       <p className="text-[8px] font-black uppercase opacity-60">Selisih (Gap)</p>
-                      <p className="text-base font-black font-mono">{formatCurrency(Math.abs((data.assets.total || 0) - (data.totalLiabilitiesAndEquity || 0)))}</p>
+                      <p className="text-base font-black tabular-nums">{formatCurrency(Math.abs((data.assets.total || 0) - (data.totalLiabilitiesAndEquity || 0)))}</p>
                     </div>
                   </>
                 )}
@@ -262,7 +262,7 @@ export default function BalanceSheetPage() {
                   <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-200 block mb-1">Grand Total</span>
                   <span className="text-sm font-black uppercase tracking-tight">TOTAL AKTIVA</span>
                 </div>
-                <span className="text-2xl font-black text-emerald-300 font-mono tabular-nums tracking-tighter">{formatCurrency(data?.assets.total || 0)}</span>
+                <span className="text-2xl font-black text-emerald-300 tabular-nums tabular-nums tracking-tighter">{formatCurrency(data?.assets.total || 0)}</span>
               </div>
             </DnaCard>
           </div>
@@ -286,7 +286,7 @@ export default function BalanceSheetPage() {
                 </div>
                 <div className="m-2 p-4 bg-slate-50 rounded-2xl flex justify-between items-center border border-slate-100">
                   <span className="text-xs font-black uppercase tracking-tight text-slate-500 italic">Subtotal Liabilities</span>
-                  <span className="text-base font-black text-slate-950 font-mono tabular-nums">{formatCurrency(data?.liabilities.total || 0)}</span>
+                  <span className="text-base font-black text-slate-950 tabular-nums tabular-nums">{formatCurrency(data?.liabilities.total || 0)}</span>
                 </div>
               </DnaCard>
             </div>
@@ -318,7 +318,7 @@ export default function BalanceSheetPage() {
                         </p>
                       </div>
                     </div>
-                    <span className="text-base font-black text-blue-700 font-mono tabular-nums">{formatCurrency(data?.equity.netIncome || 0)}</span>
+                    <span className="text-base font-black text-blue-700 tabular-nums tabular-nums">{formatCurrency(data?.equity.netIncome || 0)}</span>
                   </div>
                 </div>
                 <div className="m-2 p-6 bg-blue-950 rounded-2xl text-white flex justify-between items-center shadow-sm">
@@ -326,7 +326,7 @@ export default function BalanceSheetPage() {
                     <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-300 block mb-1">Grand Total</span>
                     <span className="text-sm font-black uppercase tracking-tight">TOTAL PASIVA</span>
                   </div>
-                  <span className="text-2xl font-black text-amber-400 font-mono tabular-nums tracking-tighter">{formatCurrency(data?.totalLiabilitiesAndEquity || 0)}</span>
+                  <span className="text-2xl font-black text-amber-400 tabular-nums tabular-nums tracking-tighter">{formatCurrency(data?.totalLiabilitiesAndEquity || 0)}</span>
                 </div>
               </DnaCard>
             </div>

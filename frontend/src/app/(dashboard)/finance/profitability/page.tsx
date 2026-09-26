@@ -1,6 +1,9 @@
-﻿"use client";
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   DnaPageContainer,
   DnaPageHeader,
@@ -30,19 +33,105 @@ interface CustomerProfitability {
   orderCount: number;
 }
 
-const SAMPLE_PROFITABILITY: CustomerProfitability[] = [
-  { id: "p-1", customerCode: "CUST-001", brandName: "Aura Glow Beauty", companyName: "PT Aura Makmur Kosmetika", contractType: "JASA_MAKLON", totalRevenue: 850000000, materialCogs: 420000000, laborOverheadCogs: 110000000, totalCogs: 530000000, grossProfit: 320000000, grossMarginPct: 37.6, orderCount: 8 },
-  { id: "p-2", customerCode: "CUST-002", brandName: "Derma Pure Skin", companyName: "CV Derma Medika", contractType: "JASA_MAKLON", totalRevenue: 620000000, materialCogs: 310000000, laborOverheadCogs: 85000000, totalCogs: 395000000, grossProfit: 225000000, grossMarginPct: 36.3, orderCount: 5 },
-  { id: "p-3", customerCode: "CUST-003", brandName: "Conscentra Parfumerie", companyName: "PT Aroma Nirwana", contractType: "JUAL_PUTUS", totalRevenue: 450000000, materialCogs: 210000000, laborOverheadCogs: 60000000, totalCogs: 270000000, grossProfit: 180000000, grossMarginPct: 40.0, orderCount: 4 },
-  { id: "p-4", customerCode: "CUST-004", brandName: "Botanical Herbs", companyName: "CV Herbal Alami Indonesia", contractType: "JASA_MAKLON", totalRevenue: 280000000, materialCogs: 165000000, laborOverheadCogs: 42000000, totalCogs: 207000000, grossProfit: 73000000, grossMarginPct: 26.1, orderCount: 2 },
-];
-
 export default function CustomerProfitabilityPage() {
-  const [data, setData] = useState<CustomerProfitability[]>(SAMPLE_PROFITABILITY);
   const [search, setSearch] = useState("");
 
-  const totalRev = data.reduce((acc, d) => acc + d.totalRevenue, 0);
-  const totalCogs = data.reduce((acc, d) => acc + d.totalCogs, 0);
+  // 1. Fetch live product profitabilities
+  const { data: rawProfitability = [], isLoading } = useQuery<any[]>({
+    queryKey: ["finance-product-profitabilities"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/product-profitabilities");
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  // 2. Fetch cogs-requests as supplementary real-time costing source
+  const { data: rawCogsRequests = [] } = useQuery<any[]>({
+    queryKey: ["finance-cogs-requests-prof"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/cogs-requests");
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const data: CustomerProfitability[] = useMemo(() => {
+    if (rawProfitability.length > 0) {
+      return rawProfitability.map((p: any) => {
+        const totalRevenue = Number(p.revenue || p.totalRevenue || 0);
+        const materialCogs = Number(p.materialCost || p.materialCogs || 0);
+        const laborOverheadCogs = Number(p.laborCost || p.overheadCost || p.laborOverheadCogs || 0);
+        const totalCogs = Number(p.cogs || p.totalCost || materialCogs + laborOverheadCogs);
+        const grossProfit = Number(p.grossProfit || (totalRevenue - totalCogs));
+        const grossMarginPct = totalRevenue > 0 ? Number(((grossProfit / totalRevenue) * 100).toFixed(1)) : 0;
+
+        return {
+          id: p.id,
+          customerCode: p.customerCode || p.product?.code || "PROD",
+          brandName: p.product?.name || p.brandName || "Produk Maklon",
+          companyName: p.customer?.name || p.companyName || "-",
+          contractType: (p.contractType || "JASA_MAKLON") as "JASA_MAKLON" | "JUAL_PUTUS",
+          totalRevenue,
+          materialCogs,
+          laborOverheadCogs,
+          totalCogs,
+          grossProfit,
+          grossMarginPct,
+          orderCount: Number(p.unitsSold || p.orderCount || 1),
+        };
+      });
+    }
+
+    // Supplementary derive from cogs requests if profitabilities table is still empty
+    if (rawCogsRequests.length > 0) {
+      return rawCogsRequests.map((req: any) => {
+        const totalRevenue = Number(req.totalRevenue || req.priceEstimate || 0);
+        const totalCogs = Number(req.totalCost || req.hppTotal || req.standardCost || 0);
+        const materialCogs = Number(req.materialCost || totalCogs * 0.7);
+        const laborOverheadCogs = totalCogs - materialCogs;
+        const grossProfit = totalRevenue - totalCogs;
+        const grossMarginPct = totalRevenue > 0 ? Number(((grossProfit / totalRevenue) * 100).toFixed(1)) : 0;
+
+        return {
+          id: req.id,
+          customerCode: req.jobOrderNumber || req.productCode || "REQ",
+          brandName: req.productName || req.description || "Produk Formulasi",
+          companyName: req.pelanggan || req.customer || "-",
+          contractType: "JASA_MAKLON",
+          totalRevenue,
+          materialCogs,
+          laborOverheadCogs,
+          totalCogs,
+          grossProfit,
+          grossMarginPct,
+          orderCount: 1,
+        };
+      });
+    }
+
+    return [];
+  }, [rawProfitability, rawCogsRequests]);
+
+  const filteredData = useMemo(() => {
+    return data.filter(
+      (d) =>
+        d.brandName.toLowerCase().includes(search.toLowerCase()) ||
+        d.customerCode.toLowerCase().includes(search.toLowerCase()) ||
+        d.companyName.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [data, search]);
+
+  const totalRev = filteredData.reduce((acc, d) => acc + d.totalRevenue, 0);
+  const totalCogs = filteredData.reduce((acc, d) => acc + d.totalCogs, 0);
   const totalProfit = totalRev - totalCogs;
   const avgMargin = totalRev > 0 ? (totalProfit / totalRev) * 100 : 0;
 
@@ -74,7 +163,7 @@ export default function CustomerProfitabilityPage() {
           value={formatRupiah(totalProfit)}
           variant="emerald"
           icon={<TrendingUp className="h-4 w-4" />}
-          delta={{ value: "Kontribusi Margin Pabrik", isPositive: true }}
+          delta={{ value: "Kontribusi Margin Pabrik", isPositive: totalProfit >= 0 }}
         />
         <DnaStatCard
           label="Rata-rata Margin Laba Kotor"
@@ -105,45 +194,53 @@ export default function CustomerProfitabilityPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {data.map((d) => (
-                <tr key={d.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="font-bold text-slate-900">{d.brandName}</div>
-                    <div className="text-[11px] text-slate-400">
-                      {d.customerCode} • {d.companyName}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <DnaBadge variant={d.contractType === "JASA_MAKLON" ? "blue" : "emerald"}>
-                      {d.contractType === "JASA_MAKLON" ? "Jasa Maklon" : "Jual Putus"}
-                    </DnaBadge>
-                  </td>
-                  <td className="px-4 py-3 text-center font-mono">{d.orderCount} Order</td>
-                  <td className="px-4 py-3 text-right font-mono font-medium text-slate-900">
-                    {formatRupiah(d.totalRevenue)}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono text-slate-600">
-                    {formatRupiah(d.materialCogs)}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono text-slate-600">
-                    {formatRupiah(d.laborOverheadCogs)}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-emerald-700">
-                    {formatRupiah(d.grossProfit)}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span
-                      className={`font-mono font-bold px-2 py-0.5 rounded-md text-[11px] ${
-                        d.grossMarginPct >= 35
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                          : "bg-amber-50 text-amber-700 border border-amber-200"
-                      }`}
-                    >
-                      {d.grossMarginPct}%
-                    </span>
+              {filteredData.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-12 text-center text-slate-400">
+                    Belum ada data profitabilitas transaksi produk yang tercatat.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredData.map((d) => (
+                  <tr key={d.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="font-bold text-slate-900">{d.brandName}</div>
+                      <div className="text-[11px] text-slate-400">
+                        {d.customerCode} • {d.companyName}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <DnaBadge variant={d.contractType === "JASA_MAKLON" ? "blue" : "emerald"}>
+                        {d.contractType === "JASA_MAKLON" ? "Jasa Maklon" : "Jual Putus"}
+                      </DnaBadge>
+                    </td>
+                    <td className="px-4 py-3 text-center tabular-nums">{d.orderCount} Order</td>
+                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900">
+                      {formatRupiah(d.totalRevenue)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-600">
+                      {formatRupiah(d.materialCogs)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-600">
+                      {formatRupiah(d.laborOverheadCogs)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums font-bold text-emerald-700">
+                      {formatRupiah(d.grossProfit)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={`tabular-nums font-bold px-2 py-0.5 rounded-md text-[11px] ${
+                          d.grossMarginPct >= 35
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                        }`}
+                      >
+                        {d.grossMarginPct}%
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </DnaTable>
         </div>

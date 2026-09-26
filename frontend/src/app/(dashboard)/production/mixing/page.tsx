@@ -29,6 +29,12 @@ import {
   DnaModal,
   DnaInput,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface MixingProductionItem {
@@ -283,58 +289,58 @@ export default function ProductionMixingPage() {
         searchPlaceholder="Cari jadwal, batch record, produk, pelanggan..."
       >
         <div className="w-full">
-          <table className="w-full text-left text-xs table-fixed">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-4 w-[16%]">Kode & Tanggal</th>
-                <th className="py-3 px-4 w-[24%]">Batch & Formula</th>
-                <th className="py-3 px-4 w-[26%]">Produk & Pelanggan</th>
-                <th className="py-3 px-4 w-[18%]">Target & Hasil Upscale</th>
-                <th className="py-3 px-4 w-[10%]">Status</th>
-                <th className="py-3 px-4 w-[6%] text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-[16%]">Kode & Tanggal</DnaTh>
+                <DnaTh className="py-3 px-4 w-[24%]">Batch & Formula</DnaTh>
+                <DnaTh className="py-3 px-4 w-[26%]">Produk & Pelanggan</DnaTh>
+                <DnaTh className="py-3 px-4 w-[18%]">Target & Hasil Upscale</DnaTh>
+                <DnaTh className="py-3 px-4 w-[10%]">Status</DnaTh>
+                <DnaTh className="py-3 px-4 w-[6%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     Memuat antrian produksi mixing...
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     <FlaskConical className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada jadwal produksi mixing yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredData.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-mono text-xs font-bold text-slate-900 truncate">{item.scheduleCode}</p>
-                      <p className="text-[11px] text-slate-500 font-mono mt-0.5 truncate">{item.date}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-mono text-xs font-semibold text-blue-700 truncate">{item.batchRecord}</p>
+                  <DnaTableRow key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                    <DnaTd className="py-3 px-4 truncate">
+                      <p className="tabular-nums text-xs font-bold text-slate-900 truncate">{item.scheduleCode}</p>
+                      <p className="text-[11px] text-slate-500 tabular-nums mt-0.5 truncate">{item.date}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
+                      <p className="tabular-nums text-xs font-semibold text-blue-700 truncate">{item.batchRecord}</p>
                       <p className="text-[11px] text-slate-500 truncate">{item.formulaName}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <p className="font-semibold text-slate-900 text-xs truncate">{item.product}</p>
                       <p className="text-[11px] text-slate-500 truncate">{item.customer}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-mono font-bold text-slate-900 text-xs truncate">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
+                      <p className="tabular-nums font-bold text-slate-900 text-xs truncate">
                         {item.targetPcs.toLocaleString()} Pcs (@{item.nettoGram}g)
                       </p>
-                      <p className="text-[11px] text-indigo-700 font-mono truncate">
+                      <p className="text-[11px] text-indigo-700 tabular-nums truncate">
                         Upscale: {item.upscaleResultKg.toFixed(1)} Kg (+{item.upscalePct}%)
                       </p>
-                    </td>
-                    <td className="py-3 px-4">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4">
                       {getStatusBadge(item.status)}
-                    </td>
-                    <td className="py-3 px-4 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-right">
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -346,12 +352,12 @@ export default function ProductionMixingPage() {
                       >
                         <Eye className="w-4 h-4 text-slate-600" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -417,8 +423,8 @@ export default function ProductionMixingPage() {
               <div className="space-y-4 text-xs">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-mono font-bold text-slate-900">{selectedDetail.scheduleCode}</span>
-                    <span className="font-mono text-slate-500">{selectedDetail.date}</span>
+                    <span className="tabular-nums font-bold text-slate-900">{selectedDetail.scheduleCode}</span>
+                    <span className="tabular-nums text-slate-500">{selectedDetail.date}</span>
                   </div>
                   <p className="font-bold text-slate-900 text-sm">{selectedDetail.product}</p>
                   <p className="text-slate-600">{selectedDetail.customer} ({selectedDetail.category})</p>
@@ -427,12 +433,12 @@ export default function ProductionMixingPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Target Produksi</span>
-                    <p className="font-mono font-bold text-slate-900 text-sm">{selectedDetail.targetPcs.toLocaleString()} Pcs</p>
+                    <p className="tabular-nums font-bold text-slate-900 text-sm">{selectedDetail.targetPcs.toLocaleString()} Pcs</p>
                     <span className="text-[10px] text-slate-400">Netto: {selectedDetail.nettoGram}g / Pcs</span>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Hasil Upscale Teoritis</span>
-                    <p className="font-mono font-bold text-indigo-700 text-sm">{selectedDetail.upscaleResultKg.toFixed(2)} Kg</p>
+                    <p className="tabular-nums font-bold text-indigo-700 text-sm">{selectedDetail.upscaleResultKg.toFixed(2)} Kg</p>
                     <span className="text-[10px] text-slate-400">Buffer susut: +{selectedDetail.upscalePct}%</span>
                   </div>
                 </div>
@@ -440,7 +446,7 @@ export default function ProductionMixingPage() {
                 {selectedDetail.actualMixingKg && (
                   <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
                     <span className="text-emerald-800 font-semibold block mb-0.5">Hasil Timbang Riil Mixing:</span>
-                    <p className="font-mono font-bold text-emerald-900 text-base">{selectedDetail.actualMixingKg} Kg</p>
+                    <p className="tabular-nums font-bold text-emerald-900 text-base">{selectedDetail.actualMixingKg} Kg</p>
                   </div>
                 )}
               </div>
@@ -460,7 +466,7 @@ export default function ProductionMixingPage() {
                   <div className="space-y-2">
                     {selectedDetail.historyLogs?.map((log, i) => (
                       <div key={i} className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
-                        <div className="flex justify-between text-[11px] font-mono text-slate-500 mb-1">
+                        <div className="flex justify-between text-[11px] tabular-nums text-slate-500 mb-1">
                           <span>{log.timestamp}</span>
                           <span className="font-semibold text-slate-700">{log.operator}</span>
                         </div>

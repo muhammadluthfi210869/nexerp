@@ -30,6 +30,12 @@ import {
   DnaErrorState,
   DnaLoadingSkeleton,
   formatRupiah,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { Plus, CheckCircle2, Clock, DollarSign } from "lucide-react";
 
@@ -246,43 +252,43 @@ export default function SampleFeePaymentPage() {
           />
         ) : (
           <div className="w-full">
-            <table className="w-full text-left border-collapse text-xs table-fixed">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  <th className="py-3 px-3 w-[22%]">No. Fee & Tanggal</th>
-                  <th className="py-3 px-3 w-[28%]">Customer ID & Keterangan</th>
-                  <th className="py-3 px-3 w-[20%] text-right">Nominal Fee</th>
-                  <th className="py-3 px-3 w-[18%] text-center">Status & Offset</th>
-                  <th className="py-3 px-3 w-[12%] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  <DnaTh className="py-3 px-3 w-[22%]">No. Fee & Tanggal</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[28%]">Customer ID & Keterangan</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[20%] text-right">Nominal Fee</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[18%] text-center">Status & Offset</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[12%] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filtered.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-3">
-                      <p className="font-mono font-bold text-blue-600 truncate">{item.feeNo}</p>
-                      <p className="text-[11px] text-slate-400 font-mono truncate">{item.date}</p>
-                    </td>
-                    <td className="py-3 px-3">
-                      <p className="font-mono text-slate-900 truncate font-semibold">{item.customerId}</p>
+                  <DnaTableRow key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="py-3 px-3">
+                      <p className="tabular-nums font-bold text-blue-600 truncate">{item.feeNo}</p>
+                      <p className="text-[11px] text-slate-400 tabular-nums truncate">{item.date}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3">
+                      <p className="tabular-nums text-slate-900 truncate font-semibold">{item.customerId}</p>
                       <p className="text-[11px] text-slate-400 truncate">{item.notes || "Tanpa catatan"}</p>
-                    </td>
-                    <td className="py-3 px-3 text-right">
-                      <p className="font-mono font-bold text-slate-900">{formatRupiah(item.amount)}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-right">
+                      <p className="tabular-nums font-bold text-slate-900">{formatRupiah(item.amount)}</p>
                       <p className="text-[10px] text-slate-400">Fee Formulasi</p>
-                    </td>
-                    <td className="py-3 px-3 text-center">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-center">
                       <DnaCell.Badge
                         status={item.offset ? "success" : "info"}
                         label={item.offset ? "OFFSET" : "RECEIVED"}
                       />
                       {item.offset && item.offsetTo !== EMPTY && (
-                        <p className="text-[10px] font-mono text-slate-400 truncate mt-0.5" title={item.offsetTo}>
+                        <p className="text-[10px] tabular-nums text-slate-400 truncate mt-0.5" title={item.offsetTo}>
                           {item.offsetTo}
                         </p>
                       )}
-                    </td>
-                    <td className="py-3 px-3 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-right">
                       <div className="flex justify-end gap-1">
                         <DnaButton
                           variant="ghost"
@@ -292,11 +298,11 @@ export default function SampleFeePaymentPage() {
                           Detail
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         )}
       </DnaDataTableCard>
@@ -330,25 +336,25 @@ export default function SampleFeePaymentPage() {
             <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Nomor Fee</span>
-                <span className="font-mono font-bold text-blue-600 text-xs">{selectedRecord.feeNo}</span>
+                <span className="tabular-nums font-bold text-blue-600 text-xs">{selectedRecord.feeNo}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Tanggal Bayar</span>
-                <span className="font-mono text-slate-700 text-xs">{selectedRecord.date}</span>
+                <span className="tabular-nums text-slate-700 text-xs">{selectedRecord.date}</span>
               </div>
               <div className="col-span-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Customer ID (UUID)</span>
-                <span className="font-mono font-semibold text-slate-900 text-xs break-all">{selectedRecord.customerId}</span>
+                <span className="tabular-nums font-semibold text-slate-900 text-xs break-all">{selectedRecord.customerId}</span>
               </div>
               <div className="col-span-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Nominal Komitmen</span>
-                <span className="font-mono font-bold text-blue-600 text-sm">{formatRupiah(selectedRecord.amount)}</span>
+                <span className="tabular-nums font-bold text-blue-600 text-sm">{formatRupiah(selectedRecord.amount)}</span>
               </div>
             </div>
 
             <div className="bg-slate-50/60 p-4 rounded-xl border border-slate-200 space-y-1 text-xs">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Kompensasi Offset ke DP Produksi</span>
-              <p className="font-mono font-bold text-emerald-600">{selectedRecord.offsetTo}</p>
+              <p className="tabular-nums font-bold text-emerald-600">{selectedRecord.offsetTo}</p>
               <p className="text-[11px] text-slate-400 italic">
                 {selectedRecord.offset
                   ? "Fee ini telah diperhitungkan memotong nilai Down Payment kontrak produksi."

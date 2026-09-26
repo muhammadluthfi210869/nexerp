@@ -28,7 +28,13 @@ import {
   DnaBadge,
   DnaModal,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface ArAgingItem {
@@ -200,27 +206,27 @@ export default function ArAgingReportPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">Customer</th>
-                <th className="px-3.5 py-3">Invoice No</th>
-                <th className="px-3.5 py-3">Invoice Date</th>
-                <th className="px-3.5 py-3">Due Date</th>
-                <th className="px-3.5 py-3 text-center">Days Overdue</th>
-                <th className="px-3.5 py-3 text-right">Amount (Rp)</th>
-                <th className="px-3.5 py-3 text-center">Bucket</th>
-                <th className="px-3.5 py-3 text-center">#</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <DnaTh className="px-3.5 py-3">Customer</DnaTh>
+                <DnaTh className="px-3.5 py-3">Invoice No</DnaTh>
+                <DnaTh className="px-3.5 py-3">Invoice Date</DnaTh>
+                <DnaTh className="px-3.5 py-3">Due Date</DnaTh>
+                <DnaTh className="px-3.5 py-3 text-center">Days Overdue</DnaTh>
+                <DnaTh className="px-3.5 py-3 text-right">Amount (Rp)</DnaTh>
+                <DnaTh className="px-3.5 py-3 text-center">Bucket</DnaTh>
+                <DnaTh className="px-3.5 py-3 text-center">#</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredItems.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 font-bold text-slate-900">{item.customer}</td>
-                  <td className="px-3.5 py-2.5 font-mono text-blue-700 font-semibold">{item.invoiceNo}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.invoiceDate}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.dueDate}</td>
-                  <td className="px-3.5 py-2.5 text-center">
+                <DnaTableRow key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                  <DnaTd className="px-3.5 py-2.5 font-bold text-slate-900">{item.customer}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 tabular-nums text-blue-700 font-semibold">{item.invoiceNo}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.invoiceDate}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.dueDate}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-center">
                     {item.daysOverdue === 0 ? (
                       <span className="text-[10px] text-emerald-700 font-bold">0 Hari</span>
                     ) : (
@@ -228,9 +234,9 @@ export default function ArAgingReportPage() {
                         {item.daysOverdue} Hari
                       </span>
                     )}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-right font-extrabold text-slate-900">{formatRupiah(item.amount)}</td>
-                  <td className="px-3.5 py-2.5 text-center">
+                  </DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-right font-extrabold text-slate-900">{formatRupiah(item.amount)}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-center">
                     <DnaBadge
                       variant={
                         item.bucket === "Current"
@@ -244,8 +250,8 @@ export default function ArAgingReportPage() {
                     >
                       {item.bucket}
                     </DnaBadge>
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
+                  </DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-center">
                     <div className="flex items-center justify-center gap-1.5">
                       <DnaButton
                         variant="secondary"
@@ -263,11 +269,11 @@ export default function ArAgingReportPage() {
                         <Send className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -286,7 +292,7 @@ export default function ArAgingReportPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">No. Faktur / Tgl:</span>
-              <span className="font-mono">{selectedInvoice?.invoiceNo} ({selectedInvoice?.invoiceDate})</span>
+              <span className="tabular-nums">{selectedInvoice?.invoiceNo} ({selectedInvoice?.invoiceDate})</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Jatuh Tempo:</span>

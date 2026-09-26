@@ -239,7 +239,7 @@ export default function ComplianceInputPage() {
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
                 <span>Dokumen akan otomatis diverifikasi ke Master Timeline Kepatuhan Audit</span>
               </div>
-              <span className="font-mono text-[11px] text-slate-400">OSS RBA & BPOM Integrated</span>
+              <span className="tabular-nums text-[11px] text-slate-400">OSS RBA & BPOM Integrated</span>
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">

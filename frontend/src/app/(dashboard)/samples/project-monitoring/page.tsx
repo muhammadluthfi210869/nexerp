@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
@@ -30,7 +30,13 @@ import {
   DnaDetailDrawer,
   DnaModal,
   DnaInput,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface RndProject {
@@ -50,96 +56,60 @@ interface RndProject {
   activeRevision: string;
 }
 
-const MOCK_RND_PROJECTS: RndProject[] = [
-  {
-    id: "proj-01",
-    projectName: "Serum Brightening Niacinamide 10% + Zinc PCA",
-    picFormulator: "Apt. Dedi Kurniawan, S.Farm",
-    clientName: "PT Cantika Glow Nusantara",
-    brandName: "GlowAura Skin",
-    status: "IN_PROGRESS",
-    statusLabel: "In Progress",
-    npfEntryDate: "2026-03-01",
-    targetFinishDate: "2026-03-12",
-    sampleWorkDays: 7,
-    formulaFolderUrl: "https://drive.google.com/drive/folders/rnd-serum-001",
-    notes: "Tekstur watery-gel transparan, tidak lengket, pH target 5.5 - 6.0.",
-    activeRevision: "Rev 1"
-  },
-  {
-    id: "proj-02",
-    projectName: "Acne Spot Gel Centella + Salicylic Acid 2%",
-    picFormulator: "Dr. Maya Sp.KK",
-    clientName: "CV Derma Estetika Mandiri",
-    brandName: "DermaPure",
-    status: "TERKIRIM",
-    statusLabel: "Sample Terkirim",
-    npfEntryDate: "2026-02-20",
-    targetFinishDate: "2026-03-02",
-    shippingDate: "2026-03-03",
-    sampleWorkDays: 9,
-    formulaFolderUrl: "https://drive.google.com/drive/folders/rnd-acne-002",
-    notes: "Sample 3 botol dropper 15ml dikirim via JNE YES.",
-    activeRevision: "Rev 1"
-  },
-  {
-    id: "proj-03",
-    projectName: "Moisturizer Ceramide Barrier Repair 5X",
-    picFormulator: "Apt. Siska Handayani, M.Farm",
-    clientName: "PT Miracle Beauty Lab",
-    brandName: "MiracleSkin",
-    status: "APPROVED",
-    statusLabel: "Sample Disetujui",
-    npfEntryDate: "2026-02-10",
-    targetFinishDate: "2026-02-22",
-    shippingDate: "2026-02-23",
-    sampleWorkDays: 10,
-    formulaFolderUrl: "https://drive.google.com/drive/folders/rnd-moist-003",
-    notes: "Klien approve sample Rev 2. Menunggu PO & pendaftaran BPOM.",
-    activeRevision: "Rev 2"
-  },
-  {
-    id: "proj-04",
-    projectName: "Sunscreen Serum SPF 50+ PA++++ Hybrid",
-    picFormulator: "Apt. Dedi Kurniawan, S.Farm",
-    clientName: "PT Kosmetika Surya Abadi",
-    brandName: "SunGlow",
-    status: "REVISION",
-    statusLabel: "Revisi Sample",
-    npfEntryDate: "2026-02-15",
-    targetFinishDate: "2026-03-05",
-    sampleWorkDays: 14,
-    formulaFolderUrl: "https://drive.google.com/drive/folders/rnd-sunscreen-004",
-    notes: "Klien request tekstur lebih matte dan minim whitecast.",
-    activeRevision: "Rev 2"
-  },
-  {
-    id: "proj-05",
-    projectName: "Gentle Facial Wash Oat + Ceramide Low pH",
-    picFormulator: "Ahmad Fauzi",
-    clientName: "PT Natural Botani Pratama",
-    brandName: "OatCare",
-    status: "OVERDUE",
-    statusLabel: "Overdue",
-    npfEntryDate: "2026-02-18",
-    targetFinishDate: "2026-03-02",
-    sampleWorkDays: 16,
-    formulaFolderUrl: "https://drive.google.com/drive/folders/rnd-fw-005",
-    notes: "Menunggu pasokan bahan baku surfaktan amino acid impor tiba di gudang.",
-    activeRevision: "Rev 1"
+const mapSampleToProject = (s: any): RndProject => {
+  let status: RndProject["status"] = "IN_PROGRESS";
+  let statusLabel = "In Progress";
+  if (s.stage === "APPROVED") {
+    status = "APPROVED";
+    statusLabel = "Sample Disetujui";
+  } else if (s.stage === "REVISING" || s.stage === "FEEDBACK_RECEIVED") {
+    status = "REVISION";
+    statusLabel = "Revisi Sample";
+  } else if (s.stage === "SENT_TO_CLIENT") {
+    status = "TERKIRIM";
+    statusLabel = "Sample Terkirim";
+  } else if (s.stage === "QUEUE" || s.stage === "WAITING_FINANCE") {
+    status = "PENDING";
+    statusLabel = "Menunggu Antrian";
+  } else if (s.targetDeadline && new Date(s.targetDeadline) < new Date() && s.stage !== "APPROVED") {
+    status = "OVERDUE";
+    statusLabel = "Overdue";
   }
-];
+
+  const createdDate = s.createdAt ? new Date(s.createdAt) : new Date();
+  const workDays = Math.max(1, Math.round((new Date().getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)));
+
+  return {
+    id: s.id,
+    projectName: s.productName || "Formula R&D",
+    picFormulator: s.pic?.fullName || s.pic?.name || "Belum Ditugaskan",
+    clientName: s.lead?.clientName || s.lead?.companyName || "Klien Mandiri",
+    brandName: s.lead?.brandName || "Brand",
+    status,
+    statusLabel,
+    npfEntryDate: s.createdAt ? new Date(s.createdAt).toISOString().split("T")[0] : "-",
+    targetFinishDate: s.targetDeadline ? new Date(s.targetDeadline).toISOString().split("T")[0] : "-",
+    shippingDate: s.sentToClientAt ? new Date(s.sentToClientAt).toISOString().split("T")[0] : undefined,
+    sampleWorkDays: workDays,
+    formulaFolderUrl: s.formulaFolderUrl || `https://drive.google.com/drive/folders/rnd-${s.sampleCode || s.id}`,
+    notes: s.targetFunction || s.feedbackNotes || s.textureReq || "Parameter spesifikasi lab aktif.",
+    activeRevision: s.formulas?.[0] ? `Rev ${s.formulas[0].version}` : `Rev ${s.revisionCount || 1}`,
+  };
+};
 
 export default function RndProjectMonitoringPage() {
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProject, setSelectedProject] = useState<RndProject | null>(null);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [newProjectForm, setNewProjectForm] = useState({
+    leadId: "",
     projectName: "",
     picFormulator: "Apt. Dedi Kurniawan, S.Farm",
     clientName: "",
@@ -150,24 +120,36 @@ export default function RndProjectMonitoringPage() {
     notes: ""
   });
 
-  const { data: rawProjects, isLoading } = useQuery({
+  const { data: leads = [] } = useQuery({
+    queryKey: ["leads-selection"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/bussdev/pipeline-v2/leads");
+        return unwrapResponse(res.data) || [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const { data: rawSamples, isLoading } = useQuery({
     queryKey: ["rnd-project-monitoring"],
     queryFn: async () => {
       try {
-        const res = await api.get("/rnd/dashboard");
-        return unwrapResponse(res.data) as RndProject[];
+        const res = await api.get("/rnd/samples");
+        return unwrapResponse(res.data) as any[];
       } catch {
-        return null;
+        return [];
       }
     }
   });
 
   const projects: RndProject[] = useMemo(() => {
-    if (rawProjects && Array.isArray(rawProjects) && rawProjects.length > 0) {
-      return rawProjects;
+    if (rawSamples && Array.isArray(rawSamples)) {
+      return rawSamples.map(mapSampleToProject);
     }
-    return MOCK_RND_PROJECTS;
-  }, [rawProjects]);
+    return [];
+  }, [rawSamples]);
 
   const filteredProjects = useMemo(() => {
     return projects.filter((p) => {
@@ -196,24 +178,49 @@ export default function RndProjectMonitoringPage() {
   const approvedCount = projects.filter(p => p.status === "APPROVED").length;
   const overdueCount = projects.filter(p => p.status === "OVERDUE").length;
 
-  const handleCreateProject = () => {
-    if (!newProjectForm.projectName || !newProjectForm.clientName) {
-      toast.warning("Form Belum Lengkap", "Nama Project dan Nama Klien wajib diisi.");
+  const handleCreateProject = async () => {
+    if (!newProjectForm.projectName) {
+      toast.warning("Form Belum Lengkap", "Nama Project formulasi wajib diisi.");
       return;
     }
 
-    toast.success("Project R&D Dibuat", `Project ${newProjectForm.projectName} berhasil didaftarkan ke timeline R&D.`);
-    setIsCreateModalOpen(false);
-    setNewProjectForm({
-      projectName: "",
-      picFormulator: "Apt. Dedi Kurniawan, S.Farm",
-      clientName: "",
-      brandName: "",
-      npfEntryDate: new Date().toISOString().split("T")[0],
-      targetFinishDate: "",
-      formulaFolderUrl: "",
-      notes: ""
-    });
+    const leadId = newProjectForm.leadId || (leads && leads.length > 0 ? leads[0].id : null);
+    if (!leadId) {
+      toast.warning("Lead Belum Dipilih", "Pilih Klien / Lead terkait formulasi ini.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await api.post("/rnd/samples", {
+        leadId,
+        productName: newProjectForm.projectName,
+        targetFunction: newProjectForm.notes || "Pengembangan Formulasi R&D",
+        textureReq: "Sesuai Standar Lab",
+        colorReq: "Sesuai Standar Lab",
+        aromaReq: "Sesuai Standar Lab",
+        targetDeadline: newProjectForm.targetFinishDate ? new Date(newProjectForm.targetFinishDate).toISOString() : undefined,
+      });
+
+      toast.success("Project R&D Dibuat", `Project ${newProjectForm.projectName} berhasil didaftarkan ke timeline R&D.`);
+      setIsCreateModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["rnd-project-monitoring"] });
+      setNewProjectForm({
+        leadId: "",
+        projectName: "",
+        picFormulator: "Apt. Dedi Kurniawan, S.Farm",
+        clientName: "",
+        brandName: "",
+        npfEntryDate: new Date().toISOString().split("T")[0],
+        targetFinishDate: "",
+        formulaFolderUrl: "",
+        notes: ""
+      });
+    } catch (err: any) {
+      toast.error("Gagal Mendaftarkan Project", err?.response?.data?.message || "Terjadi kesalahan saat memproses ke server.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusBadge = (status: RndProject["status"]) => {
@@ -305,57 +312,57 @@ export default function RndProjectMonitoringPage() {
         searchPlaceholder="Cari Project, Klien, Brand, PIC Formulator..."
       >
         <div className="w-full">
-          <table className="w-full text-left text-xs table-fixed">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-4 w-[26%]">Project & Brand</th>
-                <th className="py-3 px-4 w-[24%]">Klien & Formulator</th>
-                <th className="py-3 px-4 w-[20%]">Target & Pengerjaan</th>
-                <th className="py-3 px-4 w-[14%]">Status & Revisi</th>
-                <th className="py-3 px-4 w-[10%]">Folder Drive</th>
-                <th className="py-3 px-4 w-[6%] text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-[26%]">Project & Brand</DnaTh>
+                <DnaTh className="py-3 px-4 w-[24%]">Klien & Formulator</DnaTh>
+                <DnaTh className="py-3 px-4 w-[20%]">Target & Pengerjaan</DnaTh>
+                <DnaTh className="py-3 px-4 w-[14%]">Status & Revisi</DnaTh>
+                <DnaTh className="py-3 px-4 w-[10%]">Folder Drive</DnaTh>
+                <DnaTh className="py-3 px-4 w-[6%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     Memuat data project R&D...
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : filteredProjects.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     <FlaskConical className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada project R&D yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredProjects.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 truncate">
+                  <DnaTableRow key={row.id} className="hover:bg-slate-50/70 transition-colors">
+                    <DnaTd className="py-3 px-4 truncate">
                       <p className="font-semibold text-slate-900 text-xs truncate">{row.projectName}</p>
                       <p className="text-[11px] text-indigo-600 font-medium truncate">{row.brandName}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <p className="font-semibold text-slate-800 text-xs truncate">{row.clientName}</p>
                       <p className="text-[11px] text-slate-500 truncate">{row.picFormulator}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-mono text-xs font-bold text-slate-900 truncate">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
+                      <p className="tabular-nums text-xs font-bold text-slate-900 truncate">
                         Target: {row.targetFinishDate}
                       </p>
-                      <p className="text-[11px] text-slate-500 font-mono truncate">
+                      <p className="text-[11px] text-slate-500 tabular-nums truncate">
                         Masuk: {row.npfEntryDate} • {row.sampleWorkDays} Hari
                       </p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <div className="flex items-center gap-1.5">
                         {getStatusBadge(row.status)}
                       </div>
-                      <p className="text-[10px] font-mono text-slate-400 mt-0.5 truncate">{row.activeRevision}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                      <p className="text-[10px] tabular-nums text-slate-400 mt-0.5 truncate">{row.activeRevision}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <a
                         href={row.formulaFolderUrl}
                         target="_blank"
@@ -364,8 +371,8 @@ export default function RndProjectMonitoringPage() {
                       >
                         <FolderOpen className="w-3.5 h-3.5" /> Drive
                       </a>
-                    </td>
-                    <td className="py-3 px-4 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-right">
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -377,12 +384,12 @@ export default function RndProjectMonitoringPage() {
                       >
                         <Eye className="w-4 h-4 text-slate-600" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -398,13 +405,40 @@ export default function RndProjectMonitoringPage() {
             <DnaButton variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" onClick={handleCreateProject}>
-              Simpan Project
+            <DnaButton variant="primary" onClick={handleCreateProject} disabled={isSubmitting}>
+              {isSubmitting ? "Menyimpan..." : "Simpan Project"}
             </DnaButton>
           </div>
         }
       >
         <div className="space-y-4 text-xs">
+          {leads && leads.length > 0 && (
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Pilih Lead / Klien Terdaftar</label>
+              <select
+                aria-label="Pilih Lead / Klien Terdaftar"
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                value={newProjectForm.leadId}
+                onChange={(e) => {
+                  const selected = leads.find((l: any) => String(l.id) === e.target.value);
+                  setNewProjectForm(prev => ({
+                    ...prev,
+                    leadId: e.target.value,
+                    clientName: selected?.clientName || prev.clientName,
+                    brandName: selected?.brandName || prev.brandName,
+                  }));
+                }}
+              >
+                <option value="">-- Pilih Lead --</option>
+                {leads.map((l: any) => (
+                  <option key={l.id} value={l.id}>
+                    {l.clientName} {l.brandName ? `(${l.brandName})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="space-y-1">
             <label className="font-bold text-slate-700 uppercase">Nama Project Formulasi *</label>
             <DnaInput
@@ -488,7 +522,7 @@ export default function RndProjectMonitoringPage() {
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-slate-900 text-sm">{selectedProject.projectName}</span>
-                    <span className="font-mono text-slate-500">{selectedProject.activeRevision}</span>
+                    <span className="tabular-nums text-slate-500">{selectedProject.activeRevision}</span>
                   </div>
                   <p className="text-slate-600">{selectedProject.clientName} • Brand: {selectedProject.brandName}</p>
                 </div>
@@ -501,7 +535,7 @@ export default function RndProjectMonitoringPage() {
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Durasi Pengerjaan</span>
-                    <p className="font-mono font-bold text-indigo-700">{selectedProject.sampleWorkDays} Hari Kerja</p>
+                    <p className="tabular-nums font-bold text-indigo-700">{selectedProject.sampleWorkDays} Hari Kerja</p>
                     <span className="text-[10px] text-slate-400">Terhitung sejak NPF masuk</span>
                   </div>
                 </div>
@@ -511,15 +545,15 @@ export default function RndProjectMonitoringPage() {
                   <div className="grid grid-cols-3 gap-2 mt-1">
                     <div>
                       <span className="text-[10px] text-slate-400">Tgl Masuk NPF</span>
-                      <p className="font-mono font-bold text-slate-700">{selectedProject.npfEntryDate}</p>
+                      <p className="tabular-nums font-bold text-slate-700">{selectedProject.npfEntryDate}</p>
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-400">Target Selesai</span>
-                      <p className="font-mono font-bold text-slate-700">{selectedProject.targetFinishDate}</p>
+                      <p className="tabular-nums font-bold text-slate-700">{selectedProject.targetFinishDate}</p>
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-400">Tgl Pengiriman</span>
-                      <p className="font-mono font-bold text-slate-700">{selectedProject.shippingDate || "—"}</p>
+                      <p className="tabular-nums font-bold text-slate-700">{selectedProject.shippingDate || "—"}</p>
                     </div>
                   </div>
                 </div>
@@ -542,7 +576,7 @@ export default function RndProjectMonitoringPage() {
                     <FolderOpen className="w-5 h-5 text-blue-600" />
                     <div>
                       <p className="font-bold text-slate-800">Google Drive Folder Formula</p>
-                      <p className="text-[11px] text-slate-500 font-mono truncate max-w-xs">{selectedProject.formulaFolderUrl}</p>
+                      <p className="text-[11px] text-slate-500 tabular-nums truncate max-w-xs">{selectedProject.formulaFolderUrl}</p>
                     </div>
                   </div>
                   <a

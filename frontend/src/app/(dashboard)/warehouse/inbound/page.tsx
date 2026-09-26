@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
@@ -32,7 +32,12 @@ import {
   DnaSelect,
   DnaTextarea,
   DnaTable,
-  useDnaToast
+  useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { DnaCell } from "@/components/dna/cells/DnaCell";
 
@@ -73,6 +78,7 @@ interface GoodsReceiptNote {
 
 export default function GoodsInboundPage() {
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
 
   // Live Query: Inbounds
   const { data: rawInbounds = [] } = useQuery({
@@ -147,8 +153,7 @@ export default function GoodsInboundPage() {
     });
   }, [rawInbounds]);
 
-  const [localCreated, setLocalCreated] = useState<GoodsReceiptNote[]>([]);
-  const dataList = useMemo(() => [...localCreated, ...liveInbounds], [localCreated, liveInbounds]);
+  const dataList = liveInbounds;
 
   // Filters & State
   const [activeTab, setActiveTab] = useState<string>("ALL");
@@ -248,7 +253,7 @@ export default function GoodsInboundPage() {
     });
   };
 
-  const handleCreateGrn = () => {
+  const handleCreateGrn = async () => {
     if (!deliveryOrderNo) {
       toast.error("Nomor Surat Jalan Supplier wajib diisi.");
       return;
@@ -258,38 +263,36 @@ export default function GoodsInboundPage() {
       return;
     }
 
-    const totalGood = formItems.reduce((acc, it) => acc + it.qtyGood, 0);
-    const totalReject = formItems.reduce((acc, it) => acc + it.qtyReject, 0);
-    const totalFree = formItems.reduce((acc, it) => acc + it.qtyFree, 0);
+    try {
+      const selectedPo = (openPOs as any[]).find((p: any) => p.poNumber === selectedPoNumber);
+      const itemsPayload = formItems.map((it) => {
+        const mat = (catalogMaterials as any[]).find((m: any) => m.code === it.itemCode || m.name === it.itemName);
+        return {
+          materialId: mat?.id || it.id || "00000000-0000-0000-0000-000000000000",
+          quantity: Number(it.qtyGood || it.qtyReceived || 1),
+          batchNumber: it.batchNumber || `LOT-${Date.now().toString().slice(-4)}`,
+          expiryDate: it.expiryDate || "2028-12-31",
+        };
+      });
 
-    const newGrn: GoodsReceiptNote = {
-      id: `grn-local-${Date.now()}`,
-      grnNumber: `GRN-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(dataList.length + 1).padStart(4, "0")}`,
-      receiveDate,
-      poNumber: selectedPoNumber || "PO-DIRECT",
-      deliveryOrderNo,
-      vendorName: "PT Bahan Kimia Alam",
-      vendorCode: "SUP-001",
-      warehouseName,
-      totalQtyGood: totalGood,
-      totalQtyReject: totalReject,
-      totalQtyFree: totalFree,
-      status: totalReject > 0 ? "HAS_REJECT" : "APPROVED",
-      receivedBy: "Petugas Gudang (Anda)",
-      qcInspector: "Inspektur QC Internal",
-      notes: formNotes || "Penerimaan fisik barang supplier.",
-      items: formItems,
-    };
+      await api.post("/warehouse/inbounds", {
+        poId: selectedPo?.id,
+        receivedAt: receiveDate,
+        items: itemsPayload,
+      });
 
-    setLocalCreated([newGrn, ...localCreated]);
-    setIsCreateOpen(false);
-    toast.success(`GRN ${newGrn.grnNumber} berhasil disimpan. Stok fisik otomatis diperbarui.`);
+      queryClient.invalidateQueries({ queryKey: ["warehouse-inbounds"] });
+      setIsCreateOpen(false);
+      toast.success("Penerimaan barang (GRN) berhasil dicatat dan stok fisik diperbarui.");
 
-    // Reset Form
-    setSelectedPoNumber("");
-    setDeliveryOrderNo("");
-    setFormNotes("");
-    setFormItems([]);
+      // Reset Form
+      setSelectedPoNumber("");
+      setDeliveryOrderNo("");
+      setFormNotes("");
+      setFormItems([]);
+    } catch (err: any) {
+      toast.error("Gagal Menyimpan GRN", err?.response?.data?.message || err.message);
+    }
   };
 
   const getStatusBadge = (status: GoodsReceiptNote["status"]) => {
@@ -385,73 +388,73 @@ export default function GoodsInboundPage() {
         }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
-                <th className="px-4 py-3 h-[40px] w-[140px]">No. GRN</th>
-                <th className="px-3 py-3 h-[40px] w-[110px]">Tanggal</th>
-                <th className="px-3 py-3 h-[40px]">Supplier</th>
-                <th className="px-3 py-3 h-[40px]">Dokumen PO & SJ</th>
-                <th className="px-3 py-3 h-[40px]">Gudang Penerima</th>
-                <th className="px-3 py-3 h-[40px] text-right w-[110px]">Qty Bagus</th>
-                <th className="px-3 py-3 h-[40px] text-right w-[100px]">Qty Reject</th>
-                <th className="px-3 py-3 h-[40px] text-center w-[120px]">Status</th>
-                <th className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="px-4 py-3 h-[40px] w-[140px]">No. GRN</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[110px]">Tanggal</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Supplier</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Dokumen PO & SJ</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Gudang Penerima</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[110px]">Qty Bagus</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[100px]">Qty Reject</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-center w-[120px]">Status</DnaTh>
+                <DnaTh className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredList.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-12 text-center text-slate-400">
                     <Truck className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada dokumen penerimaan barang masuk yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredList.map((row) => (
-                  <tr
+                  <DnaTableRow
                     key={row.id}
                     onClick={() => setSelectedGrn(row)}
                     className="hover:bg-slate-50/60 transition-colors cursor-pointer group h-[48px]"
                   >
                     {/* Kolom 1: No. GRN */}
-                    <td className="px-4 py-2">
+                    <DnaTd className="px-4 py-2">
                       <DnaCell.Code value={row.grnNumber} />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 2: Tanggal */}
-                    <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                    <DnaTd className="px-3 py-2 text-slate-600 whitespace-nowrap">
                       {row.receiveDate}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 3: Supplier */}
-                    <td className="px-3 py-2 text-slate-800 font-medium truncate max-w-[200px]">
+                    <DnaTd className="px-3 py-2 text-slate-800 font-medium truncate max-w-[200px]">
                       {row.vendorName}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 4: Dokumen PO & SJ (1 Natural Pair) */}
-                    <td className="px-3 py-2">
+                    <DnaTd className="px-3 py-2">
                       <DnaCell.DoubleText
                         primary={row.poNumber}
                         secondary={`SJ: ${row.deliveryOrderNo}`}
                       />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 5: Gudang Penerima */}
-                    <td className="px-3 py-2 text-slate-800 truncate max-w-[180px]">
+                    <DnaTd className="px-3 py-2 text-slate-800 truncate max-w-[180px]">
                       {row.warehouseName.split("(")[0]}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 6: Qty Bagus */}
-                    <td className="px-3 py-2 text-right">
+                    <DnaTd className="px-3 py-2 text-right">
                       <DnaCell.Number
                         value={row.totalQtyGood}
                         colorClass="text-emerald-700 font-semibold"
                       />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 7: Qty Reject */}
-                    <td className="px-3 py-2 text-right">
+                    <DnaTd className="px-3 py-2 text-right">
                       {row.totalQtyReject > 0 ? (
                         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
                           {row.totalQtyReject.toLocaleString("id-ID")}
@@ -459,15 +462,15 @@ export default function GoodsInboundPage() {
                       ) : (
                         <span className="text-slate-400 font-normal">0</span>
                       )}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 8: Status */}
-                    <td className="px-3 py-2 text-center">
+                    <DnaTd className="px-3 py-2 text-center">
                       {getStatusBadge(row.status)}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 9: Aksi */}
-                    <td className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                    <DnaTd className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -476,12 +479,12 @@ export default function GoodsInboundPage() {
                       >
                         <Eye className="w-4 h-4" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -523,21 +526,21 @@ export default function GoodsInboundPage() {
             <div className="grid grid-cols-3 gap-3">
               <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
                 <div className="text-[10px] uppercase font-bold text-emerald-700 tracking-wider">Qty Bagus (Bayar)</div>
-                <div className="text-xl font-bold font-mono text-emerald-800 mt-1">
+                <div className="text-xl font-bold tabular-nums text-emerald-800 mt-1">
                   {selectedGrn.totalQtyGood.toLocaleString("id-ID")}
                 </div>
                 <div className="text-[10px] text-emerald-600 mt-0.5">Masuk Real Stok</div>
               </div>
               <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-center">
                 <div className="text-[10px] uppercase font-bold text-red-600 tracking-wider">Qty Reject</div>
-                <div className="text-xl font-bold font-mono text-red-700 mt-1">
+                <div className="text-xl font-bold tabular-nums text-red-700 mt-1">
                   {selectedGrn.totalQtyReject.toLocaleString("id-ID")}
                 </div>
                 <div className="text-[10px] text-red-600 mt-0.5">Klaim Retur / DN</div>
               </div>
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-center">
                 <div className="text-[10px] uppercase font-bold text-blue-600 tracking-wider">Qty Free Bonus</div>
-                <div className="text-xl font-bold font-mono text-blue-700 mt-1">
+                <div className="text-xl font-bold tabular-nums text-blue-700 mt-1">
                   {selectedGrn.totalQtyFree.toLocaleString("id-ID")}
                 </div>
                 <div className="text-[10px] text-blue-600 mt-0.5">HPP Rp 0</div>
@@ -556,7 +559,7 @@ export default function GoodsInboundPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Tanggal Terima:</span>
-                <span className="font-mono text-slate-800">{selectedGrn.receiveDate}</span>
+                <span className="tabular-nums text-slate-800">{selectedGrn.receiveDate}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Petugas Gudang / QC:</span>
@@ -571,29 +574,29 @@ export default function GoodsInboundPage() {
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
                 <DnaTable className="w-full text-left text-xs">
-                  <thead className="bg-slate-100/80 border-b border-slate-200 text-slate-600 font-semibold">
-                    <tr>
-                      <th className="py-2 px-3">Item Material</th>
-                      <th className="py-2 px-3 text-right">Datang</th>
-                      <th className="py-2 px-3 text-right text-emerald-700">Bagus</th>
-                      <th className="py-2 px-3 text-right text-red-600">Reject</th>
-                      <th className="py-2 px-3">Lot/Batch</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono">
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2 px-3">Item Material</DnaTh>
+                      <DnaTh className="py-2 px-3 text-right">Datang</DnaTh>
+                      <DnaTh className="py-2 px-3 text-right text-emerald-700">Bagus</DnaTh>
+                      <DnaTh className="py-2 px-3 text-right text-red-600">Reject</DnaTh>
+                      <DnaTh className="py-2 px-3">Lot/Batch</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedGrn.items.map((it) => (
-                      <tr key={it.id}>
-                        <td className="py-2 px-3 font-sans">
+                      <DnaTableRow key={it.id}>
+                        <DnaTd className="py-2 px-3 font-sans">
                           <div className="font-semibold text-slate-800">{it.itemName}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">{it.itemCode}</div>
-                        </td>
-                        <td className="py-2 px-3 text-right text-slate-700">{it.qtyReceived} {it.unit}</td>
-                        <td className="py-2 px-3 text-right text-emerald-700 font-bold">{it.qtyGood}</td>
-                        <td className="py-2 px-3 text-right text-red-600 font-bold">{it.qtyReject}</td>
-                        <td className="py-2 px-3 text-slate-600">{it.batchNumber}</td>
-                      </tr>
+                          <div className="text-[10px] text-slate-400 tabular-nums">{it.itemCode}</div>
+                        </DnaTd>
+                        <DnaTd className="py-2 px-3 text-right text-slate-700">{it.qtyReceived} {it.unit}</DnaTd>
+                        <DnaTd className="py-2 px-3 text-right text-emerald-700 font-bold">{it.qtyGood}</DnaTd>
+                        <DnaTd className="py-2 px-3 text-right text-red-600 font-bold">{it.qtyReject}</DnaTd>
+                        <DnaTd className="py-2 px-3 text-slate-600">{it.batchNumber}</DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
+                  </DnaTableBody>
                 </DnaTable>
               </div>
             </div>
@@ -656,7 +659,7 @@ export default function GoodsInboundPage() {
                 placeholder="Contoh: SJ/2026/09/1109"
                 value={deliveryOrderNo}
                 onChange={(e) => setDeliveryOrderNo(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -665,7 +668,7 @@ export default function GoodsInboundPage() {
                 type="date"
                 value={receiveDate}
                 onChange={(e) => setReceiveDate(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
           </div>
@@ -693,7 +696,7 @@ export default function GoodsInboundPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="font-bold text-slate-900">{item.itemName}</span>
-                      <span className="text-[11px] font-mono text-indigo-600 ml-2">[{item.itemCode}]</span>
+                      <span className="text-[11px] tabular-nums text-indigo-600 ml-2">[{item.itemCode}]</span>
                     </div>
                     <span className="text-xs text-slate-500">Order PO: <b className="text-slate-800">{item.qtyOrdered} {item.unit}</b></span>
                   </div>
@@ -706,7 +709,7 @@ export default function GoodsInboundPage() {
                         min="0"
                         value={item.qtyGood}
                         onChange={(e) => handleUpdateItem(idx, "qtyGood", parseFloat(e.target.value) || 0)}
-                        className="w-full text-xs font-mono font-bold text-emerald-700 border border-emerald-300 rounded p-1.5"
+                        className="w-full text-xs tabular-nums font-bold text-emerald-700 border border-emerald-300 rounded p-1.5"
                       />
                     </div>
                     <div>
@@ -716,7 +719,7 @@ export default function GoodsInboundPage() {
                         min="0"
                         value={item.qtyReject}
                         onChange={(e) => handleUpdateItem(idx, "qtyReject", parseFloat(e.target.value) || 0)}
-                        className="w-full text-xs font-mono font-bold text-red-600 border border-red-300 rounded p-1.5"
+                        className="w-full text-xs tabular-nums font-bold text-red-600 border border-red-300 rounded p-1.5"
                       />
                     </div>
                     <div>
@@ -726,7 +729,7 @@ export default function GoodsInboundPage() {
                         min="0"
                         value={item.qtyFree}
                         onChange={(e) => handleUpdateItem(idx, "qtyFree", parseFloat(e.target.value) || 0)}
-                        className="w-full text-xs font-mono font-bold text-blue-600 border border-blue-300 rounded p-1.5"
+                        className="w-full text-xs tabular-nums font-bold text-blue-600 border border-blue-300 rounded p-1.5"
                       />
                     </div>
                     <div>
@@ -735,7 +738,7 @@ export default function GoodsInboundPage() {
                         type="text"
                         value={item.batchNumber}
                         onChange={(e) => handleUpdateItem(idx, "batchNumber", e.target.value)}
-                        className="w-full text-xs font-mono border border-slate-300 rounded p-1.5"
+                        className="w-full text-xs tabular-nums border border-slate-300 rounded p-1.5"
                       />
                     </div>
                   </div>

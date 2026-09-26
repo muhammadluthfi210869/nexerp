@@ -2,7 +2,15 @@
 
 import { ArrowUpRight, ChevronRight, Search } from 'lucide-react';
 import { useEffect } from 'react';
-import { DashboardCard } from "@/components/dna";;
+import {
+  DashboardCard,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";;
 import { formatDate } from '../lib/format';
 import type { Client } from '@/types/marketing-overview';
 
@@ -48,34 +56,34 @@ export function ClientTable({
         </div>
       )}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[820px] text-left text-xs">
-          <thead className="border-y border-[var(--gray-100)] bg-[var(--gray-50)] text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--gray-500)]">
-            <tr>
-              <th className="px-6 py-3">Client</th>
-              <th className="px-4 py-3">Source</th>
-              <th className="px-4 py-3">Campaign</th>
-              <th className="px-4 py-3">Stage</th>
-              <th className="px-4 py-3">PIC</th>
-              <th className="px-6 py-3 text-right"><span className="sr-only">Detail</span></th>
-            </tr>
-          </thead>
-          <tbody>
+        <DnaTable>
+          <DnaTableHead>
+            <DnaTableRow>
+              <DnaTh className="px-6 py-3">Client</DnaTh>
+              <DnaTh className="px-4 py-3">Source</DnaTh>
+              <DnaTh className="px-4 py-3">Campaign</DnaTh>
+              <DnaTh className="px-4 py-3">Stage</DnaTh>
+              <DnaTh className="px-4 py-3">PIC</DnaTh>
+              <DnaTh className="px-6 py-3 text-right"><span className="sr-only">Detail</span></DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {clients.length ? (
               clients.map((client) => (
-                <tr key={client.id} className="border-b border-[var(--gray-100)] transition hover:bg-[var(--gray-50)] last:border-0">
-                  <td className="px-6 py-4">
+                <DnaTableRow key={client.id} className="border-b border-[var(--gray-100)] transition hover:bg-[var(--gray-50)] last:border-0">
+                  <DnaTd className="px-6 py-4">
                     <p className="font-bold text-[var(--gray-900)]">{client.name}</p>
                     <p className="mt-0.5 text-[var(--gray-500)]">{client.company || '—'}</p>
-                  </td>
-                  <td className="px-4 py-4">
+                  </DnaTd>
+                  <DnaTd className="px-4 py-4">
                     <span className="rounded-lg bg-[var(--gray-100)] px-2 py-1 font-semibold text-[var(--text-muted)]">{client.source}</span>
-                  </td>
-                  <td className="max-w-48 truncate px-4 py-4 text-[var(--text-muted)]">{client.campaign || 'Belum teratribusi'}</td>
-                  <td className="px-4 py-4">
+                  </DnaTd>
+                  <DnaTd className="max-w-48 truncate px-4 py-4 text-[var(--text-muted)]">{client.campaign || 'Belum teratribusi'}</DnaTd>
+                  <DnaTd className="px-4 py-4">
                     <span className="rounded-lg bg-[var(--insight-action-bg)] px-2 py-1 font-semibold text-[var(--status-action)]">{client.stage}</span>
-                  </td>
-                  <td className="px-4 py-4 text-[var(--text-muted)]">{client.owner}</td>
-                  <td className="px-6 py-4 text-right">
+                  </DnaTd>
+                  <DnaTd className="px-4 py-4 text-[var(--text-muted)]">{client.owner}</DnaTd>
+                  <DnaTd className="px-6 py-4 text-right">
                     <button
                       type="button"
                       onClick={() => onSelect(client)}
@@ -83,18 +91,18 @@ export function ClientTable({
                     >
                       Detail<ChevronRight className="h-3.5 w-3.5" />
                     </button>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))
             ) : (
-              <tr>
-                <td colSpan={6} className={`px-6 text-center text-sm text-[var(--text-muted)] ${compact ? 'py-10' : 'py-16'}`}>
+              <DnaTableRow>
+                <DnaTd colSpan={6} className={`px-6 text-center text-sm text-[var(--text-muted)] ${compact ? 'py-10' : 'py-16'}`}>
                   Tidak ada client yang sesuai filter.
-                </td>
-              </tr>
+                </DnaTd>
+              </DnaTableRow>
             )}
-          </tbody>
-        </table>
+          </DnaTableBody>
+        </DnaTable>
       </div>
     </DashboardCard>
   );

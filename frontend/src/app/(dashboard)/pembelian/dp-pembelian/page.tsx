@@ -30,6 +30,12 @@ import {
   DnaLoadingSkeleton,
   DnaErrorState,
   DnaEmptyState,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface PurchaseDp {
@@ -245,12 +251,14 @@ function DpPembelianContent() {
     });
   };
 
-  const handleApprovePayment = (id: string) => {
-    queryClient.invalidateQueries({ queryKey: ["purchase-down-payments"] });
-    if (selectedDp && selectedDp.id === id) {
-      setSelectedDp({ ...selectedDp, status: "PAID" });
-    }
-    toast.success("Pembayaran DP berhasil dikonfirmasi dan saldo kas/bank terpotong.");
+  const handleApprovePayment = (_id: string) => {
+    // PurchasePaymentsController exposes only POST / and POST /:id/reverse — there is no route
+    // that confirms a DP payment, so this no longer flips the row to PAID locally and no longer
+    // claims the cash/bank balance was debited.
+    toast.warning(
+      "Aksi belum tersedia",
+      "Backend belum menyediakan rute konfirmasi pembayaran DP. Status DP tidak diubah dan saldo kas/bank tidak terpotong.",
+    );
   };
 
   const getStatusBadge = (status: PurchaseDp["status"]) => {
@@ -350,70 +358,70 @@ function DpPembelianContent() {
           searchPlaceholder="Cari No DP, No PO, vendor, akun sumber..."
         >
           <div className="w-full">
-            <table className="w-full text-left border-collapse table-fixed text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider select-none">
-                <tr>
-                  <th className="py-3 px-4 w-[18%]">NO. DP & TANGGAL</th>
-                  <th className="py-3 px-4 w-[24%]">SUPPLIER & REF PO</th>
-                  <th className="py-3 px-4 text-center w-[16%]">TOTAL PO & % DP</th>
-                  <th className="py-3 px-4 text-right w-[18%]">NOMINAL DP & AKUN</th>
-                  <th className="py-3 px-4 text-center w-[14%]">STATUS</th>
-                  <th className="py-3 px-4 text-right w-[10%]">AKSI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-normal">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh className="py-3 px-4 w-[18%]">NO. DP & TANGGAL</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[24%]">SUPPLIER & REF PO</DnaTh>
+                  <DnaTh className="py-3 px-4 text-center w-[16%]">TOTAL PO & % DP</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[18%]">NOMINAL DP & AKUN</DnaTh>
+                  <DnaTh className="py-3 px-4 text-center w-[14%]">STATUS</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[10%]">AKSI</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredList.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center">
+                  <DnaTableRow>
+                    <DnaTd colSpan={6} className="py-8 text-center">
                       <DnaEmptyState
                         title="Tidak Ada DP Pembelian"
                         description="Belum ada data uang muka pembelian atau tidak ada hasil yang sesuai dengan filter."
                       />
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredList.map((row) => (
-                    <tr
+                    <DnaTableRow
                       key={row.id}
                       onClick={() => setSelectedDp(row)}
                       className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                     >
-                      <td className="py-3 px-4">
-                        <span className="font-mono font-bold text-indigo-600 block truncate">
+                      <DnaTd className="py-3 px-4">
+                        <span className="tabular-nums font-bold text-indigo-600 block truncate">
                           {row.dpNumber}
                         </span>
                         <span className="text-[11px] text-slate-500 block truncate">
                           {row.dpDate}
                         </span>
-                      </td>
-                      <td className="py-3 px-4">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4">
                         <span className="font-semibold text-slate-900 block truncate">
                           {row.vendorName}
                         </span>
-                        <span className="text-[11px] font-mono text-slate-500 block truncate">
+                        <span className="text-[11px] tabular-nums text-slate-500 block truncate">
                           {row.poNumber}
                         </span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className="font-mono font-medium text-slate-700 block text-xs">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
+                        <span className="tabular-nums font-medium text-slate-700 block text-xs">
                           Rp {row.totalPoAmount.toLocaleString("id-ID")}
                         </span>
                         <span className="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 mt-0.5">
                           {row.dpPercentage}% DP
                         </span>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <span className="font-mono font-bold text-emerald-600 block text-xs">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
+                        <span className="tabular-nums font-bold text-emerald-600 block text-xs">
                           Rp {row.dpAmount.toLocaleString("id-ID")}
                         </span>
                         <span className="text-[11px] text-slate-500 block truncate max-w-[200px] ml-auto">
                           {row.paymentAccount}
                         </span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
                         {getStatusBadge(row.status)}
-                      </td>
-                      <td className="py-3 px-4 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                           <DnaButton
                             variant="ghost"
@@ -434,12 +442,12 @@ function DpPembelianContent() {
                             </DnaButton>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}
@@ -483,14 +491,14 @@ function DpPembelianContent() {
             <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
                 <span className="text-slate-500 block text-[11px]">Total Nilai PO</span>
-                <span className="font-bold text-slate-900 font-mono text-sm">
+                <span className="font-bold text-slate-900 tabular-nums text-sm">
                   Rp {selectedDp.totalPoAmount.toLocaleString("id-ID")}
                 </span>
                 <span className="text-slate-500 block text-[11px] mt-0.5">PO: {selectedDp.poNumber}</span>
               </div>
               <div>
                 <span className="text-slate-500 block text-[11px]">Nominal Uang Muka ({selectedDp.dpPercentage}%)</span>
-                <span className="font-bold text-emerald-600 font-mono text-sm">
+                <span className="font-bold text-emerald-600 tabular-nums text-sm">
                   Rp {selectedDp.dpAmount.toLocaleString("id-ID")}
                 </span>
                 <span className="text-slate-500 block text-[11px] mt-0.5">Tgl: {selectedDp.dpDate}</span>
@@ -504,7 +512,7 @@ function DpPembelianContent() {
               </div>
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                 <span className="text-slate-500">No. Referensi Transfer</span>
-                <span className="font-mono text-slate-800">{selectedDp.referenceNumber || "-"}</span>
+                <span className="tabular-nums text-slate-800">{selectedDp.referenceNumber || "-"}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Status DP</span>
@@ -516,7 +524,7 @@ function DpPembelianContent() {
               <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-emerald-900 flex items-center justify-between">
                 <div>
                   <span className="font-bold block text-xs">Dialokasikan ke Faktur:</span>
-                  <span className="font-mono text-[11px]">{selectedDp.allocatedBillNumber}</span>
+                  <span className="tabular-nums text-[11px]">{selectedDp.allocatedBillNumber}</span>
                 </div>
                 <DnaBadge variant="success">Faktur Berkurang</DnaBadge>
               </div>
@@ -528,34 +536,34 @@ function DpPembelianContent() {
                 Pencatatan Otomatis Jurnal Finansial (Double-Entry)
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-left text-xs text-slate-600">
-                  <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
-                    <tr>
-                      <th className="py-2.5 px-3">Kode COA</th>
-                      <th className="py-2.5 px-3">Nama Akun Akuntansi</th>
-                      <th className="py-2.5 px-3 text-right">Debit (Rp)</th>
-                      <th className="py-2.5 px-3 text-right">Kredit (Rp)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
-                    <tr className="hover:bg-slate-50">
-                      <td className="py-2.5 px-3 text-indigo-600 font-medium">110801</td>
-                      <td className="py-2.5 px-3 text-slate-800 font-sans font-medium">Uang Muka Pembelian (Prepaid Expense)</td>
-                      <td className="py-2.5 px-3 text-right font-bold text-slate-900">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3">Kode COA</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Nama Akun Akuntansi</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Debit (Rp)</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Kredit (Rp)</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
+                    <DnaTableRow className="hover:bg-slate-50">
+                      <DnaTd className="py-2.5 px-3 text-indigo-600 font-medium">110801</DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-slate-800 font-sans font-medium">Uang Muka Pembelian (Prepaid Expense)</DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-right font-bold text-slate-900">
                         {selectedDp.dpAmount.toLocaleString("id-ID")}
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-slate-400">0</td>
-                    </tr>
-                    <tr className="hover:bg-slate-50">
-                      <td className="py-2.5 px-3 text-indigo-600 font-medium">110201</td>
-                      <td className="py-2.5 px-3 text-slate-800 font-sans font-medium pl-6">Kas & Bank (BCA Operasional)</td>
-                      <td className="py-2.5 px-3 text-right text-slate-400">0</td>
-                      <td className="py-2.5 px-3 text-right font-bold text-slate-900">
+                      </DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-right text-slate-400">0</DnaTd>
+                    </DnaTableRow>
+                    <DnaTableRow className="hover:bg-slate-50">
+                      <DnaTd className="py-2.5 px-3 text-indigo-600 font-medium">110201</DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-slate-800 font-sans font-medium pl-6">Kas & Bank (BCA Operasional)</DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-right text-slate-400">0</DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-right font-bold text-slate-900">
                         {selectedDp.dpAmount.toLocaleString("id-ID")}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                      </DnaTd>
+                    </DnaTableRow>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
           </div>
@@ -609,7 +617,7 @@ function DpPembelianContent() {
                 type="date"
                 value={dpDate}
                 onChange={(e) => setDpDate(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 tabular-nums"
               />
             </div>
           </div>
@@ -641,7 +649,7 @@ function DpPembelianContent() {
                 min="0"
                 value={dpAmount}
                 onChange={(e) => setDpAmount(parseFloat(e.target.value) || 0)}
-                className="w-full text-sm font-bold font-mono text-emerald-700 border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-sm font-bold tabular-nums text-emerald-700 border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
           </div>
@@ -669,7 +677,7 @@ function DpPembelianContent() {
                 placeholder="Contoh: TRF-BCA-9812401"
                 value={referenceNumber}
                 onChange={(e) => setReferenceNumber(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 tabular-nums"
               />
             </div>
           </div>

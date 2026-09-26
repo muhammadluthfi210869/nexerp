@@ -12,7 +12,20 @@ import {
   CheckCircle2,
   Box
 } from "lucide-react";
-import { DnaStatCard, DnaDataTableCard, DnaBadge, DnaButton, DnaInput, DnaCell } from "@/components/dna";
+import {
+  DnaStatCard,
+  DnaDataTableCard,
+  DnaBadge,
+  DnaButton,
+  DnaInput,
+  DnaCell,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import { toast } from "sonner";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
@@ -105,92 +118,96 @@ export default function WarehouseControlPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-slate-50/30 text-table-header text-slate-400 uppercase tracking-tight">
-                <th className="p-6 text-left">Batch No</th>
-                <th className="p-6 text-left">Brand & Product</th>
-                <th className="p-6 text-left">Material Required</th>
-                <th className="p-6 text-center">Req Qty</th>
-                <th className="p-6 text-center">Status</th>
-                <th className="p-6 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
+          <DnaTable className="w-full">
+            <DnaTableHead>
+              <DnaTableRow className="bg-slate-50/50 text-table-header text-slate-400 uppercase tracking-tight">
+                <DnaTh className="p-4 text-left">Batch No</DnaTh>
+                <DnaTh className="p-4 text-left">Brand & Product</DnaTh>
+                <DnaTh className="p-4 text-left">Material Required</DnaTh>
+                <DnaTh className="p-4 text-center">Req Qty</DnaTh>
+                <DnaTh className="p-4 text-center">Status</DnaTh>
+                <DnaTh className="p-4 text-right">Actions</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody className="divide-y divide-slate-100">
               {isLoading ? (
-                 <tr>
-                    <td colSpan={6} className="p-20 text-center font-black text-slate-300 italic">Syncing inventory signals...</td>
-                 </tr>
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="p-16 text-center font-bold text-slate-400 italic">Syncing inventory signals...</DnaTd>
+                </DnaTableRow>
               ) : filteredRequisitions?.length === 0 ? (
-                 <tr>
-                    <td colSpan={6} className="p-20 text-center">
-                       <Box className="w-12 h-12 mx-auto text-slate-200 mb-2" />
-                       <p className="font-black text-slate-300 italic">
-                         {searchTerm ? "No matching requisitions found." : "No active requisitions from production."}
-                       </p>
-                    </td>
-                 </tr>
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="p-16 text-center">
+                    <Box className="w-12 h-12 mx-auto text-slate-200 mb-2" />
+                    <p className="font-bold text-slate-400 italic">
+                      {searchTerm ? "No matching requisitions found." : "No active requisitions from production."}
+                    </p>
+                  </DnaTd>
+                </DnaTableRow>
               ) : filteredRequisitions.map((req: any) => (
-                <tr key={req.id} className="hover:bg-slate-50/30 transition-colors group">
-                  <td className="p-6">
-                    <div className="flex flex-col">
-                      <span className="font-black text-slate-900">{req.reqNumber}</span>
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">WO: {req.workOrder?.woNumber || "UNLINKED"}</span>
+                <DnaTableRow key={req.id} className="hover:bg-slate-50/50 transition-colors group">
+                  <DnaTd className="p-4">
+                    <DnaCell.NaturalPair
+                      primary={req.reqNumber}
+                      secondary={`WO: ${req.workOrder?.woNumber || "UNLINKED"}`}
+                    />
+                  </DnaTd>
+                  <DnaTd className="p-4">
+                    <DnaCell.NaturalPair
+                      primary={req.workOrder?.lead?.brandName || "Nex"}
+                      secondary={req.workOrder?.lead?.productInterest || "PRIVATE LABEL"}
+                    />
+                  </DnaTd>
+                  <DnaTd className="p-4">
+                    <div className="space-y-1">
+                      <p className="font-bold text-slate-900 text-xs uppercase">{req.material?.name || "BASE COMPOUND"}</p>
+                      <DnaBadge variant="default" className="text-[8px]">RAW_MATERIAL</DnaBadge>
                     </div>
-                  </td>
-                  <td className="p-6">
-                    <p className="font-black text-blue-600 uppercase text-xs">{req.workOrder?.lead?.brandName || "Nex"}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">{req.workOrder?.lead?.productInterest || "PRIVATE LABEL"}</p>
-                  </td>
-                  <td className="p-6">
-                     <p className="font-black text-slate-900 text-xs uppercase">{req.material?.name || "BASE COMPOUND"}</p>
-                      <DnaBadge status="default" className="text-[8px]">RAW_MATERIAL</DnaBadge>
-                  </td>
-                  <td className="p-6 text-center">
-                     <p className="font-black text-slate-900">{req.qty_requested} <span className="text-[10px] text-slate-400 font-bold uppercase">{req.material?.unit || "KG"}</span></p>
-                  </td>
-                  <td className="p-6 text-center">
+                  </DnaTd>
+                  <DnaTd className="p-4 text-center">
+                    <p className="font-bold text-slate-900 tabular-nums">{req.qty_requested} <span className="text-[10px] text-slate-400 font-bold uppercase">{req.material?.unit || "KG"}</span></p>
+                  </DnaTd>
+                  <DnaTd className="p-4 text-center">
                     <DnaBadge
-                      status={req.status === 'PENDING' ? 'warning' : req.status === 'ISSUED' ? 'success' : req.status === 'SHORTAGE' ? 'critical' : 'default'}
+                      variant={req.status === 'PENDING' ? 'warning' : req.status === 'ISSUED' ? 'success' : req.status === 'SHORTAGE' ? 'critical' : 'default'}
                     >
                       {req.status}
                     </DnaBadge>
-                  </td>
-                  <td className="p-6 text-right">
+                  </DnaTd>
+                  <DnaTd className="p-4 text-right">
                     <div className="flex justify-end gap-2">
-                        {req.status === 'PENDING' && (
-                          <>
-                            <DnaButton
-                              variant="danger"
-                              size="sm"
-                              icon={<AlertTriangle className="w-3 h-3" />}
-                              onClick={() => shortageMutation.mutate(req.id)}
-                              disabled={shortageMutation.isPending}
-                            >
-                              Shortage
-                            </DnaButton>
-                            <DnaButton
-                              variant="primary"
-                              size="sm"
-                              icon={<Truck className="w-3 h-3" />}
-                              onClick={() => issueMutation.mutate(req.id)}
-                              disabled={issueMutation.isPending}
-                            >
-                              Issue Materials
-                            </DnaButton>
-                          </>
-                        )}
-                       {req.status === 'ISSUED' && (
-                         <div className="text-emerald-500 flex items-center gap-1 font-black text-[10px] uppercase">
-                            <CheckCircle2 className="w-4 h-4" /> Released
-                         </div>
-                       )}
+                      {req.status === 'PENDING' && (
+                        <>
+                          <DnaButton
+                            variant="critical"
+                            size="sm"
+                            icon={<AlertTriangle className="w-3 h-3" />}
+                            onClick={() => shortageMutation.mutate(req.id)}
+                            disabled={shortageMutation.isPending}
+                          >
+                            Shortage
+                          </DnaButton>
+                          <DnaButton
+                            variant="primary"
+                            size="sm"
+                            icon={<Truck className="w-3 h-3" />}
+                            onClick={() => issueMutation.mutate(req.id)}
+                            disabled={issueMutation.isPending}
+                          >
+                            Issue Materials
+                          </DnaButton>
+                        </>
+                      )}
+                      {req.status === 'ISSUED' && (
+                        <div className="text-emerald-500 flex items-center gap-1 font-bold text-[10px] uppercase">
+                          <CheckCircle2 className="w-4 h-4" /> Released
+                        </div>
+                      )}
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
     </DashboardShell>

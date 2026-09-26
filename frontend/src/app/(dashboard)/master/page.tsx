@@ -16,6 +16,8 @@
 
 import React from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   Package,
   Building2,
@@ -36,14 +38,29 @@ import {
   DnaButton,
 } from "@/components/dna";
 
+/** Jumlah entitas master dari backend. null = belum termuat / gagal. */
+type MasterCounts = {
+  materials: number | null;
+  suppliers: number | null;
+  customers: number | null;
+  warehouses: number | null;
+  users: number | null;
+};
+
+/** Format angka atau "—" kalau backend belum/tidak mengembalikan hitungan. */
+function fmtCount(n: number | null, suffix = "") {
+  return n === null ? "—" : `${n.toLocaleString("id-ID")}${suffix}`;
+}
+
 const MASTER_MODULES = [
   {
     title: "Master Barang & Kategori",
     subtitle: "Bahan Baku, Kemasan Primer/Sekunder, Ruahan, dan Barang Jadi",
     href: "/master/goods",
     icon: Package,
-    badgeText: "2.797 SKU",
+    countKey: "materials" as const,
     badgeStatus: "info" as const,
+    badgeSuffix: " SKU",
     description:
       "Katalog material formulasi kosmetik terintegrasi dengan ROP stok minimum, harga beli standar, aging gudang, dan pemetaan akun COA.",
     quickLinks: [
@@ -56,8 +73,9 @@ const MASTER_MODULES = [
     subtitle: "Rekanan Pengadaan Bahan Baku & Kemasan",
     href: "/master/suppliers",
     icon: Building2,
-    badgeText: "178 Vendor",
+    countKey: "suppliers" as const,
     badgeStatus: "warning" as const,
+    badgeSuffix: " Vendor",
     description:
       "Registri pemasok kimiawi aktif, pabrik botol/tube, percetakan kemasan sekunder, status kepatuhan PKP (PPN 11%), dan impor data Excel.",
     quickLinks: [
@@ -70,8 +88,9 @@ const MASTER_MODULES = [
     subtitle: "Mitra Brand Owner Maklon & Evaluasi 3 Pilar",
     href: "/master/customers",
     icon: Users,
-    badgeText: "818 Klien",
+    countKey: "customers" as const,
     badgeStatus: "success" as const,
+    badgeSuffix: " Klien",
     description:
       "Basis data klien brand kosmetik dengan monitoring real-time 3 pilar: Sample Fee, Job Order Produksi, serta Legalitas BPOM/Halal.",
     quickLinks: [
@@ -82,11 +101,12 @@ const MASTER_MODULES = [
   },
   {
     title: "Gudang & Lokasi",
-    subtitle: "14 Fasilitas Titik Simpan & Otorisasi Hak Akses",
+    subtitle: "Fasilitas Titik Simpan & Otorisasi Hak Akses",
     href: "/master/warehouses",
     icon: Warehouse,
-    badgeText: "14 Titik",
+    countKey: "warehouses" as const,
     badgeStatus: "purple" as const,
+    badgeSuffix: " Titik",
     description:
       "Struktur gudang operasional Sidoarjo, Pasuruan PIER, dan Surabaya dengan pengaturan suhu (Cool Storage / Ambient) dan otorisasi staf.",
     quickLinks: [
@@ -99,8 +119,9 @@ const MASTER_MODULES = [
     subtitle: "Identitas Karyawan & Matriks Hak Akses (RBAC)",
     href: "/master/personnel",
     icon: UserCog,
-    badgeText: "24 Akun",
+    countKey: "users" as const,
     badgeStatus: "default" as const,
+    badgeSuffix: " Akun",
     description:
       "Manajemen NIP staf Dreamlab, kredensial akun login, departemen kerja, dan penetapan role-based permission berjenjang.",
     quickLinks: [
@@ -113,8 +134,11 @@ const MASTER_MODULES = [
     subtitle: "Bagan Akun Finansial & Jurnal Otomatis",
     href: "/finance/accounting/coa",
     icon: FileSpreadsheet,
-    badgeText: "COA Live",
+    // Backend belum punya endpoint daftar COA publik di modul master —
+    // jadi kartu ini tidak mengklaim jumlah akun sama sekali.
+    countKey: null,
     badgeStatus: "info" as const,
+    badgeSuffix: "",
     description:
       "Struktur nomor akun neraca, aset lancar persediaan, hutang dagang supplier, dan aturan posting jurnal otomatis dari transaksi SCM.",
     quickLinks: [
@@ -124,6 +148,29 @@ const MASTER_MODULES = [
 ];
 
 export default function MasterOverviewPage() {
+  const { data: counts, isLoading, isError, refetch } = useQuery<MasterCounts>({
+    queryKey: ["master-overview-counts"],
+    queryFn: async () => {
+      const [materials, suppliers, customers, warehouses, users] = await Promise.all([
+        api.get("/master/materials", { params: { page: 1, limit: 1 } }),
+        api.get("/master/suppliers"),
+        api.get("/master/customers"),
+        api.get("/master/warehouses"),
+        api.get("/users", { params: { page: 1, limit: 1 } }),
+      ]);
+      const m = materials.data;
+      const u = users.data;
+      return {
+        materials: typeof m?.total === "number" ? m.total : null,
+        suppliers: Array.isArray(suppliers.data) ? suppliers.data.length : null,
+        customers: Array.isArray(customers.data) ? customers.data.length : null,
+        warehouses: Array.isArray(warehouses.data) ? warehouses.data.length : null,
+        users: typeof u?.total === "number" ? u.total : null,
+      };
+    },
+    staleTime: 60_000,
+  });
+
   return (
     <div className="space-y-8 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
       {/* ── 01. MODULAR PAGE HEADER ── */}
@@ -141,13 +188,26 @@ export default function MasterOverviewPage() {
         }
       />
 
+      {isError && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-800">
+          <span>Gagal memuat jumlah data master dari server. Angka ditampilkan sebagai &quot;—&quot;.</span>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 font-bold text-amber-800 hover:bg-amber-100"
+          >
+            Coba lagi
+          </button>
+        </div>
+      )}
+
       {/* ── 02. MODULAR 5 KPI METRIC CARDS ── */}
       <DnaKpiGrid
         cards={[
           {
             key: "SKU",
             title: "TOTAL MASTER SKU",
-            value: "2.797",
+            value: isLoading ? "…" : fmtCount(counts?.materials ?? null),
             subtext: "Bahan baku, kemas & BJD",
             icon: <Package className="w-4 h-4" />,
             iconBg: "bg-blue-50",
@@ -157,7 +217,7 @@ export default function MasterOverviewPage() {
           {
             key: "SUPPLIER",
             title: "REKANAN SUPPLIER",
-            value: "178",
+            value: isLoading ? "…" : fmtCount(counts?.suppliers ?? null),
             subtext: "Vendor resmi terdaftar",
             icon: <Building2 className="w-4 h-4" />,
             iconBg: "bg-amber-50",
@@ -167,7 +227,7 @@ export default function MasterOverviewPage() {
           {
             key: "CUSTOMER",
             title: "MITRA PELANGGAN",
-            value: "818",
+            value: isLoading ? "…" : fmtCount(counts?.customers ?? null),
             subtext: "Brand owner maklon",
             icon: <Users className="w-4 h-4" />,
             iconBg: "bg-emerald-50",
@@ -177,7 +237,7 @@ export default function MasterOverviewPage() {
           {
             key: "WAREHOUSE",
             title: "FASILITAS GUDANG",
-            value: "14",
+            value: isLoading ? "…" : fmtCount(counts?.warehouses ?? null),
             subtext: "Sidoarjo, PIER, Surabaya",
             icon: <Warehouse className="w-4 h-4" />,
             iconBg: "bg-purple-50",
@@ -187,7 +247,7 @@ export default function MasterOverviewPage() {
           {
             key: "USERS",
             title: "PERSONEL AKTIF",
-            value: "24",
+            value: isLoading ? "…" : fmtCount(counts?.users ?? null),
             subtext: "Staf terotorisasi sistem",
             icon: <UserCog className="w-4 h-4" />,
             iconBg: "bg-slate-100",
@@ -209,7 +269,15 @@ export default function MasterOverviewPage() {
                 <div className="p-3.5 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors border border-blue-100">
                   <mod.icon className="w-6 h-6" />
                 </div>
-                <DnaBadge status={mod.badgeStatus}>{mod.badgeText}</DnaBadge>
+                {mod.countKey ? (
+                  <DnaBadge status={mod.badgeStatus}>
+                    {isLoading
+                      ? "…"
+                      : fmtCount(counts?.[mod.countKey] ?? null, mod.badgeSuffix)}
+                  </DnaBadge>
+                ) : (
+                  <DnaBadge status={mod.badgeStatus}>Katalog</DnaBadge>
+                )}
               </div>
 
               <div>

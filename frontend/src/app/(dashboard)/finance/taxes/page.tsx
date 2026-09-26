@@ -34,13 +34,6 @@ interface TaxRate {
   description?: string;
 }
 
-const FALLBACK: TaxRate[] = [
-  { id: "tx-1", name: "PPN 11%", rate: 11, isActive: true, description: "Pajak Pertambahan Nilai standar 2026" },
-  { id: "tx-2", name: "PPh 21", rate: 5, isActive: true, description: "Potongan pajak penghasilan karyawan" },
-  { id: "tx-3", name: "PPh 23", rate: 2, isActive: true, description: "Potongan pajak jasa" },
-  { id: "tx-4", name: "Pajak Daerah 0.5%", rate: 0.5, isActive: false, description: "Pajak restoran (legacy)" },
-];
-
 export default function FinanceTaxesPage() {
   const toast = useDnaToast();
   const qc = useQueryClient();
@@ -54,16 +47,12 @@ export default function FinanceTaxesPage() {
   const [isActive, setIsActive] = useState(true);
   const [description, setDescription] = useState("");
 
-  const { data: taxes = FALLBACK, isLoading } = useQuery({
+  const { data: taxes = [], isLoading } = useQuery({
     queryKey: ["finance-taxes"],
     queryFn: async () => {
-      try {
-        const res = await api.get("/finance/taxes");
-        const body = unwrapResponse(res);
-        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : FALLBACK;
-      } catch {
-        return FALLBACK;
-      }
+      const res = await api.get("/finance/taxes");
+      const body = unwrapResponse(res);
+      return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
     },
   });
 

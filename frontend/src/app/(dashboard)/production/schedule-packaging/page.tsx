@@ -28,6 +28,12 @@ import {
   DnaModal,
   DnaBadge,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface SchedulePackagingItem {
@@ -66,7 +72,7 @@ function SchedulePackagingContent() {
     queryKey: ["production-schedules-packaging"],
     queryFn: async () => {
       try {
-        const res = await api.get("/production/schedules?stage=PACKAGING");
+        const res = await api.get("/production/schedules?stage=PACKING");
         const unwrapped = unwrapResponse(res);
         if (Array.isArray(unwrapped)) {
           return unwrapped.map((item: any, idx: number) => ({
@@ -170,13 +176,13 @@ function SchedulePackagingContent() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "SCHEDULED":
-        return <DnaBadge status="warning">Terjadwal</DnaBadge>;
+        return <DnaBadge variant="warning">Terjadwal</DnaBadge>;
       case "IN_PROGRESS":
-        return <DnaBadge status="info">Proses Packaging</DnaBadge>;
+        return <DnaBadge variant="info">Proses Packaging</DnaBadge>;
       case "COMPLETED":
-        return <DnaBadge status="success">Selesai</DnaBadge>;
+        return <DnaBadge variant="success">Selesai</DnaBadge>;
       default:
-        return <DnaBadge status="default">{status}</DnaBadge>;
+        return <DnaBadge variant="default">{status}</DnaBadge>;
     }
   };
 
@@ -261,41 +267,41 @@ function SchedulePackagingContent() {
       {/* 1:1 Table (Exactly 9 columns matching legacy G-SERP) */}
       <DnaDataTableCard title="Daftar Jadwal Pra-Produksi Packaging">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-              <tr>
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">Kode</th>
-                <th className="py-3 px-4">Tanggal</th>
-                <th className="py-3 px-4">Batch Record</th>
-                <th className="py-3 px-4">Pelanggan</th>
-                <th className="py-3 px-4">Produk</th>
-                <th className="py-3 px-4 text-right">Target (PCS)</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-12 text-center">#</DnaTh>
+                <DnaTh className="py-3 px-4">Kode</DnaTh>
+                <DnaTh className="py-3 px-4">Tanggal</DnaTh>
+                <DnaTh className="py-3 px-4">Batch Record</DnaTh>
+                <DnaTh className="py-3 px-4">Pelanggan</DnaTh>
+                <DnaTh className="py-3 px-4">Produk</DnaTh>
+                <DnaTh className="py-3 px-4 text-right">Target (PCS)</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Status</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-8 text-center text-slate-400">
                     Tidak ada jadwal packaging ditemukan
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
-                    <td className="py-3 px-4 font-semibold text-blue-600">{item.code}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.date}</td>
-                    <td className="py-3 px-4 font-medium text-slate-800">{item.batchRecord}</td>
-                    <td className="py-3 px-4 text-slate-900 font-medium">{item.customer}</td>
-                    <td className="py-3 px-4 text-slate-800">{item.product}</td>
-                    <td className="py-3 px-4 text-right font-bold text-slate-900">
+                  <DnaTableRow key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</DnaTd>
+                    <DnaTd className="py-3 px-4 font-semibold text-blue-600">{item.code}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-600">{item.date}</DnaTd>
+                    <DnaTd className="py-3 px-4 font-medium text-slate-800">{item.batchRecord}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-900 font-medium">{item.customer}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-800">{item.product}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-right font-bold text-slate-900">
                       {item.targetPcs.toLocaleString()} PCS
-                    </td>
-                    <td className="py-3 px-4 text-center">{getStatusBadge(item.status)}</td>
-                    <td className="py-3 px-4 text-center">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-center">{getStatusBadge(item.status)}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <DnaButton
                           variant="ghost"
@@ -323,12 +329,12 @@ function SchedulePackagingContent() {
                           Print
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -382,28 +388,28 @@ function SchedulePackagingContent() {
                 Rincian Kebutuhan Kemasan Sekunder
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                    <tr>
-                      <th className="py-2.5 px-3 w-10 text-center">#</th>
-                      <th className="py-2.5 px-3">Nama Kemasan</th>
-                      <th className="py-2.5 px-3 text-center">Satuan</th>
-                      <th className="py-2.5 px-3 text-right">Qty Dibutuhkan</th>
-                      <th className="py-2.5 px-3">Catatan</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    <tr>
-                      <td className="py-2.5 px-3 text-center text-slate-400">1</td>
-                      <td className="py-2.5 px-3 font-medium text-slate-800">{selectedItem.secondaryPackaging}</td>
-                      <td className="py-2.5 px-3 text-center text-slate-600">pcs</td>
-                      <td className="py-2.5 px-3 text-right font-bold text-blue-600">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3 w-10 text-center">#</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Nama Kemasan</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-center">Satuan</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Qty Dibutuhkan</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Catatan</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
+                    <DnaTableRow>
+                      <DnaTd className="py-2.5 px-3 text-center text-slate-400">1</DnaTd>
+                      <DnaTd className="py-2.5 px-3 font-medium text-slate-800">{selectedItem.secondaryPackaging}</DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-center text-slate-600">pcs</DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-right font-bold text-blue-600">
                         {selectedItem.packagingQty.toLocaleString()}
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-500">Termasuk safety allowance 1.5%</td>
-                    </tr>
-                  </tbody>
-                </table>
+                      </DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-slate-500">Termasuk safety allowance 1.5%</DnaTd>
+                    </DnaTableRow>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
 

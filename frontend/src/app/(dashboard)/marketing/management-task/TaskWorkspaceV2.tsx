@@ -25,6 +25,12 @@ import {
   DnaKpiGrid,
   DnaPageContainer,
   DnaPageHeader,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { DnaEmptyState } from "@/components/dna";;
 import { DnaAvatar, DnaDaysLeftChip, DnaKanban, DnaPriorityBadge } from "@/components/dna";;
@@ -590,34 +596,34 @@ function TableView({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs border-collapse">
-          <thead className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-100">
-            <tr>
-              <th className="px-4 py-3 font-bold">Nama Task</th>
-              <th className="px-3 py-3 font-bold">Tipe / Project</th>
-              <th className="px-3 py-3 font-bold">Assignee</th>
-              <th className="px-3 py-3 font-bold">Brand</th>
-              <th className="px-3 py-3 font-bold">Due Date</th>
-              <th className="px-3 py-3 font-bold">Days Left</th>
-              <th className="px-3 py-3 font-bold">Prioritas</th>
-              <th className="px-3 py-3 font-bold">Status</th>
-              <th className="px-4 py-3 font-bold text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 text-slate-700">
+        <DnaTable>
+          <DnaTableHead>
+            <DnaTableRow>
+              <DnaTh className="px-4 py-3 font-bold">Nama Task</DnaTh>
+              <DnaTh className="px-3 py-3 font-bold">Tipe / Project</DnaTh>
+              <DnaTh className="px-3 py-3 font-bold">Assignee</DnaTh>
+              <DnaTh className="px-3 py-3 font-bold">Brand</DnaTh>
+              <DnaTh className="px-3 py-3 font-bold">Due Date</DnaTh>
+              <DnaTh className="px-3 py-3 font-bold">Days Left</DnaTh>
+              <DnaTh className="px-3 py-3 font-bold">Prioritas</DnaTh>
+              <DnaTh className="px-3 py-3 font-bold">Status</DnaTh>
+              <DnaTh className="px-4 py-3 font-bold text-right">Aksi</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {tasks.map((task) => {
               const isDone = task.status === "DONE";
               const allowedStatuses = [task.status, ...(NEXT_STATUSES[task.status] ?? [])];
               const memberSlug = task.assignee?.name?.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "overview";
 
               return (
-                <tr
+                <DnaTableRow
                   key={task.id}
                   onClick={() => onSelect(task.id)}
                   className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
                 >
                   {/* Task Name + Fast-path Checkbox */}
-                  <td className="px-4 py-3">
+                  <DnaTd className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <button
                         type="button"
@@ -641,13 +647,13 @@ function TableView({
                         >
                           {task.title}
                         </p>
-                        <p className="text-[10px] font-mono text-slate-400 mt-0.5">{task.taskCode}</p>
+                        <p className="text-[10px] tabular-nums text-slate-400 mt-0.5">{task.taskCode}</p>
                       </div>
                     </div>
-                  </td>
+                  </DnaTd>
 
                   {/* Type / Project */}
-                  <td className="px-3 py-3 whitespace-nowrap">
+                  <DnaTd className="px-3 py-3 whitespace-nowrap">
                     {task.type === "PROJECT" ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">
                         {task.project?.name || "Project"}
@@ -657,10 +663,10 @@ function TableView({
                         Daily Task
                       </span>
                     )}
-                  </td>
+                  </DnaTd>
 
                   {/* Assignee */}
-                  <td className="px-3 py-3 whitespace-nowrap">
+                  <DnaTd className="px-3 py-3 whitespace-nowrap">
                     <Link
                       href={`/marketing/management-task/${memberSlug}`}
                       onClick={(e) => e.stopPropagation()}
@@ -671,34 +677,34 @@ function TableView({
                         {task.assignee?.name ?? "—"}
                       </span>
                     </Link>
-                  </td>
+                  </DnaTd>
 
                   {/* Brand */}
-                  <td className="px-3 py-3 whitespace-nowrap">
+                  <DnaTd className="px-3 py-3 whitespace-nowrap">
                     <span className="font-medium text-slate-600">{task.brand?.name ?? "—"}</span>
-                  </td>
+                  </DnaTd>
 
                   {/* Due Date */}
-                  <td className="px-3 py-3 text-slate-500 whitespace-nowrap font-medium">
+                  <DnaTd className="px-3 py-3 text-slate-500 whitespace-nowrap font-medium">
                     {new Date(task.dueDate).toLocaleDateString("id-ID", {
                       day: "numeric",
                       month: "short",
                       year: "numeric",
                     })}
-                  </td>
+                  </DnaTd>
 
                   {/* Days Left Chip */}
-                  <td className="px-3 py-3 whitespace-nowrap">
+                  <DnaTd className="px-3 py-3 whitespace-nowrap">
                     <DnaDaysLeftChip dueDate={task.dueDate} />
-                  </td>
+                  </DnaTd>
 
                   {/* Priority Badge */}
-                  <td className="px-3 py-3 whitespace-nowrap">
+                  <DnaTd className="px-3 py-3 whitespace-nowrap">
                     <DnaPriorityBadge priority={task.priority} />
-                  </td>
+                  </DnaTd>
 
                   {/* Status Inline Select (Interactive) */}
-                  <td className="px-3 py-3 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                  <DnaTd className="px-3 py-3 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                     <select
                       value={task.status}
                       onChange={(e) => onStatusChange(task, e.target.value as TaskStatus)}
@@ -708,10 +714,10 @@ function TableView({
                         <option key={status} value={status}>{status === "IN_REVIEW" ? "In Review" : status.replace("_", " ")}</option>
                       ))}
                     </select>
-                  </td>
+                  </DnaTd>
 
                   {/* Action Detail */}
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                  <DnaTd className="px-4 py-3 text-right whitespace-nowrap">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -722,12 +728,12 @@ function TableView({
                     >
                       Detail
                     </button>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               );
             })}
-          </tbody>
-        </table>
+          </DnaTableBody>
+        </DnaTable>
       </div>
     </div>
   );

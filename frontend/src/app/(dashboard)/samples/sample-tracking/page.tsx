@@ -29,6 +29,12 @@ import {
   DialogContent,
   DialogTitle,
   DialogDescription,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -162,39 +168,39 @@ export default function SampleTrackingPage() {
               </div>
             }
           >
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50/70">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
+            <DnaTable>
+              <DnaTableHead className="bg-slate-50/70">
+                <DnaTableRow className="hover:bg-transparent border-slate-100">
+                  <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
                     Kode
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                  </DnaTh>
+                  <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
                     Tanggal
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                  </DnaTh>
+                  <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
                     Customer
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                  </DnaTh>
+                  <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
                     Produk
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px] w-[220px]">
+                  </DnaTh>
+                  <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px] w-[220px]">
                     Pipeline Stage
-                  </TableHead>
-                  <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                  </DnaTh>
+                  <DnaTh className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">
                     Status
-                  </TableHead>
-                  <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                  </DnaTh>
+                  <DnaTh className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
                     Detail
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+                  </DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredSamples.map((sample) => (
-                  <TableRow
+                  <DnaTableRow
                     key={sample.id}
                     className="group hover:bg-blue-50/30 transition-all duration-300 border-b border-slate-50"
                   >
-                    <TableCell className="pl-6 py-4">
+                    <DnaTd className="pl-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                           <Package className="h-4 w-4" />
@@ -203,25 +209,25 @@ export default function SampleTrackingPage() {
                           {sample.code}
                         </span>
                       </div>
-                    </TableCell>
-                    <TableCell className="py-4">
+                    </DnaTd>
+                    <DnaTd className="py-4">
                       <span className="text-[11px] font-medium text-slate-500 tabular-nums">
                         {sample.createdAt}
                       </span>
-                    </TableCell>
-                    <TableCell className="py-4">
+                    </DnaTd>
+                    <DnaTd className="py-4">
                       <p className="font-black text-slate-900 text-xs uppercase italic">
                         {sample.customerName}
                       </p>
-                    </TableCell>
-                    <TableCell className="py-4">
+                    </DnaTd>
+                    <DnaTd className="py-4">
                       <span className="text-[11px] font-medium text-slate-600">
                         {sample.productName}
                       </span>
-                    </TableCell>
-                    <TableCell className="py-4">
+                    </DnaTd>
+                    <DnaTd className="py-4">
                       {sample.status === "CANCELLED" ? (
-                        <DnaBadge status="critical">CANCELLED</DnaBadge>
+                        <DnaBadge variant="critical">CANCELLED</DnaBadge>
                       ) : (
                         <div className="flex items-center gap-1">
                           {stages.map((stage, idx) => {
@@ -254,34 +260,34 @@ export default function SampleTrackingPage() {
                           })}
                         </div>
                       )}
-                    </TableCell>
-                    <TableCell className="text-center py-4">
-                      <DnaBadge status={statusBadgeMap[sample.status]?.badge || "default"}>
+                    </DnaTd>
+                    <DnaTd className="text-center py-4">
+                      <DnaBadge variant={statusBadgeMap[sample.status]?.badge || "default"}>
                         {sample.status}
                       </DnaBadge>
-                    </TableCell>
-                    <TableCell className="pr-6 text-right py-4">
+                    </DnaTd>
+                    <DnaTd className="pr-6 text-right py-4">
                       <DnaButton
                         variant="outline"
                         size="sm"
                         icon={<Eye className="h-3.5 w-3.5" />}
                         onClick={() => setDetailOrder(sample)}
                       />
-                    </TableCell>
-                  </TableRow>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
                 {filteredSamples.length === 0 && (
-                  <TableRow>
-                    <TableCell
+                  <DnaTableRow>
+                    <DnaTd
                       colSpan={7}
                       className="text-center py-10 text-slate-400 italic"
                     >
                       Tidak ada sample tracking ditemukan.
-                    </TableCell>
-                  </TableRow>
+                    </DnaTd>
+                  </DnaTableRow>
                 )}
-              </TableBody>
-            </Table>
+              </DnaTableBody>
+            </DnaTable>
           </TableWrapper>
         </>
       )}

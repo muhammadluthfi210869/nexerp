@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   DnaPageContainer,
   DnaPageHeader,
@@ -15,6 +18,11 @@ import {
   DnaModal,
   DnaCell,
   useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import {
   FlaskConical,
@@ -55,107 +63,141 @@ interface RndProjectRecord {
   };
 }
 
-const INITIAL_PROJECTS: RndProjectRecord[] = [
-  {
-    id: "rnd-p-1",
-    projectCode: "RND-2026-081",
-    clientName: "PT Glow Skin Global",
-    brandName: "GlowSkin Aesthetic",
-    productName: "Sunscreen Glow Gel SPF 50 PA++++ 30ml",
-    category: "Sun Care",
-    claim: "Water-based, No White Cast, Niacinamide 2%",
-    picFormulator: "dr. Rian Pratama",
-    currentPhase: "Siap Produksi",
-    stabilityTestStatus: "LOLOS (Aman)",
-    bpomStatus: "TERBIT NIE",
-    startDate: "01/07/2026",
-    targetCompletion: "25/08/2026",
-    progressPercent: 100,
+const mapSampleToRecord = (s: any): RndProjectRecord => {
+  let currentPhase: RndProjectRecord["currentPhase"] = "Formulasi Lab";
+  let stabilityTestStatus: RndProjectRecord["stabilityTestStatus"] = "SEDANG DIUJI (Oven 45°C)";
+  let bpomStatus: RndProjectRecord["bpomStatus"] = "BELUM DIAJUKAN";
+  let progress = 25;
+
+  if (s.stage === "APPROVED") {
+    currentPhase = "Siap Produksi";
+    stabilityTestStatus = "LOLOS (Aman)";
+    bpomStatus = "TERBIT NIE";
+    progress = 100;
+  } else if (s.stage === "SENT_TO_CLIENT" || s.stage === "FEEDBACK_RECEIVED") {
+    currentPhase = "Sample Client";
+    progress = 75;
+  } else if (s.stage === "INTERNAL_REVIEW") {
+    currentPhase = "Uji Stabilitas";
+    progress = 50;
+  }
+
+  return {
+    id: s.id,
+    projectCode: s.sampleCode || `RND-${s.id.slice(0, 6)}`,
+    clientName: s.lead?.clientName || s.lead?.companyName || "Klien Mandiri",
+    brandName: s.lead?.brandName || "Brand",
+    productName: s.productName,
+    category: s.targetFunction || "Skincare",
+    claim: s.targetFunction || "Formula Standar",
+    picFormulator: s.pic?.fullName || s.pic?.name || "Belum Ditugaskan",
+    currentPhase,
+    stabilityTestStatus,
+    bpomStatus,
+    startDate: s.createdAt ? new Date(s.createdAt).toLocaleDateString("id-ID") : "-",
+    targetCompletion: s.targetDeadline ? new Date(s.targetDeadline).toLocaleDateString("id-ID") : "-",
+    progressPercent: progress,
     testParameters: {
-      ph: "5.8 - 6.2 (Sesuai)",
-      viscosity: "14.500 cPs (Lolos)",
+      ph: s.formulas?.[0]?.qcparameter?.phTarget || "5.5 - 6.5",
+      viscosity: s.formulas?.[0]?.qcparameter?.viscosityTarget || "Standard cPs",
       centrifuge: "3000 rpm 30 mnt (Stabil)",
-      organoleptic: "Light Gel Translucent, Odor Floral",
+      organoleptic: s.textureReq || "Sesuai Standar Lab",
       microbiology: "ALT < 10 CFU/g (Lolos BPOM)",
     },
-  },
-  {
-    id: "rnd-p-2",
-    projectCode: "RND-2026-085",
-    clientName: "CV Aura Natural",
-    brandName: "AuraGlow Botanica",
-    productName: "Centella Soothing Moisturizer Gel 50ml",
-    category: "Skin Care",
-    claim: "Cica 5%, Ceramide NP, Barrier Repair",
-    picFormulator: "Aisyah Putri, S.Si",
-    currentPhase: "Uji Stabilitas",
-    stabilityTestStatus: "SEDANG DIUJI (Oven 45°C)",
-    bpomStatus: "SUBMITTED",
-    startDate: "15/07/2026",
-    targetCompletion: "10/09/2026",
-    progressPercent: 75,
-    testParameters: {
-      ph: "5.5 (Stabil)",
-      viscosity: "18.000 cPs (Stabil)",
-      centrifuge: "3000 rpm 30 mnt (Stabil)",
-      organoleptic: "Semi-opaque Gel Pale Green",
-      microbiology: "Dalam Masa Inkubasi 14 Hari",
-    },
-  },
-  {
-    id: "rnd-p-3",
-    projectCode: "RND-2026-089",
-    clientName: "PT Derma Estetika",
-    brandName: "DermaGleam",
-    productName: "Brightening Serum Tranexamic Acid 3%",
-    category: "Face Serum",
-    claim: "Anti Flek Hitam, Kojic Acid Dipalmitate",
-    picFormulator: "dr. Rian Pratama",
-    currentPhase: "Sample Client",
-    stabilityTestStatus: "LOLOS (Aman)",
-    bpomStatus: "BELUM DIAJUKAN",
-    startDate: "20/07/2026",
-    targetCompletion: "20/09/2026",
-    progressPercent: 60,
-    testParameters: {
-      ph: "4.8 - 5.2 (Sesuai)",
-      viscosity: "2.800 cPs (Lolos)",
-      centrifuge: "3000 rpm 30 mnt (Stabil)",
-      organoleptic: "Clear Liquid, Tanpa Aroma",
-      microbiology: "Negatif Pseudomonas & Staph",
-    },
-  },
-  {
-    id: "rnd-p-4",
-    projectCode: "RND-2026-092",
-    clientName: "PT Cantika Herbal Nusantara",
-    brandName: "HerbalCare",
-    productName: "Gentle Oat Cleanser Gel Low pH 100ml",
-    category: "Cleanser",
-    claim: "Sulfat Free, Oat Extract, pH 5.5",
-    picFormulator: "Aisyah Putri, S.Si",
-    currentPhase: "Formulasi Lab",
-    stabilityTestStatus: "REVISI VISKOSITAS",
-    bpomStatus: "BELUM DIAJUKAN",
-    startDate: "05/08/2026",
-    targetCompletion: "30/09/2026",
-    progressPercent: 35,
-    testParameters: {
-      ph: "5.4 (Sesuai)",
-      viscosity: "8.500 cPs (Terlalu Cair - Perlu Thickener)",
-      centrifuge: "Sedang Formulasi Ulang",
-      organoleptic: "Milky Gel Oat",
-      microbiology: "Belum Diuji",
-    },
-  },
-];
+  };
+};
 
 export default function RndProjectMonitoringPage() {
   const toast = useDnaToast();
-  const [projects, setProjects] = useState<RndProjectRecord[]>(INITIAL_PROJECTS);
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProject, setSelectedProject] = useState<RndProjectRecord | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [createForm, setCreateForm] = useState({
+    leadId: "",
+    productName: "",
+    targetFunction: "",
+    textureReq: "Gel Transparan",
+    colorReq: "Clear",
+    aromaReq: "Floral Natural",
+    targetDeadline: "",
+  });
+
+  const { data: rawSamples, isLoading, refetch } = useQuery({
+    queryKey: ["rnd-monitoring-samples"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/rnd/samples");
+        return unwrapResponse(res.data) as any[];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: leads = [] } = useQuery({
+    queryKey: ["rnd-leads-selection"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/bussdev/pipeline-v2/leads");
+        return unwrapResponse(res.data) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const projects: RndProjectRecord[] = useMemo(() => {
+    if (rawSamples && Array.isArray(rawSamples)) {
+      return rawSamples.map(mapSampleToRecord);
+    }
+    return [];
+  }, [rawSamples]);
+
+  const handleCreateProject = async () => {
+    if (!createForm.productName) {
+      toast.warning("Form Belum Lengkap", "Nama produk formulasi wajib diisi.");
+      return;
+    }
+    const leadId = createForm.leadId || (leads && leads.length > 0 ? leads[0].id : null);
+    if (!leadId) {
+      toast.warning("Lead Belum Dipilih", "Pilih lead klien untuk proyek ini.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await api.post("/rnd/samples", {
+        leadId,
+        productName: createForm.productName,
+        targetFunction: createForm.targetFunction || "Formulasi Produk Baru",
+        textureReq: createForm.textureReq,
+        colorReq: createForm.colorReq,
+        aromaReq: createForm.aromaReq,
+        targetDeadline: createForm.targetDeadline ? new Date(createForm.targetDeadline).toISOString() : undefined,
+      });
+
+      toast.success("Proyek Berhasil Dibuat", `Proyek ${createForm.productName} berhasil didaftarkan ke lab R&D.`);
+      setIsCreateOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["rnd-monitoring-samples"] });
+      setCreateForm({
+        leadId: "",
+        productName: "",
+        targetFunction: "",
+        textureReq: "Gel Transparan",
+        colorReq: "Clear",
+        aromaReq: "Floral Natural",
+        targetDeadline: "",
+      });
+    } catch (err: any) {
+      toast.error("Gagal Membuat Proyek", err?.response?.data?.message || "Terjadi kesalahan pada server.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const filteredProjects = useMemo(() => {
     return projects.filter((p) => {
@@ -195,7 +237,7 @@ export default function RndProjectMonitoringPage() {
           <DnaButton
             variant="primary"
             icon={<Plus className="w-4 h-4" />}
-            onClick={() => toast.success("Inisiasi Proyek", "Form pembukaan proyek formulasi R&D baru dibuka.")}
+            onClick={() => setIsCreateOpen(true)}
           >
             + Proyek R&D Baru
           </DnaButton>
@@ -208,7 +250,7 @@ export default function RndProjectMonitoringPage() {
           value={`${projects.length} Proyek`}
           variant="blue"
           icon={<FlaskConical className="h-4 w-4" />}
-          delta={{ value: "4 Formulator Standby", isPositive: true }}
+          delta={{ value: "Lab Queue & Active", isPositive: true }}
         />
         <DnaStatCard
           label="Dalam Uji Stabilitas Lab"
@@ -247,7 +289,10 @@ export default function RndProjectMonitoringPage() {
           <DnaButton
             variant="secondary"
             icon={<RefreshCw className="w-4 h-4" />}
-            onClick={() => toast.success("Data Sinkron", "Jadwal dan status pengujian terhubung ke LIMS.")}
+            onClick={() => {
+              refetch();
+              toast.success("Data Disinkronkan", "Jadwal dan status pengujian R&D telah diperbarui.");
+            }}
           >
             Sinkronkan Lab
           </DnaButton>
@@ -258,37 +303,37 @@ export default function RndProjectMonitoringPage() {
       <DnaDataTableCard title="Tabel Pengawasan Milestone Proyek R&D (1:1 Standar G-SERP)">
         <div className="overflow-x-auto">
           <DnaTable className="w-full text-left text-[12px]">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
-              <tr>
-                <th className="px-4 py-3 w-12 text-center">#</th>
-                <th className="px-4 py-3">No. Proyek R&D</th>
-                <th className="px-4 py-3">Klien Maklon</th>
-                <th className="px-4 py-3">Nama Produk & Brand</th>
-                <th className="px-4 py-3">Formulator PIC</th>
-                <th className="px-4 py-3 text-center">Tahapan Riset</th>
-                <th className="px-4 py-3">Uji Stabilitas</th>
-                <th className="px-4 py-3 text-center">BPOM Status</th>
-                <th className="px-4 py-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="px-4 py-3 w-12 text-center">#</DnaTh>
+                <DnaTh className="px-4 py-3">No. Proyek R&D</DnaTh>
+                <DnaTh className="px-4 py-3">Klien Maklon</DnaTh>
+                <DnaTh className="px-4 py-3">Nama Produk & Brand</DnaTh>
+                <DnaTh className="px-4 py-3">Formulator PIC</DnaTh>
+                <DnaTh className="px-4 py-3 text-center">Tahapan Riset</DnaTh>
+                <DnaTh className="px-4 py-3">Uji Stabilitas</DnaTh>
+                <DnaTh className="px-4 py-3 text-center">BPOM Status</DnaTh>
+                <DnaTh className="px-4 py-3 text-center">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredProjects.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="px-4 py-12 text-center text-slate-400">
                     Tidak ada proyek R&D yang cocok dengan kriteria filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredProjects.map((p, index) => (
-                  <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="px-4 py-3 text-center text-slate-400 font-mono text-xs">{index + 1}</td>
-                    <td className="px-4 py-3 font-mono font-bold text-slate-900">{p.projectCode}</td>
-                    <td className="px-4 py-3 font-semibold text-slate-800">{p.clientName}</td>
-                    <td className="px-4 py-3">
+                  <DnaTableRow key={p.id} className="hover:bg-slate-50/70 transition-colors">
+                    <DnaTd className="px-4 py-3 text-center text-slate-400 tabular-nums text-xs">{index + 1}</DnaTd>
+                    <DnaTd className="px-4 py-3 tabular-nums font-bold text-slate-900">{p.projectCode}</DnaTd>
+                    <DnaTd className="px-4 py-3 font-semibold text-slate-800">{p.clientName}</DnaTd>
+                    <DnaTd className="px-4 py-3">
                       <DnaCell.Text primary={p.productName} secondary={p.brandName} />
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">{p.picFormulator}</td>
-                    <td className="px-4 py-3 text-center">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-3 text-slate-700">{p.picFormulator}</DnaTd>
+                    <DnaTd className="px-4 py-3 text-center">
                       <span
                         className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
                           p.currentPhase === "Siap Produksi"
@@ -300,8 +345,8 @@ export default function RndProjectMonitoringPage() {
                       >
                         {p.currentPhase}
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-3">
                       <span
                         className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
                           p.stabilityTestStatus.includes("LOLOS")
@@ -313,8 +358,8 @@ export default function RndProjectMonitoringPage() {
                       >
                         {p.stabilityTestStatus}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-3 text-center">
                       <DnaBadge
                         variant={
                           p.bpomStatus === "TERBIT NIE"
@@ -326,8 +371,8 @@ export default function RndProjectMonitoringPage() {
                       >
                         {p.bpomStatus}
                       </DnaBadge>
-                    </td>
-                    <td className="px-4 py-3 text-center">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-3 text-center">
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -336,11 +381,11 @@ export default function RndProjectMonitoringPage() {
                       >
                         Detail
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
+            </DnaTableBody>
           </DnaTable>
         </div>
       </DnaDataTableCard>
@@ -356,7 +401,7 @@ export default function RndProjectMonitoringPage() {
           <div className="space-y-4 text-xs">
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-mono text-slate-400 font-bold block">
+                <span className="text-[10px] tabular-nums text-slate-400 font-bold block">
                   {selectedProject.projectCode} • {selectedProject.category}
                 </span>
                 <h3 className="text-base font-bold text-slate-900">{selectedProject.productName}</h3>
@@ -408,6 +453,96 @@ export default function RndProjectMonitoringPage() {
             </div>
           </div>
         )}
+      </DnaModal>
+
+      {/* Modal Inisiasi Proyek R&D Baru */}
+      <DnaModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title="Inisiasi Proyek R&D & Formulasi Baru"
+        size="md"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <DnaButton variant="secondary" onClick={() => setIsCreateOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" onClick={handleCreateProject} disabled={isSubmitting}>
+              {isSubmitting ? "Menyimpan..." : "Daftarkan Proyek"}
+            </DnaButton>
+          </div>
+        }
+      >
+        <div className="space-y-4 text-xs">
+          {leads && leads.length > 0 && (
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Pilih Lead / Klien</label>
+              <select
+                aria-label="Pilih Lead / Klien"
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                value={createForm.leadId}
+                onChange={(e) => setCreateForm((prev) => ({ ...prev, leadId: e.target.value }))}
+              >
+                <option value="">-- Pilih Lead --</option>
+                {leads.map((l: any) => (
+                  <option key={l.id} value={l.id}>
+                    {l.clientName} {l.brandName ? `(${l.brandName})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="space-y-1">
+            <label className="font-bold text-slate-700 uppercase">Nama Produk Formulasi *</label>
+            <DnaInput
+              placeholder="Contoh: Hydrating Sunscreen Gel SPF 50"
+              value={createForm.productName}
+              onChange={(e) => setCreateForm((prev) => ({ ...prev, productName: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="font-bold text-slate-700 uppercase">Fungsi / Klaim Utama</label>
+            <DnaInput
+              placeholder="Contoh: UV Protection, Calming, Barrier Repair"
+              value={createForm.targetFunction}
+              onChange={(e) => setCreateForm((prev) => ({ ...prev, targetFunction: e.target.value }))}
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Tekstur</label>
+              <DnaInput
+                value={createForm.textureReq}
+                onChange={(e) => setCreateForm((prev) => ({ ...prev, textureReq: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Warna</label>
+              <DnaInput
+                value={createForm.colorReq}
+                onChange={(e) => setCreateForm((prev) => ({ ...prev, colorReq: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Aroma</label>
+              <DnaInput
+                value={createForm.aromaReq}
+                onChange={(e) => setCreateForm((prev) => ({ ...prev, aromaReq: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="font-bold text-slate-700 uppercase">Target Deadline Formulasi</label>
+            <DnaInput
+              type="date"
+              value={createForm.targetDeadline}
+              onChange={(e) => setCreateForm((prev) => ({ ...prev, targetDeadline: e.target.value }))}
+            />
+          </div>
+        </div>
       </DnaModal>
     </DnaPageContainer>
   );

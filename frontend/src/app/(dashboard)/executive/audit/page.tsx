@@ -29,9 +29,22 @@ import {
   TableWrapper,
   StatCard,
   KpiCard,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { format } from "date-fns";
+
+/** The API returns `timestamp` (ISO); a missing/invalid value must not throw
+ *  a RangeError that takes down the whole forensic page. */
+function formatDate(value: unknown, pattern: string) {
+  const d = new Date(String(value ?? ""));
+  return isNaN(d.getTime()) ? "—" : format(d, pattern);
+}
 
 export default function AuditTrailPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,32 +102,32 @@ export default function AuditTrailPage() {
 
       <TableWrapper>
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Timestamp</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Identity</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Action Protocol</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4">Entity Scope</TableHead>
-                <TableHead className="text-table-header text-slate-400 px-6 py-4 text-right">Checksum</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <DnaTable>
+            <DnaTableHead className="bg-slate-50/50">
+              <DnaTableRow className="hover:bg-transparent border-slate-100">
+                <DnaTh className="text-table-header text-slate-400 px-6 py-4">Timestamp</DnaTh>
+                <DnaTh className="text-table-header text-slate-400 px-6 py-4">Identity</DnaTh>
+                <DnaTh className="text-table-header text-slate-400 px-6 py-4">Action Protocol</DnaTh>
+                <DnaTh className="text-table-header text-slate-400 px-6 py-4">Entity Scope</DnaTh>
+                <DnaTh className="text-table-header text-slate-400 px-6 py-4 text-right">Checksum</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
               ) : filteredLogs?.length > 0 ? (
                 filteredLogs.map((log: any) => (
-                  <TableRow key={log.id} className="group hover:bg-slate-50/30 border-b border-slate-50">
-                    <TableCell className="px-6 py-4">
+                  <DnaTableRow key={log.id} className="group hover:bg-slate-50/30 border-b border-slate-50">
+                    <DnaTd className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <Clock className="h-4 w-4 text-slate-300" />
                         <div>
-                          <p className="text-[11px] font-bold text-slate-800">{format(new Date(log.createdAt), "HH:mm:ss")}</p>
-                          <p className="text-[9px] font-black text-slate-300 uppercase">{format(new Date(log.createdAt), "MMM dd, yyyy")}</p>
+                          <p className="text-[11px] font-bold text-slate-800">{formatDate(log.timestamp, "HH:mm:ss")}</p>
+                          <p className="text-[9px] font-black text-slate-300 uppercase">{formatDate(log.timestamp, "MMM dd, yyyy")}</p>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="px-6 py-4">
+                    </DnaTd>
+                    <DnaTd className="px-6 py-4">
                       {(() => {
                         const userName = typeof log.user === 'object' ? log.user?.name || 'System' : log.user || 'System';
                         const userRole = typeof log.user === 'object' ? log.user?.role || 'STAFF' : 'STAFF';
@@ -130,43 +143,43 @@ export default function AuditTrailPage() {
                           </div>
                         );
                       })()}
-                    </TableCell>
-                    <TableCell className="px-6 py-4">
+                    </DnaTd>
+                    <DnaTd className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <ActionIcon type={log.type || log.action || 'UPDATE'} />
                         <p className="text-[11px] font-black uppercase text-slate-700">{log.action}</p>
                       </div>
-                    </TableCell>
-                    <TableCell className="px-6 py-4">
+                    </DnaTd>
+                    <DnaTd className="px-6 py-4">
                       <div className="space-y-1">
                         <DnaBadge>
                           {log.entityType || log.entity || 'General'}
                         </DnaBadge>
                         <p className="text-[10px] font-bold text-slate-400">#{log.entityId}</p>
                       </div>
-                    </TableCell>
-                    <TableCell className="px-6 py-4 text-right">
+                    </DnaTd>
+                    <DnaTd className="px-6 py-4 text-right">
                       <div className="flex flex-col items-end gap-1">
                         <Fingerprint className="h-4 w-4 text-slate-200" />
-                        <p className="text-[8px] font-mono text-slate-300 uppercase break-all max-w-[120px]">
+                        <p className="text-[8px] tabular-nums text-slate-300 uppercase break-all max-w-[120px]">
                           {(log.hash || log.id || '0000000000000000').substring(0, 16)}...
                         </p>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-32 text-center">
+                <DnaTableRow>
+                  <DnaTd colSpan={5} className="py-32 text-center">
                     <div className="flex flex-col items-center gap-4 opacity-30">
                       <History size={48} className="stroke-[1px] text-slate-300" />
                       <p className="text-xs font-black uppercase tracking-tighter text-slate-400">No forensic data found</p>
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </DnaTd>
+                </DnaTableRow>
               )}
-            </TableBody>
-          </Table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </TableWrapper>
     </DashboardShell>
@@ -189,12 +202,12 @@ function ActionIcon({ type }: { type: string }) {
 
 function SkeletonRow() {
   return (
-    <TableRow className="animate-pulse">
-      <TableCell className="px-6 py-4"><div className="h-8 w-32 bg-slate-100 rounded-xl" /></TableCell>
-      <TableCell className="px-6 py-4"><div className="h-8 w-40 bg-slate-100 rounded-xl" /></TableCell>
-      <TableCell className="px-6 py-4"><div className="h-8 w-36 bg-slate-100 rounded-xl" /></TableCell>
-      <TableCell className="px-6 py-4"><div className="h-8 w-28 bg-slate-100 rounded-xl" /></TableCell>
-      <TableCell className="px-6 py-4"><div className="h-8 w-20 bg-slate-100 rounded-xl ml-auto" /></TableCell>
-    </TableRow>
+    <DnaTableRow className="animate-pulse">
+      <DnaTd className="px-6 py-4"><div className="h-8 w-32 bg-slate-100 rounded-xl" /></DnaTd>
+      <DnaTd className="px-6 py-4"><div className="h-8 w-40 bg-slate-100 rounded-xl" /></DnaTd>
+      <DnaTd className="px-6 py-4"><div className="h-8 w-36 bg-slate-100 rounded-xl" /></DnaTd>
+      <DnaTd className="px-6 py-4"><div className="h-8 w-28 bg-slate-100 rounded-xl" /></DnaTd>
+      <DnaTd className="px-6 py-4"><div className="h-8 w-20 bg-slate-100 rounded-xl ml-auto" /></DnaTd>
+    </DnaTableRow>
   );
 }

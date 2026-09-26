@@ -1,22 +1,20 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
-  Building2,
   Clock,
   AlertTriangle,
   FileSpreadsheet,
   Printer,
   Search,
-  Filter,
   DollarSign,
   Eye,
-  CheckCircle2,
   Wallet,
-  Calendar
+  Calendar,
+  RefreshCw
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -53,20 +51,133 @@ export default function ApAgingReportPage() {
   const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
   const [selectedInvoice, setSelectedInvoice] = useState<ApAgingItem | null>(null);
 
-  // Live AP / Bills query
-  const { data: billsRaw = [], isLoading } = useQuery({
-    queryKey: ["finance-ap-aging-bills"],
-    queryFn: async (): Promise<any[]> => {
-      const res = await api.get("/finance/bills");
-      return unwrapResponse<any[]>(res) || [];
+  // Live AP / Aging & Bills query
+  const { data: apReportRaw, isLoading, refetch } = useQuery({
+    queryKey: ["reports-ap-aging", dateRange.end],
+    queryFn: async (): Promise<any> => {
+      try {
+        const res = await api.get("/reports/ap-aging", {
+          params: { asOfDate: dateRange.end },
+        });
+        return res.data;
+      } catch {
+        const res2 = await api.get("/finance/bills");
+        return { data: unwrapResponse<any[]>(res2) || [] };
+      }
     },
   });
 
-  const realTimeBankBalance = 1550000000;
+  // Live Bank Accounts query for authentic real-time balance
+  const { data: bankAccountsRaw = [] } = useQuery({
+    queryKey: ["finance-bank-accounts-ap"],
+    queryFn: async (): Promise<any[]> => {
+      try {
+        const res = await api.get("/finance/bank-accounts");
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const realTimeBankBalance = useMemo(() => {
+    return (bankAccountsRaw || []).reduce((acc: number, b: any) => acc + Number(b.balance || 0), 0);
+  }, [bankAccountsRaw]);
 
   const apItems: ApAgingItem[] = useMemo(() => {
+    const rawList = apReportRaw?.data || [];
     const now = new Date();
-    return (billsRaw || []).map((b: any) => {
+
+    return rawList.flatMap((b: any) => {
+      // If structured as supplier aggregated record from /reports/ap-aging
+      if (b.supplier_name && b.total_ap !== undefined) {
+        const items: ApAgingItem[] = [];
+        const baseId = b.supplier_id || "supp";
+        const supplierName = b.supplier_name;
+
+        if (b.h_minus_3 > 0) {
+          items.push({
+            id: `${baseId}-h3`,
+            vendor: supplierName,
+            invoiceNo: `INV-H3-${baseId.slice(0, 6)}`,
+            invoiceDate: dateRange.start,
+            deadline: dateRange.end,
+            statusDueDate: "H-3",
+            daysOverdue: 0,
+            amount: Number(b.h_minus_3),
+            bucket: "Current",
+          });
+        }
+        if (b.h_minus_7 > 0) {
+          items.push({
+            id: `${baseId}-h7`,
+            vendor: supplierName,
+            invoiceNo: `INV-H7-${baseId.slice(0, 6)}`,
+            invoiceDate: dateRange.start,
+            deadline: dateRange.end,
+            statusDueDate: "H-7",
+            daysOverdue: 0,
+            amount: Number(b.h_minus_7),
+            bucket: "Current",
+          });
+        }
+        if (b.current > 0) {
+          items.push({
+            id: `${baseId}-curr`,
+            vendor: supplierName,
+            invoiceNo: `INV-CURR-${baseId.slice(0, 6)}`,
+            invoiceDate: dateRange.start,
+            deadline: dateRange.end,
+            statusDueDate: "NORMAL",
+            daysOverdue: 0,
+            amount: Number(b.current),
+            bucket: "Current",
+          });
+        }
+        if (b.over_30 > 0) {
+          items.push({
+            id: `${baseId}-o30`,
+            vendor: supplierName,
+            invoiceNo: `INV-O30-${baseId.slice(0, 6)}`,
+            invoiceDate: dateRange.start,
+            deadline: dateRange.end,
+            statusDueDate: "OVERDUE",
+            daysOverdue: 15,
+            amount: Number(b.over_30),
+            bucket: "1-30",
+          });
+        }
+        if (b.over_60 > 0) {
+          items.push({
+            id: `${baseId}-o60`,
+            vendor: supplierName,
+            invoiceNo: `INV-O60-${baseId.slice(0, 6)}`,
+            invoiceDate: dateRange.start,
+            deadline: dateRange.end,
+            statusDueDate: "OVERDUE",
+            daysOverdue: 45,
+            amount: Number(b.over_60),
+            bucket: "31-60",
+          });
+        }
+        if (b.over_90 > 0) {
+          items.push({
+            id: `${baseId}-o90`,
+            vendor: supplierName,
+            invoiceNo: `INV-O90-${baseId.slice(0, 6)}`,
+            invoiceDate: dateRange.start,
+            deadline: dateRange.end,
+            statusDueDate: "OVERDUE",
+            daysOverdue: 90,
+            amount: Number(b.over_90),
+            bucket: ">60",
+          });
+        }
+        return items;
+      }
+
+      // Individual bill/invoice item fallback
       const deadline = b.dueDate || b.createdAt;
       const daysToDue = deadline ? Math.ceil((new Date(deadline).getTime() - now.getTime()) / 86400000) : 0;
       const daysOverdue = daysToDue < 0 ? Math.abs(daysToDue) : 0;
@@ -80,8 +191,8 @@ export default function ApAgingReportPage() {
       else if (daysOverdue > 30) bucket = "31-60";
       else if (daysOverdue > 0) bucket = "1-30";
 
-      return {
-        id: b.id,
+      return [{
+        id: b.id || Math.random().toString(),
         vendor: b.supplier?.name || b.lead?.clientName || "Vendor Supplier",
         invoiceNo: b.invoiceNumber || `BILL-${b.id?.slice(0, 8)}`,
         invoiceDate: b.createdAt ? new Date(b.createdAt).toISOString().split("T")[0] : "",
@@ -90,9 +201,9 @@ export default function ApAgingReportPage() {
         daysOverdue,
         amount: Number(b.amountDue || b.totalAmount || 0),
         bucket,
-      };
+      }];
     });
-  }, [billsRaw]);
+  }, [apReportRaw, dateRange.start, dateRange.end]);
 
   const totalOutstanding = useMemo(() => apItems.reduce((acc, r) => acc + r.amount, 0), [apItems]);
   const countH3 = useMemo(() => apItems.filter((r) => r.statusDueDate === "H-3").length, [apItems]);
@@ -122,6 +233,10 @@ export default function ApAgingReportPage() {
         }
         actions={
           <div className="flex items-center gap-2">
+            <DnaButton variant="secondary" size="md" onClick={() => refetch()} loading={isLoading}>
+              <RefreshCw className="w-4 h-4 mr-1.5" />
+              Muat Ulang
+            </DnaButton>
             <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
               <Printer className="w-4 h-4 mr-1.5" />
               Cetak AP Aging
@@ -235,7 +350,7 @@ export default function ApAgingReportPage() {
               {filteredItems.map((item) => (
                 <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-3.5 py-2.5 font-bold text-slate-900">{item.vendor}</td>
-                  <td className="px-3.5 py-2.5 font-mono text-rose-700 font-semibold">{item.invoiceNo}</td>
+                  <td className="px-3.5 py-2.5 tabular-nums text-rose-700 font-semibold">{item.invoiceNo}</td>
                   <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.invoiceDate}</td>
                   <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.deadline}</td>
                   <td className="px-3.5 py-2.5 text-center">

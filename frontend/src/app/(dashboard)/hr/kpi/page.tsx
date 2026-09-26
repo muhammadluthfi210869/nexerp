@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   Award,
   TrendingUp,
@@ -14,7 +16,8 @@ import {
   Sparkles,
   Sliders,
   DollarSign,
-  Check
+  Check,
+  Loader2,
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -47,14 +50,6 @@ interface KpiScorecard {
   bonusAmount: number;
 }
 
-const INITIAL_KPIS: KpiScorecard[] = [
-  { id: "KPI-01", empId: "KIL-2022-001", empName: "Budi Santoso, S.T", empRole: "Supervisor Produksi", department: "Produksi Mixing", targetKpi: "Zero Batch Scrap & OEE > 85%", achievement: 95.4, disciplineScore: 98, objectiveScore: 94, grade: "A", bonusMultiplier: 1.0, bonusAmount: 6500000 },
-  { id: "KPI-02", empId: "KIL-2023-014", empName: "Rian Saputra, S.Farm", empRole: "Senior Formulator", department: "R&D Formulasi", targetKpi: "Lead Time Sample < 5 Hari", achievement: 92.0, disciplineScore: 96, objectiveScore: 90, grade: "A", bonusMultiplier: 1.0, bonusAmount: 8000000 },
-  { id: "KPI-03", empId: "KIL-2023-022", empName: "Siti Rahmawati, S.Si", empRole: "QC Inspector", department: "QC Mikrobiologi", targetKpi: "COA Release SLA < 24 Jam", achievement: 88.5, disciplineScore: 90, objectiveScore: 87, grade: "B+", bonusMultiplier: 0.75, bonusAmount: 4125000 },
-  { id: "KPI-04", empId: "KIL-2024-005", empName: "Dewi Lestari, S.E", empRole: "Senior AE BusDev", department: "BusDev Maklon", targetKpi: "Monthly Deals > Rp 800 Juta", achievement: 104.2, disciplineScore: 100, objectiveScore: 106, grade: "A", bonusMultiplier: 1.0, bonusAmount: 7000000 },
-  { id: "KPI-05", empId: "KIL-2024-031", empName: "Ahmad Dani", empRole: "Staff Inbound", department: "Warehouse Material", targetKpi: "Akurasi Stock Opname > 99%", achievement: 82.0, disciplineScore: 88, objectiveScore: 79, grade: "B", bonusMultiplier: 0.5, bonusAmount: 2400000 },
-];
-
 export default function HrKpiPage() {
   const toast = useDnaToast();
   const [period, setPeriod] = useState("Q3-2026");
@@ -62,16 +57,52 @@ export default function HrKpiPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedKpi, setSelectedKpi] = useState<KpiScorecard | null>(null);
 
-  const totalBonus = INITIAL_KPIS.reduce((acc, k) => acc + k.bonusAmount, 0);
-  const avgScore = (INITIAL_KPIS.reduce((acc, k) => acc + k.achievement, 0) / INITIAL_KPIS.length).toFixed(1);
+  const { data: rawKpis = [], isLoading } = useQuery({
+    queryKey: ["hr-kpi-employees"],
+    queryFn: async () => {
+      const res = await api.get("/hr/kpi/employees");
+      return res.data;
+    },
+  });
+
+  const kpis: KpiScorecard[] = useMemo(() => {
+    if (!rawKpis || rawKpis.length === 0) return [];
+    return (rawKpis as any[]).map((emp: any, idx: number) => {
+      const ach = emp.finalKpiScore || 0;
+      let grade: "A" | "B+" | "B" | "C" = "C";
+      let mult = 0.5;
+      if (ach >= 90) { grade = "A"; mult = 1.0; }
+      else if (ach >= 85) { grade = "B+"; mult = 0.75; }
+      else if (ach >= 75) { grade = "B"; mult = 0.5; }
+      else { grade = "C"; mult = 0.25; }
+
+      return {
+        id: emp.id || `kpi-${idx}`,
+        empId: emp.employeeId || emp.nik || `EMP-${idx + 1}`,
+        empName: emp.employeeName || emp.name || "Karyawan",
+        empRole: emp.role || "Staff",
+        department: emp.department || "Operasional",
+        targetKpi: emp.kpiItems?.[0]?.name || "Target Operasional Divisi",
+        achievement: Math.round(ach * 10) / 10,
+        disciplineScore: 95,
+        objectiveScore: Math.round((emp.roleSpecificScore || ach) * 10) / 10,
+        grade,
+        bonusMultiplier: mult,
+        bonusAmount: Math.round(mult * 5000000),
+      };
+    });
+  }, [rawKpis]);
+
+  const totalBonus = kpis.reduce((acc, k) => acc + k.bonusAmount, 0);
+  const avgScore = kpis.length > 0 ? (kpis.reduce((acc, k) => acc + k.achievement, 0) / kpis.length).toFixed(1) : "0.0";
 
   const filteredKpis = useMemo(() => {
-    return INITIAL_KPIS.filter(k => {
+    return kpis.filter(k => {
       const matchSearch = k.empName.toLowerCase().includes(searchQuery.toLowerCase()) || k.empRole.toLowerCase().includes(searchQuery.toLowerCase());
       const matchDept = deptFilter === "ALL" || k.department.includes(deptFilter);
       return matchSearch && matchDept;
     });
-  }, [searchQuery, deptFilter]);
+  }, [kpis, searchQuery, deptFilter]);
 
   return (
     <DnaPageContainer>
@@ -188,7 +219,7 @@ export default function HrKpiPage() {
                 <tr key={kpi.id} className="hover:bg-slate-50/80 transition-colors">
                   <td className="px-3.5 py-2.5 truncate">
                     <div className="font-bold text-slate-900 truncate">{kpi.empName}</div>
-                    <div className="text-[11px] font-mono text-slate-500">{kpi.empId}</div>
+                    <div className="text-[11px] tabular-nums text-slate-500">{kpi.empId}</div>
                   </td>
                   <td className="px-3.5 py-2.5 truncate">
                     <div className="font-semibold text-slate-800 truncate">{kpi.empRole}</div>
@@ -196,13 +227,13 @@ export default function HrKpiPage() {
                   </td>
                   <td className="px-3.5 py-2.5 truncate">
                     <div className="font-medium text-slate-800 truncate">{kpi.targetKpi}</div>
-                    <div className="text-[11px] text-slate-500 font-mono">
+                    <div className="text-[11px] text-slate-500 tabular-nums">
                       Obj: {kpi.objectiveScore}% &bull; Disp: {kpi.disciplineScore}%
                     </div>
                   </td>
                   <td className="px-3.5 py-2.5 truncate">
                     <div className="flex items-center gap-2">
-                      <span className="font-black text-xs text-blue-700 font-mono">
+                      <span className="font-black text-xs text-blue-700 tabular-nums">
                         {kpi.achievement}%
                       </span>
                       <DnaBadge
@@ -217,7 +248,7 @@ export default function HrKpiPage() {
                     </div>
                   </td>
                   <td className="px-3.5 py-2.5 text-right truncate">
-                    <div className="font-mono font-bold text-emerald-700">{formatRupiah(kpi.bonusAmount)}</div>
+                    <div className="tabular-nums font-bold text-emerald-700">{formatRupiah(kpi.bonusAmount)}</div>
                     <div className="text-[10px] text-slate-400">Bonus Kuartal</div>
                   </td>
                   <td className="px-3.5 py-2.5 text-center">
@@ -269,11 +300,11 @@ export default function HrKpiPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-white border border-slate-200 rounded-xl">
                     <span className="text-slate-400 block text-[11px]">Skor Objektif (Output Kerja)</span>
-                    <span className="font-mono font-bold text-blue-700 text-base">{selectedKpi.objectiveScore}%</span>
+                    <span className="tabular-nums font-bold text-blue-700 text-base">{selectedKpi.objectiveScore}%</span>
                   </div>
                   <div className="p-3 bg-white border border-slate-200 rounded-xl">
                     <span className="text-slate-400 block text-[11px]">Skor Kedisiplinan & 5R Pabrik</span>
-                    <span className="font-mono font-bold text-emerald-700 text-base">{selectedKpi.disciplineScore}%</span>
+                    <span className="tabular-nums font-bold text-emerald-700 text-base">{selectedKpi.disciplineScore}%</span>
                   </div>
                 </div>
 
@@ -294,7 +325,7 @@ export default function HrKpiPage() {
               <div className="space-y-3 text-xs">
                 <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-2">
                   <span className="text-emerald-800 font-semibold block text-[11px]">Hak Bonus Kuartal (Multiplier {selectedKpi.bonusMultiplier}x):</span>
-                  <div className="font-mono font-black text-emerald-900 text-xl">{formatRupiah(selectedKpi.bonusAmount)}</div>
+                  <div className="tabular-nums font-black text-emerald-900 text-xl">{formatRupiah(selectedKpi.bonusAmount)}</div>
                   <div className="text-[11px] text-emerald-700">Dicairkan bersamaan dengan siklus penggajian payroll batch akhir kuartal.</div>
                 </div>
               </div>

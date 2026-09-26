@@ -46,6 +46,7 @@ import {
 import { DnaBadge } from "@/components/dna/DnaBadge";
 
 import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -104,7 +105,8 @@ export default function WarehouseWorkstation() {
 
   const { data: materials = [] } = useQuery({
     queryKey: ["ws-materials"],
-    queryFn: () => api.get("/master/materials").then(r => r.data || []),
+    // GET /master/materials is paginated ({ data, total, ... }) — unwrap before .map.
+    queryFn: () => api.get("/master/materials").then(unwrapResponse),
   });
 
   const { data: fefoData } = useQuery({
@@ -166,8 +168,9 @@ export default function WarehouseWorkstation() {
     const batchId = fefoSuggestion?.suggestedBatch?.batchNumber;
     if (batchId) issueBatchMutation.mutate({ batchId, status: "ISSUED" });
     else {
-      toast.success(`Material Issued Following FEFO.`);
-      setSelectedIssueItem(null);
+      // No FEFO batch to issue, so no request is made. The old branch reported "Material Issued"
+      // anyway, which is the one thing that provably did not happen.
+      toast.error("Tidak ada batch FEFO untuk material ini — tidak ada pengeluaran stok yang tercatat.");
     }
   };
 

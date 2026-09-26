@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -10,10 +10,10 @@ import {
   FileSpreadsheet,
   Printer,
   Search,
-  Filter,
   RefreshCw,
   CheckCircle2,
-  DollarSign
+  DollarSign,
+  AlertTriangle,
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -24,7 +24,13 @@ import {
   DnaButton,
   DnaBadge,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface TrialBalanceRow {
@@ -38,38 +44,71 @@ interface TrialBalanceRow {
   endingCr: number;
 }
 
-const FALLBACK_TB_ROWS: TrialBalanceRow[] = [
-  { code: "1110", name: "Kas Operasional Kantor", openingDr: 45000000, openingCr: 0, mutasiDr: 350000000, mutasiCr: 310000000, endingDr: 85000000, endingCr: 0 },
-  { code: "1120", name: "Bank BCA Operasional (521-009182)", openingDr: 1250000000, openingCr: 0, mutasiDr: 2100000000, mutasiCr: 1800000000, endingDr: 1550000000, endingCr: 0 },
-  { code: "1130", name: "Bank Mandiri Payroll & Pajak", openingDr: 420000000, openingCr: 0, mutasiDr: 800000000, mutasiCr: 650000000, endingDr: 570000000, endingCr: 0 },
-  { code: "1210", name: "Piutang Usaha Pelanggan Maklon", openingDr: 850000000, openingCr: 0, mutasiDr: 1450000000, mutasiCr: 1300000000, endingDr: 1000000000, endingCr: 0 },
-  { code: "1310", name: "Persediaan Bahan Baku Aktif & Extract", openingDr: 980000000, openingCr: 0, mutasiDr: 620000000, mutasiCr: 480000000, endingDr: 1120000000, endingCr: 0 },
-  { code: "1320", name: "Persediaan Bahan Kemas & Packaging", openingDr: 400000000, openingCr: 0, mutasiDr: 290000000, mutasiCr: 240000000, endingDr: 450000000, endingCr: 0 },
-  { code: "2110", name: "Hutang Usaha Supplier Bahan Baku", openingDr: 0, openingCr: 620000000, mutasiDr: 450000000, mutasiCr: 520000000, endingDr: 0, endingCr: 690000000 },
-  { code: "3110", name: "Modal Disetor Pemegang Saham", openingDr: 0, openingCr: 3325000000, mutasiDr: 0, mutasiCr: 0, endingDr: 0, endingCr: 3325000000 },
-  { code: "4110", name: "Pendapatan Produksi Maklon OEM", openingDr: 0, openingCr: 0, mutasiDr: 0, mutasiCr: 1450000000, endingDr: 0, endingCr: 1450000000 },
-  { code: "5110", name: "Beban Pokok Produksi (HPP)", openingDr: 0, openingCr: 0, mutasiDr: 690000000, mutasiCr: 0, endingDr: 690000000, endingCr: 0 },
-];
-
 export default function TrialBalancePage() {
   const toast = useDnaToast();
   const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
   const [searchQuery, setSearchQuery] = useState("");
 
-  const totalOpeningDr = useMemo(() => FALLBACK_TB_ROWS.reduce((acc, r) => acc + r.openingDr, 0), []);
-  const totalOpeningCr = useMemo(() => FALLBACK_TB_ROWS.reduce((acc, r) => acc + r.openingCr, 0), []);
-  const totalMutasiDr = useMemo(() => FALLBACK_TB_ROWS.reduce((acc, r) => acc + r.mutasiDr, 0), []);
-  const totalMutasiCr = useMemo(() => FALLBACK_TB_ROWS.reduce((acc, r) => acc + r.mutasiCr, 0), []);
-  const totalEndingDr = useMemo(() => FALLBACK_TB_ROWS.reduce((acc, r) => acc + r.endingDr, 0), []);
-  const totalEndingCr = useMemo(() => FALLBACK_TB_ROWS.reduce((acc, r) => acc + r.endingCr, 0), []);
+  const { data: rawData, isLoading, refetch } = useQuery<any>({
+    queryKey: ["reports-trial-balance", dateRange.start, dateRange.end],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/reports/trial-balance", {
+          params: { startDate: dateRange.start, endDate: dateRange.end },
+        });
+        return unwrapResponse<any>(res);
+      } catch {
+        const res2 = await api.get("/finance/reports/trial-balance/detailed", {
+          params: { startDate: dateRange.start, endDate: dateRange.end },
+        });
+        return unwrapResponse<any>(res2);
+      }
+    },
+  });
 
-  const isMatched = totalEndingDr === totalEndingCr;
+  const rows: TrialBalanceRow[] = useMemo(() => {
+    const list = Array.isArray(rawData?.data)
+      ? rawData.data
+      : Array.isArray(rawData)
+      ? rawData
+      : [];
+
+    return list.map((a: any) => {
+      const openingDr = Number(a.awalDebit || 0);
+      const openingCr = Number(a.awalCredit || 0);
+      const mutasiDr = Number(a.perubahanDebit || a.debit || a.totalDebit || 0);
+      const mutasiCr = Number(a.perubahanCredit || a.credit || a.totalCredit || 0);
+      const endingDr = Number(a.akhirDebit || (a.debitBalance > 0 ? a.debitBalance : 0));
+      const endingCr = Number(a.akhirCredit || (a.creditBalance > 0 ? a.creditBalance : 0));
+
+      return {
+        code: a.code || a.coa_code || "-",
+        name: a.name || a.coa_name || "-",
+        openingDr,
+        openingCr,
+        mutasiDr,
+        mutasiCr,
+        endingDr,
+        endingCr,
+      };
+    });
+  }, [rawData]);
+
+  const totalOpeningDr = useMemo(() => rows.reduce((acc, r) => acc + r.openingDr, 0), [rows]);
+  const totalOpeningCr = useMemo(() => rows.reduce((acc, r) => acc + r.openingCr, 0), [rows]);
+  const totalMutasiDr = useMemo(() => rows.reduce((acc, r) => acc + r.mutasiDr, 0), [rows]);
+  const totalMutasiCr = useMemo(() => rows.reduce((acc, r) => acc + r.mutasiCr, 0), [rows]);
+  const totalEndingDr = useMemo(() => rows.reduce((acc, r) => acc + r.endingDr, 0), [rows]);
+  const totalEndingCr = useMemo(() => rows.reduce((acc, r) => acc + r.endingCr, 0), [rows]);
+
+  const diff = Math.abs(totalEndingDr - totalEndingCr);
+  const isMatched = diff < 1;
 
   const filteredRows = useMemo(() => {
-    return FALLBACK_TB_ROWS.filter(
+    return rows.filter(
       (r) => r.code.includes(searchQuery) || r.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [rows, searchQuery]);
 
   return (
     <DnaPageContainer>
@@ -79,11 +118,15 @@ export default function TrialBalancePage() {
         badge={
           <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-bold">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Spesifikasi SCR-165: Balance Status MATCH (0 Selisih)</span>
+            <span>Spesifikasi SCR-165: Balance Status {isMatched ? "MATCH" : "SELISIH"}</span>
           </div>
         }
         actions={
           <div className="flex items-center gap-2">
+            <DnaButton variant="secondary" size="md" onClick={() => refetch()} loading={isLoading}>
+              <RefreshCw className="w-4 h-4 mr-1.5" />
+              Muat Ulang
+            </DnaButton>
             <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
               <Printer className="w-4 h-4 mr-1.5" />
               Cetak Neraca Saldo
@@ -127,19 +170,19 @@ export default function TrialBalancePage() {
           variant="warning"
         />
         <DnaStatCard
-          label="Total Saldo Akhir"
+          label="Total Saldo Akhir (Dr)"
           value={formatRupiah(totalEndingDr)}
           icon={<CheckCircle2 className="w-4 h-4 text-blue-600" />}
-          subtext="Ending Net Balance"
+          subtext="Ending Net Debit"
           variant="info"
         />
         <DnaStatCard
           label="Balance Status"
-          value="MATCH (OK)"
-          icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-          delta={{ value: "Zero Variance", isPositive: true }}
-          subtext="Dr = Cr Sempurna"
-          variant="success"
+          value={isMatched ? "MATCH (OK)" : `SELISIH ${formatRupiah(diff)}`}
+          icon={isMatched ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertTriangle className="w-4 h-4 text-rose-600" />}
+          delta={{ value: isMatched ? "Zero Variance" : "Perlu Rekonsiliasi", isPositive: isMatched }}
+          subtext={isMatched ? "Dr = Cr Seimbang" : "Selisih Terdeteksi"}
+          variant={isMatched ? "success" : "danger"}
         />
       </DnaKpiGrid>
 
@@ -179,48 +222,56 @@ export default function TrialBalancePage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3 py-3" rowSpan={2}>Kode Akun</th>
-                <th className="px-3 py-3" rowSpan={2}>Nama Akun COA</th>
-                <th className="px-3 py-1.5 text-center border-b border-slate-200" colSpan={2}>Saldo Awal</th>
-                <th className="px-3 py-1.5 text-center border-b border-slate-200" colSpan={2}>Mutasi Periode</th>
-                <th className="px-3 py-1.5 text-center border-b border-slate-200" colSpan={2}>Saldo Akhir</th>
-              </tr>
-              <tr className="border-b border-slate-200 bg-slate-50 text-[10px] text-slate-500 font-bold uppercase">
-                <th className="px-3 py-1.5 text-right">Debit (Rp)</th>
-                <th className="px-3 py-1.5 text-right">Kredit (Rp)</th>
-                <th className="px-3 py-1.5 text-right">Debit (Rp)</th>
-                <th className="px-3 py-1.5 text-right">Kredit (Rp)</th>
-                <th className="px-3 py-1.5 text-right">Debit (Rp)</th>
-                <th className="px-3 py-1.5 text-right">Kredit (Rp)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredRows.map((r) => (
-                <tr key={r.code} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3 py-2 font-mono text-blue-700 font-bold">{r.code}</td>
-                  <td className="px-3 py-2 font-semibold text-slate-900">{r.name}</td>
-                  <td className="px-3 py-2 text-right font-medium text-slate-700">{r.openingDr > 0 ? formatRupiah(r.openingDr) : "-"}</td>
-                  <td className="px-3 py-2 text-right font-medium text-slate-700">{r.openingCr > 0 ? formatRupiah(r.openingCr) : "-"}</td>
-                  <td className="px-3 py-2 text-right font-bold text-emerald-700">{r.mutasiDr > 0 ? formatRupiah(r.mutasiDr) : "-"}</td>
-                  <td className="px-3 py-2 text-right font-bold text-rose-700">{r.mutasiCr > 0 ? formatRupiah(r.mutasiCr) : "-"}</td>
-                  <td className="px-3 py-2 text-right font-black text-slate-900">{r.endingDr > 0 ? formatRupiah(r.endingDr) : "-"}</td>
-                  <td className="px-3 py-2 text-right font-black text-slate-900">{r.endingCr > 0 ? formatRupiah(r.endingCr) : "-"}</td>
-                </tr>
-              ))}
-              <tr className="bg-emerald-50/75 font-black border-t-2 border-emerald-400">
-                <td colSpan={2} className="px-3 py-3 text-emerald-950 font-black text-right text-xs">TOTAL TRIAL BALANCE:</td>
-                <td className="px-3 py-3 text-right text-slate-900 font-bold">{formatRupiah(totalOpeningDr)}</td>
-                <td className="px-3 py-3 text-right text-slate-900 font-bold">{formatRupiah(totalOpeningCr)}</td>
-                <td className="px-3 py-3 text-right text-emerald-900 font-black">{formatRupiah(totalMutasiDr)}</td>
-                <td className="px-3 py-3 text-right text-rose-900 font-black">{formatRupiah(totalMutasiCr)}</td>
-                <td className="px-3 py-3 text-right text-emerald-950 font-black text-sm">{formatRupiah(totalEndingDr)}</td>
-                <td className="px-3 py-3 text-right text-emerald-950 font-black text-sm">{formatRupiah(totalEndingCr)}</td>
-              </tr>
-            </tbody>
-          </table>
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <DnaTh className="px-3 py-3" rowSpan={2}>Kode Akun</DnaTh>
+                <DnaTh className="px-3 py-3" rowSpan={2}>Nama Akun COA</DnaTh>
+                <DnaTh className="px-3 py-1.5 text-center border-b border-slate-200" colSpan={2}>Saldo Awal</DnaTh>
+                <DnaTh className="px-3 py-1.5 text-center border-b border-slate-200" colSpan={2}>Mutasi Periode</DnaTh>
+                <DnaTh className="px-3 py-1.5 text-center border-b border-slate-200" colSpan={2}>Saldo Akhir</DnaTh>
+              </DnaTableRow>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50 text-[10px] text-slate-500 font-bold uppercase">
+                <DnaTh className="px-3 py-1.5 text-right">Debit (Rp)</DnaTh>
+                <DnaTh className="px-3 py-1.5 text-right">Kredit (Rp)</DnaTh>
+                <DnaTh className="px-3 py-1.5 text-right">Debit (Rp)</DnaTh>
+                <DnaTh className="px-3 py-1.5 text-right">Kredit (Rp)</DnaTh>
+                <DnaTh className="px-3 py-1.5 text-right">Debit (Rp)</DnaTh>
+                <DnaTh className="px-3 py-1.5 text-right">Kredit (Rp)</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
+              {filteredRows.length === 0 ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={8} className="text-center py-8 text-slate-400 italic text-xs">
+                    {isLoading ? "Memuat neraca saldo dari server..." : "Tidak ada data neraca saldo pada periode ini."}
+                  </DnaTd>
+                </DnaTableRow>
+              ) : (
+                filteredRows.map((r) => (
+                  <DnaTableRow key={r.code} className="hover:bg-slate-50/50 transition-colors">
+                    <DnaTd className="px-3 py-2 tabular-nums text-blue-700 font-bold">{r.code}</DnaTd>
+                    <DnaTd className="px-3 py-2 font-semibold text-slate-900">{r.name}</DnaTd>
+                    <DnaTd className="px-3 py-2 text-right font-medium text-slate-700">{r.openingDr > 0 ? formatRupiah(r.openingDr) : "-"}</DnaTd>
+                    <DnaTd className="px-3 py-2 text-right font-medium text-slate-700">{r.openingCr > 0 ? formatRupiah(r.openingCr) : "-"}</DnaTd>
+                    <DnaTd className="px-3 py-2 text-right font-bold text-emerald-700">{r.mutasiDr > 0 ? formatRupiah(r.mutasiDr) : "-"}</DnaTd>
+                    <DnaTd className="px-3 py-2 text-right font-bold text-rose-700">{r.mutasiCr > 0 ? formatRupiah(r.mutasiCr) : "-"}</DnaTd>
+                    <DnaTd className="px-3 py-2 text-right font-black text-slate-900">{r.endingDr > 0 ? formatRupiah(r.endingDr) : "-"}</DnaTd>
+                    <DnaTd className="px-3 py-2 text-right font-black text-slate-900">{r.endingCr > 0 ? formatRupiah(r.endingCr) : "-"}</DnaTd>
+                  </DnaTableRow>
+                ))
+              )}
+              <DnaTableRow className="bg-emerald-50/75 font-black border-t-2 border-emerald-400">
+                <DnaTd colSpan={2} className="px-3 py-3 text-emerald-950 font-black text-right text-xs">TOTAL TRIAL BALANCE:</DnaTd>
+                <DnaTd className="px-3 py-3 text-right text-slate-900 font-bold">{formatRupiah(totalOpeningDr)}</DnaTd>
+                <DnaTd className="px-3 py-3 text-right text-slate-900 font-bold">{formatRupiah(totalOpeningCr)}</DnaTd>
+                <DnaTd className="px-3 py-3 text-right text-emerald-900 font-black">{formatRupiah(totalMutasiDr)}</DnaTd>
+                <DnaTd className="px-3 py-3 text-right text-rose-900 font-black">{formatRupiah(totalMutasiCr)}</DnaTd>
+                <DnaTd className="px-3 py-3 text-right text-emerald-950 font-black text-sm">{formatRupiah(totalEndingDr)}</DnaTd>
+                <DnaTd className="px-3 py-3 text-right text-emerald-950 font-black text-sm">{formatRupiah(totalEndingCr)}</DnaTd>
+              </DnaTableRow>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
     </DnaPageContainer>

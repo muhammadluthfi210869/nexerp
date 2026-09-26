@@ -2,23 +2,12 @@
 
 import React, { useState, Suspense, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
 import {
   Target,
   Plus,
-  Search,
-  Calendar,
-  User,
   TrendingUp,
   Award,
-  ShieldCheck,
-  Users,
   Coins,
-  DollarSign,
-  CheckCircle2,
-  AlertCircle,
-  BarChart3,
 } from "lucide-react";
 import {
   DnaPageHeader,
@@ -30,6 +19,12 @@ import {
   DnaButton,
   DnaInput,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface SalesTargetItem {
@@ -190,7 +185,12 @@ function SalesTargetContent() {
     };
 
     setTargets([newTarget, ...targets]);
-    toast.success("Target Ditambahkan", `Alokasi target Rp ${Number(formNominal).toLocaleString("id-ID")} untuk ${formName} ditetapkan.`);
+    // ponytail: SalesTarget backend controller is not yet exposed via HTTP.
+    // Display honest warning that target is recorded in local session only.
+    toast.warning(
+      "Alokasi Target Lokal",
+      `Alokasi target Rp ${Number(formNominal).toLocaleString("id-ID")} untuk ${formName} disimpan di memori sesi aktif. Endpoint backend /sales-targets belum tersedia.`
+    );
     setIsCreateOpen(false);
 
     // Reset Form
@@ -302,26 +302,26 @@ function SalesTargetContent() {
         }
       >
         <div className="w-full">
-          <table className="w-full text-left border-collapse text-xs table-fixed">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-3 w-[25%]">Account Executive & Email</th>
-                <th className="py-3 px-3 w-[18%]">Jabatan & Periode</th>
-                <th className="py-3 px-3 w-[17%] text-right">Target Omzet</th>
-                <th className="py-3 px-3 w-[17%] text-right">Realisasi Revenue</th>
-                <th className="py-3 px-3 w-[13%] text-center">Pencapaian</th>
-                <th className="py-3 px-3 w-[10%] text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <DnaTh className="py-3 px-3 w-[25%]">Account Executive & Email</DnaTh>
+                <DnaTh className="py-3 px-3 w-[18%]">Jabatan & Periode</DnaTh>
+                <DnaTh className="py-3 px-3 w-[17%] text-right">Target Omzet</DnaTh>
+                <DnaTh className="py-3 px-3 w-[17%] text-right">Realisasi Revenue</DnaTh>
+                <DnaTh className="py-3 px-3 w-[13%] text-center">Pencapaian</DnaTh>
+                <DnaTh className="py-3 px-3 w-[10%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredTargets.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="text-center py-12 text-slate-400">
                     <Target className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
                     <p className="font-semibold text-slate-600">Tidak ada target pada periode ini</p>
                     <p className="text-xs text-slate-400">Pilih bulan lain atau klik Alokasikan Target Baru.</p>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredTargets.map((t) => {
                   const pct = Math.round((t.realizedRevenue / (t.nominalTarget || 1)) * 100);
@@ -329,28 +329,28 @@ function SalesTargetContent() {
                   const isOnTrack = pct >= 70;
 
                   return (
-                    <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 px-3">
+                    <DnaTableRow key={t.id} className="hover:bg-slate-50/80 transition-colors">
+                      <DnaTd className="py-3 px-3">
                         <p className="font-semibold text-slate-900 truncate">{t.picName}</p>
-                        <p className="text-[11px] text-slate-400 font-mono truncate">{t.picEmail}</p>
-                      </td>
-                      <td className="py-3 px-3">
+                        <p className="text-[11px] text-slate-400 tabular-nums truncate">{t.picEmail}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3">
                         <p className="text-slate-800 font-medium truncate">{t.role}</p>
-                        <p className="text-[10px] text-slate-400 font-mono">{MONTHS_ID[t.month - 1]} {t.year}</p>
-                      </td>
-                      <td className="py-3 px-3 text-right">
-                        <p className="font-mono font-bold text-slate-900">
+                        <p className="text-[10px] text-slate-400 tabular-nums">{MONTHS_ID[t.month - 1]} {t.year}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-right">
+                        <p className="tabular-nums font-bold text-slate-900">
                           Rp {t.nominalTarget.toLocaleString("id-ID")}
                         </p>
                         <p className="text-[10px] text-slate-400">Kuota</p>
-                      </td>
-                      <td className="py-3 px-3 text-right">
-                        <p className="font-mono font-bold text-emerald-600">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-right">
+                        <p className="tabular-nums font-bold text-emerald-600">
                           Rp {t.realizedRevenue.toLocaleString("id-ID")}
                         </p>
                         <p className="text-[10px] text-slate-400">Realized</p>
-                      </td>
-                      <td className="py-3 px-3 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-center">
                         <div className="inline-flex flex-col items-center">
                           <span
                             className={`font-bold text-xs ${
@@ -368,8 +368,8 @@ function SalesTargetContent() {
                             />
                           </div>
                         </div>
-                      </td>
-                      <td className="py-3 px-3 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-right">
                         <div className="flex justify-end gap-1">
                           <DnaButton
                             variant="ghost"
@@ -379,13 +379,13 @@ function SalesTargetContent() {
                             Detail
                           </DnaButton>
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   );
                 })
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -426,17 +426,17 @@ function SalesTargetContent() {
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-slate-500">Target Omzet:</span>
-                <span className="font-bold text-slate-900 font-mono text-sm">
+                <span className="font-bold text-slate-900 tabular-nums text-sm">
                   Rp {detailTarget.nominalTarget.toLocaleString("id-ID")}
                 </span>
               </div>
               <div className="flex justify-between text-emerald-600 font-semibold">
                 <span>Realisasi Penjualan:</span>
-                <span className="font-mono text-sm">Rp {detailTarget.realizedRevenue.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums text-sm">Rp {detailTarget.realizedRevenue.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between border-t border-slate-200 pt-2 text-slate-700">
                 <span>Kekurangan Kuota (Gap):</span>
-                <span className="font-bold text-rose-600 font-mono">
+                <span className="font-bold text-rose-600 tabular-nums">
                   Rp{" "}
                   {Math.max(0, detailTarget.nominalTarget - detailTarget.realizedRevenue).toLocaleString(
                     "id-ID"
@@ -540,7 +540,7 @@ function SalesTargetContent() {
 
 export default function SalesTargetPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400 font-mono text-xs">Memuat Target Penjualan...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-slate-400 tabular-nums text-xs">Memuat Target Penjualan...</div>}>
       <SalesTargetContent />
     </Suspense>
   );

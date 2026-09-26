@@ -8,6 +8,13 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { useSearchParams } from "next/navigation";
 import { Calendar, Download } from "lucide-react";
 
+/** Periode berjalan dari jam sistem — bukan angka yang di-hardcode. */
+function currentPeriodLabel() {
+  return new Date()
+    .toLocaleDateString("id-ID", { month: "long", year: "numeric" })
+    .toUpperCase();
+}
+
 export default function ExecutiveDashboardPage() {
   const searchParams = useSearchParams();
   const [activeView, setActiveView] = useState<'dashboard' | 'notifications'>('dashboard');
@@ -30,7 +37,7 @@ export default function ExecutiveDashboardPage() {
         <div className="flex items-center gap-3">
           <button className="h-10 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-[10px] uppercase rounded-xl tracking-wider transition-all shadow-sm flex items-center gap-2 cursor-pointer font-black">
             <Calendar className="h-4 w-4 text-slate-400" />
-            APRIL 2024
+            {currentPeriodLabel()}
           </button>
           <button className="h-10 px-4 bg-[#0F172A] hover:bg-slate-800 text-white font-bold text-[10px] uppercase rounded-xl tracking-wider transition-all shadow-md flex items-center gap-2 cursor-pointer border-none font-black">
             <Download className="h-4 w-4" />

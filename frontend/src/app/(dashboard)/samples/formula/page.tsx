@@ -2,6 +2,8 @@
 
 import React, { useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   Layers,
   Plus,
@@ -35,6 +37,11 @@ import {
   formatRupiah,
   useDnaToast,
   DnaCell,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface ProductFormula {
@@ -54,98 +61,92 @@ interface ProductFormula {
   costPerKg: number;
 }
 
-const INITIAL_FORMULAS: ProductFormula[] = [
-  {
-    id: "form-01",
-    formulaCode: "FORM-2026-0001",
-    tanggal: "2026-03-08",
-    productName: "Brightening Glow Serum 10% Niacinamide",
-    revisionVersion: "Rev 2.0",
-    netto: "30 ml",
-    customerName: "PT Cantika Glow Nusantara",
-    busdevPic: "Sari Dewi",
-    formulatorPic: "Apt. Dedi Kurniawan, S.Farm",
-    status: "LOCKED_PRODUCTION",
-    statusLabel: "Locked (Siap Produksi)",
-    targetPh: "5.50 - 6.00",
-    targetViscosity: "1,500 - 2,500 cPs",
-    costPerKg: 145000,
-  },
-  {
-    id: "form-02",
-    formulaCode: "FORM-2026-0002",
-    tanggal: "2026-03-07",
-    productName: "Ceramide 5X Barrier Repair Moisturizer",
-    revisionVersion: "Rev 1.1",
-    netto: "50 gr",
-    customerName: "PT Miracle Beauty Lab",
-    busdevPic: "Rendi BusDev",
-    formulatorPic: "Dr. Maya Sp.KK",
-    status: "STABILITY_TEST",
-    statusLabel: "Uji Stabilitas Lab",
-    targetPh: "5.00 - 5.50",
-    targetViscosity: "30,000 - 45,000 cPs",
-    costPerKg: 185000,
-  },
-  {
-    id: "form-03",
-    formulaCode: "FORM-2026-0003",
-    tanggal: "2026-03-05",
-    productName: "Soothing Acne Gel Cica + Tea Tree",
-    revisionVersion: "Rev 1.0",
-    netto: "30 gr",
-    customerName: "PT Cantika Herbal Nusantara",
-    busdevPic: "Rina BusDev",
-    formulatorPic: "Apt. Dedi Kurniawan, S.Farm",
-    status: "LAB_TRIAL",
-    statusLabel: "Trial Formulasi Lab",
-    targetPh: "5.50 - 6.20",
-    targetViscosity: "10,000 - 15,000 cPs",
-    costPerKg: 95000,
-  },
-  {
-    id: "form-04",
-    formulaCode: "FORM-2026-0004",
-    tanggal: "2026-03-01",
-    productName: "Hydrating Lip Oil Peptide Tint",
-    revisionVersion: "Rev 1.0",
-    netto: "5 ml",
-    customerName: "CV Royal Beauty Luxe",
-    busdevPic: "Siti BusDev",
-    formulatorPic: "Budi Prakoso, S.Farm",
-    status: "LOCKED_PRODUCTION",
-    statusLabel: "Locked (Siap Produksi)",
-    targetPh: "N/A (Anhydrous)",
-    targetViscosity: "4,000 - 6,000 cPs",
-    costPerKg: 240000,
-  },
-  {
-    id: "form-05",
-    formulaCode: "FORM-2026-0005",
-    tanggal: "2026-02-28",
-    productName: "Sunscreen Glow Gel Hybrid SPF 50",
-    revisionVersion: "Rev 3.0",
-    netto: "30 gr",
-    customerName: "PT Sinar Indah Kosmetika",
-    busdevPic: "Maya BusDev",
-    formulatorPic: "Aisyah Putri, S.Si",
-    status: "LOCKED_PRODUCTION",
-    statusLabel: "Locked (Siap Produksi)",
-    targetPh: "6.00 - 6.50",
-    targetViscosity: "18,000 - 25,000 cPs",
-    costPerKg: 175000,
-  },
-];
-
 function FormulaContent() {
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode");
-  const [formulas, setFormulas] = useState<ProductFormula[]>(INITIAL_FORMULAS);
+  const queryClient = useQueryClient();
+  const toast = useDnaToast();
+
+  const { data: serverFormulas = [], isLoading } = useQuery<ProductFormula[]>({
+    queryKey: ["rnd-formulas"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/rnd/formulas");
+        const list = res.data?.data || res.data || [];
+        if (!Array.isArray(list)) return [];
+        return list.map((item: any, idx: number) => {
+          const isLocked = item.status === "PRODUCTION_LOCKED" || item.status === "LOCKED_PRODUCTION";
+          const isStability = item.status === "STABILITY_TEST";
+          const isTrial = item.status === "LAB_TRIAL";
+          return {
+            id: item.id || `form-${idx}`,
+            formulaCode: item.formulaCode || item.code || `FORM-${item.version || idx + 1}`,
+            tanggal: item.createdAt ? String(item.createdAt).slice(0, 10) : new Date().toISOString().slice(0, 10),
+            productName: item.productName || item.sampleRequest?.productName || "Formula Kosmetik",
+            revisionVersion: item.version ? `Rev ${item.version}` : "Rev 1.0",
+            netto: item.targetYieldGram ? `${item.targetYieldGram} g` : "1000 g",
+            customerName: item.customerName || item.sampleRequest?.lead?.clientName || item.sampleRequest?.clientName || "-",
+            busdevPic: item.busdevPic || item.sampleRequest?.lead?.pic?.name || "-",
+            formulatorPic: item.lockedBy?.fullName || item.formulatorPic || "Apt. Formulator",
+            status: (isLocked ? "LOCKED_PRODUCTION" : isStability ? "STABILITY_TEST" : isTrial ? "LAB_TRIAL" : "DRAFT") as ProductFormula["status"],
+            statusLabel: isLocked ? "Locked (Siap Produksi)" : isStability ? "Uji Stabilitas Lab" : isTrial ? "Trial Formulasi Lab" : "Draft",
+            targetPh: item.qcParameters?.targetPh || item.targetPh || "5.50 - 6.50",
+            targetViscosity: item.qcParameters?.targetViscosity || item.targetViscosity || "2,000 - 5,000 cPs",
+            costPerKg: Number(item.costPerKg) || 0,
+          };
+        });
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const formulas = serverFormulas;
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("ALL");
   const [selectedFormula, setSelectedFormula] = useState<ProductFormula | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const toast = useDnaToast();
+  const [createForm, setCreateForm] = useState({
+    productName: "",
+    customerName: "",
+    netto: "30 ml",
+    targetPh: "5.50 - 6.00",
+    costPerKg: 125000,
+  });
+
+  const handleLockProduction = async () => {
+    if (!selectedFormula) return;
+    try {
+      await api.patch(`/rnd/formulas/${selectedFormula.id}/lock-production`);
+      toast.success("Formula berhasil di-lock untuk produksi massal CPKB.");
+      queryClient.invalidateQueries({ queryKey: ["rnd-formulas"] });
+      setSelectedFormula((prev) =>
+        prev ? { ...prev, status: "LOCKED_PRODUCTION", statusLabel: "Locked (Siap Produksi)" } : null
+      );
+    } catch (err: any) {
+      toast.error("Gagal Mengunci Formula", err?.response?.data?.message || "Terjadi kesalahan.");
+    }
+  };
+
+  const handleCreateFormula = async () => {
+    if (!createForm.productName) {
+      toast.warning("Form Belum Lengkap", "Nama produk kosmetik wajib diisi.");
+      return;
+    }
+    try {
+      await api.post("/rnd/formulas", {
+        productName: createForm.productName,
+        customerName: createForm.customerName,
+        totalWeightGr: parseInt(createForm.netto) || 1000,
+        phases: [],
+      });
+      toast.success("Master formula baru berhasil diarsipkan.");
+      queryClient.invalidateQueries({ queryKey: ["rnd-formulas"] });
+      setIsCreateModalOpen(false);
+    } catch (err: any) {
+      toast.error("Gagal Menyimpan Formula", err?.response?.data?.message || "Gagal membuat formula.");
+    }
+  };
 
   const filteredFormulas = useMemo(() => {
     return formulas.filter((f) => {
@@ -255,56 +256,56 @@ function FormulaContent() {
         }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
-                <th className="p-3.5 w-36 min-w-[130px] whitespace-nowrap">KODE FORMULA</th>
-                <th className="p-3.5 w-28 min-w-[110px] whitespace-nowrap">TANGGAL</th>
-                <th className="p-3.5 min-w-[240px]">PRODUK &amp; KLIEN</th>
-                <th className="p-3.5 w-24 min-w-[90px] whitespace-nowrap">VERSI</th>
-                <th className="p-3.5 w-24 min-w-[90px] whitespace-nowrap">NETTO</th>
-                <th className="p-3.5 w-36 min-w-[140px] whitespace-nowrap">BUSDEV PIC</th>
-                <th className="p-3.5 w-40 min-w-[150px] whitespace-nowrap">FORMULATOR</th>
-                <th className="p-3.5 w-36 min-w-[120px] text-center whitespace-nowrap">STATUS</th>
-                <th className="p-3.5 text-center w-20 whitespace-nowrap">AKSI</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="p-3.5 w-36 min-w-[130px] whitespace-nowrap">KODE FORMULA</DnaTh>
+                <DnaTh className="p-3.5 w-28 min-w-[110px] whitespace-nowrap">TANGGAL</DnaTh>
+                <DnaTh className="p-3.5 min-w-[240px]">PRODUK &amp; KLIEN</DnaTh>
+                <DnaTh className="p-3.5 w-24 min-w-[90px] whitespace-nowrap">VERSI</DnaTh>
+                <DnaTh className="p-3.5 w-24 min-w-[90px] whitespace-nowrap">NETTO</DnaTh>
+                <DnaTh className="p-3.5 w-36 min-w-[140px] whitespace-nowrap">BUSDEV PIC</DnaTh>
+                <DnaTh className="p-3.5 w-40 min-w-[150px] whitespace-nowrap">FORMULATOR</DnaTh>
+                <DnaTh className="p-3.5 w-36 min-w-[120px] text-center whitespace-nowrap">STATUS</DnaTh>
+                <DnaTh className="p-3.5 text-center w-20 whitespace-nowrap">AKSI</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredFormulas.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-12 text-center text-slate-400">
                     <FlaskConical className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada data master formulasi yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredFormulas.map((row) => (
-                  <tr
+                  <DnaTableRow
                     key={row.id}
                     onClick={() => setSelectedFormula(row)}
                     className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                   >
-                    <td className="p-3.5 whitespace-nowrap">
+                    <DnaTd className="p-3.5 whitespace-nowrap">
                       <DnaCell.Code value={row.formulaCode} onClick={() => setSelectedFormula(row)} />
-                    </td>
-                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Date value={row.tanggal} /></td>
-                    <td className="p-3.5 min-w-[240px]">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap"><DnaCell.Date value={row.tanggal} /></DnaTd>
+                    <DnaTd className="p-3.5 min-w-[240px]">
                       <DnaCell.Text primary={row.productName} secondary={row.customerName} />
-                    </td>
-                    <td className="p-3.5 whitespace-nowrap">
-                      <span className="font-mono text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200/60">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap">
+                      <span className="tabular-nums text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200/60">
                         {row.revisionVersion}
                       </span>
-                    </td>
-                    <td className="p-3.5 whitespace-nowrap text-slate-700 font-medium">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap text-slate-700 font-medium">
                       {row.netto}
-                    </td>
-                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Avatar name={row.busdevPic} /></td>
-                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Avatar name={row.formulatorPic} /></td>
-                    <td className="p-3.5 text-center whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap"><DnaCell.Avatar name={row.busdevPic} /></DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap"><DnaCell.Avatar name={row.formulatorPic} /></DnaTd>
+                    <DnaTd className="p-3.5 text-center whitespace-nowrap">
                       <DnaCell.Badge status={row.statusLabel || row.status} />
-                    </td>
-                    <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
                       <button
                         type="button"
                         onClick={() => setSelectedFormula(row)}
@@ -313,12 +314,12 @@ function FormulaContent() {
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </button>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -343,19 +344,7 @@ function FormulaContent() {
               <DnaButton
                 variant="primary"
                 size="sm"
-                onClick={() => {
-                  setFormulas((prev) =>
-                    prev.map((f) =>
-                      f.id === selectedFormula.id
-                        ? { ...f, status: "LOCKED_PRODUCTION", statusLabel: "Locked (Siap Produksi)" }
-                        : f
-                    )
-                  );
-                  setSelectedFormula((prev) =>
-                    prev ? { ...prev, status: "LOCKED_PRODUCTION", statusLabel: "Locked (Siap Produksi)" } : null
-                  );
-                  toast.success("Formula berhasil di-lock untuk produksi massal CPKB.");
-                }}
+                onClick={handleLockProduction}
               >
                 <Lock className="w-4 h-4 mr-1.5" />
                 Lock untuk Produksi
@@ -371,12 +360,12 @@ function FormulaContent() {
               <div className="text-[11px] font-bold text-purple-900 uppercase tracking-wider">
                 Estimasi HPP Bulk Produksi
               </div>
-              <div className="text-2xl font-bold font-mono text-purple-800">
+              <div className="text-2xl font-bold tabular-nums text-purple-800">
                 {formatRupiah(selectedFormula.costPerKg)} <span className="text-xs font-normal text-purple-600 font-sans">/ Kg</span>
               </div>
               <div className="text-xs text-purple-700 flex items-center justify-between pt-1 border-t border-purple-200/60">
                 <span>Netto Kemasan:</span>
-                <span className="font-semibold font-mono">{selectedFormula.netto}</span>
+                <span className="font-semibold tabular-nums">{selectedFormula.netto}</span>
               </div>
             </div>
 
@@ -388,11 +377,11 @@ function FormulaContent() {
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="p-3 bg-white border border-slate-200 rounded-lg">
                   <span className="text-slate-400 block text-[10px] uppercase font-bold">Target Derajat pH</span>
-                  <div className="font-semibold text-slate-900 mt-1 font-mono text-sm">{selectedFormula.targetPh}</div>
+                  <div className="font-semibold text-slate-900 mt-1 tabular-nums text-sm">{selectedFormula.targetPh}</div>
                 </div>
                 <div className="p-3 bg-white border border-slate-200 rounded-lg">
                   <span className="text-slate-400 block text-[10px] uppercase font-bold">Target Viskositas</span>
-                  <div className="font-semibold text-slate-900 mt-1 font-mono text-sm">{selectedFormula.targetViscosity}</div>
+                  <div className="font-semibold text-slate-900 mt-1 tabular-nums text-sm">{selectedFormula.targetViscosity}</div>
                 </div>
               </div>
             </div>
@@ -431,10 +420,7 @@ function FormulaContent() {
             <DnaButton
               variant="primary"
               size="sm"
-              onClick={() => {
-                toast.success("Master formula baru berhasil diarsipkan.");
-                setIsCreateModalOpen(false);
-              }}
+              onClick={handleCreateFormula}
             >
               Simpan Formula
             </DnaButton>
@@ -445,25 +431,55 @@ function FormulaContent() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-bold mb-1">Nama Produk Kosmetik *</label>
-              <DnaInput type="text" placeholder="Contoh: Hydrating Toner Ceramide 2%" className="w-full text-xs" />
+              <DnaInput
+                type="text"
+                placeholder="Contoh: Hydrating Toner Ceramide 2%"
+                className="w-full text-xs"
+                value={createForm.productName}
+                onChange={(e) => setCreateForm((prev) => ({ ...prev, productName: e.target.value }))}
+              />
             </div>
             <div>
               <label className="block text-slate-700 font-bold mb-1">Nama Klien / Pelanggan *</label>
-              <DnaInput type="text" placeholder="PT Brand Kosmetik Mandiri" className="w-full text-xs" />
+              <DnaInput
+                type="text"
+                placeholder="PT Brand Kosmetik Mandiri"
+                className="w-full text-xs"
+                value={createForm.customerName}
+                onChange={(e) => setCreateForm((prev) => ({ ...prev, customerName: e.target.value }))}
+              />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-slate-700 font-bold mb-1">Netto Kemasan</label>
-              <DnaInput type="text" placeholder="30 ml" className="w-full text-xs" />
+              <DnaInput
+                type="text"
+                placeholder="30 ml"
+                className="w-full text-xs"
+                value={createForm.netto}
+                onChange={(e) => setCreateForm((prev) => ({ ...prev, netto: e.target.value }))}
+              />
             </div>
             <div>
               <label className="block text-slate-700 font-bold mb-1">Target pH</label>
-              <DnaInput type="text" placeholder="5.50 - 6.00" className="w-full text-xs" />
+              <DnaInput
+                type="text"
+                placeholder="5.50 - 6.00"
+                className="w-full text-xs"
+                value={createForm.targetPh}
+                onChange={(e) => setCreateForm((prev) => ({ ...prev, targetPh: e.target.value }))}
+              />
             </div>
             <div>
               <label className="block text-slate-700 font-bold mb-1">Estimasi HPP (Rp/Kg)</label>
-              <DnaInput type="number" placeholder="125000" className="w-full text-xs" />
+              <DnaInput
+                type="number"
+                placeholder="125000"
+                className="w-full text-xs"
+                value={createForm.costPerKg}
+                onChange={(e) => setCreateForm((prev) => ({ ...prev, costPerKg: Number(e.target.value) || 0 }))}
+              />
             </div>
           </div>
         </div>

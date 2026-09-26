@@ -27,7 +27,13 @@ import {
   DnaDetailDrawer,
   DnaModal,
   DnaInput,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface BatchRecord {
@@ -222,53 +228,53 @@ function BatchRecordContent() {
         searchPlaceholder="Cari kode batch, sales, pelanggan, produk..."
       >
         <div className="w-full">
-          <table className="w-full text-left text-xs table-fixed">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-4 w-[16%]">Kode & Tanggal</th>
-                <th className="py-3 px-4 w-[26%]">Sales & Pelanggan</th>
-                <th className="py-3 px-4 w-[28%]">Produk & Kategori</th>
-                <th className="py-3 px-4 w-[14%]">Dibuat Oleh</th>
-                <th className="py-3 px-4 w-[10%]">Status</th>
-                <th className="py-3 px-4 w-[6%] text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-[16%]">Kode & Tanggal</DnaTh>
+                <DnaTh className="py-3 px-4 w-[26%]">Sales & Pelanggan</DnaTh>
+                <DnaTh className="py-3 px-4 w-[28%]">Produk & Kategori</DnaTh>
+                <DnaTh className="py-3 px-4 w-[14%]">Dibuat Oleh</DnaTh>
+                <DnaTh className="py-3 px-4 w-[10%]">Status</DnaTh>
+                <DnaTh className="py-3 px-4 w-[6%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     Memuat data batch record...
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : filteredRecords.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     Tidak ada data batch record ditemukan.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredRecords.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-mono text-xs font-bold text-blue-600 truncate">{row.batchRecordCode}</p>
-                      <p className="text-[11px] text-slate-500 font-mono mt-0.5 truncate">{row.tanggal}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                  <DnaTableRow key={row.id} className="hover:bg-slate-50/70 transition-colors">
+                    <DnaTd className="py-3 px-4 truncate">
+                      <p className="tabular-nums text-xs font-bold text-blue-600 truncate">{row.batchRecordCode}</p>
+                      <p className="text-[11px] text-slate-500 tabular-nums mt-0.5 truncate">{row.tanggal}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <p className="font-semibold text-slate-900 text-xs truncate">{row.customerName}</p>
-                      <p className="font-mono text-[11px] text-indigo-600 truncate">{row.salesCode}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                      <p className="tabular-nums text-[11px] text-indigo-600 truncate">{row.salesCode}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <p className="font-semibold text-slate-900 text-xs truncate">{row.productName}</p>
                       <p className="text-[11px] text-slate-500 truncate">{row.category}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <p className="font-medium text-slate-800 text-xs truncate">{row.creatorName}</p>
                       <p className="text-[11px] text-slate-400 truncate">Operator</p>
-                    </td>
-                    <td className="py-3 px-4">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4">
                       {getStatusBadge(row.status)}
-                    </td>
-                    <td className="py-3 px-4 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-right">
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -280,12 +286,12 @@ function BatchRecordContent() {
                       >
                         <Eye className="w-4 h-4 text-slate-600" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -383,8 +389,8 @@ function BatchRecordContent() {
               <div className="space-y-4 text-xs">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-mono font-bold text-slate-900">{selectedRecord.batchRecordCode}</span>
-                    <span className="font-mono text-slate-500">{selectedRecord.tanggal}</span>
+                    <span className="tabular-nums font-bold text-slate-900">{selectedRecord.batchRecordCode}</span>
+                    <span className="tabular-nums text-slate-500">{selectedRecord.tanggal}</span>
                   </div>
                   <p className="font-bold text-slate-900 text-sm">{selectedRecord.productName}</p>
                   <p className="text-slate-600">{selectedRecord.customerName} ({selectedRecord.category})</p>
@@ -393,7 +399,7 @@ function BatchRecordContent() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Referensi Sales Order</span>
-                    <p className="font-mono font-bold text-indigo-600">{selectedRecord.salesCode}</p>
+                    <p className="tabular-nums font-bold text-indigo-600">{selectedRecord.salesCode}</p>
                     <span className="text-[10px] text-slate-400">Tgl: {selectedRecord.tanggalSales}</span>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
@@ -417,27 +423,27 @@ function BatchRecordContent() {
               <div className="space-y-3 text-xs">
                 <p className="font-bold text-slate-700 uppercase">Rincian Alokasi Bahan Baku:</p>
                 <div className="border border-slate-200 rounded-xl overflow-hidden">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                      <tr>
-                        <th className="p-2.5">Kode</th>
-                        <th className="p-2.5">Nama Bahan</th>
-                        <th className="p-2.5 text-right">Satuan</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      <tr>
-                        <td className="p-2.5 font-mono font-bold text-blue-600">BBK00001</td>
-                        <td className="p-2.5 text-slate-800 font-medium">Hydro Marine Collagen 99%</td>
-                        <td className="p-2.5 text-right font-mono text-slate-600">gr</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2.5 font-mono font-bold text-blue-600">BBK00002</td>
-                        <td className="p-2.5 text-slate-800 font-medium">Aqua Demineralisata (USP Grade)</td>
-                        <td className="p-2.5 text-right font-mono text-slate-600">kg</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                  <DnaTable>
+                    <DnaTableHead>
+                      <DnaTableRow>
+                        <DnaTh className="p-2.5">Kode</DnaTh>
+                        <DnaTh className="p-2.5">Nama Bahan</DnaTh>
+                        <DnaTh className="p-2.5 text-right">Satuan</DnaTh>
+                      </DnaTableRow>
+                    </DnaTableHead>
+                    <DnaTableBody>
+                      <DnaTableRow>
+                        <DnaTd className="p-2.5 tabular-nums font-bold text-blue-600">BBK00001</DnaTd>
+                        <DnaTd className="p-2.5 text-slate-800 font-medium">Hydro Marine Collagen 99%</DnaTd>
+                        <DnaTd className="p-2.5 text-right tabular-nums text-slate-600">gr</DnaTd>
+                      </DnaTableRow>
+                      <DnaTableRow>
+                        <DnaTd className="p-2.5 tabular-nums font-bold text-blue-600">BBK00002</DnaTd>
+                        <DnaTd className="p-2.5 text-slate-800 font-medium">Aqua Demineralisata (USP Grade)</DnaTd>
+                        <DnaTd className="p-2.5 text-right tabular-nums text-slate-600">kg</DnaTd>
+                      </DnaTableRow>
+                    </DnaTableBody>
+                  </DnaTable>
                 </div>
               </div>
             )

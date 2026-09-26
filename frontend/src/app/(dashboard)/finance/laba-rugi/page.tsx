@@ -54,54 +54,206 @@ interface StatementRow {
   growthPct: number;
 }
 
-const FALLBACK_P_AND_L_ROWS: StatementRow[] = [
-  // 1. REVENUE
-  { code: "4000", name: "I. PENDAPATAN OPERASIONAL (REVENUE)", level: 0, isHeader: true, currentAmount: 1875000000, prevAmount: 1650000000, growthPct: 13.6 },
-  { code: "4110", name: "  Penjualan Produksi Maklon OEM/ODM Kosmetik", level: 1, currentAmount: 1450000000, prevAmount: 1280000000, growthPct: 13.3 },
-  { code: "4120", name: "  Penjualan Batch Sample & Prototipe R&D", level: 1, currentAmount: 45000000, prevAmount: 40000000, growthPct: 12.5 },
-  { code: "4130", name: "  Jasa Notifikasi BPOM & Pendaftaran HKI Merk", level: 1, currentAmount: 125000000, prevAmount: 110000000, growthPct: 13.6 },
-  { code: "4140", name: "  Jasa Desain Kemasan & Packaging Printing", level: 1, currentAmount: 80000000, prevAmount: 70000000, growthPct: 14.3 },
-  { code: "4190", name: "  Pendapatan Operasional Lainnya", level: 1, currentAmount: 175000000, prevAmount: 150000000, growthPct: 16.7 },
-  { code: "TOT_REV", name: "TOTAL PENDAPATAN OPERASIONAL", level: 0, isTotal: true, currentAmount: 1875000000, prevAmount: 1650000000, growthPct: 13.6 },
-
-  // 2. COGS (HPP)
-  { code: "5000", name: "II. BEBAN POKOK PENJUALAN / PRODUKSI (COGS / HPP)", level: 0, isHeader: true, currentAmount: 950000000, prevAmount: 860000000, growthPct: 10.5 },
-  { code: "5110", name: "  Beban Bahan Baku Aktif, Ekstrak & Emulsifier", level: 1, currentAmount: 480000000, prevAmount: 430000000, growthPct: 11.6 },
-  { code: "5120", name: "  Beban Bahan Kemas Primer (Botol/Jar/Tube)", level: 1, currentAmount: 220000000, prevAmount: 200000000, growthPct: 10.0 },
-  { code: "5130", name: "  Beban Bahan Kemas Sekunder (Box/Folding/Segel)", level: 1, currentAmount: 70000000, prevAmount: 65000000, growthPct: 7.7 },
-  { code: "5140", name: "  Upah Tenaga Kerja Langsung Line Mixing & Filling", level: 1, currentAmount: 110000000, prevAmount: 105000000, growthPct: 4.8 },
-  { code: "5150", name: "  Overhead Pabrik, Utilitas Listrik & Boiler Mesin", level: 1, currentAmount: 70000000, prevAmount: 60000000, growthPct: 16.7 },
-  { code: "TOT_COGS", name: "TOTAL BEBAN POKOK PRODUKSI (HPP)", level: 0, isTotal: true, currentAmount: 950000000, prevAmount: 860000000, growthPct: 10.5 },
-
-  // 3. GROSS PROFIT
-  { code: "GROSS_PRF", name: "LABA KOTOR (GROSS PROFIT)", level: 0, isTotal: true, currentAmount: 925000000, prevAmount: 790000000, growthPct: 17.1 },
-
-  // 4. OPEX
-  { code: "6000", name: "III. BEBAN OPERASIONAL & ADMINISTRASI (OPEX)", level: 0, isHeader: true, currentAmount: 380000000, prevAmount: 340000000, growthPct: 11.8 },
-  { code: "6110", name: "  Gaji & Tunjangan Karyawan Manajerial / Admin", level: 1, currentAmount: 165000000, prevAmount: 150000000, growthPct: 10.0 },
-  { code: "6120", name: "  Beban Pemasaran, Iklan & Business Development", level: 1, currentAmount: 85000000, prevAmount: 75000000, growthPct: 13.3 },
-  { code: "6130", name: "  Sewa Fasilitas, Maintenance Kantor & Listrik Admin", level: 1, currentAmount: 55000000, prevAmount: 50000000, growthPct: 10.0 },
-  { code: "6140", name: "  Beban Depresiasi Mesin & Peralatan Pabrik", level: 1, currentAmount: 45000000, prevAmount: 40000000, growthPct: 12.5 },
-  { code: "6190", name: "  Beban Administrasi Umum, Legalitas & ATK", level: 1, currentAmount: 30000000, prevAmount: 25000000, growthPct: 20.0 },
-  { code: "TOT_OPEX", name: "TOTAL BEBAN OPERASIONAL (OPEX)", level: 0, isTotal: true, currentAmount: 380000000, prevAmount: 340000000, growthPct: 11.8 },
-
-  // 5. NET PROFIT
-  { code: "NET_OP_PRF", name: "LABA OPERASIONAL BERSIH (EBIT)", level: 0, isTotal: true, currentAmount: 545000000, prevAmount: 450000000, growthPct: 21.1 },
-  { code: "NET_PRF", name: "TOTAL LABA RUGI BERSIH SETELAH PAJAK", level: 0, isTotal: true, currentAmount: 490500000, prevAmount: 405000000, growthPct: 21.1 },
-];
-
 export default function LabaRugiReportPage() {
   const toast = useDnaToast();
-  const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
-  const [showComparison, setShowComparison] = useState(true);
+  const [dateRange, setDateRange] = useState({
+    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0],
+    end: new Date().toISOString().split("T")[0]
+  });
+  const [showComparison, setShowComparison] = useState(false);
   const [selectedRow, setSelectedRow] = useState<StatementRow | null>(null);
 
-  // Totals for the 5 cards (Poin 31-34)
-  const totalPendapatan = 1875000000;
-  const labaKotor = 925000000;
-  const totalHpp = 950000000;
-  const labaOperasional = 545000000;
-  const labaBersih = 490500000;
+  // 1. Fetch live Profit & Loss Report
+  const { data: plData, isLoading, refetch } = useQuery<any>({
+    queryKey: ["finance-report-profit-loss", dateRange.start, dateRange.end],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/reports/profit-loss", {
+          params: {
+            startDate: dateRange.start,
+            endDate: dateRange.end
+          }
+        });
+        return unwrapResponse<any>(res);
+      } catch {
+        return null;
+      }
+    }
+  });
+
+  // 2. Fetch drilldown General Ledger for selected account
+  const { data: ledgerData, isLoading: isLedgerLoading } = useQuery<any>({
+    queryKey: ["finance-report-gl-drilldown", selectedRow?.code, dateRange.start, dateRange.end],
+    queryFn: async () => {
+      if (!selectedRow?.code) return null;
+      try {
+        const res = await api.get(`/finance/reports/general-ledger/${selectedRow.code}`, {
+          params: {
+            startDate: dateRange.start,
+            endDate: dateRange.end
+          }
+        });
+        return unwrapResponse<any>(res);
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!selectedRow && !selectedRow.isHeader && !selectedRow.isTotal
+  });
+
+  // Transform backend report to rows
+  const { rows, totalPendapatan, totalHpp, labaKotor, labaOperasional, labaBersih } = useMemo(() => {
+    const revTotal = Number(plData?.operatingRevenue?.total || 0);
+    const cogsTotal = Number(plData?.cogs?.total || 0);
+    const gross = Number(plData?.grossProfit || (revTotal - cogsTotal));
+    const opexTotal = Number(plData?.operatingExpenses?.total || 0);
+    const opIncome = Number(plData?.operatingIncome || (gross - opexTotal));
+    const net = Number(plData?.netProfit || (opIncome + Number(plData?.otherIncome?.total || 0) - Number(plData?.otherExpenses?.total || 0)));
+
+    const resultRows: StatementRow[] = [];
+
+    // Header 1: REVENUE
+    resultRows.push({
+      code: "4000",
+      name: "I. PENDAPATAN OPERASIONAL (REVENUE)",
+      level: 0,
+      isHeader: true,
+      currentAmount: revTotal,
+      prevAmount: 0,
+      growthPct: 0
+    });
+    const revGroups = plData?.operatingRevenue?.groups || {};
+    Object.keys(revGroups).forEach((grp) => {
+      (revGroups[grp] || []).forEach((acc: any) => {
+        resultRows.push({
+          code: acc.code,
+          name: `  ${acc.name}`,
+          level: 1,
+          currentAmount: Number(acc.balance || 0),
+          prevAmount: 0,
+          growthPct: 0
+        });
+      });
+    });
+    resultRows.push({
+      code: "TOT_REV",
+      name: "TOTAL PENDAPATAN OPERASIONAL",
+      level: 0,
+      isTotal: true,
+      currentAmount: revTotal,
+      prevAmount: 0,
+      growthPct: 0
+    });
+
+    // Header 2: COGS
+    resultRows.push({
+      code: "5000",
+      name: "II. BEBAN POKOK PENJUALAN / PRODUKSI (COGS / HPP)",
+      level: 0,
+      isHeader: true,
+      currentAmount: cogsTotal,
+      prevAmount: 0,
+      growthPct: 0
+    });
+    const cogsGroups = plData?.cogs?.groups || {};
+    Object.keys(cogsGroups).forEach((grp) => {
+      (cogsGroups[grp] || []).forEach((acc: any) => {
+        resultRows.push({
+          code: acc.code,
+          name: `  ${acc.name}`,
+          level: 1,
+          currentAmount: Number(acc.balance || 0),
+          prevAmount: 0,
+          growthPct: 0
+        });
+      });
+    });
+    resultRows.push({
+      code: "TOT_COGS",
+      name: "TOTAL BEBAN POKOK PRODUKSI (HPP)",
+      level: 0,
+      isTotal: true,
+      currentAmount: cogsTotal,
+      prevAmount: 0,
+      growthPct: 0
+    });
+
+    // 3. GROSS PROFIT
+    resultRows.push({
+      code: "GROSS_PRF",
+      name: "LABA KOTOR (GROSS PROFIT)",
+      level: 0,
+      isTotal: true,
+      currentAmount: gross,
+      prevAmount: 0,
+      growthPct: 0
+    });
+
+    // 4. OPEX
+    resultRows.push({
+      code: "6000",
+      name: "III. BEBAN OPERASIONAL & ADMINISTRASI (OPEX)",
+      level: 0,
+      isHeader: true,
+      currentAmount: opexTotal,
+      prevAmount: 0,
+      growthPct: 0
+    });
+    const opexGroups = plData?.operatingExpenses?.groups || {};
+    Object.keys(opexGroups).forEach((grp) => {
+      (opexGroups[grp] || []).forEach((acc: any) => {
+        resultRows.push({
+          code: acc.code,
+          name: `  ${acc.name}`,
+          level: 1,
+          currentAmount: Number(acc.balance || 0),
+          prevAmount: 0,
+          growthPct: 0
+        });
+      });
+    });
+    resultRows.push({
+      code: "TOT_OPEX",
+      name: "TOTAL BEBAN OPERASIONAL (OPEX)",
+      level: 0,
+      isTotal: true,
+      currentAmount: opexTotal,
+      prevAmount: 0,
+      growthPct: 0
+    });
+
+    // 5. OPERATIONAL & NET PROFIT
+    resultRows.push({
+      code: "NET_OP_PRF",
+      name: "LABA OPERASIONAL BERSIH (EBIT)",
+      level: 0,
+      isTotal: true,
+      currentAmount: opIncome,
+      prevAmount: 0,
+      growthPct: 0
+    });
+    resultRows.push({
+      code: "NET_PRF",
+      name: "TOTAL LABA RUGI BERSIH SETELAH PAJAK",
+      level: 0,
+      isTotal: true,
+      currentAmount: net,
+      prevAmount: 0,
+      growthPct: 0
+    });
+
+    return {
+      rows: resultRows,
+      totalPendapatan: revTotal,
+      totalHpp: cogsTotal,
+      labaKotor: gross,
+      labaOperasional: opIncome,
+      labaBersih: net
+    };
+  }, [plData]);
+
+  const grossMarginPct = totalPendapatan > 0 ? ((labaKotor / totalPendapatan) * 100).toFixed(1) : "0.0";
+  const netMarginPct = totalPendapatan > 0 ? ((labaBersih / totalPendapatan) * 100).toFixed(1) : "0.0";
 
   return (
     <DnaPageContainer>
@@ -111,7 +263,7 @@ export default function LabaRugiReportPage() {
         badge={
           <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-semibold">
             <TrendingUp className="w-3.5 h-3.5" />
-            <span>Spesifikasi SCR-163 (Poin 31-34): Format G-SERP & 5 KPI Cards</span>
+            <span>Format G-SERP & 5 KPI Cards</span>
           </div>
         }
         actions={
@@ -128,13 +280,13 @@ export default function LabaRugiReportPage() {
         }
       />
 
-      {/* 5 KPI CARDS DENGAN URUTAN PERSIS SPESIFIKASI POIN 31-34 */}
+      {/* 5 KPI CARDS DENGAN URUTAN PERSIS SPESIFIKASI */}
       <DnaKpiGrid cols={5}>
         <DnaStatCard
           label="Total Pendapatan"
           value={formatRupiah(totalPendapatan)}
           icon={<DollarSign className="w-5 h-5 text-emerald-600" />}
-          delta={{ value: "+13.6% MoM", isPositive: true }}
+          delta={{ value: "Pendapatan Operasional", isPositive: true }}
           subtext="Revenue Maklon & Jasa"
           variant="success"
         />
@@ -142,7 +294,7 @@ export default function LabaRugiReportPage() {
           label="Laba Kotor (Gross Profit)"
           value={formatRupiah(labaKotor)}
           icon={<TrendingUp className="w-5 h-5 text-blue-600" />}
-          delta={{ value: "49.3% Gross Margin", isPositive: true }}
+          delta={{ value: `${grossMarginPct}% Gross Margin`, isPositive: labaKotor >= 0 }}
           subtext="Margin Kotor Manufaktur"
           variant="info"
         />
@@ -150,7 +302,7 @@ export default function LabaRugiReportPage() {
           label="Total Beban HPP (COGS)"
           value={formatRupiah(totalHpp)}
           icon={<ArrowDownRight className="w-5 h-5 text-amber-600" />}
-          delta={{ value: "50.7% dari Revenue", isPositive: false }}
+          delta={{ value: totalPendapatan > 0 ? `${((totalHpp / totalPendapatan) * 100).toFixed(1)}% dari Revenue` : "0% dari Revenue", isPositive: false }}
           subtext="Bahan Baku & Upah Line"
           variant="warning"
         />
@@ -158,7 +310,7 @@ export default function LabaRugiReportPage() {
           label="Laba Operasional Bersih"
           value={formatRupiah(labaOperasional)}
           icon={<PieChart className="w-5 h-5 text-purple-600" />}
-          delta={{ value: "29.1% EBIT", isPositive: true }}
+          delta={{ value: "EBIT Operasional", isPositive: labaOperasional >= 0 }}
           subtext="Laba Sebelum Bunga & Pajak"
           variant="purple"
         />
@@ -166,7 +318,7 @@ export default function LabaRugiReportPage() {
           label="Total Laba Rugi Bersih"
           value={formatRupiah(labaBersih)}
           icon={<Sparkles className="w-5 h-5 text-emerald-600" />}
-          delta={{ value: "26.2% Net Margin", isPositive: true }}
+          delta={{ value: `${netMarginPct}% Net Margin`, isPositive: labaBersih >= 0 }}
           subtext="Net Profit Margin Final"
           variant="success"
         />
@@ -218,7 +370,7 @@ export default function LabaRugiReportPage() {
               </DnaTableRow>
             </DnaTableHead>
             <DnaTableBody>
-              {FALLBACK_P_AND_L_ROWS.map((row, idx) => {
+              {rows.map((row, idx) => {
                 const isHeader = row.isHeader;
                 const isTotal = row.isTotal;
 
@@ -249,7 +401,7 @@ export default function LabaRugiReportPage() {
                     )}
                     {showComparison && (
                       <DnaTd className="text-right font-bold text-emerald-700 tabular-nums">
-                        {isHeader ? "" : `+${row.growthPct}%`}
+                        {isHeader ? "" : `${row.growthPct >= 0 ? "+" : ""}${row.growthPct}%`}
                       </DnaTd>
                     )}
                     <DnaTd className="text-center">
@@ -271,7 +423,7 @@ export default function LabaRugiReportPage() {
         </div>
       </DnaDataTableCard>
 
-      {/* DRILLDOWN MODAL AJAX DETAIL (SCR-163) */}
+      {/* DRILLDOWN MODAL AJAX DETAIL */}
       <DnaModal
         isOpen={!!selectedRow}
         onClose={() => setSelectedRow(null)}
@@ -285,7 +437,7 @@ export default function LabaRugiReportPage() {
               <p className="text-slate-900 font-bold">{selectedRow?.code} - {selectedRow?.name.trim()}</p>
             </div>
             <div className="text-right">
-              <span className="text-slate-500 font-medium">Realisasi Bulan Ini:</span>
+              <span className="text-slate-500 font-medium">Realisasi Periode Ini:</span>
               <p className="text-emerald-700 font-black text-base">{selectedRow ? formatRupiah(selectedRow.currentAmount) : "0"}</p>
             </div>
           </div>
@@ -302,13 +454,37 @@ export default function LabaRugiReportPage() {
                 </DnaTableRow>
               </DnaTableHead>
               <DnaTableBody className="divide-y divide-slate-100">
-                <DnaTableRow>
-                  <DnaTd className="py-2 text-slate-600 tabular-nums">2026-09-08</DnaTd>
-                  <DnaTd className="py-2 text-blue-700 font-semibold tabular-nums">DL-FIN-JRN-08092026-0001</DnaTd>
-                  <DnaTd className="py-2 text-slate-800">Realisasi Termin PO-8821 PT Glowing</DnaTd>
-                  <DnaTd className="py-2 text-right text-emerald-700 font-bold tabular-nums">Rp 450.000.000</DnaTd>
-                  <DnaTd className="py-2 text-right text-slate-400">-</DnaTd>
-                </DnaTableRow>
+                {isLedgerLoading ? (
+                  <DnaTableRow>
+                    <DnaTd colSpan={5} className="py-4 text-center text-slate-400">
+                      Memuat data buku besar...
+                    </DnaTd>
+                  </DnaTableRow>
+                ) : !ledgerData?.lines || ledgerData.lines.length === 0 ? (
+                  <DnaTableRow>
+                    <DnaTd colSpan={5} className="py-4 text-center text-slate-400">
+                      Tidak ada pergerakan jurnal untuk akun ini pada periode terpilih.
+                    </DnaTd>
+                  </DnaTableRow>
+                ) : (
+                  ledgerData.lines.map((item: any, i: number) => (
+                    <DnaTableRow key={i}>
+                      <DnaTd className="py-2 text-slate-600 tabular-nums">
+                        {item.date ? new Date(item.date).toISOString().split("T")[0] : "-"}
+                      </DnaTd>
+                      <DnaTd className="py-2 text-blue-700 font-semibold tabular-nums">
+                        {item.journalNumber || item.reference || "-"}
+                      </DnaTd>
+                      <DnaTd className="py-2 text-slate-800">{item.description || "-"}</DnaTd>
+                      <DnaTd className="py-2 text-right text-emerald-700 font-bold tabular-nums">
+                        {Number(item.debit || 0) > 0 ? formatRupiah(Number(item.debit)) : "-"}
+                      </DnaTd>
+                      <DnaTd className="py-2 text-right text-slate-600 tabular-nums">
+                        {Number(item.credit || 0) > 0 ? formatRupiah(Number(item.credit)) : "-"}
+                      </DnaTd>
+                    </DnaTableRow>
+                  ))
+                )}
               </DnaTableBody>
             </DnaTable>
           </div>

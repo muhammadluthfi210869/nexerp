@@ -23,7 +23,22 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DnaButton, DnaBadge, DnaInput, DnaStatCard, DnaDataTableCard, DnaModal, DnaSelect, DnaCell } from "@/components/dna";
+import {
+  DnaButton,
+  DnaBadge,
+  DnaInput,
+  DnaStatCard,
+  DnaDataTableCard,
+  DnaModal,
+  DnaSelect,
+  DnaCell,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import { useRouter } from "next/navigation";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { EmptyState } from "@/components/empty-state";
@@ -138,33 +153,33 @@ export default function ConsolidatedMRPPage() {
             <p className="text-[9px] text-slate-400">{(error as any)?.message || "Unknown error"}</p>
           </div>
         ) : (
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                <th className="py-4 px-4 text-left">#</th>
-                <th className="py-4 px-4 text-left">Identitas Bahan</th>
-                <th className="py-4 px-4 text-right">Kebutuhan / Stok</th>
-                <th className="py-4 px-4 text-right">Selisih</th>
-                <th className="py-4 px-4 text-center">Prioritas</th>
-                <th className="py-4 px-4 text-left">SO Breakdown</th>
-                <th className="py-4 px-4 text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="bg-slate-50/50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                <DnaTh className="py-4 px-4 text-left">#</DnaTh>
+                <DnaTh className="py-4 px-4 text-left">Identitas Bahan</DnaTh>
+                <DnaTh className="py-4 px-4 text-right">Kebutuhan / Stok</DnaTh>
+                <DnaTh className="py-4 px-4 text-right">Selisih</DnaTh>
+                <DnaTh className="py-4 px-4 text-center">Prioritas</DnaTh>
+                <DnaTh className="py-4 px-4 text-left">SO Breakdown</DnaTh>
+                <DnaTh className="py-4 px-4 text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-8">
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="py-8">
                     <EmptyState
                       icon={<Package className="h-8 w-8 text-slate-300" />}
                       title="Tidak Ada Data"
                       description="Tidak ada data kebutuhan yang sesuai dengan pencarian. Coba ubah kata kunci pencarian."
                     />
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : filteredData.map((item, idx) => (
-                <tr key={item.kode} className="hover:bg-slate-50/80">
-                  <td className="py-4 px-4 font-bold text-slate-300 text-xs">{(idx + 1).toString().padStart(2, '0')}</td>
-                  <td className="py-4 px-4">
+                <DnaTableRow key={item.kode} className="hover:bg-slate-50/80">
+                  <DnaTd className="py-4 px-4 font-bold text-slate-300 text-xs">{(idx + 1).toString().padStart(2, '0')}</DnaTd>
+                  <DnaTd className="py-4 px-4">
                     <div className="flex items-center gap-3">
                       <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
                         <Package className="h-4 w-4" />
@@ -174,14 +189,14 @@ export default function ConsolidatedMRPPage() {
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{item.kode} • {item.kategori}</span>
                       </div>
                     </div>
-                  </td>
-                  <td className="py-4 px-4 text-right">
+                  </DnaTd>
+                  <DnaTd className="py-4 px-4 text-right">
                     <div className="flex flex-col">
-                      <span className="font-bold text-slate-900 text-xs tabular-nums">{item.total_kebutuhan.toLocaleString()} <span className="text-[9px] text-slate-400 font-bold">{item.satuan}</span></span>
-                      <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Stok: {item.stok.toLocaleString()} {item.satuan}</span>
+                      <span className="font-bold text-slate-900 text-xs tabular-nums">{item.totalKebutuhan.toLocaleString()} <span className="text-[9px] text-slate-400 font-bold">{item.satuan}</span></span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Stok: {item.stokGudang.toLocaleString()} {item.satuan}</span>
                     </div>
-                  </td>
-                  <td className="py-4 px-4 text-right">
+                  </DnaTd>
+                  <DnaTd className="py-4 px-4 text-right">
                     <div className={cn(
                       "font-bold text-xs tabular-nums inline-flex items-center gap-1",
                       item.selisih < 0 ? "text-rose-600" : "text-emerald-600"
@@ -189,8 +204,8 @@ export default function ConsolidatedMRPPage() {
                       {item.selisih > 0 ? "+" : ""}{item.selisih.toLocaleString()}
                       {item.selisih < 0 && <AlertTriangle className="h-3 w-3 animate-pulse" />}
                     </div>
-                  </td>
-                  <td className="py-4 px-4 text-center">
+                  </DnaTd>
+                  <DnaTd className="py-4 px-4 text-center">
                     <DnaBadge status={
                       item.prioritas?.toLowerCase() === 'critical' ? 'critical' :
                       item.prioritas?.toLowerCase() === 'high' ? 'warning' :
@@ -198,13 +213,13 @@ export default function ConsolidatedMRPPage() {
                     }>
                       {item.prioritas}
                     </DnaBadge>
-                  </td>
-                  <td className="py-4 px-4">
+                  </DnaTd>
+                  <DnaTd className="py-4 px-4">
                     <p className="text-[9px] font-bold text-slate-400 uppercase leading-tight line-clamp-2 italic max-w-[150px]">
-                      {item.so_list}
+                      {item.soList?.length ?? 0} SO
                     </p>
-                  </td>
-                  <td className="py-4 px-4 text-right">
+                  </DnaTd>
+                  <DnaTd className="py-4 px-4 text-right">
                     <div className="flex justify-end gap-1.5">
                       {item.selisih < 0 && (
                         <DnaButton onClick={() => openPOModal(item)} variant="danger" size="sm">
@@ -212,11 +227,11 @@ export default function ConsolidatedMRPPage() {
                         </DnaButton>
                       )}
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         )}
 
         <div className="p-8 bg-slate-50/50 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm">
@@ -226,7 +241,7 @@ export default function ConsolidatedMRPPage() {
             </div>
             <div className="space-y-0.5">
               <p className="text-xs font-bold text-slate-900 uppercase italic">
-                Total {data.length} material | {data.reduce((a: number, i: any) => a + (i.total_kebutuhan || 0), 0).toLocaleString()} units | Estimasi berdasarkan kebutuhan
+                Total {data.length} material | {data.reduce((a: number, i: any) => a + (i.totalKebutuhan || 0), 0).toLocaleString()} units | Estimasi berdasarkan kebutuhan
               </p>
               <p className="text-[9px] font-bold text-rose-500 uppercase flex items-center gap-1.5 mt-0.5">
                 <AlertTriangle className="h-3.5 w-3.5" /> {data.filter((i: any) => i.prioritas === 'Critical' || i.prioritas === 'High').length} material dengan status Critical/High perlu pembelian segera

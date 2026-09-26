@@ -79,6 +79,11 @@ export default function InvoicingPage() {
       inv.customer.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalReceivables = invoices.filter(i => i.status !== "PAID").reduce((sum, i) => sum + i.amount, 0);
+  const paidReceivables = invoices.filter(i => i.status === "PAID").reduce((sum, i) => sum + i.amount, 0);
+  const pendingCount = invoices.filter(i => i.status === "PENDING" || i.status === "PARTIAL").length;
+  const overdueAmount = invoices.filter(i => i.status === "OVERDUE").reduce((sum, i) => sum + i.amount, 0);
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "PAID":
@@ -129,22 +134,22 @@ export default function InvoicingPage() {
       <DnaKpiGrid cols={3}>
         <DnaStatCard
           label="Total Piutang Berjalan"
-          value="Rp 170.000.000"
-          subtext="Rp 45.0M Overdue 14 Hari"
+          value={`Rp ${totalReceivables.toLocaleString("id-ID")}`}
+          subtext={`Rp ${overdueAmount.toLocaleString("id-ID")} Overdue`}
           icon={<CreditCard className="w-5 h-5 text-blue-600" />}
           variant="info"
         />
         <DnaStatCard
-          label="Penerimaan Kas (MTD)"
-          value="Rp 89.200.000"
-          subtext="65% Target Penerimaan Bulan Ini"
+          label="Penerimaan Kas (Lunas)"
+          value={`Rp ${paidReceivables.toLocaleString("id-ID")}`}
+          subtext="Total Tagihan Terbayar"
           icon={<UserCheck className="w-5 h-5 text-emerald-600" />}
           variant="success"
         />
         <DnaStatCard
           label="Menunggu Verifikasi"
-          value="4 Faktur"
-          subtext="Persetujuan Direktur Keuangan"
+          value={`${pendingCount} Faktur`}
+          subtext="Status Pending / Partial"
           icon={<AlertTriangle className="w-5 h-5 text-amber-500" />}
           variant="warning"
         />
@@ -160,7 +165,7 @@ export default function InvoicingPage() {
       >
         <DnaTable>
           <DnaTableHead>
-            <tr>
+            <DnaTableRow>
               <DnaTh className="w-[140px]">No. Invoice</DnaTh>
               <DnaTh className="w-[110px]">Tgl Terbit</DnaTh>
               <DnaTh className="w-[110px]">Jatuh Tempo</DnaTh>
@@ -169,7 +174,7 @@ export default function InvoicingPage() {
               <DnaTh align="right" className="w-[140px]">Total Tagihan</DnaTh>
               <DnaTh align="center" className="w-[130px]">Status</DnaTh>
               <DnaTh align="right" className="w-[110px]">Aksi</DnaTh>
-            </tr>
+            </DnaTableRow>
           </DnaTableHead>
           <DnaTableBody>
             {filteredInvoices.length === 0 ? (

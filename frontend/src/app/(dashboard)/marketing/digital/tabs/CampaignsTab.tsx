@@ -2,7 +2,15 @@
 
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
-import { DashboardCard } from "@/components/dna";;
+import {
+  DashboardCard,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";;
 import { FreshnessDot } from '../components/FreshnessDot';
 import { formatCurrency, formatInteger } from '../lib/format';
 import type { Connection, Freshness, MetaCampaign } from '@/types/marketing-overview';
@@ -70,38 +78,38 @@ export function CampaignsTab({
       </div>
       {campaigns.length ? (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] text-left text-xs">
-            <thead className="border-b border-[var(--gray-100)] bg-[var(--gray-50)] text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--gray-500)]">
-              <tr>
-                <th className="px-6 py-3">Campaign</th>
-                <th className="px-4 py-3 text-right">Spend</th>
-                <th className="px-4 py-3 text-right">Impressions</th>
-                <th className="px-4 py-3 text-right">Reach</th>
-                <th className="px-4 py-3 text-right">Clicks</th>
-                <th className="px-6 py-3 text-right">Lead</th>
-              </tr>
-            </thead>
-            <tbody>
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="px-6 py-3">Campaign</DnaTh>
+                <DnaTh className="px-4 py-3 text-right">Spend</DnaTh>
+                <DnaTh className="px-4 py-3 text-right">Impressions</DnaTh>
+                <DnaTh className="px-4 py-3 text-right">Reach</DnaTh>
+                <DnaTh className="px-4 py-3 text-right">Clicks</DnaTh>
+                <DnaTh className="px-6 py-3 text-right">Lead</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filtered.length ? (
                 filtered.map((c) => (
-                  <tr key={c.id} className="border-b border-[var(--gray-100)] transition hover:bg-[var(--gray-50)] last:border-0">
-                    <td className="px-6 py-4 font-bold text-[var(--gray-900)]">{c.name}</td>
-                    <td className="px-4 py-4 text-right font-semibold text-[var(--gray-900)] tabular-nums">{formatCurrency(c.spend)}</td>
-                    <td className="px-4 py-4 text-right text-[var(--text-muted)] tabular-nums">{formatInteger(c.impressions)}</td>
-                    <td className="px-4 py-4 text-right text-[var(--text-muted)] tabular-nums">{formatInteger(c.reach)}</td>
-                    <td className="px-4 py-4 text-right text-[var(--text-muted)] tabular-nums">{formatInteger(c.clicks)}</td>
-                    <td className="px-6 py-4 text-right font-extrabold text-[var(--status-action)] tabular-nums">{formatInteger(c.leads)}</td>
-                  </tr>
+                  <DnaTableRow key={c.id} className="border-b border-[var(--gray-100)] transition hover:bg-[var(--gray-50)] last:border-0">
+                    <DnaTd className="px-6 py-4 font-bold text-[var(--gray-900)]">{c.name}</DnaTd>
+                    <DnaTd className="px-4 py-4 text-right font-semibold text-[var(--gray-900)] tabular-nums">{formatCurrency(c.spend)}</DnaTd>
+                    <DnaTd className="px-4 py-4 text-right text-[var(--text-muted)] tabular-nums">{formatInteger(c.impressions)}</DnaTd>
+                    <DnaTd className="px-4 py-4 text-right text-[var(--text-muted)] tabular-nums">{formatInteger(c.reach)}</DnaTd>
+                    <DnaTd className="px-4 py-4 text-right text-[var(--text-muted)] tabular-nums">{formatInteger(c.clicks)}</DnaTd>
+                    <DnaTd className="px-6 py-4 text-right font-extrabold text-[var(--status-action)] tabular-nums">{formatInteger(c.leads)}</DnaTd>
+                  </DnaTableRow>
                 ))
               ) : (
-                <tr>
-                  <td colSpan={6} className="px-6 py-14 text-center text-sm text-[var(--text-muted)]">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="px-6 py-14 text-center text-sm text-[var(--text-muted)]">
                     Tidak ada campaign yang sesuai pencarian.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       ) : (
         <div className="p-6"><EmptySource connection={metaConnection} /></div>

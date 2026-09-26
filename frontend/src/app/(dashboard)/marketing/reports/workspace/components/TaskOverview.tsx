@@ -1,3 +1,11 @@
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import React, { useState, useMemo } from 'react';
 import { 
   CheckCircle2, 
@@ -320,36 +328,36 @@ export const TaskOverview: React.FC<TaskOverviewProps> = ({
 
         {/* Tasks Table */}
         <div className="overflow-x-auto mt-2">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                <th className="py-3 px-3">Nama Task</th>
-                <th className="py-3 px-2">Tipe / Project</th>
-                <th className="py-3 px-2">Assignee</th>
-                <th className="py-3 px-2">Due Date</th>
-                <th className="py-3 px-2">Days Left</th>
-                <th className="py-3 px-2">Priority</th>
-                <th className="py-3 px-2">Status</th>
-                <th className="py-3 px-2 text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <DnaTh className="py-3 px-3">Nama Task</DnaTh>
+                <DnaTh className="py-3 px-2">Tipe / Project</DnaTh>
+                <DnaTh className="py-3 px-2">Assignee</DnaTh>
+                <DnaTh className="py-3 px-2">Due Date</DnaTh>
+                <DnaTh className="py-3 px-2">Days Left</DnaTh>
+                <DnaTh className="py-3 px-2">Priority</DnaTh>
+                <DnaTh className="py-3 px-2">Status</DnaTh>
+                <DnaTh className="py-3 px-2 text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredTasks.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={8} className="py-8 text-center text-slate-400">
                     Tidak ada task yang cocok dengan filter saat ini.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredTasks.map(task => {
                   const daysLeftInfo = calculateDaysLeft(task.dueDate);
                   return (
-                    <tr 
+                    <DnaTableRow 
                       key={task.id}
                       className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
                       onClick={() => onViewTaskDetail(task)}
                     >
-                      <td className="py-3 px-3">
+                      <DnaTd className="py-3 px-3">
                         <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition">
                           {task.name}
                         </div>
@@ -358,9 +366,9 @@ export const TaskOverview: React.FC<TaskOverviewProps> = ({
                             {task.brief}
                           </div>
                         )}
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2">
+                      <DnaTd className="py-3 px-2">
                         {task.type === 'Project' ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-semibold">
                             {task.project || 'Project'}
@@ -370,9 +378,9 @@ export const TaskOverview: React.FC<TaskOverviewProps> = ({
                             Daily
                           </span>
                         )}
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2">
+                      <DnaTd className="py-3 px-2">
                         <span 
                           onClick={(e) => {
                             e.stopPropagation();
@@ -385,27 +393,27 @@ export const TaskOverview: React.FC<TaskOverviewProps> = ({
                           </span>
                           {task.assignee}
                         </span>
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2 text-slate-500 whitespace-nowrap">
+                      <DnaTd className="py-3 px-2 text-slate-500 whitespace-nowrap">
                         {formatDateIndo(task.dueDate)}
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2 whitespace-nowrap">
+                      <DnaTd className="py-3 px-2 whitespace-nowrap">
                         <span className={`font-semibold text-[11px] ${
                           daysLeftInfo.isLate ? 'text-rose-600 font-bold' : daysLeftInfo.isToday ? 'text-amber-600' : 'text-emerald-600'
                         }`}>
                           {daysLeftInfo.text}
                         </span>
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2 whitespace-nowrap">
+                      <DnaTd className="py-3 px-2 whitespace-nowrap">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getPriorityBadgeClass(task.priority)}`}>
                           {task.priority}
                         </span>
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                      <DnaTd className="py-3 px-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                         <select
                           value={task.status}
                           onChange={(e) => onUpdateTaskStatus(task.id, e.target.value as TaskStatus)}
@@ -416,9 +424,9 @@ export const TaskOverview: React.FC<TaskOverviewProps> = ({
                           <option value="Completed">Completed</option>
                           <option value="Late">Late</option>
                         </select>
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2 text-right whitespace-nowrap">
+                      <DnaTd className="py-3 px-2 text-right whitespace-nowrap">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -428,13 +436,13 @@ export const TaskOverview: React.FC<TaskOverviewProps> = ({
                         >
                           Detail
                         </button>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   );
                 })
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </div>
     </div>

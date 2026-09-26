@@ -4,7 +4,15 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { KpiCard } from "@/components/dna";;
+import {
+  KpiCard,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";;
 import { SectionLabel } from "@/components/dna";;
 import { Users, CheckCircle2, DollarSign, TrendingUp, Phone, Clock, AlertTriangle } from "lucide-react";
 
@@ -46,31 +54,31 @@ export default function BussdevMyPerformancePage() {
         <div className="bg-white border border-slate-200 rounded-[24px] p-8">
           <SectionLabel>My Pipeline</SectionLabel>
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-[#F9FAFB] border-b">
-                  <th className="text-table-header text-slate-400 px-6 py-4">Client</th>
-                  <th className="text-table-header text-slate-400 px-6 py-4">Status</th>
-                  <th className="text-table-header text-slate-400 px-6 py-4">Brand</th>
-                  <th className="text-table-header text-slate-400 px-6 py-4">Value</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#F1F5F9]">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="bg-[#F9FAFB] border-b">
+                  <DnaTh className="text-table-header text-slate-400 px-6 py-4">Client</DnaTh>
+                  <DnaTh className="text-table-header text-slate-400 px-6 py-4">Status</DnaTh>
+                  <DnaTh className="text-table-header text-slate-400 px-6 py-4">Brand</DnaTh>
+                  <DnaTh className="text-table-header text-slate-400 px-6 py-4">Value</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {(myLeads || []).slice(0, 10).map((lead: any, i: number) => (
-                  <tr key={lead.id || i}>
-                    <td className="text-[11px] font-bold text-slate-700 px-6 py-4">{lead.clientName || "—"}</td>
-                    <td className="px-6 py-4"><span className="text-[9px] font-black text-slate-500 uppercase">{lead.status || "—"}</span></td>
-                    <td className="text-[11px] font-bold text-slate-600 px-6 py-4">{lead.brandName || "—"}</td>
-                    <td className="text-[11px] font-bold text-slate-700 tabular px-6 py-4">{lead.estimatedValue ? `Rp ${(lead.estimatedValue / 1e6).toFixed(0)}M` : "—"}</td>
-                  </tr>
+                  <DnaTableRow key={lead.id || i}>
+                    <DnaTd className="text-[11px] font-bold text-slate-700 px-6 py-4">{lead.clientName || "—"}</DnaTd>
+                    <DnaTd className="px-6 py-4"><span className="text-[9px] font-black text-slate-500 uppercase">{lead.status || "—"}</span></DnaTd>
+                    <DnaTd className="text-[11px] font-bold text-slate-600 px-6 py-4">{lead.brandName || "—"}</DnaTd>
+                    <DnaTd className="text-[11px] font-bold text-slate-700 tabular px-6 py-4">{lead.estimatedValue ? `Rp ${(lead.estimatedValue / 1e6).toFixed(0)}M` : "—"}</DnaTd>
+                  </DnaTableRow>
                 ))}
                 {(!myLeads || myLeads.length === 0) && (
-                  <tr>
-                    <td colSpan={4} className="text-center text-[11px] font-bold text-slate-400 py-12">No leads assigned yet</td>
-                  </tr>
+                  <DnaTableRow>
+                    <DnaTd colSpan={4} className="text-center text-[11px] font-bold text-slate-400 py-12">No leads assigned yet</DnaTd>
+                  </DnaTableRow>
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </div>
 

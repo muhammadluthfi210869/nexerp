@@ -4,17 +4,6 @@ import React from "react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { 
-  FlaskConical, 
-  Clock, 
-  CheckCircle2, 
-  AlertTriangle, 
-  TrendingUp, 
-  Activity, 
-  Layers, 
-  Sparkles,
-  ArrowRight
-} from "lucide-react";
 
 const PipelineFlow: React.FC<{ stage: string }> = ({ stage }) => {
   const steps = ["NOT START", "REV 1", "REV 2", "EXTRA", "DEAL"];
@@ -53,33 +42,19 @@ export default function RndDashboardPage() {
     queryKey: ["rnd-dashboard-metrics"],
     queryFn: async () => {
       try {
-        const res = await api.get("/rnd/stats");
+        const res = await api.get("/dashboards/rnd");
         return res.data;
       } catch {
-        return null;
+        const res2 = await api.get("/rnd/dashboard");
+        return res2.data;
       }
     },
     staleTime: 30000,
   });
 
-  const pipelineRows = [
-    { id: "RD-24-041", brand: "DERMA GLOW", prod: "Brightening Serum V3", bd: "Andi P.", pic: "Dr. Sarah", stage: "DEVELOPMENT", days: "2 Days", total: "2 Days", rev: "0", first: true, status: "ONGOING", onTime: true, delay: 0 },
-    { id: "RD-24-038", brand: "PURE SKIN", prod: "Moisturizer Gel", bd: "Citra K.", pic: "Irfan J.", stage: "TESTING", days: "12 Days", total: "12 Days", rev: "2", first: false, status: "ONGOING", onTime: false, delay: 4 },
-    { id: "RD-24-035", brand: "AUREON BEAUTY", prod: "Sunscreen SPF 50", bd: "Andi P.", pic: "Dr. Sarah", stage: "APPROVED", days: "-", total: "10 Days", rev: "1", first: false, status: "APPROVED", onTime: true, delay: 0 },
-    { id: "RD-24-032", brand: "ZEN LABS", prod: "Acne Toner", bd: "Budi S.", pic: "Maya T.", stage: "REVISION", days: "22 Days", total: "22 Days", rev: "3", first: false, status: "ONGOING", onTime: false, delay: 12 },
-  ];
-
-  const staffRows = [
-    { name: "Dr. Sarah", comp: "12 / 10", speed: "3.5d", ot: "92%", first: "85%", util: "95%" },
-    { name: "Irfan J.", comp: "8 / 6", speed: "5.2d", ot: "75%", first: "68%", util: "88%" },
-    { name: "Maya T.", comp: "10 / 9", speed: "4.1d", ot: "88%", first: "75%", util: "92%" },
-  ];
-
-  const rejectRows = [
-    { prod: "Aqua Serum", stage: "TESTING", reason: "Instability", pic: "Irfan" },
-    { prod: "Cleanser Gel", stage: "APPROVAL", reason: "Color Change", pic: "Maya" },
-    { prod: "Lip Balm V2", stage: "DEVELOPMENT", reason: "Odor Issue", pic: "Irfan" },
-  ];
+  const pipelineRows = metrics?.tables?.pipelineMaster || [];
+  const staffRows = metrics?.tables?.performanceEvaluation || [];
+  const rejectRows = metrics?.tables?.failureLogs || [];
 
   return (
     <DashboardShell
@@ -89,7 +64,7 @@ export default function RndDashboardPage() {
     >
       {/* 🚀 OVERVIEW GRID: R&D VITALITY */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem", marginBottom: "3rem" }}>
-        
+
         {/* 🔴 A. TIMELINESS */}
         <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
@@ -99,21 +74,27 @@ export default function RndDashboardPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             <div style={{ background: "#F8FAFC", padding: "12px", borderRadius: "16px" }}>
               <p style={{ fontSize: "9px", fontWeight: 900, color: "#64748B", margin: 0 }}>ON-TIME SAMPLE RATE</p>
-              <p style={{ fontSize: "20px", fontWeight: 950, color: "#10B981", margin: "4px 0" }}>85.4%</p>
+              <p style={{ fontSize: "20px", fontWeight: 950, color: "#10B981", margin: "4px 0" }}>
+                {metrics?.timeliness?.onTimeRate !== undefined ? `${metrics.timeliness.onTimeRate}%` : "0%"}
+              </p>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
               <div>
                 <p style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", margin: 0 }}>AVG CYCLE</p>
-                <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>4.2 <span style={{ fontSize: "9px" }}>DAYS</span></p>
+                <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+                  {metrics?.timeliness?.avgCycleTime ?? 0} <span style={{ fontSize: "9px" }}>DAYS</span>
+                </p>
               </div>
               <div style={{ textAlign: "right" }}>
                 <p style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", margin: 0 }}>OVERDUE</p>
-                <p style={{ fontSize: "14px", fontWeight: 950, color: "#EF4444", margin: 0 }}>3 <span style={{ fontSize: "9px" }}>SAMPLES</span></p>
+                <p style={{ fontSize: "14px", fontWeight: 950, color: "#EF4444", margin: 0 }}>
+                  {metrics?.timeliness?.overdueCount ?? 0} <span style={{ fontSize: "9px" }}>SAMPLES</span>
+                </p>
               </div>
             </div>
           </div>
           <p style={{ fontSize: "9px", fontWeight: 800, color: "#94A3B8", marginTop: "1rem", borderTop: "1px solid #F1F5F9", paddingTop: "8px", marginBottom: 0 }}>
-            Insight: <span style={{ color: "#1E293B" }}>Cepat atau lambat?</span>
+            Insight: <span style={{ color: "#1E293B" }}>{metrics?.timeliness?.insight || "Menunggu data operasional"}</span>
           </p>
         </div>
 
@@ -126,21 +107,27 @@ export default function RndDashboardPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             <div style={{ background: "#F8FAFC", padding: "12px", borderRadius: "16px" }}>
               <p style={{ fontSize: "9px", fontWeight: 900, color: "#64748B", margin: 0 }}>FIRST-TIME APPROVAL</p>
-              <p style={{ fontSize: "20px", fontWeight: 950, color: "#2563EB", margin: "4px 0" }}>72.1%</p>
+              <p style={{ fontSize: "20px", fontWeight: 950, color: "#2563EB", margin: "4px 0" }}>
+                {metrics?.accuracy?.firstTimeApprovalRate !== undefined ? `${metrics.accuracy.firstTimeApprovalRate}%` : "0%"}
+              </p>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
               <div>
                 <p style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", margin: 0 }}>AVG REVISION</p>
-                <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>1.4 <span style={{ fontSize: "9px" }}>X</span></p>
+                <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+                  {metrics?.accuracy?.avgRevision ?? 0} <span style={{ fontSize: "9px" }}>X</span>
+                </p>
               </div>
               <div style={{ textAlign: "right" }}>
                 <p style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8", margin: 0 }}>FAILED</p>
-                <p style={{ fontSize: "14px", fontWeight: 950, color: "#EF4444", margin: 0 }}>5 <span style={{ fontSize: "9px" }}>ITEMS</span></p>
+                <p style={{ fontSize: "14px", fontWeight: 950, color: "#EF4444", margin: 0 }}>
+                  {metrics?.accuracy?.failedItemsCount ?? 0} <span style={{ fontSize: "9px" }}>ITEMS</span>
+                </p>
               </div>
             </div>
           </div>
           <p style={{ fontSize: "9px", fontWeight: 800, color: "#94A3B8", marginTop: "1rem", borderTop: "1px solid #F1F5F9", paddingTop: "8px", marginBottom: 0 }}>
-            Insight: <span style={{ color: "#1E293B" }}>Banyak revisi atau tidak?</span>
+            Insight: <span style={{ color: "#1E293B" }}>{metrics?.accuracy?.insight || "Menunggu data formulasi"}</span>
           </p>
         </div>
 
@@ -151,22 +138,24 @@ export default function RndDashboardPage() {
             <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>🟡 C. APPROVAL PERFORMANCE</p>
           </div>
           <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-            <p style={{ fontSize: "28px", fontWeight: 950, color: "#1E293B", margin: 0 }}>84.4%</p>
+            <p style={{ fontSize: "28px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+              {metrics?.approval?.overallRate !== undefined ? `${metrics.approval.overallRate}%` : "0%"}
+            </p>
             <p style={{ fontSize: "9px", fontWeight: 850, color: "#64748B", margin: 0 }}>OVERALL APPROVAL RATE</p>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", background: "#FFFBEB", padding: "10px", borderRadius: "12px" }}>
             <div style={{ textAlign: "center", flex: 1 }}>
               <p style={{ fontSize: "8px", fontWeight: 800, color: "#B45309", margin: 0 }}>SUBMITTED</p>
-              <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>45</p>
+              <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{metrics?.approval?.submitted ?? 0}</p>
             </div>
             <div style={{ width: "1px", background: "#FEF3C7" }} />
             <div style={{ textAlign: "center", flex: 1 }}>
               <p style={{ fontSize: "8px", fontWeight: 800, color: "#B45309", margin: 0 }}>APPROVED</p>
-              <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>38</p>
+              <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{metrics?.approval?.approved ?? 0}</p>
             </div>
           </div>
           <p style={{ fontSize: "9px", fontWeight: 800, color: "#94A3B8", marginTop: "1rem", borderTop: "1px solid #F1F5F9", paddingTop: "8px", marginBottom: 0 }}>
-            Insight: <span style={{ color: "#1E293B" }}>Diterima market atau tidak?</span>
+            Insight: <span style={{ color: "#1E293B" }}>{metrics?.approval?.insight || "Alur persetujuan sampel normal"}</span>
           </p>
         </div>
 
@@ -179,24 +168,24 @@ export default function RndDashboardPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
             <div style={{ background: "#EFF6FF", padding: "10px", borderRadius: "12px" }}>
               <p style={{ fontSize: "8px", fontWeight: 800, color: "#1D4ED8", margin: 0 }}>ACTIVE PJKT</p>
-              <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>12</p>
+              <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{metrics?.performance?.activeProjects ?? 0}</p>
             </div>
             <div style={{ background: "#F0FDF4", padding: "10px", borderRadius: "12px" }}>
               <p style={{ fontSize: "8px", fontWeight: 800, color: "#166534", margin: 0 }}>COMPLETED</p>
-              <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>28</p>
+              <p style={{ fontSize: "16px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{metrics?.performance?.completedProjects ?? 0}</p>
             </div>
           </div>
           <div style={{ marginTop: "1rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
               <span style={{ fontSize: "9px", fontWeight: 850, color: "#64748B" }}>UTILIZATION RATE</span>
-              <span style={{ fontSize: "10px", fontWeight: 950, color: "#1E293B" }}>92%</span>
+              <span style={{ fontSize: "10px", fontWeight: 950, color: "#1E293B" }}>{metrics?.performance?.utilizationRate ?? 0}%</span>
             </div>
             <div style={{ height: "6px", background: "#F1F5F9", borderRadius: "3px", overflow: "hidden" }}>
-              <div style={{ width: "92%", height: "100%", background: "#3B82F6" }} />
+              <div style={{ width: `${Math.min(metrics?.performance?.utilizationRate ?? 0, 100)}%`, height: "100%", background: "#3B82F6" }} />
             </div>
           </div>
           <p style={{ fontSize: "9px", fontWeight: 800, color: "#94A3B8", marginTop: "1rem", borderTop: "1px solid #F1F5F9", paddingTop: "8px", marginBottom: 0 }}>
-            Insight: <span style={{ color: "#1E293B" }}>Tim produktif atau tidak?</span>
+            Insight: <span style={{ color: "#1E293B" }}>{metrics?.performance?.insight || "Kapasitas R&D teroptimalisasi"}</span>
           </p>
         </div>
 
@@ -217,50 +206,46 @@ export default function RndDashboardPage() {
                   <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>TIME AUDIT</th>
                   <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>QUALITY (REV)</th>
                   <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>STATUS</th>
-                  <th style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#64748B" }}>TIMELINESS</th>
                 </tr>
               </thead>
               <tbody>
-                {pipelineRows.map((row, i) => (
-                  <tr key={i} style={{ borderBottom: "1px solid #F1F5F9", background: !row.onTime ? "#FFF1F2" : "transparent" }}>
-                    <td style={{ padding: "1.25rem 1.5rem" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 900, color: "#64748B" }}>#{row.id}</div>
-                      <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.brand}</div>
-                    </td>
-                    <td style={{ padding: "1.25rem 1.5rem", fontSize: "13px", fontWeight: 900, color: "#1E293B" }}>{row.prod}</td>
-                    <td style={{ padding: "1.25rem 1.5rem" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 800, color: "#1E293B" }}>{row.pic}</div>
-                      <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748B" }}>BD: {row.bd}</div>
-                    </td>
-                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
-                      <PipelineFlow stage={row.stage} />
-                    </td>
-                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 900, color: "#1E293B" }}>In Stage: {row.days}</div>
-                      <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748B" }}>Total: {row.total}</div>
-                    </td>
-                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
-                      <div style={{ fontSize: "14px", fontWeight: 950, color: row.rev === "0" ? "#10B981" : "#F59E0B" }}>{row.rev} <span style={{ fontSize: "9px" }}>X</span></div>
-                      {row.first && <div style={{ fontSize: "8px", fontWeight: 900, color: "#10B981" }}>FIRST-TIME</div>}
-                    </td>
-                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
-                      <span style={{ 
-                        background: row.status === "APPROVED" ? "#10B981" : (row.status === "REJECTED" ? "#EF4444" : "#64748B"),
-                        color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950
-                      }}>{row.status}</span>
-                    </td>
-                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
-                      {row.onTime ? (
-                        <span style={{ color: "#10B981", fontWeight: 950, fontSize: "10px" }}>ON-TIME</span>
-                      ) : (
-                        <div style={{ color: "#E11D48" }}>
-                          <span style={{ fontWeight: 950, fontSize: "10px" }}>DELAY</span>
-                          <div style={{ fontSize: "9px", fontWeight: 800 }}>+{row.delay} DAYS</div>
-                        </div>
-                      )}
+                {pipelineRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ padding: "3rem", textAlign: "center", color: "#94A3B8", fontSize: "12px", fontWeight: 600 }}>
+                      Belum ada sampel dalam pipeline R&D.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  pipelineRows.map((row: any, i: number) => (
+                    <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                      <td style={{ padding: "1.25rem 1.5rem" }}>
+                        <div style={{ fontSize: "11px", fontWeight: 900, color: "#64748B" }}>#{row.id}</div>
+                        <div style={{ fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.brand}</div>
+                      </td>
+                      <td style={{ padding: "1.25rem 1.5rem", fontSize: "13px", fontWeight: 900, color: "#1E293B" }}>{row.product || row.prod}</td>
+                      <td style={{ padding: "1.25rem 1.5rem" }}>
+                        <div style={{ fontSize: "11px", fontWeight: 800, color: "#1E293B" }}>{row.pic}</div>
+                        <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748B" }}>BD: {row.bd}</div>
+                      </td>
+                      <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                        <PipelineFlow stage={row.stage} />
+                      </td>
+                      <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                        <div style={{ fontSize: "11px", fontWeight: 900, color: "#1E293B" }}>{row.timeAudit || `In Stage: ${row.days || "-"}`}</div>
+                        <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748B" }}>{row.totalTime || `Total: ${row.total || "-"}`}</div>
+                      </td>
+                      <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                        <div style={{ fontSize: "14px", fontWeight: 950, color: "#F59E0B" }}>{row.revisions || row.rev || "0"}</div>
+                      </td>
+                      <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                        <span style={{
+                          background: row.status === "APPROVED" ? "#10B981" : (row.status === "REJECTED" ? "#EF4444" : "#64748B"),
+                          color: "white", padding: "4px 10px", borderRadius: "6px", fontSize: "9px", fontWeight: 950
+                        }}>{row.status}</span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -269,7 +254,7 @@ export default function RndDashboardPage() {
 
       {/* 🟠 2 & 🟡 3. RND EVALUATION & REJECT LOG */}
       <div style={{ display: "grid", gridTemplateColumns: "7fr 3fr", gap: "2rem" }}>
-        
+
         {/* 🟠 2. RND PERFORMANCE TABLE */}
         <div>
           <h3 style={{ margin: "0 0 1.25rem 0", fontSize: "12px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>🟠 2. R&D PERFORMANCE EVALUATION (PER PERSON)</h3>
@@ -285,21 +270,27 @@ export default function RndDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {staffRows.map((row, i) => (
-                  <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                    <td style={{ padding: "1.25rem 1.5rem", fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.name}</td>
-                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{row.comp}</td>
-                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 800, color: "#10B981" }}>{row.ot} OT</div>
-                      <div style={{ fontSize: "9px", color: "#64748B" }}>Avg: {row.speed}</div>
+                {staffRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#94A3B8", fontSize: "12px", fontWeight: 600 }}>
+                      Belum ada data evaluasi staf R&D.
                     </td>
-                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 950, color: "#2563EB" }}>{row.first}</div>
-                      <div style={{ fontSize: "8px", color: "#64748B" }}>FIRST-TIME</div>
-                    </td>
-                    <td style={{ padding: "1.25rem 1.5rem", textAlign: "right", fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.util}</td>
                   </tr>
-                ))}
+                ) : (
+                  staffRows.map((row: any, i: number) => (
+                    <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                      <td style={{ padding: "1.25rem 1.5rem", fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.picName || row.name}</td>
+                      <td style={{ padding: "1.25rem 1.5rem", textAlign: "center", fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{row.output || row.comp}</td>
+                      <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                        <div style={{ fontSize: "11px", fontWeight: 800, color: "#10B981" }}>{row.efficiency || row.ot}</div>
+                      </td>
+                      <td style={{ padding: "1.25rem 1.5rem", textAlign: "center" }}>
+                        <div style={{ fontSize: "11px", fontWeight: 950, color: "#2563EB" }}>{row.quality || row.first}</div>
+                      </td>
+                      <td style={{ padding: "1.25rem 1.5rem", textAlign: "right", fontSize: "13px", fontWeight: 950, color: "#1E293B" }}>{row.utilization || row.util}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -317,18 +308,26 @@ export default function RndDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {rejectRows.map((row, i) => (
-                  <tr key={i} style={{ borderBottom: "1px solid rgba(225, 29, 72, 0.1)" }}>
-                    <td style={{ padding: "1rem" }}>
-                      <p style={{ margin: 0, fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.prod}</p>
-                      <p style={{ margin: 0, fontSize: "8px", fontWeight: 700, color: "#64748B" }}>STAGE: {row.stage}</p>
-                    </td>
-                    <td style={{ padding: "1rem", textAlign: "right" }}>
-                      <p style={{ margin: 0, fontSize: "10px", fontWeight: 900, color: "#E11D48" }}>{row.reason}</p>
-                      <p style={{ margin: 0, fontSize: "8px", fontWeight: 700, color: "#94A3B8" }}>PIC: {row.pic}</p>
+                {rejectRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={2} style={{ padding: "2rem", textAlign: "center", color: "#9F1239", fontSize: "11px", fontWeight: 600 }}>
+                      Tidak ada log kegagalan sampel.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  rejectRows.map((row: any, i: number) => (
+                    <tr key={i} style={{ borderBottom: "1px solid rgba(225, 29, 72, 0.1)" }}>
+                      <td style={{ padding: "1rem" }}>
+                        <p style={{ margin: 0, fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{row.productName || row.prod}</p>
+                        <p style={{ margin: 0, fontSize: "8px", fontWeight: 700, color: "#64748B" }}>STAGE: {row.stage}</p>
+                      </td>
+                      <td style={{ padding: "1rem", textAlign: "right" }}>
+                        <p style={{ margin: 0, fontSize: "10px", fontWeight: 900, color: "#E11D48" }}>{row.reason}</p>
+                        <p style={{ margin: 0, fontSize: "8px", fontWeight: 700, color: "#94A3B8" }}>PIC: {row.picName || row.pic}</p>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

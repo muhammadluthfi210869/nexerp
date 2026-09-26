@@ -26,7 +26,13 @@ import {
   DnaButton,
   DnaBadge,
   DnaDetailDrawer,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { useRouter } from "next/navigation";
 
@@ -170,62 +176,62 @@ export default function RndInboxPage() {
         searchPlaceholder="Cari nama produk, klien, atau spesifikasi..."
       >
         <div className="w-full">
-          <table className="w-full text-left text-xs table-fixed">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-4 w-[16%]">ID & Tgl Masuk</th>
-                <th className="py-3 px-4 w-[28%]">Produk & Klien</th>
-                <th className="py-3 px-4 w-[22%]">Spesifikasi Target</th>
-                <th className="py-3 px-4 w-[18%]">Target HPP & Deadline</th>
-                <th className="py-3 px-4 w-[10%]">Status</th>
-                <th className="py-3 px-4 w-[6%] text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-[16%]">ID & Tgl Masuk</DnaTh>
+                <DnaTh className="py-3 px-4 w-[28%]">Produk & Klien</DnaTh>
+                <DnaTh className="py-3 px-4 w-[22%]">Spesifikasi Target</DnaTh>
+                <DnaTh className="py-3 px-4 w-[18%]">Target HPP & Deadline</DnaTh>
+                <DnaTh className="py-3 px-4 w-[10%]">Status</DnaTh>
+                <DnaTh className="py-3 px-4 w-[6%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     Memuat antrian formulasi...
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : filteredSamples.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     <Clock className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada antrian intake formulasi saat ini.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredSamples.map((sample) => (
-                  <tr key={sample.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-mono text-xs font-bold text-slate-900 truncate">#{sample.id.slice(0, 8)}</p>
-                      <p className="text-[11px] text-slate-500 font-mono mt-0.5 truncate">
+                  <DnaTableRow key={sample.id} className="hover:bg-slate-50/70 transition-colors">
+                    <DnaTd className="py-3 px-4 truncate">
+                      <p className="tabular-nums text-xs font-bold text-slate-900 truncate">#{sample.id.slice(0, 8)}</p>
+                      <p className="text-[11px] text-slate-500 tabular-nums mt-0.5 truncate">
                         {sample.requestedAt ? new Date(sample.requestedAt).toLocaleDateString("id-ID") : "—"}
                       </p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <p className="font-semibold text-slate-900 text-xs truncate">{sample.productName}</p>
                       <p className="text-[11px] text-slate-500 truncate">{sample.lead?.clientName || "—"}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <p className="font-medium text-slate-800 text-xs truncate">{sample.targetFunction || "Formula Baru"}</p>
                       <p className="text-[11px] text-slate-500 truncate">
                         Tekstur: {sample.textureReq || "—"} • Aroma: {sample.aromaReq || "—"}
                       </p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-mono font-bold text-slate-900 text-xs truncate">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
+                      <p className="tabular-nums font-bold text-slate-900 text-xs truncate">
                         Rp {Number(sample.targetHpp || 0).toLocaleString()}
                       </p>
-                      <p className="text-[11px] text-slate-500 font-mono truncate">
+                      <p className="text-[11px] text-slate-500 tabular-nums truncate">
                         Due: {sample.targetDeadline ? new Date(sample.targetDeadline).toLocaleDateString("id-ID") : "TBD"}
                       </p>
-                    </td>
-                    <td className="py-3 px-4">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4">
                       <DnaBadge variant="success">VERIFIED</DnaBadge>
-                    </td>
-                    <td className="py-3 px-4 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-right">
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -237,12 +243,12 @@ export default function RndInboxPage() {
                       >
                         <Eye className="w-4 h-4 text-slate-600" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -262,7 +268,7 @@ export default function RndInboxPage() {
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-slate-900 text-sm">{selectedSample.productName}</span>
-                    <span className="font-mono text-slate-500">#{selectedSample.id.slice(0, 8)}</span>
+                    <span className="tabular-nums text-slate-500">#{selectedSample.id.slice(0, 8)}</span>
                   </div>
                   <p className="text-slate-600">{selectedSample.lead?.clientName || "Klien Anonim"}</p>
                 </div>
@@ -270,14 +276,14 @@ export default function RndInboxPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Target HPP Maksimal</span>
-                    <p className="font-mono font-bold text-indigo-700 text-sm">
+                    <p className="tabular-nums font-bold text-indigo-700 text-sm">
                       Rp {Number(selectedSample.targetHpp || 0).toLocaleString()}
                     </p>
                     <span className="text-[10px] text-slate-400">Termasuk kemasan & isi</span>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Batas Waktu (Due Date)</span>
-                    <p className="font-mono font-bold text-slate-900">
+                    <p className="tabular-nums font-bold text-slate-900">
                       {selectedSample.targetDeadline ? new Date(selectedSample.targetDeadline).toLocaleDateString("id-ID") : "Belum Ditentukan"}
                     </p>
                     <span className="text-[10px] text-slate-400">SLA Formulasi Lab</span>

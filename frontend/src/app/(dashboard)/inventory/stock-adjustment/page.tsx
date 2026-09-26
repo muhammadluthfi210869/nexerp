@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   SlidersHorizontal,
   Search,
@@ -25,6 +28,12 @@ import {
   DnaModal,
   DnaCell,
   DnaBadge,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
   useDnaToast,
 } from "@/components/dna";
 
@@ -37,6 +46,7 @@ interface AdjustmentItem {
   notes: string;
   account: string;
   items: {
+    materialId?: string;
     name: string;
     unit: string;
     systemQty: number;
@@ -45,45 +55,6 @@ interface AdjustmentItem {
     reason?: string;
   }[];
 }
-
-const INITIAL_ADJUSTMENTS: AdjustmentItem[] = [
-  {
-    id: "ADJ-001",
-    code: "ADJ-2026-0001",
-    date: "2026-09-04",
-    warehouse: "Gudang Bahan Baku",
-    creator: "QC Controller",
-    notes: "Koreksi susut evaporasi bahan aktif batch mixing 01",
-    account: "5100 - Beban Selisih Persediaan",
-    items: [
-      { name: "Hairdensyl Complex", unit: "gr", systemQty: 500, actualQty: 497.5, difference: -2.5, reason: "Evaporasi panas reaktor" }
-    ]
-  },
-  {
-    id: "ADJ-002",
-    code: "ADJ-2026-0002",
-    date: "2026-09-09",
-    warehouse: "Gudang Kemasan",
-    creator: "Staff Gudang",
-    notes: "Kerusakan botol kaca saat bongkar muat forklift",
-    account: "5100 - Beban Selisih Persediaan",
-    items: [
-      { name: "IPM", unit: "gr", systemQty: 250, actualQty: 235, difference: -15, reason: "Pecah fisik kemasan luar" }
-    ]
-  },
-  {
-    id: "ADJ-003",
-    code: "ADJ-2026-0003",
-    date: "2026-09-13",
-    warehouse: "Gudang Barang Jadi",
-    creator: "Super Admin",
-    notes: "Penambahan stok sample uji lab gratis dari supplier",
-    account: "7100 - Pendapatan Lain-lain (Bonus Sample)",
-    items: [
-      { name: "Niacinamide", unit: "gr", systemQty: 100, actualQty: 105, difference: 5, reason: "Bonus supplier gratis" }
-    ]
-  }
-];
 
 export default function StockAdjustmentPage() {
   return (
@@ -97,34 +68,120 @@ function StockAdjustmentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const actionParam = searchParams.get("action");
-  const { toast } = useDnaToast();
+  const toast = useDnaToast();
+  const queryClient = useQueryClient();
 
-  const [adjustments, setAdjustments] = useState<AdjustmentItem[]>(INITIAL_ADJUSTMENTS);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAdj, setSelectedAdj] = useState<AdjustmentItem | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  // Form state
-  const [formData, setFormData] = useState({
-    code: `ADJ-2026-${String(adjustments.length + 1).padStart(4, "0")}`,
-    date: new Date().toISOString().split("T")[0],
-    warehouse: "Gudang Bahan Baku",
-    account: "5100 - Beban Selisih Persediaan",
-    notes: "",
-    items: [
-      { name: "Hairdensyl Complex", unit: "gr", systemQty: 500, actualQty: 498, difference: -2, reason: "Susut resep" }
-    ]
+  // Queries
+  const { data: rawAdjustments = [], isLoading } = useQuery({
+    queryKey: ["warehouse-adjustments"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/adjustments");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
   });
 
-  const [newItem, setNewItem] = useState({
-    name: "Niacinamide",
-    unit: "gr",
-    systemQty: 250,
-    actualQty: 248,
-    difference: -2,
-    reason: ""
+  const { data: warehouseList = [] } = useQuery({
+    queryKey: ["warehouse-warehouses"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/warehouses");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
   });
+
+  const { data: catalogMaterials = [] } = useQuery({
+    queryKey: ["warehouse-catalog"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/catalog");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const adjustments: AdjustmentItem[] = useMemo(() => {
+    if (!rawAdjustments || !Array.isArray(rawAdjustments)) return [];
+    return rawAdjustments.map((adj: any) => ({
+      id: adj.id,
+      code: adj.adjNumber || `ADJ-${adj.id.slice(0, 8).toUpperCase()}`,
+      date: adj.date || "-",
+      warehouse: adj.warehouseName || "Gudang Utama",
+      creator: "Warehouse Team",
+      notes: adj.notes || "-",
+      account: "5100 - Beban Selisih Persediaan",
+      items: [
+        {
+          name: adj.materialName || "Material",
+          unit: adj.unit || "Unit",
+          systemQty: adj.qty > 0 ? 0 : Math.abs(adj.qty),
+          actualQty: adj.qty > 0 ? adj.qty : 0,
+          difference: adj.qty,
+          reason: adj.notes || adj.type,
+        },
+      ],
+    }));
+  }, [rawAdjustments]);
+
+  // Form state
+  const [formData, setFormData] = useState<{
+    warehouseId: string;
+    date: string;
+    account: string;
+    notes: string;
+    items: {
+      materialId: string;
+      name: string;
+      unit: string;
+      systemQty: number;
+      actualQty: number;
+      difference: number;
+      reason?: string;
+    }[];
+  }>({
+    warehouseId: "",
+    date: new Date().toISOString().split("T")[0],
+    account: "5100 - Beban Selisih Persediaan",
+    notes: "",
+    items: [],
+  });
+
+  const [newItem, setNewItem] = useState<{
+    materialId: string;
+    name: string;
+    unit: string;
+    systemQty: number;
+    actualQty: number;
+    difference: number;
+    reason: string;
+  }>({
+    materialId: "",
+    name: "",
+    unit: "Kg",
+    systemQty: 0,
+    actualQty: 0,
+    difference: 0,
+    reason: "",
+  });
+
+  useEffect(() => {
+    if (warehouseList.length > 0 && !formData.warehouseId) {
+      setFormData((prev) => ({ ...prev, warehouseId: warehouseList[0].id }));
+    }
+  }, [warehouseList, formData.warehouseId]);
 
   useEffect(() => {
     if (actionParam === "create") {
@@ -133,7 +190,7 @@ function StockAdjustmentContent() {
   }, [actionParam]);
 
   const filteredData = useMemo(() => {
-    return adjustments.filter(item => {
+    return adjustments.filter((item) => {
       return (
         item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.warehouse.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -143,57 +200,87 @@ function StockAdjustmentContent() {
     });
   }, [adjustments, searchTerm]);
 
-  const totalDeficit = adjustments.reduce((acc, curr) => {
-    return acc + curr.items.filter(it => it.difference < 0).length;
-  }, 0);
+  const totalDeficit = useMemo(() => {
+    return adjustments.reduce((acc, curr) => {
+      return acc + curr.items.filter((it) => it.difference < 0).length;
+    }, 0);
+  }, [adjustments]);
 
-  const totalSurplus = adjustments.reduce((acc, curr) => {
-    return acc + curr.items.filter(it => it.difference > 0).length;
-  }, 0);
+  const totalSurplus = useMemo(() => {
+    return adjustments.reduce((acc, curr) => {
+      return acc + curr.items.filter((it) => it.difference > 0).length;
+    }, 0);
+  }, [adjustments]);
 
   const handleAddItem = () => {
+    if (!newItem.materialId) {
+      toast.warning("Pilih barang terlebih dahulu");
+      return;
+    }
     const diff = newItem.actualQty - newItem.systemQty;
     setFormData({
       ...formData,
-      items: [...formData.items, { ...newItem, difference: diff }]
+      items: [...formData.items, { ...newItem, difference: diff }],
     });
-    setNewItem({ name: "IPM", unit: "gr", systemQty: 300, actualQty: 300, difference: 0, reason: "" });
+    setNewItem({
+      materialId: "",
+      name: "",
+      unit: "Kg",
+      systemQty: 0,
+      actualQty: 0,
+      difference: 0,
+      reason: "",
+    });
   };
 
   const handleRemoveItem = (index: number) => {
     setFormData({
       ...formData,
-      items: formData.items.filter((_, i) => i !== index)
+      items: formData.items.filter((_, i) => i !== index),
     });
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.items.length === 0) {
-      toast({ title: "Item Kosong", description: "Tambahkan barang yang akan disesuaikan", variant: "warning" });
+      toast.warning("Tambahkan barang yang akan disesuaikan");
       return;
     }
 
-    const newAdj: AdjustmentItem = {
-      id: `ADJ-${Date.now()}`,
-      code: formData.code,
-      date: formData.date,
-      warehouse: formData.warehouse,
-      creator: "Super Admin",
-      account: formData.account,
-      notes: formData.notes || "Penyesuaian stok reguler",
-      items: formData.items
-    };
+    const targetWhId = formData.warehouseId || warehouseList[0]?.id;
+    if (!targetWhId) {
+      toast.error("Gudang tidak valid atau belum tersedia");
+      return;
+    }
 
-    setAdjustments([newAdj, ...adjustments]);
-    setIsCreateOpen(false);
-    toast({
-      title: "Penyesuaian Disimpan",
-      description: `Dokumen ${newAdj.code} berhasil memutasi saldo persediaan.`,
-      variant: "success"
-    });
-    if (actionParam === "create") {
-      router.push("/stock-adjustment");
+    try {
+      await Promise.all(
+        formData.items.map((it) =>
+          api.post("/warehouse/adjustments", {
+            materialId: it.materialId,
+            warehouseId: targetWhId,
+            type: it.difference < 0 ? "WRITE_OFF" : "CORRECTION",
+            qty: Math.abs(it.difference),
+            notes: `${formData.notes ? formData.notes + " - " : ""}${it.reason || ""}`.trim() || undefined,
+          })
+        )
+      );
+      toast.success("Penyesuaian stok berhasil disimpan dan dibukukan.");
+      queryClient.invalidateQueries({ queryKey: ["warehouse-adjustments"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-transactions"] });
+      setIsCreateOpen(false);
+      setFormData({
+        warehouseId: warehouseList[0]?.id || "",
+        date: new Date().toISOString().split("T")[0],
+        account: "5100 - Beban Selisih Persediaan",
+        notes: "",
+        items: [],
+      });
+      if (actionParam === "create") {
+        router.push("/stock-adjustment");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Gagal menyimpan penyesuaian stok");
     }
   };
 
@@ -266,35 +353,35 @@ function StockAdjustmentContent() {
       {/* 1:1 Table (Exactly 7 columns matching legacy G-SERP) */}
       <DnaDataTableCard title="Daftar Penyesuaian Stok">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-              <tr>
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">Kode Penyesuaian</th>
-                <th className="py-3 px-4">Tanggal</th>
-                <th className="py-3 px-4">Gudang</th>
-                <th className="py-3 px-4">Pembuat</th>
-                <th className="py-3 px-4">Catatan</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable className="w-full text-xs text-left">
+            <DnaTableHead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-12 text-center">#</DnaTh>
+                <DnaTh className="py-3 px-4">Kode Penyesuaian</DnaTh>
+                <DnaTh className="py-3 px-4">Tanggal</DnaTh>
+                <DnaTh className="py-3 px-4">Gudang</DnaTh>
+                <DnaTh className="py-3 px-4">Pembuat</DnaTh>
+                <DnaTh className="py-3 px-4">Catatan</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody className="divide-y divide-slate-100">
               {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="py-8 text-center text-slate-400">
                     Tidak ada catatan penyesuaian stok ditemukan
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
-                    <td className="py-3 px-4 font-semibold text-blue-600">{item.code}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.date}</td>
-                    <td className="py-3 px-4 font-medium text-slate-800">{item.warehouse}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.creator}</td>
-                    <td className="py-3 px-4 text-slate-700 max-w-xs truncate">{item.notes}</td>
-                    <td className="py-3 px-4 text-center">
+                  <DnaTableRow key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</DnaTd>
+                    <DnaTd className="py-3 px-4 font-semibold text-blue-600">{item.code}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-600 tabular-nums">{item.date}</DnaTd>
+                    <DnaTd className="py-3 px-4 font-medium text-slate-800">{item.warehouse}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-600">{item.creator}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-700 max-w-xs truncate">{item.notes}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-center">
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -306,12 +393,12 @@ function StockAdjustmentContent() {
                       >
                         Lihat
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -357,34 +444,34 @@ function StockAdjustmentContent() {
                 Rincian Barang Disesuaikan
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                    <tr>
-                      <th className="py-2.5 px-3 w-10 text-center">#</th>
-                      <th className="py-2.5 px-3">Nama Barang</th>
-                      <th className="py-2.5 px-3 text-center">Satuan</th>
-                      <th className="py-2.5 px-3 text-right">Stok Sistem</th>
-                      <th className="py-2.5 px-3 text-right">Stok Aktual</th>
-                      <th className="py-2.5 px-3 text-right">Selisih</th>
-                      <th className="py-2.5 px-3">Alasan / Keterangan</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
+                <DnaTable className="w-full text-xs text-left">
+                  <DnaTableHead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3 w-10 text-center">#</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Nama Barang</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-center">Satuan</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Stok Sistem</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Stok Aktual</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Selisih</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Alasan / Keterangan</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody className="divide-y divide-slate-100">
                     {selectedAdj.items.map((it, idx) => (
-                      <tr key={idx}>
-                        <td className="py-2.5 px-3 text-center text-slate-400">{idx + 1}</td>
-                        <td className="py-2.5 px-3 font-medium text-slate-800">{it.name}</td>
-                        <td className="py-2.5 px-3 text-center text-slate-600">{it.unit}</td>
-                        <td className="py-2.5 px-3 text-right text-slate-600">{it.systemQty.toLocaleString()}</td>
-                        <td className="py-2.5 px-3 text-right font-semibold text-slate-900">{it.actualQty.toLocaleString()}</td>
-                        <td className={`py-2.5 px-3 text-right font-bold ${it.difference < 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                      <DnaTableRow key={idx}>
+                        <DnaTd className="py-2.5 px-3 text-center text-slate-400">{idx + 1}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 font-medium text-slate-800">{it.name}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-center text-slate-600">{it.unit}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right text-slate-600 tabular-nums">{it.systemQty.toLocaleString()}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right font-semibold text-slate-900 tabular-nums">{it.actualQty.toLocaleString()}</DnaTd>
+                        <DnaTd className={`py-2.5 px-3 text-right font-bold tabular-nums ${it.difference < 0 ? "text-rose-600" : "text-emerald-600"}`}>
                           {it.difference > 0 ? `+${it.difference}` : it.difference}
-                        </td>
-                        <td className="py-2.5 px-3 text-slate-500">{it.reason || "-"}</td>
-                      </tr>
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-slate-500">{it.reason || "-"}</DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
 
@@ -416,14 +503,19 @@ function StockAdjustmentContent() {
                 Gudang *
               </label>
               <select
-                value={formData.warehouse}
-                onChange={(e) => setFormData({ ...formData, warehouse: e.target.value })}
+                value={formData.warehouseId || (warehouseList[0]?.id ?? "")}
+                onChange={(e) => setFormData({ ...formData, warehouseId: e.target.value })}
                 className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-white font-medium"
               >
-                <option value="Gudang Bahan Baku">Gudang Bahan Baku</option>
-                <option value="Gudang Kemasan">Gudang Kemasan</option>
-                <option value="Gudang Barang Jadi">Gudang Barang Jadi</option>
-                <option value="Gudang Surabaya">Gudang Surabaya</option>
+                {warehouseList.length === 0 ? (
+                  <option value="">Gudang Utama</option>
+                ) : (
+                  warehouseList.map((wh: any) => (
+                    <option key={wh.id} value={wh.id}>
+                      {wh.name} {wh.code ? `(${wh.code})` : ""}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
             <div>
@@ -463,14 +555,28 @@ function StockAdjustmentContent() {
               <div className="col-span-4">
                 <label className="block text-[11px] font-semibold text-slate-600 mb-1">Barang *</label>
                 <select
-                  value={newItem.name}
-                  onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                  value={newItem.materialId}
+                  onChange={(e) => {
+                    const selectedMat = catalogMaterials.find((m: any) => m.id === e.target.value);
+                    const stockVal = Number(selectedMat?.stock || selectedMat?.currentStock || 0);
+                    setNewItem({
+                      ...newItem,
+                      materialId: e.target.value,
+                      name: selectedMat?.name || e.target.value,
+                      unit: selectedMat?.unit || "Unit",
+                      systemQty: stockVal,
+                      actualQty: stockVal,
+                      difference: 0,
+                    });
+                  }}
                   className="w-full text-xs border border-slate-200 rounded-lg p-2 bg-white"
                 >
-                  <option value="Hairdensyl Complex">Hairdensyl Complex (gr)</option>
-                  <option value="Niacinamide">Niacinamide (gr)</option>
-                  <option value="IPM">IPM (gr)</option>
-                  <option value="Secret Water">Secret Water (gr)</option>
+                  <option value="">-- Pilih Barang --</option>
+                  {catalogMaterials.map((mat: any) => (
+                    <option key={mat.id} value={mat.id}>
+                      {mat.name} ({mat.unit || "Unit"})
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="col-span-2">
@@ -508,32 +614,32 @@ function StockAdjustmentContent() {
 
           {/* Tabel Item Keranjang */}
           <div className="border border-slate-200 rounded-xl overflow-hidden">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                <tr>
-                  <th className="py-2.5 px-3 w-10 text-center">#</th>
-                  <th className="py-2.5 px-3">Barang</th>
-                  <th className="py-2.5 px-3 text-center">Satuan</th>
-                  <th className="py-2.5 px-3 text-right">Stok Sistem</th>
-                  <th className="py-2.5 px-3 text-right">Stok Aktual</th>
-                  <th className="py-2.5 px-3 text-right">Selisih</th>
-                  <th className="py-2.5 px-3">Alasan</th>
-                  <th className="py-2.5 px-3 text-center w-12">Hapus</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable className="w-full text-xs text-left">
+              <DnaTableHead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                <DnaTableRow>
+                  <DnaTh className="py-2.5 px-3 w-10 text-center">#</DnaTh>
+                  <DnaTh className="py-2.5 px-3">Barang</DnaTh>
+                  <DnaTh className="py-2.5 px-3 text-center">Satuan</DnaTh>
+                  <DnaTh className="py-2.5 px-3 text-right">Stok Sistem</DnaTh>
+                  <DnaTh className="py-2.5 px-3 text-right">Stok Aktual</DnaTh>
+                  <DnaTh className="py-2.5 px-3 text-right">Selisih</DnaTh>
+                  <DnaTh className="py-2.5 px-3">Alasan</DnaTh>
+                  <DnaTh className="py-2.5 px-3 text-center w-12">Hapus</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody className="divide-y divide-slate-100">
                 {formData.items.map((it, idx) => (
-                  <tr key={idx}>
-                    <td className="py-2 px-3 text-center text-slate-400">{idx + 1}</td>
-                    <td className="py-2 px-3 font-medium text-slate-800">{it.name}</td>
-                    <td className="py-2 px-3 text-center text-slate-600">{it.unit}</td>
-                    <td className="py-2 px-3 text-right text-slate-500">{it.systemQty.toLocaleString()}</td>
-                    <td className="py-2 px-3 text-right font-bold text-slate-800">{it.actualQty.toLocaleString()}</td>
-                    <td className={`py-2 px-3 text-right font-bold ${it.difference < 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                  <DnaTableRow key={idx}>
+                    <DnaTd className="py-2 px-3 text-center text-slate-400">{idx + 1}</DnaTd>
+                    <DnaTd className="py-2 px-3 font-medium text-slate-800">{it.name}</DnaTd>
+                    <DnaTd className="py-2 px-3 text-center text-slate-600">{it.unit}</DnaTd>
+                    <DnaTd className="py-2 px-3 text-right text-slate-500 tabular-nums">{it.systemQty.toLocaleString()}</DnaTd>
+                    <DnaTd className="py-2 px-3 text-right font-bold text-slate-800 tabular-nums">{it.actualQty.toLocaleString()}</DnaTd>
+                    <DnaTd className={`py-2 px-3 text-right font-bold tabular-nums ${it.difference < 0 ? "text-rose-600" : "text-emerald-600"}`}>
                       {it.difference > 0 ? `+${it.difference}` : it.difference}
-                    </td>
-                    <td className="py-2 px-3 text-slate-500">{it.reason || "-"}</td>
-                    <td className="py-2 px-3 text-center">
+                    </DnaTd>
+                    <DnaTd className="py-2 px-3 text-slate-500">{it.reason || "-"}</DnaTd>
+                    <DnaTd className="py-2 px-3 text-center">
                       <button
                         type="button"
                         onClick={() => handleRemoveItem(idx)}
@@ -541,11 +647,11 @@ function StockAdjustmentContent() {
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
 
           <div>

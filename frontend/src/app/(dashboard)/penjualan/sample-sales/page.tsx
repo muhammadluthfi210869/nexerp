@@ -1,22 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
   Package,
   Plus,
-  Eye,
   Beaker,
   Clock,
   CheckCircle2,
-  AlertCircle,
-  Truck,
-  Sparkles,
-  FileText,
-  Search,
-  Filter,
 } from "lucide-react";
 import {
   DnaPageHeader,
@@ -28,6 +21,12 @@ import {
   DnaButton,
   DnaInput,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface SampleOrder {
@@ -96,7 +95,7 @@ function SampleSalesContent() {
   const [formPrice, setFormPrice] = useState("250000");
   const [formNotes, setFormNotes] = useState("");
 
-  const { data: orders = [], isLoading } = useQuery<SampleOrder[]>({
+  const { data: orders = [] } = useQuery<SampleOrder[]>({
     queryKey: ["bussdev-samples"],
     queryFn: async () => {
       try {
@@ -225,6 +224,41 @@ function SampleSalesContent() {
   const inProcess = orders.filter((o) => o.status === "PROCESS").length;
   const approved = orders.filter((o) => o.status === "COMPLETED").length;
 
+  const createSampleMut = useMutation({
+    mutationFn: async () => {
+      const resp = await api.post("/bussdev/samples", {
+        customerName: formCustomer,
+        brandName: formBrand || undefined,
+        productName: formProduct,
+        physicalForm: formForm,
+        volumeNetto: formNetto,
+        color: formColor,
+        fragrance: formFragrance,
+        benefitClaims: formClaims,
+        qty: Number(formQty) || 1,
+        unitPrice: Number(formPrice) || 0,
+        description: formNotes || undefined,
+      });
+      return resp.data;
+    },
+    onSuccess: (data: any) => {
+      toast.success(
+        "Sample Order Dibuat",
+        `Permintaan ${data?.code || data?.sampleCode || formProduct} berhasil dikirim ke antrean Lab R&D.`
+      );
+      setIsCreateOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["bussdev-samples"] });
+      // Reset form
+      setFormCustomer("");
+      setFormBrand("");
+      setFormProduct("");
+      setFormNotes("");
+    },
+    onError: (err: any) => {
+      toast.error("Gagal Mengirim Sample", err?.response?.data?.message || err?.message || "Terjadi kesalahan sistem.");
+    },
+  });
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formCustomer || !formProduct) {
@@ -232,36 +266,7 @@ function SampleSalesContent() {
       return;
     }
 
-    const newOrder: SampleOrder = {
-      id: `smp-${Date.now()}`,
-      code: `SMP-2026-0${orders.length + 82}`,
-      createdAt: new Date().toISOString().split("T")[0],
-      customerName: formCustomer,
-      brandName: formBrand || "Private Label",
-      productName: formProduct,
-      physicalForm: formForm,
-      volumeNetto: formNetto,
-      color: formColor,
-      fragrance: formFragrance,
-      benefitClaims: formClaims,
-      formulator: "Apt. Sarah Sp.FK",
-      qty: Number(formQty) || 1,
-      unitPrice: Number(formPrice) || 250000,
-      sampleFeeOffset: Number(formPrice) || 250000,
-      status: "PENDING",
-      targetDate: "2026-03-28",
-      notes: formNotes,
-    };
-
-    queryClient.setQueryData(["bussdev-samples"], (old: SampleOrder[] = []) => [newOrder, ...old]);
-    toast.success("Sample Order Dibuat", `Permintaan ${newOrder.code} berhasil dikirim ke antrean Lab R&D.`);
-    setIsCreateOpen(false);
-
-    // Reset form
-    setFormCustomer("");
-    setFormBrand("");
-    setFormProduct("");
-    setFormNotes("");
+    createSampleMut.mutate();
   };
 
   return (
@@ -340,63 +345,63 @@ function SampleSalesContent() {
         }}
       >
         <div className="w-full">
-          <table className="w-full text-left border-collapse text-xs table-fixed">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-3 w-[18%]">Kode & Tanggal</th>
-                <th className="py-3 px-3 w-[22%]">Pelanggan & Brand</th>
-                <th className="py-3 px-3 w-[22%]">Produk & Tekstur</th>
-                <th className="py-3 px-3 w-[16%]">Formulator & Target</th>
-                <th className="py-3 px-3 w-[12%] text-center">Status</th>
-                <th className="py-3 px-3 w-[10%] text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <DnaTh className="py-3 px-3 w-[18%]">Kode & Tanggal</DnaTh>
+                <DnaTh className="py-3 px-3 w-[22%]">Pelanggan & Brand</DnaTh>
+                <DnaTh className="py-3 px-3 w-[22%]">Produk & Tekstur</DnaTh>
+                <DnaTh className="py-3 px-3 w-[16%]">Formulator & Target</DnaTh>
+                <DnaTh className="py-3 px-3 w-[12%] text-center">Status</DnaTh>
+                <DnaTh className="py-3 px-3 w-[10%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="text-center py-12 text-slate-400">
                     <Package className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
                     <p className="font-semibold text-slate-600">Tidak ada sample ditemukan</p>
                     <p className="text-xs text-slate-400">Coba sesuaikan kata kunci pencarian atau filter status.</p>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredOrders.map((sample) => (
-                  <tr key={sample.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-3">
-                      <p className="font-mono font-bold text-blue-600 truncate">{sample.code}</p>
-                      <p className="text-[11px] text-slate-400 font-mono truncate">{sample.createdAt}</p>
-                    </td>
-                    <td className="py-3 px-3">
+                  <DnaTableRow key={sample.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="py-3 px-3">
+                      <p className="tabular-nums font-bold text-blue-600 truncate">{sample.code}</p>
+                      <p className="text-[11px] text-slate-400 tabular-nums truncate">{sample.createdAt}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3">
                       <p className="font-semibold text-slate-900 truncate">{sample.customerName}</p>
                       <p className="text-[11px] text-slate-400 truncate">{sample.brandName || "Private Label"}</p>
-                    </td>
-                    <td className="py-3 px-3">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3">
                       <p className="font-semibold text-slate-800 truncate">{sample.productName}</p>
                       <p className="text-[11px] text-slate-400 truncate">{sample.physicalForm} • {sample.volumeNetto}</p>
-                    </td>
-                    <td className="py-3 px-3">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3">
                       <p className="text-slate-700 font-medium truncate">{sample.formulator || "R&D Lab"}</p>
-                      <p className="text-[10px] text-slate-400 font-mono">Tgt: {sample.targetDate || "—"}</p>
-                    </td>
-                    <td className="py-3 px-3 text-center">
+                      <p className="text-[10px] text-slate-400 tabular-nums">Tgt: {sample.targetDate || "—"}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-center">
                       <DnaCell.Badge
                         status={statusBadgeMap[sample.status] || "default"}
                         label={statusLabelMap[sample.status] || sample.status}
                       />
-                    </td>
-                    <td className="py-3 px-3 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-right">
                       <div className="flex justify-end gap-1">
                         <DnaButton variant="ghost" size="sm" onClick={() => setDetailOrder(sample)}>
                           Detail
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -444,15 +449,15 @@ function SampleSalesContent() {
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Target Selesai Lab</span>
-                <span className="font-mono font-semibold text-slate-700 text-xs">{detailOrder.targetDate || "-"}</span>
+                <span className="tabular-nums font-semibold text-slate-700 text-xs">{detailOrder.targetDate || "-"}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Harga Sample Satuan</span>
-                <span className="font-mono font-bold text-slate-800 text-xs">Rp {detailOrder.unitPrice.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums font-bold text-slate-800 text-xs">Rp {detailOrder.unitPrice.toLocaleString("id-ID")}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Kompensasi ke PO (Offset)</span>
-                <span className="font-mono font-bold text-emerald-600 text-xs">
+                <span className="tabular-nums font-bold text-emerald-600 text-xs">
                   Rp {detailOrder.sampleFeeOffset?.toLocaleString("id-ID") || "0"}
                 </span>
               </div>

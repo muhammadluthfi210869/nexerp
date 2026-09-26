@@ -30,6 +30,12 @@ import {
   DnaBadge,
   DnaCell,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface ScheduleMixingItem {
@@ -177,15 +183,15 @@ function ScheduleMixingContent() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "SCHEDULED":
-        return <DnaBadge status="warning">Terjadwal</DnaBadge>;
+        return <DnaBadge variant="warning">Terjadwal</DnaBadge>;
       case "IN_PROGRESS":
-        return <DnaBadge status="info">Proses Mixing</DnaBadge>;
+        return <DnaBadge variant="info">Proses Mixing</DnaBadge>;
       case "COMPLETED":
-        return <DnaBadge status="success">Selesai</DnaBadge>;
+        return <DnaBadge variant="success">Selesai</DnaBadge>;
       case "CANCELLED":
-        return <DnaBadge status="danger">Batal</DnaBadge>;
+        return <DnaBadge variant="critical">Batal</DnaBadge>;
       default:
-        return <DnaBadge status="default">{status}</DnaBadge>;
+        return <DnaBadge variant="default">{status}</DnaBadge>;
     }
   };
 
@@ -252,33 +258,33 @@ function ScheduleMixingContent() {
         }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1250px] text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
-                <th className="p-3.5 w-10 text-slate-400 font-mono text-center">#</th>
-                <th className="p-3.5 w-36 min-w-[130px] whitespace-nowrap">KODE JADWAL</th>
-                <th className="p-3.5 w-28 min-w-[110px] whitespace-nowrap">TANGGAL</th>
-                <th className="p-3.5 w-32 min-w-[120px] whitespace-nowrap">BATCH RECORD</th>
-                <th className="p-3.5 min-w-[180px] whitespace-nowrap">PELANGGAN</th>
-                <th className="p-3.5 min-w-[200px]">PRODUK</th>
-                <th className="p-3.5 w-28 min-w-[100px] text-right whitespace-nowrap">TARGET</th>
-                <th className="p-3.5 w-32 min-w-[110px] text-right whitespace-nowrap">HASIL UPSCALE</th>
-                <th className="p-3.5 w-32 min-w-[110px] text-center whitespace-nowrap">STATUS</th>
-                <th className="p-3.5 text-center w-24 whitespace-nowrap">AKSI</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="p-3.5 w-10 text-slate-400 tabular-nums text-center">#</DnaTh>
+                <DnaTh className="p-3.5 w-36 min-w-[130px] whitespace-nowrap">KODE JADWAL</DnaTh>
+                <DnaTh className="p-3.5 w-28 min-w-[110px] whitespace-nowrap">TANGGAL</DnaTh>
+                <DnaTh className="p-3.5 w-32 min-w-[120px] whitespace-nowrap">BATCH RECORD</DnaTh>
+                <DnaTh className="p-3.5 min-w-[180px] whitespace-nowrap">PELANGGAN</DnaTh>
+                <DnaTh className="p-3.5 min-w-[200px]">PRODUK</DnaTh>
+                <DnaTh className="p-3.5 w-28 min-w-[100px] text-right whitespace-nowrap">TARGET</DnaTh>
+                <DnaTh className="p-3.5 w-32 min-w-[110px] text-right whitespace-nowrap">HASIL UPSCALE</DnaTh>
+                <DnaTh className="p-3.5 w-32 min-w-[110px] text-center whitespace-nowrap">STATUS</DnaTh>
+                <DnaTh className="p-3.5 text-center w-24 whitespace-nowrap">AKSI</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={10} className="py-12 text-center text-slate-400">
                     Tidak ada jadwal mixing ditemukan
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3.5 text-slate-400 font-mono text-[11px] tabular-nums text-center">{idx + 1}</td>
-                    <td className="p-3.5 whitespace-nowrap">
+                  <DnaTableRow key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="p-3.5 text-slate-400 tabular-nums text-[11px] tabular-nums text-center">{idx + 1}</DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap">
                       <DnaCell.Code
                         value={item.code}
                         onClick={() => {
@@ -286,21 +292,21 @@ function ScheduleMixingContent() {
                           setIsDetailOpen(true);
                         }}
                       />
-                    </td>
-                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Date value={item.date} /></td>
-                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Code value={item.batchRecord} /></td>
-                    <td className="p-3.5 whitespace-nowrap"><DnaCell.Text primary={item.customer} /></td>
-                    <td className="p-3.5 min-w-[200px]"><DnaCell.Text primary={item.product} /></td>
-                    <td className="p-3.5 text-right whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap"><DnaCell.Date value={item.date} /></DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap"><DnaCell.Code value={item.batchRecord} /></DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap"><DnaCell.Text primary={item.customer} /></DnaTd>
+                    <DnaTd className="p-3.5 min-w-[200px]"><DnaCell.Text primary={item.product} /></DnaTd>
+                    <DnaTd className="p-3.5 text-right whitespace-nowrap">
                       <DnaCell.Number value={item.targetPcs} suffix="PCS" />
-                    </td>
-                    <td className="p-3.5 text-right whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-right whitespace-nowrap">
                       <DnaCell.Number value={item.upscaleResult} suffix={item.unit} />
-                    </td>
-                    <td className="p-3.5 text-center whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center whitespace-nowrap">
                       <DnaCell.Badge status={item.status} />
-                    </td>
-                    <td className="p-3.5 text-center">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <button
                           type="button"
@@ -328,12 +334,12 @@ function ScheduleMixingContent() {
                           <Printer className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 

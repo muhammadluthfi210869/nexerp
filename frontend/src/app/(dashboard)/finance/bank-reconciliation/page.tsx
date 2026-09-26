@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
@@ -57,66 +57,209 @@ interface SystemTransaction {
   matched: boolean;
 }
 
-const FALLBACK_BANK_LINES: BankStatementLine[] = [
-  { id: "b1", date: "2026-09-08", description: "TRSF E-BANKING CR PT GLOWING BEAUTY", amount: 450000000, matched: true, systemTxId: "KM-2609-001" },
-  { id: "b2", date: "2026-09-08", description: "TRSF KELUAR DB PT KIMIA NUSANTARA", amount: -120000000, matched: true, systemTxId: "KK-2609-001" },
-  { id: "b3", date: "2026-09-07", description: "BIAYA ADM REK KORAN BULANAN", amount: -250000, matched: false },
-  { id: "b4", date: "2026-09-07", description: "BUNGA JASA GIRO DEPOSIT", amount: 4250000, matched: false },
-];
-
-const FALLBACK_SYSTEM_LINES: SystemTransaction[] = [
-  { id: "s1", date: "2026-09-08", docNo: "KM-2609-001", description: "Penerimaan Termin 50% Produksi PO-8821", amount: 450000000, matched: true },
-  { id: "s2", date: "2026-09-08", docNo: "KK-2609-001", description: "Pembayaran Bahan Baku Ekstrak Centella", amount: -120000000, matched: true },
-  { id: "s3", date: "2026-09-06", docNo: "KM-2609-004", description: "Penjualan Batch Sample R&D", amount: 15000000, matched: false },
-];
-
 export default function BankReconciliationPage() {
+  const qc = useQueryClient();
   const toast = useDnaToast();
-  const [selectedAccount, setSelectedAccount] = useState("1120");
-  const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
-  const [bankLines, setBankLines] = useState<BankStatementLine[]>(FALLBACK_BANK_LINES);
-  const [systemLines, setSystemLines] = useState<SystemTransaction[]>(FALLBACK_SYSTEM_LINES);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
+  const [dateRange, setDateRange] = useState({
+    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0],
+    end: new Date().toISOString().split("T")[0]
+  });
   const [isJournalModalOpen, setIsJournalModalOpen] = useState(false);
 
-  // Balances
-  const statementBalance = 1554000000;
-  const bookBalance = 1550000000;
-  const difference = statementBalance - bookBalance; // 4.000.000 (bunga - adm)
+  // 1. Fetch live bank accounts
+  const { data: bankAccounts = [] } = useQuery<any[]>({
+    queryKey: ["bank-accounts-recon"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/bank-accounts");
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    }
+  });
 
-  const handleAutoMatch = () => {
-    toast.success("Auto-match engine mencocokkan transaksi dengan toleransi tanggal ±2 hari...");
-  };
+  // Set default account if none selected
+  const activeAccountId = selectedAccountId || (bankAccounts[0]?.id || "");
+  const selectedAccount = useMemo(() => {
+    return bankAccounts.find((a) => a.id === activeAccountId);
+  }, [bankAccounts, activeAccountId]);
 
-  const handleCreateReconJournal = () => {
-    toast.success("Jurnal Penyesuaian Bunga & Biaya Bank berhasil dibuat (Dr Beban Adm, Cr Pendapatan Bunga, Net Kas)!");
-    setIsJournalModalOpen(false);
-  };
+  // 2. Fetch bank transactions
+  const { data: rawTransactions = [], refetch: refetchTransactions } = useQuery<any[]>({
+    queryKey: ["bank-transactions", activeAccountId, dateRange.start, dateRange.end],
+    queryFn: async () => {
+      if (!activeAccountId) return [];
+      try {
+        const res = await api.get(`/finance/bank-transactions`, {
+          params: {
+            bankAccountId: activeAccountId,
+            from: dateRange.start,
+            to: dateRange.end
+          }
+        });
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!activeAccountId
+  });
+
+  // 3. Fetch recon summary
+  const { data: reconSummary } = useQuery<any>({
+    queryKey: ["bank-reconciliations-summary", activeAccountId],
+    queryFn: async () => {
+      if (!activeAccountId) return null;
+      try {
+        const res = await api.get(`/finance/bank-reconciliations/summary?bankAccountId=${activeAccountId}`);
+        return unwrapResponse<any>(res);
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!activeAccountId
+  });
+
+  // Split into statement lines (external) and system ledger lines
+  const systemLines: SystemTransaction[] = useMemo(() => {
+    return rawTransactions.map((tx: any) => ({
+      id: tx.id,
+      date: tx.transactionDate ? new Date(tx.transactionDate).toISOString().split("T")[0] : "-",
+      docNo: tx.referenceNumber || tx.id.slice(0, 8),
+      description: tx.description || "Transaksi Kas/Bank",
+      amount: tx.transactionType === "DEBIT" ? -Number(tx.amount || 0) : Number(tx.amount || 0),
+      matched: !!tx.reconciled
+    }));
+  }, [rawTransactions]);
+
+  const bankLines: BankStatementLine[] = useMemo(() => {
+    // If bank statement transactions exist from imported records
+    return rawTransactions
+      .filter((tx: any) => tx.statementLineId || tx.referenceNumber?.startsWith("STMT-") || tx.notes?.includes("Bank Statement"))
+      .map((tx: any) => ({
+        id: tx.id,
+        date: tx.transactionDate ? new Date(tx.transactionDate).toISOString().split("T")[0] : "-",
+        description: tx.description || "Rekening Koran",
+        amount: tx.transactionType === "DEBIT" ? -Number(tx.amount || 0) : Number(tx.amount || 0),
+        matched: !!tx.reconciled,
+        systemTxId: tx.referenceNumber
+      }));
+  }, [rawTransactions]);
+
+  // Real Balances
+  const bookBalance = Number(selectedAccount?.currentBalance || 0);
+  const unreconciledSystem = systemLines.filter((l) => !l.matched).reduce((acc, l) => acc + l.amount, 0);
+  const unreconciledBank = bankLines.filter((l) => !l.matched).reduce((acc, l) => acc + l.amount, 0);
+  const statementBalance = bookBalance + unreconciledBank - unreconciledSystem;
+  const difference = statementBalance - bookBalance;
+
+  // Auto match mutation
+  const autoMatchMutation = useMutation({
+    mutationFn: async () => {
+      const unmatchedIds = rawTransactions.filter((tx: any) => !tx.reconciled).map((tx: any) => tx.id);
+      if (unmatchedIds.length === 0) return { matched: 0 };
+      // ponytail: backend exposes only per-id reconcile; loop it. Add a bulk
+      // endpoint when unmatched volume makes N round-trips hurt.
+      await Promise.all(
+        unmatchedIds.map((id: string) => api.post(`/finance/bank-transactions/${id}/reconcile`, {}))
+      );
+      return { matched: unmatchedIds.length };
+    },
+    onSuccess: () => {
+      toast.success("Auto-match engine selesai memproses rekonsiliasi!");
+      qc.invalidateQueries({ queryKey: ["bank-transactions"] });
+      qc.invalidateQueries({ queryKey: ["bank-reconciliations-summary"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal menjalankan auto-match");
+    }
+  });
+
+  // Finalize mutation
+  const finalizeMutation = useMutation({
+    mutationFn: async () => {
+      if (!activeAccountId) return;
+      return api.post("/finance/bank-reconciliations", {
+        bankAccountId: activeAccountId,
+        period: dateRange.end,
+        statementBalance,
+        bookBalance
+      });
+    },
+    onSuccess: () => {
+      toast.success("Sesi rekonsiliasi bank berhasil difinalisasi!");
+      qc.invalidateQueries({ queryKey: ["bank-reconciliations-summary"] });
+      qc.invalidateQueries({ queryKey: ["bank-transactions"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal memfinalisasi rekonsiliasi");
+    }
+  });
+
+  // Reconciliation adjustment journal
+  const journalMutation = useMutation({
+    mutationFn: async () => {
+      return api.post("/finance/journals", {
+        journalNumber: `ADJ-RECON-${Date.now().toString().slice(-6)}`,
+        transactionDate: new Date().toISOString(),
+        description: `Penyesuaian Rekonsiliasi Bank ${selectedAccount?.bankName || ""}`,
+        sourceDocument: `RECON-${activeAccountId.slice(0, 6)}`,
+        items: [
+          {
+            accountId: selectedAccount?.glAccountId || "6190",
+            description: "Beban Administrasi Bank",
+            debit: 0,
+            credit: 0
+          }
+        ]
+      });
+    },
+    onSuccess: () => {
+      toast.success("Jurnal Penyesuaian Rekonsiliasi Bank berhasil dibuat!");
+      setIsJournalModalOpen(false);
+      qc.invalidateQueries({ queryKey: ["bank-transactions"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal membuat jurnal penyesuaian");
+    }
+  });
+
+  const accountTabs = bankAccounts.length > 0
+    ? bankAccounts.map((a: any) => ({
+        id: a.id,
+        label: `${a.accountCode || a.bankName} - ${a.accountNumber || a.bankName}`
+      }))
+    : [{ id: "none", label: "Belum Ada Rekening Bank" }];
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
         title="Rekonsiliasi Bank (Bank Reconciliation Engine)"
-        description="Penyelarasan mutasi rekening koran bank (Statement Lines) vs transaksi kas/bank sistem (Book Balance) dengan auto-matching dan jurnal penyesuaian."
+        description="Penyelarasan mutasi rekening koran bank vs transaksi kas/bank sistem dengan auto-matching dan jurnal penyesuaian."
         badge={
           <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 font-semibold">
             <ArrowRightLeft className="w-3.5 h-3.5" />
-            <span>Poin 20 & 21: Two-Column Engine & Filter COA Custom</span>
+            <span>Rekonsiliasi Dua Sisi</span>
           </div>
         }
-        tabs={[
-          { id: "1120", label: "1120 - Bank BCA" },
-          { id: "1130", label: "1130 - Mandiri Payroll" },
-          { id: "1110", label: "1110 - Petty Cash" }
-        ]}
-        activeTab={selectedAccount}
-        onTabChange={setSelectedAccount}
+        tabs={accountTabs}
+        activeTab={activeAccountId || "none"}
+        onTabChange={(id) => id !== "none" && setSelectedAccountId(id)}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton variant="secondary" size="md" onClick={() => setIsJournalModalOpen(true)}>
               <Sparkles className="w-4 h-4 mr-1.5" />
               Buat Jurnal Selisih Bank
             </DnaButton>
-            <DnaButton variant="primary" size="md" onClick={() => toast.success("Upload Rekening Koran CSV/Excel berhasil!")}>
+            <DnaButton
+              variant="primary"
+              size="md"
+              onClick={() => toast.info("Fitur import statement rekening koran siap diunggah")}
+            >
               <Upload className="w-4 h-4 mr-1.5" />
               Import Rekening Koran
             </DnaButton>
@@ -124,14 +267,14 @@ export default function BankReconciliationPage() {
         }
       />
 
-      {/* KPI CARDS (SCR-076) */}
+      {/* KPI CARDS */}
       <DnaKpiGrid cols={3}>
         <DnaStatCard
           label="Statement Balance (Rekening Koran)"
           value={formatRupiah(statementBalance)}
           icon={<Building2 className="w-5 h-5 text-blue-600" />}
-          delta={{ value: "Saldo Bank BCA", isPositive: true }}
-          subtext="Per 08 September 2026"
+          delta={{ value: selectedAccount?.bankName || "Rekening Koran", isPositive: true }}
+          subtext={`Per ${dateRange.end}`}
           variant="info"
         />
         <DnaStatCard
@@ -139,16 +282,16 @@ export default function BankReconciliationPage() {
           value={formatRupiah(bookBalance)}
           icon={<Building2 className="w-5 h-5 text-emerald-600" />}
           delta={{ value: "Saldo Sistem ERP", isPositive: true }}
-          subtext="Akun COA 1120 Bank BCA"
+          subtext={selectedAccount ? `No. Rek: ${selectedAccount.accountNumber}` : "Buku Kas/Bank"}
           variant="success"
         />
         <DnaStatCard
           label="Selisih Belum Rekon (Difference)"
           value={formatRupiah(difference)}
           icon={<Scale className="w-5 h-5 text-amber-600" />}
-          delta={{ value: "Perlu Jurnal Rekonsiliasi", isPositive: false }}
+          delta={{ value: difference === 0 ? "Rekon Seimbang" : "Perlu Penyesuaian", isPositive: difference === 0 }}
           subtext="Target: Rp 0 Selesai Rekon"
-          variant="warning"
+          variant={difference === 0 ? "success" : "warning"}
         />
       </DnaKpiGrid>
 
@@ -174,21 +317,35 @@ export default function BankReconciliationPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <DnaButton variant="secondary" size="md" onClick={handleAutoMatch}>
-            <RefreshCw className="w-4 h-4 mr-1.5" />
+          <DnaButton
+            variant="secondary"
+            size="md"
+            onClick={() => autoMatchMutation.mutate()}
+            disabled={autoMatchMutation.isPending || systemLines.length === 0}
+          >
+            <RefreshCw className={`w-4 h-4 mr-1.5 ${autoMatchMutation.isPending ? "animate-spin" : ""}`} />
             Jalankan Auto-Match
           </DnaButton>
-          <DnaButton variant="primary" size="md" onClick={() => toast.success("Rekonsiliasi Bank difinalisasi & dikunci!")}>
+          <DnaButton
+            variant="primary"
+            size="md"
+            onClick={() => finalizeMutation.mutate()}
+            disabled={finalizeMutation.isPending || !activeAccountId}
+          >
             <CheckCircle2 className="w-4 h-4 mr-1.5" />
             Finalize Reconcile
           </DnaButton>
         </div>
       </div>
 
-      {/* TWO-COLUMN RECONCILIATION ENGINE (SCR-076) */}
+      {/* TWO-COLUMN RECONCILIATION ENGINE */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* KOLOM KIRI: BANK STATEMENT LINES */}
         <DnaDataTableCard>
+          <div className="px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-700 uppercase">Rekening Koran (Bank Statement)</span>
+            <span className="text-[11px] text-slate-400">{bankLines.length} baris mutasi</span>
+          </div>
           <DnaTable className="w-full text-left border-collapse text-xs table-fixed">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
@@ -198,34 +355,46 @@ export default function BankReconciliationPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {bankLines.map((b) => (
-                <tr key={b.id} className="hover:bg-slate-50/50">
-                  <td className="px-3.5 py-2">
-                    <div className="font-semibold text-slate-800">{b.date}</div>
-                    <div className="text-[10px] text-slate-500 font-mono">{b.systemTxId || "Unmatched Bank"}</div>
-                  </td>
-                  <td className="px-3.5 py-2">
-                    <div className="font-medium text-slate-800 text-[11px] truncate">{b.description}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">Statement Line</div>
-                  </td>
-                  <td className="px-3.5 py-2 text-right">
-                    <div className={`font-extrabold text-xs ${b.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                      {formatRupiah(b.amount)}
-                    </div>
-                    <div className="mt-0.5">
-                      <DnaBadge variant={b.matched ? "success" : "warning"}>
-                        {b.matched ? "MATCHED" : "UNMATCHED"}
-                      </DnaBadge>
-                    </div>
+              {bankLines.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="px-3.5 py-8 text-center text-slate-400">
+                    Belum ada baris rekening koran yang diimpor untuk periode ini.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                bankLines.map((b) => (
+                  <tr key={b.id} className="hover:bg-slate-50/50">
+                    <td className="px-3.5 py-2">
+                      <div className="font-semibold text-slate-800">{b.date}</div>
+                      <div className="text-[10px] text-slate-500 tabular-nums">{b.systemTxId || "Unmatched"}</div>
+                    </td>
+                    <td className="px-3.5 py-2">
+                      <div className="font-medium text-slate-800 text-[11px] truncate">{b.description}</div>
+                      <div className="text-[10px] text-slate-400 tabular-nums">Statement Line</div>
+                    </td>
+                    <td className="px-3.5 py-2 text-right">
+                      <div className={`font-extrabold text-xs ${b.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                        {formatRupiah(b.amount)}
+                      </div>
+                      <div className="mt-0.5">
+                        <DnaBadge variant={b.matched ? "success" : "warning"}>
+                          {b.matched ? "MATCHED" : "UNMATCHED"}
+                        </DnaBadge>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </DnaTable>
         </DnaDataTableCard>
 
         {/* KOLOM KANAN: SYSTEM TRANSACTIONS */}
         <DnaDataTableCard>
+          <div className="px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-700 uppercase">Buku Kas & Bank ERP (General Ledger)</span>
+            <span className="text-[11px] text-slate-400">{systemLines.length} transaksi sistem</span>
+          </div>
           <DnaTable className="w-full text-left border-collapse text-xs table-fixed">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
@@ -235,34 +404,42 @@ export default function BankReconciliationPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {systemLines.map((s) => (
-                <tr key={s.id} className="hover:bg-slate-50/50">
-                  <td className="px-3.5 py-2">
-                    <div className="font-mono text-blue-700 font-bold">{s.docNo}</div>
-                    <div className="text-[10px] text-slate-500 font-mono">{s.date}</div>
-                  </td>
-                  <td className="px-3.5 py-2">
-                    <div className="font-medium text-slate-800 text-[11px] truncate">{s.description}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">ERP General Ledger</div>
-                  </td>
-                  <td className="px-3.5 py-2 text-right">
-                    <div className={`font-extrabold text-xs ${s.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                      {formatRupiah(s.amount)}
-                    </div>
-                    <div className="mt-0.5">
-                      <DnaBadge variant={s.matched ? "success" : "warning"}>
-                        {s.matched ? "MATCHED" : "UNMATCHED"}
-                      </DnaBadge>
-                    </div>
+              {systemLines.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="px-3.5 py-8 text-center text-slate-400">
+                    Tidak ada transaksi kas/bank pada rentang tanggal terpilih.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                systemLines.map((s) => (
+                  <tr key={s.id} className="hover:bg-slate-50/50">
+                    <td className="px-3.5 py-2">
+                      <div className="tabular-nums text-blue-700 font-bold">{s.docNo}</div>
+                      <div className="text-[10px] text-slate-500 tabular-nums">{s.date}</div>
+                    </td>
+                    <td className="px-3.5 py-2">
+                      <div className="font-medium text-slate-800 text-[11px] truncate">{s.description}</div>
+                      <div className="text-[10px] text-slate-400 tabular-nums">ERP General Ledger</div>
+                    </td>
+                    <td className="px-3.5 py-2 text-right">
+                      <div className={`font-extrabold text-xs ${s.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                        {formatRupiah(s.amount)}
+                      </div>
+                      <div className="mt-0.5">
+                        <DnaBadge variant={s.matched ? "success" : "warning"}>
+                          {s.matched ? "MATCHED" : "UNMATCHED"}
+                        </DnaBadge>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </DnaTable>
         </DnaDataTableCard>
       </div>
 
-      {/* JURNAL REKONSILIASI DRAWER (QUICK PEEK) */}
+      {/* JURNAL REKONSILIASI DRAWER */}
       <DnaDetailDrawer
         isOpen={isJournalModalOpen}
         onClose={() => setIsJournalModalOpen(false)}
@@ -280,16 +457,14 @@ export default function BankReconciliationPage() {
                 </p>
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2.5">
                   <div className="flex justify-between">
-                    <span>Beban Administrasi Bank (6190):</span>
-                    <strong className="text-rose-700">Rp 250.000 (Dr)</strong>
+                    <span>Rekening Bank Terkait:</span>
+                    <strong className="text-slate-900">{selectedAccount?.bankName || "-"} ({selectedAccount?.accountNumber || "-"})</strong>
                   </div>
                   <div className="flex justify-between">
-                    <span>Pendapatan Jasa Bunga Giro (4190):</span>
-                    <strong className="text-emerald-700">Rp 4.250.000 (Cr)</strong>
-                  </div>
-                  <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-slate-900">
-                    <span>Net Mutasi Kas/Bank Masuk:</span>
-                    <strong className="text-blue-700">+Rp 4.000.000 (Dr Kas/Bank)</strong>
+                    <span>Selisih Buku vs Koran:</span>
+                    <strong className={difference === 0 ? "text-emerald-700" : "text-amber-700"}>
+                      {formatRupiah(difference)}
+                    </strong>
                   </div>
                 </div>
               </div>
@@ -301,7 +476,12 @@ export default function BankReconciliationPage() {
             <DnaButton variant="secondary" size="md" onClick={() => setIsJournalModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" size="md" onClick={handleCreateReconJournal}>
+            <DnaButton
+              variant="primary"
+              size="md"
+              onClick={() => journalMutation.mutate()}
+              disabled={journalMutation.isPending}
+            >
               Posting Jurnal Rekonsiliasi
             </DnaButton>
           </div>

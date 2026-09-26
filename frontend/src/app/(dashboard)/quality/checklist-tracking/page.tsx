@@ -41,7 +41,7 @@ interface ChecklistTracking {
 
 export default function ChecklistTrackingPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400 font-mono text-xs">Memuat Tracking Checklist...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-slate-400 tabular-nums text-xs">Memuat Tracking Checklist...</div>}>
       <ChecklistTrackingContent />
     </Suspense>
   );
@@ -78,60 +78,7 @@ function ChecklistTrackingContent() {
           passedItems: c.passedItems || c.completedItems || 12,
         }));
       } catch {
-        return [
-          {
-            id: "chk-001",
-            code: "QC-FORM-014",
-            category: "Formulasi",
-            name: "Audit Stabilitas & Viskositas Serum Niacinamide",
-            pic: "Ratna Formulator",
-            completedAt: "2026-09-02T10:30:00Z",
-            duration: "35 Menit",
-            status: "VERIFIED",
-            verifiedBy: "Dr. Budi Santoso",
-            totalItems: 14,
-            passedItems: 14,
-          },
-          {
-            id: "chk-002",
-            code: "QC-PROD-088",
-            category: "Produksi",
-            name: "Pemeriksaan Homogenitas Tangki Mixing 500L",
-            pic: "Agus Operator",
-            completedAt: "2026-09-03T14:15:00Z",
-            duration: "25 Menit",
-            status: "COMPLETED",
-            verifiedBy: "Wahyu Supervisor",
-            totalItems: 10,
-            passedItems: 10,
-          },
-          {
-            id: "chk-003",
-            code: "QC-PACK-042",
-            category: "Kemas",
-            name: "Uji Kebocoran Botol Dropper & Cetak Batch Lot",
-            pic: "Dewi Finishing",
-            completedAt: "2026-09-04T09:40:00Z",
-            duration: "40 Menit",
-            status: "VERIFIED",
-            verifiedBy: "Wahyu Supervisor",
-            totalItems: 8,
-            passedItems: 8,
-          },
-          {
-            id: "chk-004",
-            code: "QC-WH-021",
-            category: "Gudang",
-            name: "Inspeksi Masuk Raw Material Active Ingredient",
-            pic: "Bambang Logistik",
-            completedAt: "2026-09-05T11:20:00Z",
-            duration: "50 Menit",
-            status: "COMPLETED",
-            verifiedBy: "Muhammad Ghufron",
-            totalItems: 16,
-            passedItems: 15,
-          },
-        ];
+        return [];
       }
     },
   });
@@ -349,7 +296,7 @@ function ChecklistTrackingContent() {
                       setIsDetailDrawerOpen(true);
                     }}
                   >
-                    <td className="p-3.5 text-center text-slate-400 font-mono text-[11px] tabular-nums">
+                    <td className="p-3.5 text-center text-slate-400 tabular-nums text-[11px] tabular-nums">
                       {(currentPage - 1) * pageSize + idx + 1}
                     </td>
                     <td className="p-3.5">
@@ -450,7 +397,7 @@ function ChecklistTrackingContent() {
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">Durasi Pengerjaan</span>
-                    <span className="font-mono font-medium text-slate-800">{selectedChecklist.duration}</span>
+                    <span className="tabular-nums font-medium text-slate-800">{selectedChecklist.duration}</span>
                   </div>
                 </div>
 
@@ -502,7 +449,7 @@ function ChecklistTrackingContent() {
                       <span className="font-medium text-slate-800">
                         Butir Audit #{i + 1}: Kepatuhan Spesifikasi Standar Batch
                       </span>
-                      <span className="text-[10px] text-slate-400 block font-mono">SOP-QC-SEC-{100 + i}</span>
+                      <span className="text-[10px] text-slate-400 block tabular-nums">SOP-QC-SEC-{100 + i}</span>
                     </div>
                     <DnaBadge variant={i < selectedChecklist.passedItems ? "success" : "critical"}>
                       {i < selectedChecklist.passedItems ? "Lolos" : "Penyimpangan"}

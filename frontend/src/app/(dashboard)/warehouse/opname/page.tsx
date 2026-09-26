@@ -35,7 +35,12 @@ import {
   DnaTextarea,
   DnaTable,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { DnaCell } from "@/components/dna/cells/DnaCell";
 
@@ -84,12 +89,26 @@ export default function StockOpnamePage() {
 
   // Form State
   const [newSessionForm, setNewSessionForm] = useState({
-    warehouseCode: "WH-01",
-    warehouseName: "WH-01 Gudang Bahan Baku",
-    auditorLead: "Hendro Wibowo (Kepala Gudang)",
-    auditorTeam: "Budi Santoso, Dewi Sartika",
+    warehouseId: "",
+    warehouseCode: "",
+    warehouseName: "",
+    auditorLead: "",
+    auditorTeam: "",
     notes: "",
     freezeInventory: true,
+  });
+
+  // Query warehouse list
+  const { data: warehouseList = [] } = useQuery({
+    queryKey: ["warehouse-list-options"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/warehouses");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
   });
 
   // Query sessions
@@ -104,6 +123,42 @@ export default function StockOpnamePage() {
       }
     },
   });
+
+  const handleCreateOpname = async () => {
+    if (!newSessionForm.warehouseId && warehouseList.length > 0) {
+      toast.error("Pilih gudang terlebih dahulu");
+      return;
+    }
+    const targetWhId = newSessionForm.warehouseId || warehouseList[0]?.id;
+    if (!targetWhId) {
+      toast.error("Gudang tidak tersedia");
+      return;
+    }
+    try {
+      await api.post("/warehouse/opname", {
+        warehouseId: targetWhId,
+        picId: newSessionForm.auditorLead || "SYSTEM",
+        notes: newSessionForm.notes || undefined,
+        items: [],
+      });
+      toast.success("Sesi opname dimulai. Transaksi di gudang terpilih telah dibekukan (FROZEN).");
+      queryClient.invalidateQueries({ queryKey: ["warehouse-opname-sessions"] });
+      setIsCreateModalOpen(false);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Gagal memulai sesi opname");
+    }
+  };
+
+  const handleApproveOpname = async (id: string) => {
+    try {
+      await api.post(`/warehouse/opname/${id}/approve`, {});
+      toast.success("Rekonsiliasi opname disetujui & penyesuaian stok otomatis dibukukan.");
+      queryClient.invalidateQueries({ queryKey: ["warehouse-opname-sessions"] });
+      setSelectedSession(null);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Gagal menyetujui opname");
+    }
+  };
 
   const sessions: OpnameSession[] = useMemo(() => {
     if (!rawSessions || !Array.isArray(rawSessions)) return [];
@@ -143,10 +198,10 @@ export default function StockOpnamePage() {
         warehouseName: s.warehouse?.name || "Gudang Utama",
         auditorLead: s.pic?.name || s.picId || "Auditor Lead",
         auditorTeam: [],
-        totalSkus: items.length || 15,
-        countedSkus: counted || 12,
-        matchedSkus: matched || 10,
-        varianceSkus: variance || 2,
+        totalSkus: items.length,
+        countedSkus: counted,
+        matchedSkus: matched,
+        varianceSkus: variance,
         netVarianceValuation: netVal,
         status: (s.status === "COMPLETED" ? "RECONCILED_CLOSED" : s.status === "PENDING_APPROVAL" ? "IN_COUNT" : "DRAFT_FREEZE") as any,
         notes: s.notes,
@@ -274,65 +329,65 @@ export default function StockOpnamePage() {
         }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
-                <th className="px-4 py-3 h-[40px] w-[140px]">No. Sesi</th>
-                <th className="px-3 py-3 h-[40px] w-[110px]">Tgl Opname</th>
-                <th className="px-3 py-3 h-[40px]">Gudang Audit</th>
-                <th className="px-3 py-3 h-[40px]">Lead Auditor</th>
-                <th className="px-3 py-3 h-[40px] text-right w-[100px]">Total SKU</th>
-                <th className="px-3 py-3 h-[40px] text-center w-[140px]">Progres Hitung</th>
-                <th className="px-3 py-3 h-[40px] text-right w-[140px]">Varians Bersih</th>
-                <th className="px-3 py-3 h-[40px] text-center w-[140px]">Status</th>
-                <th className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="px-4 py-3 h-[40px] w-[140px]">No. Sesi</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[110px]">Tgl Opname</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Gudang Audit</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Lead Auditor</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[100px]">Total SKU</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-center w-[140px]">Progres Hitung</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[140px]">Varians Bersih</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-center w-[140px]">Status</DnaTh>
+                <DnaTh className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredSessions.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-12 text-center text-slate-400">
                     <ClipboardCheck className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada sesi stok opname yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredSessions.map((s) => (
-                  <tr
+                  <DnaTableRow
                     key={s.id}
                     onClick={() => setSelectedSession(s)}
                     className="hover:bg-slate-50/60 transition-colors cursor-pointer group h-[48px]"
                   >
                     {/* Kolom 1: No. Sesi */}
-                    <td className="px-4 py-2">
+                    <DnaTd className="px-4 py-2">
                       <DnaCell.Code value={s.sessionCode} />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 2: Tgl Opname */}
-                    <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                    <DnaTd className="px-3 py-2 text-slate-600 whitespace-nowrap">
                       {s.sessionDate}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 3: Gudang Audit */}
-                    <td className="px-3 py-2 text-slate-800 font-medium truncate max-w-[180px]">
+                    <DnaTd className="px-3 py-2 text-slate-800 font-medium truncate max-w-[180px]">
                       {s.warehouseName}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 4: Lead Auditor */}
-                    <td className="px-3 py-2 text-slate-800 truncate max-w-[160px]">
+                    <DnaTd className="px-3 py-2 text-slate-800 truncate max-w-[160px]">
                       {s.auditorLead}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 5: Total SKU */}
-                    <td className="px-3 py-2 text-right">
+                    <DnaTd className="px-3 py-2 text-right">
                       <DnaCell.Number
                         value={s.totalSkus}
                         unit="SKU"
                       />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 6: Progres Hitung */}
-                    <td className="px-3 py-2">
+                    <DnaTd className="px-3 py-2">
                       <div className="flex flex-col items-center gap-1">
                         <span className="text-[11px] font-semibold text-slate-700">
                           {s.countedSkus}/{s.totalSkus} SKU ({Math.round((s.countedSkus / (s.totalSkus || 1)) * 100)}%)
@@ -344,22 +399,22 @@ export default function StockOpnamePage() {
                           />
                         </div>
                       </div>
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 7: Varians Bersih */}
-                    <td className="px-3 py-2 text-right">
-                      <span className={`font-mono font-semibold text-[12px] ${s.netVarianceValuation < 0 ? "text-rose-600" : "text-emerald-700"}`}>
+                    <DnaTd className="px-3 py-2 text-right">
+                      <span className={`tabular-nums font-semibold text-[12px] ${s.netVarianceValuation < 0 ? "text-rose-600" : "text-emerald-700"}`}>
                         {formatRupiah(s.netVarianceValuation)}
                       </span>
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 8: Status */}
-                    <td className="px-3 py-2 text-center">
+                    <DnaTd className="px-3 py-2 text-center">
                       {getStatusBadge(s.status)}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 9: Aksi */}
-                    <td className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                    <DnaTd className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -368,12 +423,12 @@ export default function StockOpnamePage() {
                       >
                         <Eye className="w-4 h-4" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -398,10 +453,7 @@ export default function StockOpnamePage() {
               <DnaButton
                 variant="primary"
                 size="sm"
-                onClick={() => {
-                  toast.success("Rekonsiliasi opname disetujui & penyesuaian stok otomatis dibukukan.");
-                  setSelectedSession(null);
-                }}
+                onClick={() => handleApproveOpname(selectedSession.id)}
               >
                 Tutup Sesi & Rekonsiliasi
               </DnaButton>
@@ -447,7 +499,7 @@ export default function StockOpnamePage() {
                 </div>
                 <div>
                   <span className="text-slate-400 block">Total Material Dihitung:</span>
-                  <span className="font-mono font-semibold text-slate-800">
+                  <span className="tabular-nums font-semibold text-slate-800">
                     {selectedSession.countedSkus} / {selectedSession.totalSkus} SKU
                   </span>
                 </div>
@@ -470,31 +522,31 @@ export default function StockOpnamePage() {
                 </h4>
                 <div className="border border-slate-200 rounded-xl overflow-hidden">
                   <DnaTable className="w-full text-left text-xs">
-                    <thead className="bg-slate-100/80 border-b border-slate-200 text-slate-600 font-semibold">
-                      <tr>
-                        <th className="py-2.5 px-3">Item</th>
-                        <th className="py-2.5 px-3 text-right">Sistem</th>
-                        <th className="py-2.5 px-3 text-right">Fisik</th>
-                        <th className="py-2.5 px-3 text-right">Selisih</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 font-mono">
+                    <DnaTableHead>
+                      <DnaTableRow>
+                        <DnaTh className="py-2.5 px-3">Item</DnaTh>
+                        <DnaTh className="py-2.5 px-3 text-right">Sistem</DnaTh>
+                        <DnaTh className="py-2.5 px-3 text-right">Fisik</DnaTh>
+                        <DnaTh className="py-2.5 px-3 text-right">Selisih</DnaTh>
+                      </DnaTableRow>
+                    </DnaTableHead>
+                    <DnaTableBody>
                       {selectedSession.items.map((it, idx) => (
-                        <tr key={idx}>
-                          <td className="py-2.5 px-3 font-sans">
+                        <DnaTableRow key={idx}>
+                          <DnaTd className="py-2.5 px-3 font-sans">
                             <div className="font-semibold text-slate-800">{it.itemName}</div>
-                            <div className="text-[10px] text-slate-400 font-mono">{it.itemCode} • Rak {it.binLocation}</div>
-                          </td>
-                          <td className="py-2.5 px-3 text-right text-slate-600">{it.systemQty} {it.unit}</td>
-                          <td className="py-2.5 px-3 text-right font-bold text-slate-900">
+                            <div className="text-[10px] text-slate-400 tabular-nums">{it.itemCode} • Rak {it.binLocation}</div>
+                          </DnaTd>
+                          <DnaTd className="py-2.5 px-3 text-right text-slate-600">{it.systemQty} {it.unit}</DnaTd>
+                          <DnaTd className="py-2.5 px-3 text-right font-bold text-slate-900">
                             {it.actualQty !== null ? `${it.actualQty} ${it.unit}` : "-"}
-                          </td>
-                          <td className={`py-2.5 px-3 text-right font-bold ${it.differenceQty < 0 ? "text-red-600" : it.differenceQty > 0 ? "text-emerald-700" : "text-slate-500"}`}>
+                          </DnaTd>
+                          <DnaTd className={`py-2.5 px-3 text-right font-bold ${it.differenceQty < 0 ? "text-red-600" : it.differenceQty > 0 ? "text-emerald-700" : "text-slate-500"}`}>
                             {it.differenceQty > 0 ? `+${it.differenceQty}` : it.differenceQty}
-                          </td>
-                        </tr>
+                          </DnaTd>
+                        </DnaTableRow>
                       ))}
-                    </tbody>
+                    </DnaTableBody>
                   </DnaTable>
                 </div>
               </div>
@@ -519,10 +571,7 @@ export default function StockOpnamePage() {
               variant="primary"
               size="sm"
               icon={<Lock className="w-4 h-4" />}
-              onClick={() => {
-                toast.success("Sesi opname dimulai. Transaksi di gudang terpilih telah dibekukan (FROZEN).");
-                setIsCreateModalOpen(false);
-              }}
+              onClick={handleCreateOpname}
             >
               Bekukan Stok & Mulai Opname
             </DnaButton>
@@ -534,14 +583,19 @@ export default function StockOpnamePage() {
             <label className="block text-slate-700 font-bold mb-1">Pilih Gudang Target Opname *</label>
             <DnaSelect
               aria-label="Pilih Gudang"
-              value={newSessionForm.warehouseCode}
-              onChange={(val) => setNewSessionForm({ ...newSessionForm, warehouseCode: val })}
+              value={newSessionForm.warehouseId}
+              onChange={(val) => setNewSessionForm({ ...newSessionForm, warehouseId: val })}
               className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white"
             >
-              <option value="WH-01">WH-01 Gudang Bahan Baku Utama</option>
-              <option value="WH-02">WH-02 Gudang Kemas & Box</option>
-              <option value="WH-03">WH-03 Gudang Produk Jadi</option>
-              <option value="WH-04">WH-04 Gudang Karantina & QC</option>
+              {warehouseList.length === 0 ? (
+                <option value="">Tidak ada gudang aktif</option>
+              ) : (
+                warehouseList.map((w: any) => (
+                  <option key={w.id} value={w.id}>
+                    {w.code} - {w.name}
+                  </option>
+                ))
+              )}
             </DnaSelect>
           </div>
 

@@ -85,13 +85,13 @@ export default function CkpbAuditPage() {
   const { data: audits = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["ckpb-audits"],
     queryFn: async () => {
-      const resp = await api.get("/legality/ckpb-audits");
+      const resp = await api.get("/legality/audits");
       return resp.data || [];
     },
   });
 
   const createMutation = useMutation({
-    mutationFn: async (payload: any) => api.post("/legality/ckpb-audits", payload),
+    mutationFn: async (payload: any) => api.post("/legality/audits", payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ckpb-audits"] });
       success("Rekam audit CPKB sanitasi berhasil didaftarkan.");
@@ -314,18 +314,18 @@ export default function CkpbAuditPage() {
                       setIsDetailDrawerOpen(true);
                     }}
                   >
-                    <td className="p-3 text-slate-400 font-mono text-[11px] tabular-nums">
+                    <td className="p-3 text-slate-400 tabular-nums text-[11px] tabular-nums">
                       {idx + 1}
                     </td>
                     <td className="p-3">
                       <div className="font-bold text-slate-900 truncate uppercase">Area {audit.areaAudit}</div>
-                      <div className="text-[11px] text-blue-600 font-mono">
+                      <div className="text-[11px] text-blue-600 tabular-nums">
                         {audit.parameterSanitasi?.length || 0} Parameter Terinspeksi
                       </div>
                     </td>
                     <td className="p-3">
                       <div className="font-semibold text-slate-800 text-xs">{audit.tanggalAudit || "—"}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">
+                      <div className="text-[10px] text-slate-400 tabular-nums">
                         {audit.batasPerbaikan ? `Tenggat: ${audit.batasPerbaikan}` : "Tanpa tenggat"}
                       </div>
                     </td>
@@ -337,7 +337,7 @@ export default function CkpbAuditPage() {
                       <div className="text-xs text-slate-700 truncate">
                         {audit.temuan || "Tidak ada temuan deviasi kritis"}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono">Laporan Inspeksi</div>
+                      <div className="text-[10px] text-slate-400 tabular-nums">Laporan Inspeksi</div>
                     </td>
                     <td className="p-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-1.5">
@@ -554,7 +554,7 @@ export default function CkpbAuditPage() {
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">Tenggat Perbaikan</span>
-                    <span className="font-mono font-semibold text-rose-600">{selectedAudit.batasPerbaikan || "—"}</span>
+                    <span className="tabular-nums font-semibold text-rose-600">{selectedAudit.batasPerbaikan || "—"}</span>
                   </div>
                 </div>
 

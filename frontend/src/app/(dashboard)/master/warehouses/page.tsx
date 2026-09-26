@@ -52,8 +52,13 @@ import {
   DnaDetailDrawer,
   DnaTable,
   useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
-import { api } from "@/lib/api";
+import { api, extractApiError } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 
 // ── Types ──
@@ -85,6 +90,7 @@ function MasterWarehousesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
 
   const tabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<string>(
@@ -144,6 +150,142 @@ function MasterWarehousesContent() {
     }
   }, [apiWarehouses, isLoadingWarehouses, isErrorWarehouses]);
 
+  // ── Mutations ──
+  // Warehouse create/edit/delete used to edit `warehousesList` and toast "berhasil", so a refresh
+  // lost the row. They now hit /master/warehouses.
+  const invalidateWarehouses = () =>
+    queryClient.invalidateQueries({ queryKey: ["master-warehouses"] });
+
+  const saveWarehouseMut = useMutation({
+    mutationFn: async () => {
+      // ponytail: only these fields exist on the `warehouses` table (CreateWarehouseDto mirrors it
+      // 1:1). `kodeGudang` has no column — the list synthesises it from the id — and `status` is not
+      // in the DTO, so this form still shows "ACTIVE" for every row and derives the code. Persisted
+      // here: name, pic, phone, province, city, address. Add the two columns (or a code generator)
+      // when the master needs a stable, human-owned warehouse code.
+      const payload = {
+        name: warehouseForm.namaGudang.trim(),
+        picName: warehouseForm.picName.trim(),
+        phone: warehouseForm.telepon.trim() || undefined,
+        province: warehouseForm.provinsi.trim() || undefined,
+        city: warehouseForm.lokasi.trim() || undefined,
+        address: warehouseForm.alamatLengkap.trim() || undefined,
+      };
+      const res = editingWarehouse
+        ? await api.patch(`/master/warehouses/${editingWarehouse.id}`, payload)
+        : await api.post("/master/warehouses", payload);
+      return unwrapResponse(res);
+    },
+    onSuccess: () => {
+      toast.success(
+        editingWarehouse
+          ? `Data gudang ${warehouseForm.namaGudang} berhasil diperbarui.`
+          : `Gudang baru ${warehouseForm.namaGudang} berhasil didaftarkan.`,
+      );
+      setIsWarehouseModalOpen(false);
+      setEditingWarehouse(null);
+      invalidateWarehouses();
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
+  const deleteWarehouseMut = useMutation({
+    mutationFn: async (id: string) => unwrapResponse(await api.delete(`/master/warehouses/${id}`)),
+    onSuccess: () => {
+      toast.success(`Gudang ${warehouseToDelete?.namaGudang} berhasil dihapus.`);
+      setWarehouseToDelete(null);
+      invalidateWarehouses();
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
+  // ── Hak akses gudang ──
+  // Granting warehouse access used to edit `accessList` and toast "berhasil" without a request.
+  // POST /master/warehouses/access upserts exactly one (userId, warehouseId) pair per call, so N
+  // selected warehouses are N calls inside one mutationFn.
+  //
+  // ponytail: `GET /master/warehouses/access` filters by the CALLER's userId
+  // (warehouses.service.ts findAccess -> where.userId = req.user.id), so the grid can only show the
+  // grants the signed-in admin holds — not every personel's. The write is correct and persisted;
+  // the read-back is limited by that endpoint. Add a `userId` query param on the backend when the
+  // grid must show everyone's grants.
+  const { data: apiUsers } = useQuery({
+    queryKey: ["master-users-for-access"],
+    queryFn: async () => unwrapResponse(await api.get("/users")),
+    staleTime: 60000,
+  });
+
+  const accessUsers = useMemo<Array<{ id: string; fullName: string; email: string; role: string }>>(() => {
+    const items = Array.isArray(apiUsers) ? apiUsers : apiUsers?.items;
+    if (!Array.isArray(items)) return [];
+    return items.map((u: any) => ({
+      id: u.id,
+      fullName: u.fullName || u.email,
+      email: u.email || "-",
+      role: Array.isArray(u.roles) && u.roles.length > 0 ? u.roles[0] : "SCM",
+    }));
+  }, [apiUsers]);
+
+  const loadAccessList = async () => {
+    try {
+      const rows = unwrapResponse(await api.get("/master/warehouses/access"));
+      const byUser = new Map<string, WarehouseAccessItem>();
+      for (const r of Array.isArray(rows) ? rows : []) {
+        const current: WarehouseAccessItem = byUser.get(r.userId) ?? {
+          id: r.userId,
+          userId: r.userId,
+          namaPersonel: r.user?.fullName || r.user?.email || r.userId,
+          email: r.user?.email || "-",
+          phone: "-",
+          hakAkses: "WAREHOUSE",
+          gudangAkses: [],
+        };
+        if (r.warehouse?.name) current.gudangAkses.push(r.warehouse.name);
+        byUser.set(r.userId, current);
+      }
+      setAccessList([...byUser.values()]);
+    } catch {
+      // The grid is informational — a read failure must not blank the warehouse tab.
+      setAccessList([]);
+    }
+  };
+
+  useEffect(() => {
+    loadAccessList();
+  }, []);
+
+  const saveAccessMut = useMutation({
+    mutationFn: async () => {
+      const userId = accessTargetUserId || editingAccess?.userId;
+      if (!userId) {
+        throw new Error("Pilih personel penerima akses terlebih dahulu.");
+      }
+      const targets = warehousesList.filter((w) => selectedGudangsForUser.includes(w.namaGudang));
+      if (targets.length === 0) {
+        throw new Error("Pilih minimal satu gudang yang diizinkan.");
+      }
+      await Promise.all(
+        targets.map((w) =>
+          api.post("/master/warehouses/access", {
+            userId,
+            warehouseId: w.id,
+            canRead: true,
+            canWrite: true,
+          }),
+        ),
+      );
+      return targets.length;
+    },
+    onSuccess: (count) => {
+      toast.success(`${count} hak akses gudang berhasil disimpan.`);
+      setIsAccessModalOpen(false);
+      setAccessTargetUserId("");
+      setEditingAccess(null);
+      loadAccessList();
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
   // Filter & Search
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedKpiFilter, setSelectedKpiFilter] = useState<string>("ALL");
@@ -172,6 +314,7 @@ function MasterWarehousesContent() {
   const [warehouseToDelete, setWarehouseToDelete] = useState<MasterWarehouseItem | null>(null);
   const [editingAccess, setEditingAccess] = useState<WarehouseAccessItem | null>(null);
   const [selectedGudangsForUser, setSelectedGudangsForUser] = useState<string[]>([]);
+  const [accessTargetUserId, setAccessTargetUserId] = useState<string>("");
 
   useEffect(() => {
     if (searchParams.get("action") === "create") {
@@ -341,40 +484,15 @@ function MasterWarehousesContent() {
       toast.error("Kode gudang, nama gudang, dan PIC penanggung jawab wajib diisi!");
       return;
     }
-
-    if (editingWarehouse) {
-      setWarehousesList((prev) =>
-        prev.map((w) => (w.id === editingWarehouse.id ? { ...w, ...warehouseForm } : w))
-      );
-      toast.success(`Data gudang ${warehouseForm.namaGudang} berhasil diperbarui.`);
-    } else {
-      const newItem: MasterWarehouseItem = {
-        id: `wh-${Date.now()}`,
-        ...warehouseForm,
-      };
-      setWarehousesList((prev) => [...prev, newItem]);
-      toast.success(`Gudang baru ${newItem.namaGudang} berhasil didaftarkan.`);
-    }
-    setIsWarehouseModalOpen(false);
+    saveWarehouseMut.mutate();
   };
 
   const handleDeleteWarehouse = () => {
     if (!warehouseToDelete) return;
-    setWarehousesList((prev) => prev.filter((w) => w.id !== warehouseToDelete.id));
-    toast.success(`Gudang ${warehouseToDelete.namaGudang} berhasil dihapus.`);
-    setWarehouseToDelete(null);
+    deleteWarehouseMut.mutate(warehouseToDelete.id);
   };
 
-  const handleSaveAccess = () => {
-    if (!editingAccess) return;
-    setAccessList((prev) =>
-      prev.map((a) =>
-        a.id === editingAccess.id ? { ...a, gudangAkses: selectedGudangsForUser } : a
-      )
-    );
-    toast.success(`Hak akses gudang untuk ${editingAccess.namaPersonel} berhasil diperbarui.`);
-    setIsAccessModalOpen(false);
-  };
+  const handleSaveAccess = () => saveAccessMut.mutate();;
 
   return (
     <div className="space-y-6 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
@@ -502,12 +620,12 @@ function MasterWarehousesContent() {
             }}
           >
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[1150px]">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
-                    <th className="px-3.5 py-2.5 w-10 text-slate-400">#</th>
-                    <th className="px-3.5 py-2.5 w-[110px]">Kode Gudang</th>
-                    <th
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
+                    <DnaTh className="px-3.5 py-2.5 w-10 text-slate-400">#</DnaTh>
+                    <DnaTh className="px-3.5 py-2.5 w-[110px]">Kode Gudang</DnaTh>
+                    <DnaTh
                       className="px-3.5 py-2.5 cursor-pointer hover:bg-slate-100/60"
                       onClick={() => handleHeaderSortToggle("namaGudang")}
                     >
@@ -519,10 +637,10 @@ function MasterWarehousesContent() {
                           <ArrowUpDown className="w-3 h-3 text-slate-400" />
                         )}
                       </div>
-                    </th>
-                    <th className="px-3.5 py-2.5">Tipe Penyimpanan</th>
-                    <th className="px-3.5 py-2.5 text-right w-[110px]">Kapasitas Bin</th>
-                    <th
+                    </DnaTh>
+                    <DnaTh className="px-3.5 py-2.5">Tipe Penyimpanan</DnaTh>
+                    <DnaTh className="px-3.5 py-2.5 text-right w-[110px]">Kapasitas Bin</DnaTh>
+                    <DnaTh
                       className="px-3.5 py-2.5 cursor-pointer hover:bg-slate-100/60"
                       onClick={() => handleHeaderSortToggle("lokasi")}
                     >
@@ -534,25 +652,25 @@ function MasterWarehousesContent() {
                           <ArrowUpDown className="w-3 h-3 text-slate-400" />
                         )}
                       </div>
-                    </th>
-                    <th className="px-3.5 py-2.5">PIC Gudang</th>
-                    <th className="px-3.5 py-2.5">Kontak Telepon</th>
-                    <th className="px-3.5 py-2.5 text-center w-[100px] whitespace-nowrap">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+                    </DnaTh>
+                    <DnaTh className="px-3.5 py-2.5">PIC Gudang</DnaTh>
+                    <DnaTh className="px-3.5 py-2.5">Kontak Telepon</DnaTh>
+                    <DnaTh className="px-3.5 py-2.5 text-center w-[100px] whitespace-nowrap">Aksi</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {isLoadingWarehouses ? (
-                    <tr>
-                      <td colSpan={9} className="p-8 text-center text-slate-500">
+                    <DnaTableRow>
+                      <DnaTd colSpan={9} className="p-8 text-center text-slate-500">
                         <div className="flex items-center justify-center gap-2">
                           <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                           <span>Memuat data gudang...</span>
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ) : isErrorWarehouses ? (
-                    <tr>
-                      <td colSpan={9} className="p-8 text-center text-rose-500">
+                    <DnaTableRow>
+                      <DnaTd colSpan={9} className="p-8 text-center text-rose-500">
                         <div className="flex flex-col items-center justify-center gap-2">
                           <span>Gagal memuat data gudang: {(warehousesError as any)?.message || "Terjadi kesalahan"}</span>
                           <button
@@ -562,18 +680,18 @@ function MasterWarehousesContent() {
                             Coba Lagi
                           </button>
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ) : paginatedWarehouses.length === 0 ? (
-                    <tr>
-                      <td colSpan={9} className="p-8 text-center text-slate-400">
+                    <DnaTableRow>
+                      <DnaTd colSpan={9} className="p-8 text-center text-slate-400">
                         Tidak ada data gudang yang sesuai filter.
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ) : (
                     paginatedWarehouses.map((w, idx) => {
                       return (
-                        <tr
+                        <DnaTableRow
                           key={w.id}
                           className="h-[48px] hover:bg-slate-50/80 transition-colors cursor-pointer"
                           onClick={() => {
@@ -581,34 +699,34 @@ function MasterWarehousesContent() {
                             setIsDetailDrawerOpen(true);
                           }}
                         >
-                          <td className="px-3.5 py-2.5 text-slate-400 tabular-nums">
+                          <DnaTd className="px-3.5 py-2.5 text-slate-400 tabular-nums">
                             {(currentPage - 1) * pageSize + idx + 1}
-                          </td>
-                          <td className="px-3.5 py-2.5">
+                          </DnaTd>
+                          <DnaTd className="px-3.5 py-2.5">
                             <DnaCell.Code>{w.kodeGudang}</DnaCell.Code>
-                          </td>
-                          <td className="px-3.5 py-2.5">
+                          </DnaTd>
+                          <DnaTd className="px-3.5 py-2.5">
                             <DnaCell.Text className="font-semibold text-slate-900">{w.namaGudang}</DnaCell.Text>
-                          </td>
-                          <td className="px-3.5 py-2.5">
+                          </DnaTd>
+                          <DnaTd className="px-3.5 py-2.5">
                             <DnaCell.Text className="text-slate-800">{w.tipePenyimpanan}</DnaCell.Text>
-                          </td>
-                          <td className="px-3.5 py-2.5 text-right">
+                          </DnaTd>
+                          <DnaTd className="px-3.5 py-2.5 text-right">
                             <DnaCell.Numeric value={w.totalBinLocations} suffix=" Slot" />
-                          </td>
-                          <td className="px-3.5 py-2.5">
+                          </DnaTd>
+                          <DnaTd className="px-3.5 py-2.5">
                             <DnaCell.NaturalPair
                               primary={w.lokasi}
                               secondary={w.provinsi}
                             />
-                          </td>
-                          <td className="px-3.5 py-2.5">
+                          </DnaTd>
+                          <DnaTd className="px-3.5 py-2.5">
                             <DnaCell.Text className="font-semibold text-slate-800">{w.picName}</DnaCell.Text>
-                          </td>
-                          <td className="px-3.5 py-2.5">
-                            <DnaCell.Text className="font-mono text-[11.5px] text-slate-600">{w.telepon || "-"}</DnaCell.Text>
-                          </td>
-                          <td className="px-3.5 py-2.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          </DnaTd>
+                          <DnaTd className="px-3.5 py-2.5">
+                            <DnaCell.Text className="tabular-nums text-[11.5px] text-slate-600">{w.telepon || "-"}</DnaCell.Text>
+                          </DnaTd>
+                          <DnaTd className="px-3.5 py-2.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-center gap-1">
                               <DnaButton
                                 variant="ghost"
@@ -627,13 +745,13 @@ function MasterWarehousesContent() {
                                 onDelete={() => setWarehouseToDelete(w)}
                               />
                             </div>
-                          </td>
-                        </tr>
+                          </DnaTd>
+                        </DnaTableRow>
                       );
                     })
                   )}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </div>
           </DnaDataTableCard>
         </div>
@@ -645,42 +763,51 @@ function MasterWarehousesContent() {
           <DnaDataTableCard
             toolbarProps={{
               searchPlaceholder: "Cari staf gudang & wewenang...",
+              actionButton: {
+                label: "Atur Hak Akses",
+                onClick: () => {
+                  setEditingAccess(null);
+                  setAccessTargetUserId("");
+                  setSelectedGudangsForUser([]);
+                  setIsAccessModalOpen(true);
+                },
+              },
             }}
           >
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[1000px]">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold tracking-wider uppercase select-none">
-                    <th className="px-3.5 py-2.5 w-10 text-slate-400">#</th>
-                    <th className="px-3.5 py-2.5 w-[110px]">ID Personel</th>
-                    <th className="px-3.5 py-2.5">Nama Personel</th>
-                    <th className="px-3.5 py-2.5">Email Staf</th>
-                    <th className="px-3.5 py-2.5">Kontak HP</th>
-                    <th className="px-3.5 py-2.5">Hak Akses / Jabatan</th>
-                    <th className="px-3.5 py-2.5">Gudang Terotorisasi</th>
-                    <th className="px-3.5 py-2.5 text-center w-[110px]">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold tracking-wider uppercase select-none">
+                    <DnaTh className="px-3.5 py-2.5 w-10 text-slate-400">#</DnaTh>
+                    <DnaTh className="px-3.5 py-2.5 w-[110px]">ID Personel</DnaTh>
+                    <DnaTh className="px-3.5 py-2.5">Nama Personel</DnaTh>
+                    <DnaTh className="px-3.5 py-2.5">Email Staf</DnaTh>
+                    <DnaTh className="px-3.5 py-2.5">Kontak HP</DnaTh>
+                    <DnaTh className="px-3.5 py-2.5">Hak Akses / Jabatan</DnaTh>
+                    <DnaTh className="px-3.5 py-2.5">Gudang Terotorisasi</DnaTh>
+                    <DnaTh className="px-3.5 py-2.5 text-center w-[110px]">Aksi</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {accessList.map((acc, idx) => (
-                    <tr key={acc.id} className="h-[48px] hover:bg-slate-50/80 transition-colors">
-                      <td className="px-3.5 py-2.5 text-slate-400 tabular-nums">{idx + 1}</td>
-                      <td className="px-3.5 py-2.5">
+                    <DnaTableRow key={acc.id} className="h-[48px] hover:bg-slate-50/80 transition-colors">
+                      <DnaTd className="px-3.5 py-2.5 text-slate-400 tabular-nums">{idx + 1}</DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
                         <DnaCell.Code>{acc.userId}</DnaCell.Code>
-                      </td>
-                      <td className="px-3.5 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
                         <DnaCell.Text className="font-semibold text-slate-900">{acc.namaPersonel}</DnaCell.Text>
-                      </td>
-                      <td className="px-3.5 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
                         <DnaCell.Text className="text-slate-700">{acc.email}</DnaCell.Text>
-                      </td>
-                      <td className="px-3.5 py-2.5">
-                        <DnaCell.Text className="font-mono text-[11.5px] text-slate-600">{acc.phone}</DnaCell.Text>
-                      </td>
-                      <td className="px-3.5 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
+                        <DnaCell.Text className="tabular-nums text-[11.5px] text-slate-600">{acc.phone}</DnaCell.Text>
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
                         <DnaCell.Badge label={acc.hakAkses} status="info" />
-                      </td>
-                      <td className="px-3.5 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
                         <div className="flex flex-wrap gap-1">
                           {acc.gudangAkses.map((g, i) => (
                             <span
@@ -691,8 +818,8 @@ function MasterWarehousesContent() {
                             </span>
                           ))}
                         </div>
-                      </td>
-                      <td className="px-3.5 py-2.5 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5 text-center">
                         <DnaButton
                           variant="outline"
                           size="sm"
@@ -706,11 +833,11 @@ function MasterWarehousesContent() {
                         >
                           Atur Akses
                         </DnaButton>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </div>
           </DnaDataTableCard>
         </div>
@@ -805,14 +932,35 @@ function MasterWarehousesContent() {
       <DnaModal
         isOpen={isAccessModalOpen}
         onClose={() => setIsAccessModalOpen(false)}
-        title={`Otorisasi Akses: ${editingAccess?.namaPersonel}`}
+        title={editingAccess ? `Otorisasi Akses: ${editingAccess.namaPersonel}` : "Otorisasi Akses Gudang"}
         description="Pilih gudang mana saja yang dapat diakses oleh personel ini untuk transaksi mutasi barang"
         size="md"
       >
         <div className="space-y-4 py-2 text-xs">
+          <DnaSelect
+            label="Personel Penerima Akses *"
+            value={accessTargetUserId || editingAccess?.userId || ""}
+            onChange={(val) => setAccessTargetUserId(val)}
+            options={accessUsers.map((u) => ({
+              value: u.id,
+              label: `${u.fullName} — ${u.email}`,
+            }))}
+            placeholder="Pilih personel..."
+          />
+
           <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-[11px] text-slate-700">
-            Personel: <strong className="text-slate-900">{editingAccess?.namaPersonel}</strong> • Jabatan:{" "}
-            <strong className="text-blue-600">{editingAccess?.hakAkses}</strong>
+            Personel:{" "}
+            <strong className="text-slate-900">
+              {accessUsers.find((u) => u.id === (accessTargetUserId || editingAccess?.userId))?.fullName ||
+                editingAccess?.namaPersonel ||
+                "—"}
+            </strong>{" "}
+            • Jabatan:{" "}
+            <strong className="text-blue-600">
+              {accessUsers.find((u) => u.id === (accessTargetUserId || editingAccess?.userId))?.role ||
+                editingAccess?.hakAkses ||
+                "—"}
+            </strong>
           </div>
 
           <div className="space-y-2">
@@ -856,7 +1004,7 @@ function MasterWarehousesContent() {
             <DnaButton variant="ghost" onClick={() => setIsAccessModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" onClick={handleSaveAccess}>
+            <DnaButton variant="primary" loading={saveAccessMut.isPending} onClick={handleSaveAccess}>
               Simpan Otorisasi Akses
             </DnaButton>
           </div>
@@ -917,7 +1065,7 @@ function MasterWarehousesContent() {
                   </div>
                   <div className="text-right">
                     <span className="text-slate-500 block text-[11px]">Telepon / WhatsApp</span>
-                    <span className="font-mono font-medium text-slate-800">{selectedWarehouse.telepon || "-"}</span>
+                    <span className="tabular-nums font-medium text-slate-800">{selectedWarehouse.telepon || "-"}</span>
                   </div>
                 </div>
               </div>

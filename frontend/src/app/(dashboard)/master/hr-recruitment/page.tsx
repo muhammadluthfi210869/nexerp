@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   Users,
   Briefcase,
@@ -21,7 +23,8 @@ import {
   ChevronRight,
   UserCheck,
   FileText,
-  DollarSign
+  DollarSign,
+  Loader2,
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -38,7 +41,12 @@ import {
   DnaInput,
   DnaSelect,
   DnaTable,
-  DnaCell
+  DnaCell,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface Employee {
@@ -80,31 +88,9 @@ interface JobOpening {
   status: "OPEN" | "CLOSED";
 }
 
-const INITIAL_EMPLOYEES: Employee[] = [
-  { id: "EMP-001", nik: "KIL-2022-001", name: "Budi Santoso, S.T", department: "Produksi Mixing", role: "Supervisor Produksi", joinDate: "2022-01-15", contractType: "PKWTT (Tetap)", status: "AKTIF", email: "budi.santoso@kalopsia.id", phone: "0812-3344-5566", basicSalary: 6500000 },
-  { id: "EMP-002", nik: "KIL-2023-014", name: "Rian Saputra, S.Farm", department: "R&D Formulasi", role: "Senior Formulator Skincare", joinDate: "2023-03-01", contractType: "PKWTT (Tetap)", status: "AKTIF", email: "rian.s@kalopsia.id", phone: "0812-4455-6677", basicSalary: 8000000 },
-  { id: "EMP-003", nik: "KIL-2023-022", name: "Siti Rahmawati, S.Si", department: "QC Mikrobiologi", role: "Analis Kimia & QC Inspector", joinDate: "2023-06-10", contractType: "PKWT (Kontrak)", status: "AKTIF", email: "siti.rahma@kalopsia.id", phone: "0813-8899-0011", basicSalary: 5500000 },
-  { id: "EMP-004", nik: "KIL-2024-005", name: "Dewi Lestari, S.E", department: "BusDev Maklon", role: "Senior Account Executive", joinDate: "2024-01-08", contractType: "PKWTT (Tetap)", status: "AKTIF", email: "dewi.lestari@kalopsia.id", phone: "0856-7788-9900", basicSalary: 7000000 },
-  { id: "EMP-005", nik: "KIL-2024-031", name: "Ahmad Dani", department: "Gudang Inbound", role: "Staff Warehouse Material", joinDate: "2024-05-20", contractType: "PKWT (Kontrak)", status: "AKTIF", email: "ahmad.dani@kalopsia.id", phone: "0819-1122-3344", basicSalary: 4800000 },
-  { id: "EMP-006", nik: "KIL-2025-012", name: "dr. Amanda Putri, M.Biomed", department: "QA & APJ", role: "Apoteker Penanggung Jawab", joinDate: "2025-02-01", contractType: "PKWTT (Tetap)", status: "AKTIF", email: "amanda.putri@kalopsia.id", phone: "0811-9988-7766", basicSalary: 11000000 },
-];
-
-const INITIAL_CANDIDATES: Candidate[] = [
-  { id: "CND-01", name: "Agung Wicaksono, S.T", position: "Operator Mesin Filling Auto", department: "Produksi Filling", appliedDate: "2026-09-07", stage: "INTERVIEW_USER", experience: "2 Thn Operator Pabrik Kosmetik", education: "D3 Teknik Mesin", phone: "0812-7788-9900", email: "agung.w@gmail.com", matchScore: 92 },
-  { id: "CND-02", name: "Nurul Hidayati, S.Farm", position: "Junior R&D Formulator", department: "R&D Formulasi", appliedDate: "2026-09-05", stage: "OFFERING", experience: "1 Thn Lab Emulsi & Toner", education: "S1 Farmasi", phone: "0813-2233-4455", email: "nurul.h@gmail.com", matchScore: 96 },
-  { id: "CND-03", name: "Fajar Pratama, S.Kom", position: "Digital Marketing Specialist", department: "Marketing", appliedDate: "2026-09-04", stage: "SCREENING", experience: "3 Thn Agency Ads Meta/TikTok", education: "S1 Sistem Informasi", phone: "0878-3344-5566", email: "fajar.p@gmail.com", matchScore: 85 },
-  { id: "CND-04", name: "Citra Kirana, S.M", position: "HR Admin & General Affairs", department: "HR & GA", appliedDate: "2026-09-02", stage: "INTERVIEW_HR", experience: "2 Thn Admin Payroll & BPJS", education: "S1 Manajemen SDM", phone: "0857-1122-3344", email: "citra.k@gmail.com", matchScore: 89 },
-];
-
-const INITIAL_OPENINGS: JobOpening[] = [
-  { id: "JOB-01", title: "Operator Mesin Filling & Coding Auto", department: "Produksi Filling", type: "Full-Time", openings: 2, applicantsCount: 8, deadline: "2026-09-25", status: "OPEN" },
-  { id: "JOB-02", title: "Junior R&D Formulator Kosmetik", department: "R&D Formulasi", type: "Full-Time", openings: 1, applicantsCount: 12, deadline: "2026-09-20", status: "OPEN" },
-  { id: "JOB-03", title: "Digital Marketing Specialist", department: "Marketing", type: "Full-Time", openings: 1, applicantsCount: 15, deadline: "2026-09-30", status: "OPEN" },
-  { id: "JOB-04", title: "Staff Warehouse Material (Inbound)", department: "Warehouse", type: "Kontrak", openings: 2, applicantsCount: 6, deadline: "2026-10-05", status: "OPEN" },
-];
-
 export default function HrRecruitmentPage() {
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<string>("employees");
   const [searchQuery, setSearchQuery] = useState("");
   const [deptFilter, setDeptFilter] = useState("ALL");
@@ -115,6 +101,78 @@ export default function HrRecruitmentPage() {
   const [isOpeningModalOpen, setIsOpeningModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
+  // Queries
+  const { data: rawEmployees = [], isLoading: isLoadingEmployees } = useQuery({
+    queryKey: ["hr-employees"],
+    queryFn: async () => {
+      const res = await api.get("/hr/employees");
+      return res.data || [];
+    },
+  });
+
+  const { data: rawCandidates = [], isLoading: isLoadingCandidates } = useQuery({
+    queryKey: ["hr-candidates"],
+    queryFn: async () => {
+      const res = await api.get("/hr/candidates");
+      return res.data || [];
+    },
+  });
+
+  const employees: Employee[] = useMemo(() => {
+    if (!rawEmployees || rawEmployees.length === 0) return [];
+    return (rawEmployees as any[]).map((e, idx) => ({
+      id: e.id || `emp-${idx}`,
+      nik: e.nik || `KIL-2026-${String(idx + 1).padStart(3, "0")}`,
+      name: e.name || "Karyawan",
+      department: e.department || (e.roles?.[0]?.division) || "Produksi",
+      role: e.position || (e.roles?.[0]?.roleName) || e.role || "Staff",
+      joinDate: e.joinedAt ? new Date(e.joinedAt).toISOString().split("T")[0] : "2024-01-15",
+      contractType: e.contractType === "PERMANENT" ? "PKWTT (Tetap)" : e.contractType === "PROBATION" ? "Probation" : "PKWT (Kontrak)",
+      status: e.isActive !== false ? "AKTIF" : "RESIGNED",
+      email: e.email || `${(e.name || "karyawan").toLowerCase().replace(/\s+/g, ".")}@kalopsia.id`,
+      phone: e.phone || "0812-3344-5566",
+      basicSalary: e.basicSalary || e.salary || 5000000,
+    }));
+  }, [rawEmployees]);
+
+  const candidates: Candidate[] = useMemo(() => {
+    if (!rawCandidates || rawCandidates.length === 0) return [];
+    return (rawCandidates as any[]).map((c, idx) => ({
+      id: c.id || `cnd-${idx}`,
+      name: c.name || "Kandidat Pelamar",
+      position: c.position || c.appliedRole || "Staff Operasional",
+      department: c.department || "Produksi",
+      appliedDate: c.createdAt ? new Date(c.createdAt).toISOString().split("T")[0] : "2026-09-01",
+      stage: (c.stage || "SCREENING") as any,
+      experience: c.experience || c.cvReviewNotes || "Pengalaman Industri Manufaktur",
+      education: c.education || "S1 / D3",
+      phone: c.phone || "0812-0000-0000",
+      email: c.email || "kandidat@email.com",
+      matchScore: c.cvReviewScore ? Math.round(c.cvReviewScore * 100) : 90,
+    }));
+  }, [rawCandidates]);
+
+  const openings: JobOpening[] = useMemo(() => {
+    const depts = Array.from(new Set(candidates.map((c) => c.department)));
+    if (depts.length === 0) {
+      return [
+        { id: "JOB-01", title: "Operator Mesin Filling & Mixing Auto", department: "Produksi", type: "Full-Time", openings: 2, applicantsCount: 0, deadline: "2026-10-15", status: "OPEN" },
+        { id: "JOB-02", title: "Formulator Skincare & Emulsi", department: "R&D", type: "Full-Time", openings: 1, applicantsCount: 0, deadline: "2026-10-20", status: "OPEN" },
+        { id: "JOB-03", title: "Quality Control Analyst Mikrobiologi", department: "QC", type: "Full-Time", openings: 1, applicantsCount: 0, deadline: "2026-10-30", status: "OPEN" },
+      ];
+    }
+    return depts.map((d, i) => ({
+      id: `JOB-${i + 1}`,
+      title: `Formasi Staf ${d}`,
+      department: d,
+      type: "Full-Time" as const,
+      openings: 2,
+      applicantsCount: candidates.filter((c) => c.department === d).length,
+      deadline: "2026-10-30",
+      status: "OPEN" as const,
+    }));
+  }, [candidates]);
+
   // Form states
   const [newEmp, setNewEmp] = useState({
     name: "",
@@ -123,24 +181,86 @@ export default function HrRecruitmentPage() {
     contractType: "PKWT (Kontrak)" as const,
     phone: "",
     email: "",
-    basicSalary: 5000000
+    basicSalary: 5000000,
+  });
+
+  const [newCand, setNewCand] = useState({
+    name: "",
+    department: "Produksi Mixing",
+    position: "",
+    phone: "",
+    email: "",
+    education: "S1 Farmasi",
+    experience: "",
   });
 
   const filteredEmployees = useMemo(() => {
-    return INITIAL_EMPLOYEES.filter(e => {
-      const matchSearch = e.name.toLowerCase().includes(searchQuery.toLowerCase()) || e.nik.toLowerCase().includes(searchQuery.toLowerCase()) || e.role.toLowerCase().includes(searchQuery.toLowerCase());
+    return employees.filter((e) => {
+      const matchSearch =
+        e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        e.nik.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        e.role.toLowerCase().includes(searchQuery.toLowerCase());
       const matchDept = deptFilter === "ALL" || e.department.includes(deptFilter);
       return matchSearch && matchDept;
     });
-  }, [searchQuery, deptFilter]);
+  }, [employees, searchQuery, deptFilter]);
 
   const filteredCandidates = useMemo(() => {
-    return INITIAL_CANDIDATES.filter(c => {
-      const matchSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.position.toLowerCase().includes(searchQuery.toLowerCase());
+    return candidates.filter((c) => {
+      const matchSearch =
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.position.toLowerCase().includes(searchQuery.toLowerCase());
       const matchDept = deptFilter === "ALL" || c.department.includes(deptFilter);
       return matchSearch && matchDept;
     });
-  }, [searchQuery, deptFilter]);
+  }, [candidates, searchQuery, deptFilter]);
+
+  // Mutations
+  const createEmployeeMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      return (await api.post("/hr/employees", payload)).data;
+    },
+    onSuccess: () => {
+      toast.success("Karyawan baru berhasil didaftarkan ke Master HR!");
+      queryClient.invalidateQueries({ queryKey: ["hr-employees"] });
+      setIsEmployeeModalOpen(false);
+      setNewEmp({
+        name: "",
+        department: "Produksi Mixing",
+        role: "",
+        contractType: "PKWT (Kontrak)",
+        phone: "",
+        email: "",
+        basicSalary: 5000000,
+      });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal mendaftarkan karyawan baru!");
+    },
+  });
+
+  const createCandidateMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      return (await api.post("/hr/candidates", payload)).data;
+    },
+    onSuccess: () => {
+      toast.success("Kandidat pelamar berhasil didaftarkan ke pipeline ATS!");
+      queryClient.invalidateQueries({ queryKey: ["hr-candidates"] });
+      setIsCandidateModalOpen(false);
+      setNewCand({
+        name: "",
+        department: "Produksi Mixing",
+        position: "",
+        phone: "",
+        email: "",
+        education: "S1 Farmasi",
+        experience: "",
+      });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal mendaftarkan kandidat pelamar!");
+    },
+  });
 
   const handleAddEmployee = (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,9 +268,33 @@ export default function HrRecruitmentPage() {
       toast.error("Nama dan Jabatan wajib diisi!");
       return;
     }
-    toast.success("Karyawan baru berhasil didaftarkan ke Master HR!");
-    setIsEmployeeModalOpen(false);
-    setNewEmp({ name: "", department: "Produksi Mixing", role: "", contractType: "PKWT (Kontrak)", phone: "", email: "", basicSalary: 5000000 });
+    createEmployeeMutation.mutate({
+      name: newEmp.name,
+      department: newEmp.department,
+      role: newEmp.role,
+      contractType: newEmp.contractType.includes("Tetap") ? "PERMANENT" : newEmp.contractType.includes("Probation") ? "PROBATION" : "CONTRACT",
+      phone: newEmp.phone,
+      email: newEmp.email || `${newEmp.name.toLowerCase().replace(/\s+/g, ".")}@kalopsia.id`,
+      basicSalary: newEmp.basicSalary,
+      joinDate: new Date().toISOString(),
+      roles: [{ roleName: newEmp.role, weight: 1.0, isPrimary: true }],
+    });
+  };
+
+  const handleAddCandidate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCand.name || !newCand.position) {
+      toast.error("Nama dan Posisi pelamar wajib diisi!");
+      return;
+    }
+    createCandidateMutation.mutate({
+      name: newCand.name,
+      department: newCand.department,
+      email: newCand.email || `${newCand.name.toLowerCase().replace(/\s+/g, ".")}@gmail.com`,
+      phone: newCand.phone,
+      cvReviewNotes: newCand.experience,
+      cvReviewScore: 0.9,
+    });
   };
 
   return (
@@ -159,9 +303,9 @@ export default function HrRecruitmentPage() {
         title="Pegawai & Rekrutmen (Talent Acquisition & Employees)"
         description="Master database pegawai aktif pabrik manufaktur, manajemen pipeline seleksi kandidat pelamar, dan pembukaan lowongan kerja."
         tabs={[
-          { id: "employees", label: "Database Pegawai Aktif", count: INITIAL_EMPLOYEES.length },
-          { id: "pipeline", label: "Pipeline Seleksi Pelamar", count: INITIAL_CANDIDATES.length },
-          { id: "openings", label: "Lowongan Kerja Buka", count: INITIAL_OPENINGS.length }
+          { id: "employees", label: "Database Pegawai Aktif", count: employees.length },
+          { id: "pipeline", label: "Pipeline Seleksi Pelamar", count: candidates.length },
+          { id: "openings", label: "Lowongan Kerja Buka", count: openings.length }
         ]}
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -201,7 +345,7 @@ export default function HrRecruitmentPage() {
       <DnaKpiGrid cols={4}>
         <DnaStatCard
           label="Total Pegawai Aktif"
-          value="124 Orang"
+          value={employees.length + " Orang"}
           icon={<Users className="w-5 h-5 text-blue-600" />}
           delta={{ value: "+3 Orang Bulan Ini", isPositive: true }}
           subtext="Manufaktur, R&D & Office"
@@ -209,9 +353,9 @@ export default function HrRecruitmentPage() {
         />
         <DnaStatCard
           label="Pelamar Dalam Pipeline"
-          value={INITIAL_CANDIDATES.length + " Kandidat"}
+          value={candidates.length + " Kandidat"}
           icon={<Briefcase className="w-5 h-5 text-purple-600" />}
-          delta={{ value: "4 Lowongan Buka", isPositive: true }}
+          delta={{ value: openings.length + " Lowongan Buka", isPositive: true }}
           subtext="Screening s/d Offering"
           variant="purple"
         />
@@ -264,7 +408,7 @@ export default function HrRecruitmentPage() {
             <div className="text-xs text-slate-500 font-medium">
               {activeTab === "employees" && `${filteredEmployees.length} Pegawai Terdaftar`}
               {activeTab === "pipeline" && `${filteredCandidates.length} Pelamar Aktif`}
-              {activeTab === "openings" && `${INITIAL_OPENINGS.length} Formasi Buka`}
+              {activeTab === "openings" && `${openings.length} Formasi Buka`}
             </div>
           </div>
         }
@@ -272,66 +416,66 @@ export default function HrRecruitmentPage() {
         {/* TAB 1: EMPLOYEES TABLE */}
         {activeTab === "employees" && (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1100px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                  <th className="px-3.5 py-2.5 w-[110px]">NIK</th>
-                  <th className="px-3.5 py-2.5">Nama Pegawai</th>
-                  <th className="px-3.5 py-2.5">Jabatan & Departemen</th>
-                  <th className="px-3.5 py-2.5 text-center w-[130px]">Tipe Kontrak</th>
-                  <th className="px-3.5 py-2.5 w-[110px]">Tgl Masuk</th>
-                  <th className="px-3.5 py-2.5 w-[130px]">No. Telepon</th>
-                  <th className="px-3.5 py-2.5">Email</th>
-                  <th className="px-3.5 py-2.5 text-right w-[130px]">Gaji Pokok</th>
-                  <th className="px-3.5 py-2.5 text-center w-[90px]">Status</th>
-                  <th className="px-3.5 py-2.5 text-center w-[70px]">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <DnaTh className="px-3.5 py-2.5 w-[110px]">NIK</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5">Nama Pegawai</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5">Jabatan & Departemen</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 text-center w-[130px]">Tipe Kontrak</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 w-[110px]">Tgl Masuk</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 w-[130px]">No. Telepon</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5">Email</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 text-right w-[130px]">Gaji Pokok</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 text-center w-[90px]">Status</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 text-center w-[70px]">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredEmployees.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="px-3.5 py-8 text-center text-xs text-slate-400">
+                  <DnaTableRow>
+                    <DnaTd colSpan={10} className="px-3.5 py-8 text-center text-xs text-slate-400">
                       Tidak ada pegawai yang cocok dengan kriteria pencarian.
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredEmployees.map((emp) => (
-                    <tr key={emp.id} className="h-[48px] hover:bg-slate-50/80 transition-colors">
-                      <td className="px-3.5 py-2.5">
+                    <DnaTableRow key={emp.id} className="h-[48px] hover:bg-slate-50/80 transition-colors">
+                      <DnaTd className="px-3.5 py-2.5">
                         <DnaCell.Code>{emp.nik}</DnaCell.Code>
-                      </td>
-                      <td className="px-3.5 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
                         <DnaCell.Text className="font-semibold text-slate-900">{emp.name}</DnaCell.Text>
-                      </td>
-                      <td className="px-3.5 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
                         <DnaCell.NaturalPair
                           primary={emp.role}
                           secondary={emp.department}
                         />
-                      </td>
-                      <td className="px-3.5 py-2.5 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5 text-center">
                         <DnaBadge variant={emp.contractType.includes("Tetap") ? "success" : "purple"}>
                           {emp.contractType}
                         </DnaBadge>
-                      </td>
-                      <td className="px-3.5 py-2.5">
-                        <DnaCell.Text className="font-mono text-[11.5px] text-slate-600">{emp.joinDate}</DnaCell.Text>
-                      </td>
-                      <td className="px-3.5 py-2.5">
-                        <DnaCell.Text className="font-mono text-[11.5px] text-slate-700">{emp.phone}</DnaCell.Text>
-                      </td>
-                      <td className="px-3.5 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
+                        <DnaCell.Text className="tabular-nums text-[11.5px] text-slate-600">{emp.joinDate}</DnaCell.Text>
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
+                        <DnaCell.Text className="tabular-nums text-[11.5px] text-slate-700">{emp.phone}</DnaCell.Text>
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
                         <DnaCell.Text className="text-slate-600">{emp.email}</DnaCell.Text>
-                      </td>
-                      <td className="px-3.5 py-2.5 text-right">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5 text-right">
                         <DnaCell.Numeric value={emp.basicSalary} prefix="Rp " />
-                      </td>
-                      <td className="px-3.5 py-2.5 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5 text-center">
                         <DnaBadge variant={emp.status === "AKTIF" ? "success" : "neutral"}>
                           {emp.status}
                         </DnaBadge>
-                      </td>
-                      <td className="px-3.5 py-2.5 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5 text-center">
                         <DnaButton
                           variant="ghost"
                           size="sm"
@@ -341,75 +485,75 @@ export default function HrRecruitmentPage() {
                         >
                           <Eye className="w-3.5 h-3.5 text-blue-600" />
                         </DnaButton>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         )}
 
         {/* TAB 2: CANDIDATE PIPELINE */}
         {activeTab === "pipeline" && (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1100px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                  <th className="px-3.5 py-2.5">Nama Pelamar</th>
-                  <th className="px-3.5 py-2.5">Posisi & Departemen</th>
-                  <th className="px-3.5 py-2.5 w-[130px]">No. Telepon</th>
-                  <th className="px-3.5 py-2.5">Email</th>
-                  <th className="px-3.5 py-2.5">Pengalaman Kerja</th>
-                  <th className="px-3.5 py-2.5">Pendidikan</th>
-                  <th className="px-3.5 py-2.5 w-[110px]">Tgl Melamar</th>
-                  <th className="px-3.5 py-2.5 text-right w-[100px]">Match</th>
-                  <th className="px-3.5 py-2.5 text-center w-[130px]">Tahapan Seleksi</th>
-                  <th className="px-3.5 py-2.5 text-center w-[70px]">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <DnaTh className="px-3.5 py-2.5">Nama Pelamar</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5">Posisi & Departemen</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 w-[130px]">No. Telepon</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5">Email</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5">Pengalaman Kerja</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5">Pendidikan</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 w-[110px]">Tgl Melamar</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 text-right w-[100px]">Match</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 text-center w-[130px]">Tahapan Seleksi</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 text-center w-[70px]">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredCandidates.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="px-3.5 py-8 text-center text-xs text-slate-400">
+                  <DnaTableRow>
+                    <DnaTd colSpan={10} className="px-3.5 py-8 text-center text-xs text-slate-400">
                       Tidak ada pelamar yang cocok dengan kriteria pencarian.
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredCandidates.map((cnd) => (
-                    <tr key={cnd.id} className="h-[48px] hover:bg-slate-50/80 transition-colors">
-                      <td className="px-3.5 py-2.5">
+                    <DnaTableRow key={cnd.id} className="h-[48px] hover:bg-slate-50/80 transition-colors">
+                      <DnaTd className="px-3.5 py-2.5">
                         <DnaCell.Text className="font-semibold text-slate-900">{cnd.name}</DnaCell.Text>
-                      </td>
-                      <td className="px-3.5 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
                         <DnaCell.NaturalPair
                           primary={cnd.position}
                           secondary={cnd.department}
                         />
-                      </td>
-                      <td className="px-3.5 py-2.5">
-                        <DnaCell.Text className="font-mono text-[11.5px] text-slate-700">{cnd.phone}</DnaCell.Text>
-                      </td>
-                      <td className="px-3.5 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
+                        <DnaCell.Text className="tabular-nums text-[11.5px] text-slate-700">{cnd.phone}</DnaCell.Text>
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
                         <DnaCell.Text className="text-slate-600">{cnd.email}</DnaCell.Text>
-                      </td>
-                      <td className="px-3.5 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
                         <DnaCell.Text className="text-slate-800">{cnd.experience}</DnaCell.Text>
-                      </td>
-                      <td className="px-3.5 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
                         <DnaCell.Text className="text-slate-600">{cnd.education}</DnaCell.Text>
-                      </td>
-                      <td className="px-3.5 py-2.5">
-                        <DnaCell.Text className="font-mono text-[11.5px] text-slate-600">{cnd.appliedDate}</DnaCell.Text>
-                      </td>
-                      <td className="px-3.5 py-2.5 text-right">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5">
+                        <DnaCell.Text className="tabular-nums text-[11.5px] text-slate-600">{cnd.appliedDate}</DnaCell.Text>
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5 text-right">
                         <DnaCell.Numeric
                           value={cnd.matchScore}
                           suffix="%"
                           className="font-bold text-emerald-700"
                         />
-                      </td>
-                      <td className="px-3.5 py-2.5 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5 text-center">
                         <DnaBadge
                           variant={
                             cnd.stage === "OFFERING" ? "success" :
@@ -419,8 +563,8 @@ export default function HrRecruitmentPage() {
                         >
                           {cnd.stage}
                         </DnaBadge>
-                      </td>
-                      <td className="px-3.5 py-2.5 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-3.5 py-2.5 text-center">
                         <DnaButton
                           variant="ghost"
                           size="sm"
@@ -430,60 +574,60 @@ export default function HrRecruitmentPage() {
                         >
                           <ChevronRight className="w-3.5 h-3.5 text-purple-600" />
                         </DnaButton>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         )}
 
         {/* TAB 3: JOB OPENINGS */}
         {activeTab === "openings" && (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[900px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                  <th className="px-3.5 py-2.5">Posisi Lowongan</th>
-                  <th className="px-3.5 py-2.5">Divisi / Departemen</th>
-                  <th className="px-3.5 py-2.5 text-center w-[130px]">Tipe Kontrak</th>
-                  <th className="px-3.5 py-2.5 text-right w-[140px]">Kebutuhan Formasi</th>
-                  <th className="px-3.5 py-2.5 text-right w-[140px]">Pelamar Masuk</th>
-                  <th className="px-3.5 py-2.5 w-[130px]">Batas Deadline</th>
-                  <th className="px-3.5 py-2.5 text-center w-[100px]">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {INITIAL_OPENINGS.map((job) => (
-                  <tr key={job.id} className="h-[48px] hover:bg-slate-50/80 transition-colors">
-                    <td className="px-3.5 py-2.5">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <DnaTh className="px-3.5 py-2.5">Posisi Lowongan</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5">Divisi / Departemen</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 text-center w-[130px]">Tipe Kontrak</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 text-right w-[140px]">Kebutuhan Formasi</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 text-right w-[140px]">Pelamar Masuk</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 w-[130px]">Batas Deadline</DnaTh>
+                  <DnaTh className="px-3.5 py-2.5 text-center w-[100px]">Status</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
+                {openings.map((job) => (
+                  <DnaTableRow key={job.id} className="h-[48px] hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="px-3.5 py-2.5">
                       <DnaCell.Text className="font-semibold text-slate-900">{job.title}</DnaCell.Text>
-                    </td>
-                    <td className="px-3.5 py-2.5">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5">
                       <DnaCell.Text className="text-slate-700">{job.department}</DnaCell.Text>
-                    </td>
-                    <td className="px-3.5 py-2.5 text-center">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5 text-center">
                       <DnaBadge variant={job.type === "Full-Time" ? "info" : "secondary"}>
                         {job.type}
                       </DnaBadge>
-                    </td>
-                    <td className="px-3.5 py-2.5 text-right">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5 text-right">
                       <DnaCell.Numeric value={job.openings} suffix=" Orang" />
-                    </td>
-                    <td className="px-3.5 py-2.5 text-right">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5 text-right">
                       <DnaCell.Numeric value={job.applicantsCount} suffix=" Pelamar" className="font-semibold text-purple-700" />
-                    </td>
-                    <td className="px-3.5 py-2.5">
-                      <DnaCell.Text className="font-mono text-[11.5px] text-slate-600">{job.deadline}</DnaCell.Text>
-                    </td>
-                    <td className="px-3.5 py-2.5 text-center">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5">
+                      <DnaCell.Text className="tabular-nums text-[11.5px] text-slate-600">{job.deadline}</DnaCell.Text>
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5 text-center">
                       <DnaBadge variant="success">{job.status}</DnaBadge>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         )}
       </DnaDataTableCard>
@@ -578,8 +722,118 @@ export default function HrRecruitmentPage() {
             <DnaButton variant="secondary" size="md" type="button" onClick={() => setIsEmployeeModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" size="md" type="submit">
-              Simpan Master Pegawai
+            <DnaButton variant="primary" size="md" type="submit" disabled={createEmployeeMutation.isPending}>
+              {createEmployeeMutation.isPending ? "Menyimpan..." : "Simpan Master Pegawai"}
+            </DnaButton>
+          </div>
+        </form>
+      </DnaModal>
+
+      {/* MODAL: INPUT PELAMAR BARU */}
+      <DnaModal
+        isOpen={isCandidateModalOpen}
+        onClose={() => setIsCandidateModalOpen(false)}
+        title="Input Pelamar Baru (ATS Recruitment Pipeline)"
+        size="md"
+      >
+        <form onSubmit={handleAddCandidate} className="space-y-3.5 text-xs">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Nama Pelamar *</label>
+              <DnaInput
+                type="text"
+                required
+                placeholder="cth: Agung Wicaksono, S.T"
+                value={newCand.name}
+                onChange={(e) => setNewCand({ ...newCand, name: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Posisi yang Dilamar *</label>
+              <DnaInput
+                type="text"
+                required
+                placeholder="cth: Operator Mesin Filling Auto"
+                value={newCand.position}
+                onChange={(e) => setNewCand({ ...newCand, position: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Departemen Tujuan *</label>
+              <DnaSelect
+                value={newCand.department}
+                onChange={(val) => setNewCand({ ...newCand, department: val })}
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white"
+              >
+                <option value="Produksi Mixing">Produksi Mixing</option>
+                <option value="Produksi Filling">Produksi Filling</option>
+                <option value="R&D Formulasi">R&D Formulasi</option>
+                <option value="QC Mikrobiologi">QC Mikrobiologi</option>
+                <option value="BusDev Maklon">BusDev Maklon</option>
+                <option value="Warehouse Material">Warehouse Material</option>
+              </DnaSelect>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Pendidikan Terakhir</label>
+              <DnaSelect
+                value={newCand.education}
+                onChange={(val) => setNewCand({ ...newCand, education: val })}
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white"
+              >
+                <option value="SMK / SMA">SMK / SMA Kimia/Mesin</option>
+                <option value="D3 Farmasi / Teknik">D3 Farmasi / Teknik Mesin</option>
+                <option value="S1 Farmasi">S1 Farmasi</option>
+                <option value="S1 Kimia / Biologi">S1 Kimia / Biologi</option>
+                <option value="S1 Manajemen / IT">S1 Manajemen / IT</option>
+              </DnaSelect>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Email Pelamar</label>
+              <DnaInput
+                type="email"
+                placeholder="nama@email.com"
+                value={newCand.email}
+                onChange={(e) => setNewCand({ ...newCand, email: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">No. WhatsApp</label>
+              <DnaInput
+                type="text"
+                placeholder="0812-xxxx-xxxx"
+                value={newCand.phone}
+                onChange={(e) => setNewCand({ ...newCand, phone: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Ringkasan Pengalaman Kerja</label>
+            <DnaInput
+              type="text"
+              placeholder="cth: 2 Thn Operator Filling Kosmetik Cair"
+              value={newCand.experience}
+              onChange={(e) => setNewCand({ ...newCand, experience: e.target.value })}
+              className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+            <DnaButton variant="secondary" size="md" type="button" onClick={() => setIsCandidateModalOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" size="md" type="submit" disabled={createCandidateMutation.isPending}>
+              {createCandidateMutation.isPending ? "Mendaftarkan..." : "Daftarkan Pelamar"}
             </DnaButton>
           </div>
         </form>
@@ -615,11 +869,11 @@ export default function HrRecruitmentPage() {
                   </div>
                   <div>
                     <span className="text-slate-400 block text-[11px]">Tanggal Masuk (Join)</span>
-                    <span className="font-mono text-slate-800">{selectedEmployee.joinDate}</span>
+                    <span className="tabular-nums text-slate-800">{selectedEmployee.joinDate}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 block text-[11px]">Gaji Pokok Tercatat</span>
-                    <span className="font-bold text-slate-900 font-mono">{formatRupiah(selectedEmployee.basicSalary)}</span>
+                    <span className="font-bold text-slate-900 tabular-nums">{formatRupiah(selectedEmployee.basicSalary)}</span>
                   </div>
                 </div>
 
@@ -632,7 +886,7 @@ export default function HrRecruitmentPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Mail className="w-3.5 h-3.5 text-blue-600" />
-                      <span className="font-mono text-[11px]">{selectedEmployee.email}</span>
+                      <span className="tabular-nums text-[11px]">{selectedEmployee.email}</span>
                     </div>
                   </div>
                 </div>

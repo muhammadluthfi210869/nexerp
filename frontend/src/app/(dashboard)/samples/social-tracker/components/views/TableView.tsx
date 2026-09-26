@@ -1,3 +1,11 @@
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import React, { useState } from 'react';
 import { 
   Plus, 
@@ -56,13 +64,13 @@ export const TableView: React.FC<TableViewProps> = ({
     const contentType = contentTypeConfig[post.contentType];
 
     return (
-      <tr
+      <DnaTableRow
         key={post.id}
         className="h-[42px] hover:bg-slate-50/60 transition-colors cursor-pointer group border-b border-slate-100"
         onClick={() => onOpenPost(post)}
       >
         {/* Title & Preview */}
-        <td className="py-2.5 px-3 font-semibold text-slate-900 text-[12px]">
+        <DnaTd className="py-2.5 px-3 font-semibold text-slate-900 text-[12px]">
           <div className="flex items-center gap-2">
             {post.coverImage ? (
               <img
@@ -77,26 +85,26 @@ export const TableView: React.FC<TableViewProps> = ({
               {post.title}
             </span>
           </div>
-        </td>
+        </DnaTd>
 
         {/* Platform */}
-        <td className="py-2.5 px-3">
+        <DnaTd className="py-2.5 px-3">
           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${platform.bg} ${platform.text} ${platform.border}`}>
             <span>{platform.icon}</span>
             <span>{platform.name}</span>
           </span>
-        </td>
+        </DnaTd>
 
         {/* Format */}
-        <td className="py-2.5 px-3 text-[11px] text-slate-600">
+        <DnaTd className="py-2.5 px-3 text-[11px] text-slate-600">
           <span className="inline-flex items-center gap-1 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-700">
             <span>{contentType.icon}</span>
             <span>{contentType.name}</span>
           </span>
-        </td>
+        </DnaTd>
 
         {/* Status Dropdown */}
-        <td className="py-2.5 px-3" onClick={(e) => e.stopPropagation()}>
+        <DnaTd className="py-2.5 px-3" onClick={(e) => e.stopPropagation()}>
           <select
             value={post.status}
             onChange={(e) => onUpdateStatus(post.id, e.target.value as PostStatus)}
@@ -109,22 +117,22 @@ export const TableView: React.FC<TableViewProps> = ({
             <option value="published">✅ Published</option>
             <option value="archived">📦 Archived</option>
           </select>
-        </td>
+        </DnaTd>
 
         {/* Date */}
-        <td className="py-2.5 px-3 text-slate-600 font-mono text-[11px]">
+        <DnaTd className="py-2.5 px-3 text-slate-600 tabular-nums text-[11px]">
           {formatDateIndonesian(post.scheduledDate)}
-        </td>
+        </DnaTd>
 
         {/* Pillar */}
-        <td className="py-2.5 px-3">
+        <DnaTd className="py-2.5 px-3">
           <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${pillar.bg} ${pillar.text} ${pillar.border}`}>
             {pillar.name}
           </span>
-        </td>
+        </DnaTd>
 
         {/* Creative Brief */}
-        <td className="py-2.5 px-3 text-[11px] text-slate-600">
+        <DnaTd className="py-2.5 px-3 text-[11px] text-slate-600">
           <div className="max-w-[220px] truncate" title={post.notes || post.caption || post.title}>
             {post.notes ? (
               <span className="inline-flex items-center gap-1.5">
@@ -137,19 +145,19 @@ export const TableView: React.FC<TableViewProps> = ({
               <span className="text-slate-400 italic text-[11px]">+ Tambah brief</span>
             )}
           </div>
-        </td>
+        </DnaTd>
 
         {/* Reach */}
-        <td className="py-2.5 px-3 font-mono text-[12px] font-semibold text-slate-800 tabular-nums">
+        <DnaTd className="py-2.5 px-3 tabular-nums text-[12px] font-semibold text-slate-800 tabular-nums">
           {post.performance?.reach ? (
             formatNumber(post.performance.reach)
           ) : (
             <span className="text-slate-400">-</span>
           )}
-        </td>
+        </DnaTd>
 
         {/* Engagement */}
-        <td className="py-2.5 px-3 font-mono text-[12px] tabular-nums">
+        <DnaTd className="py-2.5 px-3 tabular-nums text-[12px] tabular-nums">
           {post.performance?.engagementRate ? (
             <span className="text-slate-800 font-semibold">
               {formatNumber(post.performance.likes + post.performance.comments)}{' '}
@@ -158,10 +166,10 @@ export const TableView: React.FC<TableViewProps> = ({
           ) : (
             <span className="text-slate-400">-</span>
           )}
-        </td>
+        </DnaTd>
 
         {/* Author */}
-        <td className="py-2.5 px-3 text-[11px] text-slate-600">
+        <DnaTd className="py-2.5 px-3 text-[11px] text-slate-600">
           <div className="flex items-center gap-1.5">
             <img
               src={post.author.avatar}
@@ -170,36 +178,36 @@ export const TableView: React.FC<TableViewProps> = ({
             />
             <span className="truncate">{post.author.name}</span>
           </div>
-        </td>
+        </DnaTd>
 
         {/* Arrow */}
-        <td className="py-2.5 px-2 text-right">
+        <DnaTd className="py-2.5 px-2 text-right">
           <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition" />
-        </td>
-      </tr>
+        </DnaTd>
+      </DnaTableRow>
     );
   };
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden mt-[18px]">
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse text-[12px]">
+        <DnaTable>
           {/* Table Header */}
-          <thead>
-            <tr className="bg-slate-50/75 border-b border-slate-200 text-slate-500 text-[11px] font-semibold uppercase tracking-wider h-10 sticky top-0 z-10">
-              <th className="py-2.5 px-3 font-semibold min-w-[280px]">Content Title</th>
-              <th className="py-2.5 px-3 font-semibold min-w-[130px]">Platform</th>
-              <th className="py-2.5 px-3 font-semibold min-w-[110px]">Format</th>
-              <th className="py-2.5 px-3 font-semibold min-w-[130px]">Status</th>
-              <th className="py-2.5 px-3 font-semibold min-w-[140px]">Date</th>
-              <th className="py-2.5 px-3 font-semibold min-w-[130px]">Pillar</th>
-              <th className="py-2.5 px-3 font-semibold min-w-[220px]">Creative Brief</th>
-              <th className="py-2.5 px-3 font-semibold min-w-[110px]">Reach</th>
-              <th className="py-2.5 px-3 font-semibold min-w-[120px]">Engagement</th>
-              <th className="py-2.5 px-3 font-semibold min-w-[120px]">Author</th>
-              <th className="py-2.5 px-2 w-8"></th>
-            </tr>
-          </thead>
+          <DnaTableHead>
+            <DnaTableRow className="bg-slate-50/75 border-b border-slate-200 text-slate-500 text-[11px] font-semibold uppercase tracking-wider h-10 sticky top-0 z-10">
+              <DnaTh className="py-2.5 px-3 font-semibold min-w-[280px]">Content Title</DnaTh>
+              <DnaTh className="py-2.5 px-3 font-semibold min-w-[130px]">Platform</DnaTh>
+              <DnaTh className="py-2.5 px-3 font-semibold min-w-[110px]">Format</DnaTh>
+              <DnaTh className="py-2.5 px-3 font-semibold min-w-[130px]">Status</DnaTh>
+              <DnaTh className="py-2.5 px-3 font-semibold min-w-[140px]">Date</DnaTh>
+              <DnaTh className="py-2.5 px-3 font-semibold min-w-[130px]">Pillar</DnaTh>
+              <DnaTh className="py-2.5 px-3 font-semibold min-w-[220px]">Creative Brief</DnaTh>
+              <DnaTh className="py-2.5 px-3 font-semibold min-w-[110px]">Reach</DnaTh>
+              <DnaTh className="py-2.5 px-3 font-semibold min-w-[120px]">Engagement</DnaTh>
+              <DnaTh className="py-2.5 px-3 font-semibold min-w-[120px]">Author</DnaTh>
+              <DnaTh className="py-2.5 px-2 w-8"></DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
 
           {/* Grouped by Month */}
           {groupByMonth && monthGroups.length > 0 ? (
@@ -208,10 +216,10 @@ export const TableView: React.FC<TableViewProps> = ({
               const defaultAddDate = `${group.monthKey}-15T10:00`;
 
               return (
-                <tbody key={group.monthKey} className="divide-y divide-slate-100 border-b border-slate-200">
+                <DnaTableBody key={group.monthKey}>
                   {/* Month Group Header Row */}
-                  <tr className="bg-slate-50/90 text-slate-800 select-none border-b border-slate-200">
-                    <td colSpan={11} className="py-2 px-3">
+                  <DnaTableRow className="bg-slate-50/90 text-slate-800 select-none border-b border-slate-200">
+                    <DnaTd colSpan={11} className="py-2 px-3">
                       <div className="flex items-center justify-between">
                         <div 
                           onClick={() => toggleMonth(group.monthKey)}
@@ -226,14 +234,14 @@ export const TableView: React.FC<TableViewProps> = ({
                             <span>🗓️</span>
                             <span>{group.monthName}</span>
                           </span>
-                          <span className="text-[10px] text-slate-600 font-mono bg-slate-200/80 px-2 py-0.5 rounded-full font-bold">
+                          <span className="text-[10px] text-slate-600 tabular-nums bg-slate-200/80 px-2 py-0.5 rounded-full font-bold">
                             {group.count} konten
                           </span>
 
                           {/* Month Micro-Stats Badges */}
                           <div className="hidden sm:flex items-center gap-2 text-[11px] text-slate-600 ml-3">
                             {group.totalReach > 0 && (
-                              <span className="flex items-center gap-1 font-mono text-emerald-700 font-bold">
+                              <span className="flex items-center gap-1 tabular-nums text-emerald-700 font-bold">
                                 <Eye className="w-3 h-3" />
                                 {formatNumber(group.totalReach)} reach
                               </span>
@@ -268,20 +276,20 @@ export const TableView: React.FC<TableViewProps> = ({
                           <span>Tambah di {group.monthName.split(' ')[0]}</span>
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
 
                   {/* Month Group Items */}
                   {!isCollapsed && group.items.map((post: PostItem) => renderPostRow(post))}
-                </tbody>
+                </DnaTableBody>
               );
             })
           ) : (
-            <tbody className="divide-y divide-slate-100">
+            <DnaTableBody>
               {posts.map((post) => renderPostRow(post))}
-            </tbody>
+            </DnaTableBody>
           )}
-        </table>
+        </DnaTable>
       </div>
 
       {/* Global Add Row Inline button */}

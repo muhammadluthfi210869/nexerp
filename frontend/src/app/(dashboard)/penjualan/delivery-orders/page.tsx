@@ -13,10 +13,16 @@ import {
   ShieldCheck,
   FileText
 } from "lucide-react";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { cn } from "@/lib/utils";
 import {
@@ -260,48 +266,48 @@ export default function DeliveryOrdersPage() {
           searchPlaceholder="Cari nomor DO, klien, tujuan..."
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold uppercase tracking-wider select-none">
-                  <th className="px-4 py-2.5 w-[160px]">No. Surat Jalan</th>
-                  <th className="px-4 py-2.5 w-[110px]">Tanggal</th>
-                  <th className="px-4 py-2.5 min-w-[180px]">Klien / Penerima</th>
-                  <th className="px-4 py-2.5 w-[160px]">Asal Gudang</th>
-                  <th className="px-4 py-2.5 min-w-[200px]">Tujuan Pengiriman</th>
-                  <th className="px-4 py-2.5 w-[130px]">Armada</th>
-                  <th className="px-4 py-2.5 w-[140px] text-center">Status</th>
-                  <th className="pr-4 py-2.5 w-[180px] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold uppercase tracking-wider select-none">
+                  <DnaTh className="px-4 py-2.5 w-[160px]">No. Surat Jalan</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Tanggal</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Klien / Penerima</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[160px]">Asal Gudang</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[200px]">Tujuan Pengiriman</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[130px]">Armada</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px] text-center">Status</DnaTh>
+                  <DnaTh className="pr-4 py-2.5 w-[180px] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredOrders.map((doOrder: any) => (
-                  <tr key={doOrder.id} className="h-[48px] hover:bg-slate-50/60 transition-colors">
-                    <td className="px-4 py-2.5">
+                  <DnaTableRow key={doOrder.id} className="h-[48px] hover:bg-slate-50/60 transition-colors">
+                    <DnaTd className="px-4 py-2.5">
                       <DnaCell.Code code={doOrder.trackingNo || doOrder.id} />
-                    </td>
-                    <td className="px-4 py-2.5">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-2.5">
                       <DnaCell.Text text={doOrder.date} />
-                    </td>
-                    <td className="px-4 py-2.5">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-2.5">
                       <span className="text-[12px] font-medium text-slate-900 line-clamp-1">{doOrder.client}</span>
-                    </td>
-                    <td className="px-4 py-2.5">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-2.5">
                       <span className="text-[12px] font-medium text-slate-700">{doOrder.origin}</span>
-                    </td>
-                    <td className="px-4 py-2.5">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-2.5">
                       <span className="text-[12px] font-medium text-slate-700 line-clamp-1">{doOrder.destination}</span>
-                    </td>
-                    <td className="px-4 py-2.5">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-2.5">
                       <span className="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                         {doOrder.carrier}
                       </span>
-                    </td>
-                    <td className="px-4 py-2.5 text-center">
-                      <DnaBadge status={doOrder.status === 'SHIPPED' || doOrder.status === 'DELIVERED' ? "success" : doOrder.status === 'AWAITING_FLEET' ? "warning" : "default"}>
+                    </DnaTd>
+                    <DnaTd className="px-4 py-2.5 text-center">
+                      <DnaBadge variant={doOrder.status === 'SHIPPED' || doOrder.status === 'DELIVERED' ? "success" : doOrder.status === 'AWAITING_FLEET' ? "warning" : "default"}>
                         {doOrder.status.replace(/_/g, ' ')}
                       </DnaBadge>
-                    </td>
-                    <td className="pr-4 py-2.5 text-right">
+                    </DnaTd>
+                    <DnaTd className="pr-4 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <FinalDocumentPdfButton
                           documentType="DELIVERY_ORDER"
@@ -325,11 +331,11 @@ export default function DeliveryOrdersPage() {
                           </DnaButton>
                         )}
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}

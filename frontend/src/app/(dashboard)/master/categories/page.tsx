@@ -15,7 +15,7 @@ export default function MasterCategoriesRedirect() {
 
   return (
     <div className="flex items-center justify-center min-h-[50vh] text-slate-400">
-      <div className="animate-pulse font-mono text-xs">Mengarahkan ke Kategori Barang...</div>
+      <div className="animate-pulse tabular-nums text-xs">Mengarahkan ke Kategori Barang...</div>
     </div>
   );
 }

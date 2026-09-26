@@ -33,7 +33,12 @@ import {
   DnaSelect,
   DnaTextarea,
   DnaTable,
-  useDnaToast
+  useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { DnaCell } from "@/components/dna/cells/DnaCell";
 
@@ -64,80 +69,99 @@ interface WarehouseTransfer {
   items: TransferItem[];
 }
 
-const INITIAL_TRANSFERS: WarehouseTransfer[] = [
-  {
-    id: "trf-1",
-    transferNumber: "TRF-WH-202609-0008",
-    transferDate: "2026-09-09",
-    fromWarehouse: "Gudang Bahan Baku Utama (WH-01)",
-    toWarehouse: "Gudang Karantina & QC (WH-04)",
-    referenceDoc: "SPK-2026-09-008",
-    totalItems: 2,
-    totalQty: 55.0,
-    senderPic: "Bambang Sudiro (WH-01)",
-    status: "IN_TRANSIT",
-    notes: "Pengiriman sampel ruahan dan bahan aktif untuk re-testing kestabilan mikrobiologi.",
-    items: [
-      { id: "ti-1", materialCode: "BBK00028", materialName: "Super Moisturing Max", transferQty: 50.0, availableStockOrigin: 120.0, unit: "Kg", batchLot: "LOT-BB-2609-001" },
-      { id: "ti-2", materialCode: "BBK00092", materialName: "Fragrance Sweet Vanilla", transferQty: 5.0, availableStockOrigin: 18.0, unit: "Kg", batchLot: "LOT-FG-2608-004" },
-    ],
-  },
-  {
-    id: "trf-2",
-    transferNumber: "TRF-WH-202609-0007",
-    transferDate: "2026-09-08",
-    fromWarehouse: "Gudang Kemas & Box (WH-02)",
-    toWarehouse: "Gudang Produk Jadi (WH-03)",
-    referenceDoc: "SPK-2026-09-006",
-    totalItems: 1,
-    totalQty: 300,
-    senderPic: "Siti Rahma (WH-02)",
-    receiverPic: "Rahmat Hidayat (WH-03)",
-    receivedDate: "2026-09-08 16:30",
-    status: "COMPLETED",
-    notes: "Transfer master carton box cadangan untuk line packaging shift malam.",
-    items: [
-      { id: "ti-3", materialCode: "KMS00105", materialName: "Master Carton Box K125/M125 (Isi 48)", transferQty: 300, availableStockOrigin: 1200, unit: "Pcs", batchLot: "LOT-KM-2608-012" },
-    ],
-  },
-  {
-    id: "trf-3",
-    transferNumber: "TRF-WH-202609-0005",
-    transferDate: "2026-09-05",
-    fromWarehouse: "Gudang Bahan Baku Utama (WH-01)",
-    toWarehouse: "Gudang Retur & Reject (WH-05)",
-    referenceDoc: "RET-PO-202609-0004",
-    totalItems: 1,
-    totalQty: 25.0,
-    senderPic: "Bambang Sudiro (WH-01)",
-    receiverPic: "Agus Santoso (WH-05)",
-    receivedDate: "2026-09-05 11:15",
-    status: "COMPLETED",
-    notes: "Pemindahan drum rusak fisik hasil reject QC ke gudang retur vendor.",
-    items: [
-      { id: "ti-4", materialCode: "REJ00004", materialName: "Drum Bahan Baku Rusak Segel", transferQty: 25.0, availableStockOrigin: 25.0, unit: "Kg", batchLot: "LOT-SON-2609-001" },
-    ],
-  },
-];
-
-const MASTER_WAREHOUSES = [
-  "Gudang Bahan Baku Utama (WH-01)",
-  "Gudang Kemas & Box (WH-02)",
-  "Gudang Produk Jadi (WH-03)",
-  "Gudang Karantina & QC (WH-04)",
-  "Gudang Retur & Reject (WH-05)",
-];
-
-const AVAILABLE_TRANSFER_ITEMS = [
-  { code: "BBK00028", name: "Super Moisturing Max", unit: "Kg", stock: 120.0, lot: "LOT-BB-2609-001" },
-  { code: "BBK00031", name: "Niacinamide PC (Vitamin B3)", unit: "Kg", stock: 85.0, lot: "LOT-NC-2608-019" },
-  { code: "KMS00012", name: "Botol Tube 100ml Doff White", unit: "Pcs", stock: 12500, lot: "LOT-KM-2609-002" },
-  { code: "KMS00105", name: "Master Carton Box K125/M125", unit: "Pcs", stock: 350, lot: "LOT-KM-2608-012" },
-];
-
 export default function WarehouseTransfersPage() {
   const toast = useDnaToast();
-  const [dataList, setDataList] = useState<WarehouseTransfer[]>(INITIAL_TRANSFERS);
+  const queryClient = useQueryClient();
+
+  const { data: rawTransfers = [], isLoading } = useQuery({
+    queryKey: ["warehouse-transfers"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/transfers");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: rawWarehouses = [] } = useQuery({
+    queryKey: ["master-warehouses"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/master/warehouses");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: rawCatalog = [] } = useQuery({
+    queryKey: ["warehouse-catalog"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/catalog");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const warehouseOptions = useMemo(() => {
+    if (rawWarehouses.length > 0) {
+      return rawWarehouses.map((w: any) => w.name || w.code);
+    }
+    return [
+      "Gudang Bahan Baku Utama (WH-01)",
+      "Gudang Kemas & Box (WH-02)",
+      "Gudang Produk Jadi (WH-03)",
+      "Gudang Karantina & QC (WH-04)",
+      "Gudang Retur & Reject (WH-05)",
+    ];
+  }, [rawWarehouses]);
+
+  const availableItems = useMemo(() => {
+    if (rawCatalog.length > 0) {
+      return rawCatalog.map((c: any) => ({
+        code: c.code || "MAT-01",
+        name: c.name || "Material",
+        unit: c.unit || "Kg",
+        stock: Number(c.stockQty || c.currentStock || 0),
+        lot: c.batchNumber || "-",
+      }));
+    }
+    return [];
+  }, [rawCatalog]);
+
+  const dataList: WarehouseTransfer[] = useMemo(() => {
+    if (!rawTransfers || !Array.isArray(rawTransfers)) return [];
+    return rawTransfers.map((t: any) => ({
+      id: t.id,
+      transferNumber: t.transferNumber || `TRF-${t.id.slice(0, 8).toUpperCase()}`,
+      transferDate: t.createdAt ? new Date(t.createdAt).toISOString().split("T")[0] : "-",
+      fromWarehouse: t.fromWarehouse?.name || t.sourceWarehouse?.name || "Gudang Asal",
+      toWarehouse: t.toWarehouse?.name || t.destWarehouse?.name || "Gudang Tujuan",
+      referenceDoc: t.referenceNo || t.referenceDoc || "-",
+      totalItems: t.items?.length || 0,
+      totalQty: (t.items || []).reduce((sum: number, it: any) => sum + Number(it.quantity || it.transferQty || 0), 0),
+      senderPic: t.senderPic || t.createdBy?.fullName || "Petugas Gudang",
+      receiverPic: t.receiverPic,
+      receivedDate: t.executedAt ? new Date(t.executedAt).toLocaleString("id-ID") : undefined,
+      status: (t.status === "COMPLETED" ? "COMPLETED" : t.status === "CANCELLED" ? "CANCELLED" : "IN_TRANSIT") as any,
+      notes: t.notes || "-",
+      items: (t.items || []).map((it: any, idx: number) => ({
+        id: it.id || `ti-${idx}`,
+        materialCode: it.material?.code || "MAT-01",
+        materialName: it.material?.name || "Material",
+        transferQty: Number(it.quantity || it.transferQty || 0),
+        availableStockOrigin: Number(it.availableStock || 0),
+        unit: it.material?.unit || "Kg",
+        batchLot: it.batchNumber || "-",
+      })),
+    }));
+  }, [rawTransfers]);
 
   // Filters
   const [activeTab, setActiveTab] = useState<string>("ALL");
@@ -146,8 +170,8 @@ export default function WarehouseTransfersPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Create Form State
-  const [fromWarehouse, setFromWarehouse] = useState(MASTER_WAREHOUSES[0]);
-  const [toWarehouse, setToWarehouse] = useState(MASTER_WAREHOUSES[3]);
+  const [fromWarehouse, setFromWarehouse] = useState(warehouseOptions[0] || "WH-01");
+  const [toWarehouse, setToWarehouse] = useState(warehouseOptions[1] || "WH-02");
   const [referenceDoc, setReferenceDoc] = useState("");
   const [formNotes, setFormNotes] = useState("");
   const [cartItems, setCartItems] = useState<Array<{
@@ -195,30 +219,22 @@ export default function WarehouseTransfersPage() {
     });
   }, [dataList, searchQuery, activeTab]);
 
-  const handleConfirmReceive = (trfId: string) => {
-    setDataList((prev) =>
-      prev.map((t) =>
-        t.id === trfId
-          ? {
-              ...t,
-              status: "COMPLETED",
-              receiverPic: "Petugas Gudang Penerima (Anda)",
-              receivedDate: new Date().toLocaleString("id-ID"),
-            }
-          : t
-      )
-    );
-
-    if (selectedTransfer && selectedTransfer.id === trfId) {
-      setSelectedTransfer({
-        ...selectedTransfer,
-        status: "COMPLETED",
-        receiverPic: "Petugas Gudang Penerima (Anda)",
-        receivedDate: new Date().toLocaleString("id-ID"),
-      });
+  const handleConfirmReceive = async (trfId: string) => {
+    try {
+      await api.post(`/warehouse/transfers/${trfId}/execute`, { userId: "system" });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-transfers"] });
+      toast.success("Barang transfer telah diverifikasi fisik dan stok gudang tujuan otomatis bertambah.");
+      if (selectedTransfer && selectedTransfer.id === trfId) {
+        setSelectedTransfer({
+          ...selectedTransfer,
+          status: "COMPLETED",
+          receiverPic: "Petugas Gudang Penerima (Anda)",
+          receivedDate: new Date().toLocaleString("id-ID"),
+        });
+      }
+    } catch (err: any) {
+      toast.error("Gagal Eksekusi Transfer", err?.response?.data?.message || err.message);
     }
-
-    toast.success("Barang transfer telah diverifikasi fisik dan stok gudang tujuan otomatis bertambah.");
   };
 
   const handleAddItemToCart = () => {
@@ -226,11 +242,11 @@ export default function WarehouseTransfersPage() {
       toast.error("Pilih material yang ingin ditransfer.");
       return;
     }
-    const item = AVAILABLE_TRANSFER_ITEMS.find((i) => i.code === selectedMatCode);
+    const item = availableItems.find((i) => i.code === selectedMatCode);
     if (!item) return;
 
-    if (itemTransferQty <= 0 || itemTransferQty > item.stock) {
-      toast.error(`Jumlah transfer tidak valid. Stok tersedia: ${item.stock} ${item.unit}`);
+    if (itemTransferQty <= 0) {
+      toast.error("Jumlah transfer harus lebih dari 0.");
       return;
     }
 
@@ -250,7 +266,7 @@ export default function WarehouseTransfersPage() {
     setItemTransferQty(1);
   };
 
-  const handleCreateTransfer = () => {
+  const handleCreateTransfer = async () => {
     if (fromWarehouse === toWarehouse) {
       toast.error("Gudang asal dan gudang tujuan tidak boleh sama.");
       return;
@@ -260,32 +276,34 @@ export default function WarehouseTransfersPage() {
       return;
     }
 
-    const newTransfer: WarehouseTransfer = {
-      id: `trf-${Date.now()}`,
-      transferNumber: `TRF-WH-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(dataList.length + 1).padStart(4, "0")}`,
-      transferDate: new Date().toISOString().split("T")[0],
-      fromWarehouse,
-      toWarehouse,
-      referenceDoc: referenceDoc || "INTERNAL-REQUEST",
-      totalItems: cartItems.length,
-      totalQty: cartItems.reduce((acc, it) => acc + it.transferQty, 0),
-      senderPic: "Petugas Pengirim (Anda)",
-      status: "IN_TRANSIT",
-      notes: formNotes || "Transfer stok antar gudang internal.",
-      items: cartItems.map((c, idx) => ({
-        id: `ti-${Date.now()}-${idx}`,
-        ...c,
-      })),
-    };
+    try {
+      const fromWhObj = (rawWarehouses as any[]).find((w: any) => w.name === fromWarehouse || w.id === fromWarehouse);
+      const toWhObj = (rawWarehouses as any[]).find((w: any) => w.name === toWarehouse || w.id === toWarehouse);
 
-    setDataList([newTransfer, ...dataList]);
-    setIsCreateOpen(false);
-    toast.success(`Surat Pemindahan Barang ${newTransfer.transferNumber} berhasil diterbitkan (IN_TRANSIT).`);
+      await api.post("/warehouse/transfers", {
+        fromWarehouseId: fromWhObj?.id || (rawWarehouses as any[])[0]?.id,
+        toWarehouseId: toWhObj?.id || (rawWarehouses as any[])[1]?.id,
+        notes: formNotes || "Transfer stok antar gudang internal.",
+        referenceNo: referenceDoc || undefined,
+        items: cartItems.map((it) => {
+          const catMat = (rawCatalog as any[]).find((m: any) => m.code === it.materialCode || m.name === it.materialName);
+          return {
+            materialId: catMat?.id || it.materialCode,
+            quantity: it.transferQty,
+            batchNumber: it.batchLot || undefined,
+          };
+        }),
+      });
 
-    // Reset Form
-    setCartItems([]);
-    setReferenceDoc("");
-    setFormNotes("");
+      queryClient.invalidateQueries({ queryKey: ["warehouse-transfers"] });
+      setIsCreateOpen(false);
+      setCartItems([]);
+      setReferenceDoc("");
+      setFormNotes("");
+      toast.success("Dokumen transfer gudang diterbitkan dan status IN_TRANSIT.");
+    } catch (err: any) {
+      toast.error("Gagal Menerbitkan Transfer", err?.response?.data?.message || err.message);
+    }
   };
 
   const getStatusBadge = (status: WarehouseTransfer["status"]) => {
@@ -378,80 +396,80 @@ export default function WarehouseTransfersPage() {
         }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
-                <th className="px-4 py-3 h-[40px] w-[140px]">No. Transfer</th>
-                <th className="px-3 py-3 h-[40px] w-[110px]">Tanggal</th>
-                <th className="px-3 py-3 h-[40px]">Gudang Asal</th>
-                <th className="px-3 py-3 h-[40px]">Gudang Tujuan</th>
-                <th className="px-3 py-3 h-[40px] w-[140px]">Referensi Dokumen</th>
-                <th className="px-3 py-3 h-[40px]">PIC Pengirim</th>
-                <th className="px-3 py-3 h-[40px] text-right w-[140px]">Volume & Item</th>
-                <th className="px-3 py-3 h-[40px] text-center w-[130px]">Status</th>
-                <th className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="px-4 py-3 h-[40px] w-[140px]">No. Transfer</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[110px]">Tanggal</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Gudang Asal</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Gudang Tujuan</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[140px]">Referensi Dokumen</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">PIC Pengirim</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[140px]">Volume & Item</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-center w-[130px]">Status</DnaTh>
+                <DnaTh className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredList.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-12 text-center text-slate-400">
                     <ArrowRightLeft className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada data transfer antar gudang yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredList.map((row) => (
-                  <tr
+                  <DnaTableRow
                     key={row.id}
                     onClick={() => setSelectedTransfer(row)}
                     className="hover:bg-slate-50/60 transition-colors cursor-pointer group h-[48px]"
                   >
                     {/* Kolom 1: No. Transfer */}
-                    <td className="px-4 py-2">
+                    <DnaTd className="px-4 py-2">
                       <DnaCell.Code value={row.transferNumber} />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 2: Tanggal */}
-                    <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                    <DnaTd className="px-3 py-2 text-slate-600 whitespace-nowrap">
                       {row.transferDate}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 3: Gudang Asal */}
-                    <td className="px-3 py-2 text-slate-800 font-medium truncate max-w-[160px]">
+                    <DnaTd className="px-3 py-2 text-slate-800 font-medium truncate max-w-[160px]">
                       {row.fromWarehouse.split("(")[0]}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 4: Gudang Tujuan */}
-                    <td className="px-3 py-2 text-slate-800 font-medium truncate max-w-[160px]">
+                    <DnaTd className="px-3 py-2 text-slate-800 font-medium truncate max-w-[160px]">
                       {row.toWarehouse.split("(")[0]}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 5: Referensi Dokumen */}
-                    <td className="px-3 py-2">
+                    <DnaTd className="px-3 py-2">
                       <DnaCell.Code value={row.referenceDoc} />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 6: PIC Pengirim */}
-                    <td className="px-3 py-2 text-slate-800 truncate max-w-[140px]">
+                    <DnaTd className="px-3 py-2 text-slate-800 truncate max-w-[140px]">
                       {row.senderPic}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 7: Volume & Item (1 Natural Pair) */}
-                    <td className="px-3 py-2 text-right">
+                    <DnaTd className="px-3 py-2 text-right">
                       <DnaCell.DoubleText
                         primary={`${row.totalQty.toLocaleString("id-ID")} Unit`}
                         secondary={`${row.totalItems} macam item`}
                       />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 8: Status */}
-                    <td className="px-3 py-2 text-center">
+                    <DnaTd className="px-3 py-2 text-center">
                       {getStatusBadge(row.status)}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 9: Aksi */}
-                    <td className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                    <DnaTd className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -460,12 +478,12 @@ export default function WarehouseTransfersPage() {
                       >
                         <Eye className="w-4 h-4" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -541,27 +559,27 @@ export default function WarehouseTransfersPage() {
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
                 <DnaTable className="w-full text-left text-xs">
-                  <thead className="bg-slate-100/80 border-b border-slate-200 text-slate-600 font-semibold">
-                    <tr>
-                      <th className="py-2.5 px-3">Nama Material</th>
-                      <th className="py-2.5 px-3 text-right">Qty Transfer</th>
-                      <th className="py-2.5 px-3">No. Batch/Lot</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono">
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3">Nama Material</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Qty Transfer</DnaTh>
+                      <DnaTh className="py-2.5 px-3">No. Batch/Lot</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedTransfer.items.map((it) => (
-                      <tr key={it.id}>
-                        <td className="py-2.5 px-3 font-sans">
+                      <DnaTableRow key={it.id}>
+                        <DnaTd className="py-2.5 px-3 font-sans">
                           <div className="font-semibold text-slate-800">{it.materialName}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">{it.materialCode}</div>
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-slate-900">
+                          <div className="text-[10px] text-slate-400 tabular-nums">{it.materialCode}</div>
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right font-bold text-slate-900">
                           {it.transferQty.toLocaleString("id-ID")} {it.unit}
-                        </td>
-                        <td className="py-2.5 px-3 text-slate-600">{it.batchLot}</td>
-                      </tr>
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-slate-600">{it.batchLot}</DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
+                  </DnaTableBody>
                 </DnaTable>
               </div>
             </div>
@@ -609,7 +627,7 @@ export default function WarehouseTransfersPage() {
                 onChange={setFromWarehouse}
                 className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white"
               >
-                {MASTER_WAREHOUSES.map((wh) => (
+                {warehouseOptions.map((wh: string) => (
                   <option key={wh} value={wh}>{wh}</option>
                 ))}
               </DnaSelect>
@@ -622,7 +640,7 @@ export default function WarehouseTransfersPage() {
                 onChange={setToWarehouse}
                 className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white"
               >
-                {MASTER_WAREHOUSES.map((wh) => (
+                {warehouseOptions.map((wh: string) => (
                   <option key={wh} value={wh}>{wh}</option>
                 ))}
               </DnaSelect>
@@ -636,7 +654,7 @@ export default function WarehouseTransfersPage() {
               placeholder="Contoh: SPK-2026-09-009 / REQ-PROD-01"
               value={referenceDoc}
               onChange={(e) => setReferenceDoc(e.target.value)}
-              className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono"
+              className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums"
             />
           </div>
 
@@ -654,7 +672,7 @@ export default function WarehouseTransfersPage() {
                   className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white"
                 >
                   <option value="">-- Pilih Barang dari Gudang Asal --</option>
-                  {AVAILABLE_TRANSFER_ITEMS.map((item) => (
+                  {availableItems.map((item) => (
                     <option key={item.code} value={item.code}>
                       {item.code} - {item.name} (Stok: {item.stock} {item.unit})
                     </option>
@@ -668,7 +686,7 @@ export default function WarehouseTransfersPage() {
                   placeholder="Qty"
                   value={itemTransferQty}
                   onChange={(e) => setItemTransferQty(parseFloat(e.target.value) || 0)}
-                  className="w-20 text-xs border border-slate-300 rounded-lg p-2 font-mono"
+                  className="w-20 text-xs border border-slate-300 rounded-lg p-2 tabular-nums"
                 />
                 <DnaButton variant="secondary" size="sm" onClick={handleAddItemToCart}>
                   + Tambah
@@ -680,21 +698,21 @@ export default function WarehouseTransfersPage() {
             {cartItems.length > 0 && (
               <div className="border border-slate-200 rounded-lg bg-white overflow-hidden mt-2">
                 <DnaTable className="w-full text-left text-xs">
-                  <thead className="bg-slate-100 text-slate-600 font-semibold">
-                    <tr>
-                      <th className="py-2 px-3">Item</th>
-                      <th className="py-2 px-3 text-right">Qty</th>
-                      <th className="py-2 px-3">Lot</th>
-                      <th className="py-2 px-3 text-right">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2 px-3">Item</DnaTh>
+                      <DnaTh className="py-2 px-3 text-right">Qty</DnaTh>
+                      <DnaTh className="py-2 px-3">Lot</DnaTh>
+                      <DnaTh className="py-2 px-3 text-right">Aksi</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {cartItems.map((c, idx) => (
-                      <tr key={idx}>
-                        <td className="py-2 px-3">{c.materialName}</td>
-                        <td className="py-2 px-3 text-right font-mono font-bold">{c.transferQty} {c.unit}</td>
-                        <td className="py-2 px-3 font-mono text-slate-500">{c.batchLot}</td>
-                        <td className="py-2 px-3 text-right">
+                      <DnaTableRow key={idx}>
+                        <DnaTd className="py-2 px-3">{c.materialName}</DnaTd>
+                        <DnaTd className="py-2 px-3 text-right tabular-nums font-bold">{c.transferQty} {c.unit}</DnaTd>
+                        <DnaTd className="py-2 px-3 tabular-nums text-slate-500">{c.batchLot}</DnaTd>
+                        <DnaTd className="py-2 px-3 text-right">
                           <DnaButton
                             type="button"
                             variant="ghost"
@@ -704,10 +722,10 @@ export default function WarehouseTransfersPage() {
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </DnaButton>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
+                  </DnaTableBody>
                 </DnaTable>
               </div>
             )}

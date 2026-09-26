@@ -16,6 +16,13 @@ import {
   DnaModal,
   DnaConfirmDialog,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -197,33 +204,33 @@ export default function MasterMaterialsPage() {
         }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[1200px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 font-bold uppercase tracking-wider text-[11px] select-none">
-                <th className="px-4 py-2.5 w-[140px]">Kode Material</th>
-                <th className="px-4 py-2.5 min-w-[200px]">Nama Material</th>
-                <th className="px-4 py-2.5 w-[140px] text-center">Tipe</th>
-                <th className="px-4 py-2.5 w-[100px] text-center">Satuan</th>
-                <th className="px-4 py-2.5 w-[140px] text-right">Harga Satuan</th>
-                <th className="px-4 py-2.5 w-[120px] text-right">Stok Aktual</th>
-                <th className="px-4 py-2.5 w-[120px] text-right">Min. Stok</th>
-                <th className="px-4 py-2.5 w-[110px] text-center">Status</th>
-                <th className="pr-4 py-2.5 w-[90px] text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 font-bold uppercase tracking-wider text-[11px] select-none">
+                <DnaTh className="px-4 py-2.5 w-[140px]">Kode Material</DnaTh>
+                <DnaTh className="px-4 py-2.5 min-w-[200px]">Nama Material</DnaTh>
+                <DnaTh className="px-4 py-2.5 w-[140px] text-center">Tipe</DnaTh>
+                <DnaTh className="px-4 py-2.5 w-[100px] text-center">Satuan</DnaTh>
+                <DnaTh className="px-4 py-2.5 w-[140px] text-right">Harga Satuan</DnaTh>
+                <DnaTh className="px-4 py-2.5 w-[120px] text-right">Stok Aktual</DnaTh>
+                <DnaTh className="px-4 py-2.5 w-[120px] text-right">Min. Stok</DnaTh>
+                <DnaTh className="px-4 py-2.5 w-[110px] text-center">Status</DnaTh>
+                <DnaTh className="pr-4 py-2.5 w-[90px] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={9} className="text-center py-8 text-slate-500">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="text-center py-8 text-slate-500">
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                       <span>Memuat data material...</span>
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : isError ? (
-                <tr>
-                  <td colSpan={9} className="text-center py-8 text-rose-500">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="text-center py-8 text-rose-500">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <span>Gagal memuat data material: {(error as any)?.message || "Terjadi kesalahan"}</span>
                       <button
@@ -233,41 +240,41 @@ export default function MasterMaterialsPage() {
                         Coba Lagi
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : materials.length === 0 ? (
-                <tr><td colSpan={9} className="text-center py-8 text-slate-400">Belum ada data material</td></tr>
+                <DnaTableRow><DnaTd colSpan={9} className="text-center py-8 text-slate-400">Belum ada data material</DnaTd></DnaTableRow>
               ) : materials.map((m: Material) => (
-                <tr key={m.id} className="h-[48px] hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-2.5">
+                <DnaTableRow key={m.id} className="h-[48px] hover:bg-slate-50/60 transition-colors">
+                  <DnaTd className="px-4 py-2.5">
                     <DnaCell.Code code={m.code ?? "—"} />
-                  </td>
-                  <td className="px-4 py-2.5">
+                  </DnaTd>
+                  <DnaTd className="px-4 py-2.5">
                     <span className="text-[12px] font-medium text-slate-900 line-clamp-1">{m.name}</span>
-                  </td>
-                  <td className="px-4 py-2.5 text-center">
+                  </DnaTd>
+                  <DnaTd className="px-4 py-2.5 text-center">
                     <DnaBadge variant="secondary">{m.type}</DnaBadge>
-                  </td>
-                  <td className="px-4 py-2.5 text-center">
+                  </DnaTd>
+                  <DnaTd className="px-4 py-2.5 text-center">
                     <DnaCell.Text text={m.unit} />
-                  </td>
-                  <td className="px-4 py-2.5 text-right">
+                  </DnaTd>
+                  <DnaTd className="px-4 py-2.5 text-right">
                     <DnaCell.Numeric value={m.unitPrice} prefix="Rp " />
-                  </td>
-                  <td className="px-4 py-2.5 text-right font-mono tabular-nums">
+                  </DnaTd>
+                  <DnaTd className="px-4 py-2.5 text-right tabular-nums tabular-nums">
                     <span className={`text-[12px] font-semibold ${(m.stockQty ?? 0) <= (m.minStock ?? 0) ? "text-rose-600" : "text-slate-800"}`}>
                       {(m.stockQty ?? 0).toLocaleString("id-ID")}
                     </span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right font-mono tabular-nums text-slate-500">
+                  </DnaTd>
+                  <DnaTd className="px-4 py-2.5 text-right tabular-nums tabular-nums text-slate-500">
                     {(m.minStock ?? 0).toLocaleString("id-ID")}
-                  </td>
-                  <td className="px-4 py-2.5 text-center">
+                  </DnaTd>
+                  <DnaTd className="px-4 py-2.5 text-center">
                     <DnaBadge variant={m.status === "ACTIVE" ? "success" : "secondary"}>
                       {m.status === "ACTIVE" ? "Aktif" : m.status ?? "—"}
                     </DnaBadge>
-                  </td>
-                  <td className="pr-4 py-2.5 text-right">
+                  </DnaTd>
+                  <DnaTd className="pr-4 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <DnaButton
                         variant="ghost"
@@ -286,11 +293,11 @@ export default function MasterMaterialsPage() {
                         <Trash2 className="w-3.5 h-3.5" />
                       </DnaButton>
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 

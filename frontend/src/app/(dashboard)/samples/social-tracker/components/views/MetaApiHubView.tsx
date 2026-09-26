@@ -139,7 +139,7 @@ export const MetaApiHubView: React.FC<MetaApiHubViewProps> = ({
             <span className="text-sm font-bold text-pink-600 dark:text-pink-400 mt-0.5 block">
               {metaAccount.igUsername}
             </span>
-            <span className="text-[10px] text-zinc-500 font-mono">ID: {metaAccount.igAccountId}</span>
+            <span className="text-[10px] text-zinc-500 tabular-nums">ID: {metaAccount.igAccountId}</span>
           </div>
 
           <div className="bg-zinc-50 dark:bg-zinc-800/60 p-4 rounded-xl">
@@ -147,7 +147,7 @@ export const MetaApiHubView: React.FC<MetaApiHubViewProps> = ({
             <span className="text-sm font-bold text-blue-600 dark:text-blue-400 mt-0.5 block">
               {metaAccount.pageName}
             </span>
-            <span className="text-[10px] text-zinc-500 font-mono">ID: {metaAccount.pageId}</span>
+            <span className="text-[10px] text-zinc-500 tabular-nums">ID: {metaAccount.pageId}</span>
           </div>
 
           <div className="bg-zinc-50 dark:bg-zinc-800/60 p-4 rounded-xl">
@@ -188,7 +188,7 @@ export const MetaApiHubView: React.FC<MetaApiHubViewProps> = ({
                 value={tokenInput}
                 onChange={(e) => setTokenInput(e.target.value)}
                 placeholder="EAAQ..."
-                className="w-full p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg font-mono text-xs text-[#37352f] dark:text-white outline-none focus:border-blue-500"
+                className="w-full p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg tabular-nums text-xs text-[#37352f] dark:text-white outline-none focus:border-blue-500"
               />
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
@@ -206,7 +206,7 @@ export const MetaApiHubView: React.FC<MetaApiHubViewProps> = ({
                 value={pageIdInput}
                 onChange={(e) => setPageIdInput(e.target.value)}
                 placeholder="109283746592019"
-                className="w-full p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg font-mono text-xs text-[#37352f] dark:text-white outline-none focus:border-blue-500"
+                className="w-full p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg tabular-nums text-xs text-[#37352f] dark:text-white outline-none focus:border-blue-500"
               />
             </div>
 
@@ -219,7 +219,7 @@ export const MetaApiHubView: React.FC<MetaApiHubViewProps> = ({
                 value={igIdInput}
                 onChange={(e) => setIgIdInput(e.target.value)}
                 placeholder="17841405829103948"
-                className="w-full p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg font-mono text-xs text-[#37352f] dark:text-white outline-none focus:border-blue-500"
+                className="w-full p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg tabular-nums text-xs text-[#37352f] dark:text-white outline-none focus:border-blue-500"
               />
             </div>
           </div>
@@ -278,7 +278,7 @@ export const MetaApiHubView: React.FC<MetaApiHubViewProps> = ({
             <div key={perm} className="flex items-center gap-2.5 p-2.5 bg-zinc-50 dark:bg-zinc-800/60 rounded-lg">
               <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
               <div>
-                <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-200">{perm}</span>
+                <span className="tabular-nums font-semibold text-zinc-700 dark:text-zinc-200">{perm}</span>
                 <span className="text-[10px] text-zinc-400 block">Granted & Verified</span>
               </div>
             </div>
@@ -309,7 +309,7 @@ export const MetaApiHubView: React.FC<MetaApiHubViewProps> = ({
         </div>
 
         {showJson && (
-          <pre className="p-4 bg-zinc-900 text-zinc-200 rounded-lg text-[11px] font-mono overflow-x-auto max-h-72">
+          <pre className="p-4 bg-zinc-900 text-zinc-200 rounded-lg text-[11px] tabular-nums overflow-x-auto max-h-72">
             {JSON.stringify({ ...metaAccount, accessToken: '' }, null, 2)}
           </pre>
         )}

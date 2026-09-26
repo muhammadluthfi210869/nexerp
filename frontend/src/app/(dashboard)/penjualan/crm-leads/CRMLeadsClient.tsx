@@ -40,6 +40,12 @@ import {
   DnaBadge,
   DnaButton,
   DnaInput,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { toast } from "sonner";
 
@@ -575,38 +581,38 @@ export default function CRMLeadsClient() {
             onPageChange: () => {},
           }}
         >
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
-                <th className="p-3.5 w-12 text-center text-slate-400">#</th>
-                <th className="p-3.5 w-40">TANGGAL LEADS</th>
-                <th className="p-3.5">CATATAN DISTRIBUSI</th>
-                <th className="p-3.5 w-40 text-center">TOTAL QTY LEADS</th>
-                <th className="p-3.5 w-24 text-center">AKSI</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                <DnaTh className="p-3.5 w-12 text-center text-slate-400">#</DnaTh>
+                <DnaTh className="p-3.5 w-40">TANGGAL LEADS</DnaTh>
+                <DnaTh className="p-3.5">CATATAN DISTRIBUSI</DnaTh>
+                <DnaTh className="p-3.5 w-40 text-center">TOTAL QTY LEADS</DnaTh>
+                <DnaTh className="p-3.5 w-24 text-center">AKSI</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredBatches.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-400 text-xs">
+                <DnaTableRow>
+                  <DnaTd colSpan={5} className="p-8 text-center text-slate-400 text-xs">
                     Tidak ada data distribusi leads ditemukan.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredBatches.map((batch, index) => (
-                  <tr key={batch.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3.5 text-center text-slate-400 tabular-nums">{index + 1}</td>
-                    <td className="p-3.5 font-bold text-slate-800">{batch.tanggalLeads}</td>
-                    <td className="p-3.5 text-slate-700">
+                  <DnaTableRow key={batch.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="p-3.5 text-center text-slate-400 tabular-nums">{index + 1}</DnaTd>
+                    <DnaTd className="p-3.5 font-bold text-slate-800">{batch.tanggalLeads}</DnaTd>
+                    <DnaTd className="p-3.5 text-slate-700">
                       <p className="font-semibold text-slate-900">{batch.catatan}</p>
                       <p className="text-[11px] text-slate-400">{batch.items.map((i) => i.penerima).join(", ")}</p>
-                    </td>
-                    <td className="p-3.5 text-center">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center">
                       <span className="bg-blue-50 border border-blue-200 text-blue-700 px-2.5 py-1 rounded-full font-bold text-xs">
                         {batch.totalQtyLeads} Leads
                       </span>
-                    </td>
-                    <td className="p-3.5 text-center">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => setSelectedBatchDetail(batch)}
@@ -623,12 +629,12 @@ export default function CRMLeadsClient() {
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </DnaDataTableCard>
       )}
 
@@ -683,19 +689,19 @@ export default function CRMLeadsClient() {
             onPageChange: () => {},
           }}
         >
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
-                <th className="p-3.5 w-10 text-center text-slate-400">#</th>
-                <th className="p-3.5 w-36">TANGGAL & WAKTU</th>
-                <th className="p-3.5">PROSPEK & PERUSAHAAN</th>
-                <th className="p-3.5 w-36">KONTAK WHATSAPP</th>
-                <th className="p-3.5 w-44">SUMBER & SALES</th>
-                <th className="p-3.5 w-32">STATUS</th>
-                <th className="p-3.5 w-20 text-center">AKSI</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                <DnaTh className="p-3.5 w-10 text-center text-slate-400">#</DnaTh>
+                <DnaTh className="p-3.5 w-36">TANGGAL & WAKTU</DnaTh>
+                <DnaTh className="p-3.5">PROSPEK & PERUSAHAAN</DnaTh>
+                <DnaTh className="p-3.5 w-36">KONTAK WHATSAPP</DnaTh>
+                <DnaTh className="p-3.5 w-44">SUMBER & SALES</DnaTh>
+                <DnaTh className="p-3.5 w-32">STATUS</DnaTh>
+                <DnaTh className="p-3.5 w-20 text-center">AKSI</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredLeads.map((lead, idx) => {
                 const date = new Date(lead.timestamp);
                 const formattedDate = date.toLocaleDateString("id-ID", {
@@ -709,19 +715,19 @@ export default function CRMLeadsClient() {
                 });
 
                 return (
-                  <tr key={lead.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3.5 text-center text-slate-400 tabular-nums">{idx + 1}</td>
-                    <td className="p-3.5">
+                  <DnaTableRow key={lead.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="p-3.5 text-center text-slate-400 tabular-nums">{idx + 1}</DnaTd>
+                    <DnaTd className="p-3.5">
                       <div className="font-semibold text-slate-800">{formattedDate}</div>
                       <div className="text-[11px] text-slate-400">{formattedTime} WIB</div>
-                    </td>
-                    <td className="p-3.5 cursor-pointer" onClick={() => setSelectedLeadDetail(lead)}>
+                    </DnaTd>
+                    <DnaTd className="p-3.5 cursor-pointer" onClick={() => setSelectedLeadDetail(lead)}>
                       <div className="font-bold text-slate-900 hover:text-blue-600 transition-colors">
                         {lead.nama || "-"}
                       </div>
                       <div className="text-[11px] text-slate-500">{lead.perusahaan || "Perusahaan Belum Terdaftar"}</div>
-                    </td>
-                    <td className="p-3.5">
+                    </DnaTd>
+                    <DnaTd className="p-3.5">
                       {lead.hp ? (
                         <a
                           href={`https://wa.me/${lead.hp.replace(/\D/g, "")}`}
@@ -734,17 +740,17 @@ export default function CRMLeadsClient() {
                       ) : (
                         <span className="text-slate-400">-</span>
                       )}
-                    </td>
-                    <td className="p-3.5">
+                    </DnaTd>
+                    <DnaTd className="p-3.5">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <DnaBadge status="info">{lead.source || "Dreamlab"}</DnaBadge>
+                        <DnaBadge variant="info">{lead.source || "Dreamlab"}</DnaBadge>
                         <span className="text-[11px] text-slate-500 font-medium">({lead.trafficSource || "Direct"})</span>
                       </div>
                       <div className="text-[11px] text-slate-600 font-semibold mt-0.5">
                         PIC: {lead.assignedTo || "Unassigned"}
                       </div>
-                    </td>
-                    <td className="p-3.5">
+                    </DnaTd>
+                    <DnaTd className="p-3.5">
                       <select
                         value={lead.status}
                         onChange={(e) =>
@@ -759,8 +765,8 @@ export default function CRMLeadsClient() {
                         <option value="Qualified">Qualified</option>
                         <option value="Lost">Lost</option>
                       </select>
-                    </td>
-                    <td className="p-3.5 text-center">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => setSelectedLeadDetail(lead)}
@@ -777,20 +783,20 @@ export default function CRMLeadsClient() {
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 );
               })}
 
               {filteredLeads.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400 text-xs">
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="p-8 text-center text-slate-400 text-xs">
                     {leadsLoading ? "Memuat data lead..." : "Belum ada lead masuk"}
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </DnaDataTableCard>
       )}
 
@@ -1115,29 +1121,29 @@ export default function CRMLeadsClient() {
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Rincian Penerima Leads</h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
-                    <tr>
-                      <th className="p-3">#</th>
-                      <th className="p-3">Penerima Leads</th>
-                      <th className="p-3 text-center">Qty</th>
-                      <th className="p-3 text-center">Porsi (%)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="p-3">#</DnaTh>
+                      <DnaTh className="p-3">Penerima Leads</DnaTh>
+                      <DnaTh className="p-3 text-center">Qty</DnaTh>
+                      <DnaTh className="p-3 text-center">Porsi (%)</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedBatchDetail.items.map((item, idx) => {
                       const pct = Math.round((item.qty / selectedBatchDetail.totalQtyLeads) * 100);
                       return (
-                        <tr key={idx}>
-                          <td className="p-3 text-slate-400">{idx + 1}</td>
-                          <td className="p-3 font-bold text-slate-800">{item.penerima}</td>
-                          <td className="p-3 text-center font-bold text-slate-700">{item.qty}</td>
-                          <td className="p-3 text-center font-bold text-blue-600">{pct}%</td>
-                        </tr>
+                        <DnaTableRow key={idx}>
+                          <DnaTd className="p-3 text-slate-400">{idx + 1}</DnaTd>
+                          <DnaTd className="p-3 font-bold text-slate-800">{item.penerima}</DnaTd>
+                          <DnaTd className="p-3 text-center font-bold text-slate-700">{item.qty}</DnaTd>
+                          <DnaTd className="p-3 text-center font-bold text-blue-600">{pct}%</DnaTd>
+                        </DnaTableRow>
                       );
                     })}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
           </div>
@@ -1196,7 +1202,7 @@ export default function CRMLeadsClient() {
 
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Nomor WhatsApp</span>
-                <span className="font-bold text-emerald-600 font-mono text-sm">{selectedLeadDetail.hp || "-"}</span>
+                <span className="font-bold text-emerald-600 tabular-nums text-sm">{selectedLeadDetail.hp || "-"}</span>
               </div>
             </div>
 
@@ -1225,7 +1231,7 @@ export default function CRMLeadsClient() {
             {selectedLeadDetail.pageUrl && (
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                 <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">URL Landing Page</span>
-                <span className="text-slate-600 break-all text-[11px] font-mono">{selectedLeadDetail.pageUrl}</span>
+                <span className="text-slate-600 break-all text-[11px] tabular-nums">{selectedLeadDetail.pageUrl}</span>
               </div>
             )}
           </div>

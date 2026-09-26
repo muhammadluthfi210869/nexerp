@@ -18,6 +18,9 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { api, extractApiError } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Users,
   ShieldCheck,
@@ -51,6 +54,11 @@ import {
   DnaDetailDrawer,
   DnaTable,
   useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 // ── Types ──
@@ -110,14 +118,8 @@ export function PersonnelRegistry() {
     setErrorState(null);
     try {
       const [uRes, rRes] = await Promise.all([
-        fetch("/api/v1/users").then((r) => {
-          if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
-          return r.json();
-        }),
-        fetch("/api/v1/roles").then((r) => {
-          if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
-          return r.json();
-        }),
+        api.get("/users").then(unwrapResponse),
+        api.get("/roles").then(unwrapResponse),
       ]);
 
       const rawUsers = Array.isArray(uRes) ? uRes : uRes?.items || [];
@@ -179,12 +181,16 @@ export function PersonnelRegistry() {
   const [userToDelete, setUserToDelete] = useState<MasterUserItem | null>(null);
 
   // Form User
+  // ponytail: `hakAkses` holds a UserRole slug (SCM, COMMERCIAL, ...), not a display label —
+  // POST /users validates `roles` against the Prisma enum. `kodeNip`, `phone` and `divisi`
+  // are display-only: the users table has no column for them and CreateUserDto has no field,
+  // so this form shows them but does not persist them. Add when the master needs them.
   const [userForm, setUserForm] = useState({
     kodeNip: "",
     nama: "",
     email: "",
     phone: "",
-    hakAkses: "Business Development",
+    hakAkses: "COMMERCIAL",
     divisi: "Commercial / Sales",
     status: "ACTIVE" as "ACTIVE" | "INACTIVE",
   });
@@ -309,7 +315,7 @@ export function PersonnelRegistry() {
       nama: "",
       email: "",
       phone: "",
-      hakAkses: "Business Development",
+      hakAkses: "COMMERCIAL",
       divisi: "Commercial / Sales",
       status: "ACTIVE",
     });
@@ -335,33 +341,60 @@ export function PersonnelRegistry() {
     setIsDetailModalOpen(true);
   };
 
+  const saveUserMut = useMutation({
+    mutationFn: async () => {
+      // Only these three keys exist on the `users` table (CreateUserDto/UpdateUserDto).
+      const payload = {
+        email: userForm.email.trim(),
+        fullName: userForm.nama.trim(),
+        roles: [userForm.hakAkses],
+        status: userForm.status,
+      };
+      const res = editingUser
+        ? await api.patch(`/users/${editingUser.id}`, {
+            fullName: payload.fullName,
+            roles: payload.roles,
+            status: payload.status,
+          })
+        : await api.post("/users", payload);
+      return unwrapResponse(res);
+    },
+    onSuccess: () => {
+      toast.success(
+        editingUser
+          ? `Data personil ${userForm.nama} berhasil diperbarui.`
+          : `Personil baru ${userForm.nama} berhasil didaftarkan.`,
+      );
+      setIsUserModalOpen(false);
+      setEditingUser(null);
+      loadPersonnelData();
+    },
+    onError: (e) => toast.error(extractApiError(e).message),
+  });
+
+  const deleteUserMut = useMutation({
+    // DELETE /users/:id deactivates the account (status INACTIVE + deletedAt); it does not
+    // remove the row, so the toast says so.
+    mutationFn: async (id: string) => unwrapResponse(await api.delete(`/users/${id}`)),
+    onSuccess: () => {
+      toast.success(`Akun ${userToDelete?.nama} berhasil dinonaktifkan.`);
+      setUserToDelete(null);
+      loadPersonnelData();
+    },
+    onError: (e) => toast.error(extractApiError(e).message),
+  });
+
   const handleSaveUser = () => {
-    if (!userForm.nama.trim() || !userForm.kodeNip.trim() || !userForm.email.trim()) {
-      toast.error("Nama lengkap, NIP, dan email korporat wajib diisi!");
+    if (!userForm.nama.trim() || !userForm.email.trim()) {
+      toast.error("Nama lengkap dan email korporat wajib diisi!");
       return;
     }
-
-    if (editingUser) {
-      setUsersList((prev) =>
-        prev.map((u) => (u.id === editingUser.id ? { ...u, ...userForm } : u))
-      );
-      toast.success(`Data personil ${userForm.nama} (NIP ${userForm.kodeNip}) berhasil diperbarui.`);
-    } else {
-      const newItem: MasterUserItem = {
-        id: `u-${Date.now()}`,
-        ...userForm,
-      };
-      setUsersList((prev) => [...prev, newItem]);
-      toast.success(`Personil baru ${newItem.nama} berhasil didaftarkan.`);
-    }
-    setIsUserModalOpen(false);
+    saveUserMut.mutate();
   };
 
   const handleDeleteUser = () => {
     if (!userToDelete) return;
-    setUsersList((prev) => prev.filter((u) => u.id !== userToDelete.id));
-    toast.success(`Akun ${userToDelete.nama} berhasil dinonaktifkan / dihapus.`);
-    setUserToDelete(null);
+    deleteUserMut.mutate(userToDelete.id);
   };
 
   return (
@@ -491,48 +524,48 @@ export function PersonnelRegistry() {
             }}
           >
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1200px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold uppercase tracking-wider select-none">
-                  <th className="px-3.5 py-2.5 w-[50px] text-center text-slate-400">#</th>
-                  <th className="px-4 py-2.5 w-[110px]">NIP</th>
-                  <th className="px-4 py-2.5 min-w-[180px]">Nama Personel</th>
-                  <th className="px-4 py-2.5 min-w-[180px]">Email</th>
-                  <th className="px-4 py-2.5 w-[130px]">No. Telepon</th>
-                  <th className="px-4 py-2.5 w-[160px]">Divisi / Departemen</th>
-                  <th className="px-4 py-2.5 w-[130px] text-center">Hak Akses</th>
-                  <th className="px-4 py-2.5 w-[110px] text-center">Status</th>
-                  <th className="pr-4 py-2.5 w-[90px] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold uppercase tracking-wider select-none">
+                  <DnaTh className="px-3.5 py-2.5 w-[50px] text-center text-slate-400">#</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">NIP</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Nama Personel</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Email</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[130px]">No. Telepon</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[160px]">Divisi / Departemen</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[130px] text-center">Hak Akses</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px] text-center">Status</DnaTh>
+                  <DnaTh className="pr-4 py-2.5 w-[90px] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={9} className="p-12 text-center text-slate-400 font-medium">
+                  <DnaTableRow>
+                    <DnaTd colSpan={9} className="p-12 text-center text-slate-400 font-medium">
                       Memuat data personil...
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : errorState ? (
-                  <tr>
-                    <td colSpan={9} className="p-12 text-center text-rose-500 font-medium">
+                  <DnaTableRow>
+                    <DnaTd colSpan={9} className="p-12 text-center text-rose-500 font-medium">
                       <div className="flex flex-col items-center gap-2">
                         <span>{errorState}</span>
                         <DnaButton size="sm" variant="secondary" onClick={loadPersonnelData}>
                           Coba Lagi
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : paginatedUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="p-12 text-center text-slate-400 font-medium">
+                  <DnaTableRow>
+                    <DnaTd colSpan={9} className="p-12 text-center text-slate-400 font-medium">
                       Tidak ada personel yang sesuai filter pencarian.
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   paginatedUsers.map((u, idx) => {
                     return (
-                      <tr
+                      <DnaTableRow
                         key={u.id}
                         className="h-[48px] hover:bg-slate-50/60 transition-colors cursor-pointer"
                         onClick={() => {
@@ -540,25 +573,25 @@ export function PersonnelRegistry() {
                           setIsDetailModalOpen(true);
                         }}
                       >
-                        <td className="px-3.5 py-2.5 text-center text-slate-400 font-mono text-[11.5px] tabular-nums">
+                        <DnaTd className="px-3.5 py-2.5 text-center text-slate-400 tabular-nums text-[11.5px] tabular-nums">
                           {(currentPage - 1) * pageSize + idx + 1}
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <DnaCell.Code code={u.kodeNip} />
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <span className="text-[12px] font-medium text-slate-900 line-clamp-1">{u.nama}</span>
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <span className="text-[12px] font-medium text-slate-700 line-clamp-1">{u.email}</span>
-                        </td>
-                        <td className="px-4 py-2.5 font-mono text-[11.5px] text-slate-600">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 tabular-nums text-[11.5px] text-slate-600">
                           {u.phone}
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <span className="text-[12px] font-medium text-slate-800 line-clamp-1">{u.divisi}</span>
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center">
                           <DnaBadge
                             variant={
                               u.hakAkses.includes("Admin")
@@ -570,13 +603,13 @@ export function PersonnelRegistry() {
                           >
                             {u.hakAkses}
                           </DnaBadge>
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center">
                           <DnaBadge variant={u.status === "ACTIVE" ? "success" : "neutral"}>
                             {u.status}
                           </DnaBadge>
-                        </td>
-                        <td className="pr-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                        </DnaTd>
+                        <DnaTd className="pr-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
                             <DnaButton
                               variant="ghost"
@@ -594,13 +627,13 @@ export function PersonnelRegistry() {
                               onDelete={() => setUserToDelete(u)}
                             />
                           </div>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
           </DnaDataTableCard>
         </div>
@@ -622,24 +655,24 @@ export function PersonnelRegistry() {
             }}
           >
             <DnaTable className="table-fixed w-full">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                  <th className="p-3 w-10 text-slate-400">#</th>
-                  <th className="p-3 w-[26%]">NAMA ROLE & KODE</th>
-                  <th className="p-3 w-[20%]">TINGKAT OTORITAS</th>
-                  <th className="p-3 w-[38%]">DESKRIPSI & RUANG LINGKUP</th>
-                  <th className="p-3 text-center w-[16%]">TOTAL PENGGUNA</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+                  <DnaTh className="p-3 w-10 text-slate-400">#</DnaTh>
+                  <DnaTh className="p-3 w-[26%]">NAMA ROLE & KODE</DnaTh>
+                  <DnaTh className="p-3 w-[20%]">TINGKAT OTORITAS</DnaTh>
+                  <DnaTh className="p-3 w-[38%]">DESKRIPSI & RUANG LINGKUP</DnaTh>
+                  <DnaTh className="p-3 text-center w-[16%]">TOTAL PENGGUNA</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {rolesList.map((r, idx) => (
-                  <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
-                    <td className="p-3">
+                  <DnaTableRow key={r.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="p-3 text-slate-400 tabular-nums text-[11px]">{idx + 1}</DnaTd>
+                    <DnaTd className="p-3">
                       <div className="font-bold text-slate-900 truncate">{r.namaRole}</div>
-                      <div className="font-mono text-[11px] text-blue-600 font-semibold">{r.kodeRole}</div>
-                    </td>
-                    <td className="p-3">
+                      <div className="tabular-nums text-[11px] text-blue-600 font-semibold">{r.kodeRole}</div>
+                    </DnaTd>
+                    <DnaTd className="p-3">
                       <DnaBadge
                         variant={
                           r.levelOtoritas.includes("Executive")
@@ -651,18 +684,18 @@ export function PersonnelRegistry() {
                       >
                         {r.levelOtoritas}
                       </DnaBadge>
-                    </td>
-                    <td className="p-3 text-slate-600 text-[11px] truncate">
+                    </DnaTd>
+                    <DnaTd className="p-3 text-slate-600 text-[11px] truncate">
                       {r.deskripsi}
-                    </td>
-                    <td className="p-3 text-center">
-                      <span className="font-semibold text-slate-900 px-2 py-0.5 bg-slate-100 rounded font-mono text-[11px]">
+                    </DnaTd>
+                    <DnaTd className="p-3 text-center">
+                      <span className="font-semibold text-slate-900 px-2 py-0.5 bg-slate-100 rounded tabular-nums text-[11px]">
                         {r.totalPengguna} Staf
                       </span>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
+              </DnaTableBody>
             </DnaTable>
           </DnaDataTableCard>
         </div>
@@ -694,7 +727,7 @@ export function PersonnelRegistry() {
                   <div className="space-y-1">
                     <h4 className="text-sm font-bold text-slate-900">{viewingUser.nama}</h4>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[11px] font-semibold px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700">
+                      <span className="tabular-nums text-[11px] font-semibold px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700">
                         NIP: {viewingUser.kodeNip}
                       </span>
                       <DnaBadge variant={viewingUser.status === "ACTIVE" ? "success" : "neutral"}>
@@ -715,11 +748,11 @@ export function PersonnelRegistry() {
                   </div>
                   <div>
                     <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Email Korporat</span>
-                    <span className="font-mono text-slate-700">{viewingUser.email}</span>
+                    <span className="tabular-nums text-slate-700">{viewingUser.email}</span>
                   </div>
                   <div>
                     <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Nomor WhatsApp</span>
-                    <span className="font-mono text-slate-700">{viewingUser.phone}</span>
+                    <span className="tabular-nums text-slate-700">{viewingUser.phone}</span>
                   </div>
                 </div>
               </div>
@@ -737,11 +770,11 @@ export function PersonnelRegistry() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-800">Tingkat Hak Akses</span>
-                    <span className="font-mono text-slate-600">Enterprise Standard</span>
+                    <span className="tabular-nums text-slate-600">Enterprise Standard</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-800">Sesi Login Terakhir</span>
-                    <span className="font-mono text-slate-500">Hari ini, 08:30 WIB</span>
+                    <span className="tabular-nums text-slate-500">Hari ini, 08:30 WIB</span>
                   </div>
                 </div>
               </div>
@@ -826,7 +859,7 @@ export function PersonnelRegistry() {
               label="Hak Akses / Peran *"
               value={userForm.hakAkses}
               onChange={(val) => setUserForm({ ...userForm, hakAkses: val })}
-              options={rolesList.map((r) => ({ value: r.namaRole, label: r.namaRole }))}
+              options={rolesList.map((r) => ({ value: r.kodeRole, label: r.namaRole }))}
             />
             <DnaSelect
               label="Divisi / Departemen *"
@@ -849,7 +882,7 @@ export function PersonnelRegistry() {
             <DnaButton variant="secondary" onClick={() => setIsUserModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" onClick={handleSaveUser}>
+            <DnaButton variant="primary" loading={saveUserMut.isPending} onClick={handleSaveUser}>
               Simpan Data Pengguna
             </DnaButton>
           </div>

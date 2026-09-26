@@ -24,6 +24,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 const DEFECT_CATEGORIES = ["FISIK", "KIMIA", "MIKROBIOLOGI", "LABEL_DOKUMEN", "KEMASAN", "LAINNYA"] as const;
@@ -216,7 +222,7 @@ export default function QCInspectionsPage() {
                   <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">{meta.label} Inspection — Parameters</h3>
                   <div className="flex items-center gap-3">
                     {paramsChecked > 0 && <DnaBadge status={nokCount > 0 ? "critical" : "success"}>{okCount} PASS / {nokCount} FAIL</DnaBadge>}
-                    <DnaBadge status="info">{meta.params.length} Checks</DnaBadge>
+                    <DnaBadge variant="info">{meta.params.length} Checks</DnaBadge>
                   </div>
                 </div>
 
@@ -388,44 +394,44 @@ export default function QCInspectionsPage() {
 
             {/* --- PENDING ITEMS TABLE --- */}
             <TableWrapper>
-              <table className="table-dense">
-                <thead className="bg-slate-50/50">
-                  <tr>
-                    <th className="text-table-header text-slate-400 py-4 px-4">ID</th>
-                    <th className="text-table-header text-slate-400 py-4 px-4">Source</th>
-                    <th className="text-table-header text-slate-400 py-4 px-4">Batch</th>
-                    <th className="text-table-header text-slate-400 py-4 px-4">Material / Product</th>
-                    <th className="text-table-header text-slate-400 py-4 px-4">Date</th>
-                    <th className="text-table-header text-slate-400 py-4 px-4">Priority</th>
-                    <th className="text-table-header text-slate-400 py-4 px-4">Status</th>
-                    <th className="text-table-header text-slate-400 py-4 px-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow>
+                    <DnaTh className="text-table-header text-slate-400 py-4 px-4">ID</DnaTh>
+                    <DnaTh className="text-table-header text-slate-400 py-4 px-4">Source</DnaTh>
+                    <DnaTh className="text-table-header text-slate-400 py-4 px-4">Batch</DnaTh>
+                    <DnaTh className="text-table-header text-slate-400 py-4 px-4">Material / Product</DnaTh>
+                    <DnaTh className="text-table-header text-slate-400 py-4 px-4">Date</DnaTh>
+                    <DnaTh className="text-table-header text-slate-400 py-4 px-4">Priority</DnaTh>
+                    <DnaTh className="text-table-header text-slate-400 py-4 px-4">Status</DnaTh>
+                    <DnaTh className="text-table-header text-slate-400 py-4 px-4 text-right">Action</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {isLoading && (
-                    <tr><td colSpan={8} className="text-center py-12 text-slate-400 text-sm"><Loader2 className="h-5 w-5 animate-spin inline mr-2" />Loading inspections...</td></tr>
+                    <DnaTableRow><DnaTd colSpan={8} className="text-center py-12 text-slate-400 text-sm"><Loader2 className="h-5 w-5 animate-spin inline mr-2" />Loading inspections...</DnaTd></DnaTableRow>
                   )}
                   {!isLoading && filtered.length === 0 && (
-                    <tr><td colSpan={8} className="text-center py-12 text-slate-400 text-sm">No pending {meta.label} inspections</td></tr>
+                    <DnaTableRow><DnaTd colSpan={8} className="text-center py-12 text-slate-400 text-sm">No pending {meta.label} inspections</DnaTd></DnaTableRow>
                   )}
                   {!isLoading && filtered.map((item: any) => (
-                    <tr key={item.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                      <td className="py-3 px-4 font-black text-slate-900 text-xs tabular-nums">{item.id.substring(0, 8).toUpperCase()}</td>
-                      <td className="py-3 px-4 text-slate-500">{item.source}</td>
-                      <td className="py-3 px-4 font-black text-slate-900 text-xs tabular-nums">{item.batch}</td>
-                      <td className="py-3 px-4 font-black text-slate-900 text-xs uppercase">{item.material}</td>
-                      <td className="py-3 px-4 text-slate-400">{item.date}</td>
-                      <td className="py-3 px-4"><DnaBadge status={priority(item.priority)}>{item.priority}</DnaBadge></td>
-                      <td className="py-3 px-4"><DnaBadge status="warning"><AlertTriangle className="h-3 w-3 mr-1" />PENDING</DnaBadge></td>
-                      <td className="pr-4 text-right py-3">
+                    <DnaTableRow key={item.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                      <DnaTd className="py-3 px-4 font-black text-slate-900 text-xs tabular-nums">{item.id.substring(0, 8).toUpperCase()}</DnaTd>
+                      <DnaTd className="py-3 px-4 text-slate-500">{item.source}</DnaTd>
+                      <DnaTd className="py-3 px-4 font-black text-slate-900 text-xs tabular-nums">{item.batch}</DnaTd>
+                      <DnaTd className="py-3 px-4 font-black text-slate-900 text-xs uppercase">{item.material}</DnaTd>
+                      <DnaTd className="py-3 px-4 text-slate-400">{item.date}</DnaTd>
+                      <DnaTd className="py-3 px-4"><DnaBadge status={priority(item.priority)}>{item.priority}</DnaBadge></DnaTd>
+                      <DnaTd className="py-3 px-4"><DnaBadge variant="warning"><AlertTriangle className="h-3 w-3 mr-1" />PENDING</DnaBadge></DnaTd>
+                      <DnaTd className="pr-4 text-right py-3">
                         <DnaButton variant="ghost" size="sm" onClick={() => setSelectedPendingId(selectedPendingId === item.id ? null : item.id)}>
                           <Eye className="h-3 w-3 mr-1" />{selectedPendingId === item.id ? "Inspecting..." : "Inspect"}
                         </DnaButton>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </TableWrapper>
           </TabsContent>
         ))}

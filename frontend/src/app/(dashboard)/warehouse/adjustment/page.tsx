@@ -35,7 +35,12 @@ import {
   DnaTextarea,
   DnaTable,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { DnaCell } from "@/components/dna/cells/DnaCell";
 
@@ -338,79 +343,79 @@ export default function StockAdjustmentPage() {
         }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
-                <th className="px-4 py-3 h-[40px] w-[140px]">No. Adjustment</th>
-                <th className="px-3 py-3 h-[40px] w-[110px]">Tanggal</th>
-                <th className="px-3 py-3 h-[40px]">Gudang</th>
-                <th className="px-3 py-3 h-[40px]">Tipe Adjustment</th>
-                <th className="px-3 py-3 h-[40px] w-[110px]">Akun CoA</th>
-                <th className="px-3 py-3 h-[40px]">PIC Pengaju</th>
-                <th className="px-3 py-3 h-[40px] text-right w-[140px]">Varians Finansial</th>
-                <th className="px-3 py-3 h-[40px] text-center w-[130px]">Status</th>
-                <th className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="px-4 py-3 h-[40px] w-[140px]">No. Adjustment</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[110px]">Tanggal</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Gudang</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Tipe Adjustment</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[110px]">Akun CoA</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">PIC Pengaju</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[140px]">Varians Finansial</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-center w-[130px]">Status</DnaTh>
+                <DnaTh className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredAdjustments.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-12 text-center text-slate-400">
                     <SlidersHorizontal className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada data penyesuaian stok yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredAdjustments.map((adj) => (
-                  <tr
+                  <DnaTableRow
                     key={adj.id}
                     onClick={() => setSelectedAdjustment(adj)}
                     className="hover:bg-slate-50/60 transition-colors cursor-pointer group h-[48px]"
                   >
                     {/* Kolom 1: No Adjustment */}
-                    <td className="px-4 py-2">
+                    <DnaTd className="px-4 py-2">
                       <DnaCell.Code value={adj.adjustmentNumber} />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 2: Tanggal */}
-                    <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                    <DnaTd className="px-3 py-2 text-slate-600 whitespace-nowrap">
                       {adj.adjustmentDate}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 3: Gudang */}
-                    <td className="px-3 py-2 text-slate-800 font-medium truncate max-w-[160px]">
+                    <DnaTd className="px-3 py-2 text-slate-800 font-medium truncate max-w-[160px]">
                       {adj.warehouseName}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 4: Tipe Adjustment */}
-                    <td className="px-3 py-2 text-slate-700">
+                    <DnaTd className="px-3 py-2 text-slate-700">
                       {adj.adjustmentTypeLabel}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 5: Akun CoA */}
-                    <td className="px-3 py-2 font-mono text-slate-800 text-[11.5px]">
+                    <DnaTd className="px-3 py-2 tabular-nums text-slate-800 text-[11.5px]">
                       {adj.adjustmentAccountCode}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 6: PIC Pengaju */}
-                    <td className="px-3 py-2 text-slate-800 truncate max-w-[140px]">
+                    <DnaTd className="px-3 py-2 text-slate-800 truncate max-w-[140px]">
                       {adj.createdBy}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 7: Varians Finansial */}
-                    <td className="px-3 py-2 text-right">
-                      <span className={`font-mono font-semibold text-[12px] ${adj.totalVarianceValuation < 0 ? "text-rose-600" : "text-emerald-700"}`}>
+                    <DnaTd className="px-3 py-2 text-right">
+                      <span className={`tabular-nums font-semibold text-[12px] ${adj.totalVarianceValuation < 0 ? "text-rose-600" : "text-emerald-700"}`}>
                         {formatRupiah(adj.totalVarianceValuation)}
                       </span>
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 8: Status */}
-                    <td className="px-3 py-2 text-center">
+                    <DnaTd className="px-3 py-2 text-center">
                       {getStatusBadge(adj.status)}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 9: Aksi */}
-                    <td className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                    <DnaTd className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -419,12 +424,12 @@ export default function StockAdjustmentPage() {
                       >
                         <Eye className="w-4 h-4" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -479,14 +484,14 @@ export default function StockAdjustmentPage() {
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-700">
                 Total Dampak Valuasi Varians
               </div>
-              <div className={`text-2xl font-bold font-mono ${
+              <div className={`text-2xl font-bold tabular-nums ${
                 selectedAdjustment.totalVarianceValuation < 0 ? "text-red-700" : "text-emerald-700"
               }`}>
                 {formatRupiah(selectedAdjustment.totalVarianceValuation)}
               </div>
               <div className="text-xs text-slate-600 flex items-center justify-between">
                 <span>Alokasi Akun Beban (CoA):</span>
-                <span className="font-mono font-semibold">{selectedAdjustment.adjustmentAccountCode} - {selectedAdjustment.adjustmentAccountName}</span>
+                <span className="tabular-nums font-semibold">{selectedAdjustment.adjustmentAccountCode} - {selectedAdjustment.adjustmentAccountName}</span>
               </div>
             </div>
 
@@ -502,7 +507,7 @@ export default function StockAdjustmentPage() {
                 </div>
                 <div>
                   <span className="text-slate-400 block">Tanggal Pengajuan:</span>
-                  <span className="font-mono text-slate-800">{selectedAdjustment.adjustmentDate}</span>
+                  <span className="tabular-nums text-slate-800">{selectedAdjustment.adjustmentDate}</span>
                 </div>
                 {selectedAdjustment.approvedBy && (
                   <div className="col-span-2 pt-2 border-t border-slate-200">
@@ -520,33 +525,33 @@ export default function StockAdjustmentPage() {
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
                 <DnaTable className="w-full text-left text-xs">
-                  <thead className="bg-slate-100/80 border-b border-slate-200 text-slate-600 font-semibold">
-                    <tr>
-                      <th className="py-2.5 px-3">Nama Material</th>
-                      <th className="py-2.5 px-3 text-right">Sistem</th>
-                      <th className="py-2.5 px-3 text-right">Fisik</th>
-                      <th className="py-2.5 px-3 text-right">Selisih</th>
-                      <th className="py-2.5 px-3 text-right">Nilai Varians</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono">
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3">Nama Material</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Sistem</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Fisik</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Selisih</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Nilai Varians</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedAdjustment.items.map((it, idx) => (
-                      <tr key={idx}>
-                        <td className="py-2.5 px-3 font-sans">
+                      <DnaTableRow key={idx}>
+                        <DnaTd className="py-2.5 px-3 font-sans">
                           <div className="font-semibold text-slate-800">{it.itemName}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">{it.itemCode}</div>
-                        </td>
-                        <td className="py-2.5 px-3 text-right text-slate-600">{it.systemQty} {it.unit}</td>
-                        <td className="py-2.5 px-3 text-right font-bold text-slate-900">{it.actualQty} {it.unit}</td>
-                        <td className={`py-2.5 px-3 text-right font-bold ${it.differenceQty < 0 ? "text-red-600" : "text-emerald-700"}`}>
+                          <div className="text-[10px] text-slate-400 tabular-nums">{it.itemCode}</div>
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right text-slate-600">{it.systemQty} {it.unit}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right font-bold text-slate-900">{it.actualQty} {it.unit}</DnaTd>
+                        <DnaTd className={`py-2.5 px-3 text-right font-bold ${it.differenceQty < 0 ? "text-red-600" : "text-emerald-700"}`}>
                           {it.differenceQty > 0 ? `+${it.differenceQty}` : it.differenceQty}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-slate-900">
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right font-bold text-slate-900">
                           {formatRupiah(it.varianceValuation)}
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
+                  </DnaTableBody>
                 </DnaTable>
               </div>
             </div>

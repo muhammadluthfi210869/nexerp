@@ -29,7 +29,13 @@ import {
   DnaDetailDrawer,
   DnaModal,
   DnaInput,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import Link from "next/link";
 
@@ -306,65 +312,65 @@ export default function WorkOrdersPage() {
         searchPlaceholder="Cari No. SPK, Batch, Klien, Brand, Produk..."
       >
         <div className="w-full">
-          <table className="w-full text-left text-xs table-fixed">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-4 w-[18%]">No. SPK & Batch</th>
-                <th className="py-3 px-4 w-[24%]">Klien & Brand</th>
-                <th className="py-3 px-4 w-[24%]">Produk & Target</th>
-                <th className="py-3 px-4 w-[14%]">Jadwal & PIC</th>
-                <th className="py-3 px-4 w-[14%]">Tahap & Progress</th>
-                <th className="py-3 px-4 w-[6%] text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-[18%]">No. SPK & Batch</DnaTh>
+                <DnaTh className="py-3 px-4 w-[24%]">Klien & Brand</DnaTh>
+                <DnaTh className="py-3 px-4 w-[24%]">Produk & Target</DnaTh>
+                <DnaTh className="py-3 px-4 w-[14%]">Jadwal & PIC</DnaTh>
+                <DnaTh className="py-3 px-4 w-[14%]">Tahap & Progress</DnaTh>
+                <DnaTh className="py-3 px-4 w-[6%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     Memuat data Work Orders...
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : filteredWorkOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     <Factory className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada data Work Order yang sesuai dengan filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredWorkOrders.map((wo) => {
                   const stageInfo = STAGE_LABELS[wo.currentStage] || { label: wo.currentStage, badge: "default" };
                   return (
-                    <tr key={wo.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 truncate">
-                        <p className="font-mono text-xs font-bold text-slate-900 truncate">{wo.code}</p>
-                        <p className="text-[11px] text-blue-600 font-mono flex items-center gap-1 truncate">
+                    <DnaTableRow key={wo.id} className="hover:bg-slate-50/70 transition-colors">
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="tabular-nums text-xs font-bold text-slate-900 truncate">{wo.code}</p>
+                        <p className="text-[11px] text-blue-600 tabular-nums flex items-center gap-1 truncate">
                           <Layers className="w-3 h-3 shrink-0" /> {wo.batchNumber}
                         </p>
-                      </td>
-                      <td className="py-3 px-4 truncate">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
                         <p className="font-semibold text-slate-900 text-xs truncate">{wo.customerName}</p>
                         <p className="text-[11px] text-slate-500 font-medium truncate">{wo.brandName}</p>
-                      </td>
-                      <td className="py-3 px-4 truncate">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
                         <p className="font-semibold text-slate-900 text-xs truncate">{wo.productName}</p>
                         <p className="text-[11px] text-slate-500 truncate">
                           {wo.targetQty.toLocaleString()} Pcs • {wo.netto}
                         </p>
-                      </td>
-                      <td className="py-3 px-4 truncate">
-                        <p className="font-mono text-xs text-slate-700 truncate">{wo.targetDate}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="tabular-nums text-xs text-slate-700 truncate">{wo.targetDate}</p>
                         <p className="text-[11px] text-slate-400 truncate">{wo.picOperator}</p>
-                      </td>
-                      <td className="py-3 px-4 truncate">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
                         <div className="flex items-center gap-1.5">
                           <DnaBadge variant={stageInfo.badge}>{stageInfo.label}</DnaBadge>
                         </div>
-                        <p className="text-[10px] text-slate-500 font-mono mt-0.5 truncate">
+                        <p className="text-[10px] text-slate-500 tabular-nums mt-0.5 truncate">
                           {wo.progressPct}% • G:{wo.goodQty} R:{wo.rejectQty}
                         </p>
-                      </td>
-                      <td className="py-3 px-4 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <DnaButton
                             variant="ghost"
@@ -393,13 +399,13 @@ export default function WorkOrdersPage() {
                             </DnaButton>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   );
                 })
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -593,8 +599,8 @@ export default function WorkOrdersPage() {
               <div className="space-y-4 text-xs">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-mono font-bold text-slate-900">{detailItem.code}</span>
-                    <span className="font-mono text-blue-600 font-semibold">{detailItem.batchNumber}</span>
+                    <span className="tabular-nums font-bold text-slate-900">{detailItem.code}</span>
+                    <span className="tabular-nums text-blue-600 font-semibold">{detailItem.batchNumber}</span>
                   </div>
                   <p className="font-bold text-slate-900 text-sm">{detailItem.productName}</p>
                   <p className="text-slate-600">{detailItem.customerName} ({detailItem.brandName})</p>
@@ -603,12 +609,12 @@ export default function WorkOrdersPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Target Produksi</span>
-                    <p className="font-mono font-bold text-slate-900 text-sm">{detailItem.targetQty.toLocaleString()} Pcs</p>
+                    <p className="tabular-nums font-bold text-slate-900 text-sm">{detailItem.targetQty.toLocaleString()} Pcs</p>
                     <span className="text-[10px] text-slate-400">Netto: {detailItem.netto}</span>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Output Saat Ini</span>
-                    <p className="font-mono font-bold text-emerald-700 text-sm">{detailItem.goodQty.toLocaleString()} Pcs</p>
+                    <p className="tabular-nums font-bold text-emerald-700 text-sm">{detailItem.goodQty.toLocaleString()} Pcs</p>
                     <span className="text-[10px] text-rose-500">Reject: {detailItem.rejectQty.toLocaleString()} Pcs</span>
                   </div>
                 </div>
@@ -616,7 +622,7 @@ export default function WorkOrdersPage() {
                 <div className="p-3 bg-white rounded-lg border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-slate-700 uppercase">Progress Pengerjaan</span>
-                    <span className="font-mono font-bold text-blue-600">{detailItem.progressPct}%</span>
+                    <span className="tabular-nums font-bold text-blue-600">{detailItem.progressPct}%</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                     <div
@@ -638,11 +644,11 @@ export default function WorkOrdersPage() {
                 <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Tanggal Mulai:</span>
-                    <span className="font-mono font-bold text-slate-800">{detailItem.startDate}</span>
+                    <span className="tabular-nums font-bold text-slate-800">{detailItem.startDate}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Target Selesai:</span>
-                    <span className="font-mono font-bold text-slate-800">{detailItem.targetDate}</span>
+                    <span className="tabular-nums font-bold text-slate-800">{detailItem.targetDate}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">PIC Operator:</span>

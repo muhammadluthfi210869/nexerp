@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api, extractApiError } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Truck,
@@ -34,7 +34,12 @@ import {
   DnaSelect,
   DnaTextarea,
   DnaTable,
-  useDnaToast
+  useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { DnaCell } from "@/components/dna/cells/DnaCell";
 
@@ -125,8 +130,7 @@ export default function GoodsReleasePage() {
         financialGateStatus: (s.financialStatus || "PAID") as any,
         deliveryStatus: (s.status || "READY") as any,
         dispatchedBy: s.dispatchedBy || "Petugas Gudang",
-        recipientName: s.recipientName,
-        deliveredDate: s.deliveredAt,
+        deliveredDate: s.deliveredAt ? String(s.deliveredAt).split("T")[0] : undefined,
         notes: s.notes || "Pengiriman barang jadi",
         items,
       };
@@ -134,20 +138,8 @@ export default function GoodsReleasePage() {
   }, [rawShipments]);
 
   const [localCreated, setLocalCreated] = useState<DeliveryOrder[]>([]);
-  const [deliveredIds, setDeliveredIds] = useState<Record<string, { recipientName: string; deliveredDate: string }>>({});
 
-  const dataList = useMemo(() => {
-    return [...localCreated, ...liveDeliveries].map((item) => {
-      if (deliveredIds[item.id]) {
-        return {
-          ...item,
-          deliveryStatus: "DELIVERED" as const,
-          ...deliveredIds[item.id],
-        };
-      }
-      return item;
-    });
-  }, [localCreated, liveDeliveries, deliveredIds]);
+  const dataList = useMemo(() => [...localCreated, ...liveDeliveries], [localCreated, liveDeliveries]);
 
   // Filters
   const [activeTab, setActiveTab] = useState<string>("ALL");
@@ -197,32 +189,34 @@ export default function GoodsReleasePage() {
     });
   }, [dataList, searchQuery, activeTab]);
 
-  const handleConfirmDelivered = (orderId: string) => {
-    const recipient = prompt("Masukkan nama pihak penerima barang (Proof of Delivery):", "Bpk. Hendra (Store Manager)");
-    if (!recipient) return;
+  // PATCH /fulfillment/shipments/:id/status { status: "DELIVERED" }. The service stamps
+  // `deliveredAt` and, on DELIVERED, advances the linked sales order to SOStatus.COMPLETED.
+  //
+  // ponytail: the name of the person who received the goods is NOT sent — `model Shipment` has no
+  // recipient column and UpdateShipmentStatusDto carries only `status`. The old `prompt()` for a
+  // recipient name discarded whatever was typed. Add a column + DTO field when proof-of-delivery
+  // needs a named receiver.
+  const deliverMut = useMutation({
+    mutationFn: async (orderId: string) => unwrapResponse(await api.patch(`/fulfillment/shipments/${orderId}/status`, { status: "DELIVERED" })),
+    onSuccess: (_data, orderId) => {
+      toast.success("Status pengiriman berhasil diubah menjadi Selesai Diterima (DELIVERED)");
+      if (selectedDelivery?.id === orderId) setSelectedDelivery(null);
+      queryClient.invalidateQueries({ queryKey: ["fulfillment-shipments"] });
+    },
+    onError: (e) => toast.error(extractApiError(e).message),
+  });
 
-    setDeliveredIds((prev) => ({
-      ...prev,
-      [orderId]: {
-        recipientName: recipient,
-        deliveredDate: new Date().toLocaleDateString("id-ID"),
-      },
-    }));
+  const handleConfirmDelivered = (orderId: string) => deliverMut.mutate(orderId);
 
-    if (selectedDelivery && selectedDelivery.id === orderId) {
-      setSelectedDelivery((prev) =>
-        prev
-          ? {
-              ...prev,
-              deliveryStatus: "DELIVERED",
-              recipientName: recipient,
-              deliveredDate: new Date().toLocaleDateString("id-ID"),
-            }
-          : null
-      );
-    }
-
-    toast.success("Status pengiriman berhasil diubah menjadi Selesai Diterima (DELIVERED)");
+  const handleCreateDelivery = () => {
+    // POST /fulfillment/shipments exists, but CreateShipmentDto requires `soId` (@IsUUID) and
+    // `logisticsId` (@IsUUID). This modal holds an SO *number* and a free-text courier name, so
+    // neither UUID is available and the request would 400. Nothing is sent.
+    toast.warning(
+      "Surat jalan belum diterbitkan",
+      "Form belum dapat mengirim data: backend memerlukan UUID Sales Order dan UUID master logistik, sedangkan modal ini berisi nomor SO dan nama ekspedisi bebas.",
+    );
+    setIsCreateOpen(false);
   };
 
   const getStatusBadge = (status: DeliveryOrder["deliveryStatus"]) => {
@@ -329,81 +323,81 @@ export default function GoodsReleasePage() {
         }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
-                <th className="px-4 py-3 h-[40px] w-[140px]">No. Surat Jalan</th>
-                <th className="px-3 py-3 h-[40px] w-[110px]">Tgl Kirim</th>
-                <th className="px-3 py-3 h-[40px]">Klien & Brand</th>
-                <th className="px-3 py-3 h-[40px] w-[130px]">No. SO</th>
-                <th className="px-3 py-3 h-[40px]">Ekspedisi / Driver</th>
-                <th className="px-3 py-3 h-[40px] text-right w-[110px]">Total Unit</th>
-                <th className="px-3 py-3 h-[40px] text-right w-[100px]">Box Karton</th>
-                <th className="px-3 py-3 h-[40px] text-center w-[130px]">Status</th>
-                <th className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="px-4 py-3 h-[40px] w-[140px]">No. Surat Jalan</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[110px]">Tgl Kirim</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Klien & Brand</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[130px]">No. SO</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Ekspedisi / Driver</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[110px]">Total Unit</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[100px]">Box Karton</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-center w-[130px]">Status</DnaTh>
+                <DnaTh className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredList.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-12 text-center text-slate-400">
                     <Truck className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada surat jalan pengiriman yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredList.map((row) => (
-                  <tr
+                  <DnaTableRow
                     key={row.id}
                     onClick={() => setSelectedDelivery(row)}
                     className="hover:bg-slate-50/60 transition-colors cursor-pointer group h-[48px]"
                   >
                     {/* Kolom 1: No. Surat Jalan */}
-                    <td className="px-4 py-2">
+                    <DnaTd className="px-4 py-2">
                       <DnaCell.Code value={row.deliveryNumber} />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 2: Tgl Kirim */}
-                    <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                    <DnaTd className="px-3 py-2 text-slate-600 whitespace-nowrap">
                       {row.shipDate}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 3: Klien & Brand (1 Natural Pair) */}
-                    <td className="px-3 py-2">
+                    <DnaTd className="px-3 py-2">
                       <DnaCell.DoubleText
                         primary={row.clientName}
                         secondary={row.brandName}
                       />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 4: No. SO */}
-                    <td className="px-3 py-2">
+                    <DnaTd className="px-3 py-2">
                       <DnaCell.Code value={row.soNumber} />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 5: Ekspedisi / Driver */}
-                    <td className="px-3 py-2 text-slate-800 truncate max-w-[180px]">
+                    <DnaTd className="px-3 py-2 text-slate-800 truncate max-w-[180px]">
                       {row.courierName} ({row.vehicleOrTrackingNo})
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 6: Total Unit */}
-                    <td className="px-3 py-2 text-right">
+                    <DnaTd className="px-3 py-2 text-right">
                       <DnaCell.Number
                         value={row.totalUnits}
                         unit="Unit"
                       />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 7: Box Karton */}
-                    <td className="px-3 py-2 text-right">
+                    <DnaTd className="px-3 py-2 text-right">
                       <DnaCell.Number
                         value={row.totalBoxes}
                         unit="Box"
                       />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 8: Status */}
-                    <td className="px-3 py-2 text-center">
+                    <DnaTd className="px-3 py-2 text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         {getStatusBadge(row.deliveryStatus)}
                         {row.financialGateStatus === "BLOCKED_UNPAID" && (
@@ -412,10 +406,10 @@ export default function GoodsReleasePage() {
                           </span>
                         )}
                       </div>
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 9: Aksi */}
-                    <td className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                    <DnaTd className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -424,12 +418,12 @@ export default function GoodsReleasePage() {
                       >
                         <Eye className="w-4 h-4" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -502,7 +496,7 @@ export default function GoodsReleasePage() {
                 </div>
                 <div>
                   <span className="text-slate-400 block">No. Plat / Resi:</span>
-                  <span className="font-mono font-semibold text-slate-800">{selectedDelivery.vehicleOrTrackingNo}</span>
+                  <span className="tabular-nums font-semibold text-slate-800">{selectedDelivery.vehicleOrTrackingNo}</span>
                 </div>
                 <div className="col-span-2">
                   <span className="text-slate-400 block">Alamat Tujuan Pengiriman:</span>
@@ -518,37 +512,39 @@ export default function GoodsReleasePage() {
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
                 <DnaTable className="w-full text-left text-xs">
-                  <thead className="bg-slate-100/80 border-b border-slate-200 text-slate-600 font-semibold">
-                    <tr>
-                      <th className="py-2.5 px-3">Nama Produk</th>
-                      <th className="py-2.5 px-3 text-right">Qty Kirim</th>
-                      <th className="py-2.5 px-3 text-right">Box</th>
-                      <th className="py-2.5 px-3">No. Batch</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono">
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3">Nama Produk</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Qty Kirim</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Box</DnaTh>
+                      <DnaTh className="py-2.5 px-3">No. Batch</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedDelivery.items.map((it) => (
-                      <tr key={it.id}>
-                        <td className="py-2.5 px-3 font-sans">
+                      <DnaTableRow key={it.id}>
+                        <DnaTd className="py-2.5 px-3 font-sans">
                           <div className="font-semibold text-slate-800">{it.itemName}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">{it.itemCode}</div>
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-slate-900">{it.qtyShipped} {it.unit}</td>
-                        <td className="py-2.5 px-3 text-right text-slate-700">{it.boxCount}</td>
-                        <td className="py-2.5 px-3 text-slate-600">{it.batchNumber}</td>
-                      </tr>
+                          <div className="text-[10px] text-slate-400 tabular-nums">{it.itemCode}</div>
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right font-bold text-slate-900">{it.qtyShipped} {it.unit}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right text-slate-700">{it.boxCount}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-slate-600">{it.batchNumber}</DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
+                  </DnaTableBody>
                 </DnaTable>
               </div>
             </div>
 
-            {/* POD Info if delivered */}
-            {selectedDelivery.recipientName && (
+            {/* POD Info if delivered. The receiver's name is not stored server-side (no
+                recipient column on Shipment), so only the server's own deliveredAt is shown. */}
+            {selectedDelivery.deliveryStatus === "DELIVERED" && (
               <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl">
                 <span className="font-semibold block text-emerald-800 mb-1">Bukti Penerimaan (Proof of Delivery):</span>
                 <p className="text-emerald-700 text-xs">
-                  Diterima oleh: <b className="font-semibold">{selectedDelivery.recipientName}</b> pada tanggal {selectedDelivery.deliveredDate || "-"}
+                  Diterima pada tanggal{" "}
+                  <b className="font-semibold">{selectedDelivery.deliveredDate || "-"}</b>
                 </p>
               </div>
             )}
@@ -572,10 +568,7 @@ export default function GoodsReleasePage() {
               variant="primary"
               size="sm"
               icon={<Send className="w-4 h-4" />}
-              onClick={() => {
-                toast.success("Surat jalan berhasil dibuat.");
-                setIsCreateOpen(false);
-              }}
+              onClick={handleCreateDelivery}
             >
               Terbitkan Surat Jalan
             </DnaButton>
@@ -606,7 +599,7 @@ export default function GoodsReleasePage() {
                 type="date"
                 value={shipDate}
                 onChange={(e) => setShipDate(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums"
               />
             </div>
           </div>
@@ -629,7 +622,7 @@ export default function GoodsReleasePage() {
                 placeholder="Contoh: B 9821 TBC / TRACK-88129"
                 value={vehicleOrTrackingNo}
                 onChange={(e) => setVehicleOrTrackingNo(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums"
               />
             </div>
           </div>

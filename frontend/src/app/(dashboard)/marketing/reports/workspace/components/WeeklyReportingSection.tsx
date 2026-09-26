@@ -1,3 +1,11 @@
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import React, { useState } from 'react';
 import { 
   Calendar, Users, UserPlus, UserMinus, TrendingUp, TrendingDown,
@@ -512,74 +520,74 @@ export const WeeklyReportingSection: React.FC<WeeklyReportingSectionProps> = ({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider border-b border-slate-200/80">
-              <tr>
-                <th className="py-3 px-4">Minggu</th>
-                <th className="py-3 px-3">Rentang Tanggal</th>
-                <th className="py-3 px-3 text-emerald-700">+ Follows</th>
-                <th className="py-3 px-3 text-rose-700">- Unfoll</th>
-                <th className="py-3 px-3 text-blue-800">Net Growth</th>
-                <th className="py-3 px-3">Views Konten</th>
-                <th className="py-3 px-3">Interaksi</th>
-                <th className="py-3 px-3">ER %</th>
-                <th className="py-3 px-3 text-purple-800">Stories Tayang</th>
-                <th className="py-3 px-3 text-purple-800">Total Terupload</th>
-                <th className="py-3 px-3 text-purple-800">Avg / Story</th>
-                <th className="py-3 px-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4">Minggu</DnaTh>
+                <DnaTh className="py-3 px-3">Rentang Tanggal</DnaTh>
+                <DnaTh className="py-3 px-3 text-emerald-700">+ Follows</DnaTh>
+                <DnaTh className="py-3 px-3 text-rose-700">- Unfoll</DnaTh>
+                <DnaTh className="py-3 px-3 text-blue-800">Net Growth</DnaTh>
+                <DnaTh className="py-3 px-3">Views Konten</DnaTh>
+                <DnaTh className="py-3 px-3">Interaksi</DnaTh>
+                <DnaTh className="py-3 px-3">ER %</DnaTh>
+                <DnaTh className="py-3 px-3 text-purple-800">Stories Tayang</DnaTh>
+                <DnaTh className="py-3 px-3 text-purple-800">Total Terupload</DnaTh>
+                <DnaTh className="py-3 px-3 text-purple-800">Avg / Story</DnaTh>
+                <DnaTh className="py-3 px-3 text-center">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {weeklyData.map((w) => {
                 const isSelected = selectedWeekId === w.id;
                 return (
-                  <tr 
+                  <DnaTableRow 
                     key={w.id} 
                     className={`hover:bg-blue-50/40 transition cursor-pointer ${
                       isSelected ? 'bg-blue-50/60 font-semibold' : ''
                     }`}
                     onClick={() => setSelectedWeekId(w.id)}
                   >
-                    <td className="py-3 px-4 font-bold text-slate-900 whitespace-nowrap flex items-center gap-1.5">
+                    <DnaTd className="py-3 px-4 font-bold text-slate-900 whitespace-nowrap flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-blue-600" />
                       <span>{w.weekLabel}</span>
-                    </td>
-                    <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-slate-600 whitespace-nowrap">
                       {w.dateRange}
-                    </td>
-                    <td className="py-3 px-3 font-bold text-emerald-700 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 font-bold text-emerald-700 whitespace-nowrap">
                       +{formatNumber(w.followersGained)}
-                    </td>
-                    <td className="py-3 px-3 font-bold text-rose-700 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 font-bold text-rose-700 whitespace-nowrap">
                       -{formatNumber(w.followersUnfollowed)}
-                    </td>
-                    <td className="py-3 px-3 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 whitespace-nowrap">
                       <span className={`px-2 py-0.5 rounded-full font-black text-xs ${
                         w.netGrowth >= 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
                       }`}>
                         {w.netGrowth >= 0 ? `+${formatNumber(w.netGrowth)}` : formatNumber(w.netGrowth)}
                       </span>
-                    </td>
-                    <td className="py-3 px-3 font-bold text-slate-900 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 font-bold text-slate-900 whitespace-nowrap">
                       {formatNumber(w.views)}
-                    </td>
-                    <td className="py-3 px-3 font-semibold text-slate-800 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 font-semibold text-slate-800 whitespace-nowrap">
                       {formatNumber(w.totalEngagement)}
-                    </td>
-                    <td className="py-3 px-3 font-black text-indigo-700 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 font-black text-indigo-700 whitespace-nowrap">
                       {w.engagementRate}%
-                    </td>
-                    <td className="py-3 px-3 font-semibold text-purple-900 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 font-semibold text-purple-900 whitespace-nowrap">
                       {w.storiesCount} st
-                    </td>
-                    <td className="py-3 px-3 font-bold text-purple-900 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 font-bold text-purple-900 whitespace-nowrap">
                       <div>{w.storiesCount + 3} konten</div>
                       <div className="text-[10px] text-slate-400 font-normal">({formatNumber(w.totalStoryViews)} views)</div>
-                    </td>
-                    <td className="py-3 px-3 font-medium text-slate-700 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 font-medium text-slate-700 whitespace-nowrap">
                       {formatNumber(w.avgViewsPerStory)}
-                    </td>
-                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-center whitespace-nowrap">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -590,42 +598,42 @@ export const WeeklyReportingSection: React.FC<WeeklyReportingSectionProps> = ({
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 );
               })}
-            </tbody>
+            </DnaTableBody>
             {/* Table Footer Totals */}
             <tfoot className="bg-slate-100/70 border-t border-slate-200 font-bold text-slate-800">
-              <tr>
-                <td className="py-3 px-4 font-black">TOTAL AKUMULASI</td>
-                <td className="py-3 px-3 text-slate-500 font-semibold">{weeklyData.length} Minggu</td>
-                <td className="py-3 px-3 text-emerald-800 font-black">+{formatNumber(totals.followersGained)}</td>
-                <td className="py-3 px-3 text-rose-800 font-black">-{formatNumber(totals.followersUnfollowed)}</td>
-                <td className="py-3 px-3">
+              <DnaTableRow>
+                <DnaTd className="py-3 px-4 font-black">TOTAL AKUMULASI</DnaTd>
+                <DnaTd className="py-3 px-3 text-slate-500 font-semibold">{weeklyData.length} Minggu</DnaTd>
+                <DnaTd className="py-3 px-3 text-emerald-800 font-black">+{formatNumber(totals.followersGained)}</DnaTd>
+                <DnaTd className="py-3 px-3 text-rose-800 font-black">-{formatNumber(totals.followersUnfollowed)}</DnaTd>
+                <DnaTd className="py-3 px-3">
                   <span className={`px-2 py-0.5 rounded-full font-black text-xs ${
                     totals.netGrowth >= 0 ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'
                   }`}>
                     {totals.netGrowth >= 0 ? `+${formatNumber(totals.netGrowth)}` : formatNumber(totals.netGrowth)}
                   </span>
-                </td>
-                <td className="py-3 px-3 text-slate-900 font-black">{formatNumber(totals.views)}</td>
-                <td className="py-3 px-3 text-slate-900 font-black">{formatNumber(totals.totalEngagement)}</td>
-                <td className="py-3 px-3 text-indigo-800 font-black">
+                </DnaTd>
+                <DnaTd className="py-3 px-3 text-slate-900 font-black">{formatNumber(totals.views)}</DnaTd>
+                <DnaTd className="py-3 px-3 text-slate-900 font-black">{formatNumber(totals.totalEngagement)}</DnaTd>
+                <DnaTd className="py-3 px-3 text-indigo-800 font-black">
                   {totals.views > 0 ? ((totals.totalEngagement / totals.views) * 100).toFixed(2) : '5.0'}%
-                </td>
-                <td className="py-3 px-3 text-purple-900 font-black">{totals.storiesCount} st</td>
-                <td className="py-3 px-3 text-purple-900 font-black">
+                </DnaTd>
+                <DnaTd className="py-3 px-3 text-purple-900 font-black">{totals.storiesCount} st</DnaTd>
+                <DnaTd className="py-3 px-3 text-purple-900 font-black">
                   <div>{totals.storiesCount + 12} konten</div>
                   <div className="text-[10px] text-slate-400 font-normal">({formatNumber(totals.totalStoryViews)} views)</div>
-                </td>
-                <td className="py-3 px-3 text-slate-800 font-black">
+                </DnaTd>
+                <DnaTd className="py-3 px-3 text-slate-800 font-black">
                   {totals.storiesCount > 0 ? formatNumber(Math.round(totals.totalStoryViews / totals.storiesCount)) : 0}
-                </td>
-                <td className="py-3 px-3"></td>
-              </tr>
+                </DnaTd>
+                <DnaTd className="py-3 px-3"></DnaTd>
+              </DnaTableRow>
             </tfoot>
-          </table>
+          </DnaTable>
         </div>
       </div>
 

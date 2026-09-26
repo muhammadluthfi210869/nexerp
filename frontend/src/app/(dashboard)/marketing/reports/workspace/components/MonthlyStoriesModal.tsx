@@ -224,7 +224,7 @@ export const MonthlyStoriesModal: React.FC<MonthlyStoriesModalProps> = ({
               </div>
               <div className="text-right">
                 <span className="text-[10px] text-emerald-700 font-semibold block">Formula:</span>
-                <span className="text-[11px] text-slate-600 font-mono bg-white px-2 py-0.5 rounded border border-emerald-200">
+                <span className="text-[11px] text-slate-600 tabular-nums bg-white px-2 py-0.5 rounded border border-emerald-200">
                   {formatNumber(totalViews)} ÷ {storiesCount || 1}
                 </span>
               </div>

@@ -26,7 +26,13 @@ import {
   DnaDetailDrawer,
   DnaModal,
   DnaInput,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -81,7 +87,7 @@ export default function LabTestCenterPage() {
     queryKey: ["formulas"],
     queryFn: async () => {
       try {
-        const res = await api.get("/formulas");
+        const res = await api.get("/rnd/formulas");
         return res.data?.data || res.data || [];
       } catch {
         return [];
@@ -259,57 +265,57 @@ export default function LabTestCenterPage() {
           searchPlaceholder="Cari parameter pH, warna, penguji..."
         >
           <div className="w-full">
-            <table className="w-full text-left text-xs table-fixed">
-              <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-                <tr>
-                  <th className="py-3 px-4 w-[16%]">Tanggal & Uji</th>
-                  <th className="py-3 px-4 w-[28%]">Parameter Fisik</th>
-                  <th className="py-3 px-4 w-[22%]">Organoleptik</th>
-                  <th className="py-3 px-4 w-[16%]">Stabilitas (40°C / RT / 4°C)</th>
-                  <th className="py-3 px-4 w-[12%]">Penguji</th>
-                  <th className="py-3 px-4 w-[6%] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh className="py-3 px-4 w-[16%]">Tanggal & Uji</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[28%]">Parameter Fisik</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[22%]">Organoleptik</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[16%]">Stabilitas (40°C / RT / 4°C)</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[12%]">Penguji</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[6%] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <DnaTableRow>
+                    <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                       Memuat hasil uji lab...
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : filteredResults.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <DnaTableRow>
+                    <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                       <FlaskConical className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                       Tidak ada data uji lab untuk formula ini.
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredResults.map((r) => {
                     const isAllStable = r.stability40C === "STABLE" && r.stabilityRT === "STABLE" && r.stability4C === "STABLE";
                     return (
-                      <tr key={r.id} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="py-3 px-4 truncate">
+                      <DnaTableRow key={r.id} className="hover:bg-slate-50/70 transition-colors">
+                        <DnaTd className="py-3 px-4 truncate">
                           <p className="font-semibold text-slate-900 text-xs truncate">
                             {r.testDate ? new Date(r.testDate).toLocaleDateString("id-ID") : "—"}
                           </p>
-                          <p className="text-[11px] text-slate-500 font-mono truncate">ID: {r.id.slice(0, 8)}</p>
-                        </td>
-                        <td className="py-3 px-4 truncate">
+                          <p className="text-[11px] text-slate-500 tabular-nums truncate">ID: {r.id.slice(0, 8)}</p>
+                        </DnaTd>
+                        <DnaTd className="py-3 px-4 truncate">
                           <p className="font-semibold text-slate-900 text-xs truncate">
                             pH: {r.actualPh || "—"} • Visk: {r.actualViscosity || "—"}
                           </p>
                           <p className="text-[11px] text-slate-500 truncate">
                             Densitas: {r.actualDensity || "—"} g/ml
                           </p>
-                        </td>
-                        <td className="py-3 px-4 truncate">
+                        </DnaTd>
+                        <DnaTd className="py-3 px-4 truncate">
                           <p className="font-medium text-slate-800 text-xs truncate">Warna: {r.colorResult || "—"}</p>
                           <p className="text-[11px] text-slate-500 truncate">
                             Aroma: {r.aromaResult || "—"} • {r.textureResult || "—"}
                           </p>
-                        </td>
-                        <td className="py-3 px-4 truncate">
+                        </DnaTd>
+                        <DnaTd className="py-3 px-4 truncate">
                           <div className="flex items-center gap-1.5">
                             <DnaBadge variant={r.stability40C === "STABLE" ? "success" : "danger"}>
                               40°: {r.stability40C === "STABLE" ? "OK" : "NO"}
@@ -321,12 +327,12 @@ export default function LabTestCenterPage() {
                           <p className="text-[10px] text-slate-500 mt-0.5">
                             {isAllStable ? "Semua Suhu Stabil" : "Ketidakstabilan Terdeteksi"}
                           </p>
-                        </td>
-                        <td className="py-3 px-4 truncate">
+                        </DnaTd>
+                        <DnaTd className="py-3 px-4 truncate">
                           <p className="font-medium text-slate-800 text-xs truncate">{r.tester?.fullName || "Analis Lab"}</p>
                           <p className="text-[11px] text-slate-400 truncate">QC Analis</p>
-                        </td>
-                        <td className="py-3 px-4 text-right">
+                        </DnaTd>
+                        <DnaTd className="py-3 px-4 text-right">
                           <DnaButton
                             variant="ghost"
                             size="sm"
@@ -338,13 +344,13 @@ export default function LabTestCenterPage() {
                           >
                             <Eye className="w-4 h-4 text-slate-600" />
                           </DnaButton>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       </div>
@@ -491,15 +497,15 @@ export default function LabTestCenterPage() {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">pH Aktual</span>
-                    <p className="font-mono font-bold text-slate-900 text-sm">{selectedResult.actualPh || "—"}</p>
+                    <p className="tabular-nums font-bold text-slate-900 text-sm">{selectedResult.actualPh || "—"}</p>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Viskositas</span>
-                    <p className="font-mono font-bold text-slate-900 text-sm">{selectedResult.actualViscosity || "—"} cps</p>
+                    <p className="tabular-nums font-bold text-slate-900 text-sm">{selectedResult.actualViscosity || "—"} cps</p>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Densitas</span>
-                    <p className="font-mono font-bold text-slate-900 text-sm">{selectedResult.actualDensity || "—"} g/ml</p>
+                    <p className="tabular-nums font-bold text-slate-900 text-sm">{selectedResult.actualDensity || "—"} g/ml</p>
                   </div>
                 </div>
 

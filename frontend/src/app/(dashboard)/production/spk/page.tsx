@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Printer,
   ArrowLeft,
@@ -11,9 +12,20 @@ import {
 import {
   DnaPageContainer,
   DnaPageHeader,
-  DnaButton
+  DnaButton,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  DnaEmptyState,
+  DnaErrorState,
+  DnaLoadingSkeleton,
 } from "@/components/dna";
 import Link from "next/link";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 
 interface SpkDocumentData {
   spkCode: string;
@@ -33,6 +45,7 @@ interface SpkDocumentData {
   upscaleResultKg: number;
   formulaCode: string;
   formulaVersion: string;
+  apjSignatureUrl: string | null;
   rawMaterials: {
     code: string;
     inciName: string;
@@ -52,85 +65,103 @@ interface SpkDocumentData {
   }[];
 }
 
-const SPK_DATABASE: Record<string, SpkDocumentData> = {
-  "SPK-2026-0042": {
-    spkCode: "SPK-2026-0042",
-    batchNumber: "BATCH-GLW-0909",
-    soCode: "SO-2026-0188",
-    issueDate: "2026-09-08",
-    targetDate: "2026-09-12",
-    customerName: "PT Cantika Jelita Nusantara",
-    brandName: "GlowGoddess",
-    productName: "Niacinamide 10% Brightening Serum",
-    bpomNa: "NA18241900124",
-    category: "Skincare",
-    nettoPerPcs: "30 ml",
-    targetQtyPcs: 5000,
-    baseResultKg: 150.0,
-    upscalePct: 3.0,
-    upscaleResultKg: 154.5,
-    formulaCode: "FORM-NIAC-V4.1",
-    formulaVersion: "Rev 4.1 (CPKB Approved)",
-    rawMaterials: [
-      { code: "RM-AQ-001", inciName: "Aqua (Deionized Water)", tradeName: "Purified Water", phase: "Fase A (Basis)", percentage: 76.5, standardKg: 114.75, upscaleKg: 118.19, lotWarehouse: "LOT-AQ-260901" },
-      { code: "RM-GLY-002", inciName: "Glycerin 99.7% USP", tradeName: "Glycerin USP", phase: "Fase A (Basis)", percentage: 5.0, standardKg: 7.50, upscaleKg: 7.73, lotWarehouse: "LOT-GLY-260815" },
-      { code: "RM-BTY-003", inciName: "Butylene Glycol", tradeName: "1,3-Butanediol", phase: "Fase A (Basis)", percentage: 3.0, standardKg: 4.50, upscaleKg: 4.64, lotWarehouse: "LOT-BG-260720" },
-      { code: "RM-HYA-004", inciName: "Sodium Hyaluronate", tradeName: "Hyaluronic Acid Multi-MW", phase: "Fase A (Basis)", percentage: 0.5, standardKg: 0.75, upscaleKg: 0.77, lotWarehouse: "LOT-HA-260810" },
-      { code: "RM-NIA-005", inciName: "Niacinamide (Vitamin B3)", tradeName: "Niacinamide PC Grade", phase: "Fase B (Zat Aktif)", percentage: 10.0, standardKg: 15.00, upscaleKg: 15.45, lotWarehouse: "LOT-NIA-260828" },
-      { code: "RM-ARB-006", inciName: "Alpha-Arbutin", tradeName: "Alpha-Arbutin Pure", phase: "Fase B (Zat Aktif)", percentage: 2.0, standardKg: 3.00, upscaleKg: 3.09, lotWarehouse: "LOT-ARB-260714" },
-      { code: "RM-ALN-007", inciName: "Allantoin", tradeName: "Allantoin USP", phase: "Fase B (Zat Aktif)", percentage: 0.2, standardKg: 0.30, upscaleKg: 0.31, lotWarehouse: "LOT-ALN-260630" },
-      { code: "RM-PRV-008", inciName: "Phenoxyethanol (and) Ethylhexylglycerin", tradeName: "Euxyl PE 9010", phase: "Fase C (Pengawet)", percentage: 0.8, standardKg: 1.20, upscaleKg: 1.24, lotWarehouse: "LOT-PE-260819" },
-      { code: "RM-DIS-009", inciName: "Disodium EDTA", tradeName: "Disodium EDTA", phase: "Fase A (Basis)", percentage: 0.05, standardKg: 0.075, upscaleKg: 0.08, lotWarehouse: "LOT-EDTA-260512" },
-      { code: "RM-XAN-010", inciName: "Xanthan Gum (Clear Grade)", tradeName: "Rheocare XGN", phase: "Fase A (Basis)", percentage: 0.35, standardKg: 0.525, upscaleKg: 0.54, lotWarehouse: "LOT-XAN-260805" },
-      { code: "RM-CA-011", inciName: "Citric Acid (pH Adjuster)", tradeName: "Citric Acid Anhydrous", phase: "Fase D (Adjuster)", percentage: 1.6, standardKg: 2.40, upscaleKg: 2.47, lotWarehouse: "LOT-CA-260701" }
-    ],
-    steps: [
-      { stepNo: 1, stage: "Penimbangan (Weighing)", instruction: "Timbang seluruh bahan di ruang timbang steril kelas C sesuai lot alokasi.", criticalParams: "Akurasi timbang ±0.1g, label identitas batch pada wadah", operatorRole: "Petugas Timbang & QC" },
-      { stepNo: 2, stage: "Mixing Fase A (Bejana 500L)", instruction: "Masukkan Deionized Water ke bejana. Dispersikan Xanthan Gum & Disodium EDTA dengan Agitator 800 RPM hingga larut sempurna.", criticalParams: "Suhu 30-35°C, Agitator 800 RPM, Waktu 20 menit", operatorRole: "Operator Mixing" },
-      { stepNo: 3, stage: "Mixing Fase B (Zat Aktif)", instruction: "Tambahkan Niacinamide 10% dan Alpha-Arbutin secara perlahan. Nyalakan homogenizer pada 2500 RPM sampai larutan jernih homogen.", criticalParams: "Suhu < 40°C, Homogenizer 2500 RPM, Waktu 15 menit", operatorRole: "Operator Mixing & IPC" },
-      { stepNo: 4, stage: "Finishing & Preservative", instruction: "Tambahkan Euxyl PE 9010. Lakukan pengukuran pH aktual (target 5.2 - 5.8) dan viskositas (target 1000 - 1500 cPs).", criticalParams: "Target pH: 5.4, Viskositas: 1200 cPs", operatorRole: "QC In-Process" },
-      { stepNo: 5, stage: "Filling Kemasan Primer", instruction: "Salurkan ruahan tersaring ke Line Filling Rotary 2. Isi ke botol pipet 30ml amber dengan uji tara berkala tiap 30 menit.", criticalParams: "Tare: 46.5g, Netto: 30.2g ±0.5g, Torsi: 1.8 Nm", operatorRole: "Operator Filling" },
-      { stepNo: 6, stage: "Packaging Sekunder", instruction: "Pasang inner folding box emboss gold, leaflet cara pakai, dan segel hologram keaslian. Masukkan ke master carton 48 pcs.", criticalParams: "Scan Barcode NA BPOM OK, Hologram Rapi", operatorRole: "Operator Packaging" },
-      { stepNo: 7, stage: "Rilis Karantina APJ", instruction: "Evaluasi hasil mikrobiologi 3x24 jam dan terbitkan Certificate of Analysis (CoA) rilis resmi.", criticalParams: "ALT < 10 CFU/g, Bebas Patogen, Tanda Tangan SIPA APJ", operatorRole: "Apoteker Penanggung Jawab (APJ)" }
-    ]
-  },
-  "SPK-2026-0043": {
-    spkCode: "SPK-2026-0043",
-    batchNumber: "BATCH-AURA-0910",
-    soCode: "SO-2026-0190",
-    issueDate: "2026-09-09",
-    targetDate: "2026-09-11",
-    customerName: "CV Aura Skin Estetika",
-    brandName: "AuraGlow",
-    productName: "Centella Asiatica Soothing Gel Cream",
-    bpomNa: "NA18240105581",
-    category: "Skincare",
-    nettoPerPcs: "50 gr",
-    targetQtyPcs: 3000,
-    baseResultKg: 150.0,
-    upscalePct: 5.0,
-    upscaleResultKg: 157.5,
-    formulaCode: "FORM-CENT-V3.2",
-    formulaVersion: "Rev 3.2 (Emulgel Base)",
-    rawMaterials: [
-      { code: "RM-AQ-001", inciName: "Aqua (Deionized Water)", tradeName: "Purified Water", phase: "Fase Air", percentage: 70.0, standardKg: 105.00, upscaleKg: 110.25, lotWarehouse: "LOT-AQ-260901" },
-      { code: "RM-CENT-002", inciName: "Centella Asiatica Leaf Extract", tradeName: "Cica Extract 10:1", phase: "Fase Aktif", percentage: 5.0, standardKg: 7.50, upscaleKg: 7.88, lotWarehouse: "LOT-CICA-260812" },
-      { code: "RM-CARB-003", inciName: "Carbomer 940", tradeName: "Carbopol 940", phase: "Fase Gelling", percentage: 0.8, standardKg: 1.20, upscaleKg: 1.26, lotWarehouse: "LOT-CARB-260719" },
-      { code: "RM-TEA-004", inciName: "Triethanolamine 99%", tradeName: "TEA Pure", phase: "Fase Netralisasi", percentage: 0.7, standardKg: 1.05, upscaleKg: 1.10, lotWarehouse: "LOT-TEA-260625" }
-    ],
-    steps: [
-      { stepNo: 1, stage: "Penimbangan", instruction: "Timbang bahan sesuai formula upscale 157.5 Kg.", criticalParams: "Validasi timbang", operatorRole: "Petugas Timbang" },
-      { stepNo: 2, stage: "Mixing & Emulsi", instruction: "Kembangkan Carbomer pada suhu 70°C, netralisasi dengan TEA hingga terbentuk gel bening.", criticalParams: "Suhu 70°C, pH 5.6", operatorRole: "Operator Mixing" },
-      { stepNo: 3, stage: "Filling Jar", instruction: "Pengisian ke acrylic pot jar 50gr.", criticalParams: "Netto 50.0g ±0.5g", operatorRole: "Operator Filling" },
-      { stepNo: 4, stage: "Rilis APJ", instruction: "Pelepasan batch resmi ke Gudang Produk Jadi WH-03.", criticalParams: "CoA terbit", operatorRole: "APJ" }
-    ]
-  }
-};
+const fmtDate = (value?: string | null) =>
+  value ? new Date(value).toISOString().slice(0, 10) : "—";
 
 export default function SpkPrintablePage() {
-  const [selectedSpkCode, setSelectedSpkCode] = useState<string>("SPK-2026-0042");
+  const [selectedBatchNo, setSelectedBatchNo] = useState<string>("");
 
-  const data = SPK_DATABASE[selectedSpkCode] || SPK_DATABASE["SPK-2026-0042"];
+  // Batch record list — the SPK/EBMR document is rendered from real batch data.
+  const {
+    data: batchRecords,
+    isLoading: listLoading,
+    isError: listError,
+    refetch: refetchList,
+  } = useQuery<any[]>({
+    queryKey: ["production-batch-records"],
+    queryFn: async () => {
+      const res = await api.get("/production/batch-records");
+      const body = unwrapResponse<any>(res);
+      return Array.isArray(body) ? body : (body?.data ?? []);
+    },
+  });
+
+  const activeBatchNo = selectedBatchNo || batchRecords?.[0]?.batchNo || "";
+
+  const {
+    data: detail,
+    isLoading: detailLoading,
+    isError: detailError,
+    refetch: refetchDetail,
+  } = useQuery<any>({
+    queryKey: ["production-batch-record-detail", activeBatchNo],
+    enabled: !!activeBatchNo,
+    queryFn: async () => {
+      const res = await api.get(`/production/batch-records/${activeBatchNo}/detail`);
+      return unwrapResponse<any>(res);
+    },
+  });
+
+  const data: SpkDocumentData | null = useMemo(() => {
+    if (!detail) return null;
+
+    const workOrder = detail.workOrders?.[0];
+    const schedules: any[] = workOrder?.schedules ?? [];
+    const lead = detail.so?.lead;
+
+    const materials = schedules.flatMap((sch) => sch.stepDetails ?? []);
+    const totalTheoretical = materials.reduce(
+      (sum, det) => sum + Number(det.qtyTheoretical || 0),
+      0,
+    );
+    const totalActual = materials.reduce(
+      (sum, det) => sum + Number(det.qtyActual || 0),
+      0,
+    );
+
+    return {
+      spkCode: detail.batchNo,
+      batchNumber: detail.batchNo,
+      soCode: detail.so?.soNumber || "—",
+      issueDate: fmtDate(detail.apjReleasedAt || detail.createdAt),
+      targetDate: fmtDate(workOrder?.targetCompletion),
+      customerName: lead?.clientName || "—",
+      brandName: lead?.brandName || "—",
+      productName: lead?.productInterest || "—",
+      bpomNa: "—",
+      category: "—",
+      nettoPerPcs: "—",
+      targetQtyPcs: Number(workOrder?.targetQty || 0),
+      baseResultKg: totalTheoretical,
+      upscalePct: 0,
+      upscaleResultKg: totalActual,
+      formulaCode: detail.formula?.code || detail.formula?.name || "—",
+      formulaVersion: detail.formula?.version
+        ? `Rev ${detail.formula.version}`
+        : "—",
+      apjSignatureUrl: detail.apjSignatureUrl ?? null,
+      rawMaterials: materials.map((det, idx) => ({
+        code: det.materialCode || det.material?.code || `RM-${idx + 1}`,
+        inciName: det.material?.name || "—",
+        tradeName: det.material?.name || "—",
+        phase: det.category || "RAW",
+        percentage:
+          totalTheoretical > 0
+            ? (Number(det.qtyTheoretical || 0) / totalTheoretical) * 100
+            : 0,
+        standardKg: Number(det.qtyTheoretical || 0),
+        upscaleKg: Number(det.qtyActual || 0),
+        lotWarehouse: det.material?.batchNumber || "—",
+      })),
+      steps: schedules.map((sch, idx) => ({
+        stepNo: idx + 1,
+        stage: `${sch.stage} · ${sch.scheduleNumber}`,
+        instruction: `Target ${Number(sch.targetQty || 0).toLocaleString()} unit pada mesin ${sch.machine?.name || "—"}.`,
+        criticalParams: `Hasil tercatat: ${Number(sch.resultQty || 0).toLocaleString()} unit`,
+        operatorRole: sch.status || "SCHEDULED",
+      })),
+    };
+  }, [detail]);
 
   const handlePrint = () => {
     window.print();
@@ -148,12 +179,12 @@ export default function SpkPrintablePage() {
               <span>Official CPKB Document</span>
             </div>
           }
-          tabs={[
-            { id: "SPK-2026-0042", label: "SPK-0042 (Niacinamide)" },
-            { id: "SPK-2026-0043", label: "SPK-0043 (Centella)" }
-          ]}
-          activeTab={selectedSpkCode}
-          onTabChange={setSelectedSpkCode}
+          tabs={(batchRecords ?? []).slice(0, 6).map((b) => ({
+            id: b.batchNo,
+            label: b.batchNo,
+          }))}
+          activeTab={activeBatchNo}
+          onTabChange={setSelectedBatchNo}
           actions={
             <div className="flex items-center gap-2">
               <Link href="/production/work-orders">
@@ -171,7 +202,23 @@ export default function SpkPrintablePage() {
         />
       </div>
 
-      {/* PRINTABLE EBMR DOCUMENT WRAPPER */}
+      {listLoading || detailLoading ? (
+        <DnaLoadingSkeleton rows={6} className="max-w-5xl mx-auto" />
+      ) : listError || detailError ? (
+        <DnaErrorState
+          title="Gagal Memuat Batch Record"
+          message="Dokumen SPK tidak dapat dimuat dari server."
+          onRetry={() => (listError ? refetchList() : refetchDetail())}
+          className="max-w-5xl mx-auto"
+        />
+      ) : !data ? (
+        <DnaEmptyState
+          title="Belum Ada Batch Record Dirilis"
+          description="Dokumen SPK/EBMR dibuat otomatis dari batch record produksi. Belum ada batch record yang tersedia di sistem."
+          className="max-w-5xl mx-auto"
+        />
+      ) : (
+      /* PRINTABLE EBMR DOCUMENT WRAPPER */
       <div className="bg-white border border-slate-300 rounded-xl p-8 max-w-5xl mx-auto text-slate-900 shadow-sm print:shadow-none print:border-none print:p-0 print:m-0">
         {/* KOP SURAT RESMI PABRIK MAKLON */}
         <div className="border-b-2 border-slate-900 pb-4 mb-6 flex items-start justify-between">
@@ -192,8 +239,8 @@ export default function SpkPrintablePage() {
 
           <div className="text-right space-y-1">
             <div className="text-sm font-black text-slate-900 uppercase">SURAT PERINTAH KERJA (SPK)</div>
-            <div className="text-[10px] font-mono text-slate-600">BATCH MANUFACTURING RECORD (EBMR)</div>
-            <div className="inline-block px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-[10px] font-mono font-bold">
+            <div className="text-[10px] tabular-nums text-slate-600">BATCH MANUFACTURING RECORD (EBMR)</div>
+            <div className="inline-block px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-[10px] tabular-nums font-bold">
               {data.spkCode}
             </div>
           </div>
@@ -203,7 +250,7 @@ export default function SpkPrintablePage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs mb-6">
           <div>
             <div className="text-[10px] text-slate-500 font-bold uppercase">Nomor Batch Produksi</div>
-            <div className="font-extrabold text-blue-800 font-mono text-sm">{data.batchNumber}</div>
+            <div className="font-extrabold text-blue-800 tabular-nums text-sm">{data.batchNumber}</div>
           </div>
           <div>
             <div className="text-[10px] text-slate-500 font-bold uppercase">No. Sales Order</div>
@@ -224,7 +271,7 @@ export default function SpkPrintablePage() {
           </div>
           <div className="col-span-2 pt-2 border-t border-slate-200">
             <div className="text-[10px] text-slate-500 font-bold uppercase">Nama Produk & Nomor Notifikasi BPOM</div>
-            <div className="font-bold text-slate-900">{data.productName} • <span className="font-mono text-blue-700">{data.bpomNa}</span></div>
+            <div className="font-bold text-slate-900">{data.productName} • <span className="tabular-nums text-blue-700">{data.bpomNa}</span></div>
           </div>
 
           <div className="pt-2 border-t border-slate-200">
@@ -252,51 +299,51 @@ export default function SpkPrintablePage() {
               <FlaskConical className="w-4 h-4 text-blue-700" />
               <span>1. Formula Komposisi & Penimbangan Bahan (BOM Upscaled)</span>
             </h2>
-            <span className="text-[10px] font-mono text-slate-500">Formula Ref: {data.formulaCode} ({data.formulaVersion})</span>
+            <span className="text-[10px] tabular-nums text-slate-500">Formula Ref: {data.formulaCode} ({data.formulaVersion})</span>
           </div>
 
-          <table className="w-full text-left text-[11px] border border-slate-300">
-            <thead className="bg-slate-100 text-slate-800 font-bold uppercase text-[10px]">
-              <tr>
-                <th className="px-2.5 py-2 border-b border-r border-slate-300">Kode</th>
-                <th className="px-2.5 py-2 border-b border-r border-slate-300">Nama INCI / Kimia</th>
-                <th className="px-2.5 py-2 border-b border-r border-slate-300">Fase</th>
-                <th className="px-2.5 py-2 border-b border-r border-slate-300 text-right">%</th>
-                <th className="px-2.5 py-2 border-b border-r border-slate-300 text-right">Standar (Kg)</th>
-                <th className="px-2.5 py-2 border-b border-r border-slate-300 text-right bg-blue-50/60 font-black">Upscale (Kg)</th>
-                <th className="px-2.5 py-2 border-b border-r border-slate-300">Lot Gudang</th>
-                <th className="px-2.5 py-2 border-b border-slate-300 text-center">Paraf Timbang</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="px-2.5 py-2 border-b border-r border-slate-300">Kode</DnaTh>
+                <DnaTh className="px-2.5 py-2 border-b border-r border-slate-300">Nama INCI / Kimia</DnaTh>
+                <DnaTh className="px-2.5 py-2 border-b border-r border-slate-300">Fase</DnaTh>
+                <DnaTh className="px-2.5 py-2 border-b border-r border-slate-300 text-right">%</DnaTh>
+                <DnaTh className="px-2.5 py-2 border-b border-r border-slate-300 text-right">Standar (Kg)</DnaTh>
+                <DnaTh className="px-2.5 py-2 border-b border-r border-slate-300 text-right bg-blue-50/60 font-black">Upscale (Kg)</DnaTh>
+                <DnaTh className="px-2.5 py-2 border-b border-r border-slate-300">Lot Gudang</DnaTh>
+                <DnaTh className="px-2.5 py-2 border-b border-slate-300 text-center">Paraf Timbang</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {data.rawMaterials.map((rm, idx) => (
-                <tr key={idx} className="hover:bg-slate-50">
-                  <td className="px-2.5 py-1.5 border-r border-slate-200 font-mono text-[10px]">{rm.code}</td>
-                  <td className="px-2.5 py-1.5 border-r border-slate-200">
+                <DnaTableRow key={idx} className="hover:bg-slate-50">
+                  <DnaTd className="px-2.5 py-1.5 border-r border-slate-200 tabular-nums text-[10px]">{rm.code}</DnaTd>
+                  <DnaTd className="px-2.5 py-1.5 border-r border-slate-200">
                     <div className="font-semibold text-slate-900">{rm.tradeName}</div>
                     <div className="text-[9px] text-slate-500 italic">{rm.inciName}</div>
-                  </td>
-                  <td className="px-2.5 py-1.5 border-r border-slate-200 font-medium text-slate-700">{rm.phase}</td>
-                  <td className="px-2.5 py-1.5 border-r border-slate-200 text-right font-medium">{rm.percentage.toFixed(2)}%</td>
-                  <td className="px-2.5 py-1.5 border-r border-slate-200 text-right text-slate-600">{rm.standardKg.toFixed(3)}</td>
-                  <td className="px-2.5 py-1.5 border-r border-slate-200 text-right font-bold text-blue-900 bg-blue-50/40">
+                  </DnaTd>
+                  <DnaTd className="px-2.5 py-1.5 border-r border-slate-200 font-medium text-slate-700">{rm.phase}</DnaTd>
+                  <DnaTd className="px-2.5 py-1.5 border-r border-slate-200 text-right font-medium">{rm.percentage.toFixed(2)}%</DnaTd>
+                  <DnaTd className="px-2.5 py-1.5 border-r border-slate-200 text-right text-slate-600">{rm.standardKg.toFixed(3)}</DnaTd>
+                  <DnaTd className="px-2.5 py-1.5 border-r border-slate-200 text-right font-bold text-blue-900 bg-blue-50/40">
                     {rm.upscaleKg.toFixed(3)}
-                  </td>
-                  <td className="px-2.5 py-1.5 border-r border-slate-200 font-mono text-[10px] text-slate-600">{rm.lotWarehouse}</td>
-                  <td className="px-2.5 py-1.5 text-center text-slate-300 font-mono">______</td>
-                </tr>
+                  </DnaTd>
+                  <DnaTd className="px-2.5 py-1.5 border-r border-slate-200 tabular-nums text-[10px] text-slate-600">{rm.lotWarehouse}</DnaTd>
+                  <DnaTd className="px-2.5 py-1.5 text-center text-slate-300 tabular-nums">______</DnaTd>
+                </DnaTableRow>
               ))}
-              <tr className="bg-slate-100 font-bold text-[11px]">
-                <td colSpan={3} className="px-2.5 py-2 border-r border-slate-300 text-right uppercase">Total Formula</td>
-                <td className="px-2.5 py-2 border-r border-slate-300 text-right">100.00%</td>
-                <td className="px-2.5 py-2 border-r border-slate-300 text-right">{data.baseResultKg.toFixed(2)} Kg</td>
-                <td className="px-2.5 py-2 border-r border-slate-300 text-right font-black text-blue-900 bg-blue-100/60">
+              <DnaTableRow className="bg-slate-100 font-bold text-[11px]">
+                <DnaTd colSpan={3} className="px-2.5 py-2 border-r border-slate-300 text-right uppercase">Total Formula</DnaTd>
+                <DnaTd className="px-2.5 py-2 border-r border-slate-300 text-right">100.00%</DnaTd>
+                <DnaTd className="px-2.5 py-2 border-r border-slate-300 text-right">{data.baseResultKg.toFixed(2)} Kg</DnaTd>
+                <DnaTd className="px-2.5 py-2 border-r border-slate-300 text-right font-black text-blue-900 bg-blue-100/60">
                   {data.upscaleResultKg.toFixed(2)} Kg
-                </td>
-                <td colSpan={2} className="px-2.5 py-2 text-center text-[10px] text-slate-500">Toleransi loss timbang max ±0.05%</td>
-              </tr>
-            </tbody>
-          </table>
+                </DnaTd>
+                <DnaTd colSpan={2} className="px-2.5 py-2 text-center text-[10px] text-slate-500">Toleransi loss timbang max ±0.05%</DnaTd>
+              </DnaTableRow>
+            </DnaTableBody>
+          </DnaTable>
         </div>
 
         {/* TABEL 2: SOP & LEMBAR VERIFIKASI TAHAPAN CPKB */}
@@ -306,34 +353,34 @@ export default function SpkPrintablePage() {
             <span>2. Instruksi Manufaktur & Lembar Verifikasi Tahapan CPKB</span>
           </h2>
 
-          <table className="w-full text-left text-[11px] border border-slate-300">
-            <thead className="bg-slate-100 text-slate-800 font-bold uppercase text-[10px]">
-              <tr>
-                <th className="px-2 py-2 border-b border-r border-slate-300 w-8 text-center">#</th>
-                <th className="px-2.5 py-2 border-b border-r border-slate-300 w-36">Tahapan Proses</th>
-                <th className="px-2.5 py-2 border-b border-r border-slate-300">Instruksi Kerja & Parameter Kritis</th>
-                <th className="px-2.5 py-2 border-b border-r border-slate-300 w-36">Penanggung Jawab</th>
-                <th className="px-2.5 py-2 border-b border-slate-300 w-28 text-center">Paraf & Jam</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="px-2 py-2 border-b border-r border-slate-300 w-8 text-center">#</DnaTh>
+                <DnaTh className="px-2.5 py-2 border-b border-r border-slate-300 w-36">Tahapan Proses</DnaTh>
+                <DnaTh className="px-2.5 py-2 border-b border-r border-slate-300">Instruksi Kerja & Parameter Kritis</DnaTh>
+                <DnaTh className="px-2.5 py-2 border-b border-r border-slate-300 w-36">Penanggung Jawab</DnaTh>
+                <DnaTh className="px-2.5 py-2 border-b border-slate-300 w-28 text-center">Paraf & Jam</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {data.steps.map((st) => (
-                <tr key={st.stepNo} className="hover:bg-slate-50">
-                  <td className="px-2 py-2 border-r border-slate-200 text-center font-bold text-slate-600">{st.stepNo}</td>
-                  <td className="px-2.5 py-2 border-r border-slate-200 font-bold text-slate-900">{st.stage}</td>
-                  <td className="px-2.5 py-2 border-r border-slate-200">
+                <DnaTableRow key={st.stepNo} className="hover:bg-slate-50">
+                  <DnaTd className="px-2 py-2 border-r border-slate-200 text-center font-bold text-slate-600">{st.stepNo}</DnaTd>
+                  <DnaTd className="px-2.5 py-2 border-r border-slate-200 font-bold text-slate-900">{st.stage}</DnaTd>
+                  <DnaTd className="px-2.5 py-2 border-r border-slate-200">
                     <div className="text-slate-800 font-medium">{st.instruction}</div>
                     <div className="text-[10px] text-indigo-800 font-semibold mt-0.5">Spesifikasi: {st.criticalParams}</div>
-                  </td>
-                  <td className="px-2.5 py-2 border-r border-slate-200 font-medium text-slate-700 text-[10px]">{st.operatorRole}</td>
-                  <td className="px-2.5 py-2 text-center text-slate-300 font-mono text-[10px]">
+                  </DnaTd>
+                  <DnaTd className="px-2.5 py-2 border-r border-slate-200 font-medium text-slate-700 text-[10px]">{st.operatorRole}</DnaTd>
+                  <DnaTd className="px-2.5 py-2 text-center text-slate-300 tabular-nums text-[10px]">
                     <div>[ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</div>
                     <div className="text-[9px] text-slate-400 mt-0.5">___:___ WIB</div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
 
         {/* LEMBAR TANDA TANGAN & PENGESAHAN AKHIR */}
@@ -345,34 +392,35 @@ export default function SpkPrintablePage() {
           <div className="grid grid-cols-4 gap-4 text-center">
             <div className="p-2 bg-white border border-slate-200 rounded">
               <div className="text-[10px] text-slate-500 font-semibold uppercase">Dibuat Oleh (R&D / PPC)</div>
-              <div className="h-12 flex items-center justify-center text-slate-300 font-mono">[ TTD ]</div>
-              <div className="font-bold text-slate-800">Hendra Wijaya</div>
-              <div className="text-[9px] text-slate-400">PPC & Formulator</div>
+              <div className="h-12 flex items-center justify-center text-slate-300 tabular-nums">[ TTD ]</div>
+              <div className="font-bold text-slate-400">_____________</div>
+              <div className="text-[9px] text-slate-400">PPC &amp; Formulator</div>
             </div>
 
             <div className="p-2 bg-white border border-slate-200 rounded">
               <div className="text-[10px] text-slate-500 font-semibold uppercase">Disetujui (Kepala Produksi)</div>
-              <div className="h-12 flex items-center justify-center text-slate-300 font-mono">[ TTD ]</div>
-              <div className="font-bold text-slate-800">Budi Santoso</div>
+              <div className="h-12 flex items-center justify-center text-slate-300 tabular-nums">[ TTD ]</div>
+              <div className="font-bold text-slate-400">_____________</div>
               <div className="text-[9px] text-slate-400">Plant Production Head</div>
             </div>
 
             <div className="p-2 bg-white border border-slate-200 rounded">
               <div className="text-[10px] text-slate-500 font-semibold uppercase">Diperiksa (In-Process QC)</div>
-              <div className="h-12 flex items-center justify-center text-slate-300 font-mono">[ TTD ]</div>
-              <div className="font-bold text-slate-800">Ahmad Fauzi</div>
+              <div className="h-12 flex items-center justify-center text-slate-300 tabular-nums">[ TTD ]</div>
+              <div className="font-bold text-slate-400">_____________</div>
               <div className="text-[9px] text-slate-400">QA / QC Inspector</div>
             </div>
 
             <div className="p-2 bg-emerald-50 border border-emerald-200 rounded">
               <div className="text-[10px] text-emerald-800 font-bold uppercase">Rilis Akhir (APJ)</div>
-              <div className="h-12 flex items-center justify-center text-emerald-400 font-mono">[ TTD & STEMPEL ]</div>
-              <div className="font-bold text-emerald-900">apt. Siti Rahmawati, S.Farm</div>
-              <div className="text-[9px] text-emerald-700 font-mono">SIPA: 19920815/SIPA_32.73/2022</div>
+              <div className="h-12 flex items-center justify-center text-emerald-400 tabular-nums">[ TTD &amp; STEMPEL ]</div>
+              <div className="font-bold text-emerald-900">{data.apjSignatureUrl ? "Sudah dirilis (tanda tangan digital terlampir)" : "_____________"}</div>
+              <div className="text-[9px] text-emerald-700 tabular-nums">Identitas APJ tidak diekspos endpoint batch record</div>
             </div>
           </div>
         </div>
       </div>
+      )}
     </DnaPageContainer>
   );
 }

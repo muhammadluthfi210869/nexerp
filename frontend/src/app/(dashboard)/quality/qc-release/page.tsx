@@ -28,7 +28,13 @@ import {
   DnaDetailDrawer,
   DnaModal,
   DnaInput,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import Link from "next/link";
 
@@ -228,53 +234,53 @@ export default function QcReleasePage() {
         searchPlaceholder="Cari No. Batch, SPK, Produk, Brand, Pelanggan..."
       >
         <div className="w-full">
-          <table className="w-full text-left text-xs table-fixed">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-4 w-[18%]">No. Batch & SPK</th>
-                <th className="py-3 px-4 w-[24%]">Produk & Brand</th>
-                <th className="py-3 px-4 w-[22%]">Output & Fisika-Kimia</th>
-                <th className="py-3 px-4 w-[18%]">Uji Mikrobiologi</th>
-                <th className="py-3 px-4 w-[12%]">Status & APJ</th>
-                <th className="py-3 px-4 w-[6%] text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-[18%]">No. Batch & SPK</DnaTh>
+                <DnaTh className="py-3 px-4 w-[24%]">Produk & Brand</DnaTh>
+                <DnaTh className="py-3 px-4 w-[22%]">Output & Fisika-Kimia</DnaTh>
+                <DnaTh className="py-3 px-4 w-[18%]">Uji Mikrobiologi</DnaTh>
+                <DnaTh className="py-3 px-4 w-[12%]">Status & APJ</DnaTh>
+                <DnaTh className="py-3 px-4 w-[6%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     Memuat antrian karantina QC...
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : filteredBatches.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     <ShieldCheck className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada batch karantina yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredBatches.map((item) => {
                   const statusInfo = STATUS_CONFIG[item.status] || { label: item.status, badge: "default" };
                   return (
-                    <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 truncate">
-                        <p className="font-mono text-xs font-bold text-blue-700 truncate">{item.batchNumber}</p>
-                        <p className="text-[11px] text-slate-500 font-mono mt-0.5 truncate">{item.spkCode}</p>
-                      </td>
-                      <td className="py-3 px-4 truncate">
+                    <DnaTableRow key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="tabular-nums text-xs font-bold text-blue-700 truncate">{item.batchNumber}</p>
+                        <p className="text-[11px] text-slate-500 tabular-nums mt-0.5 truncate">{item.spkCode}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
                         <p className="font-semibold text-slate-900 text-xs truncate">{item.productName}</p>
                         <p className="text-[11px] text-slate-500 truncate">{item.customerName} ({item.brandName})</p>
-                      </td>
-                      <td className="py-3 px-4 truncate">
-                        <p className="font-mono font-bold text-slate-900 text-xs truncate">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="tabular-nums font-bold text-slate-900 text-xs truncate">
                           {item.outputQty.toLocaleString()} Pcs
                         </p>
                         <p className="text-[11px] text-slate-500 truncate">
                           pH: {item.phValue} • Visk: {item.viscosityCps} cPs
                         </p>
-                      </td>
-                      <td className="py-3 px-4 truncate">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
                         <div className="flex items-center gap-1">
                           <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${item.microbiologyPass ? "text-emerald-600" : "text-amber-500"}`} />
                           <span className={`font-semibold text-xs truncate ${item.microbiologyPass ? "text-emerald-700" : "text-amber-700"}`}>
@@ -282,30 +288,46 @@ export default function QcReleasePage() {
                           </span>
                         </div>
                         <p className="text-[10px] text-slate-400 mt-0.5">Uji ALT & Patogen</p>
-                      </td>
-                      <td className="py-3 px-4 truncate">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
                         <DnaBadge variant={statusInfo.badge}>{statusInfo.label}</DnaBadge>
-                        <p className="text-[10px] font-mono text-slate-500 mt-0.5 truncate">{item.coaNumber || "Belum ttd"}</p>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <DnaButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setDetailModalItem(item);
-                            setIsDetailDrawerOpen(true);
-                          }}
-                          title="Lihat Detail Hasil QC"
-                        >
-                          <Eye className="w-4 h-4 text-slate-600" />
-                        </DnaButton>
-                      </td>
-                    </tr>
+                        <p className="text-[10px] tabular-nums text-slate-500 mt-0.5 truncate">{item.coaNumber || "Belum ttd"}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {item.status === "QUARANTINE" && (
+                            <DnaButton
+                              variant="primary"
+                              size="sm"
+                              onClick={() => {
+                                setReleaseModalItem(item);
+                                setAgreeCheck(false);
+                              }}
+                              title="Proses Pelepasan & Rilis APJ"
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5 mr-1" />
+                              Rilis APJ
+                            </DnaButton>
+                          )}
+                          <DnaButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setDetailModalItem(item);
+                              setIsDetailDrawerOpen(true);
+                            }}
+                            title="Lihat Detail Hasil QC"
+                          >
+                            <Eye className="w-4 h-4 text-slate-600" />
+                          </DnaButton>
+                        </div>
+                      </DnaTd>
+                    </DnaTableRow>
                   );
                 })
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -334,6 +356,9 @@ export default function QcReleasePage() {
           <div className="space-y-4 text-xs">
             <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg space-y-1">
               <div className="font-bold text-emerald-950">{releaseModalItem.productName}</div>
+              <p className="text-emerald-900 font-semibold">
+                Verifikasi Pelepasan Batch Sesuai Regulasi CPKB
+              </p>
               <p className="text-emerald-800">
                 Kuantitas Rilis: <span className="font-bold">{releaseModalItem.outputQty.toLocaleString()} Pcs</span> ke Gudang Produk Jadi (WH-03)
               </p>
@@ -394,8 +419,8 @@ export default function QcReleasePage() {
               <div className="space-y-4 text-xs">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-mono font-bold text-blue-700">{detailModalItem.batchNumber}</span>
-                    <span className="font-mono text-slate-500">{detailModalItem.spkCode}</span>
+                    <span className="tabular-nums font-bold text-blue-700">{detailModalItem.batchNumber}</span>
+                    <span className="tabular-nums text-slate-500">{detailModalItem.spkCode}</span>
                   </div>
                   <p className="font-bold text-slate-900 text-sm">{detailModalItem.productName}</p>
                   <p className="text-slate-600">{detailModalItem.customerName} ({detailModalItem.brandName})</p>
@@ -404,17 +429,17 @@ export default function QcReleasePage() {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">pH Terukur</span>
-                    <p className="font-mono font-bold text-slate-900 text-sm">{detailModalItem.phValue}</p>
+                    <p className="tabular-nums font-bold text-slate-900 text-sm">{detailModalItem.phValue}</p>
                     <span className="text-[10px] text-slate-400">Spec: {detailModalItem.phRange}</span>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Viskositas</span>
-                    <p className="font-mono font-bold text-slate-900 text-sm">{detailModalItem.viscosityCps} cPs</p>
+                    <p className="tabular-nums font-bold text-slate-900 text-sm">{detailModalItem.viscosityCps} cPs</p>
                     <span className="text-[10px] text-slate-400">Spindle 4 @30 RPM</span>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Specific Gravity</span>
-                    <p className="font-mono font-bold text-slate-900 text-sm">{detailModalItem.specificGravity}</p>
+                    <p className="tabular-nums font-bold text-slate-900 text-sm">{detailModalItem.specificGravity}</p>
                     <span className="text-[10px] text-slate-400">Piknometer</span>
                   </div>
                 </div>
@@ -451,11 +476,11 @@ export default function QcReleasePage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">No. SIPA:</span>
-                    <span className="font-mono text-slate-700">{detailModalItem.apjSipa || "—"}</span>
+                    <span className="tabular-nums text-slate-700">{detailModalItem.apjSipa || "—"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">No. Sertifikat CoA:</span>
-                    <span className="font-mono font-bold text-emerald-700">{detailModalItem.coaNumber || "—"}</span>
+                    <span className="tabular-nums font-bold text-emerald-700">{detailModalItem.coaNumber || "—"}</span>
                   </div>
                 </div>
               </div>

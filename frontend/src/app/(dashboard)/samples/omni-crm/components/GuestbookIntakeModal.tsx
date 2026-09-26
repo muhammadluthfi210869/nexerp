@@ -149,7 +149,7 @@ export const GuestbookIntakeModal: React.FC<GuestbookIntakeModalProps> = ({
               <span className="text-slate-500 block text-[11px] font-semibold">
                 Prediksi Alokasi Sales (Round-Robin {(state.busDevs || []).length} BusDev):
               </span>
-              <strong className="text-blue-700 font-mono font-bold">
+              <strong className="text-blue-700 tabular-nums font-bold">
                 {targetPipeline.roundRobin
                   ? nextEligibleBusDev
                     ? `${nextEligibleBusDev.name} (${nextEligibleBusDev.formattedPhone || nextEligibleBusDev.phone})`
@@ -226,7 +226,7 @@ export const GuestbookIntakeModal: React.FC<GuestbookIntakeModalProps> = ({
                   placeholder="Contoh: 628123456789"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 tabular-nums focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
                 />
               </div>
             </div>
@@ -330,7 +330,7 @@ export const GuestbookIntakeModal: React.FC<GuestbookIntakeModalProps> = ({
                 placeholder="Contoh: 30000000"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 tabular-nums focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
               />
             </div>
           </div>

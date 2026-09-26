@@ -6,7 +6,22 @@ import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaStatCard, DnaBadge, DnaDataTableCard, DnaModal, DnaTextarea, DnaSelect, DnaTabNav, DnaCell } from "@/components/dna";
+import {
+  DnaStatCard,
+  DnaBadge,
+  DnaDataTableCard,
+  DnaModal,
+  DnaTextarea,
+  DnaSelect,
+  DnaTabNav,
+  DnaCell,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import {
   ClipboardList,
   FlaskConical,
@@ -149,21 +164,21 @@ function OperationsContent() {
             </div>
           }
         >
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[10px] font-bold tracking-wider">
-                <th className="py-3 px-4">Schedule</th>
-                <th className="py-3 px-4">Work Order</th>
-                <th className="py-3 px-4 text-center">Progress</th>
-                <th className="py-3 px-4 text-center">Aging</th>
-                <th className="py-3 px-4 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[10px] font-bold tracking-wider">
+                <DnaTh className="py-3 px-4">Schedule</DnaTh>
+                <DnaTh className="py-3 px-4">Work Order</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Progress</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Aging</DnaTh>
+                <DnaTh className="py-3 px-4 text-right">Action</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {items.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-xs text-slate-400">No {stageName.toLowerCase()} schedules</td>
-                </tr>
+                <DnaTableRow>
+                  <DnaTd colSpan={5} className="py-8 text-center text-xs text-slate-400">No {stageName.toLowerCase()} schedules</DnaTd>
+                </DnaTableRow>
               ) : (
                 items.map((item: any) => {
                   const status = item.status === "COMPLETED" || item.status === "DONE" ? "DONE"
@@ -172,35 +187,35 @@ function OperationsContent() {
                   const aging = getAgingDays(item.startTime);
 
                   return (
-                    <tr key={item.id} className="hover:bg-slate-50/80">
-                      <td className="py-3 px-4">
+                    <DnaTableRow key={item.id} className="hover:bg-slate-50/80">
+                      <DnaTd className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center", config.bg)}>
                             <Icon className={cn("h-4 w-4", config.color)} />
                           </div>
                           <span className="text-xs font-bold text-slate-900">{item.scheduleCode || item.scheduleNumber || item.id?.slice(0, 8)}</span>
                         </div>
-                      </td>
-                      <td className="py-3 px-4 text-xs text-slate-600">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-xs text-slate-600">
                         {item.workOrder?.woNumber || item.woNumber || "-"}
-                      </td>
-                      <td className="py-3 px-4 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
                         <DnaSelect
                           value={status}
                           onChange={(val) => val && handleProgressClick(item, val)}
                           options={STAGE_OPTIONS}
                           className="w-[150px] mx-auto text-[9px] font-bold uppercase h-8"
                         />
-                      </td>
-                      <td className="py-3 px-4 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <Clock className={cn("h-3 w-3", aging > 3 ? "text-amber-500" : "text-slate-300")} />
                           <span className={cn("text-xs font-bold", aging > 3 ? "text-amber-600" : "text-slate-500")}>
                             {aging > 0 ? `${aging}d` : "—"}
                           </span>
                         </div>
-                      </td>
-                      <td className="py-3 px-4 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         {status !== "DONE" && (
                           <DnaButton
                             variant="primary"
@@ -211,13 +226,13 @@ function OperationsContent() {
                             {status === "NOT_STARTED" ? "Start" : "Complete"}
                           </DnaButton>
                         )}
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   );
                 })
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </DnaDataTableCard>
       </div>
     );
@@ -262,52 +277,52 @@ function OperationsContent() {
                 </div>
               }
             >
-              <table className="w-full text-left border-collapse text-[12px]">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[10px] font-bold tracking-wider">
-                    <th className="py-3 px-4">WO</th>
-                    <th className="py-3 px-4">Produk</th>
-                    <th className="py-3 px-4">Stage</th>
-                    <th className="py-3 px-4 text-center">Progress</th>
-                    <th className="py-3 px-4 text-right">Target</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[10px] font-bold tracking-wider">
+                    <DnaTh className="py-3 px-4">WO</DnaTh>
+                    <DnaTh className="py-3 px-4">Produk</DnaTh>
+                    <DnaTh className="py-3 px-4">Stage</DnaTh>
+                    <DnaTh className="py-3 px-4 text-center">Progress</DnaTh>
+                    <DnaTh className="py-3 px-4 text-right">Target</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {woList.slice(0, 15).map((wo: any) => (
-                    <tr key={wo.id} className="hover:bg-slate-50/80">
-                      <td className="py-3 px-4">
+                    <DnaTableRow key={wo.id} className="hover:bg-slate-50/80">
+                      <DnaTd className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center">
                             <Factory className="h-4 w-4 text-slate-500" />
                           </div>
                           <span className="text-xs font-bold text-slate-900">{wo.woNumber || wo.id?.slice(0, 8)}</span>
                         </div>
-                      </td>
-                      <td className="py-3 px-4 text-xs text-slate-600">{wo.productName || wo.lead?.clientName || "-"}</td>
-                      <td className="py-3 px-4">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-xs text-slate-600">{wo.productName || wo.lead?.clientName || "-"}</DnaTd>
+                      <DnaTd className="py-3 px-4">
                         <DnaBadge status={wo.stage === "FINISHED_GOODS" ? "success" : wo.status === "IN_PROGRESS" ? "warning" : "default"}>
                           {wo.stage || wo.status || "PLANNING"}
                         </DnaBadge>
-                      </td>
-                      <td className="py-3 px-4 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
                         {wo.stage === "FINISHED_GOODS" || wo.status === "DONE" ? (
-                          <DnaBadge status="success">Done</DnaBadge>
+                          <DnaBadge variant="success">Done</DnaBadge>
                         ) : wo.status === "IN_PROGRESS" ? (
-                          <DnaBadge status="warning">In Progress</DnaBadge>
+                          <DnaBadge variant="warning">In Progress</DnaBadge>
                         ) : (
-                          <DnaBadge status="default">Not Started</DnaBadge>
+                          <DnaBadge variant="default">Not Started</DnaBadge>
                         )}
-                      </td>
-                      <td className="py-3 px-4 text-right text-xs text-slate-600">{wo.targetQty || "-"}</td>
-                    </tr>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right text-xs text-slate-600">{wo.targetQty || "-"}</DnaTd>
+                    </DnaTableRow>
                   ))}
                   {woList.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-xs text-slate-400">Belum ada work orders</td>
-                    </tr>
+                    <DnaTableRow>
+                      <DnaTd colSpan={5} className="py-8 text-center text-xs text-slate-400">Belum ada work orders</DnaTd>
+                    </DnaTableRow>
                   )}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </DnaDataTableCard>
           </div>
         )}

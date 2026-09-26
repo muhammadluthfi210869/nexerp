@@ -28,6 +28,12 @@ import {
   DnaLoadingSkeleton,
   DnaErrorState,
   DnaEmptyState,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface ApBill {
@@ -264,8 +270,8 @@ export default function BayarPembelianPage() {
           {bankBalances.map((acc) => (
             <div key={acc.accountCode} className="bg-slate-50/80 border border-slate-200/80 rounded-xl px-3 py-2 min-w-[160px]">
               <div className="text-[11px] font-semibold text-slate-700 truncate">{acc.accountName}</div>
-              <div className="text-[10px] text-slate-400 font-mono">{acc.accountNumber}</div>
-              <div className="text-[12px] font-bold font-mono text-slate-900 mt-0.5">
+              <div className="text-[10px] text-slate-400 tabular-nums">{acc.accountNumber}</div>
+              <div className="text-[12px] font-bold tabular-nums text-slate-900 mt-0.5">
                 Rp {acc.balance.toLocaleString("id-ID")}
               </div>
             </div>
@@ -325,52 +331,52 @@ export default function BayarPembelianPage() {
           searchPlaceholder="Cari No Faktur, PO, supplier..."
         >
           <div className="w-full">
-            <table className="w-full text-left border-collapse table-fixed text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider select-none">
-                <tr>
-                  <th className="py-3 px-4 w-[20%]">NO. FAKTUR & PO</th>
-                  <th className="py-3 px-4 w-[22%]">SUPPLIER / VENDOR</th>
-                  <th className="py-3 px-4 w-[18%]">JATUH TEMPO & AGING</th>
-                  <th className="py-3 px-4 text-right w-[16%]">NILAI & POTONGAN</th>
-                  <th className="py-3 px-4 text-right w-[14%]">SISA TAGIHAN</th>
-                  <th className="py-3 px-4 text-right w-[10%]">AKSI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-normal">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh className="py-3 px-4 w-[20%]">NO. FAKTUR & PO</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[22%]">SUPPLIER / VENDOR</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[18%]">JATUH TEMPO & AGING</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[16%]">NILAI & POTONGAN</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[14%]">SISA TAGIHAN</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[10%]">AKSI</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredList.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center">
+                  <DnaTableRow>
+                    <DnaTd colSpan={6} className="py-8 text-center">
                       <DnaEmptyState
                         title="Tidak Ada Tagihan"
                         description="Tidak ada faktur pembelian yang perlu dibayar pada kategori filter ini."
                       />
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredList.map((row) => (
-                    <tr
+                    <DnaTableRow
                       key={row.id}
                       onClick={() => handleOpenPayDrawer(row)}
                       className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                     >
-                      <td className="py-3 px-4">
-                        <span className="font-mono font-bold text-indigo-600 block truncate">
+                      <DnaTd className="py-3 px-4">
+                        <span className="tabular-nums font-bold text-indigo-600 block truncate">
                           {row.billNumber}
                         </span>
-                        <span className="text-[11px] font-mono text-slate-500 block truncate">
+                        <span className="text-[11px] tabular-nums text-slate-500 block truncate">
                           {row.poNumber}
                         </span>
-                      </td>
-                      <td className="py-3 px-4">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4">
                         <span className="font-semibold text-slate-900 block truncate">
                           {row.vendorName}
                         </span>
-                        <span className="text-[11px] font-mono text-slate-500 block">
+                        <span className="text-[11px] tabular-nums text-slate-500 block">
                           {row.vendorCode}
                         </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="text-[11px] font-mono text-slate-600 block">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4">
+                        <span className="text-[11px] tabular-nums text-slate-600 block">
                           {row.dueDate}
                         </span>
                         <div className="mt-0.5">
@@ -392,9 +398,9 @@ export default function BayarPembelianPage() {
                             </span>
                           )}
                         </div>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <span className="font-mono font-bold text-slate-900 block text-xs">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
+                        <span className="tabular-nums font-bold text-slate-900 block text-xs">
                           Rp {row.totalAmount.toLocaleString("id-ID")}
                         </span>
                         {row.availableDebitNote > 0 ? (
@@ -404,16 +410,16 @@ export default function BayarPembelianPage() {
                         ) : (
                           <span className="text-[10px] text-slate-400 block">-</span>
                         )}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <span className="font-mono font-bold text-rose-600 block text-xs">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
+                        <span className="tabular-nums font-bold text-rose-600 block text-xs">
                           Rp {row.remainingAmount.toLocaleString("id-ID")}
                         </span>
                         <span className="text-[10px] text-slate-500 block">
                           {row.status === "PARTIAL" ? "Sebagian" : "Belum Bayar"}
                         </span>
-                      </td>
-                      <td className="py-3 px-4 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                           <DnaButton
                             variant="primary"
@@ -424,12 +430,12 @@ export default function BayarPembelianPage() {
                             Bayar
                           </DnaButton>
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}
@@ -469,7 +475,7 @@ export default function BayarPembelianPage() {
             <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
                 <span className="text-slate-500 block text-[11px]">Sisa Hutang Faktur</span>
-                <span className="font-bold text-slate-900 font-mono text-sm block">
+                <span className="font-bold text-slate-900 tabular-nums text-sm block">
                   Rp {selectedBill.remainingAmount.toLocaleString("id-ID")}
                 </span>
                 <span className="text-slate-500 text-[11px]">Total PO: {selectedBill.poNumber}</span>
@@ -525,7 +531,7 @@ export default function BayarPembelianPage() {
                     type="date"
                     value={paymentDate}
                     onChange={(e) => setPaymentDate(e.target.value)}
-                    className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
                 <div>
@@ -553,7 +559,7 @@ export default function BayarPembelianPage() {
                     min="1"
                     value={payAmount}
                     onChange={(e) => setPayAmount(parseFloat(e.target.value) || 0)}
-                    className="w-full text-sm font-bold font-mono text-indigo-700 border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full text-sm font-bold tabular-nums text-indigo-700 border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
                 <div>
@@ -563,7 +569,7 @@ export default function BayarPembelianPage() {
                     placeholder="Contoh: TRF-BCA-992140"
                     value={refNumber}
                     onChange={(e) => setRefNumber(e.target.value)}
-                    className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
               </div>

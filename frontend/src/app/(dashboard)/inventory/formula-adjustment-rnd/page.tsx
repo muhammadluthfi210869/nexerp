@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -14,9 +14,7 @@ import {
   Calculator,
   Building2,
   User,
-  FlaskConical,
   Scale,
-  FileText
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -30,7 +28,13 @@ import {
   DnaModal,
   DnaInput,
   DnaErrorState,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface FormulaAdjustment {
@@ -130,9 +134,11 @@ export default function FormulaAdjustmentPage() {
   }, [adjustments]);
 
   const handleSaveUpscale = () => {
-    toast.success(
-      "Penyesuaian Formulasi Disimpan",
-      `Hasil Upscale ${calculatedUpscaleKg.toFixed(1)} Kg (Target: ${calcTargetQty.toLocaleString()} Pcs) berhasil diajukan untuk SPK Produksi.`
+    // ponytail: R&D formula adjustment is an analytical tool; backend has no POST /rnd/formulas/adjustments.
+    // Calculations stay local to the active session and provide parameters for production work orders.
+    toast.warning(
+      "Simulasi Lokal Tersimpan",
+      `Hasil Upscale ${calculatedUpscaleKg.toFixed(1)} Kg (Target: ${calcTargetQty.toLocaleString()} Pcs) dihitung secara lokal. Backend belum menyediakan endpoint penyimpanan penyesuaian formulasi.`
     );
     setIsUpscaleModalOpen(false);
   };
@@ -221,27 +227,27 @@ export default function FormulaAdjustmentPage() {
         searchPlaceholder="Cari Kode ADJ, Formula, Produk, Klien, Formulator..."
       >
         <div className="w-full">
-          <table className="w-full text-left text-xs table-fixed">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-4 w-[16%]">Kode & Tanggal</th>
-                <th className="py-3 px-4 w-[28%]">Formula & Produk</th>
-                <th className="py-3 px-4 w-[20%]">Klien & Brand</th>
-                <th className="py-3 px-4 w-[18%]">Target & Upscale</th>
-                <th className="py-3 px-4 w-[10%]">Status</th>
-                <th className="py-3 px-4 w-[8%] text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-[16%]">Kode & Tanggal</DnaTh>
+                <DnaTh className="py-3 px-4 w-[28%]">Formula & Produk</DnaTh>
+                <DnaTh className="py-3 px-4 w-[20%]">Klien & Brand</DnaTh>
+                <DnaTh className="py-3 px-4 w-[18%]">Target & Upscale</DnaTh>
+                <DnaTh className="py-3 px-4 w-[10%]">Status</DnaTh>
+                <DnaTh className="py-3 px-4 w-[8%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     Memuat data penyesuaian formulasi...
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : isError ? (
-                <tr>
-                  <td colSpan={6} className="py-6 px-4">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-6 px-4">
                     <DnaErrorState
                       title={denied ? "Akses ditolak" : "Gagal memuat data"}
                       message={
@@ -251,44 +257,44 @@ export default function FormulaAdjustmentPage() {
                       }
                       onRetry={() => refetch()}
                     />
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : filteredAdjustments.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     <Scale className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada catatan penyesuaian formulasi yang sesuai.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredAdjustments.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-mono text-xs font-bold text-slate-900 truncate">{row.adjustmentCode}</p>
-                      <p className="text-[11px] text-slate-500 font-mono mt-0.5 truncate">{row.adjustmentDate}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                  <DnaTableRow key={row.id} className="hover:bg-slate-50/70 transition-colors">
+                    <DnaTd className="py-3 px-4 truncate">
+                      <p className="tabular-nums text-xs font-bold text-slate-900 truncate">{row.adjustmentCode}</p>
+                      <p className="text-[11px] text-slate-500 tabular-nums mt-0.5 truncate">{row.adjustmentDate}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <p className="font-semibold text-slate-900 text-xs truncate">{row.productName}</p>
-                      <p className="font-mono text-[11px] text-indigo-600 truncate">
+                      <p className="tabular-nums text-[11px] text-indigo-600 truncate">
                         {row.formulaCode} • Rev {row.revisionVersion}
                       </p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <p className="font-semibold text-slate-800 truncate">{row.clientName}</p>
                       <p className="text-[11px] text-slate-500 truncate">{row.brandName}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-mono font-bold text-slate-900 text-xs truncate">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
+                      <p className="tabular-nums font-bold text-slate-900 text-xs truncate">
                         {row.targetProductionQtyPcs.toLocaleString()} Pcs (@{row.nettoPerPcs}g)
                       </p>
-                      <p className="font-mono text-[11px] text-indigo-700 truncate">
+                      <p className="tabular-nums text-[11px] text-indigo-700 truncate">
                         {row.upscaleResultKg.toFixed(1)} Kg (+{row.upscalePercent}%)
                       </p>
-                    </td>
-                    <td className="py-3 px-4">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4">
                       {getStatusBadge(row.status)}
-                    </td>
-                    <td className="py-3 px-4 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-right">
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -300,12 +306,12 @@ export default function FormulaAdjustmentPage() {
                       >
                         <Eye className="w-4 h-4 text-slate-600" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -361,15 +367,15 @@ export default function FormulaAdjustmentPage() {
           <div className="p-4 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-3">
             <div className="flex justify-between items-center text-xs">
               <span className="text-indigo-900 font-semibold">Base Result (Teoritis):</span>
-              <span className="font-mono font-bold text-slate-800">{calculatedBaseKg.toFixed(2)} Kg</span>
+              <span className="tabular-nums font-bold text-slate-800">{calculatedBaseKg.toFixed(2)} Kg</span>
             </div>
             <div className="flex justify-between items-center text-xs">
               <span className="text-amber-900 font-semibold">Tambahan Upscale (+{calcUpscalePct}%):</span>
-              <span className="font-mono font-bold text-amber-700">+{((calculatedBaseKg * calcUpscalePct) / 100).toFixed(2)} Kg</span>
+              <span className="tabular-nums font-bold text-amber-700">+{((calculatedBaseKg * calcUpscalePct) / 100).toFixed(2)} Kg</span>
             </div>
             <div className="pt-2 border-t border-indigo-200 flex justify-between items-center">
               <span className="text-xs font-bold text-indigo-950 uppercase">Total Hasil Upscale (Penimbangan):</span>
-              <span className="font-mono text-base font-bold text-indigo-900">{calculatedUpscaleKg.toFixed(2)} Kg</span>
+              <span className="tabular-nums text-base font-bold text-indigo-900">{calculatedUpscaleKg.toFixed(2)} Kg</span>
             </div>
           </div>
 
@@ -399,8 +405,8 @@ export default function FormulaAdjustmentPage() {
               <div className="space-y-4">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-mono font-bold text-slate-900">{selectedAdjustment.adjustmentCode}</span>
-                    <span className="font-mono text-xs text-slate-500">{selectedAdjustment.adjustmentDate}</span>
+                    <span className="tabular-nums font-bold text-slate-900">{selectedAdjustment.adjustmentCode}</span>
+                    <span className="tabular-nums text-xs text-slate-500">{selectedAdjustment.adjustmentDate}</span>
                   </div>
                   <p className="font-bold text-slate-900 text-sm">{selectedAdjustment.productName}</p>
                   <p className="text-xs text-slate-600">{selectedAdjustment.clientName} ({selectedAdjustment.brandName})</p>
@@ -409,22 +415,22 @@ export default function FormulaAdjustmentPage() {
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Target Produksi</span>
-                    <p className="font-mono font-bold text-slate-900">{selectedAdjustment.targetProductionQtyPcs.toLocaleString()} Pcs</p>
+                    <p className="tabular-nums font-bold text-slate-900">{selectedAdjustment.targetProductionQtyPcs.toLocaleString()} Pcs</p>
                     <span className="text-[10px] text-slate-400">Netto @{selectedAdjustment.nettoPerPcs}g</span>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Base Result</span>
-                    <p className="font-mono font-bold text-slate-700">{selectedAdjustment.baseResultKg.toFixed(2)} Kg</p>
+                    <p className="tabular-nums font-bold text-slate-700">{selectedAdjustment.baseResultKg.toFixed(2)} Kg</p>
                     <span className="text-[10px] text-slate-400">Teoritis Lab</span>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Buffer Upscale</span>
-                    <p className="font-mono font-bold text-amber-600">+{selectedAdjustment.upscalePercent}%</p>
+                    <p className="tabular-nums font-bold text-amber-600">+{selectedAdjustment.upscalePercent}%</p>
                     <span className="text-[10px] text-slate-400">Loss bejana/filling</span>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Total Hasil Upscale</span>
-                    <p className="font-mono font-bold text-indigo-700">{selectedAdjustment.upscaleResultKg.toFixed(2)} Kg</p>
+                    <p className="tabular-nums font-bold text-indigo-700">{selectedAdjustment.upscaleResultKg.toFixed(2)} Kg</p>
                     <span className="text-[10px] text-slate-400">Bobot penimbangan</span>
                   </div>
                 </div>

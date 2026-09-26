@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   FileText,
   Calendar,
@@ -16,7 +18,8 @@ import {
   FileSpreadsheet,
   Eye,
   Check,
-  X
+  X,
+  Loader2,
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -47,44 +50,118 @@ interface HrTicketItem {
   empId: string;
   empName: string;
   department: string;
-  type: "CUTI_TAHUNAN" | "IZIN_SAKIT" | "LEMBUR_PRODUKSI" | "DINAS_LUAR" | "CUTI_MELAHIRKAN";
+  type: string;
   startDate: string;
   endDate: string;
   duration: string;
   reason: string;
   approver: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: string;
 }
-
-const INITIAL_TICKETS: HrTicketItem[] = [
-  { id: "TCK-01", ticketNo: "REQ-LV-001", empId: "KIL-2022-001", empName: "Budi Santoso, S.T", department: "Produksi Mixing", type: "LEMBUR_PRODUKSI", startDate: "2026-09-09 16:00", endDate: "2026-09-09 20:00", duration: "4 Jam", reason: "Surat Perintah Lembur (SPL) Batch Darurat PO-8821", approver: "Plant Manager", status: "APPROVED" },
-  { id: "TCK-02", ticketNo: "REQ-LV-002", empId: "KIL-2023-014", empName: "Rian Saputra, S.Farm", department: "R&D Formulasi", type: "CUTI_TAHUNAN", startDate: "2026-09-15", endDate: "2026-09-17", duration: "3 Hari", reason: "Acara keluarga (Sisa Cuti Tahunan: 8 Hari)", approver: "Head of R&D", status: "PENDING" },
-  { id: "TCK-03", ticketNo: "REQ-LV-003", empId: "KIL-2023-022", empName: "Siti Rahmawati, S.Si", department: "QC Mikrobiologi", type: "IZIN_SAKIT", startDate: "2026-09-08", endDate: "2026-09-08", duration: "1 Hari", reason: "Sakit demam, surat dokter klinik terlampir", approver: "Supervisor QA", status: "APPROVED" },
-  { id: "TCK-04", ticketNo: "REQ-LV-004", empId: "KIL-2024-005", empName: "Dewi Lestari, S.E", department: "BusDev Maklon", type: "DINAS_LUAR", startDate: "2026-09-11", endDate: "2026-09-12", duration: "2 Hari", reason: "Meeting presentasi formula kosmetik dengan klien Jakarta", approver: "Direktur Bisnis", status: "APPROVED" },
-];
 
 export default function HrTicketsPage() {
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<HrTicketItem | null>(null);
 
+  // Live queries
+  const { data: rawTickets = [], isLoading } = useQuery({
+    queryKey: ["hr-tickets"],
+    queryFn: async () => {
+      const res = await api.get("/hr/tickets");
+      return res.data;
+    },
+  });
+
+  const { data: rawEmployees = [] } = useQuery({
+    queryKey: ["hr-employees"],
+    queryFn: async () => {
+      const res = await api.get("/hr/employees");
+      return res.data;
+    },
+  });
+
+  const employees = Array.isArray(rawEmployees) ? rawEmployees : [];
+
+  const tickets: HrTicketItem[] = useMemo(() => {
+    if (!rawTickets || !Array.isArray(rawTickets) || rawTickets.length === 0) return [];
+    return rawTickets.map((t: any, idx: number) => {
+      const sDate = t.startDate ? new Date(t.startDate).toISOString().slice(0, 10) : "-";
+      const eDate = t.endDate ? new Date(t.endDate).toISOString().slice(0, 10) : sDate;
+      const durationDays = (t.startDate && t.endDate)
+        ? Math.max(1, Math.round((new Date(t.endDate).getTime() - new Date(t.startDate).getTime()) / (1000 * 60 * 60 * 24)))
+        : 1;
+
+      return {
+        id: t.id || `tck-${idx}`,
+        ticketNo: t.id ? `REQ-LV-${String(t.id).slice(0, 6).toUpperCase()}` : `REQ-LV-${idx + 1}`,
+        empId: t.employee?.employeeId || t.employee?.nik || t.employeeId || `EMP-${idx + 1}`,
+        empName: t.employee?.name || t.employee?.fullName || "Karyawan",
+        department: t.employee?.department || "Operasional",
+        type: t.type || "LEAVE",
+        startDate: sDate,
+        endDate: eDate,
+        duration: `${durationDays} Hari`,
+        reason: t.reason || "-",
+        approver: t.approver?.name || "Manager",
+        status: t.status || "PENDING",
+      };
+    });
+  }, [rawTickets]);
+
   // Form states
   const [newTicket, setNewTicket] = useState({
-    empName: "Budi Santoso, S.T",
-    type: "CUTI_TAHUNAN" as const,
+    employeeId: "",
+    type: "LEAVE",
     startDate: "2026-09-20",
     endDate: "2026-09-21",
     reason: ""
   });
 
-  const pendingCount = INITIAL_TICKETS.filter(t => t.status === "PENDING").length;
-  const approvedCount = INITIAL_TICKETS.filter(t => t.status === "APPROVED").length;
-  const splCount = INITIAL_TICKETS.filter(t => t.type === "LEMBUR_PRODUKSI").length;
+  const createMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      return (await api.post("/hr/tickets", payload)).data;
+    },
+    onSuccess: () => {
+      toast.success("Pengajuan tiket berhasil dibuat!");
+      queryClient.invalidateQueries({ queryKey: ["hr-tickets"] });
+      setIsCreateModalOpen(false);
+      setNewTicket({
+        employeeId: employees[0]?.id || "",
+        type: "LEAVE",
+        startDate: "2026-09-20",
+        endDate: "2026-09-21",
+        reason: ""
+      });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal membuat pengajuan tiket!");
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      return (await api.patch(`/hr/tickets/${id}`, { status })).data;
+    },
+    onSuccess: (_, vars) => {
+      toast.success(`Tiket berhasil di-${vars.status === "APPROVED" ? "setujui" : "tolak"}!`);
+      queryClient.invalidateQueries({ queryKey: ["hr-tickets"] });
+      setSelectedTicket(null);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal memperbarui status tiket!");
+    },
+  });
+
+  const pendingCount = tickets.filter(t => t.status === "PENDING").length;
+  const approvedCount = tickets.filter(t => t.status === "APPROVED").length;
+  const splCount = tickets.filter(t => t.type === "OVERTIME" || t.type === "LEMBUR_PRODUKSI").length;
 
   const filteredTickets = useMemo(() => {
-    return INITIAL_TICKETS.filter(t => {
+    return tickets.filter(t => {
       const matchSearch =
         t.empName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.ticketNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -92,17 +169,26 @@ export default function HrTicketsPage() {
       const matchType = typeFilter === "ALL" || t.type === typeFilter;
       return matchSearch && matchType;
     });
-  }, [searchQuery, typeFilter]);
+  }, [tickets, searchQuery, typeFilter]);
 
   const handleCreateTicket = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTicket.reason) {
+    const empId = newTicket.employeeId || employees[0]?.id;
+    if (!empId) {
+      toast.error("Pilih karyawan terlebih dahulu!");
+      return;
+    }
+    if (!newTicket.reason.trim()) {
       toast.error("Alasan pengajuan wajib diisi!");
       return;
     }
-    toast.success("Pengajuan tiket berhasil dikirim ke atasan!");
-    setIsCreateModalOpen(false);
-    setNewTicket({ empName: "Budi Santoso, S.T", type: "CUTI_TAHUNAN", startDate: "2026-09-20", endDate: "2026-09-21", reason: "" });
+    createMutation.mutate({
+      employeeId: empId,
+      type: newTicket.type,
+      startDate: new Date(newTicket.startDate).toISOString(),
+      endDate: new Date(newTicket.endDate).toISOString(),
+      reason: newTicket.reason,
+    });
   };
 
   return (
@@ -111,11 +197,10 @@ export default function HrTicketsPage() {
         title="Izin, Cuti & Lembur (Employee Request Tickets)"
         description="Portal persetujuan bertingkat izin sakit, cuti tahunan, dinas luar kota, dan Surat Perintah Lembur (SPL) operator manufaktur."
         tabs={[
-          { id: "ALL", label: "Semua Tiket", count: INITIAL_TICKETS.length },
-          { id: "CUTI_TAHUNAN", label: "Cuti Tahunan" },
-          { id: "IZIN_SAKIT", label: "Izin Sakit" },
-          { id: "LEMBUR_PRODUKSI", label: "Lembur (SPL)" },
-          { id: "DINAS_LUAR", label: "Dinas Luar" }
+          { id: "ALL", label: "Semua Tiket", count: tickets.length },
+          { id: "LEAVE", label: "Cuti & Izin" },
+          { id: "OVERTIME", label: "Lembur (SPL)" },
+          { id: "REIMBURSE", label: "Reimburse & Dinas" },
         ]}
         activeTab={typeFilter}
         onTabChange={setTypeFilter}
@@ -364,9 +449,9 @@ export default function HrTicketsPage() {
                 <DnaButton
                   variant="danger"
                   size="md"
+                  disabled={updateStatusMutation.isPending}
                   onClick={() => {
-                    toast.error(`Tiket ${selectedTicket.ticketNo} ditolak.`);
-                    setSelectedTicket(null);
+                    updateStatusMutation.mutate({ id: selectedTicket.id, status: "REJECTED" });
                   }}
                 >
                   <X className="w-4 h-4 mr-1.5" />
@@ -375,9 +460,9 @@ export default function HrTicketsPage() {
                 <DnaButton
                   variant="primary"
                   size="md"
+                  disabled={updateStatusMutation.isPending}
                   onClick={() => {
-                    toast.success(`Tiket ${selectedTicket.ticketNo} berhasil disetujui!`);
-                    setSelectedTicket(null);
+                    updateStatusMutation.mutate({ id: selectedTicket.id, status: "APPROVED" });
                   }}
                 >
                   <Check className="w-4 h-4 mr-1.5" />
@@ -405,14 +490,18 @@ export default function HrTicketsPage() {
           <div>
             <label className="block font-semibold text-slate-700 mb-1">Pilih Karyawan *</label>
             <DnaSelect
-              value={newTicket.empName}
-              onChange={(val) => setNewTicket({ ...newTicket, empName: val })}
+              value={newTicket.employeeId || employees[0]?.id || ""}
+              onChange={(val) => setNewTicket({ ...newTicket, employeeId: val })}
               className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
             >
-              <option value="Budi Santoso, S.T">Budi Santoso - Produksi Mixing</option>
-              <option value="Rian Saputra, S.Farm">Rian Saputra - R&D Formulasi</option>
-              <option value="Siti Rahmawati, S.Si">Siti Rahmawati - QC Mikrobiologi</option>
-              <option value="Dewi Lestari, S.E">Dewi Lestari - BusDev</option>
+              {employees.map((emp: any) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.name || emp.fullName} ({emp.employeeId || emp.nik || "Karyawan"}) - {emp.department || "Operasional"}
+                </option>
+              ))}
+              {employees.length === 0 && (
+                <option value="">(Memuat data karyawan...)</option>
+              )}
             </DnaSelect>
           </div>
 
@@ -420,13 +509,12 @@ export default function HrTicketsPage() {
             <label className="block font-semibold text-slate-700 mb-1">Jenis Pengajuan *</label>
             <DnaSelect
               value={newTicket.type}
-              onChange={(val) => setNewTicket({ ...newTicket, type: val as any })}
+              onChange={(val) => setNewTicket({ ...newTicket, type: val })}
               className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
             >
-              <option value="CUTI_TAHUNAN">Cuti Tahunan (Tahunan / Pribadi)</option>
-              <option value="IZIN_SAKIT">Izin Sakit (Surat Dokter)</option>
-              <option value="LEMBUR_PRODUKSI">Surat Perintah Lembur (SPL Produksi)</option>
-              <option value="DINAS_LUAR">Perjalanan Dinas Luar Kota</option>
+              <option value="LEAVE">Cuti Tahunan / Izin Sakit (LEAVE)</option>
+              <option value="OVERTIME">Surat Perintah Lembur / SPL Produksi (OVERTIME)</option>
+              <option value="REIMBURSE">Dinas Luar Kota / Reimburse (REIMBURSE)</option>
             </DnaSelect>
           </div>
 
@@ -469,8 +557,8 @@ export default function HrTicketsPage() {
             <DnaButton variant="secondary" size="md" type="button" onClick={() => setIsCreateModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" size="md" type="submit">
-              Kirim Tiket Pengajuan
+            <DnaButton variant="primary" size="md" type="submit" disabled={createMutation.isPending}>
+              {createMutation.isPending ? "Mengirim..." : "Kirim Tiket Pengajuan"}
             </DnaButton>
           </div>
         </form>

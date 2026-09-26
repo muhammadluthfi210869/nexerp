@@ -167,7 +167,7 @@ export default function NotificationDetailPage() {
               <span className="text-muted-foreground block text-xs uppercase font-semibold">
                 ID Dokumen / Objek
               </span>
-              <span className="font-mono text-xs">
+              <span className="tabular-nums text-xs">
                 {notification.referenceId || "—"}
               </span>
             </div>

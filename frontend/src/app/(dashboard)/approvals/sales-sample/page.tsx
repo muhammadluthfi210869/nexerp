@@ -10,8 +10,8 @@
  * no browser storage and no fallback here.
  */
 
-import React, { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
 import {
@@ -126,6 +126,7 @@ const toItem = (sample: ApiSample): SalesSampleApprovalItem => {
 };
 
 export default function SalesSampleApprovalPage() {
+  const queryClient = useQueryClient();
   const { data, isLoading, isError, error, refetch } = useQuery<ApiSample[]>({
     queryKey: ["rnd-samples-approval"],
     queryFn: async () => {
@@ -134,6 +135,27 @@ export default function SalesSampleApprovalPage() {
       return Array.isArray(body) ? body : (body?.data ?? []);
     },
   });
+
+  const handleApprove = useCallback(async (id: string, notes?: string) => {
+    // Transition sample stage to APPROVED or call accept endpoint
+    try {
+      await api.patch(`/rnd/sample/${id}/advance`, {
+        newStage: "APPROVED",
+        feedback: notes || "Sample approved via approval portal",
+      });
+    } catch {
+      await api.post(`/rnd/sample/${id}/accept`, {});
+    }
+    queryClient.invalidateQueries({ queryKey: ["rnd-samples-approval"] });
+  }, [queryClient]);
+
+  const handleReject = useCallback(async (id: string, reason: string) => {
+    await api.patch(`/rnd/sample/${id}/advance`, {
+      newStage: "REJECTED",
+      rejectionReason: reason || "Sample rejected by client / reviewer",
+    });
+    queryClient.invalidateQueries({ queryKey: ["rnd-samples-approval"] });
+  }, [queryClient]);
 
   const items = useMemo<SalesSampleApprovalItem[]>(
     () => (Array.isArray(data) ? data.map(toItem) : []),
@@ -151,37 +173,28 @@ export default function SalesSampleApprovalPage() {
       header: "No. Sample",
       accessor: "code",
       sortable: true,
-      render: (item) => <DnaCell.code>{item.code}</DnaCell.code>,
+      render: (item) => <DnaCell.Code value={item.code} />,
     },
     {
       header: "Klien & Brand",
       accessor: "client",
       sortable: true,
       render: (item) => (
-        <div>
-          <p className="font-semibold text-slate-800">{item.client}</p>
-          <p className="text-[11px] text-blue-600 font-medium">{item.brand}</p>
-        </div>
+        <DnaCell.NaturalPair primary={item.client} secondary={item.brand} />
       ),
     },
     {
       header: "Nama Produk & Revisi",
       accessor: "productName",
       render: (item) => (
-        <div>
-          <p className="text-xs font-semibold text-slate-800">{item.productName}</p>
-          <p className="text-[11px] text-slate-500">{item.revision}</p>
-        </div>
+        <DnaCell.NaturalPair primary={item.productName} secondary={item.revision} />
       ),
     },
     {
       header: "Formulator & Sales",
       accessor: "formulator",
       render: (item) => (
-        <div>
-          <p className="text-xs font-medium text-slate-700">{item.formulator}</p>
-          <p className="text-[11px] text-slate-500">PIC: {item.salesPic}</p>
-        </div>
+        <DnaCell.NaturalPair primary={item.formulator} secondary={`PIC: ${item.salesPic}`} />
       ),
     },
     {
@@ -197,12 +210,12 @@ export default function SalesSampleApprovalPage() {
       align: "center",
       render: (item) => (
         <DnaBadge
-          status={
+          variant={
             item.status === "APPROVED"
-              ? "SUCCESS"
+              ? "success"
               : item.status === "REJECTED"
-              ? "DANGER"
-              : "WARNING"
+              ? "critical"
+              : "warning"
           }
         >
           {item.status === "APPROVED"
@@ -275,6 +288,8 @@ export default function SalesSampleApprovalPage() {
       items={items}
       columns={columns}
       getDetailData={buildDetailData}
+      onApprove={handleApprove}
+      onReject={handleReject}
       searchPlaceholder="Cari nomor sample, nama produk, brand, formulator..."
     />
   );

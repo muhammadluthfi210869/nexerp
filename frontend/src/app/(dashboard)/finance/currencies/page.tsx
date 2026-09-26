@@ -35,13 +35,6 @@ interface Currency {
   isMain?: boolean;
 }
 
-const FALLBACK: Currency[] = [
-  { id: "cur-1", code: "IDR", symbol: "Rp", exchangeRate: 1, isMain: true },
-  { id: "cur-2", code: "USD", symbol: "$", exchangeRate: 15800, isMain: false },
-  { id: "cur-3", code: "EUR", symbol: "€", exchangeRate: 17200, isMain: false },
-  { id: "cur-4", code: "SGD", symbol: "S$", exchangeRate: 11800, isMain: false },
-];
-
 export default function FinanceCurrenciesPage() {
   const toast = useDnaToast();
   const qc = useQueryClient();
@@ -57,16 +50,12 @@ export default function FinanceCurrenciesPage() {
   const [exchangeRate, setExchangeRate] = useState("");
   const [isMain, setIsMain] = useState(false);
 
-  const { data: currencies = FALLBACK, isLoading } = useQuery({
+  const { data: currencies = [], isLoading } = useQuery({
     queryKey: ["finance-currencies"],
     queryFn: async () => {
-      try {
-        const res = await api.get("/finance/currencies");
-        const body = unwrapResponse(res);
-        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : FALLBACK;
-      } catch {
-        return FALLBACK;
-      }
+      const res = await api.get("/finance/currencies");
+      const body = unwrapResponse(res);
+      return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
     },
   });
 

@@ -34,6 +34,12 @@ import {
   Dialog,
   DialogContent,
   Label,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
@@ -241,48 +247,48 @@ export default function StabilityTestingPage() {
             {allStudies.length} <span className="text-lg font-light">Samples</span>
           </h3>
           <div className="flex gap-2">
-            <DnaBadge status="default" className="bg-white/10 text-white border-none">Skin: 8</DnaBadge>
-            <DnaBadge status="default" className="bg-white/10 text-white border-none">Color: 4</DnaBadge>
+            <DnaBadge variant="default" className="bg-white/10 text-white border-none">Skin: 8</DnaBadge>
+            <DnaBadge variant="default" className="bg-white/10 text-white border-none">Color: 4</DnaBadge>
           </div>
         </DataCard>
       </div>
 
       {/* Stability Logs Table */}
       <TableWrapper>
-        <table>
-          <thead className="bg-[#F8FAFC]">
-            <tr className="hover:bg-transparent border-[var(--border-color)]">
-              <th className="py-6 pl-10 text-table-header">Study ID</th>
-              <th className="text-table-header">Product / Formulation</th>
-              <th className="text-table-header text-center">Chamber</th>
-              <th className="text-table-header text-center">Interval</th>
-              <th className="text-table-header">Next Test Gate</th>
-              <th className="text-table-header text-center">Integrity Status</th>
-              <th className="pr-10 text-right text-table-header">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+        <DnaTable>
+          <DnaTableHead>
+            <DnaTableRow className="hover:bg-transparent border-[var(--border-color)]">
+              <DnaTh className="py-6 pl-10 text-table-header">Study ID</DnaTh>
+              <DnaTh className="text-table-header">Product / Formulation</DnaTh>
+              <DnaTh className="text-table-header text-center">Chamber</DnaTh>
+              <DnaTh className="text-table-header text-center">Interval</DnaTh>
+              <DnaTh className="text-table-header">Next Test Gate</DnaTh>
+              <DnaTh className="text-table-header text-center">Integrity Status</DnaTh>
+              <DnaTh className="pr-10 text-right text-table-header">Actions</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {isLoading && (
-              <tr>
-                <td colSpan={7} className="text-center py-12">
+              <DnaTableRow>
+                <DnaTd colSpan={7} className="text-center py-12">
                   <Loader2 className="h-5 w-5 animate-spin inline mr-2 text-slate-400" />
                   <span className="text-slate-400 text-sm">Loading studies...</span>
-                </td>
-              </tr>
+                </DnaTd>
+              </DnaTableRow>
             )}
             {!isLoading && allStudies.length === 0 && (
-              <tr>
-                <td colSpan={7} className="text-center py-12">
+              <DnaTableRow>
+                <DnaTd colSpan={7} className="text-center py-12">
                   <p className="text-slate-400 text-sm">No active stability studies</p>
-                </td>
-              </tr>
+                </DnaTd>
+              </DnaTableRow>
             )}
             {allStudies.map((log: any) => (
-              <tr
+              <DnaTableRow
                 key={log.id}
                 className="group hover:bg-blue-50/30 transition-all duration-300 border-b border-[var(--border-color)]"
               >
-                <td className="py-6 pl-10">
+                <DnaTd className="py-6 pl-10">
                   <div className="flex items-center gap-4">
                     <div className="h-12 w-12 rounded-2xl bg-gray-100 text-gray-900 flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform">
                       <Timer className="h-5 w-5 text-blue-400" />
@@ -292,8 +298,8 @@ export default function StabilityTestingPage() {
                       <span className="text-[11px] font-medium text-slate-400">Started: {log.startDate}</span>
                     </div>
                   </div>
-                </td>
-                <td>
+                </DnaTd>
+                <DnaTd>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
                       <Beaker className="h-4 w-4 text-slate-400" />
@@ -303,27 +309,27 @@ export default function StabilityTestingPage() {
                       <p className="text-[11px] font-medium text-slate-400">Batch: {log.batch}</p>
                     </div>
                   </div>
-                </td>
-                <td className="text-center">
-                  <DnaBadge status={log.chamber === "A" ? "info" : "default"}>
+                </DnaTd>
+                <DnaTd className="text-center">
+                  <DnaBadge variant={log.chamber === "A" ? "info" : "default"}>
                     Chamber {log.chamber || "A"}
                   </DnaBadge>
-                </td>
-                <td className="text-center">
-                  <DnaBadge status="default">{log.interval || "1M"}</DnaBadge>
-                </td>
-                <td>
+                </DnaTd>
+                <DnaTd className="text-center">
+                  <DnaBadge variant="default">{log.interval || "1M"}</DnaBadge>
+                </DnaTd>
+                <DnaTd>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-3.5 w-3.5 text-slate-400" />
                     <p className="font-medium text-slate-500 text-[11px]">{log.nextTest}</p>
                   </div>
-                </td>
-                <td className="text-center">
-                  <DnaBadge status={log.status === "STABLE" ? "success" : "critical"}>
+                </DnaTd>
+                <DnaTd className="text-center">
+                  <DnaBadge variant={log.status === "STABLE" ? "success" : "critical"}>
                     {log.status}
                   </DnaBadge>
-                </td>
-                <td className="pr-10 text-right">
+                </DnaTd>
+                <DnaTd className="pr-10 text-right">
                   <DnaButton
                     variant="outline"
                     className="h-9 px-4 text-[10px]"
@@ -334,11 +340,11 @@ export default function StabilityTestingPage() {
                   >
                     Log Result <ChevronRight className="ml-2 h-3 w-3" />
                   </DnaButton>
-                </td>
-              </tr>
+                </DnaTd>
+              </DnaTableRow>
             ))}
-          </tbody>
-        </table>
+          </DnaTableBody>
+        </DnaTable>
       </TableWrapper>
 
       {/* New Stability Study Dialog */}

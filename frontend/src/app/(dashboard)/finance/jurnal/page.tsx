@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import Link from "next/link";
-import { BookOpen, Layers, GitMerge, Search, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { BookOpen, Layers, GitMerge, Search, Plus } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaTabNav } from "@/components/dna";
 import {
@@ -25,19 +25,6 @@ const ACCOUNT_TYPES: Record<string, string> = {
   REVENUE: "success",
   EXPENSE: "warning",
 };
-
-const STATIC_COA = [
-  { kode: "11111", nama: "Kas Utama" },
-  { kode: "11112", nama: "Kas Kecil" },
-  { kode: "11212", nama: "BCA (2640351589)" },
-  { kode: "11411", nama: "Piutang Dagang" },
-  { kode: "11611", nama: "Persediaan Bahan Baku" },
-  { kode: "21111", nama: "Hutang Dagang" },
-  { kode: "31111", nama: "Modal Saham" },
-  { kode: "41111", nama: "Penjualan" },
-  { kode: "51111", nama: "HPP" },
-  { kode: "61111", nama: "Beban Gaji" },
-];
 
 const MAPPING_ITEMS = [
   { id: "coa_1", label: "Hutang Dagang", default: "21111" },
@@ -77,7 +64,7 @@ export default function JurnalPage() {
     staleTime: 30000,
   });
 
-  const [mappings, setMappings] = useState<Record<string, string>>({
+  const [mappings] = useState<Record<string, string>>({
     coa_1: "21111",
     coa_7: "11411",
     coa_8: "41211",
@@ -110,7 +97,7 @@ export default function JurnalPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <DnaStatCard icon={<BookOpen className="text-blue-600" />} label="Total Jurnal" value={totalJurnal} subValue={stats?.totalTransactions ? `${stats.totalTransactions} transaksi` : undefined} />
+            <DnaStatCard icon={<BookOpen className="text-blue-600" />} label="Total Jurnal" value={totalJurnal} subValue={stats?.transactions?.length ? `${stats.transactions.length} transaksi` : undefined} />
             <DnaStatCard icon={<Layers className="text-emerald-600" />} label="Total Akun (COA)" value={totalAkun} />
             <DnaStatCard icon={<GitMerge className="text-purple-600" />} label="Active Auto Mappings" value={`${activeMappings} / ${MAPPING_ITEMS.length}`} />
           </div>
@@ -263,13 +250,17 @@ export default function JurnalPage() {
                   <DnaTableBody>
                     {MAPPING_ITEMS.map((item) => {
                       const val = mappings[item.id];
-                      const coa = STATIC_COA.find(c => c.kode === val);
+                      // COA labels come from the live chart of accounts
+                      // (`GET /finance/accounts` → { code, name }); the old
+                      // STATIC_COA literal is gone so an unmapped/unfetched
+                      // account can never be labelled with invented names.
+                      const coa = accounts?.find((c: any) => c.code === val);
                       return (
                         <DnaTableRow key={item.id} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50">
                           <DnaTd className="py-3 pl-6 font-black text-slate-900 text-xs uppercase italic">{item.label}</DnaTd>
                           <DnaTd className="py-3">
                             <span className={cn("text-xs font-semibold tabular-nums", val ? "text-blue-600" : "text-slate-400")}>
-                              {coa ? `${coa.kode} — ${coa.nama}` : "— Not Set —"}
+                              {coa ? `${coa.code} — ${coa.name}` : (val ? `${val} — Nama akun tidak ditemukan` : "— Not Set —")}
                             </span>
                           </DnaTd>
                           <DnaTd className="py-3 text-center">

@@ -1,3 +1,11 @@
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   BarChart3, 
@@ -1255,31 +1263,31 @@ export const BrandReportingView: React.FC<BrandReportingViewProps> = ({
         {/* VIEW 2: TAMPILAN TABEL LENGKAP DENGAN PREVIEW KONTEN */}
         {contentViewMode === 'table' && (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/60">
-                  <th className="py-3 px-3">Visual Konten</th>
-                  <th className="py-3 px-2">Tanggal</th>
-                  <th className="py-3 px-2">PIC</th>
-                  <th className="py-3 px-2 text-right">Kuantitas Views</th>
-                  <th className="py-3 px-2 text-right">Reach</th>
-                  <th className="py-3 px-2 text-right">Likes</th>
-                  <th className="py-3 px-2 text-right">Shares</th>
-                  <th className="py-3 px-2 text-right">Comments</th>
-                  <th className="py-3 px-2 text-right">Saves</th>
-                  <th className="py-3 px-2 text-right">Total Interaksi</th>
-                  <th className="py-3 px-2 text-right">ER %</th>
-                  <th className="py-3 px-2 text-center">Status</th>
-                  <th className="py-3 px-3 text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/60">
+                  <DnaTh className="py-3 px-3">Visual Konten</DnaTh>
+                  <DnaTh className="py-3 px-2">Tanggal</DnaTh>
+                  <DnaTh className="py-3 px-2">PIC</DnaTh>
+                  <DnaTh className="py-3 px-2 text-right">Kuantitas Views</DnaTh>
+                  <DnaTh className="py-3 px-2 text-right">Reach</DnaTh>
+                  <DnaTh className="py-3 px-2 text-right">Likes</DnaTh>
+                  <DnaTh className="py-3 px-2 text-right">Shares</DnaTh>
+                  <DnaTh className="py-3 px-2 text-right">Comments</DnaTh>
+                  <DnaTh className="py-3 px-2 text-right">Saves</DnaTh>
+                  <DnaTh className="py-3 px-2 text-right">Total Interaksi</DnaTh>
+                  <DnaTh className="py-3 px-2 text-right">ER %</DnaTh>
+                  <DnaTh className="py-3 px-2 text-center">Status</DnaTh>
+                  <DnaTh className="py-3 px-3 text-center">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredAndSortedPosts.length === 0 ? (
-                  <tr>
-                    <td colSpan={13} className="py-8 text-center text-slate-400">
+                  <DnaTableRow>
+                    <DnaTd colSpan={13} className="py-8 text-center text-slate-400">
                       Tidak ada konten yang sesuai dengan filter pencarian.
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredAndSortedPosts.map((post) => {
                     const m = post.metrics || {
@@ -1296,9 +1304,9 @@ export const BrandReportingView: React.FC<BrandReportingViewProps> = ({
                     const isHighER = (m.engagementRate || 0) >= 5.0;
 
                     return (
-                      <tr key={post.id} className="hover:bg-slate-50/80 transition group">
+                      <DnaTableRow key={post.id} className="hover:bg-slate-50/80 transition group">
                         {/* Visual Konten & Judul */}
-                        <td className="py-3 px-3">
+                        <DnaTd className="py-3 px-3">
                           <div className="flex items-center gap-3 max-w-sm">
                             {post.imageUrl ? (
                               <button
@@ -1346,66 +1354,66 @@ export const BrandReportingView: React.FC<BrandReportingViewProps> = ({
                               </div>
                             </div>
                           </div>
-                        </td>
+                        </DnaTd>
 
                         {/* Tanggal */}
-                        <td className="py-3 px-2 text-slate-500 whitespace-nowrap text-[11px]">
+                        <DnaTd className="py-3 px-2 text-slate-500 whitespace-nowrap text-[11px]">
                           {post.date}
-                        </td>
+                        </DnaTd>
 
                         {/* PIC */}
-                        <td className="py-3 px-2 whitespace-nowrap font-semibold text-slate-700 text-[11px]">
+                        <DnaTd className="py-3 px-2 whitespace-nowrap font-semibold text-slate-700 text-[11px]">
                           {post.pic}
-                        </td>
+                        </DnaTd>
 
                         {/* Views */}
-                        <td className="py-3 px-2 text-right whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 text-right whitespace-nowrap">
                           <span className="font-black text-blue-900 text-sm">
                             {formatNumber(m.views || 0)}
                           </span>
-                        </td>
+                        </DnaTd>
 
                         {/* Reach */}
-                        <td className="py-3 px-2 text-right whitespace-nowrap text-slate-600 font-semibold">
+                        <DnaTd className="py-3 px-2 text-right whitespace-nowrap text-slate-600 font-semibold">
                           {formatNumber(m.reach || 0)}
-                        </td>
+                        </DnaTd>
 
                         {/* Likes */}
-                        <td className="py-3 px-2 text-right whitespace-nowrap text-slate-700">
+                        <DnaTd className="py-3 px-2 text-right whitespace-nowrap text-slate-700">
                           {formatNumber(m.likes || 0)}
-                        </td>
+                        </DnaTd>
 
                         {/* Shares */}
-                        <td className="py-3 px-2 text-right whitespace-nowrap text-emerald-700 font-semibold">
+                        <DnaTd className="py-3 px-2 text-right whitespace-nowrap text-emerald-700 font-semibold">
                           {formatNumber(m.shares || 0)}
-                        </td>
+                        </DnaTd>
 
                         {/* Comments */}
-                        <td className="py-3 px-2 text-right whitespace-nowrap text-slate-700">
+                        <DnaTd className="py-3 px-2 text-right whitespace-nowrap text-slate-700">
                           {formatNumber(m.comments || 0)}
-                        </td>
+                        </DnaTd>
 
                         {/* Saves */}
-                        <td className="py-3 px-2 text-right whitespace-nowrap text-indigo-700 font-semibold">
+                        <DnaTd className="py-3 px-2 text-right whitespace-nowrap text-indigo-700 font-semibold">
                           {formatNumber(m.saves || 0)}
-                        </td>
+                        </DnaTd>
 
                         {/* Total Interaksi */}
-                        <td className="py-3 px-2 text-right whitespace-nowrap font-extrabold text-slate-900">
+                        <DnaTd className="py-3 px-2 text-right whitespace-nowrap font-extrabold text-slate-900">
                           {formatNumber(totalInteraksi)}
-                        </td>
+                        </DnaTd>
 
                         {/* ER % */}
-                        <td className="py-3 px-2 text-right whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 text-right whitespace-nowrap">
                           <span className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-black ${
                             isHighER ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'
                           }`}>
                             {m.engagementRate || (m.views ? ((totalInteraksi / m.views) * 100).toFixed(2) : 0)}%
                           </span>
-                        </td>
+                        </DnaTd>
 
                         {/* Status Tag */}
-                        <td className="py-3 px-2 text-center whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 text-center whitespace-nowrap">
                           {isViral ? (
                             <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
                               <Flame className="w-3 h-3 text-amber-600" />
@@ -1420,10 +1428,10 @@ export const BrandReportingView: React.FC<BrandReportingViewProps> = ({
                               {post.status}
                             </span>
                           )}
-                        </td>
+                        </DnaTd>
 
                         {/* Aksi */}
-                        <td className="py-3 px-3 text-center whitespace-nowrap">
+                        <DnaTd className="py-3 px-3 text-center whitespace-nowrap">
                           <div className="flex items-center justify-center gap-1.5">
                             <button
                               type="button"
@@ -1442,13 +1450,13 @@ export const BrandReportingView: React.FC<BrandReportingViewProps> = ({
                               <span>Metrik</span>
                             </button>
                           </div>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         )}
       </div>

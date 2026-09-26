@@ -44,6 +44,7 @@ vi.mock("@/components/dna", async () => {
 });
 
 import ExecutiveDashboardPage from "@/app/(dashboard)/executive/dashboard/page";
+import NotificationHubClient from "@/app/(dashboard)/executive/dashboard/NotificationHubClient";
 import AuditTrailPage from "@/app/(dashboard)/executive/audit/page";
 import ArAgingReportPage from "@/app/(dashboard)/reports/ar-aging/page";
 import ReportSalesSummaryPage from "@/app/(dashboard)/reports/sales-summary/page";
@@ -87,6 +88,44 @@ describe("P18 Live Flow — Reporting, Executive Analytics & Audit UI", () => {
       await waitFor(() => {
         expect(screen.getByText(/Pusat Komando Strategis/i)).toBeInTheDocument();
       });
+    });
+  });
+
+  describe("1b. Notification Hub (SCR-150 tab=notifications)", () => {
+    // Regression: this surface used to ship six hardcoded diagnostic groups
+    // ("5 Client overdue > 60 hari", "Mesin RO-02 Downtime"). It must render
+    // what /executive/alerts returns, and show zero when that API reports zero.
+    it("renders alert counts from /executive/alerts, never hardcoded constants", async () => {
+      vi.spyOn(api, "get").mockImplementation((url: string) => {
+        if (url.includes("alerts")) {
+          return Promise.resolve({
+            data: {
+              production: { overdue: 3, nearDeadline: 1, bottlenecks: 0, alerts: ["3 Work Orders are currently overdue"] },
+              cashflow: { overdueInvoices: 7, largeUnpaid: 0, alerts: [] },
+              sales: { unfollowed: 0, stuck: 0, alerts: [] },
+              repeatOrder: { readyThisWeek: 0, churnRisk: 0, alerts: [] },
+              lostRisk: { churnRisk: 0, dealAtRisk: 0, alerts: [] },
+            },
+          });
+        }
+        return Promise.resolve({ data: [] });
+      });
+
+      renderWithClient(<NotificationHubClient />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/3 Work order lewat deadline/i)).toBeInTheDocument();
+        expect(screen.getByText(/7 Invoice overdue/i)).toBeInTheDocument();
+        expect(screen.getByText(/3 Work Orders are currently overdue/i)).toBeInTheDocument();
+      });
+
+      // The old fabricated strings must be gone.
+      expect(screen.queryByText(/Mesin RO-02 Downtime/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Rp 120jt/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/2H AGO/i)).not.toBeInTheDocument();
+
+      // Sales reports 0 unfollowed -> its group must not invent an issue.
+      expect(screen.queryByText(/Lead belum difollow-up/i)).not.toBeInTheDocument();
     });
   });
 

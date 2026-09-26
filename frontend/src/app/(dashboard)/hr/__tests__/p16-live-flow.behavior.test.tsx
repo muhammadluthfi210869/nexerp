@@ -11,6 +11,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
@@ -38,6 +39,112 @@ import HrAttendancePage from "@/app/(dashboard)/master/hr-attendance/page";
 import HrRecruitmentPage from "@/app/(dashboard)/master/hr-recruitment/page";
 import HrKpiPage from "@/app/(dashboard)/hr/kpi/page";
 
+const MOCK_PAYROLLS = [
+  {
+    id: "PAY-01",
+    employee: {
+      nik: "KIL-2022-001",
+      name: "Budi Santoso",
+      department: "Produksi Mixing",
+      role: "Supervisor Produksi",
+      bankName: "BCA",
+      bankAccount: "521-0099881",
+    },
+    basicSalary: 6500000,
+    allowance: 1200000,
+    overtimePay: 850000,
+    loanDeduction: 500000,
+    remainingLoan: 1500000,
+    netSalary: 8640000,
+    status: "APPROVED",
+  },
+  {
+    id: "PAY-02",
+    employee: {
+      nik: "KIL-2023-014",
+      name: "Rian Saputra",
+      department: "R&D Formulasi",
+      role: "Senior Formulator",
+      bankName: "Bank Mandiri",
+      bankAccount: "137-0099112",
+    },
+    basicSalary: 8000000,
+    allowance: 1500000,
+    overtimePay: 0,
+    loanDeduction: 0,
+    remainingLoan: 0,
+    netSalary: 10020000,
+    status: "APPROVED",
+  },
+];
+
+const MOCK_ATTENDANCE = [
+  {
+    id: "att-1",
+    employee: {
+      nik: "KIL-2022-001",
+      name: "Budi Santoso",
+      department: "Produksi Mixing",
+    },
+    shift: "Shift 1 (07:00 - 15:30)",
+    clockIn: "2026-09-09T06:48:00Z",
+    clockOut: "2026-09-09T15:35:00Z",
+    distanceMeters: 12,
+    latitude: -6.2088,
+    longitude: 106.8456,
+    isLate: false,
+  },
+  {
+    id: "att-2",
+    employee: {
+      nik: "KIL-2023-014",
+      name: "Rian Saputra",
+      department: "R&D Formulasi",
+    },
+    shift: "Office (08:00 - 17:00)",
+    clockIn: "2026-09-09T07:52:00Z",
+    clockOut: "2026-09-09T17:05:00Z",
+    distanceMeters: 18,
+    latitude: -6.2088,
+    longitude: 106.8456,
+    isLate: false,
+  },
+];
+
+const MOCK_EMPLOYEES = [
+  {
+    id: "emp-1",
+    nik: "KIL-2022-001",
+    name: "Budi Santoso",
+    department: "Produksi Mixing",
+    role: "Supervisor Produksi",
+    joinedAt: "2022-01-15T00:00:00Z",
+    isActive: true,
+    email: "budi.santoso@kalopsia.id",
+  },
+  {
+    id: "emp-2",
+    nik: "KIL-2023-014",
+    name: "Rian Saputra",
+    department: "R&D Formulasi",
+    role: "Senior Formulator",
+    joinedAt: "2023-03-01T00:00:00Z",
+    isActive: true,
+    email: "rian.s@kalopsia.id",
+  },
+];
+
+const MOCK_CANDIDATES = [
+  {
+    id: "cnd-1",
+    name: "Calon Operator",
+    appliedRole: "Operator",
+    department: "Produksi",
+    stage: "SCREENING",
+    status: "ACTIVE",
+  },
+];
+
 function renderWithClient(ui: React.ReactElement) {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -50,23 +157,44 @@ function renderWithClient(ui: React.ReactElement) {
 
 describe("P16 Live Flow — Human Resources, Attendance, Kasbon & Payroll UI", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
+    vi.spyOn(api, "get").mockImplementation((url: string) => {
+      if (url.includes("/hr/payrolls")) {
+        return Promise.resolve({ data: MOCK_PAYROLLS });
+      }
+      if (url.includes("/hr/attendance")) {
+        return Promise.resolve({ data: MOCK_ATTENDANCE });
+      }
+      if (url.includes("/hr/employees")) {
+        return Promise.resolve({ data: MOCK_EMPLOYEES });
+      }
+      if (url.includes("/hr/candidates")) {
+        return Promise.resolve({ data: MOCK_CANDIDATES });
+      }
+      return Promise.resolve({ data: [] });
+    });
   });
 
   describe("1. Payroll Workbench & Salary Slip (Sleepsalary)", () => {
-    it("renders payroll overview with KPI cards and employee payroll table", () => {
+    it("renders payroll overview with KPI cards and employee payroll table", async () => {
       renderWithClient(<HrPayrollPage />);
 
       expect(screen.getByText(/Payroll Workbench & Penggajian/i)).toBeInTheDocument();
-      expect(screen.getByText(/Budi Santoso/i)).toBeInTheDocument();
-      expect(screen.getByText(/Rian Saputra/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/Budi Santoso/i)).toBeInTheDocument();
+        expect(screen.getByText(/Rian Saputra/i)).toBeInTheDocument();
+      });
     });
 
     it("opens detailed Salary Slip modal with Upah Tetap, 2-Col Transport, Kasbon reminder, BPJS and PPh21", async () => {
       renderWithClient(<HrPayrollPage />);
 
-      // Click first "Slip Gaji" button
-      const slipButtons = screen.getAllByRole("button", { name: /Slip Gaji/i });
+      await waitFor(() => {
+        expect(screen.getByText(/Budi Santoso/i)).toBeInTheDocument();
+      });
+
+      // Click first "Slip" button
+      const slipButtons = screen.getAllByRole("button", { name: /Slip/i });
       fireEvent.click(slipButtons[0]);
 
       // Check modal rendered
@@ -98,31 +226,41 @@ describe("P16 Live Flow — Human Resources, Attendance, Kasbon & Payroll UI", (
   });
 
   describe("2. Presensi Live Attendance (Geofencing)", () => {
-    it("renders attendance monitor with geofence badge and employee attendance entries", () => {
+    it("renders attendance monitor with geofence badge and employee attendance entries", async () => {
       renderWithClient(<HrAttendancePage />);
 
       expect(screen.getByText(/Presensi Live Attendance/i)).toBeInTheDocument();
       expect(screen.getByText(/Geofence Pabrik: Radius 50m Aktif/i)).toBeInTheDocument();
-      expect(screen.getByText(/Budi Santoso/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/Budi Santoso/i)).toBeInTheDocument();
+      });
     });
 
-    it("filters attendance by search keyword", () => {
+    it("filters attendance by search keyword", async () => {
       renderWithClient(<HrAttendancePage />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Budi Santoso/i)).toBeInTheDocument();
+      });
 
       const searchInput = screen.getByPlaceholderText(/Cari nama atau NIK/i);
       fireEvent.change(searchInput, { target: { value: "Rian Saputra" } });
 
-      expect(screen.getByText(/Rian Saputra/i)).toBeInTheDocument();
-      expect(screen.queryByText(/Budi Santoso/i)).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/Rian Saputra/i)).toBeInTheDocument();
+        expect(screen.queryByText(/Budi Santoso/i)).not.toBeInTheDocument();
+      });
     });
   });
 
   describe("3. Recruitment ATS & Demographics", () => {
-    it("renders recruitment pipeline with ATS stages and candidate list", () => {
+    it("renders recruitment pipeline with ATS stages and candidate list", async () => {
       renderWithClient(<HrRecruitmentPage />);
 
       expect(screen.getByText(/Pegawai & Rekrutmen/i)).toBeInTheDocument();
-      expect(screen.getByText(/Budi Santoso/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/Budi Santoso/i)).toBeInTheDocument();
+      });
     });
   });
 

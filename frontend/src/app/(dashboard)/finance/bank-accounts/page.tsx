@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   DnaPageContainer,
   DnaPageHeader,
@@ -22,6 +25,7 @@ import {
   DnaTableBody,
   DnaTableRow,
   DnaTd,
+  useDnaToast,
 } from "@/components/dna";
 import { Plus, Building2, CreditCard, Wallet, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
@@ -37,57 +41,38 @@ interface BankAccount {
   isActive: boolean;
 }
 
-const INITIAL_ACCOUNTS: BankAccount[] = [
-  {
-    id: "bank-1",
-    bankName: "Bank Central Asia (BCA)",
-    accountNumber: "541-0988-121",
-    accountName: "PT Karya Impian Laboratoris (Operasional)",
-    accountType: "BANK",
-    currency: "IDR",
-    currentBalance: 1250000000,
-    glAccountCode: "11300",
-    isActive: true,
-  },
-  {
-    id: "bank-2",
-    bankName: "Bank Mandiri",
-    accountNumber: "132-00-987654-1",
-    accountName: "PT Karya Impian Laboratoris (Payroll)",
-    accountType: "BANK",
-    currency: "IDR",
-    currentBalance: 420000000,
-    glAccountCode: "11310",
-    isActive: true,
-  },
-  {
-    id: "cash-1",
-    bankName: "Brankas Utama Pabrik",
-    accountNumber: "CASH-MAIN",
-    accountName: "Kas Operasional Pabrik",
-    accountType: "CASH",
-    currency: "IDR",
-    currentBalance: 35000000,
-    glAccountCode: "11100",
-    isActive: true,
-  },
-  {
-    id: "petty-1",
-    bankName: "Petty Cash Finance Lab",
-    accountNumber: "CASH-PETTY",
-    accountName: "Kas Kecil R&D & Operasional",
-    accountType: "PETTY_CASH",
-    currency: "IDR",
-    currentBalance: 12500000,
-    glAccountCode: "11200",
-    isActive: true,
-  },
-];
-
 export default function BankAccountsPage() {
-  const [accounts, setAccounts] = useState<BankAccount[]>(INITIAL_ACCOUNTS);
+  const qc = useQueryClient();
+  const toast = useDnaToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const { data: rawAccounts = [], isLoading } = useQuery<any[]>({
+    queryKey: ["finance-bank-accounts"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/bank-accounts");
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const accounts: BankAccount[] = useMemo(() => {
+    return rawAccounts.map((a: any) => ({
+      id: a.id,
+      bankName: a.bankName || a.accountCode || "Bank",
+      accountNumber: a.accountNumber || "-",
+      accountName: a.notes || a.bankName || "Rekening Operasional",
+      accountType: (a.accountType || "BANK") as "BANK" | "CASH" | "PETTY_CASH",
+      currency: a.currencyCode || a.currency || "IDR",
+      currentBalance: Number(a.currentBalance || a.initialBalance || 0),
+      glAccountCode: a.glAccountId || a.glAccountCode || "1110",
+      isActive: a.isActive !== false,
+    }));
+  }, [rawAccounts]);
 
   const totalBalance = accounts.reduce((acc, a) => acc + (a.isActive ? a.currentBalance : 0), 0);
   const totalBank = accounts.filter((a) => a.accountType === "BANK").reduce((acc, a) => acc + a.currentBalance, 0);
@@ -103,28 +88,52 @@ export default function BankAccountsPage() {
     glAccountCode: "11300",
   });
 
+  const createMutation = useMutation({
+    mutationFn: async (payload: any) => api.post("/finance/bank-accounts", payload),
+    onSuccess: () => {
+      toast.success("Rekening kas/bank berhasil ditambahkan");
+      qc.invalidateQueries({ queryKey: ["finance-bank-accounts"] });
+      setIsModalOpen(false);
+      setFormData({
+        bankName: "",
+        accountNumber: "",
+        accountName: "",
+        accountType: "BANK",
+        currency: "IDR",
+        initialBalance: 0,
+        glAccountCode: "11300",
+      });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal membuat rekening kas/bank");
+    },
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) =>
+      api.patch(`/finance/bank-accounts/${id}`, { isActive }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["finance-bank-accounts"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal mengubah status rekening");
+    },
+  });
+
   const handleCreate = () => {
-    const newAcc: BankAccount = {
-      id: "acc-" + Date.now(),
+    if (!formData.bankName || !formData.accountNumber) {
+      toast.error("Nama bank dan nomor rekening wajib diisi");
+      return;
+    }
+    const accountCode = `${formData.bankName.slice(0, 4).toUpperCase()}-${formData.accountNumber.slice(-4)}`;
+    createMutation.mutate({
+      accountCode,
       bankName: formData.bankName,
       accountNumber: formData.accountNumber,
-      accountName: formData.accountName,
       accountType: formData.accountType,
-      currency: formData.currency,
-      currentBalance: formData.initialBalance,
-      glAccountCode: formData.glAccountCode,
-      isActive: true,
-    };
-    setAccounts([newAcc, ...accounts]);
-    setIsModalOpen(false);
-    setFormData({
-      bankName: "",
-      accountNumber: "",
-      accountName: "",
-      accountType: "BANK",
-      currency: "IDR",
-      initialBalance: 0,
-      glAccountCode: "11300",
+      currencyCode: formData.currency,
+      initialBalance: Number(formData.initialBalance),
+      notes: formData.accountName,
     });
   };
 
@@ -189,7 +198,7 @@ export default function BankAccountsPage() {
         <div className="overflow-x-auto">
           <DnaTable>
             <DnaTableHead>
-              <tr>
+              <DnaTableRow>
                 <DnaTh>Nama Bank / Kas</DnaTh>
                 <DnaTh className="w-[140px]">Nomor Rekening</DnaTh>
                 <DnaTh>Atas Nama</DnaTh>
@@ -198,7 +207,7 @@ export default function BankAccountsPage() {
                 <DnaTh align="right" className="w-[150px]">Saldo Berjalan</DnaTh>
                 <DnaTh align="center" className="w-[110px]">Status</DnaTh>
                 <DnaTh align="center" className="w-[110px]">Aksi</DnaTh>
-              </tr>
+              </DnaTableRow>
             </DnaTableHead>
             <DnaTableBody>
               {filtered.map((acc) => (
@@ -255,10 +264,9 @@ export default function BankAccountsPage() {
                       variant="secondary"
                       size="sm"
                       onClick={() =>
-                        setAccounts(
-                          accounts.map((a) => (a.id === acc.id ? { ...a, isActive: !a.isActive } : a))
-                        )
+                        toggleMutation.mutate({ id: acc.id, isActive: !acc.isActive })
                       }
+                      disabled={toggleMutation.isPending}
                     >
                       {acc.isActive ? "Nonaktifkan" : "Aktifkan"}
                     </DnaButton>

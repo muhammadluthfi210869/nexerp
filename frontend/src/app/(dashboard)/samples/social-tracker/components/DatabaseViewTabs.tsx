@@ -72,7 +72,7 @@ export const DatabaseViewTabs: React.FC<DatabaseViewTabsProps> = ({
             >
               <span>📋</span>
               <span>Table View</span>
-              <span className="text-[11px] text-[#787774] font-mono">({counts.total})</span>
+              <span className="text-[11px] text-[#787774] tabular-nums">({counts.total})</span>
             </button>
 
             <button

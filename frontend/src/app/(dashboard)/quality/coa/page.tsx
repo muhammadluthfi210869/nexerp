@@ -26,7 +26,13 @@ import {
   DnaButton,
   DnaBadge,
   DnaDetailDrawer,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface CoaRecord {
@@ -201,58 +207,58 @@ export default function CoACenterPage() {
         searchPlaceholder="Cari nomor CoA, nama produk, nomor batch, atau analis..."
       >
         <div className="w-full">
-          <table className="w-full text-left text-xs table-fixed">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-4 w-[18%]">Certificate ID & Tgl</th>
-                <th className="py-3 px-4 w-[28%]">Produk & Batch</th>
-                <th className="py-3 px-4 w-[22%]">Parameter Uji Rilis</th>
-                <th className="py-3 px-4 w-[16%]">Inspektor Mutu</th>
-                <th className="py-3 px-4 w-[10%]">Status</th>
-                <th className="py-3 px-4 w-[6%] text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-[18%]">Certificate ID & Tgl</DnaTh>
+                <DnaTh className="py-3 px-4 w-[28%]">Produk & Batch</DnaTh>
+                <DnaTh className="py-3 px-4 w-[22%]">Parameter Uji Rilis</DnaTh>
+                <DnaTh className="py-3 px-4 w-[16%]">Inspektor Mutu</DnaTh>
+                <DnaTh className="py-3 px-4 w-[10%]">Status</DnaTh>
+                <DnaTh className="py-3 px-4 w-[6%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     Memuat arsip CoA...
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : filteredRecords.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     <ShieldCheck className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada sertifikat CoA yang sesuai kriteria.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredRecords.map((record) => (
-                  <tr key={record.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 truncate">
-                      <p className="font-mono text-xs font-bold text-slate-900 truncate">{record.id}</p>
-                      <p className="text-[11px] text-slate-500 font-mono mt-0.5 truncate">{record.releaseDate}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                  <DnaTableRow key={record.id} className="hover:bg-slate-50/70 transition-colors">
+                    <DnaTd className="py-3 px-4 truncate">
+                      <p className="tabular-nums text-xs font-bold text-slate-900 truncate">{record.id}</p>
+                      <p className="text-[11px] text-slate-500 tabular-nums mt-0.5 truncate">{record.releaseDate}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <p className="font-semibold text-slate-900 text-xs truncate">{record.product}</p>
-                      <p className="text-[11px] text-slate-500 font-mono truncate">Batch: {record.batch}</p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                      <p className="text-[11px] text-slate-500 tabular-nums truncate">Batch: {record.batch}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <p className="font-medium text-slate-800 text-xs truncate">
                         pH: {record.parameters?.ph || "—"} • Visk: {record.parameters?.viscosity || "—"}
                       </p>
                       <p className="text-[11px] text-slate-500 truncate">
                         Densitas: {record.parameters?.density || "—"} g/ml
                       </p>
-                    </td>
-                    <td className="py-3 px-4 truncate">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <p className="font-medium text-slate-800 text-xs truncate">{record.analyst}</p>
                       <p className="text-[11px] text-slate-400 truncate">QC Inspector</p>
-                    </td>
-                    <td className="py-3 px-4">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4">
                       <DnaBadge variant="success">TERVERIFIKASI</DnaBadge>
-                    </td>
-                    <td className="py-3 px-4 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-right">
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -264,12 +270,12 @@ export default function CoACenterPage() {
                       >
                         <Eye className="w-4 h-4 text-slate-600" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -288,11 +294,11 @@ export default function CoACenterPage() {
               <div className="space-y-4 text-xs">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-mono font-bold text-slate-900">{selectedCoa.id}</span>
-                    <span className="font-mono text-slate-500">{selectedCoa.releaseDate}</span>
+                    <span className="tabular-nums font-bold text-slate-900">{selectedCoa.id}</span>
+                    <span className="tabular-nums text-slate-500">{selectedCoa.releaseDate}</span>
                   </div>
                   <p className="font-bold text-slate-900 text-sm">{selectedCoa.product}</p>
-                  <p className="text-slate-600 font-mono">No. Batch: {selectedCoa.batch}</p>
+                  <p className="text-slate-600 tabular-nums">No. Batch: {selectedCoa.batch}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -324,15 +330,15 @@ export default function CoACenterPage() {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">pH Uji</span>
-                    <p className="font-mono font-bold text-slate-900">{selectedCoa.parameters?.ph || "—"}</p>
+                    <p className="tabular-nums font-bold text-slate-900">{selectedCoa.parameters?.ph || "—"}</p>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Viskositas</span>
-                    <p className="font-mono font-bold text-slate-900">{selectedCoa.parameters?.viscosity || "—"} cps</p>
+                    <p className="tabular-nums font-bold text-slate-900">{selectedCoa.parameters?.viscosity || "—"} cps</p>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Densitas</span>
-                    <p className="font-mono font-bold text-slate-900">{selectedCoa.parameters?.density || "—"} g/ml</p>
+                    <p className="tabular-nums font-bold text-slate-900">{selectedCoa.parameters?.density || "—"} g/ml</p>
                   </div>
                 </div>
 

@@ -290,12 +290,12 @@ export default function LegalityRecordsPage() {
                       setIsDetailDrawerOpen(true);
                     }}
                   >
-                    <td className="p-3 text-slate-400 font-mono text-[11px] tabular-nums">
+                    <td className="p-3 text-slate-400 tabular-nums text-[11px] tabular-nums">
                       {idx + 1}
                     </td>
                     <td className="p-3">
                       <div className="font-bold text-slate-900 truncate uppercase">{regTitle}</div>
-                      <div className="font-mono text-[11px] text-blue-600 font-semibold">{regId}</div>
+                      <div className="tabular-nums text-[11px] text-blue-600 font-semibold">{regId}</div>
                     </td>
                     <td className="p-3">
                       <div className="font-semibold text-slate-800 truncate">{record.clientName || "PT Nex Industri"}</div>
@@ -305,7 +305,7 @@ export default function LegalityRecordsPage() {
                       <div className="font-medium text-slate-900 text-xs truncate">
                         {record.stage ? record.stage.replace("_", " ") : "Pemeriksaan Substantif"}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono">
+                      <div className="text-[10px] text-slate-400 tabular-nums">
                         {record.daysElapsed ? `${record.daysElapsed} hari berjalan` : "Baru diajukan"}
                       </div>
                     </td>
@@ -389,7 +389,7 @@ export default function LegalityRecordsPage() {
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">Nomor Registrasi / SK</span>
-                    <span className="font-mono font-bold text-blue-600 text-sm">{selectedRecord.regId}</span>
+                    <span className="tabular-nums font-bold text-blue-600 text-sm">{selectedRecord.regId}</span>
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">Klien Pemilik Hak</span>
@@ -397,7 +397,7 @@ export default function LegalityRecordsPage() {
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">Kategori Dokumen</span>
-                    <span className="font-mono text-slate-700">{selectedRecord.type || selectedRecord.category || "Kosmetika"}</span>
+                    <span className="tabular-nums text-slate-700">{selectedRecord.type || selectedRecord.category || "Kosmetika"}</span>
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">PIC Penanggung Jawab</span>
@@ -405,7 +405,7 @@ export default function LegalityRecordsPage() {
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">Durasi Proses</span>
-                    <span className="font-mono font-semibold text-slate-800">{selectedRecord.daysElapsed || 0} Hari</span>
+                    <span className="tabular-nums font-semibold text-slate-800">{selectedRecord.daysElapsed || 0} Hari</span>
                   </div>
                 </div>
 

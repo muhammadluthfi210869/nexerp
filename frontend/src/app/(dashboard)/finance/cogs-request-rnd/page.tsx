@@ -2,6 +2,8 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   DollarSign,
   Plus,
@@ -59,93 +61,49 @@ interface CogsRequest {
   notes?: string;
 }
 
-const INITIAL_COGS: CogsRequest[] = [
-  {
-    id: "cogs-01",
-    requestCode: "HPP-2026-0001",
-    requestDate: "2026-03-08",
-    customerName: "PT Cantika Glow Nusantara",
-    productName: "Brightening Glow Serum 10% Niacinamide 30ml",
-    formulaCode: "FORM-2026-0001 (Rev 2.0)",
-    moqQty: 5000,
-    status: "APPROVED",
-    statusLabel: "Disetujui Management",
-    formulaCost: 4350,
-    primaryPackCost: 4200,
-    secondaryPackCost: 1650,
-    laborCost: 850,
-    overheadCost: 650,
-    totalHppPerPcs: 12050,
-    recommendedPrice: 24500,
-    notes: "MOQ 5.000 pcs disetujui untuk kontrak maklon kosmetik."
-  },
-  {
-    id: "cogs-02",
-    requestCode: "HPP-2026-0002",
-    requestDate: "2026-03-07",
-    customerName: "PT Miracle Beauty Lab",
-    productName: "Ceramide 5X Barrier Repair Moisturizer 50g",
-    formulaCode: "FORM-2026-0002 (Rev 1.1)",
-    moqQty: 3000,
-    status: "APPROVED",
-    statusLabel: "Disetujui Management",
-    formulaCost: 9250,
-    primaryPackCost: 6500,
-    secondaryPackCost: 2100,
-    laborCost: 950,
-    overheadCost: 850,
-    totalHppPerPcs: 20300,
-    recommendedPrice: 38000,
-    notes: "Biaya kemasan jar akrilik impor disesuaikan kurs USD 16.200."
-  },
-  {
-    id: "cogs-03",
-    requestCode: "HPP-2026-0003",
-    requestDate: "2026-03-05",
-    customerName: "PT Cantika Herbal Nusantara",
-    productName: "Soothing Acne Gel Cica + Tea Tree 30gr",
-    formulaCode: "FORM-2026-0003 (Rev 1.0)",
-    moqQty: 5000,
-    status: "PENDING",
-    statusLabel: "Menunggu Approval",
-    formulaCost: 2850,
-    primaryPackCost: 3200,
-    secondaryPackCost: 1400,
-    laborCost: 750,
-    overheadCost: 550,
-    totalHppPerPcs: 9000,
-    recommendedPrice: 18500,
-    notes: "Perhitungan HPP awal menunggu rilis harga final kemasan tube lokal."
-  },
-  {
-    id: "cogs-04",
-    requestCode: "HPP-2026-0004",
-    requestDate: "2026-03-01",
-    customerName: "CV Royal Beauty Luxe",
-    productName: "Hydrating Lip Oil Peptide Tint 5ml",
-    formulaCode: "FORM-2026-0004 (Rev 1.0)",
-    moqQty: 10000,
-    status: "APPROVED",
-    statusLabel: "Disetujui Management",
-    formulaCost: 1200,
-    primaryPackCost: 5500,
-    secondaryPackCost: 1800,
-    laborCost: 650,
-    overheadCost: 450,
-    totalHppPerPcs: 9950,
-    recommendedPrice: 22000,
-    notes: "MOQ 10.000 pcs disetujui untuk peluncuran seasonal Q3."
-  }
-];
-
 function CogsRequestContent() {
   const searchParams = useSearchParams();
-  const [cogsList, setCogsList] = useState<CogsRequest[]>(INITIAL_COGS);
+  const qc = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedCogs, setSelectedCogs] = useState<CogsRequest | null>(null);
   const toast = useDnaToast();
+
+  const { data: rawCogs = [], isLoading } = useQuery<any[]>({
+    queryKey: ["finance-cogs-requests-rnd"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/cogs-requests");
+        const body = res.data;
+        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const cogsList: CogsRequest[] = useMemo(() => {
+    return rawCogs.map((item: any, idx: number) => ({
+      id: item.id || `cogs-${idx}`,
+      requestCode: item.jobOrderNumber || item.requestCode || `HPP-2026-${String(idx + 1).padStart(4, "0")}`,
+      requestDate: item.recordedAt ? new Date(item.recordedAt).toISOString().slice(0, 10) : item.requestDate || new Date().toISOString().slice(0, 10),
+      customerName: item.customerName || item.description || "Client Partner",
+      productName: item.productName || item.jobOrderNumber || "Produk Maklon",
+      formulaCode: item.formulaCode || "FORM-STD-001",
+      moqQty: Number(item.moqQty || 5000),
+      status: item.closedAt ? "APPROVED" : "PENDING",
+      statusLabel: item.closedAt ? "Disetujui Management" : "Menunggu Approval",
+      formulaCost: Number(item.formulaCost || (Number(item.totalCost || 0) * 0.45) || 0),
+      primaryPackCost: Number(item.primaryPackCost || (Number(item.totalCost || 0) * 0.35) || 0),
+      secondaryPackCost: Number(item.secondaryPackCost || (Number(item.totalCost || 0) * 0.1) || 0),
+      laborCost: Number(item.laborCost || 850),
+      overheadCost: Number(item.overheadCost || 650),
+      totalHppPerPcs: Number(item.totalCost ? Math.round(Number(item.totalCost) / 5000) : 0),
+      recommendedPrice: Number(item.totalRevenue ? Math.round(Number(item.totalRevenue) / 5000) : 0),
+      notes: item.description || ""
+    }));
+  }, [rawCogs]);
 
   // Create Form State (1:1 G-SERP Row 140)
   const [formData, setFormData] = useState({
@@ -185,31 +143,31 @@ function CogsRequestContent() {
   const approvedCount = cogsList.filter((c) => c.status === "APPROVED").length;
   const pendingCount = cogsList.filter((c) => c.status === "PENDING").length;
 
+  const createMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      return api.post("/finance/cogs-requests", payload);
+    },
+    onSuccess: () => {
+      toast.success("Permintaan HPP Dibuat", "Dokumen pengajuan HPP berhasil disimpan di backend.");
+      qc.invalidateQueries({ queryKey: ["finance-cogs-requests-rnd"] });
+      setIsCreateModalOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error("Gagal membuat HPP", err?.response?.data?.message || err?.message || "Kesalahan jaringan");
+    }
+  });
+
   const handleSaveCogs = (e: React.FormEvent) => {
     e.preventDefault();
-    const newCogs: CogsRequest = {
-      id: `cogs-${Date.now()}`,
-      requestCode: `HPP-2026-${String(cogsList.length + 1).padStart(4, "0")}`,
-      requestDate: formData.tanggal,
-      customerName: formData.pelanggan,
-      productName: "Sunscreen Glow Gel Hybrid SPF 50 30ml",
-      formulaCode: formData.formula,
-      moqQty: Number(formData.jumlahMoq) || 5000,
-      status: "PENDING",
-      statusLabel: "Menunggu Approval",
-      formulaCost: 5250,
-      primaryPackCost: 3800,
-      secondaryPackCost: 1500,
-      laborCost: 850,
-      overheadCost: 650,
-      totalHppPerPcs: 12450,
-      recommendedPrice: 25000,
-      notes: "Kalkulasi HPP awal berdasarkan simulasi kemasan primer & sekunder."
+    const moq = Number(formData.jumlahMoq) || 5000;
+    const joNum = `JO-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
+    const payload = {
+      jobOrderNumber: joNum,
+      description: `${formData.pelanggan} - ${formData.formula} - ${formData.netto}`,
+      totalCost: moq * 12450,
+      totalRevenue: moq * 25000,
     };
-
-    setCogsList([newCogs, ...cogsList]);
-    setIsCreateModalOpen(false);
-    toast.success("Permintaan HPP Dibuat", "Dokumen pengajuan HPP berhasil diteruskan ke Finance & Management.");
+    createMutation.mutate(payload);
   };
 
   return (

@@ -70,21 +70,21 @@ export default function FinanceDashboardPage() {
           <div style={{ marginBottom: "1.25rem" }}>
             <p style={{ fontSize: "10px", fontWeight: 800, color: "#64748B", margin: 0 }}>TOTAL REVENUE</p>
             <p style={{ fontSize: "22px", fontWeight: 950, color: "#1E293B", margin: "4px 0" }}>
-              {formatMilyarJuta(metrics?.totalRevenue ?? metrics?.revenue, "Rp 12.8 M")}
+              {formatMilyarJuta(metrics?.totalRevenue ?? metrics?.revenue, "Rp 0")}
             </p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>COLLECTION RATE</span>
-              <span style={{ fontSize: "12px", fontWeight: 950, color: "#10B981" }}>{metrics?.collectionRate ?? 82.5}%</span>
+              <span style={{ fontSize: "12px", fontWeight: 950, color: "#10B981" }}>{metrics?.collectionRate ?? 0}%</span>
             </div>
             <div style={{ height: "6px", background: "#F1F5F9", borderRadius: "3px", overflow: "hidden" }}>
-              <div style={{ width: `${metrics?.collectionRate ?? 82.5}%`, height: "100%", background: "#3B82F6" }} />
+              <div style={{ width: `${metrics?.collectionRate ?? 0}%`, height: "100%", background: "#3B82F6" }} />
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
               <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>UNCOLLECTED</span>
               <span style={{ fontSize: "12px", fontWeight: 950, color: "#EF4444" }}>
-                {formatMilyarJuta(metrics?.uncollected, "Rp 2.2 M")}
+                {formatMilyarJuta(metrics?.uncollected, "Rp 0")}
               </span>
             </div>
           </div>
@@ -99,25 +99,25 @@ export default function FinanceDashboardPage() {
           <div style={{ marginBottom: "1.25rem" }}>
             <p style={{ fontSize: "10px", fontWeight: 800, color: "#64748B", margin: 0 }}>TOTAL EXPENSE (MTD)</p>
             <p style={{ fontSize: "22px", fontWeight: 950, color: "#EAB308", margin: "4px 0" }}>
-              {formatMilyarJuta(metrics?.totalExpense ?? metrics?.expense, "Rp 8.4 M")}
+              {formatMilyarJuta(metrics?.totalExpense ?? metrics?.expense, "Rp 0")}
             </p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ fontSize: "10px", fontWeight: 850, color: "#64748B" }}>COGS</span>
               <span style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>
-                {formatMilyarJuta(metrics?.cogs, "Rp 5.2 M")}
+                {formatMilyarJuta(metrics?.cogs, "Rp 0")}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ fontSize: "10px", fontWeight: 850, color: "#64748B" }}>OPERATIONAL</span>
               <span style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>
-                {formatMilyarJuta(metrics?.operational, "Rp 3.2 M")}
+                {formatMilyarJuta(metrics?.operational, "Rp 0")}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 10px", background: "#F8FAFC", borderRadius: "8px", marginTop: "4px" }}>
               <span style={{ fontSize: "9px", fontWeight: 900, color: "#64748B" }}>EXPENSE RATIO</span>
-              <span style={{ fontSize: "11px", fontWeight: 950, color: "#EAB308" }}>{metrics?.expenseRatio ?? 65.6}%</span>
+              <span style={{ fontSize: "11px", fontWeight: 950, color: "#EAB308" }}>{metrics?.expenseRatio ?? 0}%</span>
             </div>
           </div>
         </div>
@@ -130,7 +130,7 @@ export default function FinanceDashboardPage() {
           </div>
           <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
             <p style={{ fontSize: "28px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
-              {formatMilyarJuta(metrics?.netCashFlow, "Rp 1.8 M")}
+              {formatMilyarJuta(metrics?.netCashFlow, "Rp 0")}
             </p>
             <p style={{ fontSize: "9px", fontWeight: 850, color: "#166534", margin: 0 }}>NET CASH FLOW (MTD)</p>
           </div>
@@ -138,19 +138,19 @@ export default function FinanceDashboardPage() {
             <div style={{ background: "white", padding: "10px", borderRadius: "12px", border: "1px solid #DCFCE7" }}>
               <p style={{ fontSize: "8px", fontWeight: 850, color: "#64748B", margin: 0 }}>CASH IN</p>
               <p style={{ fontSize: "12px", fontWeight: 950, color: "#10B981", margin: 0 }}>
-                {formatMilyarJuta(metrics?.cashIn, "Rp 10.2M")}
+                {formatMilyarJuta(metrics?.cashIn, "Rp 0")}
               </p>
             </div>
             <div style={{ background: "white", padding: "10px", borderRadius: "12px", border: "1px solid #DCFCE7" }}>
               <p style={{ fontSize: "8px", fontWeight: 850, color: "#64748B", margin: 0 }}>CASH OUT</p>
               <p style={{ fontSize: "12px", fontWeight: 950, color: "#EF4444", margin: 0 }}>
-                {formatMilyarJuta(metrics?.cashOut, "Rp 8.4M")}
+                {formatMilyarJuta(metrics?.cashOut, "Rp 0")}
               </p>
             </div>
           </div>
           <div style={{ textAlign: "center", marginTop: "12px" }}>
             <p style={{ fontSize: "9px", fontWeight: 850, color: "#64748B", margin: 0 }}>
-              CURRENT BALANCE: <span style={{ color: "#1E293B", fontWeight: 950 }}>{formatMilyarJuta(metrics?.currentBalance, "Rp 4.5 M")}</span>
+              CURRENT BALANCE: <span style={{ color: "#1E293B", fontWeight: 950 }}>{formatMilyarJuta(metrics?.currentBalance, "Rp 0")}</span>
             </p>
           </div>
         </div>
@@ -165,24 +165,24 @@ export default function FinanceDashboardPage() {
             <div>
               <p style={{ fontSize: "9px", fontWeight: 800, color: "#64748B", margin: 0 }}>NET PROFIT</p>
               <p style={{ fontSize: "18px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
-                {formatMilyarJuta(metrics?.netProfit, "Rp 4.4 M")}
+                {formatMilyarJuta(metrics?.netProfit, "Rp 0")}
               </p>
             </div>
             <div style={{ textAlign: "right" }}>
               <p style={{ fontSize: "9px", fontWeight: 800, color: "#64748B", margin: 0 }}>MARGIN</p>
-              <p style={{ fontSize: "18px", fontWeight: 950, color: "#8B5CF6", margin: 0 }}>{metrics?.margin ?? 34.3}%</p>
+              <p style={{ fontSize: "18px", fontWeight: 950, color: "#8B5CF6", margin: 0 }}>{metrics?.margin ?? 0}%</p>
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>GROSS PROFIT</span>
               <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>
-                {formatMilyarJuta(metrics?.grossProfit, "Rp 7.6 M")}
+                {formatMilyarJuta(metrics?.grossProfit, "Rp 0")}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>GP MARGIN</span>
-              <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{metrics?.gpMargin ?? 59.4}%</span>
+              <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{metrics?.gpMargin ?? 0}%</span>
             </div>
           </div>
         </div>
@@ -197,19 +197,19 @@ export default function FinanceDashboardPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "white", padding: "8px 12px", borderRadius: "10px" }}>
               <span style={{ fontSize: "9px", fontWeight: 900, color: "#EF4444" }}>OVERDUE A/R</span>
               <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>
-                {formatMilyarJuta(metrics?.overdueAr, "Rp 850 Jt")}
+                {formatMilyarJuta(metrics?.overdueAr, "Rp 0")}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "white", padding: "8px 12px", borderRadius: "10px" }}>
               <span style={{ fontSize: "9px", fontWeight: 900, color: "#EA580C" }}>OVERDUE A/P</span>
               <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>
-                {formatMilyarJuta(metrics?.overdueAp, "Rp 420 Jt")}
+                {formatMilyarJuta(metrics?.overdueAp, "Rp 0")}
               </span>
             </div>
             <div style={{ background: "#9F1239", padding: "10px", borderRadius: "12px", marginTop: "2px" }}>
               <p style={{ fontSize: "9px", fontWeight: 950, color: "#ffffff", margin: 0, opacity: 0.9 }}>RISK ALERT</p>
               <p style={{ fontSize: "11px", fontWeight: 950, color: "#ffffff", margin: 0 }}>
-                {metrics?.cashRunwayAlert || "CASH RUNWAY < 3 MONTHS"}
+                {metrics?.cashRunwayAlert || "HEALTHY RUNWAY"}
               </p>
             </div>
           </div>

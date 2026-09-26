@@ -210,7 +210,7 @@ export default function ClientEscrowPage() {
                 className="hover:bg-slate-50/50 transition-colors cursor-pointer"
               >
                 <td className="px-3.5 py-2.5">
-                  <div className="font-mono text-purple-700 font-bold text-xs">{e.escrowNo}</div>
+                  <div className="tabular-nums text-purple-700 font-bold text-xs">{e.escrowNo}</div>
                   <div className="mt-0.5">
                     <DnaBadge
                       variant={
@@ -279,7 +279,7 @@ export default function ClientEscrowPage() {
                 <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
                   <div>
                     <div className="text-[11px] text-slate-500">Nomor Escrow</div>
-                    <div className="font-mono font-bold text-purple-700 text-sm">{selectedEscrow?.escrowNo}</div>
+                    <div className="tabular-nums font-bold text-purple-700 text-sm">{selectedEscrow?.escrowNo}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-slate-500">Klien Pemilik Dana</div>

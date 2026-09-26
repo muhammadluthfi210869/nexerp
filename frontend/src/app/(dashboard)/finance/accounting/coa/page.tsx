@@ -50,7 +50,7 @@ import {
   DnaTable,
   useDnaToast,
 } from "@/components/dna";
-import { MASTER_COA_LIST, CoaAccountItem } from "@/lib/coa-utils";
+import { unwrapResponse } from "@/lib/unwrap-response";
 
 export interface AccountModel {
   id: string;
@@ -62,18 +62,6 @@ export interface AccountModel {
   parentId?: string | null;
   isActive: boolean;
 }
-
-// Convert MASTER_COA_LIST into initial state models
-const INITIAL_COA_DATA: AccountModel[] = MASTER_COA_LIST.map((item, idx) => ({
-  id: `coa-${item.code}`,
-  code: item.code,
-  name: item.name,
-  type: item.type,
-  normalBalance: item.normalBalance || (item.type === "ASSET" || item.type === "EXPENSE" ? "DEBIT" : "CREDIT"),
-  category: item.category || "General",
-  parentId: null,
-  isActive: item.isActive ?? true,
-}));
 
 function ChartOfAccountsContent() {
   const router = useRouter();
@@ -95,17 +83,24 @@ function ChartOfAccountsContent() {
     router.replace(`/finance/accounting/coa?tab=${tabId.toLowerCase()}`);
   };
 
-  // ── States ──
-  const [accountsList, setAccountsList] = useState<AccountModel[]>(INITIAL_COA_DATA);
-
-  // Sync with API query if backend is available
-  const { data: apiAccounts } = useQuery<AccountModel[]>({
+  // Sync with API query
+  const { data: rawAccounts = [], isLoading } = useQuery<AccountModel[]>({
     queryKey: ["finance-accounts"],
     queryFn: async (): Promise<AccountModel[]> => {
       try {
         const res = await api.get("/finance/accounts");
-        if (Array.isArray(res.data) && res.data.length > 0) {
-          return res.data;
+        const body = unwrapResponse<any[]>(res);
+        if (Array.isArray(body)) {
+          return body.map((acc: any) => ({
+            id: acc.id,
+            code: acc.code,
+            name: acc.name,
+            type: acc.type,
+            normalBalance: acc.normalBalance || (acc.type === "ASSET" || acc.type === "EXPENSE" ? "DEBIT" : "CREDIT"),
+            category: acc.category || acc.reportGroup || "General",
+            parentId: acc.parentId,
+            isActive: acc.isActive !== false,
+          }));
         }
         return [];
       } catch {
@@ -115,11 +110,55 @@ function ChartOfAccountsContent() {
     staleTime: 60000,
   });
 
-  useEffect(() => {
-    if (apiAccounts && apiAccounts.length > 0) {
-      setAccountsList(apiAccounts);
-    }
-  }, [apiAccounts]);
+  const accountsList = rawAccounts;
+
+  const createMutation = useMutation({
+    mutationFn: async (payload: any) => api.post("/finance/accounts", payload),
+    onSuccess: () => {
+      toast.success("Akun baru berhasil ditambahkan.");
+      queryClient.invalidateQueries({ queryKey: ["finance-accounts"] });
+      setIsModalOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal membuat akun");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, payload }: { id: string; payload: any }) =>
+      api.patch(`/finance/accounts/${id}`, payload),
+    onSuccess: () => {
+      toast.success("Akun berhasil diperbarui.");
+      queryClient.invalidateQueries({ queryKey: ["finance-accounts"] });
+      setIsModalOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal memperbarui akun");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => api.delete(`/finance/accounts/${id}`),
+    onSuccess: () => {
+      toast.success("Akun berhasil dihapus.");
+      queryClient.invalidateQueries({ queryKey: ["finance-accounts"] });
+      setAccountToDelete(null);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal menghapus akun");
+    },
+  });
+
+  const seedMutation = useMutation({
+    mutationFn: async () => api.post("/finance/accounts/seed", {}),
+    onSuccess: () => {
+      toast.success("Master akun COA standar berhasil diinisialisasi!");
+      queryClient.invalidateQueries({ queryKey: ["finance-accounts"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal inisialisasi akun COA");
+    },
+  });
 
   // Filter & Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -311,44 +350,25 @@ function ChartOfAccountsContent() {
       return;
     }
 
+    const payload = {
+      code: formCode.trim(),
+      name: formName.trim(),
+      type: formType,
+      normalBalance: formNormalBalance,
+      category: formCategory,
+      isActive: formIsActive,
+    };
+
     if (editingAccount) {
-      setAccountsList((prev) =>
-        prev.map((a) =>
-          a.id === editingAccount.id
-            ? {
-                ...a,
-                code: formCode,
-                name: formName,
-                type: formType,
-                normalBalance: formNormalBalance,
-                category: formCategory,
-                isActive: formIsActive,
-              }
-            : a
-        )
-      );
-      toast.success(`Akun ${formCode} - ${formName} berhasil diperbarui.`);
+      updateMutation.mutate({ id: editingAccount.id, payload });
     } else {
-      const newAcc: AccountModel = {
-        id: `coa-${Date.now()}`,
-        code: formCode,
-        name: formName,
-        type: formType,
-        normalBalance: formNormalBalance,
-        category: formCategory,
-        isActive: formIsActive,
-      };
-      setAccountsList((prev) => [newAcc, ...prev]);
-      toast.success(`Akun baru ${newAcc.code} - ${newAcc.name} berhasil ditambahkan.`);
+      createMutation.mutate(payload);
     }
-    setIsModalOpen(false);
   };
 
   const handleDeleteAccount = () => {
     if (!accountToDelete) return;
-    setAccountsList((prev) => prev.filter((a) => a.id !== accountToDelete.id));
-    toast.success(`Akun ${accountToDelete.code} berhasil dihapus.`);
-    setAccountToDelete(null);
+    deleteMutation.mutate(accountToDelete.id);
   };
 
   // Helper badge color per account type
@@ -646,7 +666,7 @@ function ChartOfAccountsContent() {
                       />
                     </td>
                     {/* Number */}
-                    <td className="p-3.5 text-slate-400 font-mono text-[11px]">
+                    <td className="p-3.5 text-slate-400 tabular-nums text-[11px]">
                       {(currentPage - 1) * pageSize + idx + 1}
                     </td>
                     {/* Kode Akun */}
@@ -656,7 +676,7 @@ function ChartOfAccountsContent() {
                     {/* Nama Rekening */}
                     <td className="p-3.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-md bg-slate-100 border border-slate-200/60 text-slate-700 flex items-center justify-center font-mono font-bold text-[10px] shrink-0">
+                        <div className="w-6 h-6 rounded-md bg-slate-100 border border-slate-200/60 text-slate-700 flex items-center justify-center tabular-nums font-bold text-[10px] shrink-0">
                           {acc.code.charAt(0)}
                         </div>
                         <DnaCell.Text primary={acc.name} />
@@ -715,13 +735,13 @@ function ChartOfAccountsContent() {
           <div className="space-y-6 py-2 text-xs">
             {/* Header Badge Card */}
             <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200/80">
-              <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center font-mono font-black text-sm shadow-xs">
+              <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center tabular-nums font-black text-sm shadow-xs">
                 {viewingAccount.code.substring(0, 3)}
               </div>
               <div className="space-y-1">
                 <h4 className="text-base font-bold text-slate-900">{viewingAccount.name}</h4>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-semibold px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700">
+                  <span className="tabular-nums text-xs font-semibold px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700">
                     Kode: {viewingAccount.code}
                   </span>
                   <DnaCell.Badge
@@ -886,7 +906,7 @@ function ChartOfAccountsContent() {
 
 export default function ChartOfAccountsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400 font-mono text-xs">Memuat Chart of Accounts...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-slate-400 tabular-nums text-xs">Memuat Chart of Accounts...</div>}>
       <ChartOfAccountsContent />
     </Suspense>
   );

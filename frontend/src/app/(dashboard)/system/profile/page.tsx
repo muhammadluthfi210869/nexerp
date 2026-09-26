@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   DnaPageContainer,
   DnaPageHeader,
@@ -38,6 +40,29 @@ export default function UserProfilePage() {
     department: "Executive Management",
     joinedDate: "15 Januari 2024",
   });
+
+  const { data: userProfile } = useQuery({
+    queryKey: ["auth-profile"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/auth/profile");
+        return res.data;
+      } catch {
+        return null;
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (userProfile) {
+      setProfile((prev) => ({
+        ...prev,
+        fullName: userProfile.name || prev.fullName,
+        email: userProfile.email || prev.email,
+        role: userProfile.role || prev.role,
+      }));
+    }
+  }, [userProfile]);
 
   const [passwords, setPasswords] = useState({
     currentPassword: "",
@@ -127,19 +152,19 @@ export default function UserProfilePage() {
                 <span className="text-muted-foreground flex items-center gap-1.5">
                   <Mail className="w-3.5 h-3.5" /> Email
                 </span>
-                <span className="font-mono font-medium">{profile.email}</span>
+                <span className="tabular-nums font-medium">{profile.email}</span>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-border/30">
                 <span className="text-muted-foreground flex items-center gap-1.5">
                   <Phone className="w-3.5 h-3.5" /> No. WhatsApp
                 </span>
-                <span className="font-mono font-medium">{profile.phone}</span>
+                <span className="tabular-nums font-medium">{profile.phone}</span>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-border/30">
                 <span className="text-muted-foreground flex items-center gap-1.5">
                   <Building className="w-3.5 h-3.5" /> NIK / ID Karyawan
                 </span>
-                <span className="font-mono font-medium">{profile.employeeId}</span>
+                <span className="tabular-nums font-medium">{profile.employeeId}</span>
               </div>
               <div className="flex items-center justify-between py-1">
                 <span className="text-muted-foreground flex items-center gap-1.5">
@@ -312,7 +337,7 @@ export default function UserProfilePage() {
                                 </DnaBadge>
                               )}
                             </div>
-                            <div className="text-muted-foreground font-mono text-[11px] mt-0.5">
+                            <div className="text-muted-foreground tabular-nums text-[11px] mt-0.5">
                               {s.ip} • {s.lastActive}
                             </div>
                           </div>

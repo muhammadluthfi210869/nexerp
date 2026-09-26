@@ -43,6 +43,13 @@ import {
   DnaLoadingSkeleton,
   DnaErrorState,
   DnaEmptyState,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
 import { formatCurrency } from "@/lib/utils";
 
@@ -452,64 +459,64 @@ function PurchaseRequestsContent() {
           }}
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1250px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
-                  <th className="px-4 py-2.5 w-[170px]">No. PR</th>
-                  <th className="px-4 py-2.5 w-[110px]">Tanggal</th>
-                  <th className="px-4 py-2.5 w-[160px]">Departemen</th>
-                  <th className="px-4 py-2.5 w-[160px]">Pemohon</th>
-                  <th className="px-4 py-2.5 min-w-[180px]">Kategori Anggaran</th>
-                  <th className="px-4 py-2.5 w-[110px] text-center">Prioritas</th>
-                  <th className="px-4 py-2.5 w-[140px] text-right">Estimasi Budget</th>
-                  <th className="px-4 py-2.5 w-[140px] text-center">Status Approval</th>
-                  <th className="pr-4 py-2.5 w-[70px] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
+                  <DnaTh className="px-4 py-2.5 w-[170px]">No. PR</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Tanggal</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[160px]">Departemen</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[160px]">Pemohon</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Kategori Anggaran</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px] text-center">Prioritas</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px] text-right">Estimasi Budget</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px] text-center">Status Approval</DnaTh>
+                  <DnaTh className="pr-4 py-2.5 w-[70px] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredPrList.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="py-8 text-center">
+                  <DnaTableRow>
+                    <DnaTd colSpan={9} className="py-8 text-center">
                       <DnaEmptyState
                         title="Belum Ada Permintaan Pembelian"
                         description="Belum ada data permintaan pembelian yang sesuai filter ini."
                       />
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredPrList.map((pr) => (
-                    <tr
+                    <DnaTableRow
                       key={pr.id}
                       onClick={() => setSelectedPr(pr)}
                       className="h-[48px] hover:bg-slate-50/60 transition-colors cursor-pointer"
                     >
-                      <td className="px-4 py-2.5">
+                      <DnaTd className="px-4 py-2.5">
                         <DnaCell.Code code={pr.prCode} />
-                      </td>
-                      <td className="px-4 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5">
                         <DnaCell.Text text={pr.date} />
-                      </td>
-                      <td className="px-4 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5">
                         <DnaCell.Text text={pr.department} />
-                      </td>
-                      <td className="px-4 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5">
                         <span className="text-[12px] font-medium text-slate-900 line-clamp-1">
                           {pr.requesterName} <span className="text-[10.5px] text-slate-400 font-normal">({pr.requesterRole})</span>
                         </span>
-                      </td>
-                      <td className="px-4 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5">
                         <span className="text-[12px] font-medium text-slate-700 line-clamp-1">{pr.categoryCoa}</span>
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5 text-center">
                         {getPriorityBadge(pr.priority)}
-                      </td>
-                      <td className="px-4 py-2.5 text-right">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5 text-right">
                         <DnaCell.Numeric value={pr.totalEstimated} prefix="Rp " />
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5 text-center">
                         {getStatusBadge(pr.status)}
-                      </td>
-                      <td className="pr-4 py-2.5 text-right">
+                      </DnaTd>
+                      <DnaTd className="pr-4 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                           <DnaButton
                             variant="ghost"
@@ -540,12 +547,12 @@ function PurchaseRequestsContent() {
                             </>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}
@@ -599,7 +606,7 @@ function PurchaseRequestsContent() {
               </div>
               <div className="text-right">
                 <span className="text-[11px] text-slate-500 block">Total Estimasi</span>
-                <span className="text-base font-bold text-blue-600 font-mono block">
+                <span className="text-base font-bold text-blue-600 tabular-nums block">
                   {formatCurrency(selectedPr.totalEstimated)}
                 </span>
               </div>
@@ -608,11 +615,11 @@ function PurchaseRequestsContent() {
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-white p-3 rounded-xl border border-slate-200">
                 <span className="text-slate-400 block mb-0.5 text-[11px]">Alokasi COA</span>
-                <span className="font-bold text-slate-800 font-mono text-xs">{selectedPr.categoryCoa}</span>
+                <span className="font-bold text-slate-800 tabular-nums text-xs">{selectedPr.categoryCoa}</span>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-200">
                 <span className="text-slate-400 block mb-0.5 text-[11px]">Target Tiba</span>
-                <span className="font-bold text-slate-800 font-mono text-xs">{selectedPr.targetDate}</span>
+                <span className="font-bold text-slate-800 tabular-nums text-xs">{selectedPr.targetDate}</span>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-200">
                 <span className="text-slate-400 block mb-0.5 text-[11px]">Prioritas</span>
@@ -626,39 +633,39 @@ function PurchaseRequestsContent() {
                 Daftar Bahan / Barang Diminta ({selectedPr.items.length} Item)
               </h4>
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-bold uppercase text-[10px]">
-                      <th className="py-2 px-2">#</th>
-                      <th className="py-2 px-2">KODE</th>
-                      <th className="py-2 px-3">NAMA BAHAN</th>
-                      <th className="py-2 px-2 text-right">QTY</th>
-                      <th className="py-2 px-2 text-right">EST. HARGA</th>
-                      <th className="py-2 px-3 text-right">SUBTOTAL</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow className="border-b border-slate-200 bg-slate-50 text-slate-600 font-bold uppercase text-[10px]">
+                      <DnaTh className="py-2 px-2">#</DnaTh>
+                      <DnaTh className="py-2 px-2">KODE</DnaTh>
+                      <DnaTh className="py-2 px-3">NAMA BAHAN</DnaTh>
+                      <DnaTh className="py-2 px-2 text-right">QTY</DnaTh>
+                      <DnaTh className="py-2 px-2 text-right">EST. HARGA</DnaTh>
+                      <DnaTh className="py-2 px-3 text-right">SUBTOTAL</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedPr.items.map((it, i) => (
-                      <tr key={it.id}>
-                        <td className="py-2 px-2 text-slate-400 font-bold">{i + 1}</td>
-                        <td className="py-2 px-2 font-mono text-slate-600 text-[11px]">{it.materialCode}</td>
-                        <td className="py-2 px-3 font-semibold text-slate-900">
+                      <DnaTableRow key={it.id}>
+                        <DnaTd className="py-2 px-2 text-slate-400 font-bold">{i + 1}</DnaTd>
+                        <DnaTd className="py-2 px-2 tabular-nums text-slate-600 text-[11px]">{it.materialCode}</DnaTd>
+                        <DnaTd className="py-2 px-3 font-semibold text-slate-900">
                           {it.materialName}
                           {it.notes && <span className="block text-[10px] text-slate-400">{it.notes}</span>}
-                        </td>
-                        <td className="py-2 px-2 text-right font-bold text-slate-800">
+                        </DnaTd>
+                        <DnaTd className="py-2 px-2 text-right font-bold text-slate-800">
                           {it.qty} {it.unit}
-                        </td>
-                        <td className="py-2 px-2 text-right font-mono text-slate-600 text-[11px]">
+                        </DnaTd>
+                        <DnaTd className="py-2 px-2 text-right tabular-nums text-slate-600 text-[11px]">
                           {formatCurrency(it.estimatedPrice)}
-                        </td>
-                        <td className="py-2 px-3 text-right font-bold text-blue-600 font-mono text-[11px]">
+                        </DnaTd>
+                        <DnaTd className="py-2 px-3 text-right font-bold text-blue-600 tabular-nums text-[11px]">
                           {formatCurrency(it.subtotal)}
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
 
@@ -784,7 +791,7 @@ function PurchaseRequestsContent() {
                       onChange={(e) => handleUpdateItem(item.id, "estimatedPrice", Number(e.target.value))}
                     />
                   </div>
-                  <div className="w-28 text-right font-bold text-blue-600 font-mono text-[11px]">
+                  <div className="w-28 text-right font-bold text-blue-600 tabular-nums text-[11px]">
                     {formatCurrency(item.subtotal)}
                   </div>
                   <button
@@ -800,7 +807,7 @@ function PurchaseRequestsContent() {
 
             <div className="flex justify-between items-center pt-2 border-t border-slate-200 text-xs">
               <span className="font-bold text-slate-600">Total Estimasi Anggaran PR:</span>
-              <span className="text-sm font-black text-blue-600 font-mono">
+              <span className="text-sm font-black text-blue-600 tabular-nums">
                 {formatCurrency(cartItems.reduce((sum, it) => sum + it.subtotal, 0))}
               </span>
             </div>

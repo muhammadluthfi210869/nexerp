@@ -1,3 +1,11 @@
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 'use client';
 
 import React from 'react';
@@ -34,40 +42,40 @@ export function BestContentTable({ rows }: Props) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="bg-[#F9FAFB] border-b border-gray-100">
-            <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">#</th>
-            <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Content</th>
-            <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Type</th>
-            <th className="px-5 py-4 text-right text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Views</th>
-            <th className="px-5 py-4 text-right text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Likes</th>
-            <th className="px-5 py-4 text-right text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Comments</th>
-            <th className="px-5 py-4 text-right text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Saves</th>
-            <th className="px-5 py-4 text-right text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Engagement</th>
-          </tr>
-        </thead>
-        <tbody>
+      <DnaTable>
+        <DnaTableHead>
+          <DnaTableRow className="bg-[#F9FAFB] border-b border-gray-100">
+            <DnaTh className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">#</DnaTh>
+            <DnaTh className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Content</DnaTh>
+            <DnaTh className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Type</DnaTh>
+            <DnaTh className="px-5 py-4 text-right text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Views</DnaTh>
+            <DnaTh className="px-5 py-4 text-right text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Likes</DnaTh>
+            <DnaTh className="px-5 py-4 text-right text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Comments</DnaTh>
+            <DnaTh className="px-5 py-4 text-right text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Saves</DnaTh>
+            <DnaTh className="px-5 py-4 text-right text-[10px] font-black uppercase tracking-[0.05em] text-gray-400">Engagement</DnaTh>
+          </DnaTableRow>
+        </DnaTableHead>
+        <DnaTableBody>
           {sorted.map((row, i) => (
-            <tr key={`${row.date}-${row.platform}-${i}`} className="border-b border-gray-50 transition hover:bg-[#F8FAFC]">
-              <td className="px-5 py-4 text-[11px] font-black text-gray-400 tabular-nums">#{i + 1}</td>
-              <td className="px-5 py-4 max-w-[200px] truncate text-[11px] font-medium text-gray-900" title={row.copywriting || row.contentBrief}>
+            <DnaTableRow key={`${row.date}-${row.platform}-${i}`} className="border-b border-gray-50 transition hover:bg-[#F8FAFC]">
+              <DnaTd className="px-5 py-4 text-[11px] font-black text-gray-400 tabular-nums">#{i + 1}</DnaTd>
+              <DnaTd className="px-5 py-4 max-w-[200px] truncate text-[11px] font-medium text-gray-900" title={row.copywriting || row.contentBrief}>
                 {row.copywriting || row.contentBrief || '-'}
-              </td>
-              <td className="px-5 py-4">
+              </DnaTd>
+              <DnaTd className="px-5 py-4">
                 <span className={`inline-block rounded-[8px] px-3 py-1 text-[10px] font-black uppercase tracking-[0.05em] ${typeColors[row.contentType] || 'bg-[#F9FAFB] text-[#6B7280]'}`}>
                   {row.contentType || '-'}
                 </span>
-              </td>
-              <td className="px-5 py-4 text-right text-[11px] font-medium text-gray-600 tabular-nums">{row.views?.toLocaleString() ?? '-'}</td>
-              <td className="px-5 py-4 text-right text-[11px] font-medium text-gray-600 tabular-nums">{row.likes ?? '-'}</td>
-              <td className="px-5 py-4 text-right text-[11px] font-medium text-gray-600 tabular-nums">{row.comments ?? '-'}</td>
-              <td className="px-5 py-4 text-right text-[11px] font-medium text-gray-600 tabular-nums">{row.saves ?? '-'}</td>
-              <td className="px-5 py-4 text-right text-[11px] font-black text-blue-700 tabular-nums">{row.engagement.toLocaleString()}</td>
-            </tr>
+              </DnaTd>
+              <DnaTd className="px-5 py-4 text-right text-[11px] font-medium text-gray-600 tabular-nums">{row.views?.toLocaleString() ?? '-'}</DnaTd>
+              <DnaTd className="px-5 py-4 text-right text-[11px] font-medium text-gray-600 tabular-nums">{row.likes ?? '-'}</DnaTd>
+              <DnaTd className="px-5 py-4 text-right text-[11px] font-medium text-gray-600 tabular-nums">{row.comments ?? '-'}</DnaTd>
+              <DnaTd className="px-5 py-4 text-right text-[11px] font-medium text-gray-600 tabular-nums">{row.saves ?? '-'}</DnaTd>
+              <DnaTd className="px-5 py-4 text-right text-[11px] font-black text-blue-700 tabular-nums">{row.engagement.toLocaleString()}</DnaTd>
+            </DnaTableRow>
           ))}
-        </tbody>
-      </table>
+        </DnaTableBody>
+      </DnaTable>
     </div>
   );
 }

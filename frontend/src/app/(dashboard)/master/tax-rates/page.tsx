@@ -24,6 +24,11 @@ import {
   DnaInput,
   DnaTextarea,
   useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -204,30 +209,30 @@ export default function MasterTaxRatesPage() {
         }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[800px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold tracking-wider uppercase select-none">
-                <th className="px-3.5 py-2.5 w-12 text-center text-slate-400">#</th>
-                <th className="px-3.5 py-2.5">Nama Tarif Pajak</th>
-                <th className="px-3.5 py-2.5 text-right w-[150px]">Persentase (%)</th>
-                <th className="px-3.5 py-2.5">Deskripsi & Ruang Lingkup</th>
-                <th className="px-3.5 py-2.5 text-center w-[120px]">Status</th>
-                <th className="px-3.5 py-2.5 text-center w-[120px] whitespace-nowrap">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold tracking-wider uppercase select-none">
+                <DnaTh className="px-3.5 py-2.5 w-12 text-center text-slate-400">#</DnaTh>
+                <DnaTh className="px-3.5 py-2.5">Nama Tarif Pajak</DnaTh>
+                <DnaTh className="px-3.5 py-2.5 text-right w-[150px]">Persentase (%)</DnaTh>
+                <DnaTh className="px-3.5 py-2.5">Deskripsi & Ruang Lingkup</DnaTh>
+                <DnaTh className="px-3.5 py-2.5 text-center w-[120px]">Status</DnaTh>
+                <DnaTh className="px-3.5 py-2.5 text-center w-[120px] whitespace-nowrap">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="px-3.5 py-8 text-center text-xs text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="px-3.5 py-8 text-center text-xs text-slate-400">
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                       <span>Memuat data tarif pajak...</span>
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : isError ? (
-                <tr>
-                  <td colSpan={6} className="px-3.5 py-8 text-center text-xs text-rose-500">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="px-3.5 py-8 text-center text-xs text-rose-500">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <span>Gagal memuat data tarif pajak: {(taxRatesError as any)?.message || "Terjadi kesalahan"}</span>
                       <button
@@ -238,17 +243,17 @@ export default function MasterTaxRatesPage() {
                         Coba Lagi
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : filteredTaxRates.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-3.5 py-8 text-center text-xs text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="px-3.5 py-8 text-center text-xs text-slate-400">
                     Belum ada tarif yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredTaxRates.map((tr, idx) => (
-                  <tr
+                  <DnaTableRow
                     key={tr.id}
                     className="h-[48px] hover:bg-slate-50/80 transition-colors cursor-pointer"
                     onClick={() => {
@@ -256,30 +261,30 @@ export default function MasterTaxRatesPage() {
                       setIsDetailDrawerOpen(true);
                     }}
                   >
-                    <td className="px-3.5 py-2.5 text-center font-mono text-slate-400 text-[11px] tabular-nums">
+                    <DnaTd className="px-3.5 py-2.5 text-center tabular-nums text-slate-400 text-[11px] tabular-nums">
                       {idx + 1}
-                    </td>
-                    <td className="px-3.5 py-2.5">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5">
                       <DnaCell.Text className="font-semibold text-slate-900">{tr.name}</DnaCell.Text>
-                    </td>
-                    <td className="px-3.5 py-2.5 text-right">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5 text-right">
                       <DnaCell.Numeric
                         value={Number(tr.rate)}
                         suffix="%"
-                        className="font-mono font-bold text-blue-600"
+                        className="tabular-nums font-bold text-blue-600"
                       />
-                    </td>
-                    <td className="px-3.5 py-2.5">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5">
                       <DnaCell.Text className="text-slate-600">
                         {tr.description || <span className="text-slate-300">-</span>}
                       </DnaCell.Text>
-                    </td>
-                    <td className="px-3.5 py-2.5 text-center">
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5 text-center">
                       <DnaBadge variant={tr.isActive ? "success" : "neutral"}>
                         {tr.isActive ? "AKTIF" : "NON-AKTIF"}
                       </DnaBadge>
-                    </td>
-                    <td className="px-3.5 py-2.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-1">
                         <DnaButton
                           variant="ghost"
@@ -312,12 +317,12 @@ export default function MasterTaxRatesPage() {
                           <Power className="w-3.5 h-3.5" />
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -347,7 +352,7 @@ export default function MasterTaxRatesPage() {
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">Persentase Pemotongan / Pungutan</span>
-                    <span className="font-mono font-bold text-blue-600 text-sm">
+                    <span className="tabular-nums font-bold text-blue-600 text-sm">
                       {Number(selectedTaxRate.rate).toFixed(2)}%
                     </span>
                   </div>

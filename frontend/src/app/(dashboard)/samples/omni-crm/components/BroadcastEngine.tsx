@@ -243,7 +243,7 @@ export const BroadcastEngine: React.FC<BroadcastEngineProps> = ({
             </div>
           </div>
 
-          <span className="text-xs font-bold font-mono px-2.5 py-1 bg-white border border-emerald-200 rounded-lg text-emerald-800">
+          <span className="text-xs font-bold tabular-nums px-2.5 py-1 bg-white border border-emerald-200 rounded-lg text-emerald-800">
             {filteredAudience.length} Prospek Terpilih
           </span>
         </div>
@@ -260,7 +260,7 @@ export const BroadcastEngine: React.FC<BroadcastEngineProps> = ({
               <h1 className="text-lg font-bold text-slate-900 tracking-tight">
                 WhatsApp Broadcast & Segmentation Studio
               </h1>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 font-mono uppercase tracking-wide">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 tabular-nums uppercase tracking-wide">
                 Anti-Ban Engine
               </span>
             </div>
@@ -276,7 +276,7 @@ export const BroadcastEngine: React.FC<BroadcastEngineProps> = ({
             <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">
               Target Audience
             </span>
-            <span className="text-base font-bold text-blue-700 font-mono tabular-nums">
+            <span className="text-base font-bold text-blue-700 tabular-nums tabular-nums">
               {filteredAudience.length} Leads
             </span>
           </div>
@@ -285,7 +285,7 @@ export const BroadcastEngine: React.FC<BroadcastEngineProps> = ({
             <span className="text-[10px] text-emerald-700 font-bold block uppercase tracking-wider">
               Progress Terkirim
             </span>
-            <span className="text-base font-bold text-emerald-700 font-mono tabular-nums">
+            <span className="text-base font-bold text-emerald-700 tabular-nums tabular-nums">
               {sentCount} / {broadcastQueue.length}
             </span>
           </div>
@@ -306,7 +306,7 @@ export const BroadcastEngine: React.FC<BroadcastEngineProps> = ({
                   Kriteria Segmentasi Prospek
                 </h3>
               </div>
-              <span className="text-[10px] text-slate-500 font-mono">
+              <span className="text-[10px] text-slate-500 tabular-nums">
                 {filteredAudience.length} Leads Terkualifikasi
               </span>
             </div>
@@ -398,20 +398,20 @@ export const BroadcastEngine: React.FC<BroadcastEngineProps> = ({
                   Draf Pesan Broadcast (Mendukung Format Spintax)
                 </h3>
               </div>
-              <span className="text-[10px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 font-mono font-bold uppercase tracking-wide">
+              <span className="text-[10px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 tabular-nums font-bold uppercase tracking-wide">
                 {`{Opsi A|Opsi B}`}
               </span>
             </div>
 
             <p className="text-[12px] text-slate-500 font-normal">
-              Gunakan tag <code className="bg-slate-100 text-blue-700 px-1 py-0.5 rounded font-mono font-bold">{'{{name}}'}</code> dan <code className="bg-slate-100 text-blue-700 px-1 py-0.5 rounded font-mono font-bold">{'{{source}}'}</code> untuk personalisasi nama dan sumber iklan.
+              Gunakan tag <code className="bg-slate-100 text-blue-700 px-1 py-0.5 rounded tabular-nums font-bold">{'{{name}}'}</code> dan <code className="bg-slate-100 text-blue-700 px-1 py-0.5 rounded tabular-nums font-bold">{'{{source}}'}</code> untuk personalisasi nama dan sumber iklan.
             </p>
 
             <textarea
               rows={5}
               value={templateText}
               onChange={(e) => setTemplateText(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-[12px] text-slate-800 font-mono leading-relaxed focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-white resize-none"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-[12px] text-slate-800 tabular-nums leading-relaxed focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-white resize-none"
             />
 
             {/* Live Variations Preview */}
@@ -506,7 +506,7 @@ export const BroadcastEngine: React.FC<BroadcastEngineProps> = ({
             <div className="space-y-1.5">
               <div className="flex justify-between text-[12px] font-semibold">
                 <span className="text-slate-700">Kemajuan Pengiriman:</span>
-                <span className="font-mono text-blue-700 font-bold tabular-nums">{progressPercent}%</span>
+                <span className="tabular-nums text-blue-700 font-bold tabular-nums">{progressPercent}%</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
                 <div
@@ -559,7 +559,7 @@ export const BroadcastEngine: React.FC<BroadcastEngineProps> = ({
                   Daftar Antrean Penerima
                 </h3>
               </div>
-              <span className="text-[10px] text-slate-500 font-mono">
+              <span className="text-[10px] text-slate-500 tabular-nums">
                 {broadcastQueue.length} Target
               </span>
             </div>
@@ -595,7 +595,7 @@ export const BroadcastEngine: React.FC<BroadcastEngineProps> = ({
                         </div>
                         <div className="truncate">
                           <span className="font-bold block truncate">{item.leadName}</span>
-                          <span className="text-[10px] text-slate-500 font-mono">
+                          <span className="text-[10px] text-slate-500 tabular-nums">
                             +{item.phone} • {item.source}
                           </span>
                         </div>

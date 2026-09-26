@@ -1,3 +1,11 @@
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import React, { useState } from 'react';
 import {
   GitBranch,
@@ -179,7 +187,7 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
               <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">
                 {isBusDev ? 'Leads Anda' : 'Total Leads'}
               </span>
-              <span className="text-lg font-bold text-slate-900 font-mono tabular-nums">
+              <span className="text-lg font-bold text-slate-900 tabular-nums tabular-nums">
                 {currentPipelineLeads.length}
               </span>
             </div>
@@ -187,7 +195,7 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
               <span className="text-[10px] text-blue-700 font-bold block uppercase tracking-wider">
                 Client DEAL
               </span>
-              <span className="text-lg font-bold text-blue-700 font-mono tabular-nums">
+              <span className="text-lg font-bold text-blue-700 tabular-nums tabular-nums">
                 {totalDeals} Deals
               </span>
             </div>
@@ -195,7 +203,7 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
               <span className="text-[10px] text-emerald-700 font-bold block uppercase tracking-wider">
                 Pipeline Value
               </span>
-              <span className="text-lg font-bold text-emerald-700 font-mono tabular-nums">
+              <span className="text-lg font-bold text-emerald-700 tabular-nums tabular-nums">
                 Rp {(totalValue / 1000000).toFixed(0)} Jt
               </span>
             </div>
@@ -215,7 +223,7 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
               <div>
                 <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <span>Dreamlab Multi-Pipeline Overview</span>
-                  <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md border border-blue-200 font-mono font-bold uppercase tracking-wide">
+                  <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md border border-blue-200 tabular-nums font-bold uppercase tracking-wide">
                     1 BusDev = 1 Dedicated WhatsApp Number
                   </span>
                 </h2>
@@ -258,7 +266,7 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                 <Users className="w-3.5 h-3.5 text-blue-600" />
                 <span>Pilih Sub-Pipeline BusDev Maklon:</span>
               </span>
-              <span className="text-[11px] text-slate-500 font-mono">
+              <span className="text-[11px] text-slate-500 tabular-nums">
                 {busDevPipelines.length} Dedicated BusDev Pipelines
               </span>
             </div>
@@ -276,7 +284,7 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
               >
                 <span>🌐 Master Round-Robin (All)</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold ${
+                  className={`text-[10px] px-1.5 py-0.5 rounded-md tabular-nums font-bold ${
                     selectedPipelineId === 'pipe_round_robin'
                       ? 'bg-blue-700 text-white'
                       : 'bg-slate-100 text-slate-600'
@@ -332,7 +340,7 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                     </div>
 
                     <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold ${
+                      className={`text-[10px] px-1.5 py-0.5 rounded-md tabular-nums font-bold ${
                         isSelected ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-600'
                       }`}
                     >
@@ -353,7 +361,7 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                 Tahapan Funnel Maklon: {isBusDev ? `Pipeline Pribadi (${currentUser?.name})` : currentPipeline.name}
               </span>
               {isBusDev && (
-                <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md border border-emerald-200 font-mono font-bold">
+                <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md border border-emerald-200 tabular-nums font-bold">
                   📱 {currentUser?.phone}
                 </span>
               )}
@@ -400,14 +408,14 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                   <div>
                     <div className="flex items-center justify-between text-[11px] uppercase font-bold mb-2 pb-1 border-b border-slate-100">
                       <span className="text-slate-800 truncate">{stage.name}</span>
-                      <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold">
+                      <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md text-[10px] tabular-nums font-bold">
                         {leadsInStage.length}
                       </span>
                     </div>
 
                     <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-0.5">
                       {leadsInStage.length === 0 ? (
-                        <div className="flex items-center justify-center py-4 text-slate-400 font-mono text-[10px] uppercase">
+                        <div className="flex items-center justify-center py-4 text-slate-400 tabular-nums text-[10px] uppercase">
                           Kosong
                         </div>
                       ) : (
@@ -422,15 +430,15 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                               <div className="text-[12px] font-semibold text-slate-900 group-hover:text-blue-600 truncate">
                                 {lead.name}
                               </div>
-                              <div className="text-[10px] text-slate-500 mt-0.5 font-mono truncate">
+                              <div className="text-[10px] text-slate-500 mt-0.5 tabular-nums truncate">
                                 {lead.source}
                               </div>
 
                               <div className="mt-1 flex items-center justify-between pt-1 border-t border-slate-200/60 text-[10px]">
-                                <span className="text-blue-700 font-mono font-medium">
+                                <span className="text-blue-700 tabular-nums font-medium">
                                   {assignedUser ? assignedUser.name.split(' ')[0] : 'Unassigned'}
                                 </span>
-                                <span className="text-slate-400 font-mono">{lead.id}</span>
+                                <span className="text-slate-400 tabular-nums">{lead.id}</span>
                               </div>
                             </div>
                           );
@@ -451,25 +459,25 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                   <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
                   <span>Overview Matriks Seluruh Pipeline BusDev:</span>
                 </span>
-                <span className="text-[11px] text-slate-500 font-mono">
+                <span className="text-[11px] text-slate-500 tabular-nums">
                   {activeBusDevs.length} BusDev Connected
                 </span>
               </div>
 
               <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xs">
-                <table className="w-full text-left text-[12px]">
-                  <thead className="h-10 bg-slate-50/75 text-[11px] uppercase font-semibold text-slate-500 tracking-wider border-b border-slate-200">
-                    <tr>
-                      <th className="py-2.5 px-3">Pipeline & BusDev</th>
-                      <th className="py-2.5 px-2 text-center text-slate-900 font-semibold">Total Leads</th>
-                      <th className="py-2.5 px-2 text-center text-blue-700 font-semibold">Cold</th>
-                      <th className="py-2.5 px-2 text-center text-amber-700 font-semibold">Warm</th>
-                      <th className="py-2.5 px-2 text-center text-orange-700 font-semibold">Hot</th>
-                      <th className="py-2.5 px-2 text-center text-purple-700 font-semibold">Sample</th>
-                      <th className="py-2.5 px-3 text-right text-emerald-700 font-semibold">Pipeline Value</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono text-[12px]">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3">Pipeline & BusDev</DnaTh>
+                      <DnaTh className="py-2.5 px-2 text-center text-slate-900 font-semibold">Total Leads</DnaTh>
+                      <DnaTh className="py-2.5 px-2 text-center text-blue-700 font-semibold">Cold</DnaTh>
+                      <DnaTh className="py-2.5 px-2 text-center text-amber-700 font-semibold">Warm</DnaTh>
+                      <DnaTh className="py-2.5 px-2 text-center text-orange-700 font-semibold">Hot</DnaTh>
+                      <DnaTh className="py-2.5 px-2 text-center text-purple-700 font-semibold">Sample</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right text-emerald-700 font-semibold">Pipeline Value</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {pipelinesList.map((pipe) => {
                       const isSelected = pipe.id === selectedPipelineId;
                       const owner = (state.busDevs || []).find((b) => b.id === pipe.assignedBusDevId);
@@ -490,14 +498,14 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                       const val = pLeads.reduce((acc, l) => acc + (l.value || 0), 0);
 
                       return (
-                        <tr
+                        <DnaTableRow
                           key={pipe.id}
                           onClick={() => setSelectedPipelineId(pipe.id)}
                           className={`h-[40px] transition-colors cursor-pointer hover:bg-slate-50/60 ${
                             isSelected ? 'bg-blue-50/50 font-semibold' : ''
                           }`}
                         >
-                          <td className="py-2 px-3 text-slate-800 font-sans flex items-center gap-2">
+                          <DnaTd className="py-2 px-3 text-slate-800 font-sans flex items-center gap-2">
                             <div
                               className={`w-2 h-2 rounded-full ${
                                 isSelected ? 'bg-blue-600' : 'bg-slate-300'
@@ -505,26 +513,26 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                             />
                             <span className="truncate max-w-[180px] font-medium">{pipe.name}</span>
                             {owner && (
-                              <span className="text-[10px] text-slate-500 font-mono">
+                              <span className="text-[10px] text-slate-500 tabular-nums">
                                 ({owner.formattedPhone || owner.phone})
                               </span>
                             )}
-                          </td>
-                          <td className="py-2 px-2 text-center text-slate-900 font-bold tabular-nums">
+                          </DnaTd>
+                          <DnaTd className="py-2 px-2 text-center text-slate-900 font-bold tabular-nums">
                             {pLeads.length}
-                          </td>
-                          <td className="py-2 px-2 text-center text-blue-700 tabular-nums">{cold}</td>
-                          <td className="py-2 px-2 text-center text-amber-700 tabular-nums">{warm}</td>
-                          <td className="py-2 px-2 text-center text-orange-700 tabular-nums">{hot}</td>
-                          <td className="py-2 px-2 text-center text-purple-700 tabular-nums">{sample}</td>
-                          <td className="py-2 px-3 text-right text-emerald-700 font-bold tabular-nums">
+                          </DnaTd>
+                          <DnaTd className="py-2 px-2 text-center text-blue-700 tabular-nums">{cold}</DnaTd>
+                          <DnaTd className="py-2 px-2 text-center text-amber-700 tabular-nums">{warm}</DnaTd>
+                          <DnaTd className="py-2 px-2 text-center text-orange-700 tabular-nums">{hot}</DnaTd>
+                          <DnaTd className="py-2 px-2 text-center text-purple-700 tabular-nums">{sample}</DnaTd>
+                          <DnaTd className="py-2 px-3 text-right text-emerald-700 font-bold tabular-nums">
                             Rp {(val / 1000000).toFixed(0)} Jt
-                          </td>
-                        </tr>
+                          </DnaTd>
+                        </DnaTableRow>
                       );
                     })}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
           )}
@@ -544,7 +552,7 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                 <h3 className="text-[12px] font-bold text-slate-900">
                   {isBusDev ? 'Pesan WhatsApp Nomor Anda' : 'Aktivitas WhatsApp Terkini'}
                 </h3>
-                <span className="text-[10px] text-slate-500 font-mono">
+                <span className="text-[10px] text-slate-500 tabular-nums">
                   {isBusDev ? currentUser?.phone : 'Sinkronisasi Realtime Coexistence'}
                 </span>
               </div>
@@ -582,7 +590,7 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                       <span className="font-semibold text-slate-900 truncate max-w-[140px]">
                         {lead?.name || msg.senderName}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-[10px] text-slate-400 tabular-nums">
                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
@@ -608,7 +616,7 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                 <h3 className="text-[12px] font-bold text-slate-900">
                   {isBusDev ? 'Profil & Spesialisasi Anda' : 'Distribusi Round Robin'}
                 </h3>
-                <span className="text-[10px] text-slate-500 font-mono">
+                <span className="text-[10px] text-slate-500 tabular-nums">
                   {isBusDev
                     ? currentUser?.specialty
                     : `Next: ${nextEligible?.name || (activeBusDevs[0]?.name ?? 'Belum ada')}`}
@@ -651,13 +659,13 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
                     </div>
                     <div className="truncate">
                       <span className="text-slate-900 block truncate font-medium">{busdev.name}</span>
-                      <span className="text-[10px] text-slate-500 font-mono">
+                      <span className="text-[10px] text-slate-500 tabular-nums">
                         📱 {busdev.formattedPhone || busdev.phone}
                       </span>
                     </div>
                   </div>
 
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-white border border-slate-200 font-mono font-bold text-slate-700">
+                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-white border border-slate-200 tabular-nums font-bold text-slate-700">
                     {count} Leads
                   </span>
                 </div>
@@ -675,7 +683,7 @@ export const BentoOverview: React.FC<BentoOverviewProps> = ({
               </div>
               <div>
                 <h3 className="text-[12px] font-bold text-slate-900">Broadcast & Automations</h3>
-                <span className="text-[10px] text-slate-500 font-mono">Anti-Ban Spintax Engine</span>
+                <span className="text-[10px] text-slate-500 tabular-nums">Anti-Ban Spintax Engine</span>
               </div>
             </div>
           </div>

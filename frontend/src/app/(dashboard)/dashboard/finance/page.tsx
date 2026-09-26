@@ -59,6 +59,18 @@ export default function FinanceDashboard() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   // --- Fetchers ---
+  const { data: financeDash } = useQuery({
+    queryKey: ["dashboards-finance"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/dashboards/finance");
+        return res.data;
+      } catch {
+        return null;
+      }
+    },
+  });
+
   const { data: salesOrders, isLoading: soLoading } = useQuery<SalesOrder[]>({
     queryKey: ["sales-orders"],
     queryFn: async () => {
@@ -124,11 +136,12 @@ export default function FinanceDashboard() {
       }
     >
       {(() => {
-        const pendingDP = salesOrders?.filter(so => so.status === "PENDING_DP").length || 0;
-        const activeSO = salesOrders?.filter(so => so.status === "ACTIVE").length || 0;
+        const pendingDP = financeDash?.kpis?.pendingDP?.value ?? (salesOrders?.filter(so => so.status === "PENDING_DP").length || 0);
+        const activeSO = financeDash?.kpis?.activeSO?.value ?? (salesOrders?.filter(so => so.status === "ACTIVE").length || 0);
+        const totalCount = financeDash?.kpis?.totalSO?.value ?? (salesOrders?.length || 0);
         return (
           <div className="grid grid-cols-3 gap-8 mb-6">
-            <KpiCard label="Total SO" value={String(salesOrders?.length || 0)} targetPct={50} icon={<FileText />} />
+            <KpiCard label="Total SO" value={String(totalCount)} targetPct={50} icon={<FileText />} />
             <KpiCard
               label="Pending DP"
               value={String(pendingDP)}

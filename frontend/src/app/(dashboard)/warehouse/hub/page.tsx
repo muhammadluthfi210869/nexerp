@@ -3,7 +3,15 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Button } from "@/components/dna";
+import {
+  Button,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import {
   Sheet,
   SheetContent,
@@ -127,46 +135,46 @@ export default function WarehouseHubPage() {
 
       {/* MAIN GRID */}
       <TableWrapper className="shadow-2xl shadow-slate-200/50">
-        <table className="w-full">
-          <thead className="bg-slate-50/50">
-            <tr className="hover:bg-transparent border-slate-100">
-              <th className="py-7 pl-10 font-black text-slate-400 uppercase tracking-tight text-[9px] text-left">
+        <DnaTable>
+          <DnaTableHead>
+            <DnaTableRow className="hover:bg-transparent border-slate-100">
+              <DnaTh className="py-7 pl-10 font-black text-slate-400 uppercase tracking-tight text-[9px] text-left">
                 Material Identity
-              </th>
-              <th className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-left">
+              </DnaTh>
+              <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-left">
                 Category
-              </th>
-              <th className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">
+              </DnaTh>
+              <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">
                 Physical Stock
-              </th>
-              <th className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">
+              </DnaTh>
+              <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">
                 Quarantine
-              </th>
-              <th className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-left">
+              </DnaTh>
+              <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-left">
                 Valuation (HPP)
-              </th>
-              <th className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-left">
+              </DnaTh>
+              <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-left">
                 Status
-              </th>
-              <th className="pr-10 text-right"></th>
-            </tr>
-          </thead>
-          <tbody>
+              </DnaTh>
+              <DnaTh className="pr-10 text-right"></DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {isLoading ? (
-              <tr>
-                <td colSpan={7} className="h-96 text-center">
+              <DnaTableRow>
+                <DnaTd colSpan={7} className="h-96 text-center">
                   <Loader2 className="h-10 w-10 animate-spin mx-auto text-blue-600 opacity-20" />
-                </td>
-              </tr>
+                </DnaTd>
+              </DnaTableRow>
             ) : filteredCatalog?.length === 0 ? (
-              <tr>
-                <td
+              <DnaTableRow>
+                <DnaTd
                   colSpan={7}
                   className="h-96 text-center text-slate-300 font-bold uppercase text-xs italic tracking-widest"
                 >
                   No materials found in catalog
-                </td>
-              </tr>
+                </DnaTd>
+              </DnaTableRow>
             ) : (
               filteredCatalog?.map((item) => {
                 const hpp =
@@ -179,12 +187,12 @@ export default function WarehouseHubPage() {
                   .reduce((sum, inv) => sum + Number(inv.currentStock), 0);
 
                 return (
-                  <tr
+                  <DnaTableRow
                     key={item.id}
                     className="group hover:bg-blue-50/30 transition-all cursor-pointer border-b border-slate-50"
                     onClick={() => setSelectedItem(item)}
                   >
-                    <td className="py-6 pl-10">
+                    <DnaTd className="py-6 pl-10">
                       <div className="flex items-center gap-4">
                         <div
                           className={cn(
@@ -205,16 +213,16 @@ export default function WarehouseHubPage() {
                           </p>
                         </div>
                       </div>
-                    </td>
-                    <td>
+                    </DnaTd>
+                    <DnaTd>
                       <DnaBadge
-                        status="default"
+                        variant="default"
                         className="bg-white border-slate-200 text-slate-500"
                       >
                         {item.category?.name || "Uncategorized"}
                       </DnaBadge>
-                    </td>
-                    <td className="text-center">
+                    </DnaTd>
+                    <DnaTd className="text-center">
                       <div className="flex flex-col items-center">
                         <span
                           className={cn(
@@ -228,8 +236,8 @@ export default function WarehouseHubPage() {
                           {item.unit}
                         </span>
                       </div>
-                    </td>
-                    <td className="text-center">
+                    </DnaTd>
+                    <DnaTd className="text-center">
                       <div className="flex flex-col items-center">
                         <span
                           className={cn(
@@ -245,8 +253,8 @@ export default function WarehouseHubPage() {
                           On Hold
                         </span>
                       </div>
-                    </td>
-                    <td>
+                    </DnaTd>
+                    <DnaTd>
                       <div className="space-y-0.5">
                         <p className="font-black text-slate-900 text-xs tabular-nums">
                           Rp {hpp.toLocaleString()}
@@ -255,8 +263,8 @@ export default function WarehouseHubPage() {
                           Moving Avg
                         </p>
                       </div>
-                    </td>
-                    <td>
+                    </DnaTd>
+                    <DnaTd>
                       <div className="flex items-center gap-2">
                         <div
                           className={cn(
@@ -275,18 +283,18 @@ export default function WarehouseHubPage() {
                           {isCritical ? "RESTOCK NOW" : "OPTIMAL"}
                         </span>
                       </div>
-                    </td>
-                    <td className="pr-10 text-right">
+                    </DnaTd>
+                    <DnaTd className="pr-10 text-right">
                       <div className="flex items-center justify-end group-hover:translate-x-1 transition-transform">
                         <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-600" />
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 );
               })
             )}
-          </tbody>
-        </table>
+          </DnaTableBody>
+        </DnaTable>
       </TableWrapper>
 
       {/* DETAIL SHEET */}
@@ -301,7 +309,7 @@ export default function WarehouseHubPage() {
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
                     <DnaBadge
-                      status="info"
+                      variant="info"
                       className="font-black text-[9px] uppercase tracking-widest mb-4"
                     >
                       SKU PROTOCOL: {selectedItem.code}

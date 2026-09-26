@@ -36,6 +36,13 @@ import {
   DnaLoadingSkeleton,
   DnaErrorState,
   DnaEmptyState,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
 import { formatCurrency } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
@@ -250,54 +257,54 @@ export default function PurchaseOrdersModernPage() {
           }}
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1250px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
-                  <th className="px-4 py-2.5 w-[170px]">No. Purchase Order</th>
-                  <th className="px-4 py-2.5 w-[110px]">Tanggal</th>
-                  <th className="px-4 py-2.5 min-w-[180px]">Supplier</th>
-                  <th className="px-4 py-2.5 w-[150px]">Gudang Tujuan</th>
-                  <th className="px-4 py-2.5 w-[120px]">Deadline Tiba</th>
-                  <th className="px-4 py-2.5 w-[110px] text-center">Status TTD</th>
-                  <th className="px-4 py-2.5 w-[140px] text-right">Total Nilai</th>
-                  <th className="px-4 py-2.5 w-[120px] text-center">Status Bayar</th>
-                  <th className="px-4 py-2.5 w-[130px] text-center">Status Inbound</th>
-                  <th className="pr-4 py-2.5 w-[70px] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
+                  <DnaTh className="px-4 py-2.5 w-[170px]">No. Purchase Order</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Tanggal</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Supplier</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[150px]">Gudang Tujuan</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px]">Deadline Tiba</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px] text-center">Status TTD</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px] text-right">Total Nilai</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px] text-center">Status Bayar</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[130px] text-center">Status Inbound</DnaTh>
+                  <DnaTh className="pr-4 py-2.5 w-[70px] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredPoList.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="py-8 text-center">
+                  <DnaTableRow>
+                    <DnaTd colSpan={10} className="py-8 text-center">
                       <DnaEmptyState
                         title="Belum Ada Purchase Order"
                         description="Tidak ada data purchase order pada filter ini."
                       />
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredPoList.map((po) => (
-                    <tr
+                    <DnaTableRow
                       key={po.id}
                       onClick={() => setSelectedPo(po)}
                       className="h-[48px] hover:bg-slate-50/60 transition-colors cursor-pointer"
                     >
-                      <td className="px-4 py-2.5">
+                      <DnaTd className="px-4 py-2.5">
                         <DnaCell.Code code={po.poCode} />
-                      </td>
-                      <td className="px-4 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5">
                         <DnaCell.Text text={po.date} />
-                      </td>
-                      <td className="px-4 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5">
                         <span className="text-[12px] font-medium text-slate-900 line-clamp-1">{po.supplierName}</span>
-                      </td>
-                      <td className="px-4 py-2.5">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5">
                         <DnaCell.Text text={po.warehouseTarget} />
-                      </td>
-                      <td className="px-4 py-2.5 font-mono text-[11.5px] text-slate-700">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5 tabular-nums text-[11.5px] text-slate-700">
                         {po.deadlineDate}
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5 text-center">
                         {po.isSignedDigitally ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                             <FileCheck className="w-3 h-3" />
@@ -306,11 +313,11 @@ export default function PurchaseOrdersModernPage() {
                         ) : (
                           <span className="text-[11px] text-slate-400">Belum TTD</span>
                         )}
-                      </td>
-                      <td className="px-4 py-2.5 text-right">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5 text-right">
                         <DnaCell.Numeric value={po.totalAmount} prefix="Rp " />
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5 text-center">
                         <DnaBadge
                           variant={
                             po.paymentStatus === "PAID"
@@ -326,8 +333,8 @@ export default function PurchaseOrdersModernPage() {
                             ? "DP Lunas"
                             : "Belum Bayar"}
                         </DnaBadge>
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-2.5 text-center">
                         <span
                           className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded border ${
                             po.receivingStatus === "FULLY_RECEIVED"
@@ -343,8 +350,8 @@ export default function PurchaseOrdersModernPage() {
                             ? "Inbound Parsial"
                             : "Menunggu Inbound"}
                         </span>
-                      </td>
-                      <td className="pr-4 py-2.5 text-right">
+                      </DnaTd>
+                      <DnaTd className="pr-4 py-2.5 text-right">
                         <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                           <DnaButton
                             variant="ghost"
@@ -355,12 +362,12 @@ export default function PurchaseOrdersModernPage() {
                             <Eye className="w-3.5 h-3.5" />
                           </DnaButton>
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}
@@ -402,7 +409,7 @@ export default function PurchaseOrdersModernPage() {
               </div>
               <div className="text-right">
                 <span className="text-[11px] text-slate-500 block">Grand Total PO</span>
-                <span className="text-base font-bold text-blue-600 font-mono block">
+                <span className="text-base font-bold text-blue-600 tabular-nums block">
                   {formatCurrency(selectedPo.totalAmount)}
                 </span>
               </div>
@@ -411,11 +418,11 @@ export default function PurchaseOrdersModernPage() {
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-white p-3 rounded-xl border border-slate-200">
                 <span className="text-slate-400 block mb-0.5 text-[11px]">Tgl Terbit PO</span>
-                <span className="font-bold text-slate-800 font-mono text-xs">{selectedPo.date}</span>
+                <span className="font-bold text-slate-800 tabular-nums text-xs">{selectedPo.date}</span>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-200">
                 <span className="text-slate-400 block mb-0.5 text-[11px]">Target Deadline Tiba</span>
-                <span className="font-bold text-rose-600 font-mono text-xs">{selectedPo.deadlineDate}</span>
+                <span className="font-bold text-rose-600 tabular-nums text-xs">{selectedPo.deadlineDate}</span>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-200">
                 <span className="text-slate-400 block mb-0.5 text-[11px]">PIC & Digital Sign</span>
@@ -431,44 +438,44 @@ export default function PurchaseOrdersModernPage() {
                 Rincian 3 Pilar Fisik Penerimaan (Bagus / Reject / Free)
               </h4>
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-bold uppercase text-[10px]">
-                      <th className="py-2 px-2">#</th>
-                      <th className="py-2 px-2">KODE</th>
-                      <th className="py-2 px-3">NAMA BAHAN</th>
-                      <th className="py-2 px-2 text-right">ORDER</th>
-                      <th className="py-2 px-2 text-right text-emerald-700">BAGUS</th>
-                      <th className="py-2 px-2 text-right text-rose-600">REJECT</th>
-                      <th className="py-2 px-2 text-right text-amber-600">FREE</th>
-                      <th className="py-2 px-3 text-right">SUBTOTAL</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow className="border-b border-slate-200 bg-slate-50 text-slate-600 font-bold uppercase text-[10px]">
+                      <DnaTh className="py-2 px-2">#</DnaTh>
+                      <DnaTh className="py-2 px-2">KODE</DnaTh>
+                      <DnaTh className="py-2 px-3">NAMA BAHAN</DnaTh>
+                      <DnaTh className="py-2 px-2 text-right">ORDER</DnaTh>
+                      <DnaTh className="py-2 px-2 text-right text-emerald-700">BAGUS</DnaTh>
+                      <DnaTh className="py-2 px-2 text-right text-rose-600">REJECT</DnaTh>
+                      <DnaTh className="py-2 px-2 text-right text-amber-600">FREE</DnaTh>
+                      <DnaTh className="py-2 px-3 text-right">SUBTOTAL</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedPo.items.map((it, i) => (
-                      <tr key={it.id}>
-                        <td className="py-2 px-2 text-slate-400 font-bold">{i + 1}</td>
-                        <td className="py-2 px-2 font-mono text-slate-600 text-[11px]">{it.materialCode}</td>
-                        <td className="py-2 px-3 font-semibold text-slate-900">{it.materialName}</td>
-                        <td className="py-2 px-2 text-right font-bold text-slate-800">
+                      <DnaTableRow key={it.id}>
+                        <DnaTd className="py-2 px-2 text-slate-400 font-bold">{i + 1}</DnaTd>
+                        <DnaTd className="py-2 px-2 tabular-nums text-slate-600 text-[11px]">{it.materialCode}</DnaTd>
+                        <DnaTd className="py-2 px-3 font-semibold text-slate-900">{it.materialName}</DnaTd>
+                        <DnaTd className="py-2 px-2 text-right font-bold text-slate-800">
                           {it.orderedQty} {it.unit}
-                        </td>
-                        <td className="py-2 px-2 text-right font-bold text-emerald-700 bg-emerald-50/50">
+                        </DnaTd>
+                        <DnaTd className="py-2 px-2 text-right font-bold text-emerald-700 bg-emerald-50/50">
                           {it.goodQty}
-                        </td>
-                        <td className="py-2 px-2 text-right font-bold text-rose-600 bg-rose-50/50">
+                        </DnaTd>
+                        <DnaTd className="py-2 px-2 text-right font-bold text-rose-600 bg-rose-50/50">
                           {it.rejectQty}
-                        </td>
-                        <td className="py-2 px-2 text-right font-bold text-amber-600 bg-amber-50/50">
+                        </DnaTd>
+                        <DnaTd className="py-2 px-2 text-right font-bold text-amber-600 bg-amber-50/50">
                           {it.freeQty}
-                        </td>
-                        <td className="py-2 px-3 text-right font-bold text-blue-600 font-mono text-[11px]">
+                        </DnaTd>
+                        <DnaTd className="py-2 px-3 text-right font-bold text-blue-600 tabular-nums text-[11px]">
                           {formatCurrency(it.subtotal)}
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
 
@@ -476,19 +483,19 @@ export default function PurchaseOrdersModernPage() {
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
               <div className="flex justify-between text-slate-600">
                 <span>Subtotal Barang:</span>
-                <span className="font-mono">{formatCurrency(selectedPo.subtotalAmount)}</span>
+                <span className="tabular-nums">{formatCurrency(selectedPo.subtotalAmount)}</span>
               </div>
               <div className="flex justify-between text-emerald-700">
                 <span>Diskon Pembelian (Rp):</span>
-                <span className="font-mono">- {formatCurrency(selectedPo.discountRp)}</span>
+                <span className="tabular-nums">- {formatCurrency(selectedPo.discountRp)}</span>
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>Ongkos Kirim:</span>
-                <span className="font-mono">+ {formatCurrency(selectedPo.shippingCostRp)}</span>
+                <span className="tabular-nums">+ {formatCurrency(selectedPo.shippingCostRp)}</span>
               </div>
               <div className="flex justify-between font-bold text-slate-900 pt-2 border-t border-slate-200 text-sm">
                 <span>Grand Total:</span>
-                <span className="text-blue-600 font-mono">{formatCurrency(selectedPo.totalAmount)}</span>
+                <span className="text-blue-600 tabular-nums">{formatCurrency(selectedPo.totalAmount)}</span>
               </div>
             </div>
           </div>

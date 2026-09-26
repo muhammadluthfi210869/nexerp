@@ -102,13 +102,13 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
           </div>
 
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <div className="flex items-center gap-1 font-mono text-[10px]">
+            <div className="flex items-center gap-1 tabular-nums text-[10px]">
               <Clock className="w-3 h-3 text-slate-400" />
               <span>{formatDateIndonesian(post.scheduledDate)}</span>
             </div>
 
             {post.performance?.reach ? (
-              <div className="flex items-center gap-1 text-emerald-700 font-mono font-bold text-[11px] tabular-nums">
+              <div className="flex items-center gap-1 text-emerald-700 tabular-nums font-bold text-[11px] tabular-nums">
                 <Eye className="w-3 h-3" />
                 <span>{formatNumber(post.performance.reach)}</span>
               </div>
@@ -153,11 +153,11 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
                       <span>🗓️</span>
                       <span>{group.monthName}</span>
                     </h3>
-                    <span className="text-[10px] font-mono bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded-full font-bold">
+                    <span className="text-[10px] tabular-nums bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded-full font-bold">
                       {group.count} konten
                     </span>
                     {group.totalReach > 0 && (
-                      <span className="text-[11px] text-emerald-700 font-mono font-bold hidden sm:inline-block">
+                      <span className="text-[11px] text-emerald-700 tabular-nums font-bold hidden sm:inline-block">
                         • {formatNumber(group.totalReach)} reach
                       </span>
                     )}

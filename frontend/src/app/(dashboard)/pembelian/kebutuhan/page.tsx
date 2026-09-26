@@ -39,6 +39,12 @@ import {
   DnaLoadingSkeleton,
   DnaErrorState,
   DnaEmptyState,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { formatCurrency } from "@/lib/utils";
 
@@ -157,7 +163,13 @@ function KebutuhanBarangMRPContent() {
       status: netNeed > 0 ? "DEFICIT" : "SAFE_STOCK",
     };
     setManualNeeds([newItem, ...manualNeeds]);
-    toast.success("Kebutuhan Dicatat", `Kebutuhan ${newItem.materialName} berhasil ditambahkan ke rencana MRP.`);
+    // Local planning worksheet only. POST /scm/goods-requirements needs `salesOrderId` and
+    // `items[].materialId` as UUIDs; this form holds a material code/name, so it cannot fill
+    // either and the row would be rejected. Nothing is sent until those pickers exist.
+    toast.warning(
+      "Kebutuhan dicatat lokal",
+      `Kebutuhan ${newItem.materialName} masuk ke rencana MRP di layar ini saja — belum tersimpan ke server.`,
+    );
     setIsCreateOpen(false);
   };
 
@@ -285,62 +297,62 @@ function KebutuhanBarangMRPContent() {
           searchPlaceholder="Cari kode bahan, nama bahan, SO ref, supplier..."
         >
           <div className="w-full">
-            <table className="w-full text-left border-collapse table-fixed text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider select-none">
-                <tr>
-                  <th className="py-3 px-4 w-[24%]">MATERIAL & KATEGORI</th>
-                  <th className="py-3 px-4 w-[18%]">SO REF & KLIEN</th>
-                  <th className="py-3 px-4 text-center w-[16%]">GROSS VS REAL STOK</th>
-                  <th className="py-3 px-4 text-right w-[16%]">NET DEFISIT (PO)</th>
-                  <th className="py-3 px-4 text-right w-[16%]">SUPPLIER & EST. BIAYA</th>
-                  <th className="py-3 px-4 text-right w-[10%]">AKSI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-normal">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh className="py-3 px-4 w-[24%]">MATERIAL & KATEGORI</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[18%]">SO REF & KLIEN</DnaTh>
+                  <DnaTh className="py-3 px-4 text-center w-[16%]">GROSS VS REAL STOK</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[16%]">NET DEFISIT (PO)</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[16%]">SUPPLIER & EST. BIAYA</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[10%]">AKSI</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredList.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center">
+                  <DnaTableRow>
+                    <DnaTd colSpan={6} className="py-8 text-center">
                       <DnaEmptyState
                         title="Belum Ada Analisis MRP"
                         description="Tidak ada data kebutuhan barang pada filter ini."
                       />
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredList.map((item) => (
-                    <tr
+                    <DnaTableRow
                       key={item.id}
                       onClick={() => setSelectedItem(item)}
                       className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                     >
-                      <td className="py-3 px-4">
+                      <DnaTd className="py-3 px-4">
                         <span className="font-semibold text-slate-900 block truncate">
                           {item.materialName}
                         </span>
-                        <span className="text-[11px] font-mono text-slate-500 block truncate">
-                          {item.materialCode} • {item.category}
+                        <span className="text-[11px] tabular-nums text-slate-500 block truncate">
+                          <span>{item.materialCode}</span> • {item.category}
                         </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="font-mono font-bold text-slate-800 block truncate">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4">
+                        <span className="tabular-nums font-bold text-slate-800 block truncate">
                           {item.salesOrderRef}
                         </span>
                         <span className="text-[11px] text-slate-500 block truncate">
                           {item.clientName}
                         </span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className="font-mono font-bold text-slate-700 block text-xs">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
+                        <span className="tabular-nums font-bold text-slate-700 block text-xs">
                           {item.grossRequirement} {item.unit} (Gross)
                         </span>
                         <span className="text-[11px] font-medium text-emerald-700 block">
                           Stok: {item.realStockQty} {item.unit}
                         </span>
-                      </td>
-                      <td className="py-3 px-4 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         {item.netNeedQty > 0 ? (
                           <>
-                            <span className="font-mono font-black text-rose-600 block text-xs">
+                            <span className="tabular-nums font-black text-rose-600 block text-xs">
                               {item.netNeedQty} {item.unit}
                             </span>
                             <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200 inline-block">
@@ -349,22 +361,22 @@ function KebutuhanBarangMRPContent() {
                           </>
                         ) : (
                           <>
-                            <span className="font-mono font-semibold text-emerald-700 block text-xs">
+                            <span className="tabular-nums font-semibold text-emerald-700 block text-xs">
                               0 {item.unit}
                             </span>
                             <span className="text-[10px] text-emerald-600 font-medium">Stok Aman</span>
                           </>
                         )}
-                      </td>
-                      <td className="py-3 px-4 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         <span className="font-semibold text-slate-800 block truncate text-xs">
                           {item.primarySupplier}
                         </span>
-                        <span className="font-mono font-bold text-blue-600 block text-xs">
+                        <span className="tabular-nums font-bold text-blue-600 block text-xs">
                           {item.netNeedQty > 0 ? formatCurrency(item.estimatedTotalCost) : "—"}
                         </span>
-                      </td>
-                      <td className="py-3 px-4 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                           {item.netNeedQty > 0 && (
                             <DnaButton
@@ -385,12 +397,12 @@ function KebutuhanBarangMRPContent() {
                             Detail
                           </DnaButton>
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}
@@ -432,12 +444,12 @@ function KebutuhanBarangMRPContent() {
             <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
                 <span className="text-slate-500 block text-[11px]">SO Terkait & Produk</span>
-                <span className="font-bold text-slate-900 font-mono text-sm block">{selectedItem.salesOrderRef}</span>
+                <span className="font-bold text-slate-900 tabular-nums text-sm block">{selectedItem.salesOrderRef}</span>
                 <span className="text-slate-500 text-[11px] mt-0.5">{selectedItem.brandProduct} ({selectedItem.clientName})</span>
               </div>
               <div className="text-right">
                 <span className="text-slate-500 block text-[11px]">Total Biaya Pengadaan</span>
-                <span className="font-bold text-blue-600 font-mono text-sm block">
+                <span className="font-bold text-blue-600 tabular-nums text-sm block">
                   {selectedItem.netNeedQty > 0 ? formatCurrency(selectedItem.estimatedTotalCost) : "Rp 0 (Cukup)"}
                 </span>
                 <span className="text-slate-500 text-[11px] mt-0.5">Supplier: {selectedItem.primarySupplier}</span>
@@ -448,25 +460,25 @@ function KebutuhanBarangMRPContent() {
             <div className="grid grid-cols-4 gap-3 text-xs">
               <div className="bg-white p-3 rounded-xl border border-slate-200">
                 <span className="text-slate-400 block mb-0.5 text-[11px]">Gross Need</span>
-                <span className="font-bold text-slate-900 text-sm font-mono">
+                <span className="font-bold text-slate-900 text-sm tabular-nums">
                   {selectedItem.grossRequirement} {selectedItem.unit}
                 </span>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-200">
                 <span className="text-slate-400 block mb-0.5 text-[11px]">Real Stok</span>
-                <span className="font-bold text-emerald-700 text-sm font-mono">
+                <span className="font-bold text-emerald-700 text-sm tabular-nums">
                   {selectedItem.realStockQty} {selectedItem.unit}
                 </span>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-200">
                 <span className="text-slate-400 block mb-0.5 text-[11px]">On-Order</span>
-                <span className="font-bold text-blue-700 text-sm font-mono">
+                <span className="font-bold text-blue-700 text-sm tabular-nums">
                   {selectedItem.onOrderQty} {selectedItem.unit}
                 </span>
               </div>
               <div className="bg-rose-50/80 p-3 rounded-xl border border-rose-200">
                 <span className="text-rose-600 block mb-0.5 text-[11px] font-bold">Defisit (Perlu PO)</span>
-                <span className="font-black text-rose-700 text-sm font-mono">
+                <span className="font-black text-rose-700 text-sm tabular-nums">
                   {selectedItem.netNeedQty} {selectedItem.unit}
                 </span>
               </div>
@@ -483,13 +495,13 @@ function KebutuhanBarangMRPContent() {
               </div>
               <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
                 <span className="text-slate-600">Estimasi Harga Satuan:</span>
-                <span className="font-mono font-semibold text-slate-800">
+                <span className="tabular-nums font-semibold text-slate-800">
                   {formatCurrency(selectedItem.estimatedUnitPrice)} / {selectedItem.unit}
                 </span>
               </div>
               <div className="flex justify-between items-center py-1.5">
                 <span className="text-slate-600 font-semibold">Total Biaya Pengadaan Defisit:</span>
-                <span className="font-mono font-bold text-blue-600 text-sm">
+                <span className="tabular-nums font-bold text-blue-600 text-sm">
                   {formatCurrency(selectedItem.estimatedTotalCost)}
                 </span>
               </div>

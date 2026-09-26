@@ -122,7 +122,7 @@ export default function DnaVisualPage() {
                     >
                       <div className={cn("w-full h-7 rounded-lg shadow-2xs mb-1.5", c.bg)} />
                       <p className="font-semibold text-[11px] text-slate-800 leading-tight">{c.name}</p>
-                      <p className="text-[9px] text-slate-400 font-mono mt-0.5">{c.hex}</p>
+                      <p className="text-[9px] text-slate-400 tabular-nums mt-0.5">{c.hex}</p>
                     </div>
                   ))}
                 </div>
@@ -140,7 +140,7 @@ export default function DnaVisualPage() {
                     >
                       <div className={cn("w-full h-5 rounded-md shadow-2xs mb-1", c.bg)} />
                       <p className="font-semibold text-[10px] text-slate-800 truncate">{c.name}</p>
-                      <p className="text-[8px] text-slate-400 font-mono">{c.hex}</p>
+                      <p className="text-[8px] text-slate-400 tabular-nums">{c.hex}</p>
                     </div>
                   ))}
                 </div>
@@ -158,7 +158,7 @@ export default function DnaVisualPage() {
                     >
                       <div className={cn("w-full h-5 rounded-md shadow-2xs mb-1", c.bg)} />
                       <p className="font-semibold text-[9px] text-slate-800 truncate">{c.name}</p>
-                      <p className="text-[8px] text-slate-400 font-mono">{c.hex}</p>
+                      <p className="text-[8px] text-slate-400 tabular-nums">{c.hex}</p>
                     </div>
                   ))}
                 </div>
@@ -172,7 +172,7 @@ export default function DnaVisualPage() {
                     <div key={c.name} className="p-1.5 rounded-xl border border-slate-100 bg-slate-50/50">
                       <div className={cn("w-full h-4.5 rounded-md shadow-2xs mb-1", c.bg)} />
                       <p className="font-semibold text-[9px] text-slate-800 truncate">{c.name}</p>
-                      <p className="text-[8px] text-slate-400 font-mono">{c.hex}</p>
+                      <p className="text-[8px] text-slate-400 tabular-nums">{c.hex}</p>
                     </div>
                   ))}
                 </div>
@@ -194,7 +194,7 @@ export default function DnaVisualPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-[14px] font-bold text-slate-900">Page Title</p>
-                    <span className="text-[11px] text-slate-400 font-mono font-semibold">32 / 40 - Bold</span>
+                    <span className="text-[11px] text-slate-400 tabular-nums font-semibold">32 / 40 - Bold</span>
                   </div>
                   <p className="text-[12px] text-slate-500 mt-0.5">Untuk judul halaman utama. Contoh: <span className="font-bold text-slate-900">Work Orders & Production</span></p>
                 </div>
@@ -205,7 +205,7 @@ export default function DnaVisualPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-[14px] font-semibold text-slate-900">Section Title</p>
-                    <span className="text-[11px] text-slate-400 font-mono font-semibold">20 / 28 - Semibold</span>
+                    <span className="text-[11px] text-slate-400 tabular-nums font-semibold">20 / 28 - Semibold</span>
                   </div>
                   <p className="text-[12px] text-slate-500 mt-0.5">Untuk judul section / modul. Contoh: <span className="font-semibold text-slate-900">Intake Klien</span></p>
                 </div>
@@ -216,7 +216,7 @@ export default function DnaVisualPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-[14px] font-normal text-slate-900">Body / Regular</p>
-                    <span className="text-[11px] text-slate-400 font-mono font-semibold">14 / 20 - Regular</span>
+                    <span className="text-[11px] text-slate-400 tabular-nums font-semibold">14 / 20 - Regular</span>
                   </div>
                   <p className="text-[12px] text-slate-500 mt-0.5">Teks utama untuk konten. Contoh: Deskripsi, label</p>
                 </div>
@@ -227,7 +227,7 @@ export default function DnaVisualPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-[14px] font-medium text-slate-900">Body / Medium</p>
-                    <span className="text-[11px] text-slate-400 font-mono font-semibold">14 / 20 - Medium</span>
+                    <span className="text-[11px] text-slate-400 tabular-nums font-semibold">14 / 20 - Medium</span>
                   </div>
                   <p className="text-[12px] text-slate-500 mt-0.5">Untuk teks penting / emphasized. Contoh: Nilai, highlight</p>
                 </div>
@@ -238,7 +238,7 @@ export default function DnaVisualPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-[12px] font-semibold text-slate-900">Table Header</p>
-                    <span className="text-[11px] text-slate-400 font-mono font-semibold">12 / 16 - Semibold</span>
+                    <span className="text-[11px] text-slate-400 tabular-nums font-semibold">12 / 16 - Semibold</span>
                   </div>
                   <p className="text-[12px] text-slate-500 mt-0.5">Digunakan di header tabel. Contoh: <span className="font-semibold uppercase text-slate-800">WO, PRODUK, KLIEN</span></p>
                 </div>
@@ -249,7 +249,7 @@ export default function DnaVisualPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-[12px] text-slate-700">Helper / Caption</p>
-                    <span className="text-[11px] text-slate-400 font-mono font-semibold">12 / 16 - Regular</span>
+                    <span className="text-[11px] text-slate-400 tabular-nums font-semibold">12 / 16 - Regular</span>
                   </div>
                   <p className="text-[12px] text-slate-500 mt-0.5">Teks bantu, catatan, hint. Contoh: Helper text, caption</p>
                 </div>
@@ -260,7 +260,7 @@ export default function DnaVisualPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-[14px] font-bold text-slate-900">KPI Value</p>
-                    <span className="text-[11px] text-blue-600 font-mono font-bold">24 / 32 - Bold</span>
+                    <span className="text-[11px] text-blue-600 tabular-nums font-bold">24 / 32 - Bold</span>
                   </div>
                   <p className="text-[12px] text-slate-600 mt-0.5">Nilai utama pada KPI card. Contoh: <span className="font-bold text-slate-900">450 Jt, 64%</span></p>
                 </div>
@@ -291,7 +291,7 @@ export default function DnaVisualPage() {
                     placeholder="Cari parameter, node, atau log..."
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-10 py-1 text-[11px] text-slate-500"
                   />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-slate-400 border border-slate-200 rounded px-1">
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] tabular-nums text-slate-400 border border-slate-200 rounded px-1">
                     Ctrl+K
                   </span>
                 </div>
@@ -393,6 +393,12 @@ import {
   useDnaToast,
   type DnaConfirmVariant,
   type DnaLineItem,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import {
   Plus,

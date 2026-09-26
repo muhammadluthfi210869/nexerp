@@ -33,6 +33,12 @@ import {
   DnaErrorState,
   DnaEmptyState,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 type DpCategory = "sample" | "legalitas" | "produksi";
@@ -293,57 +299,57 @@ function DownPaymentContent() {
             onPageChange: () => {},
           }}
         >
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold text-slate-600 tracking-wider">
-                <th className="p-3.5 w-10 text-center text-slate-400">#</th>
-                <th className="p-3.5 w-44">KODE DP & TANGGAL</th>
-                <th className="p-3.5">PELANGGAN & REFERENSI</th>
-                <th className="p-3.5 w-48 text-right">NOMINAL & SISA SALDO</th>
-                <th className="p-3.5 w-36 text-center">STATUS</th>
-                <th className="p-3.5 w-24 text-center">AKSI</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold text-slate-600 tracking-wider">
+                <DnaTh className="p-3.5 w-10 text-center text-slate-400">#</DnaTh>
+                <DnaTh className="p-3.5 w-44">KODE DP & TANGGAL</DnaTh>
+                <DnaTh className="p-3.5">PELANGGAN & REFERENSI</DnaTh>
+                <DnaTh className="p-3.5 w-48 text-right">NOMINAL & SISA SALDO</DnaTh>
+                <DnaTh className="p-3.5 w-36 text-center">STATUS</DnaTh>
+                <DnaTh className="p-3.5 w-24 text-center">AKSI</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredRecords.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="text-center py-12 text-slate-400">
                     <Wallet className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
                     <p className="font-semibold text-slate-600">Tidak ada data uang muka pada kategori ini</p>
                     <p className="text-xs text-slate-400">Pilih tab lain atau klik tombol Terima Uang Muka Baru.</p>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredRecords.map((dp, idx) => (
-                  <tr
+                  <DnaTableRow
                     key={dp.id}
                     onClick={() => setSelectedRecord(dp)}
                     className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
                   >
-                    <td className="p-3.5 text-center text-slate-400 tabular-nums">{idx + 1}</td>
-                    <td className="p-3.5">
-                      <div className="font-mono font-bold text-blue-600 hover:underline">{dp.code}</div>
+                    <DnaTd className="p-3.5 text-center text-slate-400 tabular-nums">{idx + 1}</DnaTd>
+                    <DnaTd className="p-3.5">
+                      <div className="tabular-nums font-bold text-blue-600 hover:underline">{dp.code}</div>
                       <div className="text-[11px] text-slate-400">{dp.date}</div>
-                    </td>
-                    <td className="p-3.5">
+                    </DnaTd>
+                    <DnaTd className="p-3.5">
                       <div className="font-semibold text-slate-900">{dp.customerName}</div>
                       <div className="text-[11px] text-slate-500">
-                        {dp.brandName} • <span className="font-mono text-slate-400">Ref: {dp.refNumber || "—"}</span>
+                        {dp.brandName} • <span className="tabular-nums text-slate-400">Ref: {dp.refNumber || "—"}</span>
                       </div>
-                    </td>
-                    <td className="p-3.5 text-right">
-                      <div className="font-mono font-bold text-slate-900">Rp {dp.amount.toLocaleString("id-ID")}</div>
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-right">
+                      <div className="tabular-nums font-bold text-slate-900">Rp {dp.amount.toLocaleString("id-ID")}</div>
                       <div className="text-[11px] font-bold text-emerald-600">
                         Sisa: Rp {dp.remainingAmount.toLocaleString("id-ID")}
                       </div>
-                    </td>
-                    <td className="p-3.5 text-center">
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center">
                       <DnaCell.Badge
                         status={statusBadgeConfig[dp.status]?.status || "default"}
                         label={statusBadgeConfig[dp.status]?.label || dp.status}
                       />
-                    </td>
-                    <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-1">
                         <button
                           type="button"
@@ -366,12 +372,12 @@ function DownPaymentContent() {
                           <ArrowUpRight className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </DnaDataTableCard>
       )}
 
@@ -413,7 +419,7 @@ function DownPaymentContent() {
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">Nomor Referensi</span>
-                <p className="font-mono font-semibold text-blue-600">{selectedRecord.refNumber}</p>
+                <p className="tabular-nums font-semibold text-blue-600">{selectedRecord.refNumber}</p>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">Kategori Alur</span>

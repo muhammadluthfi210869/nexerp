@@ -1,22 +1,18 @@
 "use client";
 
-import React, { useState, useMemo, Suspense, useEffect } from "react";
+import { useState, useMemo, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Building2,
   Plus,
-  Calendar,
-  FileSpreadsheet,
   Printer,
   Search,
-  Filter,
   Eye,
   DollarSign,
   TrendingDown,
-  Layers,
   Wrench,
   Sparkles
 } from "lucide-react";
@@ -55,6 +51,7 @@ interface AssetRegisterItem {
 function AssetsContent() {
   const searchParams = useSearchParams();
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [selectedAsset, setSelectedAsset] = useState<AssetRegisterItem | null>(null);
@@ -88,10 +85,11 @@ function AssetsContent() {
     queryKey: ["finance-assets-register"],
     queryFn: async (): Promise<any[]> => {
       try {
-        const res = await api.get("/finance/assets");
+        const res = await api.get("/finance/fixed-assets");
         return unwrapResponse<any[]>(res) || [];
       } catch {
-        return [];
+        const res2 = await api.get("/finance/assets");
+        return unwrapResponse<any[]>(res2) || [];
       }
     },
   });
@@ -128,13 +126,42 @@ function AssetsContent() {
     });
   }, [assets, searchQuery, categoryFilter]);
 
+  const createAssetMutation = useMutation({
+    mutationFn: async () => {
+      return api.post("/finance/fixed-assets", {
+        assetName: formData.name,
+        assetCategory: formData.category,
+        acquisitionDate: formData.acquisitionDate,
+        acquisitionCost: Number(formData.cost),
+        usefulLife: (usefulLifeMap[formData.category] || 4) * 12,
+        location: formData.location,
+        department: formData.department,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Aset Tetap baru berhasil didaftarkan ke database!");
+      queryClient.invalidateQueries({ queryKey: ["finance-assets-register"] });
+      setIsCreateModalOpen(false);
+      setFormData({
+        name: "",
+        category: "Inventaris",
+        acquisitionDate: new Date().toISOString().split("T")[0],
+        cost: "",
+        location: "Ruang Produksi Manufaktur",
+        department: "Produksi Manufaktur",
+      });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal mendaftarkan aset tetap.");
+    },
+  });
+
   const handleSaveAsset = () => {
     if (!formData.name || !formData.cost) {
       toast.error("Mohon lengkapi nama dan harga perolehan aset!");
       return;
     }
-    toast.success("Aset Tetap baru berhasil didaftarkan dengan kode universal global!");
-    setIsCreateModalOpen(false);
+    createAssetMutation.mutate();
   };
 
   return (
@@ -235,8 +262,8 @@ function AssetsContent() {
               filteredAssets.map((a) => (
                 <tr key={a.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-3.5 py-2.5 truncate">
-                    <div className="font-mono text-blue-700 font-bold truncate">{a.assetCode}</div>
-                    <div className="text-[11px] text-slate-500 font-mono">{a.acquisitionDate || "-"}</div>
+                    <div className="tabular-nums text-blue-700 font-bold truncate">{a.assetCode}</div>
+                    <div className="text-[11px] text-slate-500 tabular-nums">{a.acquisitionDate || "-"}</div>
                   </td>
                   <td className="px-3.5 py-2.5 truncate">
                     <div className="font-bold text-slate-900 truncate">{a.name}</div>
@@ -253,7 +280,7 @@ function AssetsContent() {
                   </td>
                   <td className="px-3.5 py-2.5 text-right truncate">
                     <div className="font-bold text-emerald-700">{formatRupiah(a.bookValue)}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">Net Value</div>
+                    <div className="text-[10px] text-slate-400 tabular-nums">Net Value</div>
                   </td>
                   <td className="px-3.5 py-2.5 text-center">
                     <DnaButton variant="ghost" size="sm" onClick={() => setSelectedAsset(a)} title="Lihat Detail & Riwayat">
@@ -281,7 +308,7 @@ function AssetsContent() {
               type="text"
               value="DL-FIN-AST-09092026-0004"
               disabled
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs bg-slate-100 font-mono text-slate-600"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs bg-slate-100 tabular-nums text-slate-600"
             />
           </div>
 
@@ -368,8 +395,8 @@ function AssetsContent() {
             <DnaButton variant="secondary" size="md" onClick={() => setIsCreateModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" size="md" onClick={handleSaveAsset}>
-              Simpan Aset Register
+            <DnaButton variant="primary" size="md" onClick={handleSaveAsset} disabled={createAssetMutation.isPending}>
+              {createAssetMutation.isPending ? "Menyimpan..." : "Simpan Aset Register"}
             </DnaButton>
           </div>
         </div>
@@ -455,7 +482,7 @@ function AssetsContent() {
                         <tr key={idx}>
                           <td className="py-2.5 px-2">
                             <div className="font-medium text-slate-800">{ph.date}</div>
-                            <div className="font-mono text-[10px] text-blue-700">{ph.invoiceRef}</div>
+                            <div className="tabular-nums text-[10px] text-blue-700">{ph.invoiceRef}</div>
                           </td>
                           <td className="py-2.5 px-2">
                             <div className="font-semibold text-slate-900">{ph.type}</div>
@@ -501,7 +528,7 @@ function AssetsContent() {
 
 export default function AssetsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400 font-mono text-xs">Memuat Asset Register...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-slate-400 tabular-nums text-xs">Memuat Asset Register...</div>}>
       <AssetsContent />
     </Suspense>
   );

@@ -2,40 +2,36 @@
 
 /**
  * Client Lost & Churn Analysis — Commercial Front-End
- *
  * Sesuai Legacy ERP Audit (kil_erp_full_inventory_v2.csv Baris 14 & 107),
  * Menampilkan rincian Prospek Gagal (Sebelum Deal) dan Klien Churn (Setelah Delivery).
- *
- * Visual DNA Golden Reference:
- * - Light Enterprise Theme (bg-[#F8FAFC])
- * - DnaPageHeader with backLink { href, label }
- * - DnaKpiGrid with 4 interactive KPI cards (Prospek Lost, Klien Churn, Lost Value, Alasan Dominan)
- * - 2 Sub-tabel DnaDataTableCard (Section A & Section B)
- * - DnaCell.* primitives & DnaModal
  */
 
-import React, { useState, useMemo, Suspense } from "react";
+import React, { useState, useMemo, useEffect, useCallback, Suspense } from "react";
 import {
   XCircle,
   AlertTriangle,
-  Search,
   DollarSign,
   Users,
   Phone,
-  TrendingDown,
+  RefreshCw,
 } from "lucide-react";
 import {
   DnaPageHeader,
   DnaKpiGrid,
   DnaDataTableCard,
   DnaButton,
-  DnaInput,
-  DnaModal,
   DnaDetailDrawer,
   DnaCell,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { formatCurrency } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 export interface LostProspectItem {
   id: string;
@@ -64,83 +60,14 @@ export interface ChurnedClientItem {
   churnReason: string;
 }
 
-const MOCK_PROSPECTS_LOST: LostProspectItem[] = [
-  {
-    id: "pl-1",
-    brandName: "GlowVibe",
-    productName: "Centella Soothing Gel 50ml",
-    clientName: "PT Cantik Jelita",
-    phoneNo: "081234112233",
-    bdName: "Revita (BusDev 1)",
-    estimatedValue: 35000000,
-    sampleDate: "2026-07-15",
-    sampleStatus: "SAMPLE_REVISION",
-    lostReason: "PRICE_ISSUE",
-    lostNotes: "Target budget HPP klien Rp 18.000/pcs sedangkan HPP produksi Rp 23.500/pcs",
-  },
-  {
-    id: "pl-2",
-    brandName: "AuraSkin",
-    productName: "AHA BHA Peeling Serum 30ml",
-    clientName: "dr. Maya Sp.KK",
-    phoneNo: "085678445566",
-    bdName: "Dimas (BusDev Lead)",
-    estimatedValue: 50000000,
-    sampleDate: "2026-08-01",
-    sampleStatus: "SAMPLE_APPROVED",
-    lostReason: "MOQ_TOO_HIGH",
-    lostNotes: "Klien hanya minta MOQ 500 pcs untuk uji klinis awal, pabrik minimum 1.000 pcs",
-  },
-  {
-    id: "pl-3",
-    brandName: "DermaHerb",
-    productName: "Brightening Face Wash 100ml",
-    clientName: "CV Herbal Sentosa",
-    phoneNo: "081987778899",
-    bdName: "Revita (BusDev 1)",
-    estimatedValue: 28000000,
-    sampleDate: "2026-06-20",
-    sampleStatus: "SAMPLE_PROCESS",
-    lostReason: "GHOSTING",
-    lostNotes: "Follow-up 3x via WhatsApp dan telepon tidak ada respon selama 45 hari",
-  },
-];
-
-const MOCK_CHURNED_CLIENTS: ChurnedClientItem[] = [
-  {
-    id: "cc-1",
-    clientName: "PT Aura Makmur Mandiri",
-    brandName: "AuraWhite",
-    phoneNo: "082299887766",
-    lifetimeValue: 185000000,
-    totalOrders: 4,
-    lastOrderDate: "2025-11-10",
-    inactivityMonths: 10,
-    lastProductOrdered: "Body Lotion Tone Up 250ml",
-    churnReason: "Brand beralih fokus ke produk fashion / apparel",
-  },
-  {
-    id: "cc-2",
-    clientName: "CV Pesona Estetika",
-    brandName: "PesonaGlow",
-    phoneNo: "081344556677",
-    lifetimeValue: 92000000,
-    totalOrders: 2,
-    lastOrderDate: "2026-01-15",
-    inactivityMonths: 8,
-    lastProductOrdered: "Moisturizer Gel 30g",
-    churnReason: "Pindah ke pabrik maklon kompetitor karena penawaran termin pembayaran Net 60",
-  },
-];
-
-const REASON_LABELS: Record<string, { label: string; status: string }> = {
-  PRICE_ISSUE: { label: "HPP Terlalu Tinggi", status: "cancel" },
-  MOQ_TOO_HIGH: { label: "MOQ Terlalu Tinggi", status: "warning" },
-  QUALITY: { label: "Kualitas / Karakteristik", status: "warning" },
-  GHOSTING: { label: "Klien Tidak Merespons", status: "pending" },
-  COMPETITOR: { label: "Pindah ke Kompetitor", status: "cancel" },
-  NOT_READY: { label: "Modal / Belum Siap", status: "info" },
-  OTHER: { label: "Alasan Lainnya", status: "neutral" },
+const REASON_LABELS: Record<string, { label: string; status: "critical" | "warning" | "neutral" | "success" }> = {
+  PRICE_ISSUE: { label: "HPP Terlalu Tinggi", status: "critical" },
+  MOQ_TOO_HIGH: { label: "MOQ Tidak Cocok", status: "warning" },
+  QUALITY: { label: "Formula Kurang Pas", status: "critical" },
+  GHOSTING: { label: "Klien Hilang Kontak", status: "neutral" },
+  COMPETITOR: { label: "Pindah ke Maklon Lain", status: "warning" },
+  NOT_READY: { label: "Klien Belum Siap Modal", status: "neutral" },
+  OTHER: { label: "Alasan Lain", status: "neutral" },
 };
 
 function LostContent() {
@@ -150,32 +77,118 @@ function LostContent() {
   const [selectedProspect, setSelectedProspect] = useState<LostProspectItem | null>(null);
   const [selectedChurn, setSelectedChurn] = useState<ChurnedClientItem | null>(null);
 
+  const [prospects, setProspects] = useState<LostProspectItem[]>([]);
+  const [churns, setChurns] = useState<ChurnedClientItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [lostGroupRes, lostDealsRes, lostChurnRes] = await Promise.allSettled([
+        api.get<any[]>("/bussdev/leads/group/lost"),
+        api.get<any[]>("/crm/lost-deals"),
+        api.get<any[]>("/bussdev/analytics/lost-churn"),
+      ]);
+
+      const prospectList: LostProspectItem[] = [];
+
+      if (lostGroupRes.status === "fulfilled" && Array.isArray(lostGroupRes.value.data)) {
+        for (const item of lostGroupRes.value.data) {
+          prospectList.push({
+            id: item.id || `lead-${Math.random()}`,
+            brandName: item.brandName || item.clientName || "Brand",
+            productName: item.productInterest || "Kustom Kosmetik",
+            clientName: item.clientName || "Klien",
+            phoneNo: item.phoneNo || item.phone || "",
+            bdName: item.pic?.name || item.lastActionBy || "BusDev",
+            estimatedValue: Number(item.estimatedValue || 0),
+            sampleDate: item.updatedAt ? new Date(item.updatedAt).toISOString().slice(0, 10) : "-",
+            sampleStatus: item.status || "LOST",
+            lostReason: (item.lostReason as any) || "OTHER",
+            lostNotes: item.notes || item.reason || "",
+          });
+        }
+      }
+
+      if (lostDealsRes.status === "fulfilled" && Array.isArray(lostDealsRes.value.data)) {
+        for (const deal of lostDealsRes.value.data) {
+          if (!prospectList.some((p) => p.id === deal.id || p.id === deal.leadId)) {
+            prospectList.push({
+              id: deal.id,
+              brandName: deal.lead?.clientName || "Brand",
+              productName: "Produk Maklon",
+              clientName: deal.lead?.clientName || "Klien",
+              phoneNo: "",
+              bdName: "BusDev",
+              estimatedValue: 0,
+              sampleDate: deal.createdAt ? new Date(deal.createdAt).toISOString().slice(0, 10) : "-",
+              sampleStatus: "LOST",
+              lostReason: (deal.reason as any) || "OTHER",
+              lostNotes: deal.notes || "",
+            });
+          }
+        }
+      }
+
+      setProspects(prospectList);
+
+      const churnList: ChurnedClientItem[] = [];
+      if (lostChurnRes.status === "fulfilled" && Array.isArray(lostChurnRes.value.data)) {
+        for (const c of lostChurnRes.value.data) {
+          churnList.push({
+            id: c.id || `churn-${Math.random()}`,
+            clientName: c.brand || c.clientName || "Klien Maklon",
+            brandName: c.brand || "Brand",
+            phoneNo: c.phone || "",
+            lifetimeValue: Number(c.lostValue || 0),
+            totalOrders: c.totalOrders || 1,
+            lastOrderDate: c.lastOrderDate || "-",
+            inactivityMonths: c.inactivityMonths || 6,
+            lastProductOrdered: c.lastProduct || "Sediaan Kosmetik",
+            churnReason: c.reason || "Tidak ada repeat order",
+          });
+        }
+      }
+      setChurns(churnList);
+    } catch (err: any) {
+      setError(err?.message || "Gagal memuat data lost & churn");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
   // Global KPI calculations
-  const totalLostCount = MOCK_PROSPECTS_LOST.length;
-  const totalChurnCount = MOCK_CHURNED_CLIENTS.length;
-  const totalLostValue = MOCK_PROSPECTS_LOST.reduce((sum, p) => sum + p.estimatedValue, 0);
+  const totalLostCount = prospects.length;
+  const totalChurnCount = churns.length;
+  const totalLostValue = prospects.reduce((sum, p) => sum + p.estimatedValue, 0);
 
   const filteredProspects = useMemo(() => {
-    if (!searchQuery.trim()) return MOCK_PROSPECTS_LOST;
+    if (!searchQuery.trim()) return prospects;
     const q = searchQuery.toLowerCase();
-    return MOCK_PROSPECTS_LOST.filter(
+    return prospects.filter(
       (p) =>
         p.brandName.toLowerCase().includes(q) ||
         p.clientName.toLowerCase().includes(q) ||
         p.productName.toLowerCase().includes(q)
     );
-  }, [searchQuery]);
+  }, [prospects, searchQuery]);
 
   const filteredChurn = useMemo(() => {
-    if (!searchQuery.trim()) return MOCK_CHURNED_CLIENTS;
+    if (!searchQuery.trim()) return churns;
     const q = searchQuery.toLowerCase();
-    return MOCK_CHURNED_CLIENTS.filter(
+    return churns.filter(
       (c) =>
         c.brandName.toLowerCase().includes(q) ||
         c.clientName.toLowerCase().includes(q) ||
         c.lastProductOrdered.toLowerCase().includes(q)
     );
-  }, [searchQuery]);
+  }, [churns, searchQuery]);
 
   const handleReEngage = (name: string, phone?: string) => {
     if (phone) {
@@ -232,7 +245,7 @@ function LostContent() {
           },
           {
             label: "Alasan Utama Pembatalan",
-            value: "HPP & MOQ",
+            value: totalLostCount > 0 ? "HPP & MOQ" : "Belum Ada",
             subtitle: "Sensitivitas harga & kuantiti batch",
             trend: "Evaluasi R&D",
             icon: AlertTriangle,
@@ -240,6 +253,16 @@ function LostContent() {
           },
         ]}
       />
+
+      {error && (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-sm flex items-center justify-between">
+          <span>{error}</span>
+          <DnaButton size="sm" variant="outline" onClick={fetchData} className="gap-1">
+            <RefreshCw className="w-3.5 h-3.5" />
+            Coba Lagi
+          </DnaButton>
+        </div>
+      )}
 
       {/* Unified Table Card */}
       <DnaDataTableCard
@@ -252,102 +275,116 @@ function LostContent() {
         }}
       >
         <div className="w-full">
-          {activeTab === "prospects" ? (
-            <table className="w-full text-left border-collapse text-xs table-fixed">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  <th className="py-3 px-3 w-[24%]">Brand & Produk</th>
-                  <th className="py-3 px-3 w-[22%]">Pelanggan & Kontak</th>
-                  <th className="py-3 px-3 w-[18%]">PIC BD & Tgl Sample</th>
-                  <th className="py-3 px-3 w-[16%] text-right">Est. Value Deal</th>
-                  <th className="py-3 px-3 w-[10%] text-center">Alasan Lost</th>
-                  <th className="py-3 px-3 w-[10%] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredProspects.map((item) => {
-                  const reason = REASON_LABELS[item.lostReason] || {
-                    label: item.lostReason,
-                    status: "neutral",
-                  };
-                  return (
-                    <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 px-3">
-                        <p className="font-semibold text-slate-900 truncate">{item.brandName}</p>
-                        <p className="text-[11px] text-slate-400 truncate">{item.productName}</p>
-                      </td>
-                      <td className="py-3 px-3">
-                        <p className="font-medium text-slate-800 truncate">{item.clientName}</p>
-                        <p className="font-mono text-[11px] text-slate-400 truncate">{item.phoneNo || "—"}</p>
-                      </td>
-                      <td className="py-3 px-3">
-                        <p className="text-slate-800 truncate">{item.bdName}</p>
-                        <p className="font-mono text-[10px] text-slate-400">Sample: {item.sampleDate}</p>
-                      </td>
-                      <td className="py-3 px-3 text-right">
-                        <p className="font-mono font-bold text-slate-900">{formatCurrency(item.estimatedValue)}</p>
-                        <p className="text-[10px] text-slate-400 truncate">{item.sampleStatus}</p>
-                      </td>
-                      <td className="py-3 px-3 text-center">
-                        <DnaCell.Badge label={reason.label} status={reason.status} />
-                      </td>
-                      <td className="py-3 px-3 text-right">
-                        <div className="flex justify-end gap-1">
-                          <DnaButton variant="ghost" size="sm" onClick={() => setSelectedProspect(item)}>
-                            Detail
-                          </DnaButton>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          {loading ? (
+            <div className="p-12 text-center text-slate-400 text-sm">
+              Memuat data analisis pembatalan...
+            </div>
+          ) : activeTab === "prospects" ? (
+            filteredProspects.length === 0 ? (
+              <div className="p-12 text-center text-slate-400 text-sm">
+                Belum ada data prospek batal tercatat di sistem.
+              </div>
+            ) : (
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <DnaTh className="py-3 px-3 w-[24%]">Brand & Produk</DnaTh>
+                    <DnaTh className="py-3 px-3 w-[22%]">Pelanggan & Kontak</DnaTh>
+                    <DnaTh className="py-3 px-3 w-[18%]">PIC BD & Tgl Sample</DnaTh>
+                    <DnaTh className="py-3 px-3 w-[16%] text-right">Est. Value Deal</DnaTh>
+                    <DnaTh className="py-3 px-3 w-[10%] text-center">Alasan Lost</DnaTh>
+                    <DnaTh className="py-3 px-3 w-[10%] text-right">Aksi</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
+                  {filteredProspects.map((item) => {
+                    const reason = REASON_LABELS[item.lostReason] || {
+                      label: item.lostReason,
+                      status: "neutral",
+                    };
+                    return (
+                      <DnaTableRow key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                        <DnaTd className="py-3 px-3">
+                          <p className="font-semibold text-slate-900 truncate">{item.brandName}</p>
+                          <p className="text-[11px] text-slate-400 truncate">{item.productName}</p>
+                        </DnaTd>
+                        <DnaTd className="py-3 px-3">
+                          <p className="font-medium text-slate-800 truncate">{item.clientName}</p>
+                          <p className="tabular-nums text-[11px] text-slate-400 truncate">{item.phoneNo || "—"}</p>
+                        </DnaTd>
+                        <DnaTd className="py-3 px-3">
+                          <p className="text-slate-800 truncate">{item.bdName}</p>
+                          <p className="tabular-nums text-[10px] text-slate-400">Sample: {item.sampleDate}</p>
+                        </DnaTd>
+                        <DnaTd className="py-3 px-3 text-right">
+                          <p className="tabular-nums font-bold text-slate-900">{formatCurrency(item.estimatedValue)}</p>
+                          <p className="text-[10px] text-slate-400 truncate">{item.sampleStatus}</p>
+                        </DnaTd>
+                        <DnaTd className="py-3 px-3 text-center">
+                          <DnaCell.Badge label={reason.label} status={reason.status} />
+                        </DnaTd>
+                        <DnaTd className="py-3 px-3 text-right">
+                          <div className="flex justify-end gap-1">
+                            <DnaButton variant="ghost" size="sm" onClick={() => setSelectedProspect(item)}>
+                              Detail
+                            </DnaButton>
+                          </div>
+                        </DnaTd>
+                      </DnaTableRow>
+                    );
+                  })}
+                </DnaTableBody>
+              </DnaTable>
+            )
+          ) : filteredChurn.length === 0 ? (
+            <div className="p-12 text-center text-slate-400 text-sm">
+              Belum ada data klien dormant tercatat di sistem.
+            </div>
           ) : (
-            <table className="w-full text-left border-collapse text-xs table-fixed">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  <th className="py-3 px-3 w-[25%]">Pelanggan & Brand</th>
-                  <th className="py-3 px-3 w-[20%]">Total Order & Jeda</th>
-                  <th className="py-3 px-3 w-[22%]">Order Terakhir & Produk</th>
-                  <th className="py-3 px-3 w-[15%] text-right">Lifetime Value</th>
-                  <th className="py-3 px-3 w-[8%] text-center">Status</th>
-                  <th className="py-3 px-3 w-[10%] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  <DnaTh className="py-3 px-3 w-[25%]">Pelanggan & Brand</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[20%]">Total Order & Jeda</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[22%]">Order Terakhir & Produk</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[15%] text-right">Lifetime Value</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[8%] text-center">Status</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[10%] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredChurn.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-3">
+                  <DnaTableRow key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="py-3 px-3">
                       <p className="font-semibold text-slate-900 truncate">{item.clientName}</p>
                       <p className="text-[11px] text-slate-400 truncate">{item.brandName} • {item.phoneNo}</p>
-                    </td>
-                    <td className="py-3 px-3">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3">
                       <p className="font-semibold text-slate-800">{item.totalOrders}x Order</p>
                       <p className="text-[10px] text-rose-600 font-bold">{item.inactivityMonths} Bulan Dormant</p>
-                    </td>
-                    <td className="py-3 px-3">
-                      <p className="font-mono text-slate-700">{item.lastOrderDate}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3">
+                      <p className="tabular-nums text-slate-700">{item.lastOrderDate}</p>
                       <p className="text-[11px] text-slate-400 truncate">{item.lastProductOrdered}</p>
-                    </td>
-                    <td className="py-3 px-3 text-right">
-                      <p className="font-mono font-bold text-emerald-600">{formatCurrency(item.lifetimeValue)}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-right">
+                      <p className="tabular-nums font-bold text-emerald-600">{formatCurrency(item.lifetimeValue)}</p>
                       <p className="text-[10px] text-slate-400">Total Omset</p>
-                    </td>
-                    <td className="py-3 px-3 text-center">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-center">
                       <DnaCell.Badge label="Dormant" status="critical" />
-                    </td>
-                    <td className="py-3 px-3 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-right">
                       <div className="flex justify-end gap-1">
                         <DnaButton variant="ghost" size="sm" onClick={() => setSelectedChurn(item)}>
                           Detail
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           )}
         </div>
       </DnaDataTableCard>
@@ -394,7 +431,7 @@ function LostContent() {
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">Potensi Omset:</span>
-                <p className="font-bold text-rose-600 font-mono">{formatCurrency(selectedProspect.estimatedValue)}</p>
+                <p className="font-bold text-rose-600 tabular-nums">{formatCurrency(selectedProspect.estimatedValue)}</p>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">Status Terakhir:</span>
@@ -402,7 +439,7 @@ function LostContent() {
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">Tanggal Sample:</span>
-                <p className="font-mono text-slate-700">{selectedProspect.sampleDate}</p>
+                <p className="tabular-nums text-slate-700">{selectedProspect.sampleDate}</p>
               </div>
             </div>
 
@@ -455,7 +492,7 @@ function LostContent() {
             <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Lifetime Value:</span>
-                <p className="font-bold text-emerald-600 font-mono">{formatCurrency(selectedChurn.lifetimeValue)}</p>
+                <p className="font-bold text-emerald-600 tabular-nums">{formatCurrency(selectedChurn.lifetimeValue)}</p>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Batch Dipesan:</span>
@@ -463,7 +500,7 @@ function LostContent() {
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">Order Terakhir:</span>
-                <p className="font-mono text-slate-800">{selectedChurn.lastOrderDate}</p>
+                <p className="tabular-nums text-slate-800">{selectedChurn.lastOrderDate}</p>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">Produk Terakhir:</span>

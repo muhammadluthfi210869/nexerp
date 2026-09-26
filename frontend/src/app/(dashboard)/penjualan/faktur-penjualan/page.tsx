@@ -43,6 +43,12 @@ import {
   DnaErrorState,
   DnaEmptyState,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 export interface InvoiceItemDetail {
@@ -379,64 +385,64 @@ function FakturPenjualanContent() {
           }}
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1250px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                  <th className="px-4 py-2.5 w-[170px]">No. Faktur</th>
-                  <th className="px-4 py-2.5 w-[160px]">No. Sales Order</th>
-                  <th className="px-4 py-2.5 w-[110px]">Tgl Faktur</th>
-                  <th className="px-4 py-2.5 w-[110px]">Jatuh Tempo</th>
-                  <th className="px-4 py-2.5 min-w-[180px]">Pelanggan & Brand</th>
-                  <th className="px-4 py-2.5 w-[140px] text-right">Total Tagihan</th>
-                  <th className="px-4 py-2.5 w-[140px] text-right">Sisa Piutang</th>
-                  <th className="px-4 py-2.5 w-[120px] text-center">Status Bayar</th>
-                  <th className="px-4 py-2.5 w-[120px] text-center">AR Gatekeeper</th>
-                  <th className="pr-4 py-2.5 w-[70px] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <DnaTh className="px-4 py-2.5 w-[170px]">No. Faktur</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[160px]">No. Sales Order</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Tgl Faktur</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Jatuh Tempo</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Pelanggan & Brand</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px] text-right">Total Tagihan</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px] text-right">Sisa Piutang</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px] text-center">Status Bayar</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px] text-center">AR Gatekeeper</DnaTh>
+                  <DnaTh className="pr-4 py-2.5 w-[70px] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredInvoices.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="text-center py-12 text-slate-400">
+                  <DnaTableRow>
+                    <DnaTd colSpan={10} className="text-center py-12 text-slate-400">
                       <Receipt className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
                       <p className="font-semibold text-slate-600">Tidak ada faktur ditemukan</p>
                       <p className="text-xs text-slate-400">Sesuaikan filter atau buat faktur baru.</p>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredInvoices.map((inv) => {
                     const remaining = inv.grandTotal - inv.paidAmount;
                     return (
-                      <tr key={inv.id} className="h-[48px] hover:bg-slate-50/60 transition-colors">
-                        <td className="px-4 py-2.5">
+                      <DnaTableRow key={inv.id} className="h-[48px] hover:bg-slate-50/60 transition-colors">
+                        <DnaTd className="px-4 py-2.5">
                           <DnaCell.Code code={inv.invoiceNumber} />
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <DnaCell.Code code={inv.soNumber} />
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <DnaCell.Text text={inv.invoiceDate} />
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <DnaCell.Text text={inv.dueDate} />
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <div>
                             <div className="text-[12px] font-medium text-slate-900 line-clamp-1">{inv.customerName}</div>
                             <div className="text-[10.5px] text-slate-400 font-normal mt-0.5 line-clamp-1">{inv.brandName || "Reguler"}</div>
                           </div>
-                        </td>
-                        <td className="px-4 py-2.5 text-right">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-right">
                           <DnaCell.Numeric value={inv.grandTotal} prefix="Rp " />
-                        </td>
-                        <td className="px-4 py-2.5 text-right font-mono tabular-nums">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-right tabular-nums tabular-nums">
                           <span className={`text-[12px] font-semibold ${remaining > 0 ? "text-rose-600" : "text-emerald-600"}`}>
                             Rp {remaining.toLocaleString("id-ID")}
                           </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center">
                           <DnaBadge
-                            status={
+                            variant={
                               inv.paymentStatus === "PAID"
                                 ? "success"
                                 : inv.paymentStatus === "PARTIAL"
@@ -450,8 +456,8 @@ function FakturPenjualanContent() {
                               ? "Sebagian"
                               : "Belum Bayar"}
                           </DnaBadge>
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center">
                           <button
                             onClick={() => toggleGatekeeper(inv.id)}
                             className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border transition-all cursor-pointer ${
@@ -463,8 +469,8 @@ function FakturPenjualanContent() {
                           >
                             DO {inv.arGatekeeperStatus}
                           </button>
-                        </td>
-                        <td className="pr-4 py-2.5 text-right">
+                        </DnaTd>
+                        <DnaTd className="pr-4 py-2.5 text-right">
                           <DnaButton
                             variant="ghost"
                             className="h-7 w-7 p-0 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600"
@@ -473,13 +479,13 @@ function FakturPenjualanContent() {
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </DnaButton>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}
@@ -549,7 +555,7 @@ function FakturPenjualanContent() {
             <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">No. Sales Order</span>
-                <span className="font-mono font-bold text-blue-600 text-xs">{detailInvoice.soNumber}</span>
+                <span className="tabular-nums font-bold text-blue-600 text-xs">{detailInvoice.soNumber}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">PIC BusDev</span>
@@ -557,11 +563,11 @@ function FakturPenjualanContent() {
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tgl Faktur</span>
-                <span className="font-mono text-slate-700 text-xs">{detailInvoice.invoiceDate}</span>
+                <span className="tabular-nums text-slate-700 text-xs">{detailInvoice.invoiceDate}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Jatuh Tempo</span>
-                <span className="font-mono font-semibold text-rose-600 text-xs">{detailInvoice.dueDate}</span>
+                <span className="tabular-nums font-semibold text-rose-600 text-xs">{detailInvoice.dueDate}</span>
               </div>
             </div>
 
@@ -569,29 +575,29 @@ function FakturPenjualanContent() {
             <div>
               <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">Item Barang / Jasa</p>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 font-bold uppercase text-[10px]">
-                    <tr>
-                      <th className="p-2.5">Produk / Item</th>
-                      <th className="p-2.5 text-right">Qty</th>
-                      <th className="p-2.5 text-right">Harga Satuan</th>
-                      <th className="p-2.5 text-right">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="p-2.5">Produk / Item</DnaTh>
+                      <DnaTh className="p-2.5 text-right">Qty</DnaTh>
+                      <DnaTh className="p-2.5 text-right">Harga Satuan</DnaTh>
+                      <DnaTh className="p-2.5 text-right">Subtotal</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {detailInvoice.items.map((it) => (
-                      <tr key={it.id}>
-                        <td className="p-2.5">
+                      <DnaTableRow key={it.id}>
+                        <DnaTd className="p-2.5">
                           <p className="font-bold text-slate-800">{it.itemName}</p>
-                          <p className="text-[10px] text-slate-400 font-mono">{it.itemCode}</p>
-                        </td>
-                        <td className="p-2.5 text-right font-medium">{it.qty.toLocaleString("id-ID")} {it.unit}</td>
-                        <td className="p-2.5 text-right font-mono">Rp {it.price.toLocaleString("id-ID")}</td>
-                        <td className="p-2.5 text-right font-bold text-slate-900 font-mono">Rp {it.total.toLocaleString("id-ID")}</td>
-                      </tr>
+                          <p className="text-[10px] text-slate-400 tabular-nums">{it.itemCode}</p>
+                        </DnaTd>
+                        <DnaTd className="p-2.5 text-right font-medium">{it.qty.toLocaleString("id-ID")} {it.unit}</DnaTd>
+                        <DnaTd className="p-2.5 text-right tabular-nums">Rp {it.price.toLocaleString("id-ID")}</DnaTd>
+                        <DnaTd className="p-2.5 text-right font-bold text-slate-900 tabular-nums">Rp {it.total.toLocaleString("id-ID")}</DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
 
@@ -600,31 +606,31 @@ function FakturPenjualanContent() {
               <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">Rincian Finansial</p>
               <div className="flex justify-between">
                 <span className="text-slate-500">Subtotal Barang:</span>
-                <span className="font-semibold text-slate-800 font-mono">Rp {detailInvoice.subtotal.toLocaleString("id-ID")}</span>
+                <span className="font-semibold text-slate-800 tabular-nums">Rp {detailInvoice.subtotal.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between text-rose-600">
                 <span>Total Diskon (Rp):</span>
-                <span className="font-mono">-Rp {detailInvoice.totalDiscount.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums">-Rp {detailInvoice.totalDiscount.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">PPN 11%:</span>
-                <span className="font-semibold text-slate-800 font-mono">Rp {detailInvoice.taxAmount.toLocaleString("id-ID")}</span>
+                <span className="font-semibold text-slate-800 tabular-nums">Rp {detailInvoice.taxAmount.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between text-emerald-600 font-semibold border-t border-slate-200 pt-1.5">
                 <span>Potongan Down Payment (Kompensasi DP):</span>
-                <span className="font-mono">-Rp {detailInvoice.downPaymentOffset.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums">-Rp {detailInvoice.downPaymentOffset.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-900 border-t border-slate-200 pt-2">
                 <span>Grand Total Tagihan:</span>
-                <span className="font-mono text-blue-600">Rp {detailInvoice.grandTotal.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums text-blue-600">Rp {detailInvoice.grandTotal.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between text-xs font-semibold text-slate-600 pt-1">
                 <span>Sudah Dibayar:</span>
-                <span className="font-mono text-emerald-600">Rp {detailInvoice.paidAmount.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums text-emerald-600">Rp {detailInvoice.paidAmount.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between text-xs font-bold text-rose-600 border-t border-slate-200 pt-1.5">
                 <span>Sisa Piutang (Outstanding):</span>
-                <span className="font-mono">Rp {(detailInvoice.grandTotal - detailInvoice.paidAmount).toLocaleString("id-ID")}</span>
+                <span className="tabular-nums">Rp {(detailInvoice.grandTotal - detailInvoice.paidAmount).toLocaleString("id-ID")}</span>
               </div>
             </div>
 

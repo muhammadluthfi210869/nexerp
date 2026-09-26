@@ -23,6 +23,7 @@ import {
   DnaBadge 
 } from "@/components/dna";
 import { TableShell } from "@/components/layout/TableShell";
+import { api } from "@/lib/api";
 
 function getBadgeVariant(type: string) {
   switch (type) {
@@ -71,7 +72,7 @@ function AuditLogCard({ log }: { log: any }) {
           <DnaBadge variant={getBadgeVariant(log.entityType)}>
             {(log.entityType || "").replace("_", " ")}
           </DnaBadge>
-          <span className="text-xs font-bold text-slate-400 font-mono">
+          <span className="text-xs font-bold text-slate-400 tabular-nums">
             #{shortId}
           </span>
         </div>
@@ -142,9 +143,10 @@ export default function AuditLedgerPage() {
 
   const fetchLogs = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/system/audit-logs?limit=100`);
-      const data = await res.json();
-      setLogs(data);
+      // Through the shared client, so the Bearer token is attached and a 401
+      // surfaces as an axios error instead of an error envelope fed into setLogs.
+      const res = await api.get("/system/audit-logs", { params: { limit: 100 } });
+      setLogs(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error("Failed to fetch audit logs", error);
     } finally {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, Suspense } from "react";
+import React, { useState, useMemo, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Users,
@@ -9,27 +9,27 @@ import {
   Clock,
   Printer,
   Plus,
-  Search,
   Sparkles,
-  Eye,
-  EyeOff,
-  Phone,
-  Tag,
+  RefreshCw,
 } from "lucide-react";
 import {
   DnaPageContainer,
   DnaPageHeader,
   DnaKpiGrid,
-  DnaStatCard,
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
   DnaModal,
   DnaDetailDrawer,
-  DnaInput,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
-import { DnaTable } from "@/components/dna";
+import { api } from "@/lib/api";
 
 interface GuestBookEntry {
   id: string;
@@ -45,81 +45,15 @@ interface GuestBookEntry {
   category: "BRANDED" | "PEMULA" | "KLINIK" | "DISTRIBUTOR";
 }
 
-const SAMPLE_GUESTS: GuestBookEntry[] = [
-  {
-    id: "gb-1",
-    no: 1,
-    dateTime: "2026-09-02 10:15",
-    clientName: "Ibu Amanda Putri (Glow & Shine)",
-    meetingPic: "Apt. Rina Lestari / Irma Safarina",
-    contact: "0812-9988-7711",
-    city: "Jakarta Selatan",
-    productInterest: "Serum Retinol 30ml Encapsulated",
-    moq: 1000,
-    targetMarket: "Wanita 25-45 Karir",
-    category: "BRANDED",
-  },
-  {
-    id: "gb-2",
-    no: 2,
-    dateTime: "2026-09-03 13:30",
-    clientName: "dr. Hendra Pratama (Dermalife)",
-    meetingPic: "dr. Siska Amelia / Fadilah Syahab",
-    contact: "0811-2233-4455",
-    city: "Surabaya",
-    productInterest: "Hybrid Sunscreen SPF 50 Gel 50ml",
-    moq: 2500,
-    targetMarket: "Pasien Klinik Kecantikan",
-    category: "KLINIK",
-  },
-  {
-    id: "gb-3",
-    no: 3,
-    dateTime: "2026-09-04 11:00",
-    clientName: "Bapak Surya Wijaya (Kharisma Herbal)",
-    meetingPic: "Budi Santoso / Keviana",
-    contact: "0813-5566-7788",
-    city: "Bandung",
-    productInterest: "Hair Growth Oil Kemiri 100ml",
-    moq: 5000,
-    targetMarket: "Mass Market E-Commerce",
-    category: "BRANDED",
-  },
-  {
-    id: "gb-4",
-    no: 4,
-    dateTime: "2026-09-05 14:45",
-    clientName: "Ibu Cindy Claudia (Beauty Glow ID)",
-    meetingPic: "Apt. Rina Lestari / Vira",
-    contact: "0817-8899-0011",
-    city: "Semarang",
-    productInterest: "Moisturizer Gel Ceramide 30g",
-    moq: 1000,
-    targetMarket: "Remaja & Dewasa Muda",
-    category: "PEMULA",
-  },
-  {
-    id: "gb-5",
-    no: 5,
-    dateTime: "2026-09-06 09:30",
-    clientName: "dr. Melissa Anggraini (Aura Derma)",
-    meetingPic: "Fadilah Syahab / Desy",
-    contact: "0812-3344-5566",
-    city: "Malang",
-    productInterest: "Facial Wash Tea Tree Acne 100ml",
-    moq: 3000,
-    targetMarket: "Kulit Berjerawat",
-    category: "KLINIK",
-  },
-];
-
 function GuestBookContent() {
   const toast = useDnaToast();
   const searchParams = useSearchParams();
 
-  const [guests, setGuests] = useState<GuestBookEntry[]>(SAMPLE_GUESTS);
+  const [guests, setGuests] = useState<GuestBookEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("ALL");
-  const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState<GuestBookEntry | null>(null);
@@ -137,6 +71,39 @@ function GuestBookContent() {
     meetingWith: "Apt. Rina Lestari",
     busDev: "Irma Safarina",
   });
+
+  const fetchGuests = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.get<any[]>("/guests");
+      const data = Array.isArray(res.data) ? res.data : [];
+      const mapped: GuestBookEntry[] = data.map((item, idx) => ({
+        id: item.id || `gb-${idx}`,
+        no: idx + 1,
+        dateTime: item.visitDate
+          ? new Date(item.visitDate).toISOString().slice(0, 16).replace("T", " ")
+          : new Date(item.createdAt || Date.now()).toISOString().slice(0, 16).replace("T", " "),
+        clientName: item.instansi ? `${item.clientName} (${item.instansi})` : item.clientName,
+        meetingPic: item.bd?.fullName || item.meetingWith || "BusDev Maklon",
+        contact: item.phoneNo || item.phone || "—",
+        city: item.city || "Jakarta",
+        productInterest: item.productInterest || "Produk Maklon",
+        moq: item.moqPlan || item.moq || 1000,
+        targetMarket: item.targetMarket || "Umum",
+        category: (item.category as any) || "BRANDED",
+      }));
+      setGuests(mapped);
+    } catch (err: any) {
+      setError(err?.message || "Gagal memuat buku tamu");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchGuests();
+  }, [fetchGuests]);
 
   useEffect(() => {
     if (searchParams.get("action") === "create") {
@@ -156,39 +123,46 @@ function GuestBookContent() {
     });
   }, [guests, searchQuery, categoryFilter]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name || !formData.phone || !formData.company) {
       toast.error("Mohon lengkapi nama klien, kontak WhatsApp, dan nama perusahaan/brand!");
       return;
     }
-    const newEntry: GuestBookEntry = {
-      id: `gb-${Date.now()}`,
-      no: guests.length + 1,
-      dateTime: new Date().toISOString().slice(0, 16).replace("T", " "),
-      clientName: `${formData.name} (${formData.company})`,
-      meetingPic: `${formData.meetingWith} / ${formData.busDev}`,
-      contact: formData.phone,
-      city: formData.city,
-      productInterest: formData.productInterest,
-      moq: parseInt(formData.moq) || 1000,
-      targetMarket: formData.targetMarket,
-      category: formData.category,
-    };
-    setGuests([newEntry, ...guests]);
-    toast.success("Catatan kunjungan tamu berhasil disimpan!");
-    setIsModalOpen(false);
-    setFormData({
-      name: "",
-      phone: "",
-      city: "Jakarta",
-      company: "",
-      productInterest: "",
-      moq: "1000",
-      targetMarket: "",
-      category: "BRANDED",
-      meetingWith: "Apt. Rina Lestari",
-      busDev: "Irma Safarina",
-    });
+
+    setSaving(true);
+    try {
+      await api.post("/guests", {
+        clientName: formData.name,
+        instansi: formData.company,
+        productInterest: formData.productInterest || undefined,
+        moqPlan: parseInt(formData.moq, 10) || 1000,
+        category: formData.category,
+        phoneNo: formData.phone,
+        city: formData.city,
+        targetMarket: formData.targetMarket || undefined,
+        visitDate: new Date().toISOString(),
+      });
+
+      toast.success("Catatan kunjungan tamu berhasil disimpan!");
+      setIsModalOpen(false);
+      setFormData({
+        name: "",
+        phone: "",
+        city: "Jakarta",
+        company: "",
+        productInterest: "",
+        moq: "1000",
+        targetMarket: "",
+        category: "BRANDED",
+        meetingWith: "Apt. Rina Lestari",
+        busDev: "Irma Safarina",
+      });
+      await fetchGuests();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || "Gagal menyimpan buku tamu");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const countAll = guests.length;
@@ -230,8 +204,8 @@ function GuestBookContent() {
           {
             label: "Total Tamu Terdaftar",
             value: `${guests.length} Tamu`,
-            subtitle: "Calon mitra maklon periode ini",
-            trend: "+28% vs bln lalu",
+            subtitle: "Calon mitra maklon tercatat",
+            trend: "Buku Tamu",
             icon: Users,
             variant: "blue",
           },
@@ -262,6 +236,16 @@ function GuestBookContent() {
         ]}
       />
 
+      {error && (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-sm flex items-center justify-between">
+          <span>{error}</span>
+          <DnaButton size="sm" variant="outline" onClick={fetchGuests} className="gap-1">
+            <RefreshCw className="w-3.5 h-3.5" />
+            Coba Lagi
+          </DnaButton>
+        </div>
+      )}
+
       {/* Main Table Card */}
       <DnaDataTableCard
         count={filteredGuests.length}
@@ -273,76 +257,82 @@ function GuestBookContent() {
         }}
       >
         <div className="w-full">
-          <table className="w-full text-left border-collapse text-xs table-fixed">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-3 w-[18%]">Waktu & Kota</th>
-                <th className="py-3 px-3 w-[22%]">Klien & Kontak</th>
-                <th className="py-3 px-3 w-[20%]">Meeting & Kategori</th>
-                <th className="py-3 px-3 w-[20%]">Minat Produk & MOQ</th>
-                <th className="py-3 px-3 w-[10%] text-center">Kategori</th>
-                <th className="py-3 px-3 w-[10%] text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredGuests.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-400">
-                    <Users className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
-                    <p className="font-semibold text-slate-600">Tidak ada data tamu kunjungan</p>
-                    <p className="text-xs text-slate-400">Coba sesuaikan kata kunci pencarian atau filter kategori.</p>
-                  </td>
-                </tr>
-              ) : (
-                filteredGuests.map((g) => (
-                  <tr key={g.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-3">
-                      <p className="font-mono font-semibold text-slate-700">{g.dateTime}</p>
-                      <p className="text-[11px] text-slate-400 truncate">{g.city}</p>
-                    </td>
-                    <td className="py-3 px-3">
-                      <p className="font-semibold text-slate-900 truncate">{g.clientName}</p>
-                      <p className="font-mono text-[11px] text-blue-600 truncate">{g.contact}</p>
-                    </td>
-                    <td className="py-3 px-3">
-                      <p className="text-slate-800 font-medium truncate">{g.meetingPic}</p>
-                      <p className="text-[10px] text-slate-400 truncate">{g.targetMarket}</p>
-                    </td>
-                    <td className="py-3 px-3">
-                      <p className="font-semibold text-slate-800 truncate">{g.productInterest}</p>
-                      <p className="font-mono text-[10px] text-slate-500">MOQ: {g.moq.toLocaleString("id-ID")} pcs</p>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <DnaBadge
-                        variant={
-                          g.category === "BRANDED"
-                            ? "purple"
-                            : g.category === "KLINIK"
-                            ? "emerald"
-                            : g.category === "PEMULA"
-                            ? "amber"
-                            : "blue"
-                        }
-                      >
-                        {g.category}
-                      </DnaBadge>
-                    </td>
-                    <td className="py-3 px-3 text-right">
-                      <div className="flex justify-end gap-1">
-                        <DnaButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedGuest(g)}
+          {loading ? (
+            <div className="p-12 text-center text-slate-400 text-sm">
+              Memuat data buku tamu...
+            </div>
+          ) : (
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  <DnaTh className="py-3 px-3 w-[18%]">Waktu & Kota</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[22%]">Klien & Kontak</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[20%]">Meeting & Kategori</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[20%]">Minat Produk & MOQ</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[10%] text-center">Kategori</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[10%] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
+                {filteredGuests.length === 0 ? (
+                  <DnaTableRow>
+                    <DnaTd colSpan={6} className="text-center py-12 text-slate-400">
+                      <Users className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
+                      <p className="font-semibold text-slate-600">Tidak ada data tamu kunjungan</p>
+                      <p className="text-xs text-slate-400">Belum ada catatan tamu atau coba sesuaikan filter pencarian.</p>
+                    </DnaTd>
+                  </DnaTableRow>
+                ) : (
+                  filteredGuests.map((g) => (
+                    <DnaTableRow key={g.id} className="hover:bg-slate-50/80 transition-colors">
+                      <DnaTd className="py-3 px-3">
+                        <p className="tabular-nums font-semibold text-slate-700">{g.dateTime}</p>
+                        <p className="text-[11px] text-slate-400 truncate">{g.city}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3">
+                        <p className="font-semibold text-slate-900 truncate">{g.clientName}</p>
+                        <p className="tabular-nums text-[11px] text-blue-600 truncate">{g.contact}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3">
+                        <p className="text-slate-800 font-medium truncate">{g.meetingPic}</p>
+                        <p className="text-[10px] text-slate-400 truncate">{g.targetMarket}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3">
+                        <p className="font-semibold text-slate-800 truncate">{g.productInterest}</p>
+                        <p className="tabular-nums text-[10px] text-slate-500">MOQ: {g.moq.toLocaleString("id-ID")} pcs</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-center">
+                        <DnaBadge
+                          variant={
+                            g.category === "BRANDED"
+                              ? "purple"
+                              : g.category === "KLINIK"
+                              ? "emerald"
+                              : g.category === "PEMULA"
+                              ? "amber"
+                              : "blue"
+                          }
                         >
-                          Detail
-                        </DnaButton>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                          {g.category}
+                        </DnaBadge>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-right">
+                        <div className="flex justify-end gap-1">
+                          <DnaButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedGuest(g)}
+                          >
+                            Detail
+                          </DnaButton>
+                        </div>
+                      </DnaTd>
+                    </DnaTableRow>
+                  ))
+                )}
+              </DnaTableBody>
+            </DnaTable>
+          )}
         </div>
       </DnaDataTableCard>
 
@@ -384,7 +374,7 @@ function GuestBookContent() {
             <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Waktu Kunjungan</span>
-                <span className="font-mono font-semibold text-slate-800 text-xs">{selectedGuest.dateTime}</span>
+                <span className="tabular-nums font-semibold text-slate-800 text-xs">{selectedGuest.dateTime}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Asal Kota</span>
@@ -396,11 +386,11 @@ function GuestBookContent() {
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">WhatsApp Klien</span>
-                <span className="font-mono font-bold text-blue-600 text-xs">{selectedGuest.contact}</span>
+                <span className="tabular-nums font-bold text-blue-600 text-xs">{selectedGuest.contact}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Target MOQ</span>
-                <span className="font-mono font-bold text-slate-900 text-xs">{selectedGuest.moq.toLocaleString("id-ID")} pcs</span>
+                <span className="tabular-nums font-bold text-slate-900 text-xs">{selectedGuest.moq.toLocaleString("id-ID")} pcs</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Target Pasar Konsumen</span>
@@ -537,8 +527,8 @@ function GuestBookContent() {
             <DnaButton variant="secondary" size="md" onClick={() => setIsModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" size="md" onClick={handleSave}>
-              Simpan Buku Tamu
+            <DnaButton variant="primary" size="md" onClick={handleSave} disabled={saving}>
+              {saving ? "Menyimpan..." : "Simpan Buku Tamu"}
             </DnaButton>
           </div>
         </div>
@@ -547,9 +537,9 @@ function GuestBookContent() {
   );
 }
 
-export default function BussDevGuestBookReportPage() {
+export default function GuestBookPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400">Memuat Buku Tamu...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">Loading...</div>}>
       <GuestBookContent />
     </Suspense>
   );

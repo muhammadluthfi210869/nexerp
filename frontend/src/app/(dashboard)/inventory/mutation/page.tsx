@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   ArrowRightLeft,
   Search,
@@ -29,6 +32,12 @@ import {
   DnaCell,
   DnaBadge,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface TransferItem {
@@ -42,72 +51,13 @@ interface TransferItem {
   status: "COMPLETED" | "PENDING" | "CANCELLED";
   notes?: string;
   items: {
+    materialId?: string;
     name: string;
     unit: string;
     qty: number;
     notes?: string;
   }[];
 }
-
-const INITIAL_TRANSFERS: TransferItem[] = [
-  {
-    id: "TRF-001",
-    code: "TRF-2026-0001",
-    date: "2026-09-02",
-    sourceWarehouse: "Gudang Bahan Baku",
-    destWarehouse: "Gudang Kemasan",
-    creator: "Super Admin",
-    vehicleNo: "B 9284 KIL",
-    status: "COMPLETED",
-    notes: "Mutasi bahan baku untuk batch mixing awal pekan",
-    items: [
-      { name: "Hairdensyl Complex", unit: "gr", qty: 50, notes: "Lot HC-0921" },
-      { name: "IPM", unit: "gr", qty: 25, notes: "Lot IPM-882" }
-    ]
-  },
-  {
-    id: "TRF-002",
-    code: "TRF-2026-0002",
-    date: "2026-09-05",
-    sourceWarehouse: "Gudang Bahan Baku",
-    destWarehouse: "Gudang Barang Jadi",
-    creator: "Super Admin",
-    vehicleNo: "B 1042 SER",
-    status: "PENDING",
-    notes: "Transfer sampel uji stabilitas ke gudang lab",
-    items: [
-      { name: "Niacinamide", unit: "gr", qty: 10, notes: "Sampel uji mikroba" }
-    ]
-  },
-  {
-    id: "TRF-003",
-    code: "TRF-2026-0003",
-    date: "2026-09-08",
-    sourceWarehouse: "Gudang Kemasan",
-    destWarehouse: "Gudang Barang Jadi",
-    creator: "Logistics Officer",
-    vehicleNo: "L 8831 UY",
-    status: "COMPLETED",
-    notes: "Mutasi kemasan primer botol 100ml ke lini packaging",
-    items: [
-      { name: "Secret Water", unit: "gr", qty: 2500, notes: "Solvent pelarut" }
-    ]
-  },
-  {
-    id: "TRF-004",
-    code: "TRF-2026-0004",
-    date: "2026-09-12",
-    sourceWarehouse: "Gudang Bahan Baku",
-    destWarehouse: "Gudang Kemasan",
-    creator: "Super Admin",
-    vehicleNo: "B 7721 PK",
-    status: "PENDING",
-    notes: "Buffer stock bahan aktif niacinamide pabrik utama",
-    items: [
-      { name: "Hairdensyl Complex", unit: "gr", qty: 100, notes: "Stock pengaman" }
-    ]
-  }
-];
 
 export default function InventoryMutationPage() {
   return (
@@ -121,9 +71,9 @@ function InventoryMutationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const actionParam = searchParams.get("action");
-  const { toast } = useDnaToast();
+  const toast = useDnaToast();
+  const queryClient = useQueryClient();
 
-  const [transfers, setTransfers] = useState<TransferItem[]>(INITIAL_TRANSFERS);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -131,26 +81,114 @@ function InventoryMutationContent() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  // Form State
-  const [formData, setFormData] = useState({
-    code: `TRF-2026-${String(transfers.length + 1).padStart(4, "0")}`,
-    date: new Date().toISOString().split("T")[0],
-    sourceWarehouse: "Gudang Bahan Baku",
-    destWarehouse: "Gudang Kemasan",
-    vehicleNo: "",
-    notes: "",
-    cartItems: [
-      { name: "Hairdensyl Complex", unit: "gr", qtyStock: 500, qtyTransfer: 50, notes: "Permintaan lini 1" }
-    ]
+  // Queries
+  const { data: rawTransfers = [], isLoading } = useQuery({
+    queryKey: ["warehouse-transfers"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/transfers");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
   });
 
-  const [newItem, setNewItem] = useState({
-    name: "Niacinamide",
-    unit: "gr",
-    qtyStock: 250,
-    qtyTransfer: 25,
-    notes: ""
+  const { data: warehouseList = [] } = useQuery({
+    queryKey: ["warehouse-warehouses"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/warehouses");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
   });
+
+  const { data: catalogMaterials = [] } = useQuery({
+    queryKey: ["warehouse-catalog"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/catalog");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const transfers: TransferItem[] = useMemo(() => {
+    if (!rawTransfers || !Array.isArray(rawTransfers)) return [];
+    return rawTransfers.map((t: any) => ({
+      id: t.id,
+      code: t.transferNumber || `TRF-${t.id.slice(0, 8).toUpperCase()}`,
+      date: t.date ? new Date(t.date).toISOString().split("T")[0] : "-",
+      sourceWarehouse: t.sourceWarehouse?.name || "Gudang Asal",
+      destWarehouse: t.destWarehouse?.name || "Gudang Tujuan",
+      creator: t.createdById || "Admin Gudang",
+      vehicleNo: "Internal Transfer",
+      status: (t.status || "PENDING") as "COMPLETED" | "PENDING" | "CANCELLED",
+      notes: t.notes || "-",
+      items: (t.items || []).map((it: any) => ({
+        materialId: it.materialId,
+        name: it.material?.name || "Material",
+        unit: it.material?.unit || "Unit",
+        qty: Number(it.qty || 0),
+        notes: it.notes || "-",
+      })),
+    }));
+  }, [rawTransfers]);
+
+  // Form State
+  const [formData, setFormData] = useState<{
+    sourceWarehouseId: string;
+    destWarehouseId: string;
+    date: string;
+    vehicleNo: string;
+    notes: string;
+    cartItems: {
+      materialId: string;
+      name: string;
+      unit: string;
+      qtyStock: number;
+      qtyTransfer: number;
+      notes: string;
+    }[];
+  }>({
+    sourceWarehouseId: "",
+    destWarehouseId: "",
+    date: new Date().toISOString().split("T")[0],
+    vehicleNo: "",
+    notes: "",
+    cartItems: [],
+  });
+
+  const [newItem, setNewItem] = useState<{
+    materialId: string;
+    name: string;
+    unit: string;
+    qtyStock: number;
+    qtyTransfer: number;
+    notes: string;
+  }>({
+    materialId: "",
+    name: "",
+    unit: "Kg",
+    qtyStock: 0,
+    qtyTransfer: 1,
+    notes: "",
+  });
+
+  useEffect(() => {
+    if (warehouseList.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        sourceWarehouseId: prev.sourceWarehouseId || warehouseList[0]?.id || "",
+        destWarehouseId: prev.destWarehouseId || (warehouseList[1]?.id || warehouseList[0]?.id || ""),
+      }));
+    }
+  }, [warehouseList]);
 
   useEffect(() => {
     if (actionParam === "create") {
@@ -159,7 +197,7 @@ function InventoryMutationContent() {
   }, [actionParam]);
 
   const filteredData = useMemo(() => {
-    return transfers.filter(item => {
+    return transfers.filter((item) => {
       const matchSearch =
         item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.sourceWarehouse.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -170,79 +208,100 @@ function InventoryMutationContent() {
     });
   }, [transfers, searchTerm, statusFilter]);
 
-  const totalCompleted = transfers.filter(t => t.status === "COMPLETED").length;
-  const totalPending = transfers.filter(t => t.status === "PENDING").length;
+  const totalCompleted = useMemo(() => transfers.filter((t) => t.status === "COMPLETED").length, [transfers]);
+  const totalPending = useMemo(() => transfers.filter((t) => t.status === "PENDING").length, [transfers]);
 
   const handleAddItem = () => {
-    if (!newItem.name || newItem.qtyTransfer <= 0) {
-      toast({ title: "Validasi Gagal", description: "Pilih barang dan jumlah transfer valid", variant: "warning" });
+    if (!newItem.materialId || newItem.qtyTransfer <= 0) {
+      toast.warning("Pilih barang dan masukkan jumlah transfer yang valid");
       return;
     }
     setFormData({
       ...formData,
-      cartItems: [...formData.cartItems, { ...newItem }]
+      cartItems: [...formData.cartItems, { ...newItem }],
     });
-    setNewItem({ name: "IPM", unit: "gr", qtyStock: 300, qtyTransfer: 10, notes: "" });
+    setNewItem({
+      materialId: "",
+      name: "",
+      unit: "Kg",
+      qtyStock: 0,
+      qtyTransfer: 1,
+      notes: "",
+    });
   };
 
   const handleRemoveItem = (index: number) => {
     setFormData({
       ...formData,
-      cartItems: formData.cartItems.filter((_, i) => i !== index)
+      cartItems: formData.cartItems.filter((_, i) => i !== index),
     });
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.sourceWarehouse === formData.destWarehouse) {
-      toast({ title: "Gudang Sama", description: "Gudang asal dan tujuan tidak boleh sama", variant: "danger" });
+    if (formData.sourceWarehouseId === formData.destWarehouseId) {
+      toast.error("Gudang asal dan tujuan tidak boleh sama");
       return;
     }
     if (formData.cartItems.length === 0) {
-      toast({ title: "Keranjang Kosong", description: "Tambahkan minimal satu item transfer", variant: "warning" });
+      toast.warning("Tambahkan minimal satu item transfer");
       return;
     }
 
-    const newTransfer: TransferItem = {
-      id: `TRF-${Date.now()}`,
-      code: formData.code,
-      date: formData.date,
-      sourceWarehouse: formData.sourceWarehouse,
-      destWarehouse: formData.destWarehouse,
-      creator: "Super Admin",
-      vehicleNo: formData.vehicleNo || "Internal Trolley",
-      status: "COMPLETED",
-      notes: formData.notes,
-      items: formData.cartItems.map(it => ({
-        name: it.name,
-        unit: it.unit,
-        qty: it.qtyTransfer,
-        notes: it.notes
-      }))
-    };
+    try {
+      await api.post("/warehouse/transfers", {
+        sourceWarehouseId: formData.sourceWarehouseId,
+        destWarehouseId: formData.destWarehouseId,
+        notes: `${formData.vehicleNo ? `[Kendaraan: ${formData.vehicleNo}] ` : ""}${formData.notes || ""}`.trim() || undefined,
+        items: formData.cartItems.map((it) => ({
+          materialId: it.materialId,
+          qty: it.qtyTransfer,
+        })),
+      });
 
-    setTransfers([newTransfer, ...transfers]);
-    setIsCreateOpen(false);
-    toast({
-      title: "Mutasi Disimpan",
-      description: `Surat Mutasi ${newTransfer.code} berhasil diproses antar gudang.`,
-      variant: "success"
-    });
-    if (actionParam === "create") {
-      router.push("/goods-transfer");
+      toast.success("Surat Mutasi Transfer berhasil dibuat.");
+      queryClient.invalidateQueries({ queryKey: ["warehouse-transfers"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-transactions"] });
+      setIsCreateOpen(false);
+      setFormData({
+        sourceWarehouseId: warehouseList[0]?.id || "",
+        destWarehouseId: warehouseList[1]?.id || warehouseList[0]?.id || "",
+        date: new Date().toISOString().split("T")[0],
+        vehicleNo: "",
+        notes: "",
+        cartItems: [],
+      });
+      if (actionParam === "create") {
+        router.push("/goods-transfer");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Gagal membuat transfer barang");
+    }
+  };
+
+  const handleExecuteTransfer = async (id: string) => {
+    try {
+      await api.post(`/warehouse/transfers/${id}/execute`, {});
+      toast.success("Transfer barang berhasil dieksekusi dan stok telah dipindahkan.");
+      queryClient.invalidateQueries({ queryKey: ["warehouse-transfers"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-transactions"] });
+      setSelectedTransfer(null);
+      setIsDetailOpen(false);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Gagal mengeksekusi transfer barang");
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "COMPLETED":
-        return <DnaBadge status="success">Selesai</DnaBadge>;
+        return <DnaBadge variant="success">Selesai</DnaBadge>;
       case "PENDING":
-        return <DnaBadge status="warning">Dalam Proses</DnaBadge>;
+        return <DnaBadge variant="warning">Dalam Proses</DnaBadge>;
       case "CANCELLED":
-        return <DnaBadge status="danger">Dibatalkan</DnaBadge>;
+        return <DnaBadge variant="critical">Dibatalkan</DnaBadge>;
       default:
-        return <DnaBadge status="default">{status}</DnaBadge>;
+        return <DnaBadge variant="default">{status}</DnaBadge>;
     }
   };
 
@@ -327,37 +386,37 @@ function InventoryMutationContent() {
       {/* 1:1 Table (Exactly 8 columns matching legacy G-SERP) */}
       <DnaDataTableCard title="Daftar Mutasi Antar Gudang">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-              <tr>
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">Kode Transfer</th>
-                <th className="py-3 px-4">Tanggal</th>
-                <th className="py-3 px-4">Gudang Asal</th>
-                <th className="py-3 px-4">Gudang Tujuan</th>
-                <th className="py-3 px-4">Pembuat</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-12 text-center">#</DnaTh>
+                <DnaTh className="py-3 px-4">Kode Transfer</DnaTh>
+                <DnaTh className="py-3 px-4">Tanggal</DnaTh>
+                <DnaTh className="py-3 px-4">Gudang Asal</DnaTh>
+                <DnaTh className="py-3 px-4">Gudang Tujuan</DnaTh>
+                <DnaTh className="py-3 px-4">Pembuat</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Status</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={8} className="py-8 text-center text-slate-400">
                     Tidak ada transaksi mutasi barang ditemukan
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
-                    <td className="py-3 px-4 font-semibold text-blue-600">{item.code}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.date}</td>
-                    <td className="py-3 px-4 font-medium text-slate-800">{item.sourceWarehouse}</td>
-                    <td className="py-3 px-4 font-medium text-blue-600">{item.destWarehouse}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.creator}</td>
-                    <td className="py-3 px-4 text-center">{getStatusBadge(item.status)}</td>
-                    <td className="py-3 px-4 text-center">
+                  <DnaTableRow key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</DnaTd>
+                    <DnaTd className="py-3 px-4 font-semibold text-blue-600">{item.code}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-600">{item.date}</DnaTd>
+                    <DnaTd className="py-3 px-4 font-medium text-slate-800">{item.sourceWarehouse}</DnaTd>
+                    <DnaTd className="py-3 px-4 font-medium text-blue-600">{item.destWarehouse}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-600">{item.creator}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-center">{getStatusBadge(item.status)}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <DnaButton
                           variant="ghost"
@@ -385,12 +444,12 @@ function InventoryMutationContent() {
                           Print
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -436,30 +495,30 @@ function InventoryMutationContent() {
                 Rincian Barang Ditransfer
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                    <tr>
-                      <th className="py-2.5 px-3 w-10 text-center">#</th>
-                      <th className="py-2.5 px-3">Nama Barang</th>
-                      <th className="py-2.5 px-3 text-center">Satuan</th>
-                      <th className="py-2.5 px-3 text-right">Qty Transfer</th>
-                      <th className="py-2.5 px-3">Catatan Khusus</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3 w-10 text-center">#</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Nama Barang</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-center">Satuan</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Qty Transfer</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Catatan Khusus</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedTransfer.items.map((it, idx) => (
-                      <tr key={idx}>
-                        <td className="py-2.5 px-3 text-center text-slate-400">{idx + 1}</td>
-                        <td className="py-2.5 px-3 font-medium text-slate-800">{it.name}</td>
-                        <td className="py-2.5 px-3 text-center text-slate-600">{it.unit}</td>
-                        <td className="py-2.5 px-3 text-right font-bold text-blue-600">
+                      <DnaTableRow key={idx}>
+                        <DnaTd className="py-2.5 px-3 text-center text-slate-400">{idx + 1}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 font-medium text-slate-800">{it.name}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-center text-slate-600">{it.unit}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right font-bold text-blue-600">
                           {it.qty.toLocaleString("id-ID")}
-                        </td>
-                        <td className="py-2.5 px-3 text-slate-500">{it.notes || "-"}</td>
-                      </tr>
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-slate-500">{it.notes || "-"}</DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
 
@@ -473,6 +532,14 @@ function InventoryMutationContent() {
               <DnaButton variant="secondary" onClick={() => setIsDetailOpen(false)}>
                 Tutup
               </DnaButton>
+              {selectedTransfer.status === "PENDING" && (
+                <DnaButton
+                  variant="primary"
+                  onClick={() => handleExecuteTransfer(selectedTransfer.id)}
+                >
+                  Eksekusi Mutasi (Keluarkan & Terima)
+                </DnaButton>
+              )}
             </div>
           </div>
         )}
@@ -497,15 +564,15 @@ function InventoryMutationContent() {
                 Gudang Asal *
               </label>
               <select
-                value={formData.sourceWarehouse}
-                onChange={(e) => setFormData({ ...formData, sourceWarehouse: e.target.value })}
+                value={formData.sourceWarehouseId}
+                onChange={(e) => setFormData({ ...formData, sourceWarehouseId: e.target.value })}
                 className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-white font-medium"
               >
-                <option value="Gudang Bahan Baku">Gudang Bahan Baku</option>
-                <option value="Gudang Kemasan">Gudang Kemasan</option>
-                <option value="Gudang Barang Jadi">Gudang Barang Jadi</option>
-                <option value="Gudang Surabaya">Gudang Surabaya</option>
-                <option value="Gudang Laboratorium">Gudang Laboratorium</option>
+                {warehouseList.map((wh: any) => (
+                  <option key={wh.id} value={wh.id}>
+                    {wh.name} {wh.code ? `(${wh.code})` : ""}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -513,15 +580,15 @@ function InventoryMutationContent() {
                 Gudang Tujuan *
               </label>
               <select
-                value={formData.destWarehouse}
-                onChange={(e) => setFormData({ ...formData, destWarehouse: e.target.value })}
+                value={formData.destWarehouseId}
+                onChange={(e) => setFormData({ ...formData, destWarehouseId: e.target.value })}
                 className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-white font-medium"
               >
-                <option value="Gudang Kemasan">Gudang Kemasan</option>
-                <option value="Gudang Bahan Baku">Gudang Bahan Baku</option>
-                <option value="Gudang Barang Jadi">Gudang Barang Jadi</option>
-                <option value="Gudang Surabaya">Gudang Surabaya</option>
-                <option value="Gudang Laboratorium">Gudang Laboratorium</option>
+                {warehouseList.map((wh: any) => (
+                  <option key={wh.id} value={wh.id}>
+                    {wh.name} {wh.code ? `(${wh.code})` : ""}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -559,15 +626,26 @@ function InventoryMutationContent() {
               <div className="col-span-5">
                 <label className="block text-[11px] font-semibold text-slate-600 mb-1">Barang *</label>
                 <select
-                  value={newItem.name}
-                  onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                  value={newItem.materialId}
+                  onChange={(e) => {
+                    const selectedMat = catalogMaterials.find((m: any) => m.id === e.target.value);
+                    const stockVal = Number(selectedMat?.stock || selectedMat?.currentStock || 0);
+                    setNewItem({
+                      ...newItem,
+                      materialId: e.target.value,
+                      name: selectedMat?.name || e.target.value,
+                      unit: selectedMat?.unit || "Kg",
+                      qtyStock: stockVal,
+                    });
+                  }}
                   className="w-full text-xs border border-slate-200 rounded-lg p-2 bg-white"
                 >
-                  <option value="Hairdensyl Complex">Hairdensyl Complex (gr)</option>
-                  <option value="Niacinamide">Niacinamide (gr)</option>
-                  <option value="IPM">IPM (gr)</option>
-                  <option value="Secret Water">Secret Water (gr)</option>
-                  <option value="TR-3TS">TR-3TS (gr)</option>
+                  <option value="">-- Pilih Barang --</option>
+                  {catalogMaterials.map((mat: any) => (
+                    <option key={mat.id} value={mat.id}>
+                      {mat.name} ({mat.unit || "Unit"})
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="col-span-3">
@@ -597,26 +675,26 @@ function InventoryMutationContent() {
 
           {/* Tabel Keranjang Item */}
           <div className="border border-slate-200 rounded-xl overflow-hidden">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                <tr>
-                  <th className="py-2.5 px-3 w-10 text-center">#</th>
-                  <th className="py-2.5 px-3">Barang</th>
-                  <th className="py-2.5 px-3 text-center">Satuan</th>
-                  <th className="py-2.5 px-3 text-right">Qty Mutasi</th>
-                  <th className="py-2.5 px-3">Catatan</th>
-                  <th className="py-2.5 px-3 text-center w-12">Hapus</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh className="py-2.5 px-3 w-10 text-center">#</DnaTh>
+                  <DnaTh className="py-2.5 px-3">Barang</DnaTh>
+                  <DnaTh className="py-2.5 px-3 text-center">Satuan</DnaTh>
+                  <DnaTh className="py-2.5 px-3 text-right">Qty Mutasi</DnaTh>
+                  <DnaTh className="py-2.5 px-3">Catatan</DnaTh>
+                  <DnaTh className="py-2.5 px-3 text-center w-12">Hapus</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {formData.cartItems.map((it, idx) => (
-                  <tr key={idx}>
-                    <td className="py-2 px-3 text-center text-slate-400">{idx + 1}</td>
-                    <td className="py-2 px-3 font-medium text-slate-800">{it.name}</td>
-                    <td className="py-2 px-3 text-center text-slate-600">{it.unit}</td>
-                    <td className="py-2 px-3 text-right font-bold text-blue-600">{it.qtyTransfer.toLocaleString()}</td>
-                    <td className="py-2 px-3 text-slate-500">{it.notes || "-"}</td>
-                    <td className="py-2 px-3 text-center">
+                  <DnaTableRow key={idx}>
+                    <DnaTd className="py-2 px-3 text-center text-slate-400">{idx + 1}</DnaTd>
+                    <DnaTd className="py-2 px-3 font-medium text-slate-800">{it.name}</DnaTd>
+                    <DnaTd className="py-2 px-3 text-center text-slate-600">{it.unit}</DnaTd>
+                    <DnaTd className="py-2 px-3 text-right font-bold text-blue-600">{it.qtyTransfer.toLocaleString()}</DnaTd>
+                    <DnaTd className="py-2 px-3 text-slate-500">{it.notes || "-"}</DnaTd>
+                    <DnaTd className="py-2 px-3 text-center">
                       <button
                         type="button"
                         onClick={() => handleRemoveItem(idx)}
@@ -624,11 +702,11 @@ function InventoryMutationContent() {
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
 
           <div>

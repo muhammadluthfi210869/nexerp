@@ -26,6 +26,12 @@ import {
   DnaLoadingSkeleton,
   DnaErrorState,
   DnaEmptyState,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface SalesReturn {
@@ -383,53 +389,53 @@ function ReturPenjualanContent() {
           />
         ) : (
           <div className="w-full">
-            <table className="w-full text-left border-collapse text-xs table-fixed">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  <th className="py-3 px-3 w-[20%]">Kode Retur & SO</th>
-                  <th className="py-3 px-3 w-[24%]">Pelanggan & Produk</th>
-                  <th className="py-3 px-3 w-[18%]">Tanggal & Lokasi</th>
-                  <th className="py-3 px-3 w-[16%] text-right">Nilai & Qty Retur</th>
-                  <th className="py-3 px-3 w-[12%] text-center">Status</th>
-                  <th className="py-3 px-3 w-[10%] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  <DnaTh className="py-3 px-3 w-[20%]">Kode Retur & SO</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[24%]">Pelanggan & Produk</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[18%]">Tanggal & Lokasi</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[16%] text-right">Nilai & Qty Retur</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[12%] text-center">Status</DnaTh>
+                  <DnaTh className="py-3 px-3 w-[10%] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredReturns.map((ret) => (
-                  <tr key={ret.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-3">
-                      <p className="font-mono font-bold text-blue-600 truncate">{ret.returnCode}</p>
-                      <p className="text-[11px] text-slate-400 font-mono truncate">{ret.soNumber}</p>
-                    </td>
-                    <td className="py-3 px-3">
+                  <DnaTableRow key={ret.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="py-3 px-3">
+                      <p className="tabular-nums font-bold text-blue-600 truncate">{ret.returnCode}</p>
+                      <p className="text-[11px] text-slate-400 tabular-nums truncate">{ret.soNumber}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3">
                       <p className="font-semibold text-slate-900 truncate">{ret.customerName}</p>
                       <p className="text-[11px] text-slate-400 truncate">{ret.productName}</p>
-                    </td>
-                    <td className="py-3 px-3">
-                      <p className="font-mono font-semibold text-slate-700">{ret.returnDate}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3">
+                      <p className="tabular-nums font-semibold text-slate-700">{ret.returnDate}</p>
                       <p className="text-[10px] text-slate-400 truncate">{ret.warehouseName}</p>
-                    </td>
-                    <td className="py-3 px-3 text-right">
-                      <p className="font-mono font-bold text-slate-900">Rp {ret.totalValue.toLocaleString("id-ID")}</p>
-                      <p className="text-[10px] text-slate-400 font-mono">{ret.qtyReturned.toLocaleString("id-ID")} pcs</p>
-                    </td>
-                    <td className="py-3 px-3 text-center">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-right">
+                      <p className="tabular-nums font-bold text-slate-900">Rp {ret.totalValue.toLocaleString("id-ID")}</p>
+                      <p className="text-[10px] text-slate-400 tabular-nums">{ret.qtyReturned.toLocaleString("id-ID")} pcs</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-center">
                       <DnaCell.Badge
                         status={statusBadgeConfig[ret.status]?.status || "default"}
                         label={statusBadgeConfig[ret.status]?.label || ret.status}
                       />
-                    </td>
-                    <td className="py-3 px-3 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-right">
                       <div className="flex justify-end gap-1">
                         <DnaButton variant="ghost" size="sm" onClick={() => setDetailReturn(ret)}>
                           Detail
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         )}
       </DnaDataTableCard>
@@ -486,11 +492,11 @@ function ReturPenjualanContent() {
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">No. Sales Order</span>
-                <span className="font-mono font-bold text-blue-600 text-xs">{detailReturn.soNumber}</span>
+                <span className="tabular-nums font-bold text-blue-600 text-xs">{detailReturn.soNumber}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Tanggal Retur</span>
-                <span className="font-mono text-slate-700 text-xs">{detailReturn.returnDate}</span>
+                <span className="tabular-nums text-slate-700 text-xs">{detailReturn.returnDate}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Gudang Alokasi</span>
@@ -507,15 +513,15 @@ function ReturPenjualanContent() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Jumlah Diretur:</span>
-                <span className="font-semibold text-slate-800 font-mono">{detailReturn.qtyReturned.toLocaleString("id-ID")} pcs</span>
+                <span className="font-semibold text-slate-800 tabular-nums">{detailReturn.qtyReturned.toLocaleString("id-ID")} pcs</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Harga Satuan:</span>
-                <span className="font-semibold text-slate-800 font-mono">Rp {detailReturn.unitPrice.toLocaleString("id-ID")}</span>
+                <span className="font-semibold text-slate-800 tabular-nums">Rp {detailReturn.unitPrice.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between border-t border-slate-200 pt-2 text-sm font-bold text-rose-600">
                 <span>Total Nilai Kompensasi:</span>
-                <span className="font-mono">Rp {detailReturn.totalValue.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums">Rp {detailReturn.totalValue.toLocaleString("id-ID")}</span>
               </div>
             </div>
 

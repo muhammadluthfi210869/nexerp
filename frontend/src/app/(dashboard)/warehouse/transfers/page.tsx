@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   ArrowRight,
   ArrowRightLeft,
@@ -59,7 +60,9 @@ export default function TransferOrdersPage() {
 
   const { data: materials } = useQuery({
     queryKey: ["raw-materials"],
-    queryFn: () => api.get("/master/materials").then(r => r.data),
+    // GET /master/materials is paginated — { data, total, page, limit, totalPages } —
+    // so the list must be unwrapped before `.map` / `.find` touch it.
+    queryFn: () => api.get("/master/materials").then(unwrapResponse),
   });
 
   const createMutation = useMutation({

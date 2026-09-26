@@ -40,7 +40,7 @@ import {
   DnaTableBody,
   DnaTableRow,
   DnaTd,
-  DnaCell
+  DnaCell,
 } from "@/components/dna";
 
 interface CashOutItem {
@@ -79,6 +79,18 @@ function CashOutContent() {
     queryFn: async (): Promise<any[]> => {
       const res = await api.get("/finance/journals");
       return unwrapResponse<any[]>(res) || [];
+    },
+  });
+
+  const { data: accountsRaw = [] } = useQuery({
+    queryKey: ["finance-accounts-for-cash-out"],
+    queryFn: async (): Promise<any[]> => {
+      try {
+        const res = await api.get("/finance/accounts");
+        return unwrapResponse<any[]>(res) || [];
+      } catch {
+        return [];
+      }
     },
   });
 
@@ -142,23 +154,54 @@ function CashOutContent() {
     });
   }, [cashOutItems, searchQuery, statusTab]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.description || !formData.amount) {
       toast.error("Mohon lengkapi seluruh kolom bertanda bintang (*)");
       return;
     }
-    toast.success("Bukti Kas Bank Keluar berhasil disimpan dan diposting ke Jurnal!");
-    setIsCreateModalOpen(false);
-    setFormData({
-      date: new Date().toISOString().split("T")[0],
-      description: "",
-      account: "BCA Operasional (521-009182)",
-      to: "",
-      billNo: "",
-      coaExpense: "5110 - Beban Pokok Bahan Baku",
-      amount: "",
-      entryNotes: ""
-    });
+
+    try {
+      const cashAcc = accountsRaw.find((a: any) => a.type === "ASSET" && (a.name.toLowerCase().includes("kas") || a.name.toLowerCase().includes("bank"))) || accountsRaw.find((a: any) => a.type === "ASSET");
+      const expAcc = accountsRaw.find((a: any) => a.type === "EXPENSE") || accountsRaw[0];
+
+      if (cashAcc?.id && expAcc?.id) {
+        await api.post("/finance/cash/disburse", {
+          date: new Date(formData.date).toISOString(),
+          cashAccountId: cashAcc.id,
+          category: "BEBAN_OPERASIONAL",
+          debitAccountId: expAcc.id,
+          amount: Number(formData.amount),
+          entityName: formData.to || "Vendor/Staff",
+          notes: formData.description,
+        });
+      } else {
+        await api.post("/finance/journals", {
+          date: formData.date,
+          reference: `KK-${Date.now().toString().slice(-6)}`,
+          description: `Kas Keluar: ${formData.to || "Pihak Terkait"} - ${formData.description}`,
+          lines: [
+            { accountId: expAcc?.id || "default-exp", debit: Number(formData.amount), credit: 0 },
+            { accountId: cashAcc?.id || "default-cash", debit: 0, credit: Number(formData.amount) },
+          ],
+        });
+      }
+
+      toast.success("Bukti Kas Bank Keluar berhasil disimpan dan diposting ke Jurnal!");
+      refetch();
+      setIsCreateModalOpen(false);
+      setFormData({
+        date: new Date().toISOString().split("T")[0],
+        description: "",
+        account: "BCA Operasional (521-009182)",
+        to: "",
+        billNo: "",
+        coaExpense: "5110 - Beban Pokok Bahan Baku",
+        amount: "",
+        entryNotes: ""
+      });
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Gagal menyimpan kas keluar");
+    }
   };
 
   return (
@@ -245,7 +288,7 @@ function CashOutContent() {
         <div className="overflow-x-auto">
           <DnaTable className="min-w-[1150px]">
             <DnaTableHead>
-              <tr>
+              <DnaTableRow>
                 <DnaTh className="w-[130px]">No Bukti</DnaTh>
                 <DnaTh className="w-[110px]">Tanggal</DnaTh>
                 <DnaTh>Deskripsi Pengeluaran</DnaTh>
@@ -256,7 +299,7 @@ function CashOutContent() {
                 <DnaTh align="right" className="w-[140px]">Jumlah (Rp)</DnaTh>
                 <DnaTh align="center" className="w-[100px]">Status</DnaTh>
                 <DnaTh align="center" className="w-[80px]">Aksi</DnaTh>
-              </tr>
+              </DnaTableRow>
             </DnaTableHead>
             <DnaTableBody>
               {filteredItems.map((item) => (
@@ -322,15 +365,15 @@ function CashOutContent() {
                   </DnaTd>
                 </DnaTableRow>
               ))}
-              <tr className="bg-rose-50/75 font-semibold border-t-2 border-rose-300">
-                <td colSpan={7} className="px-3.5 py-3 text-rose-950 font-bold text-right text-xs">
+              <DnaTableRow className="bg-rose-50/75 font-semibold border-t-2 border-rose-300">
+                <DnaTd colSpan={7} className="px-3.5 py-3 text-rose-950 font-bold text-right text-xs">
                   TOTAL KAS KELUAR:
-                </td>
-                <td className="px-3.5 py-3 text-right text-rose-950 font-bold tabular-nums text-sm">
+                </DnaTd>
+                <DnaTd className="px-3.5 py-3 text-right text-rose-950 font-bold tabular-nums text-sm">
                   {formatRupiah(totalKasKeluar)}
-                </td>
-                <td colSpan={2}></td>
-              </tr>
+                </DnaTd>
+                <DnaTd colSpan={2}></DnaTd>
+              </DnaTableRow>
             </DnaTableBody>
           </DnaTable>
         </div>
@@ -441,7 +484,7 @@ function CashOutContent() {
 
           <div className="p-3 bg-rose-50 rounded-lg border border-rose-200 flex justify-between items-center">
             <span className="text-rose-900 font-medium">Jurnal Otomatis yang Terbentuk:</span>
-            <span className="font-mono text-xs font-bold text-rose-800">
+            <span className="tabular-nums text-xs font-bold text-rose-800">
               Dr Beban/Biaya / Cr Kas/Bank ({formData.account.split(" ")[0]})
             </span>
           </div>
@@ -479,7 +522,7 @@ function CashOutContent() {
                 <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
                   <div>
                     <div className="text-[11px] text-slate-500">Nomor Bukti</div>
-                    <div className="font-mono font-bold text-rose-700 text-sm">{selectedDetail?.code}</div>
+                    <div className="tabular-nums font-bold text-rose-700 text-sm">{selectedDetail?.code}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-slate-500">Tanggal Pengeluaran</div>
@@ -491,7 +534,7 @@ function CashOutContent() {
                   </div>
                   <div>
                     <div className="text-[11px] text-slate-500">No. Tagihan / Ref</div>
-                    <div className="font-mono text-slate-800">{selectedDetail?.billNo}</div>
+                    <div className="tabular-nums text-slate-800">{selectedDetail?.billNo}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-slate-500">Sumber Kas / Rekening</div>
@@ -522,35 +565,35 @@ function CashOutContent() {
               <div className="p-4 space-y-3 text-xs">
                 <div className="text-slate-500 font-medium">Entri Jurnal Akuntansi Pengeluaran:</div>
                 <div className="border border-slate-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-[11px]">
-                      <tr>
-                        <th className="p-2.5">Akun COA</th>
-                        <th className="p-2.5 text-right">Debit</th>
-                        <th className="p-2.5 text-right">Kredit</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      <tr>
-                        <td className="p-2.5 font-medium text-slate-800">
+                  <DnaTable>
+                    <DnaTableHead>
+                      <DnaTableRow>
+                        <DnaTh className="p-2.5">Akun COA</DnaTh>
+                        <DnaTh className="p-2.5 text-right">Debit</DnaTh>
+                        <DnaTh className="p-2.5 text-right">Kredit</DnaTh>
+                      </DnaTableRow>
+                    </DnaTableHead>
+                    <DnaTableBody>
+                      <DnaTableRow>
+                        <DnaTd className="p-2.5 font-medium text-slate-800">
                           Dr. {selectedDetail?.category}
-                        </td>
-                        <td className="p-2.5 text-right font-bold text-rose-700">
+                        </DnaTd>
+                        <DnaTd className="p-2.5 text-right font-bold text-rose-700">
                           {selectedDetail ? formatRupiah(selectedDetail.amount) : "0"}
-                        </td>
-                        <td className="p-2.5 text-right text-slate-400">-</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2.5 font-medium text-slate-800 pl-6">
+                        </DnaTd>
+                        <DnaTd className="p-2.5 text-right text-slate-400">-</DnaTd>
+                      </DnaTableRow>
+                      <DnaTableRow>
+                        <DnaTd className="p-2.5 font-medium text-slate-800 pl-6">
                           Cr. {selectedDetail?.account}
-                        </td>
-                        <td className="p-2.5 text-right text-slate-400">-</td>
-                        <td className="p-2.5 text-right font-bold text-rose-700">
+                        </DnaTd>
+                        <DnaTd className="p-2.5 text-right text-slate-400">-</DnaTd>
+                        <DnaTd className="p-2.5 text-right font-bold text-rose-700">
                           {selectedDetail ? formatRupiah(selectedDetail.amount) : "0"}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                        </DnaTd>
+                      </DnaTableRow>
+                    </DnaTableBody>
+                  </DnaTable>
                 </div>
               </div>
             )

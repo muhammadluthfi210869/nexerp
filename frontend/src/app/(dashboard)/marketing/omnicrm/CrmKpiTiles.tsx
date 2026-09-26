@@ -5,7 +5,15 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { DnaBadge } from "@/components/dna";
+import {
+  DnaBadge,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 
 interface KpiSummary {
   leadsToday: number;
@@ -65,9 +73,9 @@ function fmtDate(s: string | null): string {
   return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
 }
 function balanceBadge(status: RoundRobinHistorical["balanceMetrics"]["isBalanced"]) {
-  if (status === "SEIMBANG") return <DnaBadge status="default">SEIMBANG ✓</DnaBadge>;
-  if (status === "CENDERUNG_SEIMBANG") return <DnaBadge status="default">CENDERUNG SEIMBANG</DnaBadge>;
-  return <DnaBadge status="warning">TIDAK SEIMBANG</DnaBadge>;
+  if (status === "SEIMBANG") return <DnaBadge variant="default">SEIMBANG ✓</DnaBadge>;
+  if (status === "CENDERUNG_SEIMBANG") return <DnaBadge variant="default">CENDERUNG SEIMBANG</DnaBadge>;
+  return <DnaBadge variant="warning">TIDAK SEIMBANG</DnaBadge>;
 }
 
 export function CrmKpiTiles() {
@@ -126,24 +134,24 @@ export function CrmKpiTiles() {
         {!hasErpRrData ? (
           <p className="text-xs text-muted-foreground">Belum ada leads yang ter-assign.</p>
         ) : (
-          <table className="w-full text-xs" data-testid="kpi-round-robin-table">
-            <thead>
-              <tr className="text-left text-muted-foreground">
-                <th className="pb-2">BusDev</th>
-                <th className="pb-2 text-right">Hari Ini</th>
-                <th className="pb-2 text-right">7 Hari Terakhir</th>
-              </tr>
-            </thead>
-            <tbody>
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="text-left text-muted-foreground">
+                <DnaTh className="pb-2">BusDev</DnaTh>
+                <DnaTh className="pb-2 text-right">Hari Ini</DnaTh>
+                <DnaTh className="pb-2 text-right">7 Hari Terakhir</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {kpi.roundRobinDistribution.map((row) => (
-                <tr key={row.agentId ?? "unassigned"} className="border-t border-border" data-testid={`kpi-round-robin-row-${row.agentId ?? "unassigned"}`}>
-                  <td className="py-2">{row.agentName ?? <em className="text-muted-foreground">(unassigned)</em>}</td>
-                  <td className="py-2 text-right"><strong>{row.todayCount}</strong></td>
-                  <td className="py-2 text-right">{row.weekCount}</td>
-                </tr>
+                <DnaTableRow key={row.agentId ?? "unassigned"} className="border-t border-border" data-testid={`kpi-round-robin-row-${row.agentId ?? "unassigned"}`}>
+                  <DnaTd className="py-2">{row.agentName ?? <em className="text-muted-foreground">(unassigned)</em>}</DnaTd>
+                  <DnaTd className="py-2 text-right"><strong>{row.todayCount}</strong></DnaTd>
+                  <DnaTd className="py-2 text-right">{row.weekCount}</DnaTd>
+                </DnaTableRow>
               ))}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         )}
       </section>
 
@@ -152,32 +160,32 @@ export function CrmKpiTiles() {
         {kpi.replyRatePerBusdev.length === 0 ? (
           <p className="text-xs text-muted-foreground">Belum ada leads yang ter-assign.</p>
         ) : (
-          <table className="w-full text-xs" data-testid="kpi-per-busdev-table">
-            <thead>
-              <tr className="text-left text-muted-foreground">
-                <th className="pb-2">BusDev</th>
-                <th className="pb-2 text-right">Total Leads</th>
-                <th className="pb-2 text-right">Replied</th>
-                <th className="pb-2 text-right">Reply Rate</th>
-                <th className="pb-2 text-right">Avg First Response</th>
-              </tr>
-            </thead>
-            <tbody>
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="text-left text-muted-foreground">
+                <DnaTh className="pb-2">BusDev</DnaTh>
+                <DnaTh className="pb-2 text-right">Total Leads</DnaTh>
+                <DnaTh className="pb-2 text-right">Replied</DnaTh>
+                <DnaTh className="pb-2 text-right">Reply Rate</DnaTh>
+                <DnaTh className="pb-2 text-right">Avg First Response</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {kpi.replyRatePerBusdev.map((row) => (
-                <tr key={row.busdevId} className="border-t border-border" data-testid={`kpi-per-busdev-row-${row.busdevId}`}>
-                  <td className="py-2">{row.busdevName}</td>
-                  <td className="py-2 text-right">{row.totalLeads}</td>
-                  <td className="py-2 text-right"><strong>{row.repliedLeads}</strong></td>
-                  <td className="py-2 text-right">
+                <DnaTableRow key={row.busdevId} className="border-t border-border" data-testid={`kpi-per-busdev-row-${row.busdevId}`}>
+                  <DnaTd className="py-2">{row.busdevName}</DnaTd>
+                  <DnaTd className="py-2 text-right">{row.totalLeads}</DnaTd>
+                  <DnaTd className="py-2 text-right"><strong>{row.repliedLeads}</strong></DnaTd>
+                  <DnaTd className="py-2 text-right">
                     <DnaBadge status={row.replyRatePct < 0.1 ? "warning" : "default"}>
                       {fmtPct(row.replyRatePct)}
                     </DnaBadge>
-                  </td>
-                  <td className="py-2 text-right">{fmtMin(row.avgFirstResponseMinutes)}</td>
-                </tr>
+                  </DnaTd>
+                  <DnaTd className="py-2 text-right">{fmtMin(row.avgFirstResponseMinutes)}</DnaTd>
+                </DnaTableRow>
               ))}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         )}
       </section>
 
@@ -216,32 +224,32 @@ export function CrmKpiTiles() {
             {historical.busdevs.length === 0 ? (
               <p className="text-xs text-muted-foreground">Belum ada busdevs di database dreamlab.</p>
             ) : (
-              <table className="w-full text-xs" data-testid="kpi-round-robin-historical-table">
-                <thead>
-                  <tr className="text-left text-muted-foreground">
-                    <th className="pb-2">BusDev</th>
-                    <th className="pb-2">No. WA</th>
-                    <th className="pb-2 text-right">Total</th>
-                    <th className="pb-2 text-right">30d</th>
-                    <th className="pb-2 text-right">7d</th>
-                    <th className="pb-2 text-right">Assigned Terakhir</th>
-                    <th className="pb-2">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow className="text-left text-muted-foreground">
+                    <DnaTh className="pb-2">BusDev</DnaTh>
+                    <DnaTh className="pb-2">No. WA</DnaTh>
+                    <DnaTh className="pb-2 text-right">Total</DnaTh>
+                    <DnaTh className="pb-2 text-right">30d</DnaTh>
+                    <DnaTh className="pb-2 text-right">7d</DnaTh>
+                    <DnaTh className="pb-2 text-right">Assigned Terakhir</DnaTh>
+                    <DnaTh className="pb-2">Status</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {historical.busdevs.map((b) => (
-                    <tr key={b.name} className="border-t border-border" data-testid={`kpi-rr-hist-row-${b.name}`}>
-                      <td className="py-2"><strong>{b.name}</strong></td>
-                      <td className="py-2 text-muted-foreground">{b.phone ?? "—"}</td>
-                      <td className="py-2 text-right"><strong>{b.totalLeads.toLocaleString("id-ID")}</strong></td>
-                      <td className="py-2 text-right">{b.last30d}</td>
-                      <td className="py-2 text-right">{b.last7d}</td>
-                      <td className="py-2 text-right">{fmtDate(b.lastAssignedAt)}</td>
-                      <td className="py-2">{b.isActive ? <DnaBadge status="default">aktif</DnaBadge> : <DnaBadge status="warning">non-aktif</DnaBadge>}</td>
-                    </tr>
+                    <DnaTableRow key={b.name} className="border-t border-border" data-testid={`kpi-rr-hist-row-${b.name}`}>
+                      <DnaTd className="py-2"><strong>{b.name}</strong></DnaTd>
+                      <DnaTd className="py-2 text-muted-foreground">{b.phone ?? "—"}</DnaTd>
+                      <DnaTd className="py-2 text-right"><strong>{b.totalLeads.toLocaleString("id-ID")}</strong></DnaTd>
+                      <DnaTd className="py-2 text-right">{b.last30d}</DnaTd>
+                      <DnaTd className="py-2 text-right">{b.last7d}</DnaTd>
+                      <DnaTd className="py-2 text-right">{fmtDate(b.lastAssignedAt)}</DnaTd>
+                      <DnaTd className="py-2">{b.isActive ? <DnaBadge variant="default">aktif</DnaBadge> : <DnaBadge variant="warning">non-aktif</DnaBadge>}</DnaTd>
+                    </DnaTableRow>
                   ))}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             )}
             <p className="mt-3 text-xs text-muted-foreground">
               Sumber: PostgreSQL <code>dreamlab</code> DB · tabel <code>busdevs</code> + <code>leads</code> + <code>rr_counter</code> · snapshot {fmtDate(historical.generatedAt)}.

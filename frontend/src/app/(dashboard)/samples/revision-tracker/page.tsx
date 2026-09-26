@@ -23,7 +23,13 @@ import {
   DnaButton,
   DnaBadge,
   DnaDetailDrawer,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { api } from "@/lib/api";
 
@@ -204,53 +210,53 @@ export default function RevisionTrackerPage() {
         searchPlaceholder="Cari kode sampel, nama produk, atau klien..."
       >
         <div className="w-full">
-          <table className="w-full text-left text-xs table-fixed">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-4 w-[16%]">Kode & Tanggal</th>
-                <th className="py-3 px-4 w-[28%]">Produk & Klien</th>
-                <th className="py-3 px-4 w-[18%]">Formulator PIC</th>
-                <th className="py-3 px-4 w-[14%]">Iterasi Formula</th>
-                <th className="py-3 px-4 w-[14%]">Status</th>
-                <th className="py-3 px-4 w-[10%] text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-[16%]">Kode & Tanggal</DnaTh>
+                <DnaTh className="py-3 px-4 w-[28%]">Produk & Klien</DnaTh>
+                <DnaTh className="py-3 px-4 w-[18%]">Formulator PIC</DnaTh>
+                <DnaTh className="py-3 px-4 w-[14%]">Iterasi Formula</DnaTh>
+                <DnaTh className="py-3 px-4 w-[14%]">Status</DnaTh>
+                <DnaTh className="py-3 px-4 w-[10%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     Memuat data revisi sampel...
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : displayedList.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     <FlaskConical className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada catatan revisi pada kategori ini.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 displayedList.map((entry) => {
                   const formulaCount = entry.formulas?.length || 0;
                   const isCritical = formulaCount > 3;
                   return (
-                    <tr key={entry.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 truncate">
-                        <p className="font-mono text-xs font-bold text-slate-900 truncate">{entry.sampleCode}</p>
-                        <p className="text-[11px] text-slate-500 font-mono mt-0.5 truncate">
+                    <DnaTableRow key={entry.id} className="hover:bg-slate-50/70 transition-colors">
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="tabular-nums text-xs font-bold text-slate-900 truncate">{entry.sampleCode}</p>
+                        <p className="text-[11px] text-slate-500 tabular-nums mt-0.5 truncate">
                           {entry.latestRevisionDate || entry.completedAt || "—"}
                         </p>
-                      </td>
-                      <td className="py-3 px-4 truncate">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
                         <p className="font-semibold text-slate-900 text-xs truncate">{entry.productName}</p>
                         <p className="text-[11px] text-slate-500 truncate">{entry.lead?.clientName || "—"}</p>
-                      </td>
-                      <td className="py-3 px-4 truncate">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
                         <p className="font-medium text-slate-800 text-xs truncate">{entry.pic?.name || "—"}</p>
                         <p className="text-[11px] text-slate-400 truncate">R&D Formulator</p>
-                      </td>
-                      <td className="py-3 px-4 truncate">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold font-mono ${
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold tabular-nums ${
                           isCritical ? "bg-rose-100 text-rose-800" : "bg-slate-100 text-slate-800"
                         }`}>
                           {formulaCount}x Revisi
@@ -258,11 +264,11 @@ export default function RevisionTrackerPage() {
                         <p className="text-[10px] text-slate-400 mt-0.5">
                           {isCritical ? "⚠️ Bottleneck" : "Normal"}
                         </p>
-                      </td>
-                      <td className="py-3 px-4">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4">
                         {getStatusBadge(entry.revisionStatus)}
-                      </td>
-                      <td className="py-3 px-4 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         <DnaButton
                           variant="ghost"
                           size="sm"
@@ -274,13 +280,13 @@ export default function RevisionTrackerPage() {
                         >
                           <Eye className="w-4 h-4 text-slate-600" />
                         </DnaButton>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   );
                 })
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -299,8 +305,8 @@ export default function RevisionTrackerPage() {
               <div className="space-y-4 text-xs">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-mono font-bold text-slate-900">{selectedSample.sampleCode}</span>
-                    <span className="font-mono text-slate-500">{selectedSample.latestRevisionDate || selectedSample.completedAt || "—"}</span>
+                    <span className="tabular-nums font-bold text-slate-900">{selectedSample.sampleCode}</span>
+                    <span className="tabular-nums text-slate-500">{selectedSample.latestRevisionDate || selectedSample.completedAt || "—"}</span>
                   </div>
                   <p className="font-bold text-slate-900 text-sm">{selectedSample.productName}</p>
                   <p className="text-slate-600">{selectedSample.lead?.clientName} ({selectedSample.lead?.brandName || "—"})</p>
@@ -314,7 +320,7 @@ export default function RevisionTrackerPage() {
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-slate-200">
                     <span className="text-slate-500 block mb-1">Total Iterasi Formula</span>
-                    <p className="font-mono font-bold text-indigo-700 text-sm">{selectedSample.formulas?.length || 0} Versi</p>
+                    <p className="tabular-nums font-bold text-indigo-700 text-sm">{selectedSample.formulas?.length || 0} Versi</p>
                     <span className="text-[10px] text-slate-400">Tercatat di sistem</span>
                   </div>
                 </div>
@@ -328,27 +334,27 @@ export default function RevisionTrackerPage() {
               <div className="space-y-3 text-xs">
                 <p className="font-bold text-slate-700 uppercase">Riwayat Branching Formula:</p>
                 <div className="border border-slate-200 rounded-xl overflow-hidden">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                      <tr>
-                        <th className="p-2.5">Versi</th>
-                        <th className="p-2.5">Kode Formula</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
+                  <DnaTable>
+                    <DnaTableHead>
+                      <DnaTableRow>
+                        <DnaTh className="p-2.5">Versi</DnaTh>
+                        <DnaTh className="p-2.5">Kode Formula</DnaTh>
+                      </DnaTableRow>
+                    </DnaTableHead>
+                    <DnaTableBody>
                       {(selectedSample.formulas || []).map((f, idx) => (
-                        <tr key={f.id || idx}>
-                          <td className="p-2.5 font-bold font-mono text-slate-700">v{f.version || idx + 1}</td>
-                          <td className="p-2.5 font-mono text-indigo-600 font-semibold">{f.formulaCode}</td>
-                        </tr>
+                        <DnaTableRow key={f.id || idx}>
+                          <DnaTd className="p-2.5 font-bold tabular-nums text-slate-700">v{f.version || idx + 1}</DnaTd>
+                          <DnaTd className="p-2.5 tabular-nums text-indigo-600 font-semibold">{f.formulaCode}</DnaTd>
+                        </DnaTableRow>
                       ))}
                       {(selectedSample.formulas || []).length === 0 && (
-                        <tr>
-                          <td colSpan={2} className="p-4 text-center text-slate-400">Belum ada cabang formula.</td>
-                        </tr>
+                        <DnaTableRow>
+                          <DnaTd colSpan={2} className="p-4 text-center text-slate-400">Belum ada cabang formula.</DnaTd>
+                        </DnaTableRow>
                       )}
-                    </tbody>
-                  </table>
+                    </DnaTableBody>
+                  </DnaTable>
                 </div>
               </div>
             ) : null

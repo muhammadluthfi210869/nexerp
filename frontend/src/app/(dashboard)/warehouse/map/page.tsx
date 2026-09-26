@@ -221,8 +221,8 @@ export default function WarehouseMapPage() {
                   : "border-blue-200 bg-blue-50/40 hover:bg-blue-50 hover:border-blue-400"
               } hover:shadow-md hover:-translate-y-0.5`}
             >
-              <span className="text-[10px] font-mono font-bold text-slate-500 uppercase">{rack.id}</span>
-              <span className={`text-xs font-bold font-mono ${
+              <span className="text-[10px] tabular-nums font-bold text-slate-500 uppercase">{rack.id}</span>
+              <span className={`text-xs font-bold tabular-nums ${
                 rack.status === "MAINTENANCE" ? "text-slate-400" : "text-slate-900"
               }`}>
                 {rack.status === "MAINTENANCE" ? "OFF" : `${rack.utilization}%`}
@@ -246,10 +246,10 @@ export default function WarehouseMapPage() {
               Area Docking & Pintu Masuk Inbound Loading Gudang
             </p>
             <div className="flex gap-3 justify-center mt-2">
-              <div className="w-16 h-6 rounded bg-white border border-slate-200 text-[10px] font-mono flex items-center justify-center text-slate-400 font-bold">
+              <div className="w-16 h-6 rounded bg-white border border-slate-200 text-[10px] tabular-nums flex items-center justify-center text-slate-400 font-bold">
                 GATE 1
               </div>
-              <div className="w-16 h-6 rounded bg-white border border-slate-200 text-[10px] font-mono flex items-center justify-center text-slate-400 font-bold">
+              <div className="w-16 h-6 rounded bg-white border border-slate-200 text-[10px] tabular-nums flex items-center justify-center text-slate-400 font-bold">
                 GATE 2
               </div>
             </div>
@@ -291,7 +291,7 @@ export default function WarehouseMapPage() {
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
               <div className="flex items-center justify-between text-slate-700 font-bold uppercase text-[11px]">
                 <span>Tingkat Utilisasi Rak</span>
-                <span className="font-mono text-base font-bold text-blue-700">{selectedRack.utilization}%</span>
+                <span className="tabular-nums text-base font-bold text-blue-700">{selectedRack.utilization}%</span>
               </div>
               <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                 <div
@@ -302,8 +302,8 @@ export default function WarehouseMapPage() {
                 />
               </div>
               <div className="flex items-center justify-between text-slate-500 text-[11px] pt-1">
-                <span>Kapasitas Terisi: <b className="text-slate-800 font-mono">{selectedRack.currentUsage} {selectedRack.unit}</b></span>
-                <span>Maksimum: <b className="text-slate-800 font-mono">{selectedRack.capacity} {selectedRack.unit}</b></span>
+                <span>Kapasitas Terisi: <b className="text-slate-800 tabular-nums">{selectedRack.currentUsage} {selectedRack.unit}</b></span>
+                <span>Maksimum: <b className="text-slate-800 tabular-nums">{selectedRack.capacity} {selectedRack.unit}</b></span>
               </div>
             </div>
 

@@ -1,14 +1,27 @@
 "use client";
 
+/**
+ * Wired to GET /purchase/requests + POST /purchase/requests/:id/{approve,reject}.
+ * The previous revision rendered an in-file `INITIAL_PR_DATA` array of invented
+ * purchase requests, so an operator could "approve" a record that existed only
+ * in the bundle. There is no static array and no fallback here.
+ */
+
 import React from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   ApprovalPageShell,
   type ApprovalColumn,
   type ApprovalDetailData,
-  DnaCell,
   DnaBadge,
-  formatRupiah,
+  DnaCell,
+  DnaErrorState,
 } from "@/components/dna";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
+
+const EMPTY = "—";
 
 interface PurchaseRequestApprovalItem {
   id: string;
@@ -20,6 +33,10 @@ interface PurchaseRequestApprovalItem {
   purpose: string;
   itemsCount: number;
   estimatedTotal: number;
+  // Aliases read by ApprovalPageShell's search and stat aggregation.
+  title: string;
+  partnerName: string;
+  totalAmount: number;
   date: string;
   dueDate: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
@@ -36,134 +53,105 @@ interface PurchaseRequestApprovalItem {
   }>;
 }
 
-const INITIAL_PR_DATA: PurchaseRequestApprovalItem[] = [
-  {
-    id: "pr-1",
-    code: "PR-2026-0645",
-    department: "Produksi & Manufaktur",
-    requesterName: "Hendra Gunawan",
-    creatorRole: "Production Supervisor",
-    urgency: "Tinggi",
-    purpose: "Buffer stock bahan aktif Niacinamide PC Grade dan Propylene Glycol mencapai batas kritis ROP",
-    itemsCount: 2,
-    estimatedTotal: 78500000,
-    date: "25/08/2026",
-    dueDate: "28/08/2026",
-    status: "PENDING",
-    notes: "Dibutuhkan sebelum jadwal mixing batch WO-2608-05 tanggal 2 September 2026.",
-    lineItems: [
-      {
-        id: "pri-1",
-        itemCode: "RAW-NIA-01",
-        itemName: "Niacinamide PC Grade USP 99.8%",
-        qty: 150,
-        unit: "Kg",
-        unitPrice: 360000,
-        total: 54000000,
-        notes: "Sisa stok di gudang hanya 12 kg (Batas ROP: 50 kg).",
-      },
-      {
-        id: "pri-2",
-        itemCode: "RAW-PG-01",
-        itemName: "Propylene Glycol USP Cosmetic Grade",
-        qty: 700,
-        unit: "Kg",
-        unitPrice: 35000,
-        total: 24500000,
-        notes: "Konsumsi reguler 200kg/minggu.",
-      },
-    ],
-  },
-  {
-    id: "pr-2",
-    code: "PR-2026-0641",
-    department: "Laboratorium QC & R&D",
-    requesterName: "dr. Rian Pratama",
-    creatorRole: "R&D Head",
-    urgency: "Normal",
-    purpose: "Reagen uji mikrobiologi dan strip pH meter presisi tinggi untuk rilis batch",
-    itemsCount: 3,
-    estimatedTotal: 14200000,
-    date: "23/08/2026",
-    dueDate: "30/08/2026",
-    status: "APPROVED",
-    notes: "Pengadaan rutin triwulan kebutuhan consumable lab kimia dan mikrobiologi.",
-    lineItems: [
-      {
-        id: "pri-3",
-        itemCode: "LAB-MED-01",
-        itemName: "Nutrient Agar Media Mikrobiologi Difco 500g",
-        qty: 4,
-        unit: "Botol",
-        unitPrice: 1850000,
-        total: 7400000,
-      },
-      {
-        id: "pri-4",
-        itemCode: "LAB-PH-STRIP",
-        itemName: "Indikator pH Merck Non-Bleeding pH 0-14",
-        qty: 10,
-        unit: "Kotak",
-        unitPrice: 680000,
-        total: 6800000,
-      },
-    ],
-  },
-  {
-    id: "pr-3",
-    code: "PR-2026-0635",
-    department: "Maintenance & Utility Pabrik",
-    requesterName: "Joko Santoso",
-    creatorRole: "Maintenance Lead",
-    urgency: "Darurat",
-    purpose: "Sparepart Mechanical Seal & Motor Impeller Homogenizer Reaktor A",
-    itemsCount: 1,
-    estimatedTotal: 28500000,
-    date: "21/08/2026",
-    dueDate: "24/08/2026",
-    status: "APPROVED",
-    notes: "Perbaikan mendesak reaktor emulsi 1000L guna mencegah downtime lini produksi.",
-    lineItems: [
-      {
-        id: "pri-5",
-        itemCode: "SP-MECH-HOM10",
-        itemName: "Mechanical Seal Double Cartridge High Temp 150°C",
-        qty: 1,
-        unit: "Set",
-        unitPrice: 28500000,
-        total: 28500000,
-      },
-    ],
-  },
-  {
-    id: "pr-4",
-    code: "PR-2026-0628",
-    department: "Umum & GA",
-    requesterName: "Dewi Lestari",
-    creatorRole: "GA Staff",
-    urgency: "Normal",
-    purpose: "Penggantian laptop staff baru divisi Digital Marketing",
-    itemsCount: 2,
-    estimatedTotal: 32000000,
-    date: "18/08/2026",
-    dueDate: "25/08/2026",
-    status: "REJECTED",
-    notes: "Ditolak: Alokasi belanja IT aset kantor telah melampaui pagu CAPEX semester II.",
-    lineItems: [
-      {
-        id: "pri-6",
-        itemCode: "IT-LAP-01",
-        itemName: "Laptop Business Series Core i7 16GB RAM",
-        qty: 2,
-        unit: "Unit",
-        unitPrice: 16000000,
-        total: 32000000,
-      },
-    ],
-  },
-];
+/** Backend PRPriority / free-text urgency → the three labels this screen uses. */
+function urgencyOf(priority?: string, urgency?: string): "Normal" | "Tinggi" | "Darurat" {
+  const key = (urgency || priority || "").toUpperCase();
+  if (key === "URGENT" || key === "DARURAT") return "Darurat";
+  if (key === "HIGH" || key === "TINGGI") return "Tinggi";
+  return "Normal";
+}
+
+/** PRStatus → the shell/modal vocabulary. */
+function approvalStatusOf(status?: string): "PENDING" | "APPROVED" | "REJECTED" {
+  const key = (status || "").toUpperCase();
+  if (key === "APPROVED" || key === "CONVERTED") return "APPROVED";
+  if (key === "REJECTED" || key === "CANCELLED") return "REJECTED";
+  return "PENDING";
+}
+
+function formatDate(value?: string | null): string {
+  if (!value) return EMPTY;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return EMPTY;
+  return d.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function toItem(raw: any): PurchaseRequestApprovalItem {
+  const items: any[] = Array.isArray(raw?.items) ? raw.items : [];
+  const lineItems = items.map((li: any, idx: number) => {
+    const qty = Number(li?.qtyRequired) || 0;
+    const unitPrice = Number(li?.estimatedPrice) || 0;
+    return {
+      id: li?.id ?? `li-${idx}`,
+      itemCode: li?.material?.code ?? EMPTY,
+      itemName: li?.material?.name ?? "Material belum tertaut",
+      qty,
+      unit: li?.material?.unit ?? EMPTY,
+      unitPrice,
+      total: qty * unitPrice,
+    };
+  });
+  return {
+    id: raw?.id,
+    code: raw?.requestNumber ?? EMPTY,
+    department: raw?.warehouse?.name ?? EMPTY,
+    requesterName: raw?.creator?.fullName ?? EMPTY,
+    creatorRole: raw?.warehouse?.name ? `Gudang ${raw.warehouse.name}` : "Pemohon Internal",
+    urgency: urgencyOf(raw?.priority, raw?.urgency),
+    purpose: raw?.notes ?? raw?.budgetCode ?? EMPTY,
+    itemsCount: items.length,
+    estimatedTotal: lineItems.reduce((sum, li) => sum + li.total, 0),
+    title: raw?.notes ?? raw?.budgetCode ?? EMPTY,
+    partnerName: raw?.warehouse?.name ?? EMPTY,
+    totalAmount: lineItems.reduce((sum, li) => sum + li.total, 0),
+    date: formatDate(raw?.requestDate ?? raw?.createdAt),
+    dueDate: EMPTY,
+    status: approvalStatusOf(raw?.status),
+    notes: raw?.notes ?? EMPTY,
+    lineItems,
+  };
+}
 
 export default function PurchaseRequestApprovalPage() {
+  const qc = useQueryClient();
+  const queryKey = ["purchase-requests-approval"];
+
+  const { data, isLoading, isError, error, refetch } = useQuery<any[]>({
+    queryKey,
+    queryFn: async () => {
+      const resp = await api.get("/purchase/requests");
+      const body = unwrapResponse<any>(resp);
+      return Array.isArray(body) ? body : (body?.data ?? []);
+    },
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.post(`/purchase/requests/${id}/approve`).then((r) => unwrapResponse(r)),
+    onSuccess: () => {
+      toast.success("Permintaan pembelian disetujui.");
+      qc.invalidateQueries({ queryKey });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Gagal menyetujui permintaan pembelian."),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: (p: { id: string; reason: string }) =>
+      api
+        .post(`/purchase/requests/${p.id}/reject`, { reason: p.reason })
+        .then((r) => unwrapResponse(r)),
+    onSuccess: () => {
+      toast.success("Permintaan pembelian ditolak.");
+      qc.invalidateQueries({ queryKey });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Gagal menolak permintaan pembelian."),
+  });
+
+  const items = React.useMemo<PurchaseRequestApprovalItem[]>(
+    () => (Array.isArray(data) ? data.map(toItem) : []),
+    [data],
+  );
+
   const columns: ApprovalColumn<PurchaseRequestApprovalItem>[] = [
     {
       header: "No. PR",
@@ -172,7 +160,7 @@ export default function PurchaseRequestApprovalPage() {
       render: (item) => <DnaCell.Code value={item.code} />,
     },
     {
-      header: "Departemen",
+      header: "Gudang / Departemen",
       accessor: "department",
       sortable: true,
       render: (item) => (
@@ -250,45 +238,67 @@ export default function PurchaseRequestApprovalPage() {
     category: "PERMINTAAN PEMBELIAN INTERNAL",
     status: item.status,
     date: item.date,
-    dueDate: item.dueDate,
     creatorName: item.requesterName,
     creatorRole: item.creatorRole,
     partnerName: item.department,
-    partnerLabel: "Departemen Pemohon",
-    warehouseName: "Pusat Pengadaan (Procurement)",
+    partnerLabel: "Gudang / Departemen Pemohon",
     totalAmount: item.estimatedTotal,
-    notes: `Tingkat Urgensi: ${item.urgency} | Justifikasi: ${item.purpose} | Catatan: ${item.notes}`,
+    notes: `Tingkat Urgensi: ${item.urgency} | Catatan: ${item.notes}`,
     lineItems: item.lineItems,
     timeline: [
       {
         id: "tl-1",
-        action: "Purchase Request Diajukan",
+        action: "Permintaan pembelian tercatat di sistem",
         actor: item.requesterName,
         role: item.creatorRole,
-        timestamp: `${item.date} 08:45 WIB`,
+        timestamp: item.date,
         status: "completed",
-        notes: `Pengajuan internal kategori ${item.urgency}.`,
       },
       {
         id: "tl-2",
-        action: "Verifikasi Kepala Departemen (HOD)",
-        actor: "Head of Department",
-        role: item.department,
-        timestamp: `${item.date} 11:20 WIB`,
-        status: "completed",
-        notes: "Kebutuhan disetujui sesuai rencana kerja operasional.",
-      },
-      {
-        id: "tl-3",
-        action: "Otorisasi Budget Finance & Procurement",
-        actor: "Finance / General Manager",
+        action: "Otorisasi berjenjang (Procurement / Finance)",
+        actor: "Menunggu keputusan approver",
         role: "Management",
-        timestamp: item.status === "APPROVED" ? `${item.date} 15:00 WIB` : "Menunggu Eksekusi",
-        status: item.status === "APPROVED" ? "completed" : item.status === "REJECTED" ? "failed" : "pending",
-        notes: item.status === "REJECTED" ? item.notes : undefined,
+        timestamp: item.status === "PENDING" ? "Menunggu eksekusi" : item.date,
+        status:
+          item.status === "APPROVED"
+            ? "completed"
+            : item.status === "REJECTED"
+            ? "failed"
+            : "pending",
       },
     ],
   });
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-slate-400">Memuat daftar permintaan pembelian...</div>;
+  }
+
+  if (isError) {
+    const errStatus = (error as { response?: { status?: number } })?.response?.status;
+    const denied = errStatus === 401 || errStatus === 403;
+    return (
+      <div className="p-8">
+        <DnaErrorState
+          title={denied ? "Akses ditolak" : "Gagal memuat data"}
+          message={
+            denied
+              ? "Akun ini tidak berwenang membaca daftar permintaan pembelian."
+              : "Daftar permintaan pembelian tidak dapat diambil dari server."
+          }
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="p-8 text-center text-slate-400">
+        Belum ada permintaan pembelian pada sistem.
+      </div>
+    );
+  }
 
   return (
     <ApprovalPageShell
@@ -300,10 +310,12 @@ export default function PurchaseRequestApprovalPage() {
         { label: "Persetujuan", href: "/approvals/purchase" },
         { label: "Permintaan Pembelian" },
       ]}
-      items={INITIAL_PR_DATA}
+      items={items}
       columns={columns}
       getDetailData={buildDetailData}
-      searchPlaceholder="Cari nomor PR, departemen pemohon, justifikasi..."
+      onApprove={(id) => approveMutation.mutateAsync(id)}
+      onReject={(id, reason) => rejectMutation.mutateAsync({ id, reason })}
+      searchPlaceholder="Cari nomor PR, gudang pemohon, justifikasi..."
     />
   );
 }

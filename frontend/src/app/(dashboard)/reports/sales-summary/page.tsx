@@ -181,14 +181,14 @@ export default function ReportSalesSummaryPage() {
                       {item.contractType}
                     </DnaBadge>
                   </td>
-                  <td className="px-4 py-3 text-center font-mono font-semibold">{item.invoiceCount}</td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-slate-900">
+                  <td className="px-4 py-3 text-center tabular-nums font-semibold">{item.invoiceCount}</td>
+                  <td className="px-4 py-3 text-right tabular-nums font-bold text-slate-900">
                     {formatRupiah(item.totalAmount)}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-emerald-600">
+                  <td className="px-4 py-3 text-right tabular-nums font-bold text-emerald-600">
                     {formatRupiah(item.totalReceived)}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-rose-600">
+                  <td className="px-4 py-3 text-right tabular-nums font-bold text-rose-600">
                     {formatRupiah(item.outstanding)}
                   </td>
                   <td className="px-4 py-3 text-right">

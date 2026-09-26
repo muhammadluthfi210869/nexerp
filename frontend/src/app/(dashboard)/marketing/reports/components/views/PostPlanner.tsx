@@ -3,7 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { Filter, Plus, Search } from "lucide-react";
 import Link from "next/link";
-import { DnaButton, DnaInput } from "@/components/dna";
+import {
+  DnaButton,
+  DnaInput,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import { marketingService, mockViewer } from "@/lib/services/marketing-service";
 import type { SocialPost, PostPlatform, PostStatus } from "@/types/marketing-api";
 
@@ -47,42 +56,42 @@ export default function PostPlanner({ brand, channel }: { brand: string; channel
         </div>
       </div>
       <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-700">
-            <tr>
-              <th className="text-left px-3 py-2 font-semibold">Tanggal</th>
-              <th className="text-left px-3 py-2 font-semibold">Judul</th>
-              <th className="text-left px-3 py-2 font-semibold">Format</th>
-              <th className="text-left px-3 py-2 font-semibold">Status</th>
-              <th className="text-left px-3 py-2 font-semibold">PIC</th>
-              <th className="text-left px-3 py-2 font-semibold">Progress</th>
-              <th className="text-left px-3 py-2 font-semibold">Hook</th>
-            </tr>
-          </thead>
-          <tbody>
+        <DnaTable>
+          <DnaTableHead>
+            <DnaTableRow>
+              <DnaTh className="text-left px-3 py-2 font-semibold">Tanggal</DnaTh>
+              <DnaTh className="text-left px-3 py-2 font-semibold">Judul</DnaTh>
+              <DnaTh className="text-left px-3 py-2 font-semibold">Format</DnaTh>
+              <DnaTh className="text-left px-3 py-2 font-semibold">Status</DnaTh>
+              <DnaTh className="text-left px-3 py-2 font-semibold">PIC</DnaTh>
+              <DnaTh className="text-left px-3 py-2 font-semibold">Progress</DnaTh>
+              <DnaTh className="text-left px-3 py-2 font-semibold">Hook</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-3 py-8 text-center text-slate-400">Belum ada post untuk filter ini.</td></tr>
+              <DnaTableRow><DnaTd colSpan={7} className="px-3 py-8 text-center text-slate-400">Belum ada post untuk filter ini.</DnaTd></DnaTableRow>
             )}
             {filtered.map((p) => (
-              <tr key={p.id} className="border-t border-slate-100 hover:bg-slate-50">
-                <td className="px-3 py-2 text-slate-600">{p.date}</td>
-                <td className="px-3 py-2 font-medium">{p.title}</td>
-                <td className="px-3 py-2 text-slate-600">{p.format}</td>
-                <td className="px-3 py-2">
+              <DnaTableRow key={p.id} className="border-t border-slate-100 hover:bg-slate-50">
+                <DnaTd className="px-3 py-2 text-slate-600">{p.date}</DnaTd>
+                <DnaTd className="px-3 py-2 font-medium">{p.title}</DnaTd>
+                <DnaTd className="px-3 py-2 text-slate-600">{p.format}</DnaTd>
+                <DnaTd className="px-3 py-2">
                   <span className={`text-xs px-2 py-0.5 rounded-full ${p.status === "Published" ? "bg-emerald-100 text-emerald-700" : p.status === "Late" ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-700"}`}>{p.status}</span>
-                </td>
-                <td className="px-3 py-2 text-slate-600">{p.pic ?? "—"}</td>
-                <td className="px-3 py-2">
+                </DnaTd>
+                <DnaTd className="px-3 py-2 text-slate-600">{p.pic ?? "—"}</DnaTd>
+                <DnaTd className="px-3 py-2">
                   <div className="flex items-center gap-2">
                     <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-blue-500" style={{ width: `${p.progress}%` }} /></div>
                     <span className="text-xs text-slate-500">{p.progress}%</span>
                   </div>
-                </td>
-                <td className="px-3 py-2 text-slate-600 max-w-xs truncate">{p.hook ?? "—"}</td>
-              </tr>
+                </DnaTd>
+                <DnaTd className="px-3 py-2 text-slate-600 max-w-xs truncate">{p.hook ?? "—"}</DnaTd>
+              </DnaTableRow>
             ))}
-          </tbody>
-        </table>
+          </DnaTableBody>
+        </DnaTable>
       </div>
       <div className="text-xs text-slate-500">Menampilkan {filtered.length} dari {posts.length} post</div>
     </div>

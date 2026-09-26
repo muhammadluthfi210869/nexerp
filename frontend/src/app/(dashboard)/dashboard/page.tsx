@@ -1,16 +1,15 @@
 "use client";
 
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Zap, 
-  CreditCard, 
-  Target, 
-  Share2, 
+import {
+  TrendingUp,
+  Zap,
+  CreditCard,
+  Target,
+  Share2,
   PieChart as PieIcon,
   Activity,
   ArrowRight,
@@ -21,7 +20,6 @@ import {
   Bookmark,
   Package
 } from "lucide-react";
-import { Card } from "@/components/dna";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/dna";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -100,8 +98,13 @@ export default function DashboardPage() {
   const { data: rawAudit, isLoading, isError } = useQuery<AuditData>({
     queryKey: ["marketing-audit"],
     queryFn: async () => {
-      const res = await api.get("/analytics/executive");
-      return res.data;
+      try {
+        const res = await api.get("/dashboards/marketing");
+        return res.data;
+      } catch {
+        const res2 = await api.get("/analytics/executive");
+        return res2.data;
+      }
     }
   });
 

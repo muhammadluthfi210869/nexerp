@@ -181,7 +181,7 @@ export const CreatePipelineModal: React.FC<CreatePipelineModalProps> = ({
                 }`}
               >
                 <div className="text-xs">Maklon Standar</div>
-                <div className="text-[10px] text-blue-600 mt-0.5 font-mono">6 Tahap Funnel</div>
+                <div className="text-[10px] text-blue-600 mt-0.5 tabular-nums">6 Tahap Funnel</div>
               </button>
 
               <button
@@ -194,7 +194,7 @@ export const CreatePipelineModal: React.FC<CreatePipelineModalProps> = ({
                 }`}
               >
                 <div className="text-xs">Ringkas</div>
-                <div className="text-[10px] text-blue-600 mt-0.5 font-mono">4 Tahap Cepat</div>
+                <div className="text-[10px] text-blue-600 mt-0.5 tabular-nums">4 Tahap Cepat</div>
               </button>
 
               <button
@@ -207,7 +207,7 @@ export const CreatePipelineModal: React.FC<CreatePipelineModalProps> = ({
                 }`}
               >
                 <div className="text-xs">Kustom</div>
-                <div className="text-[10px] text-blue-600 mt-0.5 font-mono">Ketik Sendiri</div>
+                <div className="text-[10px] text-blue-600 mt-0.5 tabular-nums">Ketik Sendiri</div>
               </button>
             </div>
 
@@ -218,7 +218,7 @@ export const CreatePipelineModal: React.FC<CreatePipelineModalProps> = ({
                   value={customStagesText}
                   onChange={(e) => setCustomStagesText(e.target.value)}
                   placeholder="Ketik 1 baris per nama tahapan"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 tabular-nums text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
                 />
               </div>
             )}

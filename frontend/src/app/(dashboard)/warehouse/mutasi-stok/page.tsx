@@ -28,7 +28,12 @@ import {
   DnaBadge,
   DnaTable,
   DnaDetailDrawer,
-  useDnaToast
+  useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { DnaCell } from "@/components/dna/cells/DnaCell";
 
@@ -49,21 +54,61 @@ interface MutationItem {
   notes: string;
 }
 
-const FALLBACK_MUTATIONS: MutationItem[] = [
-  { id: "1", datetime: "2026-09-08 09:30", docRef: "GR-PO-8821", itemCode: "RAW-NIC-01", itemName: "Niacinamide Pure Grade", sourceWarehouse: "Supplier PT Kimia", destWarehouse: "Gudang Bahan Baku CPKB", mutationType: "INBOUND_GR", qtyIn: 100, qtyOut: 0, balance: 250, unit: "Kg", pic: "Ahmad Staff Gudang", notes: "Penerimaan PO Inbound Bahan Baku" },
-  { id: "2", datetime: "2026-09-08 11:15", docRef: "SPK-MIX-041", itemCode: "RAW-NIC-01", itemName: "Niacinamide Pure Grade", sourceWarehouse: "Gudang Bahan Baku CPKB", destWarehouse: "Line Mixing Produksi", mutationType: "OUTBOUND_SPK", qtyIn: 0, qtyOut: 25, balance: 225, unit: "Kg", pic: "Budi Operator Mixing", notes: "Pengeluaran Bahan Baku SPK Batch 2609-01" },
-  { id: "3", datetime: "2026-09-07 14:00", docRef: "TRF-WH-009", itemCode: "PCK-BOT-30", itemName: "Botol Kaca Serum 30ml", sourceWarehouse: "Gudang Transit Karantina", destWarehouse: "Gudang Kemasan", mutationType: "TRANSFER_WH", qtyIn: 5000, qtyOut: 0, balance: 15000, unit: "Pcs", pic: "Siti Logistik", notes: "Transfer internal gudang pasca lulus QC APJ" },
-  { id: "4", datetime: "2026-09-06 16:45", docRef: "OPN-202609-01", itemCode: "RAW-ALOE-05", itemName: "Aloe Vera Extract 10x", sourceWarehouse: "Sistem Inventory", destWarehouse: "Gudang Bahan Baku CPKB", mutationType: "ADJUSTMENT_OPNAME", qtyIn: 2, qtyOut: 0, balance: 48, unit: "Kg", pic: "Auditor Gudang", notes: "Koreksi hasil stock opname fisik mingguan" },
-];
-
 export default function MutasiStokReportPage() {
   const toast = useDnaToast();
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMutation, setSelectedMutation] = useState<MutationItem | null>(null);
 
+  const { data: rawTransactions = [], isLoading } = useQuery({
+    queryKey: ["warehouse-transactions"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/transactions");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const liveMutations: MutationItem[] = useMemo(() => {
+    if (!rawTransactions || !Array.isArray(rawTransactions)) return [];
+    return rawTransactions.map((tx: any) => {
+      const isOut = tx.type === "OUTBOUND";
+      const isTrf = tx.type === "TRANSFER";
+      const isAdj = tx.type === "ADJUSTMENT";
+      const mutationType: MutationItem["mutationType"] = isOut
+        ? "OUTBOUND_SPK"
+        : isTrf
+        ? "TRANSFER_WH"
+        : isAdj
+        ? "ADJUSTMENT_OPNAME"
+        : "INBOUND_GR";
+
+      const qty = Number(tx.quantity || 0);
+
+      return {
+        id: tx.id,
+        datetime: tx.createdAt ? new Date(tx.createdAt).toISOString().replace("T", " ").slice(0, 16) : "-",
+        docRef: tx.referenceNo || `TX-${tx.id.slice(0, 8).toUpperCase()}`,
+        itemCode: tx.material?.code || "MAT-01",
+        itemName: tx.material?.name || "Material",
+        sourceWarehouse: isOut ? "Gudang Utama" : "Penerimaan / Vendor",
+        destWarehouse: isOut ? "Produksi / Ekspedisi" : "Gudang Utama",
+        mutationType,
+        qtyIn: isOut ? 0 : qty,
+        qtyOut: isOut ? qty : 0,
+        balance: qty,
+        unit: tx.material?.unit || "Kg",
+        pic: tx.performedBy || "Petugas Gudang",
+        notes: tx.notes || "-",
+      };
+    });
+  }, [rawTransactions]);
+
   const filteredMutations = useMemo(() => {
-    return FALLBACK_MUTATIONS.filter((m) => {
+    return liveMutations.filter((m) => {
       const matchSearch =
         m.docRef.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.itemCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -77,10 +122,10 @@ export default function MutasiStokReportPage() {
 
       return matchSearch && matchTab;
     });
-  }, [searchQuery, activeTab]);
+  }, [liveMutations, searchQuery, activeTab]);
 
-  const totalInbound = useMemo(() => FALLBACK_MUTATIONS.reduce((sum, m) => sum + m.qtyIn, 0), []);
-  const totalOutbound = useMemo(() => FALLBACK_MUTATIONS.reduce((sum, m) => sum + m.qtyOut, 0), []);
+  const totalInbound = useMemo(() => liveMutations.reduce((sum, m) => sum + m.qtyIn, 0), [liveMutations]);
+  const totalOutbound = useMemo(() => liveMutations.reduce((sum, m) => sum + m.qtyOut, 0), [liveMutations]);
 
   const getTypeBadge = (type: MutationItem["mutationType"]) => {
     switch (type) {
@@ -108,11 +153,11 @@ export default function MutasiStokReportPage() {
           </div>
         }
         tabs={[
-          { id: "ALL", label: "Semua Mutasi", count: FALLBACK_MUTATIONS.length },
-          { id: "INBOUND_GR", label: "Masuk (Inbound)", count: FALLBACK_MUTATIONS.filter((m) => m.mutationType === "INBOUND_GR").length },
-          { id: "OUTBOUND_SPK", label: "Keluar (SPK)", count: FALLBACK_MUTATIONS.filter((m) => m.mutationType === "OUTBOUND_SPK").length },
-          { id: "TRANSFER_WH", label: "Transfer Gudang", count: FALLBACK_MUTATIONS.filter((m) => m.mutationType === "TRANSFER_WH").length },
-          { id: "ADJUSTMENT_OPNAME", label: "Penyesuaian", count: FALLBACK_MUTATIONS.filter((m) => m.mutationType === "ADJUSTMENT_OPNAME").length },
+          { id: "ALL", label: "Semua Mutasi", count: liveMutations.length },
+          { id: "INBOUND_GR", label: "Masuk (Inbound)", count: liveMutations.filter((m) => m.mutationType === "INBOUND_GR").length },
+          { id: "OUTBOUND_SPK", label: "Keluar (SPK)", count: liveMutations.filter((m) => m.mutationType === "OUTBOUND_SPK").length },
+          { id: "TRANSFER_WH", label: "Transfer Gudang", count: liveMutations.filter((m) => m.mutationType === "TRANSFER_WH").length },
+          { id: "ADJUSTMENT_OPNAME", label: "Penyesuaian", count: liveMutations.filter((m) => m.mutationType === "ADJUSTMENT_OPNAME").length },
         ]}
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -174,91 +219,91 @@ export default function MutasiStokReportPage() {
         }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
-                <th className="px-4 py-3 h-[40px] w-[130px]">Waktu</th>
-                <th className="px-3 py-3 h-[40px] w-[130px]">No. Dokumen</th>
-                <th className="px-3 py-3 h-[40px]">Barang & SKU</th>
-                <th className="px-3 py-3 h-[40px] text-center w-[120px]">Tipe Mutasi</th>
-                <th className="px-3 py-3 h-[40px]">Gudang Asal</th>
-                <th className="px-3 py-3 h-[40px]">Gudang Tujuan</th>
-                <th className="px-3 py-3 h-[40px] text-right w-[120px]">Pergerakan Qty</th>
-                <th className="px-3 py-3 h-[40px] text-right w-[110px]">Saldo Akhir</th>
-                <th className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="px-4 py-3 h-[40px] w-[130px]">Waktu</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[130px]">No. Dokumen</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Barang & SKU</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-center w-[120px]">Tipe Mutasi</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Gudang Asal</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Gudang Tujuan</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[120px]">Pergerakan Qty</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[110px]">Saldo Akhir</DnaTh>
+                <DnaTh className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredMutations.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-12 text-center text-slate-400">
                     <ArrowRightLeft className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada catatan mutasi stok yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredMutations.map((m) => (
-                  <tr
+                  <DnaTableRow
                     key={m.id}
                     onClick={() => setSelectedMutation(m)}
                     className="hover:bg-slate-50/60 transition-colors cursor-pointer group h-[48px]"
                   >
                     {/* Kolom 1: Waktu */}
-                    <td className="px-4 py-2 text-slate-600 whitespace-nowrap">
+                    <DnaTd className="px-4 py-2 text-slate-600 whitespace-nowrap">
                       {m.datetime}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 2: No. Dokumen */}
-                    <td className="px-3 py-2">
+                    <DnaTd className="px-3 py-2">
                       <DnaCell.Code value={m.docRef} />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 3: Barang & SKU (1 Natural Pair) */}
-                    <td className="px-3 py-2">
+                    <DnaTd className="px-3 py-2">
                       <DnaCell.DoubleText
                         primary={m.itemName}
                         secondary={m.itemCode}
                       />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 4: Tipe Mutasi */}
-                    <td className="px-3 py-2 text-center">
+                    <DnaTd className="px-3 py-2 text-center">
                       {getTypeBadge(m.mutationType)}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 5: Gudang Asal */}
-                    <td className="px-3 py-2 text-slate-800 truncate max-w-[150px]">
+                    <DnaTd className="px-3 py-2 text-slate-800 truncate max-w-[150px]">
                       {m.sourceWarehouse}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 6: Gudang Tujuan */}
-                    <td className="px-3 py-2 text-slate-800 truncate max-w-[150px]">
+                    <DnaTd className="px-3 py-2 text-slate-800 truncate max-w-[150px]">
                       {m.destWarehouse}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 7: Pergerakan Qty */}
-                    <td className="px-3 py-2 text-right">
+                    <DnaTd className="px-3 py-2 text-right">
                       {m.qtyIn > 0 ? (
-                        <span className="font-semibold text-emerald-700 font-mono text-[12px]">
+                        <span className="font-semibold text-emerald-700 tabular-nums text-[12px]">
                           +{m.qtyIn.toLocaleString("id-ID")} {m.unit}
                         </span>
                       ) : (
-                        <span className="font-semibold text-amber-700 font-mono text-[12px]">
+                        <span className="font-semibold text-amber-700 tabular-nums text-[12px]">
                           -{m.qtyOut.toLocaleString("id-ID")} {m.unit}
                         </span>
                       )}
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 8: Saldo Akhir */}
-                    <td className="px-3 py-2 text-right">
+                    <DnaTd className="px-3 py-2 text-right">
                       <DnaCell.Number
                         value={m.balance}
                         unit={m.unit}
                       />
-                    </td>
+                    </DnaTd>
 
                     {/* Kolom 9: Aksi */}
-                    <td className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                    <DnaTd className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -267,12 +312,12 @@ export default function MutasiStokReportPage() {
                       >
                         <Eye className="w-4 h-4" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -304,7 +349,7 @@ export default function MutasiStokReportPage() {
                 Volume Transaksi Mutasi
               </div>
               <div className="flex items-baseline justify-between">
-                <div className="text-2xl font-bold font-mono">
+                <div className="text-2xl font-bold tabular-nums">
                   {selectedMutation.qtyIn > 0 ? (
                     <span className="text-emerald-600">+{selectedMutation.qtyIn.toLocaleString("id-ID")} {selectedMutation.unit}</span>
                   ) : (
@@ -312,7 +357,7 @@ export default function MutasiStokReportPage() {
                   )}
                 </div>
                 <div className="text-xs text-slate-500">
-                  Saldo Sesudah Transaksi: <b className="text-slate-900 font-mono">{selectedMutation.balance.toLocaleString("id-ID")} {selectedMutation.unit}</b>
+                  Saldo Sesudah Transaksi: <b className="text-slate-900 tabular-nums">{selectedMutation.balance.toLocaleString("id-ID")} {selectedMutation.unit}</b>
                 </div>
               </div>
             </div>
@@ -333,7 +378,7 @@ export default function MutasiStokReportPage() {
                 </div>
                 <div>
                   <span className="text-slate-400 block">Waktu Pencatatan:</span>
-                  <span className="font-mono text-slate-800">{selectedMutation.datetime}</span>
+                  <span className="tabular-nums text-slate-800">{selectedMutation.datetime}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block">Operator / PIC:</span>

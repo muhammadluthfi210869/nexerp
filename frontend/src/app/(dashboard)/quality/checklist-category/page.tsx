@@ -1,53 +1,54 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import { useSearchParams } from "next/navigation";
-import { 
-  ClipboardList, 
-  History, 
-  Eye, 
-  Search, 
-  Calendar, 
-  Plus, 
-  Trash2, 
-  ChevronLeft, 
-  Save, 
-  Info,
+import {
+  History,
+  Search,
+  Plus,
+  Trash2,
+  ChevronLeft,
+  Save,
   GitCommit,
   Clock,
   ArrowRight,
-  Layers,
   Settings2,
   Workflow,
   CheckCircle2,
-  MoreVertical,
   ShieldAlert,
   ArrowDownWideNarrow,
   Timer,
   LayoutGrid
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Input, 
-  Card, 
-  DnaBadge, 
-  StatCard, 
-  DnaButton, 
-  TableWrapper 
+import {
+  Input,
+  Card,
+  DnaBadge,
+  StatCard,
+  DnaButton,
+  TableWrapper,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { FormShell } from "@/components/layout/FormShell";
 
-// Static Data from Plan
-const STATIC_CATEGORIES = [
-  { "nama": "Desain Logo", "urutan": 1, "lama_hari": 7, "setelah": "-", "type": "Design" },
-  { "nama": "HKI", "urutan": 2, "lama_hari": 14, "setelah": "Desain Logo", "type": "Legal" },
-  { "nama": "BPOM NA", "urutan": 3, "lama_hari": 30, "setelah": "HKI", "type": "Legal" },
-  { "nama": "BPOM Merk", "urutan": 4, "lama_hari": 30, "setelah": "HKI", "type": "Legal" },
-  { "nama": "Produksi", "urutan": 5, "lama_hari": 7, "setelah": "BPOM NA", "type": "Ops" },
-  { "nama": "Packing", "urutan": 6, "lama_hari": 3, "setelah": "Produksi", "type": "Ops" },
-  { "nama": "Delivery", "urutan": 7, "lama_hari": 1, "setelah": "Packing", "type": "Logistics" },
-  { "nama": "Uji Lab", "urutan": 8, "lama_hari": 14, "setelah": "-", "type": "QA" }
-];
+/** A field the backend does not send is shown as unknown, never guessed. */
+interface CategoryRow {
+  nama: string;
+  urutan: number;
+  lama_hari: number | null;
+  setelah: string;
+  type: string;
+}
+
+const UNKNOWN = "—";
 
 const DEPENDENCY_OPTIONS = [
   "Desain Logo", "HKI", "BPOM NA", "BPOM Merk", "MOU", "Desain Kemasan", 
@@ -66,21 +67,39 @@ export default function ChecklistCategoryPrototype() {
 function ChecklistCategoryContent() {
   const searchParams = useSearchParams();
   const [view, setView] = useState<"list" | "form">("list");
+  // Rows come only from the live endpoint. A failed or empty response renders
+  // an empty/honest state — it must never be backfilled with a literal.
+  const { data: categories = [], isLoading, isError, refetch } = useQuery<CategoryRow[]>({
+    queryKey: ["qc-checklist-categories"],
+    queryFn: async () => {
+      const res = await api.get("/qc/checklists/categories");
+      const raw = res.data?.data || res.data || [];
+      if (!Array.isArray(raw)) return [];
+      return raw.map((c: any): CategoryRow => {
+        // `/qc/checklists/categories` sends { id, label, order, gate }. Only
+        // those are real; anything else is reported as unknown rather than
+        // filled with a default that reads like data.
+        const days = c.defaultDays ?? c.lama_hari ?? null;
+        return {
+          nama: c.label || c.name || c.id,
+          urutan: Number(c.order ?? c.sequence ?? 0),
+          lama_hari: days === null || days === "" ? null : Number(days),
+          setelah: c.after || c.afterCategory || "-",
+          type: c.gate || c.type || UNKNOWN,
+        };
+      });
+    },
+  });
+
+  const dependencies = categories.filter((c) => c.setelah && c.setelah !== "-").length;
+  const knownDays = categories.map((c) => c.lama_hari).filter((d): d is number => d !== null);
+  const maxDays = knownDays.length > 0 ? Math.max(...knownDays) : null;
 
   useEffect(() => {
     if (searchParams.get("action") === "create") {
       setView("form");
     }
   }, [searchParams]);
-
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.5, staggerChildren: 0.1, ease: [0.22, 1, 0.36, 1] as const }
-    }
-  };
 
   return (
     <FormShell
@@ -116,11 +135,14 @@ function ChecklistCategoryContent() {
             className="space-y-10"
           >
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <StatCard label="Active Protocols" value="24" icon={<Workflow className="h-6 w-6" />} />
-              <StatCard label="Avg. Cycle Time" value="84d" icon={<Timer className="h-6 w-6" />} />
-              <StatCard label="Dependencies" value="18" icon={<GitCommit className="h-6 w-6" />} />
-              <StatCard label="Critical Path Risk" value="Low" icon={<ShieldAlert className="h-6 w-6" />} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <StatCard label="Kategori Aktif" value={String(categories.length)} icon={<Workflow className="h-6 w-6" />} />
+              <StatCard
+                label="SLA Terpanjang"
+                value={maxDays === null ? UNKNOWN : `${maxDays}d`}
+                icon={<Timer className="h-6 w-6" />}
+              />
+              <StatCard label="Kategori Berdependensi" value={String(dependencies)} icon={<GitCommit className="h-6 w-6" />} />
             </div>
 
             {/* List Table */}
@@ -139,39 +161,64 @@ function ChecklistCategoryContent() {
                 </div>
               }
             >
-              <table>
-                <thead className="bg-[#F8FAFC]">
-                  <tr className="hover:bg-transparent border-[var(--border-color)]">
-                    <th className="py-6 pl-10 text-table-header w-24 text-center">Order</th>
-                    <th className="text-table-header">Category Identity</th>
-                    <th className="text-table-header">Default SLA</th>
-                    <th className="text-table-header">Sequence Hook (After)</th>
-                    <th className="pr-10 text-right text-table-header">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {STATIC_CATEGORIES.map((cat) => (
-                    <tr key={cat.nama} className="group hover:bg-amber-50/30 transition-all duration-300 border-b border-[var(--border-color)]">
-                      <td className="py-6 pl-10 text-center">
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow className="hover:bg-transparent border-[var(--border-color)]">
+                    <DnaTh className="py-6 pl-10 text-table-header w-24 text-center">Order</DnaTh>
+                    <DnaTh className="text-table-header">Category Identity</DnaTh>
+                    <DnaTh className="text-table-header">Default SLA</DnaTh>
+                    <DnaTh className="text-table-header">Sequence Hook (After)</DnaTh>
+                    <DnaTh className="pr-10 text-right text-table-header">Action</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
+                  {isError && (
+                    <DnaTableRow className="hover:bg-transparent">
+                      <DnaTd colSpan={5} className="py-10 text-center">
+                        <p className="text-xs font-bold text-rose-600 uppercase tracking-tight">
+                          Gagal memuat kategori checklist dari server.
+                        </p>
+                        <DnaButton variant="outline" className="mt-3 rounded-[14px] text-[12px]" onClick={() => refetch()}>
+                          Coba lagi
+                        </DnaButton>
+                      </DnaTd>
+                    </DnaTableRow>
+                  )}
+                  {!isError && !isLoading && categories.length === 0 && (
+                    <DnaTableRow className="hover:bg-transparent">
+                      <DnaTd colSpan={5} className="py-10 text-center">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-tight">
+                          Belum ada kategori checklist yang terdaftar.
+                        </p>
+                      </DnaTd>
+                    </DnaTableRow>
+                  )}
+                  {categories.map((cat) => (
+                    <DnaTableRow key={cat.nama} className="group hover:bg-amber-50/30 transition-all duration-300 border-b border-[var(--border-color)]">
+                      <DnaTd className="py-6 pl-10 text-center">
                           <span className="h-10 w-10 rounded-xl bg-gray-100 text-gray-900 flex items-center justify-center mx-auto font-bold shadow-sm group-hover:scale-110 transition-transform">
                             {cat.urutan}
                          </span>
-                      </td>
-                      <td>
+                      </DnaTd>
+                      <DnaTd>
                         <div className="flex items-center gap-4">
                           <div className="flex flex-col">
                             <span className="font-semibold text-slate-900 tracking-tight text-sm">{cat.nama}</span>
-                            <DnaBadge status="default" className="w-fit mt-1">{cat.type}</DnaBadge>
+                            <DnaBadge variant="default" className="w-fit mt-1">{cat.type}</DnaBadge>
                           </div>
                         </div>
-                      </td>
-                      <td>
+                      </DnaTd>
+                      <DnaTd>
                          <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-amber-500" />
-                            <span className="text-sm font-bold text-slate-900 tabular-nums">{cat.lama_hari} <span className="text-[10px] text-slate-400 uppercase">Days</span></span>
+                            {cat.lama_hari === null ? (
+                              <span className="text-sm font-bold text-slate-400 tabular-nums">{UNKNOWN}</span>
+                            ) : (
+                              <span className="text-sm font-bold text-slate-900 tabular-nums">{cat.lama_hari} <span className="text-[10px] text-slate-400 uppercase">Days</span></span>
+                            )}
                          </div>
-                      </td>
-                      <td>
+                      </DnaTd>
+                      <DnaTd>
                         {cat.setelah === "-" ? (
                           <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Independent</span>
                         ) : (
@@ -180,8 +227,8 @@ function ChecklistCategoryContent() {
                              <span className="text-[10px] font-bold text-emerald-600 uppercase underline decoration-emerald-200 underline-offset-4">{cat.setelah}</span>
                           </div>
                         )}
-                      </td>
-                      <td className="pr-10 text-right">
+                      </DnaTd>
+                      <DnaTd className="pr-10 text-right">
                         <div className="flex justify-end gap-2">
                             <DnaButton variant="ghost" className="h-11 w-11 rounded-2xl bg-slate-50 text-slate-400 hover:bg-gray-900 hover:text-white transition-all shadow-sm">
                                <Settings2 className="h-5 w-5" />
@@ -190,11 +237,11 @@ function ChecklistCategoryContent() {
                               <Trash2 className="h-5 w-5" />
                            </DnaButton>
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </TableWrapper>
           </motion.div>
         ) : (

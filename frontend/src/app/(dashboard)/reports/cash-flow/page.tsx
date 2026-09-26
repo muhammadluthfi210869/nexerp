@@ -1,21 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
-  Wallet,
   ArrowUpRight,
   ArrowDownRight,
   FileSpreadsheet,
   Printer,
   Calendar,
-  DollarSign,
   TrendingUp,
-  RefreshCw,
   Building2,
-  PieChart
+  RefreshCw,
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -24,23 +21,73 @@ import {
   DnaStatCard,
   DnaDataTableCard,
   DnaButton,
-  DnaBadge,
   formatRupiah,
   useDnaToast,
-  DnaInput
+  DnaInput,
 } from "@/components/dna";
 import { DnaTable } from "@/components/dna";
+
+interface CashFlowResponse {
+  operating_cash_flow?: number;
+  investing_cash_flow?: number;
+  financing_cash_flow?: number;
+  net_cash_flow?: number;
+  operating?: { in: number; out: number; net: number };
+  investing?: { in: number; out: number; net: number };
+  financing?: { in: number; out: number; net: number };
+  // Alternative backend response structure
+  operatingCashFlow?: number;
+  investingCashFlow?: number;
+  financingCashFlow?: number;
+  netCashFlow?: number;
+  beginningCash?: number;
+  endingCash?: number;
+}
 
 export default function CashFlowReportPage() {
   const toast = useDnaToast();
   const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
 
-  const cashBeginning = 1850000000;
-  const cashOperating = 485000000;
-  const cashInvesting = -120000000;
-  const cashFinancing = -150000000;
-  const netCashChange = cashOperating + cashInvesting + cashFinancing;
-  const cashEnding = cashBeginning + netCashChange;
+  const { data: rawReport, isLoading, refetch } = useQuery<any>({
+    queryKey: ["reports-cash-flow", dateRange.start, dateRange.end],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/reports/cash-flow", {
+          params: { startDate: dateRange.start, endDate: dateRange.end },
+        });
+        return unwrapResponse<any>(res);
+      } catch {
+        // Fallback to finance controller alias if needed
+        const res2 = await api.get("/finance/reports/cash-flow", {
+          params: { startDate: dateRange.start, endDate: dateRange.end },
+        });
+        return unwrapResponse<any>(res2);
+      }
+    },
+  });
+
+  const report: CashFlowResponse = useMemo(() => {
+    const d = rawReport?.data || rawReport || {};
+    return d;
+  }, [rawReport]);
+
+  const cashOperating = Number(report.operating_cash_flow ?? report.operating?.net ?? report.operatingCashFlow ?? 0);
+  const cashInvesting = Number(report.investing_cash_flow ?? report.investing?.net ?? report.investingCashFlow ?? 0);
+  const cashFinancing = Number(report.financing_cash_flow ?? report.financing?.net ?? report.financingCashFlow ?? 0);
+  const netCashChange = Number(report.net_cash_flow ?? report.netCashFlow ?? (cashOperating + cashInvesting + cashFinancing));
+
+  // Beginning cash can be estimated or zeroed if no historical balance
+  const cashBeginning = Number(report.beginningCash ?? 0);
+  const cashEnding = Number(report.endingCash ?? (cashBeginning + netCashChange));
+
+  const operatingIn = Number(report.operating?.in ?? (cashOperating > 0 ? cashOperating : 0));
+  const operatingOut = Number(report.operating?.out ?? (cashOperating < 0 ? Math.abs(cashOperating) : 0));
+
+  const investingIn = Number(report.investing?.in ?? (cashInvesting > 0 ? cashInvesting : 0));
+  const investingOut = Number(report.investing?.out ?? (cashInvesting < 0 ? Math.abs(cashInvesting) : 0));
+
+  const financingIn = Number(report.financing?.in ?? (cashFinancing > 0 ? cashFinancing : 0));
+  const financingOut = Number(report.financing?.out ?? (cashFinancing < 0 ? Math.abs(cashFinancing) : 0));
 
   return (
     <DnaPageContainer>
@@ -55,6 +102,10 @@ export default function CashFlowReportPage() {
         }
         actions={
           <div className="flex items-center gap-2">
+            <DnaButton variant="secondary" size="md" onClick={() => refetch()} loading={isLoading}>
+              <RefreshCw className="w-4 h-4 mr-1.5" />
+              Muat Ulang
+            </DnaButton>
             <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
               <Printer className="w-4 h-4 mr-1.5" />
               Cetak Arus Kas
@@ -73,25 +124,25 @@ export default function CashFlowReportPage() {
           label="Arus Kas Masuk Operasional (CFO)"
           value={formatRupiah(cashOperating)}
           icon={<ArrowUpRight className="w-5 h-5 text-emerald-600" />}
-          delta={{ value: "+Inflow Sehat", isPositive: true }}
-          subtext="Penerimaan Pelanggan - Supplier"
-          variant="success"
+          delta={{ value: cashOperating >= 0 ? "+Inflow Positif" : "Defisit Operasional", isPositive: cashOperating >= 0 }}
+          subtext="Penerimaan Operasional vs Pengeluaran"
+          variant={cashOperating >= 0 ? "success" : "danger"}
         />
         <DnaStatCard
-          label="Arus Kas Keluar Investasi & Pendanaan"
-          value={formatRupiah(Math.abs(cashInvesting + cashFinancing))}
+          label="Arus Kas Investasi & Pendanaan"
+          value={formatRupiah(cashInvesting + cashFinancing)}
           icon={<ArrowDownRight className="w-5 h-5 text-amber-600" />}
-          delta={{ value: "Capex & Cicilan Bank", isPositive: false }}
-          subtext="Beli Mesin & Pelunasan Kewajiban"
+          delta={{ value: "Capex & Pembiayaan", isPositive: false }}
+          subtext="Aset Tetap & Transaksi Modal/Utang"
           variant="warning"
         />
         <DnaStatCard
-          label="Saldo Kas Bersih Akhir (Cash Ending)"
-          value={formatRupiah(cashEnding)}
+          label="Kenaikan/Penurunan Kas Bersih"
+          value={formatRupiah(netCashChange)}
           icon={<Building2 className="w-5 h-5 text-blue-600" />}
-          delta={{ value: "+" + formatRupiah(netCashChange) + " Net Change", isPositive: true }}
-          subtext="Total Likuiditas Kas & Bank Tersedia"
-          variant="info"
+          delta={{ value: `${formatRupiah(netCashChange)} Net Cash Flow`, isPositive: netCashChange >= 0 }}
+          subtext="Perubahan Likuiditas Periode Ini"
+          variant={netCashChange >= 0 ? "info" : "danger"}
         />
       </DnaKpiGrid>
 
@@ -125,20 +176,12 @@ export default function CashFlowReportPage() {
             <DnaTable className="w-full text-left border-collapse text-xs">
               <tbody className="divide-y divide-slate-100">
                 <tr className="hover:bg-slate-50/50">
-                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Penerimaan Kas dari Pelanggan Maklon & Pembelian Produk</td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-emerald-700">Rp 1.450.000.000</td>
+                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Penerimaan Kas Operasional (Penjualan / Jasa)</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-emerald-700">{formatRupiah(operatingIn)}</td>
                 </tr>
                 <tr className="hover:bg-slate-50/50">
-                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pembayaran Kas kepada Pemasok Bahan Baku & Kemasan</td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">(Rp 620.000.000)</td>
-                </tr>
-                <tr className="hover:bg-slate-50/50">
-                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pembayaran Gaji, Upah Kerja & Tunjangan BPJS Karyawan</td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">(Rp 245.000.000)</td>
-                </tr>
-                <tr className="hover:bg-slate-50/50">
-                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pembayaran Biaya Operasional, Utilitas Listrik & Administrasi</td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">(Rp 100.000.000)</td>
+                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pengeluaran Kas Operasional (HPP, Beban Operasional & Gaji)</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">({formatRupiah(operatingOut)})</td>
                 </tr>
                 <tr className="bg-emerald-50/60 font-bold border-t border-emerald-300">
                   <td className="px-3.5 py-3 text-emerald-950 font-extrabold">ARUS KAS BERSIH DARI OPERASIONAL (CFO):</td>
@@ -155,16 +198,18 @@ export default function CashFlowReportPage() {
             <DnaTable className="w-full text-left border-collapse text-xs">
               <tbody className="divide-y divide-slate-100">
                 <tr className="hover:bg-slate-50/50">
-                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pembelian Mesin Homogenizer High Shear R&D Baru</td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">(Rp 85.000.000)</td>
+                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Penerimaan Kas dari Pelepasan Aset & Investasi</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-emerald-700">{formatRupiah(investingIn)}</td>
                 </tr>
                 <tr className="hover:bg-slate-50/50">
-                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Upgrade Fasilitas Cleanroom CPKB & Ruang HVAC</td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">(Rp 35.000.000)</td>
+                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pengeluaran Kas Pembelian Aset Tetap & Investasi Mesin</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">({formatRupiah(investingOut)})</td>
                 </tr>
                 <tr className="bg-amber-50/60 font-bold border-t border-amber-300">
                   <td className="px-3.5 py-3 text-amber-950 font-extrabold">ARUS KAS BERSIH DARI INVESTASI (CFI):</td>
-                  <td className="px-3.5 py-3 text-right text-amber-900 font-black">({formatRupiah(Math.abs(cashInvesting))})</td>
+                  <td className="px-3.5 py-3 text-right text-amber-900 font-black">
+                    {cashInvesting < 0 ? `(${formatRupiah(Math.abs(cashInvesting))})` : formatRupiah(cashInvesting)}
+                  </td>
                 </tr>
               </tbody>
             </DnaTable>
@@ -177,15 +222,21 @@ export default function CashFlowReportPage() {
             <DnaTable className="w-full text-left border-collapse text-xs">
               <tbody className="divide-y divide-slate-100">
                 <tr className="hover:bg-slate-50/50">
-                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pembayaran Pokok Pinjaman Investasi Bank BCA</td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">(Rp 150.000.000)</td>
+                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Penerimaan Modal Disetor & Penarikan Pinjaman Bank</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-emerald-700">{formatRupiah(financingIn)}</td>
+                </tr>
+                <tr className="hover:bg-slate-50/50">
+                  <td className="px-3.5 py-2.5 text-slate-800 font-medium">Pelunasan Pokok Pinjaman & Pembagian Dividen/Prive</td>
+                  <td className="px-3.5 py-2.5 text-right font-bold text-rose-700">({formatRupiah(financingOut)})</td>
                 </tr>
                 <tr className="bg-rose-50/60 font-bold border-t border-rose-300">
                   <td className="px-3.5 py-3 text-rose-950 font-extrabold">ARUS KAS BERSIH DARI PENDANAAN (CFF):</td>
-                  <td className="px-3.5 py-3 text-right text-rose-900 font-black">({formatRupiah(Math.abs(cashFinancing))})</td>
+                  <td className="px-3.5 py-3 text-right text-rose-900 font-black">
+                    {cashFinancing < 0 ? `(${formatRupiah(Math.abs(cashFinancing))})` : formatRupiah(cashFinancing)}
+                  </td>
                 </tr>
                 <tr className="bg-blue-100/70 font-black border-t-2 border-blue-500">
-                  <td className="px-3.5 py-3.5 text-blue-950 font-black text-sm">TOTAL KENAIKAN BERSIH KAS & SALDO AKHIR:</td>
+                  <td className="px-3.5 py-3.5 text-blue-950 font-black text-sm">TOTAL PERUBAHAN BERSIH KAS & SALDO AKHIR:</td>
                   <td className="px-3.5 py-3.5 text-right text-blue-950 font-black text-sm">{formatRupiah(cashEnding)}</td>
                 </tr>
               </tbody>

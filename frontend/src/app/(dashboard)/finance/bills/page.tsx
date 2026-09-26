@@ -193,7 +193,7 @@ export default function VendorBillsPage() {
         <div className="overflow-x-auto">
           <DnaTable>
             <DnaTableHead>
-              <tr>
+              <DnaTableRow>
                 <DnaTh className="w-[140px]">No. Tagihan</DnaTh>
                 <DnaTh className="w-[110px]">Tgl Terbit</DnaTh>
                 <DnaTh className="w-[110px]">Jatuh Tempo</DnaTh>
@@ -202,16 +202,16 @@ export default function VendorBillsPage() {
                 <DnaTh align="right" className="w-[140px]">Total Hutang</DnaTh>
                 <DnaTh align="center" className="w-[130px]">Status</DnaTh>
                 <DnaTh align="right" className="w-[90px]">Aksi</DnaTh>
-              </tr>
+              </DnaTableRow>
             </DnaTableHead>
             <DnaTableBody>
               {filteredBills.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={8} className="py-12 text-center text-slate-400">
                     <FileText className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada tagihan supplier yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredBills.map((bill) => (
                   <DnaTableRow

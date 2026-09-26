@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, extractApiError } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   FileSpreadsheet,
@@ -23,12 +23,21 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
+  DnaInput,
+  DnaSelect,
   DnaModal,
   DnaDetailDrawer,
   useDnaToast,
   DnaLoadingSkeleton,
   DnaErrorState,
   DnaEmptyState,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
 
 export interface BillItemDetail {
@@ -118,6 +127,20 @@ export default function FakturPembelianPage() {
     }));
   }, [rawBills]);
 
+  // The bill form needs a supplier UUID (CreatePurchaseInvoiceDto.vendorId is @IsUUID), so the
+  // picker is backed by the master list rather than a free-text name.
+  const { data: rawSuppliers } = useQuery({
+    queryKey: ["master-suppliers-for-bill"],
+    queryFn: async () => unwrapResponse(await api.get("/master/suppliers")),
+    staleTime: 300000,
+  });
+
+  const supplierOptions = useMemo<Array<{ value: string; label: string }>>(() => {
+    const items = Array.isArray(rawSuppliers) ? rawSuppliers : rawSuppliers?.items;
+    if (!Array.isArray(items)) return [];
+    return items.map((s: any) => ({ value: s.id, label: s.name || s.supplierName || s.email || s.id }));
+  }, [rawSuppliers]);
+
   // Filters
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
@@ -130,12 +153,14 @@ export default function FakturPembelianPage() {
   // Create Form State
   const [billNumber, setBillNumber] = useState("");
   const [poNumber, setPoNumber] = useState("");
-  const [vendorName, setVendorName] = useState("");
+  // The backend keys a bill on `vendorId` (@IsUUID), so the form carries a supplier UUID, not a
+  // typed name. See the DnaSelect in the create modal.
+  const [vendorId, setVendorId] = useState("");
+  const [importFile, setImportFile] = useState<File | null>(null);
   const [procurementCategory, setProcurementCategory] = useState(PROCUREMENT_CATEGORIES[0]);
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
   const [dueDate, setDueDate] = useState(new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0]);
   const [formNotes, setFormNotes] = useState("");
-  const [unpaidReason, setUnpaidReason] = useState("Menunggu termin jatuh tempo reguler 30 hari.");
   const [items, setItems] = useState<BillItemDetail[]>([
     {
       id: "item-1",
@@ -226,55 +251,163 @@ export default function FakturPembelianPage() {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const formSubtotal = useMemo(() => {
-    return items.reduce((sum, it) => sum + it.qty * it.price, 0);
-  }, [items]);
+  // POST /purchase/invoices. `invoiceNumber` (the vendor's own number) is what the backend
+  // stores on the row; it also auto-generates the internal `billNumber` (FP...) itself, so the
+  // FP number shown in the modal is not what this form sends.
+  //
+  // ponytail: `poNumber` typed below is display-only. purchase-invoices.service.ts sets
+  // `poNumber: po?.poNumber` — i.e. from the linked PO record — and the DTO has no plain
+  // `poNumber` field, so a typed value is dropped. Add when a 3-way match by typed PO exists.
+  const createBillMut = useMutation({
+    mutationFn: async () =>
+      unwrapResponse(
+        await api.post("/purchase/invoices", {
+          vendorId,
+          invoiceNumber: billNumber.trim(),
+          procurementCategory,
+          invoiceDate,
+          dueDate,
+          notes: formNotes.trim() || undefined,
+          items: items.map((it) => ({
+            itemCode: it.itemCode || undefined,
+            itemName: it.itemName,
+            qty: Number(it.qty) || 0,
+            unit: it.unit,
+            price: Number(it.price) || 0,
+            discount: Number(it.discountRp) || 0,
+          })),
+        }),
+      ),
+    onSuccess: () => {
+      toast.success(`Faktur Pembelian ${billNumber} berhasil dicatat & masuk ke daftar Hutang Dagang (AP).`);
+      setIsCreateOpen(false);
+      setBillNumber("");
+      setPoNumber("");
+      setVendorId("");
+      setFormNotes("");
+      queryClient.invalidateQueries({ queryKey: ["purchase-invoices"] });
+    },
+    onError: (e) => toast.error(extractApiError(e).message),
+  });
 
-  const formTotalDiscount = useMemo(() => {
-    return items.reduce((sum, it) => sum + (it.discountRp || 0), 0);
-  }, [items]);
-
-  const formTax = useMemo(() => {
-    return (formSubtotal - formTotalDiscount) * 0.11;
-  }, [formSubtotal, formTotalDiscount]);
-
-  const formGrandTotal = useMemo(() => {
-    return formSubtotal - formTotalDiscount + formTax;
-  }, [formSubtotal, formTotalDiscount, formTax]);
+  const importMut = useMutation({
+    // The endpoint takes `{ rows }` and returns one result per row, so the summary counts the
+    // server's own verdicts instead of asserting how many landed.
+    mutationFn: async (rows: unknown[]) =>
+      unwrapResponse(await api.post("/purchase/invoices/import", { rows })) as Array<{
+        success: boolean;
+        billNumber?: string;
+        error?: string;
+      }>,
+    onSuccess: (results) => {
+      const list = Array.isArray(results) ? results : [];
+      const ok = list.filter((r) => r.success).length;
+      const rejected = list.length - ok;
+      if (ok === 0) {
+        toast.error(
+          "Impor faktur gagal",
+          list[0]?.error || "Tidak ada baris yang diterima backend. Periksa nama vendor terhadap master supplier.",
+        );
+      } else if (rejected > 0) {
+        toast.warning(`${ok} faktur pembelian ditambahkan, ${rejected} baris ditolak backend.`);
+      } else {
+        toast.success(`${ok} faktur pembelian berhasil diimpor.`);
+      }
+      setIsImportModalOpen(false);
+      setImportFile(null);
+      queryClient.invalidateQueries({ queryKey: ["purchase-invoices"] });
+    },
+    onError: (e) => toast.error(extractApiError(e).message),
+  });
 
   const handleCreateBill = () => {
     if (!billNumber.trim()) {
       toast.error("Nomor Faktur Pembelian (Vendor Invoice No) wajib diisi");
       return;
     }
-    if (!vendorName.trim()) {
-      toast.error("Nama Supplier / Vendor wajib diisi");
+    if (!vendorId) {
+      toast.error("Pilih supplier / vendor dari daftar master terlebih dahulu");
       return;
     }
-    if (items.length === 0 || !items[0].itemName) {
+    if (items.length === 0 || !items[0].itemName.trim()) {
       toast.error("Isi minimal 1 detail item barang");
       return;
     }
-
-    queryClient.invalidateQueries({ queryKey: ["purchase-invoices"] });
-    setIsCreateOpen(false);
-    setBillNumber("");
-    setPoNumber("");
-    setVendorName("");
-    setFormNotes("");
-    toast.success(`Faktur Pembelian ${billNumber} berhasil dicatat & masuk ke daftar Hutang Dagang (AP).`);
+    createBillMut.mutate();
   };
 
   const handleSaveReason = () => {
     if (!reasonModalBill) return;
-    queryClient.invalidateQueries({ queryKey: ["purchase-invoices"] });
+    // `bill.unpaidReason` exists on the table, but the invoices controller exposes no PATCH:
+    // only POST /, POST /import, GET / and GET /:id. There is nothing to write to, so this
+    // stops claiming an update instead of dropping the edit.
+    toast.warning(
+      "Catatan belum tersimpan",
+      "Backend belum menyediakan rute ubah faktur (PATCH /purchase/invoices/:id). Catatan tidak dipersist.",
+    );
     setReasonModalBill(null);
-    toast.success("Catatan alasan belum lunas berhasil diperbarui.");
   };
 
-  const handleImportExcel = () => {
-    setIsImportModalOpen(false);
-    toast.success("File Excel berhasil diproses: 3 Faktur Pembelian baru ditambahkan.");
+  const IMPORT_HEADERS = "vendor,invoice number,due date,item,qty,unit,price,notes";
+
+  const handleDownloadImportTemplate = () => {
+    const blob = new Blob([`${IMPORT_HEADERS}\nPT Contoh Supplier,INV/2026/09/0001,2026-10-26,Kemasan PET 250ml,100,pcs,2500,\n`], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "template_import_faktur_pembelian.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Rows are matched to a supplier by NAME against the master supplier list, because the import
+  // endpoint needs `vendorId` (@IsUUID) and a CSV cannot carry UUIDs. A row whose vendor name is
+  // not in the master is sent without vendorId and comes back rejected by the backend, which is
+  // counted as "ditolak" rather than silently dropped.
+  const handleImportExcel = async () => {
+    if (!importFile) {
+      toast.error("Pilih file CSV terlebih dahulu");
+      return;
+    }
+    let csv = "";
+    try {
+      csv = await importFile.text();
+    } catch {
+      toast.error("Gagal membaca file. Pastikan file CSV yang dipilih valid.");
+      return;
+    }
+
+    const lines = csv.split(/\r?\n/).filter((l) => l.trim());
+    if (lines.length < 2) {
+      toast.error("File CSV kosong atau hanya berisi baris header.");
+      return;
+    }
+    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    const rows = lines.slice(1).map((line) => {
+      const cells = line.split(",").map((c) => c.trim());
+      const row: Record<string, string> = {};
+      headers.forEach((h, i) => (row[h] = cells[i] ?? ""));
+      const vendorLabel = row["vendor"] || row["supplier"] || row["nama supplier"] || "";
+      const supplier = supplierOptions.find((s) => s.label.toLowerCase() === vendorLabel.toLowerCase());
+      return {
+        vendorId: supplier?.value,
+        invoiceNumber: row["invoice number"] || undefined,
+        dueDate: row["due date"] || undefined,
+        notes: row["notes"] || `Impor ${importFile.name}`,
+        items: [
+          {
+            itemName: row["item"] || "Item impor",
+            qty: Number(row["qty"]) || 1,
+            unit: row["unit"] || "pcs",
+            price: Number(row["price"]) || 0,
+          },
+        ],
+      };
+    });
+
+    importMut.mutate(rows);
   };
 
   return (
@@ -379,62 +512,62 @@ export default function FakturPembelianPage() {
           }}
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1250px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
-                  <th className="px-4 py-2.5 w-[170px]">No. Faktur</th>
-                  <th className="px-4 py-2.5 w-[160px]">No. Purchase Order</th>
-                  <th className="px-4 py-2.5 w-[110px]">Tgl Faktur</th>
-                  <th className="px-4 py-2.5 w-[110px]">Jatuh Tempo</th>
-                  <th className="px-4 py-2.5 min-w-[180px]">Supplier</th>
-                  <th className="px-4 py-2.5 w-[160px]">Kategori Pengadaan</th>
-                  <th className="px-4 py-2.5 w-[140px] text-right">Nilai Tagihan</th>
-                  <th className="px-4 py-2.5 w-[140px] text-right">Sisa Hutang</th>
-                  <th className="px-4 py-2.5 w-[120px] text-center">Status Bayar</th>
-                  <th className="pr-4 py-2.5 w-[70px] text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
+                  <DnaTh className="px-4 py-2.5 w-[170px]">No. Faktur</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[160px]">No. Purchase Order</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Tgl Faktur</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Jatuh Tempo</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Supplier</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[160px]">Kategori Pengadaan</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px] text-right">Nilai Tagihan</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px] text-right">Sisa Hutang</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px] text-center">Status Bayar</DnaTh>
+                  <DnaTh className="pr-4 py-2.5 w-[70px] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredList.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="py-8 text-center">
+                  <DnaTableRow>
+                    <DnaTd colSpan={10} className="py-8 text-center">
                       <DnaEmptyState
                         title="Tidak Ada Faktur Pembelian"
                         description="Belum ada data faktur pembelian atau tidak ada hasil yang sesuai dengan filter."
                       />
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredList.map((row) => {
                     const remaining = Math.max(0, row.grandTotal - row.paidAmount);
                     return (
-                      <tr
+                      <DnaTableRow
                         key={row.id}
                         onClick={() => setSelectedBill(row)}
                         className="h-[48px] hover:bg-slate-50/60 transition-colors cursor-pointer"
                       >
-                        <td className="px-4 py-2.5">
+                        <DnaTd className="px-4 py-2.5">
                           <DnaCell.Code code={row.billNumber} />
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <DnaCell.Code code={row.poNumber} />
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <DnaCell.Text text={row.invoiceDate} />
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <DnaCell.Text text={row.dueDate} />
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <span className="text-[12px] font-medium text-slate-900 line-clamp-1">{row.vendorName}</span>
-                        </td>
-                        <td className="px-4 py-2.5">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
                           <span className="text-[12px] font-medium text-slate-700 line-clamp-1">{row.procurementCategory}</span>
-                        </td>
-                        <td className="px-4 py-2.5 text-right">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-right">
                           <DnaCell.Numeric value={row.grandTotal} prefix="Rp " />
-                        </td>
-                        <td className="px-4 py-2.5 text-right font-mono tabular-nums">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-right tabular-nums tabular-nums">
                           {remaining > 0 ? (
                             <span className="text-[12px] font-semibold text-rose-600">
                               Rp {remaining.toLocaleString("id-ID")}
@@ -442,8 +575,8 @@ export default function FakturPembelianPage() {
                           ) : (
                             <span className="text-[12px] font-semibold text-emerald-600">Lunas</span>
                           )}
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center">
                           {row.paymentStatus === "PAID" ? (
                             <DnaBadge variant="success">Sudah Dibayar</DnaBadge>
                           ) : row.paymentStatus === "PARTIAL" ? (
@@ -451,8 +584,8 @@ export default function FakturPembelianPage() {
                           ) : (
                             <DnaBadge variant="critical">Belum Dibayar</DnaBadge>
                           )}
-                        </td>
-                        <td className="pr-4 py-2.5 text-right">
+                        </DnaTd>
+                        <DnaTd className="pr-4 py-2.5 text-right">
                           <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                             <DnaButton
                               variant="ghost"
@@ -463,13 +596,13 @@ export default function FakturPembelianPage() {
                               <Eye className="w-3.5 h-3.5" />
                             </DnaButton>
                           </div>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}
@@ -518,12 +651,12 @@ export default function FakturPembelianPage() {
             <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
                 <span className="text-slate-500 block text-[11px]">Tgl Faktur / Jatuh Tempo</span>
-                <span className="font-bold text-slate-900 font-mono text-sm block">{selectedBill.invoiceDate}</span>
+                <span className="font-bold text-slate-900 tabular-nums text-sm block">{selectedBill.invoiceDate}</span>
                 <span className="text-amber-700 block text-[11px] font-medium mt-0.5">Jatuh Tempo: {selectedBill.dueDate}</span>
               </div>
               <div className="text-right">
                 <span className="text-slate-500 block text-[11px]">Grand Total Tagihan</span>
-                <span className="font-bold text-slate-900 font-mono text-sm block">
+                <span className="font-bold text-slate-900 tabular-nums text-sm block">
                   Rp {selectedBill.grandTotal.toLocaleString("id-ID")}
                 </span>
                 <span className="text-slate-500 block text-[11px] mt-0.5">Kategori: {selectedBill.procurementCategory}</span>
@@ -543,38 +676,38 @@ export default function FakturPembelianPage() {
                 Rincian Barang & Diskon Nominal (Rp)
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-left text-xs text-slate-600">
-                  <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700 text-[10px] uppercase">
-                    <tr>
-                      <th className="py-2.5 px-3">Kode</th>
-                      <th className="py-2.5 px-3">Nama Barang</th>
-                      <th className="py-2.5 px-3 text-right">Qty</th>
-                      <th className="py-2.5 px-3 text-right">Harga</th>
-                      <th className="py-2.5 px-3 text-right">Diskon (Rp)</th>
-                      <th className="py-2.5 px-3 text-right">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3">Kode</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Nama Barang</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Qty</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Harga</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Diskon (Rp)</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Subtotal</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedBill.items.map((it) => (
-                      <tr key={it.id} className="hover:bg-slate-50">
-                        <td className="py-2 px-3 text-indigo-600 font-medium">{it.itemCode}</td>
-                        <td className="py-2 px-3 font-sans font-semibold text-slate-800">{it.itemName}</td>
-                        <td className="py-2 px-3 text-right text-slate-700">
+                      <DnaTableRow key={it.id} className="hover:bg-slate-50">
+                        <DnaTd className="py-2 px-3 text-indigo-600 font-medium">{it.itemCode}</DnaTd>
+                        <DnaTd className="py-2 px-3 font-sans font-semibold text-slate-800">{it.itemName}</DnaTd>
+                        <DnaTd className="py-2 px-3 text-right text-slate-700">
                           {it.qty} {it.unit}
-                        </td>
-                        <td className="py-2 px-3 text-right text-slate-600">
+                        </DnaTd>
+                        <DnaTd className="py-2 px-3 text-right text-slate-600">
                           Rp {it.price.toLocaleString("id-ID")}
-                        </td>
-                        <td className="py-2 px-3 text-right text-emerald-600 font-bold">
+                        </DnaTd>
+                        <DnaTd className="py-2 px-3 text-right text-emerald-600 font-bold">
                           - Rp {(it.discountRp || 0).toLocaleString("id-ID")}
-                        </td>
-                        <td className="py-2 px-3 text-right font-bold text-slate-900">
+                        </DnaTd>
+                        <DnaTd className="py-2 px-3 text-right font-bold text-slate-900">
                           Rp {it.total.toLocaleString("id-ID")}
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
 
@@ -582,25 +715,25 @@ export default function FakturPembelianPage() {
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1.5 text-xs">
               <div className="flex justify-between text-slate-600">
                 <span>Subtotal Bruto:</span>
-                <span className="font-mono">Rp {selectedBill.subtotal.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums">Rp {selectedBill.subtotal.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between text-emerald-600 font-medium">
                 <span>Total Diskon:</span>
-                <span className="font-mono">- Rp {selectedBill.totalDiscountRp.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums">- Rp {selectedBill.totalDiscountRp.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>PPN (11%):</span>
-                <span className="font-mono">Rp {selectedBill.taxAmount.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums">Rp {selectedBill.taxAmount.toLocaleString("id-ID")}</span>
               </div>
               {selectedBill.dpDeduction > 0 && (
                 <div className="flex justify-between text-purple-600 font-medium">
                   <span>Potongan DP:</span>
-                  <span className="font-mono">- Rp {selectedBill.dpDeduction.toLocaleString("id-ID")}</span>
+                  <span className="tabular-nums">- Rp {selectedBill.dpDeduction.toLocaleString("id-ID")}</span>
                 </div>
               )}
               <div className="border-t border-slate-200 pt-2 flex justify-between font-bold text-slate-900 text-sm">
                 <span>Grand Total:</span>
-                <span className="font-mono text-indigo-700">Rp {selectedBill.grandTotal.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums text-indigo-700">Rp {selectedBill.grandTotal.toLocaleString("id-ID")}</span>
               </div>
             </div>
           </div>
@@ -651,7 +784,13 @@ export default function FakturPembelianPage() {
             <DnaButton variant="outline" size="sm" onClick={() => setIsCreateOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" size="sm" icon={<Send className="w-4 h-4" />} onClick={handleCreateBill}>
+            <DnaButton
+              variant="primary"
+              size="sm"
+              icon={<Send className="w-4 h-4" />}
+              loading={createBillMut.isPending}
+              onClick={handleCreateBill}
+            >
               Simpan Faktur Pembelian
             </DnaButton>
           </div>
@@ -666,17 +805,17 @@ export default function FakturPembelianPage() {
                 placeholder="Contoh: INV/2026/09/0088"
                 value={billNumber}
                 onChange={(e) => setBillNumber(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
             <div>
-              <label className="block text-slate-700 font-bold mb-1">Nama Supplier / Vendor *</label>
-              <input
-                type="text"
-                placeholder="Contoh: PT Sumber Organik Nusantara"
-                value={vendorName}
-                onChange={(e) => setVendorName(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              <DnaSelect
+                label="Supplier / Vendor"
+                required
+                value={vendorId}
+                onChange={(val) => setVendorId(val)}
+                options={supplierOptions}
+                placeholder={supplierOptions.length === 0 ? "Memuat master supplier..." : "Pilih supplier..."}
               />
             </div>
             <div>
@@ -686,8 +825,13 @@ export default function FakturPembelianPage() {
                 placeholder="Contoh: PO-202609-000005"
                 value={poNumber}
                 onChange={(e) => setPoNumber(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
+              {/* Only informational: the backend stores the PO number from the linked PO/GR
+                  record, not from this box. See createBillMut. */}
+              <p className="text-[10px] text-amber-600 mt-1">
+                Referensi saja — tidak tersimpan sampai PO ditautkan.
+              </p>
             </div>
           </div>
 
@@ -698,7 +842,7 @@ export default function FakturPembelianPage() {
                 type="date"
                 value={invoiceDate}
                 onChange={(e) => setInvoiceDate(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -707,7 +851,7 @@ export default function FakturPembelianPage() {
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -747,7 +891,7 @@ export default function FakturPembelianPage() {
                       placeholder="Kode"
                       value={item.itemCode}
                       onChange={(e) => handleUpdateItem(idx, "itemCode", e.target.value)}
-                      className="w-full text-xs border border-slate-200 rounded p-1.5 font-mono"
+                      className="w-full text-xs border border-slate-200 rounded p-1.5 tabular-nums"
                     />
                   </div>
                   <div className="flex-1">
@@ -764,7 +908,7 @@ export default function FakturPembelianPage() {
                       placeholder="Qty"
                       value={item.qty}
                       onChange={(e) => handleUpdateItem(idx, "qty", Number(e.target.value))}
-                      className="w-full text-xs border border-slate-200 rounded p-1.5 text-right font-mono"
+                      className="w-full text-xs border border-slate-200 rounded p-1.5 text-right tabular-nums"
                     />
                   </div>
                   <div className="w-24">
@@ -773,10 +917,10 @@ export default function FakturPembelianPage() {
                       placeholder="Harga"
                       value={item.price}
                       onChange={(e) => handleUpdateItem(idx, "price", Number(e.target.value))}
-                      className="w-full text-xs border border-slate-200 rounded p-1.5 text-right font-mono"
+                      className="w-full text-xs border border-slate-200 rounded p-1.5 text-right tabular-nums"
                     />
                   </div>
-                  <div className="w-24 text-right font-bold text-indigo-700 font-mono text-[11px]">
+                  <div className="w-24 text-right font-bold text-indigo-700 tabular-nums text-[11px]">
                     Rp {item.total.toLocaleString("id-ID")}
                   </div>
                   <button
@@ -808,24 +952,43 @@ export default function FakturPembelianPage() {
       <DnaModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
-        title="Import Faktur Pembelian dari Excel"
-        description="Unggah file .xlsx atau .csv untuk memproses faktur massal."
+        title="Import Faktur Pembelian dari CSV"
+        description="Unggah file CSV untuk memproses faktur massal."
         size="md"
         footer={
           <div className="flex items-center justify-end gap-2.5 w-full">
             <DnaButton variant="outline" size="sm" onClick={() => setIsImportModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" size="sm" onClick={handleImportExcel}>
+            <DnaButton variant="primary" size="sm" loading={importMut.isPending} onClick={handleImportExcel}>
               Proses File
             </DnaButton>
           </div>
         }
       >
-        <div className="p-6 border-2 border-dashed border-slate-200 rounded-xl text-center">
-          <Upload className="w-8 h-8 text-indigo-500 mx-auto mb-2" />
-          <p className="text-xs font-semibold text-slate-700">Tarik & lepaskan file Excel di sini</p>
-          <p className="text-[11px] text-slate-400 mt-1">Mendukung format .xlsx, .xls, .csv</p>
+        <div className="space-y-3 text-xs">
+          {/* ponytail: only CSV is accepted. The parse is a browser-side split(","), so .xlsx would
+              need a spreadsheet reader dependency. Add when bulk import from real Excel is wanted. */}
+          <div className="p-6 border-2 border-dashed border-slate-200 rounded-xl text-center">
+            <Upload className="w-8 h-8 text-indigo-500 mx-auto mb-2" />
+            <DnaInput
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
+            />
+            <p className="text-[11px] text-slate-400 mt-2">
+              Format didukung: <span className="font-semibold">.csv</span>. Nama vendor pada kolom
+              &quot;vendor&quot; harus sama persis dengan nama di master supplier.
+            </p>
+          </div>
+          <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+            <span className="text-slate-600">
+              Kolom: <span className="font-mono text-[11px]">{IMPORT_HEADERS}</span>
+            </span>
+            <DnaButton variant="ghost" size="sm" onClick={handleDownloadImportTemplate}>
+              Unduh Template
+            </DnaButton>
+          </div>
         </div>
       </DnaModal>
     </DnaPageContainer>

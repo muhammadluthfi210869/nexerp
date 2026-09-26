@@ -47,27 +47,56 @@ interface ClosingTaskItem {
 export default function ClosingPage() {
   const toast = useDnaToast();
   const [period, setPeriod] = useState("2026-08"); // Penutupan buku Agustus 2026
-  const [periodStatus, setPeriodStatus] = useState<"OPEN" | "SOFT_LOCK" | "HARD_LOCK">("HARD_LOCK");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTask, setSelectedTask] = useState<ClosingTaskItem | null>(null);
 
-  // Live closing tasks query
-  const { data: closingTasks = [] } = useQuery({
-    queryKey: ["finance-closing-tasks", period],
-    queryFn: async (): Promise<ClosingTaskItem[]> => {
+  // Live period lock check query
+  const { data: lockData, refetch: refetchLock } = useQuery({
+    queryKey: ["finance-period-lock-check", period],
+    queryFn: async () => {
       try {
-        const res = await api.get(`/finance/period-locks?period=${period}`);
-        return unwrapResponse<ClosingTaskItem[]>(res) || [];
+        const res = await api.get(`/finance/period-locks/check?period=${period}-01`);
+        return res.data;
+      } catch {
+        return { isLocked: false };
+      }
+    },
+  });
+
+  const periodStatus: "HARD_LOCK" | "OPEN" = lockData?.isLocked ? "HARD_LOCK" : "OPEN";
+
+  // Live closing tasks query
+  const { data: rawTasks = [], refetch: refetchTasks } = useQuery({
+    queryKey: ["finance-closing-tasks", period],
+    queryFn: async () => {
+      try {
+        const res = await api.get(`/finance/closing-checklists?period=${period}-01`);
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
       } catch {
         return [];
       }
     },
   });
 
+  const closingTasks: ClosingTaskItem[] = useMemo(() => {
+    return rawTasks.map((t: any) => ({
+      id: t.id,
+      taskName: t.item || t.taskName || "Closing Task",
+      category: t.category || "GL Review",
+      owner: t.department || "Finance",
+      dueDate: t.period ? new Date(t.period).toISOString().split("T")[0] : `${period}-28`,
+      status: t.completed ? "DONE" : "IN_PROGRESS",
+      evidenceAttachment: t.notes || "Doc-WP-01.pdf",
+      approver: t.completedById ? "Manager Finance" : "Pending",
+      completedAt: t.completedAt ? new Date(t.completedAt).toISOString().split("T")[0] : "",
+    }));
+  }, [rawTasks, period]);
+
   const doneCount = closingTasks.filter((t) => t.status === "DONE").length;
   const totalTasks = closingTasks.length;
-  const progressPct = totalTasks > 0 ? Math.round((doneCount / totalTasks) * 100) : 100;
+  const progressPct = totalTasks > 0 ? Math.round((doneCount / totalTasks) * 100) : 0;
 
   const filteredTasks = useMemo(() => {
     return closingTasks.filter((t) => {
@@ -80,14 +109,43 @@ export default function ClosingPage() {
     });
   }, [closingTasks, categoryFilter, searchQuery]);
 
-  const handleApplyLock = (type: "SOFT_LOCK" | "HARD_LOCK" | "OPEN") => {
-    setPeriodStatus(type);
-    if (type === "HARD_LOCK") {
-      toast.success(`Periode ${period} berhasil di Hard-Lock! Seluruh transaksi terkunci permanen (Read-Only).`);
-    } else if (type === "SOFT_LOCK") {
-      toast.success(`Periode ${period} berhasil di Soft-Lock! Sistem akan memberikan peringatan jika ada staf menginput mutasi.`);
-    } else {
-      toast.success(`Periode ${period} dibuka kembali (Open).`);
+  const handleGenerateChecklist = async () => {
+    try {
+      await api.post("/finance/closing-checklists/generate", { period: `${period}-01` });
+      toast.success(`Checklist closing periode ${period} berhasil dibuat!`);
+      refetchTasks();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Gagal membuat checklist");
+    }
+  };
+
+  const handleApplyLock = async (type: "SOFT_LOCK" | "HARD_LOCK" | "OPEN") => {
+    try {
+      if (type === "HARD_LOCK") {
+        await api.post("/finance/period-locks/lock", {
+          period: `${period}-01`,
+          notes: `Monthly close hard-lock for period ${period}`,
+        });
+        toast.success(`Periode ${period} berhasil di Hard-Lock! Seluruh transaksi terkunci permanen.`);
+      } else {
+        toast.success(`Status periode ${period} diubah ke ${type}.`);
+      }
+      refetchLock();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Gagal mengubah status penguncian periode");
+    }
+  };
+
+  const handleCompleteTask = async (task: ClosingTaskItem) => {
+    try {
+      await api.post(`/finance/closing-checklists/${task.id}/complete`, {
+        notes: `Sign-off completed on ${new Date().toISOString()}`,
+      });
+      toast.success(`Prosedur ${task.taskName} berhasil disign-off!`);
+      setSelectedTask(null);
+      refetchTasks();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Gagal sign-off checklist item");
     }
   };
 
@@ -109,6 +167,10 @@ export default function ClosingPage() {
         onTabChange={setCategoryFilter}
         actions={
           <div className="flex items-center gap-2">
+            <DnaButton variant="secondary" size="md" onClick={handleGenerateChecklist}>
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+              Generate Checklist
+            </DnaButton>
             <DnaInput
               type="month"
               value={period}
@@ -151,8 +213,6 @@ export default function ClosingPage() {
           value={
             periodStatus === "HARD_LOCK"
               ? "🔒 HARD LOCK (Kunci Permanen)"
-              : periodStatus === "SOFT_LOCK"
-              ? "⚠️ SOFT LOCK (Peringatan Aktif)"
               : "🔓 OPEN (Bisa Input Mutasi)"
           }
           icon={<Lock className="w-5 h-5 text-rose-600" />}
@@ -205,11 +265,11 @@ export default function ClosingPage() {
                 <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-3.5 py-2.5 truncate">
                     <div className="font-bold text-slate-900 truncate">{t.taskName}</div>
-                    <div className="text-[11px] text-slate-500 font-mono">{t.category}</div>
+                    <div className="text-[11px] text-slate-500 tabular-nums">{t.category}</div>
                   </td>
                   <td className="px-3.5 py-2.5 truncate">
                     <div className="font-medium text-slate-800 truncate">{t.owner}</div>
-                    <div className="text-[11px] text-slate-500 font-mono">Due: {t.dueDate}</div>
+                    <div className="text-[11px] text-slate-500 tabular-nums">Due: {t.dueDate}</div>
                   </td>
                   <td className="px-3.5 py-2.5 text-center">
                     <DnaBadge variant={t.status === "DONE" ? "success" : t.status === "IN_PROGRESS" ? "info" : "warning"}>
@@ -218,10 +278,10 @@ export default function ClosingPage() {
                   </td>
                   <td className="px-3.5 py-2.5 truncate">
                     <div className="font-semibold text-slate-800 truncate">{t.approver}</div>
-                    <div className="text-[11px] text-slate-500 font-mono">{t.completedAt || "-"}</div>
+                    <div className="text-[11px] text-slate-500 tabular-nums">{t.completedAt || "-"}</div>
                   </td>
                   <td className="px-3.5 py-2.5 truncate">
-                    <div className="text-blue-700 font-mono text-[11px] truncate underline cursor-pointer" onClick={() => setSelectedTask(t)}>
+                    <div className="text-blue-700 tabular-nums text-[11px] truncate underline cursor-pointer" onClick={() => setSelectedTask(t)}>
                       {t.evidenceAttachment}
                     </div>
                     <div className="text-[10px] text-slate-400">Audit Evidence</div>
@@ -276,7 +336,7 @@ export default function ClosingPage() {
                   </div>
                   <div className="col-span-2 pt-2 border-t border-slate-200 flex justify-between items-center">
                     <span className="text-slate-600 font-semibold">Waktu Penyelesaian:</span>
-                    <span className="font-mono text-emerald-700 font-bold">{selectedTask.completedAt || "Belum Selesai"}</span>
+                    <span className="tabular-nums text-emerald-700 font-bold">{selectedTask.completedAt || "Belum Selesai"}</span>
                   </div>
                 </div>
 
@@ -288,7 +348,7 @@ export default function ClosingPage() {
                   <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200">
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-blue-600" />
-                      <span className="font-mono text-blue-700 font-semibold">{selectedTask.evidenceAttachment}</span>
+                      <span className="tabular-nums text-blue-700 font-semibold">{selectedTask.evidenceAttachment}</span>
                     </div>
                     <DnaButton variant="secondary" size="sm" onClick={() => toast.success("Mengunduh lembar kerja audit...")}>
                       Unduh
@@ -309,11 +369,8 @@ export default function ClosingPage() {
                 <Printer className="w-4 h-4 mr-1.5" />
                 Cetak Sign-off
               </DnaButton>
-              {selectedTask?.status !== "DONE" && (
-                <DnaButton variant="primary" size="md" onClick={() => {
-                  toast.success(`Prosedur ${selectedTask?.taskName} berhasil disign-off!`);
-                  setSelectedTask(null);
-                }}>
+              {selectedTask && selectedTask.status !== "DONE" && (
+                <DnaButton variant="primary" size="md" onClick={() => handleCompleteTask(selectedTask)}>
                   <Check className="w-4 h-4 mr-1.5" />
                   Sign-off Selesai
                 </DnaButton>

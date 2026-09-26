@@ -43,6 +43,14 @@ const DISPLAYABLE_RENDITION = /\.(png|jpe?g|webp|gif|avif|svg)$/i;
 const isDisplayable = (url?: string | null) =>
   !!url && DISPLAYABLE_RENDITION.test(url.split("?")[0]);
 
+/** The rendition to put on screen: the master when it renders, else the preview. */
+const artworkSrcOf = (task: any): string | null =>
+  isDisplayable(task?.artworkUrl)
+    ? task.artworkUrl
+    : isDisplayable(task?.artworkPreviewUrl)
+    ? task.artworkPreviewUrl
+    : null;
+
 export default function ComplianceInboxPage() {
   const queryClient = useQueryClient();
   const { success, error: toastError } = useDnaToast();
@@ -257,14 +265,48 @@ export default function ComplianceInboxPage() {
                     setIsDetailDrawerOpen(true);
                   }}
                 >
-                  <td className="p-3 text-slate-400 font-mono text-[11px] tabular-nums">
+                  <td className="p-3 text-slate-400 tabular-nums text-[11px] tabular-nums">
                     {idx + 1}
                   </td>
                   <td className="p-3">
                     <div className="font-bold text-slate-900 truncate uppercase">{task.title}</div>
-                    <div className="font-mono text-[11px] text-blue-600 font-semibold truncate">
+                    <div className="tabular-nums text-[11px] text-blue-600 font-semibold truncate">
                       ID: {task.pipelineId ? task.pipelineId.substring(0, 12) : task.id}
                     </div>
+                    {task.type === "ARTWORK_REVIEW" &&
+                      (task.artworkUrl || task.artworkPreviewUrl) && (
+                        <div className="mt-2 flex items-center gap-2">
+                          {artworkSrcOf(task) ? (
+                            <Image
+                              src={artworkSrcOf(task) as string}
+                              alt={`Artwork V${task.artworkVersion ?? "-"}`}
+                              width={64}
+                              height={64}
+                              className="w-10 h-10 rounded-lg border border-slate-200 object-cover shrink-0"
+                              unoptimized
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center shrink-0">
+                              <FileCheck className="w-4 h-4 text-slate-400" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <div className="text-[10px] font-black uppercase tracking-wide text-slate-600">
+                              V{task.artworkVersion ?? "-"}
+                            </div>
+                            {task.artworkUrl && (
+                              <a
+                                href={task.artworkUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] font-bold text-blue-600 hover:underline"
+                              >
+                                {task.artworkUrl.split("/").pop()}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
                   </td>
                   <td className="p-3">
                     <div className="flex items-center gap-1.5 mb-1 flex-wrap">
@@ -280,7 +322,7 @@ export default function ComplianceInboxPage() {
                         {task.priority || "NORMAL"}
                       </DnaBadge>
                     </div>
-                    <div className="text-[11px] text-slate-500 font-mono">
+                    <div className="text-[11px] text-slate-500 tabular-nums">
                       {task.type?.replace("_", " ")}
                     </div>
                   </td>
@@ -288,7 +330,7 @@ export default function ComplianceInboxPage() {
                     <div className="font-medium text-slate-800 text-xs">
                       {task.createdAt ? new Date(task.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                     </div>
-                    <div className="text-[10px] text-slate-400 font-mono">
+                    <div className="text-[10px] text-slate-400 tabular-nums">
                       {task.createdAt ? new Date(task.createdAt).toLocaleTimeString("id-ID") : ""}
                     </div>
                   </td>
@@ -343,7 +385,7 @@ export default function ComplianceInboxPage() {
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">Tipe Kepatuhan</span>
-                    <span className="font-mono font-bold text-blue-600 text-sm">{selectedTask.type}</span>
+                    <span className="tabular-nums font-bold text-blue-600 text-sm">{selectedTask.type}</span>
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">Prioritas Antrean</span>
@@ -351,7 +393,7 @@ export default function ComplianceInboxPage() {
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[11px]">ID Pipeline Proyek</span>
-                    <span className="font-mono text-slate-600">{selectedTask.pipelineId}</span>
+                    <span className="tabular-nums text-slate-600">{selectedTask.pipelineId}</span>
                   </div>
                 </div>
 
@@ -375,7 +417,7 @@ export default function ComplianceInboxPage() {
                         <div className="text-center space-y-2">
                           <FileCheck className="w-10 h-10 text-slate-400 mx-auto" />
                           <p className="font-bold text-slate-700">Berkas Master Grafis Terlampir</p>
-                          <p className="text-[11px] text-slate-400 font-mono">
+                          <p className="text-[11px] text-slate-400 tabular-nums">
                             {selectedTask.artworkUrl?.split("/").pop() || "master-artwork.pdf"}
                           </p>
                         </div>

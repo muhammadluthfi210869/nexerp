@@ -1,357 +1,509 @@
 "use client";
 
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  DnaErrorState,
+  DnaLoadingSkeleton,
+  DnaEmptyState,
+  DnaBadge,
+} from "@/components/dna";
+
 import React from "react";
 import * as Lucide from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 
 const Icon = ({ name, size = 18, color, style, className }: { name: string; size?: number; color?: string; style?: React.CSSProperties; className?: string }) => {
   const LucideIcon = (Lucide as any)[name] || Lucide.HelpCircle;
   return <LucideIcon size={size} color={color} style={style} className={className} />;
 };
 
+const cardStyle: React.CSSProperties = {
+  background: "white",
+  padding: "1.5rem",
+  borderRadius: "24px",
+  border: "1px solid #E2E8F0",
+  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)",
+};
+
+const thStyle: React.CSSProperties = { padding: "1.25rem 2rem", fontSize: "10px", fontWeight: 950, color: "#94A3B8" };
+const tdStyle: React.CSSProperties = { padding: "1.5rem 2rem" };
+
+const asArray = (body: any): any[] => (Array.isArray(body) ? body : (body?.data ?? []));
+
 export default function ProductionDashboardPage() {
+  const dashboard = useQuery<any>({
+    queryKey: ["production-dashboard"],
+    queryFn: async () => {
+      const res = await api.get("/production/dashboard");
+      return unwrapResponse<any>(res) ?? {};
+    },
+  });
+
+  const preparation = useQuery<any[]>({
+    queryKey: ["production-warehouse-preparation"],
+    queryFn: async () => asArray(unwrapResponse<any>(await api.get("/production/warehouse-preparation"))),
+  });
+
+  const microFlow = useQuery<any[]>({
+    queryKey: ["production-micro-flow"],
+    queryFn: async () => asArray(unwrapResponse<any>(await api.get("/production/micro-flow"))),
+  });
+
+  const granular = useQuery<any[]>({
+    queryKey: ["production-batch-audit"],
+    queryFn: async () => asArray(unwrapResponse<any>(await api.get("/production/batch-audit"))),
+  });
+
+  const cards = dashboard.data?.cards;
+  const isLoading = dashboard.isLoading;
+  const isError = dashboard.isError;
+
+  const achievement = cards?.achievement;
+  const timeliness = cards?.timeliness;
+  const efficiency = cards?.efficiency;
+  const quality = cards?.quality;
+  const alerts = cards?.alerts;
+
+  const precision = (dashboard.data?.precisionTracking ?? []) as any[];
+
   return (
     <DashboardShell
       title="PRODUCTION COMMAND CENTER"
-      subtitle="Shop Floor & Efficiency Audit"
+      subtitle="Shop Floor & Efficiency Audit — sumber: /production/dashboard, /warehouse-preparation, /micro-flow, /batch-audit"
     >
-      {/* 🚀 I. EXECUTIVE OVERVIEW (Manufacturing Command) */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1.25rem", marginBottom: "3rem" }}>
-        
-        {/* 🎯 1. PRODUCTION OUTPUT */}
-        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
-             <Icon name="Target" size={16} color="#3B82F6" />
-             <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>A. OUTPUT & ACHIEVEMENT</p>
-          </div>
-          <div style={{ textAlign: "center", marginBottom: "1.25rem" }}>
-             <p style={{ fontSize: "28px", fontWeight: 950, color: "#1E293B", margin: 0 }}>94.2%</p>
-             <p style={{ fontSize: "9px", fontWeight: 850, color: "#64748B", margin: 0 }}>ACHIEVEMENT RATE</p>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>PLANNED</span>
-                <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>250k Units</span>
-             </div>
-             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>ACTUAL</span>
-                <span style={{ fontSize: "12px", fontWeight: 950, color: "#10B981" }}>235k Units</span>
-             </div>
-             <div style={{ background: "#F8FAFC", padding: "8px", borderRadius: "10px", border: "1px solid #E2E8F0", marginTop: "4px" }}>
-                <p style={{ fontSize: "8px", fontWeight: 850, color: "#64748B", margin: 0 }}>COMPLETED ORDERS</p>
-                <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>18 / 22</p>
-             </div>
-          </div>
-        </div>
+      {isError ? (
+        <DnaErrorState
+          title="Gagal Memuat Dasbor Produksi"
+          message="Tidak dapat mengambil metrik produksi dari server."
+          onRetry={() => dashboard.refetch()}
+        />
+      ) : isLoading ? (
+        <DnaLoadingSkeleton rows={8} />
+      ) : (
+        <>
+          {/* 🚀 I. EXECUTIVE OVERVIEW (Manufacturing Command) */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1.25rem", marginBottom: "3rem" }}>
 
-        {/* ⏱️ 2. TIMELINESS */}
-        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
-             <Icon name="Clock" size={16} color="#EAB308" />
-             <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>B. TIMELINESS AUDIT</p>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>ON-TIME RATE</span>
-                <span style={{ fontSize: "12px", fontWeight: 950, color: "#EAB308" }}>86.4%</span>
-             </div>
-             <div style={{ height: "6px", background: "#F1F5F9", borderRadius: "3px", overflow: "hidden" }}>
-                <div style={{ width: "86.4%", height: "100%", background: "#EAB308" }} />
-             </div>
-             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                <div style={{ background: "#FFF1F2", padding: "8px", borderRadius: "10px" }}>
-                   <p style={{ fontSize: "7px", fontWeight: 850, color: "#EF4444", margin: 0 }}>DELAYED</p>
-                   <p style={{ fontSize: "12px", fontWeight: 950, color: "#E11D48", margin: 0 }}>4</p>
-                </div>
-                <div style={{ background: "#F0FDF4", padding: "8px", borderRadius: "10px" }}>
-                   <p style={{ fontSize: "7px", fontWeight: 850, color: "#166534", margin: 0 }}>AVG CYCLE</p>
-                   <p style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B", margin: 0 }}>24.2h</p>
-                </div>
-             </div>
-          </div>
-        </div>
-
-        {/* ⚙️ 3. EFFICIENCY */}
-        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
-             <Icon name="Cpu" size={16} color="#8B5CF6" />
-             <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>C. RESOURCE EFFICIENCY</p>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>MACHINE UTIL.</span>
-                <span style={{ fontSize: "12px", fontWeight: 950, color: "#8B5CF6" }}>78.2%</span>
-             </div>
-             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>LABOR PROD.</span>
-                <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>92.5%</span>
-             </div>
-             <div style={{ background: "#FFF7ED", padding: "10px", borderRadius: "12px", border: "1px solid #FFEDD5", marginTop: "4px" }}>
-                <p style={{ fontSize: "8px", fontWeight: 850, color: "#C2410C", margin: 0 }}>DOWNTIME (MTD)</p>
-                <p style={{ fontSize: "14px", fontWeight: 950, color: "#EA580C", margin: "2px 0 0 0" }}>42.5h</p>
-             </div>
-          </div>
-        </div>
-
-        {/* 🧪 4. QUALITY */}
-        <div style={{ background: "white", padding: "1.5rem", borderRadius: "24px", border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
-             <Icon name="Beaker" size={16} color="#10B981" />
-             <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>D. QUALITY CONTROL</p>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-             <div>
-                <p style={{ fontSize: "10px", fontWeight: 800, color: "#64748B", margin: 0 }}>GOOD UNITS</p>
-                <p style={{ fontSize: "18px", fontWeight: 950, color: "#10B981", margin: 0 }}>232k</p>
-             </div>
-             <div style={{ textAlign: "right" }}>
-                <p style={{ fontSize: "10px", fontWeight: 800, color: "#64748B", margin: 0 }}>DEFECT RATE</p>
-                <p style={{ fontSize: "18px", fontWeight: 950, color: "#EF4444", margin: 0 }}>1.45%</p>
-             </div>
-          </div>
-          <div style={{ background: "#F1F5F9", height: "6px", borderRadius: "3px", overflow: "hidden", display: "flex" }}>
-             <div style={{ width: "98.5%", height: "100%", background: "#10B981" }} />
-             <div style={{ width: "1.5%", height: "100%", background: "#EF4444" }} />
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
-             <span style={{ fontSize: "10px", fontWeight: 850, color: "#64748B" }}>REWORK COUNT</span>
-             <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>1,240 Pcs</span>
-          </div>
-        </div>
-
-        {/* ⚠️ 5. RISK ALERT */}
-        <div style={{ background: "#FFF1F2", padding: "1.5rem", borderRadius: "24px", border: "1px solid #FECDD3", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
-             <Icon name="ShieldAlert" size={16} color="#E11D48" />
-             <p style={{ fontSize: "11px", fontWeight: 950, color: "#9F1239", letterSpacing: "0.05em", margin: 0 }}>E. CRITICAL ALERTS</p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "8px" }}>
-             <div style={{ display: "flex", justifyContent: "space-between", background: "white", padding: "8px 12px", borderRadius: "10px", border: "1px solid #FECDD3" }}>
-                <span style={{ fontSize: "9px", fontWeight: 900, color: "#E11D48" }}>BREAKDOWNS</span>
-                <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>2</span>
-             </div>
-             <div style={{ display: "flex", justifyContent: "space-between", background: "white", padding: "8px 12px", borderRadius: "10px", border: "1px solid #FECDD3" }}>
-                <span style={{ fontSize: "9px", fontWeight: 900, color: "#EF4444" }}>SHORTAGES</span>
-                <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>5</span>
-             </div>
-             <div style={{ background: "#9F1239", padding: "8px 12px", borderRadius: "10px", marginTop: "2px" }}>
-                <p style={{ fontSize: "8px", fontWeight: 950, color: "#ffffff", margin: 0, opacity: 0.9 }}>URGENT ALERT</p>
-                <p style={{ fontSize: "10px", fontWeight: 950, color: "#ffffff", margin: 0 }}>4 ORDERS OVERDUE &gt; 48H</p>
-             </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* 📦 II. PENYIAPAN BAHAN (FROM WAREHOUSE) */}
-      <div style={{ marginBottom: "3.5rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-          <h3 style={{ margin: 0, fontSize: "13px", fontWeight: 950, color: "#64748B", letterSpacing: "0.05em" }}>II. PENYIAPAN BAHAN (FROM WAREHOUSE)</h3>
-          <Link href="/warehouse" style={{ 
-            background: "#EFF6FF", color: "#2563EB", border: "1px solid #BFDBFE", 
-            padding: "6px 16px", borderRadius: "99px", fontSize: "11px", fontWeight: 950, 
-            display: "flex", alignItems: "center", gap: "6px", textDecoration: "none" 
-          }}>
-            MONITORING GUDANG
-          </Link>
-        </div>
-        <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>WORK ORDER / PRODUK</th>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>STATUS PICKING</th>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>KELENGKAPAN</th>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "right", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>ESTIMASI KIRIM</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { wo: "WO-2024-088", product: "Day Cream Gold", status: "IN PROGRESS", progress: 65, color: "#3B82F6", time: "14:00 Today" },
-                { wo: "WO-2024-089", product: "Night Serum", status: "WAITING", progress: 0, color: "#94A3B8", time: "16:30 Today" },
-                { wo: "WO-2024-090", product: "Facial Wash", status: "READY", progress: 100, color: "#10B981", time: "READY" },
-              ].map((row, i) => (
-                <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                  <td style={{ padding: "1.5rem 2rem" }}>
-                    <div style={{ fontSize: "14px", fontWeight: 950, color: "#0F172A" }}>{row.wo}</div>
-                    <div style={{ fontSize: "11px", color: "#64748B", fontWeight: 500 }}>{row.product}</div>
-                  </td>
-                  <td style={{ padding: "1.5rem 2rem", textAlign: "center" }}>
-                    <span style={{ fontSize: "10px", fontWeight: 950, color: row.color }}>{row.status}</span>
-                  </td>
-                  <td style={{ padding: "1.5rem 2rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <div style={{ flex: 1, height: "6px", background: "#F1F5F9", borderRadius: "3px", overflow: "hidden" }}>
-                        <div style={{ width: `${row.progress}%`, height: "100%", background: row.color }} />
-                      </div>
-                      <span style={{ fontSize: "11px", fontWeight: 950, color: "#0F172A", minWidth: "35px" }}>{row.progress}%</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: "1.5rem 2rem", textAlign: "right" }}>
-                    <span style={{ fontSize: "12px", fontWeight: 950, color: row.time === "READY" ? "#10B981" : "#1E293B" }}>{row.time}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* 🧪 III. ALUR MIKRO INTERNAL (DIAGNOSA LANTAI PABRIK) */}
-      <div style={{ marginBottom: "4rem" }}>
-        <h3 style={{ marginBottom: "1.5rem", fontSize: "13px", fontWeight: 950, color: "#64748B", letterSpacing: "0.05em" }}>III. ALUR MIKRO INTERNAL (DIAGNOSA LANTAI PABRIK)</h3>
-        <div style={{ background: "white", padding: "2.5rem", borderRadius: "32px", border: "1px solid #F1F5F9", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          {[
-            { label: "ANTREAN WO", val: "1", sub: "BATCHES", icon: "ClipboardList" },
-            { label: "MIXING", val: "2", sub: "BATCHES", icon: "Workflow" },
-            { label: "FILLING", val: "1", sub: "BATCHES", icon: "Pipette" },
-            { label: "PACKING", val: "1", sub: "BATCHES", icon: "Package" },
-            { label: "FINISHED GOODS", val: "3,000", sub: "PCS", icon: "CheckCircle2" },
-          ].map((item, i, arr) => (
-            <React.Fragment key={i}>
-              <div style={{ 
-                width: "180px", padding: "1.5rem", borderRadius: "16px", border: "1px solid #F1F5F9", 
-                background: "white", textAlign: "center", position: "relative",
-                boxShadow: "0 4px 15px -5px rgba(0,0,0,0.05)"
-              }}>
-                <p style={{ fontSize: "11px", fontWeight: 800, color: "#94A3B8", marginBottom: "8px", margin: 0 }}>{item.label}</p>
-                <p style={{ fontSize: "28px", fontWeight: 950, color: "#1E293B", margin: "4px 0" }}>{item.val}</p>
-                <p style={{ fontSize: "10px", fontWeight: 900, color: "#94A3B8", margin: 0 }}>{item.sub}</p>
+            {/* 🎯 1. PRODUCTION OUTPUT */}
+            <div style={cardStyle}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+                <Icon name="Target" size={16} color="#3B82F6" />
+                <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>A. OUTPUT & ACHIEVEMENT</p>
               </div>
-              {i < arr.length - 1 && (
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-                  <span style={{ fontSize: "10px", fontWeight: 950, color: i % 2 === 0 ? "#E11D48" : "#94A3B8", background: i % 2 === 0 ? "#FFF1F2" : "#F8FAFC", padding: "2px 8px", borderRadius: "4px" }}>
-                    {i === 0 ? "IDLE: 13h" : (i === 1 ? "WAIT: 0.2d" : "IDLE: 14h")}
+              <div style={{ textAlign: "center", marginBottom: "1.25rem" }}>
+                <p style={{ fontSize: "28px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+                  {achievement ? `${achievement.rate.toFixed(1)}%` : "—"}
+                </p>
+                <p style={{ fontSize: "9px", fontWeight: 850, color: "#64748B", margin: 0 }}>ACHIEVEMENT RATE</p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>PLANNED</span>
+                  <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>
+                    {achievement ? `${achievement.planned.toLocaleString("id-ID")} Units` : "—"}
                   </span>
-                  <Icon name="ArrowRight" size={20} color={i % 2 === 0 ? "#EF4444" : "#CBD5E1"} />
                 </div>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>ACTUAL</span>
+                  <span style={{ fontSize: "12px", fontWeight: 950, color: "#10B981" }}>
+                    {achievement ? `${achievement.actual.toLocaleString("id-ID")} Units` : "—"}
+                  </span>
+                </div>
+                <div style={{ background: "#F8FAFC", padding: "8px", borderRadius: "10px", border: "1px solid #E2E8F0", marginTop: "4px" }}>
+                  <p style={{ fontSize: "8px", fontWeight: 850, color: "#64748B", margin: 0 }}>COMPLETED ORDERS</p>
+                  <p style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+                    {achievement ? `${achievement.completedOrders} / ${achievement.totalOrders}` : "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-      {/* 📊 IV. TABEL AUDIT HASIL PRODUKSI (PRECISION PCS TRACKING) */}
-      <div style={{ marginBottom: "4rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-          <h3 style={{ margin: 0, fontSize: "13px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>IV. TABEL AUDIT HASIL PRODUKSI (PRECISION PCS TRACKING)</h3>
-          <span style={{ background: "#4F46E5", color: "white", padding: "4px 12px", borderRadius: "99px", fontSize: "10px", fontWeight: 950 }}>CHAIN OF CUSTODY</span>
-        </div>
-        <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#4F46E5" }}>DEADLINE (H-MINUS)</th>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#4F46E5" }}>PRODUCT ID / NAME</th>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#4F46E5" }}>CHAIN OF CUSTODY (UNIT FLOW)</th>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#4F46E5" }}>ANOMALY STATUS</th>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "right", fontSize: "10px", fontWeight: 950, color: "#4F46E5" }}>STATUS & REASON</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { date: "2026-04-05", h: "Sisa 5 Hari", id: "WO-2824-001", name: "Serum Vitamin C Complex", steps: [1010, 1000, 990, 990], activeIdx: 4, anomaly: "HILANG: 20 UNIT", anomalyColor: "#E11D48", status: "FINISHED", sub: "100%", reason: '"Ada 10 unit hilang dipindah Filling ke Packing."', color: "#10B981" },
-                { date: "2026-04-02", h: "Sisa 2 Hari", id: "WO-2824-002", name: "Night Cream Retinol 2%", hColor: "#E11D48", steps: [1250, 850, 850, 850], activeIdx: 4, anomaly: "REJECT: 400 UNIT", anomalyColor: "#F59E0B", status: "FINISHED", sub: "100%", reason: '"Reject 400 unit di Mixing tank (kontaminasi)."', color: "#10B981" },
-                { date: "2026-04-10", h: "Sisa 10 Hari", id: "WO-2824-003", name: "Sunscreen SPF 50 PA+++", steps: [5200, 0, 0, 0], activeIdx: 1, anomaly: "PROSES MIXING", anomalyColor: "#D1FAE5", anomalyTextColor: "#059669", status: "MIXING", sub: "25%", reason: '"Stuck - Sedang menunggu kiriman Fragrance."', color: "#3B82F6" },
-                { date: "2026-04-08", h: "Sisa 8 Hari", id: "WO-2824-004", name: "Hydrating Rose Toner", steps: [2500, 2480, 0, 0], activeIdx: 2, anomaly: "PROSES FILLING", anomalyColor: "#D1FAE5", anomalyTextColor: "#059669", status: "FILLING", sub: "50%", reason: '"Sedang running di mesin Filling B."', color: "#3B82F6" },
-                { date: "2026-04-07", h: "Sisa 7 Hari", id: "WO-2824-005", name: "Brightening Body Lotion", steps: [3050, 3000, 2980, 0], activeIdx: 3, anomaly: "PROSES PACKING", anomalyColor: "#D1FAE5", anomalyTextColor: "#059669", status: "PACKING", sub: "75%", reason: '"Koding batch sedang berlangsung."', color: "#3B82F6" },
-              ].map((row, i) => (
-                <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                  <td style={{ padding: "1.5rem 2rem" }}>
-                    <div style={{ fontSize: "13px", fontWeight: 950, color: "#0F172A" }}>{row.date}</div>
-                    <span style={{ fontSize: "9px", fontWeight: 900, color: row.hColor || "#64748B", background: row.hColor ? "#FFF1F2" : "#F8FAFC", padding: "2px 8px", borderRadius: "4px" }}>{row.h}</span>
-                  </td>
-                  <td style={{ padding: "1.5rem 2rem" }}>
-                    <div style={{ fontSize: "14px", fontWeight: 950, color: "#0F172A" }}>{row.name}</div>
-                    <div style={{ fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>{row.id}</div>
-                  </td>
-                  <td style={{ padding: "1.5rem 2rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {["MIXING", "FILLING", "PACKING", "FINISH"].map((step, sIdx) => (
-                        <div key={sIdx} style={{ display: "flex", alignItems: "center" }}>
-                          <div style={{ textAlign: "center", width: "60px" }}>
-                            <div style={{ 
-                              width: "32px", height: "32px", borderRadius: "50%", border: "1px solid #E2E8F0", 
-                              margin: "0 auto 6px", display: "flex", alignItems: "center", justifyContent: "center",
-                              background: (sIdx + 1) === row.activeIdx ? "#4F46E5" : ((sIdx + 1) < row.activeIdx ? "#EEF2FF" : "white"),
-                              color: (sIdx + 1) === row.activeIdx ? "white" : ((sIdx + 1) < row.activeIdx ? "#4F46E5" : "#94A3B8")
-                            }}>
-                              {(sIdx + 1) < row.activeIdx ? <Icon name="Check" size={14} /> : (sIdx + 1)}
+            {/* ⏱️ 2. TIMELINESS */}
+            <div style={cardStyle}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+                <Icon name="Clock" size={16} color="#EAB308" />
+                <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>B. TIMELINESS AUDIT</p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>ON-TIME RATE</span>
+                  <span style={{ fontSize: "12px", fontWeight: 950, color: "#EAB308" }}>
+                    {timeliness ? `${timeliness.rate}%` : "—"}
+                  </span>
+                </div>
+                <div style={{ height: "6px", background: "#F1F5F9", borderRadius: "3px", overflow: "hidden" }}>
+                  <div style={{ width: `${Math.min(100, Number(timeliness?.rate ?? 0))}%`, height: "100%", background: "#EAB308" }} />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                  <div style={{ background: "#FFF1F2", padding: "8px", borderRadius: "10px" }}>
+                    <p style={{ fontSize: "7px", fontWeight: 850, color: "#EF4444", margin: 0 }}>DELAYED</p>
+                    <p style={{ fontSize: "12px", fontWeight: 950, color: "#E11D48", margin: 0 }}>
+                      {timeliness ? timeliness.delayed : "—"}
+                    </p>
+                  </div>
+                  <div style={{ background: "#F0FDF4", padding: "8px", borderRadius: "10px" }}>
+                    <p style={{ fontSize: "7px", fontWeight: 850, color: "#166534", margin: 0 }}>AVG CYCLE</p>
+                    <p style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B", margin: 0 }}>
+                      {timeliness ? `${timeliness.avgCycleHours}h` : "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ⚙️ 3. EFFICIENCY */}
+            <div style={cardStyle}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+                <Icon name="Cpu" size={16} color="#8B5CF6" />
+                <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>C. RESOURCE EFFICIENCY</p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>MACHINE UTIL.</span>
+                  <span style={{ fontSize: "12px", fontWeight: 950, color: "#8B5CF6" }}>
+                    {efficiency ? `${efficiency.utilization}%` : "—"}
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748B" }}>LABOR PROD.</span>
+                  <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>
+                    {efficiency ? `${efficiency.labor}%` : "—"}
+                  </span>
+                </div>
+                <div style={{ background: "#FFF7ED", padding: "10px", borderRadius: "12px", border: "1px solid #FFEDD5", marginTop: "4px" }}>
+                  <p style={{ fontSize: "8px", fontWeight: 850, color: "#C2410C", margin: 0 }}>DOWNTIME (MTD)</p>
+                  <p style={{ fontSize: "14px", fontWeight: 950, color: "#EA580C", margin: "2px 0 0 0" }}>
+                    {efficiency ? `${efficiency.downtime}` : "—"}
+                  </p>
+                </div>
+                <p style={{ fontSize: "8px", color: "#94A3B8", margin: 0, fontStyle: "italic" }}>
+                  Utilisasi & labor masih baseline backend, belum dari OEE mesin.
+                </p>
+              </div>
+            </div>
+
+            {/* 🧪 4. QUALITY */}
+            <div style={cardStyle}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+                <Icon name="Beaker" size={16} color="#10B981" />
+                <p style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em", margin: 0 }}>D. QUALITY CONTROL</p>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                <div>
+                  <p style={{ fontSize: "10px", fontWeight: 800, color: "#64748B", margin: 0 }}>GOOD UNITS</p>
+                  <p style={{ fontSize: "18px", fontWeight: 950, color: "#10B981", margin: 0 }}>
+                    {quality ? quality.goodUnits.toLocaleString("id-ID") : "—"}
+                  </p>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <p style={{ fontSize: "10px", fontWeight: 800, color: "#64748B", margin: 0 }}>DEFECT RATE</p>
+                  <p style={{ fontSize: "18px", fontWeight: 950, color: "#EF4444", margin: 0 }}>
+                    {quality ? `${quality.defectRate}%` : "—"}
+                  </p>
+                </div>
+              </div>
+              <div style={{ background: "#F1F5F9", height: "6px", borderRadius: "3px", overflow: "hidden", display: "flex" }}>
+                <div style={{ width: `${Math.max(0, 100 - Number(quality?.defectRate ?? 0))}%`, height: "100%", background: "#10B981" }} />
+                <div style={{ width: `${Math.min(100, Number(quality?.defectRate ?? 0))}%`, height: "100%", background: "#EF4444" }} />
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
+                <span style={{ fontSize: "10px", fontWeight: 850, color: "#64748B" }}>REWORK COUNT</span>
+                <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>
+                  {quality ? `${quality.reworkCount} Pcs` : "—"}
+                </span>
+              </div>
+            </div>
+
+            {/* ⚠️ 5. RISK ALERT */}
+            <div style={{ ...cardStyle, background: "#FFF1F2", border: "1px solid #FECDD3" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
+                <Icon name="ShieldAlert" size={16} color="#E11D48" />
+                <p style={{ fontSize: "11px", fontWeight: 950, color: "#9F1239", letterSpacing: "0.05em", margin: 0 }}>E. CRITICAL ALERTS</p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", background: "white", padding: "8px 12px", borderRadius: "10px", border: "1px solid #FECDD3" }}>
+                  <span style={{ fontSize: "9px", fontWeight: 900, color: "#E11D48" }}>BREAKDOWNS</span>
+                  <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{alerts ? alerts.breakdown : "—"}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", background: "white", padding: "8px 12px", borderRadius: "10px", border: "1px solid #FECDD3" }}>
+                  <span style={{ fontSize: "9px", fontWeight: 900, color: "#EF4444" }}>SHORTAGES</span>
+                  <span style={{ fontSize: "12px", fontWeight: 950, color: "#1E293B" }}>{alerts ? alerts.shortages : "—"}</span>
+                </div>
+                <div style={{ background: "#9F1239", padding: "8px 12px", borderRadius: "10px", marginTop: "2px" }}>
+                  <p style={{ fontSize: "8px", fontWeight: 950, color: "#ffffff", margin: 0, opacity: 0.9 }}>ANOMALI TERDETEKSI</p>
+                  <p style={{ fontSize: "10px", fontWeight: 950, color: "#ffffff", margin: 0 }}>
+                    {alerts ? `${alerts.urgent} LOG REJECT > 5%` : "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* 📦 II. PENYIAPAN BAHAN (FROM WAREHOUSE) */}
+          <div style={{ marginBottom: "3.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <h3 style={{ margin: 0, fontSize: "13px", fontWeight: 950, color: "#64748B", letterSpacing: "0.05em" }}>II. PENYIAPAN BAHAN (FROM WAREHOUSE)</h3>
+              <Link href="/warehouse" style={{
+                background: "#EFF6FF", color: "#2563EB", border: "1px solid #BFDBFE",
+                padding: "6px 16px", borderRadius: "99px", fontSize: "11px", fontWeight: 950,
+                display: "flex", alignItems: "center", gap: "6px", textDecoration: "none"
+              }}>
+                MONITORING GUDANG
+              </Link>
+            </div>
+            <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+              {preparation.isLoading ? (
+                <DnaLoadingSkeleton rows={3} />
+              ) : preparation.isError ? (
+                <DnaErrorState
+                  title="Gagal Memuat Penyiapan Bahan"
+                  message="Tidak dapat mengambil data picking dari server."
+                  onRetry={() => preparation.refetch()}
+                />
+              ) : (preparation.data ?? []).length === 0 ? (
+                <DnaEmptyState
+                  title="Tidak Ada Work Order Menunggu Bahan"
+                  description="Belum ada work order berstatus WAITING_MATERIAL pada sistem."
+                />
+              ) : (
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                      <DnaTh style={{ ...thStyle, textAlign: "left" }}>WORK ORDER / PRODUK</DnaTh>
+                      <DnaTh style={{ ...thStyle, textAlign: "center" }}>STATUS PICKING</DnaTh>
+                      <DnaTh style={{ ...thStyle, textAlign: "center" }}>KELENGKAPAN</DnaTh>
+                      <DnaTh style={{ ...thStyle, textAlign: "right" }}>ESTIMASI KIRIM</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
+                    {(preparation.data ?? []).map((row) => {
+                      const color =
+                        row.status === "READY" ? "#10B981" : row.status === "PICKING" ? "#3B82F6" : "#94A3B8";
+                      return (
+                        <DnaTableRow key={row.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                          <DnaTd style={tdStyle}>
+                            <div style={{ fontSize: "14px", fontWeight: 950, color: "#0F172A" }}>{row.woNumber}</div>
+                            <div style={{ fontSize: "11px", color: "#64748B", fontWeight: 500 }}>{row.productName}</div>
+                          </DnaTd>
+                          <DnaTd style={{ ...tdStyle, textAlign: "center" }}>
+                            <span style={{ fontSize: "10px", fontWeight: 950, color }}>{row.status}</span>
+                          </DnaTd>
+                          <DnaTd style={tdStyle}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                              <div style={{ flex: 1, height: "6px", background: "#F1F5F9", borderRadius: "3px", overflow: "hidden" }}>
+                                <div style={{ width: `${Math.min(100, Number(row.completeness || 0))}%`, height: "100%", background: color }} />
+                              </div>
+                              <span style={{ fontSize: "11px", fontWeight: 950, color: "#0F172A", minWidth: "45px" }}>{row.completeness}%</span>
                             </div>
-                            <p style={{ fontSize: "8px", fontWeight: 950, color: "#1E293B", margin: 0 }}>{step}</p>
-                            <p style={{ fontSize: "9px", fontWeight: 950, color: (sIdx+1) <= row.activeIdx ? "#4F46E5" : "#94A3B8", margin: 0 }}>{row.steps[sIdx] || "-"}</p>
-                          </div>
-                          {sIdx < 3 && <div style={{ width: "40px", height: "2px", background: (sIdx + 1) < row.activeIdx ? "#4F46E5" : "#F1F5F9", marginTop: "-20px" }} />}
+                          </DnaTd>
+                          <DnaTd style={{ ...tdStyle, textAlign: "right" }}>
+                            <div style={{ fontSize: "12px", fontWeight: 950, color: row.status === "READY" ? "#10B981" : "#1E293B" }}>
+                              {row.status === "READY" ? "READY" : new Date(row.estimatedDelivery).toLocaleDateString("id-ID")}
+                            </div>
+                            <div style={{ fontSize: "10px", color: row.diffDays < 0 ? "#E11D48" : "#94A3B8" }}>
+                              {row.diffDays < 0 ? `LEWAT ${Math.abs(row.diffDays)} HARI` : `H-${row.diffDays}`}
+                            </div>
+                          </DnaTd>
+                        </DnaTableRow>
+                      );
+                    })}
+                  </DnaTableBody>
+                </DnaTable>
+              )}
+            </div>
+          </div>
+
+          {/* 🧪 III. ALUR MIKRO INTERNAL (DIAGNOSA LANTAI PABRIK) */}
+          <div style={{ marginBottom: "4rem" }}>
+            <h3 style={{ marginBottom: "1.5rem", fontSize: "13px", fontWeight: 950, color: "#64748B", letterSpacing: "0.05em" }}>III. ALUR MIKRO INTERNAL (DIAGNOSA LANTAI PABRIK)</h3>
+            {microFlow.isLoading ? (
+              <DnaLoadingSkeleton rows={2} />
+            ) : microFlow.isError ? (
+              <DnaErrorState
+                title="Gagal Memuat Alur Mikro"
+                message="Tidak dapat mengambil diagnostik lantai pabrik."
+                onRetry={() => microFlow.refetch()}
+              />
+            ) : (microFlow.data ?? []).length === 0 ? (
+              <DnaEmptyState title="Belum Ada Alur Aktif" description="Tidak ada work order aktif di lantai produksi." />
+            ) : (
+              <div style={{ background: "white", padding: "2.5rem", borderRadius: "32px", border: "1px solid #F1F5F9", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                {(microFlow.data ?? []).map((item, i, arr) => {
+                  const icons: Record<string, string> = {
+                    WAITING_MATERIAL: "ClipboardList",
+                    MIXING: "Workflow",
+                    FILLING: "Pipette",
+                    PACKING: "Package",
+                  };
+                  const heatColor =
+                    item.heat === "CRITICAL" ? "#E11D48" : item.heat === "BUSY" ? "#EAB308" : "#94A3B8";
+                  return (
+                    <React.Fragment key={item.stage}>
+                      <div style={{
+                        width: "180px", padding: "1.5rem", borderRadius: "16px", border: "1px solid #F1F5F9",
+                        background: "white", textAlign: "center", position: "relative",
+                        boxShadow: "0 4px 15px -5px rgba(0,0,0,0.05)"
+                      }}>
+                        <p style={{ fontSize: "11px", fontWeight: 800, color: "#94A3B8", marginBottom: "8px", margin: 0 }}>
+                          {item.stage.replace("_", " ")}
+                        </p>
+                        <p style={{ fontSize: "28px", fontWeight: 950, color: "#1E293B", margin: "4px 0" }}>{item.batchCount}</p>
+                        <p style={{ fontSize: "10px", fontWeight: 900, color: "#94A3B8", margin: 0 }}>
+                          {item.totalUnits.toLocaleString("id-ID")} UNIT
+                        </p>
+                        <p style={{ fontSize: "9px", fontWeight: 900, color: heatColor, margin: "4px 0 0 0" }}>{item.heat}</p>
+                      </div>
+                      {i < arr.length - 1 && (
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontSize: "10px", fontWeight: 950, color: heatColor, background: item.heat === "CRITICAL" ? "#FFF1F2" : "#F8FAFC", padding: "2px 8px", borderRadius: "4px" }}>
+                            WAIT: {item.waitTime}
+                          </span>
+                          <Icon name="ArrowRight" size={20} color={item.heat === "CRITICAL" ? "#EF4444" : "#CBD5E1"} />
                         </div>
-                      ))}
-                    </div>
-                  </td>
-                  <td style={{ padding: "1.5rem 2rem", textAlign: "center" }}>
-                    <span style={{ 
-                      background: row.anomalyColor, color: row.anomalyTextColor || "white", 
-                      padding: "8px 16px", borderRadius: "20px", fontSize: "10px", fontWeight: 950,
-                      boxShadow: row.anomalyTextColor ? "none" : "0 4px 12px -2px rgba(225,29,72,0.2)"
-                    }}>{row.anomaly}</span>
-                  </td>
-                  <td style={{ padding: "1.5rem 2rem", textAlign: "right" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px", marginBottom: "4px" }}>
-                      <span style={{ fontSize: "11px", fontWeight: 950, color: row.color }}>{row.status}</span>
-                      <span style={{ fontSize: "11px", fontWeight: 800, color: "#94A3B8" }}>{row.sub}</span>
-                    </div>
-                    <div style={{ fontSize: "11px", color: "#64748B", fontStyle: "italic", maxWidth: "180px", marginLeft: "auto" }}>{row.reason}</div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            )}
+            <p style={{ fontSize: "10px", color: "#94A3B8", marginTop: "10px", fontStyle: "italic" }}>
+              Catatan: nilai wait time masih estimasi kasar dari backend (bukan selisih waktu antar tahap sebenarnya).
+            </p>
+          </div>
 
-      {/* 🧪 V. DAFTAR GRANULAR (AUDIT BATCH PRODUKSI) */}
-      <div style={{ marginBottom: "4rem" }}>
-        <h3 style={{ marginBottom: "1.5rem", fontSize: "13px", fontWeight: 950, color: "#64748B", letterSpacing: "0.05em" }}>V. DAFTAR GRANULAR (AUDIT BATCH PRODUKSI)</h3>
-        <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>NO. WORK ORDER</th>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "left", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>NAMA KLIEN & PRODUK</th>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>TAHAPAN SAAT INI</th>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>ESTIMASI SELESAI</th>
-                <th style={{ padding: "1.25rem 2rem", textAlign: "right", fontSize: "10px", fontWeight: 950, color: "#94A3B8" }}>QTY DEFECT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { wo: "WO-2026-03-01", client: "PT. GlowUp - Brightening Serum 20ml", stage: "FILLING", time: "2026-03-30", defect: 0 },
-                { wo: "WO-2026-03-02", client: "CV. Beauty - Acne Toner 100ml", stage: "PACKING & KODING", time: "2026-03-28", defect: 125, color: "#E11D48" },
-                { wo: "WO-2026-03-03", client: "Klinik Dr. A - Sunscreen SPF 50", stage: "MIXING", time: "2026-04-02", defect: 0 },
-                { wo: "WO-2026-03-04", client: "PT. Naturals - Body Lotion 250ml", stage: "ANTREAN WO", time: "2026-04-05", defect: 0, stageColor: "#E11D48" },
-                { wo: "WO-2026-03-05", client: "Klinik Dr. B - Night Cream 15g", stage: "FINISHED GOODS", time: "2026-03-29", defect: 10, color: "#E11D48" },
-              ].map((row, i) => (
-                <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                  <td style={{ padding: "1.25rem 2rem", fontSize: "12px", fontWeight: 800, color: "#94A3B8" }}>{row.wo}</td>
-                  <td style={{ padding: "1.25rem 2rem" }}>
-                    <div style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B" }}>{row.client}</div>
-                  </td>
-                  <td style={{ padding: "1.25rem 2rem", textAlign: "center" }}>
-                    <span style={{ 
-                      background: row.stageColor || "#F1F5F9", color: row.stageColor ? "white" : "#1E293B", 
-                      padding: "6px 14px", borderRadius: "99px", fontSize: "10px", fontWeight: 950 
-                    }}>{row.stage}</span>
-                  </td>
-                  <td style={{ padding: "1.25rem 2rem", textAlign: "center", fontSize: "13px", fontWeight: 800, color: "#1E293B" }}>{row.time}</td>
-                  <td style={{ padding: "1.25rem 2rem", textAlign: "right" }}>
-                    <span style={{ fontSize: "13px", fontWeight: 950, color: row.defect > 0 ? "#E11D48" : "#10B981" }}>{row.defect} Pcs</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+          {/* 📊 IV. TABEL AUDIT HASIL PRODUKSI (PRECISION PCS TRACKING) */}
+          <div style={{ marginBottom: "4rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <h3 style={{ margin: 0, fontSize: "13px", fontWeight: 950, color: "#1E293B", letterSpacing: "0.05em" }}>IV. TABEL AUDIT HASIL PRODUKSI (PRECISION PCS TRACKING)</h3>
+              <span style={{ background: "#4F46E5", color: "white", padding: "4px 12px", borderRadius: "99px", fontSize: "10px", fontWeight: 950 }}>CHAIN OF CUSTODY</span>
+            </div>
+            <div style={{ background: "white", borderRadius: "32px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+              {precision.length === 0 ? (
+                <DnaEmptyState
+                  title="Belum Ada Log Produksi Bulan Ini"
+                  description="Tidak ada production log yang tercatat pada periode month-to-date."
+                />
+              ) : (
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                      <DnaTh style={{ ...thStyle, textAlign: "left", color: "#4F46E5" }}>DEADLINE (H-MINUS)</DnaTh>
+                      <DnaTh style={{ ...thStyle, textAlign: "left", color: "#4F46E5" }}>PRODUCT ID / NAME</DnaTh>
+                      <DnaTh style={{ ...thStyle, textAlign: "center", color: "#4F46E5" }}>UNIT FLOW (IN &gt;&gt; GOOD)</DnaTh>
+                      <DnaTh style={{ ...thStyle, textAlign: "center", color: "#4F46E5" }}>ANOMALY STATUS</DnaTh>
+                      <DnaTh style={{ ...thStyle, textAlign: "right", color: "#4F46E5" }}>TAHAP</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
+                    {precision.map((row, i) => (
+                      <DnaTableRow key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                        <DnaTd style={tdStyle}>
+                          <div style={{ fontSize: "13px", fontWeight: 950, color: "#0F172A" }}>
+                            {row.deadline < 0 ? `LEWAT ${Math.abs(row.deadline)} HARI` : `H-${row.deadline}`}
+                          </div>
+                        </DnaTd>
+                        <DnaTd style={tdStyle}>
+                          <div style={{ fontSize: "14px", fontWeight: 950, color: "#0F172A" }}>{row.productName}</div>
+                          <div style={{ fontSize: "9px", fontWeight: 800, color: "#94A3B8" }}>{row.batchId}</div>
+                        </DnaTd>
+                        <DnaTd style={{ ...tdStyle, textAlign: "center" }}>
+                          <span style={{ fontSize: "12px", fontWeight: 950, color: "#4F46E5", background: "#EEF2FF", padding: "4px 12px", borderRadius: "8px" }}>
+                            {row.unitFlow}
+                          </span>
+                        </DnaTd>
+                        <DnaTd style={{ ...tdStyle, textAlign: "center" }}>
+                          <DnaBadge variant={row.anomaly === "DEFECT_DETECTED" ? "critical" : "success"}>
+                            {row.anomaly}
+                          </DnaBadge>
+                        </DnaTd>
+                        <DnaTd style={{ ...tdStyle, textAlign: "right" }}>
+                          <span style={{ fontSize: "11px", fontWeight: 950, color: "#4F46E5" }}>{row.status}</span>
+                        </DnaTd>
+                      </DnaTableRow>
+                    ))}
+                  </DnaTableBody>
+                </DnaTable>
+              )}
+            </div>
+          </div>
 
+          {/* 🧪 V. DAFTAR GRANULAR (AUDIT BATCH PRODUKSI) */}
+          <div style={{ marginBottom: "4rem" }}>
+            <h3 style={{ marginBottom: "1.5rem", fontSize: "13px", fontWeight: 950, color: "#64748B", letterSpacing: "0.05em" }}>V. DAFTAR GRANULAR (AUDIT BATCH PRODUKSI)</h3>
+            <div style={{ background: "white", borderRadius: "24px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+              {granular.isLoading ? (
+                <DnaLoadingSkeleton rows={4} />
+              ) : granular.isError ? (
+                <DnaErrorState
+                  title="Gagal Memuat Audit Batch"
+                  message="Tidak dapat mengambil audit granular batch produksi."
+                  onRetry={() => granular.refetch()}
+                />
+              ) : (granular.data ?? []).length === 0 ? (
+                <DnaEmptyState
+                  title="Belum Ada Work Order Aktif"
+                  description="Tidak ada work order berjalan untuk diaudit saat ini."
+                />
+              ) : (
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                      <DnaTh style={{ ...thStyle, textAlign: "left" }}>NO. WORK ORDER</DnaTh>
+                      <DnaTh style={{ ...thStyle, textAlign: "left" }}>NAMA KLIEN &amp; PRODUK</DnaTh>
+                      <DnaTh style={{ ...thStyle, textAlign: "center" }}>TAHAPAN SAAT INI</DnaTh>
+                      <DnaTh style={{ ...thStyle, textAlign: "center" }}>ESTIMASI SELESAI</DnaTh>
+                      <DnaTh style={{ ...thStyle, textAlign: "right" }}>QTY DEFECT</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
+                    {(granular.data ?? []).map((row) => (
+                      <DnaTableRow key={row.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                        <DnaTd style={{ ...tdStyle, padding: "1.25rem 2rem", fontSize: "12px", fontWeight: 800, color: "#94A3B8" }}>
+                          {row.woNumber}
+                        </DnaTd>
+                        <DnaTd style={{ ...tdStyle, padding: "1.25rem 2rem" }}>
+                          <div style={{ fontSize: "14px", fontWeight: 950, color: "#1E293B" }}>{row.clientName}</div>
+                          <div style={{ fontSize: "11px", color: "#64748B" }}>{row.productName}</div>
+                        </DnaTd>
+                        <DnaTd style={{ ...tdStyle, padding: "1.25rem 2rem", textAlign: "center" }}>
+                          <span style={{
+                            background: row.healthScore === "ANOMALY" ? "#E11D48" : "#F1F5F9",
+                            color: row.healthScore === "ANOMALY" ? "white" : "#1E293B",
+                            padding: "6px 14px", borderRadius: "99px", fontSize: "10px", fontWeight: 950
+                          }}>{row.currentStage}</span>
+                        </DnaTd>
+                        <DnaTd style={{ ...tdStyle, padding: "1.25rem 2rem", textAlign: "center" }}>
+                          <div style={{ fontSize: "13px", fontWeight: 800, color: "#1E293B" }}>
+                            {new Date(row.estCompletion).toLocaleDateString("id-ID")}
+                          </div>
+                          <div style={{ fontSize: "10px", fontWeight: 900, color: row.healthScore === "ANOMALY" ? "#E11D48" : "#64748B" }}>
+                            {row.deadlineHeader}
+                          </div>
+                        </DnaTd>
+                        <DnaTd style={{ ...tdStyle, padding: "1.25rem 2rem", textAlign: "right" }}>
+                          <span style={{ fontSize: "13px", fontWeight: 950, color: row.qtyDefect > 0 ? "#E11D48" : "#10B981" }}>
+                            {row.qtyDefect} Pcs
+                          </span>
+                        </DnaTd>
+                      </DnaTableRow>
+                    ))}
+                  </DnaTableBody>
+                </DnaTable>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </DashboardShell>
   );
 }

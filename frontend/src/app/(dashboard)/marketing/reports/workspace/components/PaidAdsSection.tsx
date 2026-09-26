@@ -1,3 +1,11 @@
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import React, { useState } from 'react';
 import { 
   TrendingUp, 
@@ -220,37 +228,37 @@ export const PaidAdsSection: React.FC<PaidAdsSectionProps> = ({
 
             {/* CREATIVE PERFORMANCE TABLE */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                    <th className="py-3 px-3">Creative Name & Hook</th>
-                    <th className="py-3 px-3">Format & Angle</th>
-                    <th className="py-3 px-3 text-right">Spend</th>
-                    <th className="py-3 px-3 text-center">Hook Rate (3s)</th>
-                    <th className="py-3 px-3 text-center">CTR</th>
-                    <th className="py-3 px-3 text-right text-blue-700">Leads</th>
-                    <th className="py-3 px-3 text-right text-emerald-700">Cost / Lead (CPL)</th>
-                    <th className="py-3 px-3 text-center">Status</th>
-                    <th className="py-3 px-3">Action Recommendation</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    <DnaTh className="py-3 px-3">Creative Name & Hook</DnaTh>
+                    <DnaTh className="py-3 px-3">Format & Angle</DnaTh>
+                    <DnaTh className="py-3 px-3 text-right">Spend</DnaTh>
+                    <DnaTh className="py-3 px-3 text-center">Hook Rate (3s)</DnaTh>
+                    <DnaTh className="py-3 px-3 text-center">CTR</DnaTh>
+                    <DnaTh className="py-3 px-3 text-right text-blue-700">Leads</DnaTh>
+                    <DnaTh className="py-3 px-3 text-right text-emerald-700">Cost / Lead (CPL)</DnaTh>
+                    <DnaTh className="py-3 px-3 text-center">Status</DnaTh>
+                    <DnaTh className="py-3 px-3">Action Recommendation</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {filteredCreatives.map(creative => (
-                    <tr key={creative.id} className="hover:bg-slate-50/70 transition">
-                      <td className="py-3.5 px-3 max-w-xs">
+                    <DnaTableRow key={creative.id} className="hover:bg-slate-50/70 transition">
+                      <DnaTd className="py-3.5 px-3 max-w-xs">
                         <div className="font-bold text-slate-900">{creative.creativeName}</div>
                         <div className="text-[11px] text-indigo-700 font-medium italic mt-0.5">
                           &ldquo;{creative.hook}&rdquo;
                         </div>
-                      </td>
-                      <td className="py-3.5 px-3">
+                      </DnaTd>
+                      <DnaTd className="py-3.5 px-3">
                         <div className="font-semibold text-slate-800">{creative.format}</div>
                         <div className="text-[10px] text-slate-500 mt-0.5">{creative.visualAngle}</div>
-                      </td>
-                      <td className="py-3.5 px-3 text-right font-medium text-slate-700 whitespace-nowrap">
+                      </DnaTd>
+                      <DnaTd className="py-3.5 px-3 text-right font-medium text-slate-700 whitespace-nowrap">
                         {formatRupiah(creative.spend)}
-                      </td>
-                      <td className="py-3.5 px-3 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3.5 px-3 text-center">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                           creative.hookRate >= 40
                             ? 'bg-emerald-100 text-emerald-800'
@@ -260,11 +268,11 @@ export const PaidAdsSection: React.FC<PaidAdsSectionProps> = ({
                         }`}>
                           {creative.hookRate}%
                         </span>
-                      </td>
-                      <td className="py-3.5 px-3 text-center font-medium text-slate-700">
+                      </DnaTd>
+                      <DnaTd className="py-3.5 px-3 text-center font-medium text-slate-700">
                         {creative.ctr}%
-                      </td>
-                      <td className="py-3.5 px-3 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3.5 px-3 text-right">
                         <div className="inline-flex items-center gap-1 font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
                           +{creative.leadsContributed}
                         </div>
@@ -273,11 +281,11 @@ export const PaidAdsSection: React.FC<PaidAdsSectionProps> = ({
                             +{creative.sampleRequests} samples
                           </div>
                         )}
-                      </td>
-                      <td className="py-3.5 px-3 text-right font-bold text-emerald-800 whitespace-nowrap">
+                      </DnaTd>
+                      <DnaTd className="py-3.5 px-3 text-right font-bold text-emerald-800 whitespace-nowrap">
                         {formatRupiah(creative.cpl)}
-                      </td>
-                      <td className="py-3.5 px-3 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3.5 px-3 text-center">
                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                           creative.status === 'Top Performer'
                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
@@ -289,14 +297,14 @@ export const PaidAdsSection: React.FC<PaidAdsSectionProps> = ({
                         }`}>
                           {creative.status}
                         </span>
-                      </td>
-                      <td className="py-3.5 px-3 text-slate-600 text-[11px] max-w-xs leading-relaxed">
+                      </DnaTd>
+                      <DnaTd className="py-3.5 px-3 text-slate-600 text-[11px] max-w-xs leading-relaxed">
                         {creative.actionRecommendation}
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </div>
           </div>
         </div>
@@ -344,54 +352,54 @@ export const PaidAdsSection: React.FC<PaidAdsSectionProps> = ({
             </p>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                    <th className="py-3 px-3">Keyword Query</th>
-                    <th className="py-3 px-3 text-center">Match Type</th>
-                    <th className="py-3 px-3 text-right">Impressions</th>
-                    <th className="py-3 px-3 text-right">Clicks</th>
-                    <th className="py-3 px-3 text-right">CPC</th>
-                    <th className="py-3 px-3 text-right text-blue-700">Leads Contributed</th>
-                    <th className="py-3 px-3 text-center">Conv. Rate</th>
-                    <th className="py-3 px-3 text-right text-emerald-700">Cost / Lead</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    <DnaTh className="py-3 px-3">Keyword Query</DnaTh>
+                    <DnaTh className="py-3 px-3 text-center">Match Type</DnaTh>
+                    <DnaTh className="py-3 px-3 text-right">Impressions</DnaTh>
+                    <DnaTh className="py-3 px-3 text-right">Clicks</DnaTh>
+                    <DnaTh className="py-3 px-3 text-right">CPC</DnaTh>
+                    <DnaTh className="py-3 px-3 text-right text-blue-700">Leads Contributed</DnaTh>
+                    <DnaTh className="py-3 px-3 text-center">Conv. Rate</DnaTh>
+                    <DnaTh className="py-3 px-3 text-right text-emerald-700">Cost / Lead</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {googleData.topQueries.map((q, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/70 transition">
-                      <td className="py-3 px-3 font-bold text-slate-900">
+                    <DnaTableRow key={idx} className="hover:bg-slate-50/70 transition">
+                      <DnaTd className="py-3 px-3 font-bold text-slate-900">
                         {q.keyword}
-                      </td>
-                      <td className="py-3 px-3 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-center">
                         <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700">
                           {q.matchType}
                         </span>
-                      </td>
-                      <td className="py-3 px-3 text-right font-medium text-slate-700">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-right font-medium text-slate-700">
                         {formatNumber(q.impressions)}
-                      </td>
-                      <td className="py-3 px-3 text-right font-medium text-slate-700">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-right font-medium text-slate-700">
                         {formatNumber(q.clicks)}
-                      </td>
-                      <td className="py-3 px-3 text-right text-slate-600">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-right text-slate-600">
                         {formatRupiah(q.cpc)}
-                      </td>
-                      <td className="py-3 px-3 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-right">
                         <span className="font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
                           +{q.leadsContributed} Leads
                         </span>
-                      </td>
-                      <td className="py-3 px-3 text-center font-bold text-slate-800">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-center font-bold text-slate-800">
                         {q.conversionRate}%
-                      </td>
-                      <td className="py-3 px-3 text-right font-bold text-emerald-800">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-right font-bold text-emerald-800">
                         {formatRupiah(q.cpl)}
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </div>
           </div>
         </div>

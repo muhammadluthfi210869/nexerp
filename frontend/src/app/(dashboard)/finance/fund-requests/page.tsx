@@ -36,9 +36,10 @@ import {
   useDnaToast,
   DnaInput,
   DnaSelect,
-  DnaTextarea
+  DnaTextarea,
+  DnaCell,
+  DnaTable,
 } from "@/components/dna";
-import { DnaTable } from "@/components/dna";
 
 interface FundRequestItem {
   id: string;
@@ -54,13 +55,6 @@ interface FundRequestItem {
   requiredDate: string;
   notes?: string;
 }
-
-const FALLBACK_REQUESTS: FundRequestItem[] = [
-  { id: "1", requestNo: "FR-2609-001", applicant: "Ahmad Staff Gudang", level: "STAFF", department: "Gudang & Logistik", purpose: "Pengadaan Pallet Kayu Standar CPKB 50 Unit", amount: 7500000, currentApprovalLevel: "ACCOUNTING", status: "PENDING_APPROVAL", requestDate: "2026-09-08", requiredDate: "2026-09-12" },
-  { id: "2", requestNo: "FR-2609-002", applicant: "Budi Santoso (Head)", level: "HEAD_DIVISI", department: "Produksi Manufaktur", purpose: "Sparepart Katup Seal Homogenizer High-Speed", amount: 18500000, currentApprovalLevel: "DIREKTUR", status: "PENDING_APPROVAL", requestDate: "2026-09-07", requiredDate: "2026-09-10" },
-  { id: "3", requestNo: "FR-2609-003", applicant: "Rian Saputra", level: "STAFF", department: "R&D Formulasi", purpose: "Bahan Uji Mikrobiologi & Media Kultur Cepat", amount: 4200000, currentApprovalLevel: "COMPLETED", status: "DISBURSED", requestDate: "2026-09-02", requiredDate: "2026-09-05" },
-  { id: "4", requestNo: "FR-2609-004", applicant: "Dewi Lestari (Head)", level: "HEAD_DIVISI", department: "Business Development", purpose: "Sewa Booth Pameran Maklon Kosmetik Jakarta", amount: 35000000, currentApprovalLevel: "COMPLETED", status: "APPROVED", requestDate: "2026-09-01", requiredDate: "2026-09-15" },
-];
 
 export default function FundRequestsPage() {
   return (
@@ -79,6 +73,36 @@ function FundRequestsContent() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<FundRequestItem | null>(null);
 
+  const { data: rawRequests = [], refetch } = useQuery({
+    queryKey: ["finance-fund-requests"],
+    queryFn: async (): Promise<any[]> => {
+      try {
+        const res = await api.get("/finance/fund-requests");
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const fundRequests: FundRequestItem[] = useMemo(() => {
+    return rawRequests.map((req: any) => ({
+      id: req.id,
+      requestNo: req.requestNumber || `FR-${req.id?.slice(0, 8)}`,
+      applicant: req.requester?.name || req.applicant || "Staff Pemohon",
+      level: (req.level || "STAFF") as "STAFF" | "HEAD_DIVISI",
+      department: req.department?.name || req.departmentId || "Operasional",
+      purpose: req.reason || req.purpose || "Operasional",
+      amount: Number(req.amount || 0),
+      currentApprovalLevel: req.status === "APPROVED_BY_DIR" ? "COMPLETED" : req.status === "APPROVED_BY_MGR" ? "DIREKTUR" : "ACCOUNTING",
+      status: req.status === "DISBURSED" ? "DISBURSED" : req.status === "REJECTED" ? "REJECTED" : req.status?.includes("APPROVED") ? "APPROVED" : "PENDING_APPROVAL",
+      requestDate: req.createdAt ? new Date(req.createdAt).toISOString().split("T")[0] : "",
+      requiredDate: req.requiredDate ? new Date(req.requiredDate).toISOString().split("T")[0] : "",
+      notes: req.rejectReason || req.notes,
+    }));
+  }, [rawRequests]);
+
   useEffect(() => {
     if (searchParams.get("action") === "create") {
       setIsCreateModalOpen(true);
@@ -96,19 +120,19 @@ function FundRequestsContent() {
   });
 
   const totalPengajuanBulanIni = useMemo(() => {
-    return FALLBACK_REQUESTS.reduce((acc, r) => acc + r.amount, 0);
-  }, []);
+    return fundRequests.reduce((acc, r) => acc + r.amount, 0);
+  }, [fundRequests]);
 
   const totalMenungguApproval = useMemo(() => {
-    return FALLBACK_REQUESTS.filter((r) => r.status === "PENDING_APPROVAL").length;
-  }, []);
+    return fundRequests.filter((r) => r.status === "PENDING_APPROVAL").length;
+  }, [fundRequests]);
 
   const totalDisbursed = useMemo(() => {
-    return FALLBACK_REQUESTS.filter((r) => r.status === "DISBURSED").reduce((acc, r) => acc + r.amount, 0);
-  }, []);
+    return fundRequests.filter((r) => r.status === "DISBURSED").reduce((acc, r) => acc + r.amount, 0);
+  }, [fundRequests]);
 
   const filteredRequests = useMemo(() => {
-    return FALLBACK_REQUESTS.filter((r) => {
+    return fundRequests.filter((r) => {
       const matchSearch =
         r.requestNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.applicant.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -117,25 +141,60 @@ function FundRequestsContent() {
       const matchDept = departmentFilter === "ALL" || r.department === departmentFilter;
       return matchSearch && matchStatus && matchDept;
     });
-  }, [searchQuery, statusFilter, departmentFilter]);
+  }, [fundRequests, searchQuery, statusFilter, departmentFilter]);
 
-  const handleSubmit = () => {
-    if (!formData.applicant || !formData.purpose || !formData.amount) {
+  const handleSubmit = async () => {
+    if (!formData.purpose || !formData.amount) {
       toast.error("Mohon lengkapi seluruh formulir pengajuan dana!");
       return;
     }
-    toast.success("Pengajuan dana berhasil disubmit ke alur persetujuan!");
-    setIsCreateModalOpen(false);
+    try {
+      await api.post("/finance/fund-request", {
+        departmentId: formData.department,
+        amount: Number(formData.amount),
+        reason: formData.purpose,
+      });
+      toast.success("Pengajuan dana berhasil disubmit ke alur persetujuan!");
+      refetch();
+      setIsCreateModalOpen(false);
+      setFormData({
+        level: "STAFF",
+        applicant: "",
+        department: "Produksi Manufaktur",
+        purpose: "",
+        amount: "",
+        requiredDate: new Date().toISOString().split("T")[0]
+      });
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Gagal mengajukan dana");
+    }
   };
 
-  const handleApprove = (req: FundRequestItem) => {
-    toast.success(`Pengajuan dana ${req.requestNo} berhasil disetujui!`);
-    setSelectedRequest(null);
+  const handleApprove = async (req: FundRequestItem) => {
+    try {
+      await api.patch(`/finance/fund-request/${req.id}/approve`, {
+        approvedById: req.id,
+      });
+      toast.success(`Pengajuan dana ${req.requestNo} berhasil disetujui!`);
+      refetch();
+      setSelectedRequest(null);
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Gagal menyetujui pengajuan dana");
+    }
   };
 
-  const handleDisburse = (req: FundRequestItem) => {
-    toast.success(`Dana ${req.requestNo} (${formatRupiah(req.amount)}) berhasil dicairkan! Kas Keluar otomatis dibuat.`);
-    setSelectedRequest(null);
+  const handleDisburse = async (req: FundRequestItem) => {
+    try {
+      await api.post(`/finance/fund-request/${req.id}/disburse`, {
+        disbursedById: req.id,
+        accountId: req.id,
+      });
+      toast.success(`Dana ${req.requestNo} (${formatRupiah(req.amount)}) berhasil dicairkan!`);
+      refetch();
+      setSelectedRequest(null);
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Gagal mencairkan dana");
+    }
   };
 
   return (
@@ -174,7 +233,7 @@ function FundRequestsContent() {
           label="Total Pengajuan Bulan Ini"
           value={formatRupiah(totalPengajuanBulanIni)}
           icon={<DollarSign className="w-5 h-5 text-blue-600" />}
-          delta={{ value: `${FALLBACK_REQUESTS.length} Pengajuan`, isPositive: true }}
+          delta={{ value: `${fundRequests.length} Pengajuan`, isPositive: true }}
           subtext="Total Permintaan Dana Masuk"
           variant="info"
         />
@@ -423,7 +482,7 @@ function FundRequestsContent() {
                 <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
                   <div>
                     <div className="text-[11px] text-slate-500">Nomor Pengajuan</div>
-                    <div className="font-mono font-bold text-blue-700 text-sm">{selectedRequest?.requestNo}</div>
+                    <div className="tabular-nums font-bold text-blue-700 text-sm">{selectedRequest?.requestNo}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-slate-500">Tanggal Diajukan</div>
@@ -505,7 +564,7 @@ function FundRequestsContent() {
                     ) : selectedRequest?.status === "DISBURSED" ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                     ) : (
-                      <div className="text-[10px] text-slate-400 font-mono">MENUNGGU</div>
+                      <div className="text-[10px] text-slate-400 tabular-nums">MENUNGGU</div>
                     )}
                   </div>
                   <div className={`p-3 rounded-lg border flex items-center justify-between ${
@@ -518,7 +577,7 @@ function FundRequestsContent() {
                     {selectedRequest?.status === "DISBURSED" ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                     ) : (
-                      <div className="text-[10px] text-slate-400 font-mono">STANDBY</div>
+                      <div className="text-[10px] text-slate-400 tabular-nums">STANDBY</div>
                     )}
                   </div>
                 </div>

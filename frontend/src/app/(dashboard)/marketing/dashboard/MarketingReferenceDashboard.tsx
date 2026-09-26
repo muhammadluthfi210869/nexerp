@@ -2,6 +2,8 @@
 
 import React from 'react';
 import * as Lucide from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
 const Icon = ({ name, size = 18, color, style }: { name: string; size?: number; color?: string; style?: React.CSSProperties }) => {
    const LucideIcon = (Lucide as any)[name] || Lucide.HelpCircle;
@@ -9,13 +11,16 @@ const Icon = ({ name, size = 18, color, style }: { name: string; size?: number; 
 };
 
 const LineChart: React.FC<{ data: number[], color: string, color2?: string, data2?: number[] }> = ({ data, color, color2, data2 }) => {
-   const max = 150;
+   if (data.length === 0) return null;
    const width = 500;
    const height = 150;
-   const step = width / (data.length - 1);
-
-   const points = data.map((d, i) => `${i * step},${height - (d / max) * height}`).join(' ');
-   const points2 = data2 ? data2.map((d, i) => `${i * step},${height - (d / max) * height}`).join(' ') : null;
+   // ponytail: one scale per series. The two lines carry different units (lead
+   // count vs rupiah CPL), so a shared axis flattens whichever is smaller.
+   const peak = (s: number[]) => Math.max(...s, 1);
+   const step = width / Math.max(data.length - 1, 1);
+   const points = data.map((d, i) => `${i * step},${height - (d / peak(data)) * height}`).join(' ');
+   const points2 = data2 && data2.length ? data2.map((d, i) => `${i * step},${height - (d / peak(data2)) * height}`).join(' ') : null;
+   const dataPeak = peak(data);
 
    return (
       <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: '180px', overflow: 'visible' }}>
@@ -43,7 +48,7 @@ const LineChart: React.FC<{ data: number[], color: string, color2?: string, data
             </>
          )}
          {data.map((d, i) => (
-            <circle key={i} cx={i * step} cy={height - (d / max) * height} r="4" fill="white" stroke={color} strokeWidth="2" />
+            <circle key={i} cx={i * step} cy={height - (d / dataPeak) * height} r="4" fill="white" stroke={color} strokeWidth="2" />
          ))}
       </svg>
    );
@@ -59,102 +64,103 @@ export interface PlatformRow {
    views: number;
    clicks: number;
    leads: number;
-   sample: number;
-   deal: number;
+   sample: number | null;
+   deal: number | null;
    signalText: string;
    signalType: 'healthy' | 'lead-issue' | 'close-issue' | 'critical' | 'strong';
    signalIcon: string;
 }
 
-const DEFAULT_PLATFORMS: PlatformRow[] = [
-   {
-      id: 'meta-ads',
-      name: 'Meta Ads',
-      category: 'Paid Social',
-      icon: 'Zap',
-      color: '#2563EB',
-      bg: '#EFF6FF',
-      views: 1250000,
-      clicks: 30000,
-      leads: 900,
-      sample: 360,
-      deal: 30,
-      signalText: 'Healthy',
-      signalType: 'healthy',
-      signalIcon: 'CheckCircle2'
-   },
-   {
-      id: 'google-ads',
-      name: 'Google Ads',
-      category: 'Paid Search',
-      icon: 'Filter',
-      color: '#D97706',
-      bg: '#FEF3C7',
-      views: 450000,
-      clicks: 21600,
-      leads: 300,
-      sample: 75,
-      deal: 8,
-      signalText: 'Lead Issue',
-      signalType: 'lead-issue',
-      signalIcon: 'AlertCircle'
-   },
-   {
-      id: 'google-organic',
-      name: 'Google Organic',
-      category: 'SEO Organic',
-      icon: 'Globe',
-      color: '#10B981',
-      bg: '#ECFDF5',
-      views: 180000,
-      clicks: 9900,
-      leads: 198,
-      sample: 59,
-      deal: 3,
-      signalText: 'Close Issue',
-      signalType: 'close-issue',
-      signalIcon: 'AlertTriangle'
-   },
-   {
-      id: 'organic-social',
-      name: 'Organic Social',
-      category: 'IG & TikTok',
-      icon: 'Share2',
-      color: '#EC4899',
-      bg: '#FDF2F8',
-      views: 850000,
-      clicks: 15300,
-      leads: 183,
-      sample: 40,
-      deal: 1,
-      signalText: 'Critical',
-      signalType: 'critical',
-      signalIcon: 'AlertCircle'
-   },
-   {
-      id: 'database-crm',
-      name: 'Database / CRM',
-      category: 'WA & Email',
-      icon: 'Database',
-      color: '#8B5CF6',
-      bg: '#F5F3FF',
-      views: 25000,
-      clicks: 3000,
-      leads: 150,
-      sample: 75,
-      deal: 15,
-      signalText: 'Strong',
-      signalType: 'strong',
-      signalIcon: 'Star'
-   }
-];
+// Presentation only: the tile label, icon and colour for each TrafficSource.
+// Every number in the matrix comes from GET /marketing/platform-performance.
+const CHANNEL_META: Record<string, { label: string; category: string; icon: string; color: string; bg: string }> = {
+   FB_ADS: { label: 'Meta Ads', category: 'Paid Social', icon: 'Zap', color: '#2563EB', bg: '#EFF6FF' },
+   IG_ADS: { label: 'Instagram Ads', category: 'Paid Social', icon: 'Instagram', color: '#EC4899', bg: '#FDF2F8' },
+   TIKTOK_ADS: { label: 'TikTok Ads', category: 'Paid Social', icon: 'Share2', color: '#0F172A', bg: '#F1F5F9' },
+   GOOGLE_ADS: { label: 'Google Ads', category: 'Paid Search', icon: 'Filter', color: '#D97706', bg: '#FEF3C7' },
+   IG_ORGANIC: { label: 'Instagram Organic', category: 'Organic Social', icon: 'Instagram', color: '#EC4899', bg: '#FDF2F8' },
+   FB_ORGANIC: { label: 'Facebook Organic', category: 'Organic Social', icon: 'ThumbsUp', color: '#2563EB', bg: '#EFF6FF' },
+   TIKTOK_ORGANIC: { label: 'TikTok Organic', category: 'Organic Social', icon: 'Music2', color: '#0F172A', bg: '#F1F5F9' },
+   LINKTREE: { label: 'Linktree', category: 'Link in Bio', icon: 'Link2', color: '#10B981', bg: '#ECFDF5' },
+   OTHER: { label: 'Lain-lain', category: 'Other', icon: 'Globe', color: '#8B5CF6', bg: '#F5F3FF' },
+};
+
+// The audit signal is derived from the ad numbers that actually exist (ROAS, CPL,
+// spend), not from a hand-written label. Per-channel sample and deal are not
+// modelled in the backend, so those two columns render "—" rather than a guess.
+function signalFor(roas: number, spend: number, cpl: number): Pick<PlatformRow, 'signalText' | 'signalType' | 'signalIcon'> {
+   if (spend <= 0) return { signalText: 'Tanpa Belanja', signalType: 'close-issue', signalIcon: 'AlertTriangle' };
+   if (roas >= 4) return { signalText: 'Strong', signalType: 'strong', signalIcon: 'Star' };
+   if (roas >= 2) return { signalText: 'Healthy', signalType: 'healthy', signalIcon: 'CheckCircle2' };
+   if (roas < 1) return { signalText: 'Critical', signalType: 'critical', signalIcon: 'AlertCircle' };
+   if (cpl <= 0) return { signalText: 'Lead Issue', signalType: 'lead-issue', signalIcon: 'AlertCircle' };
+   return { signalText: 'Perlu Audit', signalType: 'close-issue', signalIcon: 'AlertTriangle' };
+}
+
+// Rupiah in the compact form the legacy dashboard used: Rp 3,24 M / Rp 342,5 Jt / Rp 28 Rb.
+function rupiah(value: number): string {
+   const n = Number(value) || 0;
+   if (Math.abs(n) >= 1_000_000_000) return `Rp ${(n / 1_000_000_000).toFixed(2).replace('.', ',')} M`;
+   if (Math.abs(n) >= 1_000_000) return `Rp ${(n / 1_000_000).toFixed(1).replace('.', ',')} Jt`;
+   if (Math.abs(n) >= 1_000) return `Rp ${Math.round(n / 1_000).toLocaleString('id-ID')} Rb`;
+   return `Rp ${Math.round(n).toLocaleString('id-ID')}`;
+}
+
+function pct(numerator: number, denominator: number): string {
+   if (!denominator) return '0,0';
+   return ((numerator / denominator) * 100).toFixed(1).replace('.', ',');
+}
 
 const DigitalMarketing: React.FC = () => {
-   const totViews = DEFAULT_PLATFORMS.reduce((acc, p) => acc + p.views, 0);
-   const totClicks = DEFAULT_PLATFORMS.reduce((acc, p) => acc + p.clicks, 0);
-   const totLeads = DEFAULT_PLATFORMS.reduce((acc, p) => acc + p.leads, 0);
-   const totSample = DEFAULT_PLATFORMS.reduce((acc, p) => acc + p.sample, 0);
-   const totDeal = DEFAULT_PLATFORMS.reduce((acc, p) => acc + p.deal, 0);
+   const { data } = useQuery({
+      queryKey: ['marketing-dashboard-analytics'],
+      queryFn: async () => (await api.get('/marketing/analytics')).data,
+      refetchInterval: 60000,
+   });
+   const { data: platformPerf } = useQuery({
+      queryKey: ['marketing-platform-performance'],
+      queryFn: async () => {
+         const res = await api.get('/marketing/platform-performance');
+         return Array.isArray(res.data) ? res.data : [];
+      },
+      refetchInterval: 60000,
+   });
+
+   const acquisition = data?.acquisition ?? {};
+   const funnel = data?.funnel ?? {};
+   const budget = data?.budget ?? {};
+   const trends: any[] = Array.isArray(data?.trends) ? data.trends : [];
+
+   const platforms: PlatformRow[] = (platformPerf ?? []).map((raw: any) => {
+      const key = String(raw?.name ?? 'OTHER').toUpperCase().replace(/[^A-Z_]/g, '');
+      const meta = CHANNEL_META[key] ?? CHANNEL_META.OTHER;
+      return {
+         id: key,
+         name: meta.label,
+         category: meta.category,
+         icon: meta.icon,
+         color: meta.color,
+         bg: meta.bg,
+         views: Number(raw?.impressions ?? 0),
+         clicks: Number(raw?.clicks ?? 0),
+         leads: Number(raw?.leads ?? 0),
+         sample: null,
+         deal: null,
+         ...signalFor(Number(raw?.roas ?? 0), Number(raw?.spend ?? 0), Number(raw?.cpl ?? 0)),
+      };
+   });
+
+   const totViews = platforms.reduce((acc: number, p: PlatformRow) => acc + p.views, 0);
+   const totClicks = platforms.reduce((acc: number, p: PlatformRow) => acc + p.clicks, 0);
+   const totLeads = Number(funnel.leadsQualified ?? platforms.reduce((acc: number, p: PlatformRow) => acc + p.leads, 0));
+   const totSample = Number(funnel.samples ?? 0);
+   const totDeal = Number(funnel.deals ?? 0);
+
+   const revenue = Number(acquisition.revenue ?? 0);
+   const revenueTarget = Number(acquisition.revenueTarget ?? acquisition.target ?? 0);
+   const spend = Number(budget.totalSpend ?? 0);
+   const spendTarget = Number(budget.budgetTarget ?? 0);
+   const periodLabel = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date()).toUpperCase();
 
    const overallCtr = ((totClicks / totViews) * 100).toFixed(1);
    const overallLeadRate = ((totLeads / totClicks) * 100).toFixed(1);
@@ -172,7 +178,7 @@ const DigitalMarketing: React.FC = () => {
             </div>
             <div style={{ background: 'white', padding: '10px 18px', borderRadius: '12px', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                <Icon name="Calendar" size={14} color="#64748B" />
-               <span style={{ fontSize: '12px', fontWeight: 800, color: '#1E293B' }}>MARCH 2024</span>
+               <span style={{ fontSize: '12px', fontWeight: 800, color: '#1E293B' }}>{periodLabel}</span>
             </div>
          </div>
 
@@ -185,20 +191,20 @@ const DigitalMarketing: React.FC = () => {
                </div>
                <div style={{ marginBottom: '1.5rem' }}>
                   <p style={{ margin: 0, fontSize: '10px', fontWeight: 800, color: '#94A3B8' }}>REVENUE SALES (MTD)</p>
-                  <h3 style={{ margin: '4px 0', fontSize: '28px', fontWeight: 950, color: '#1E293B' }}>Rp 3.24 M</h3>
+                  <h3 style={{ margin: '4px 0', fontSize: '28px', fontWeight: 950, color: '#1E293B' }}>{rupiah(revenue)}</h3>
                   <div style={{ height: '6px', background: '#F1F5F9', borderRadius: '3px', position: 'relative', overflow: 'hidden', marginTop: '8px' }}>
-                     <div style={{ width: '72%', height: '100%', background: '#2563EB' }}></div>
+                     <div style={{ width: `${Math.min(100, revenueTarget > 0 ? (revenue / revenueTarget) * 100 : 0)}%`, height: '100%', background: '#2563EB' }}></div>
                   </div>
-                  <p style={{ margin: '6px 0 0 0', fontSize: '10px', fontWeight: 700, color: '#64748B' }}>Target: Rp 4.5M <span style={{ color: '#2563EB' }}>(72%)</span></p>
+                  <p style={{ margin: '6px 0 0 0', fontSize: '10px', fontWeight: 700, color: '#64748B' }}>Target: {rupiah(revenueTarget)} <span style={{ color: '#2563EB' }}>({pct(revenue, revenueTarget)}%)</span></p>
                </div>
                <div style={{ display: 'flex', gap: '1rem', paddingTop: '1.25rem', borderTop: '1px solid #F1F5F9' }}>
                   <div style={{ flex: 1 }}>
                      <p style={{ margin: 0, fontSize: '9px', fontWeight: 800, color: '#94A3B8' }}>CLIENT ACQ.</p>
-                     <p style={{ margin: 0, fontSize: '16px', fontWeight: 950, color: '#1E293B' }}>42 <span style={{ fontSize: '10px', color: '#10B981' }}>+12%</span></p>
+                     <p style={{ margin: 0, fontSize: '16px', fontWeight: 950, color: '#1E293B' }}>{Number(acquisition.clientAcq ?? 0).toLocaleString('id-ID')}</p>
                   </div>
                   <div style={{ flex: 1, borderLeft: '1px solid #F1F5F9', paddingLeft: '1rem' }}>
                      <p style={{ margin: 0, fontSize: '9px', fontWeight: 800, color: '#94A3B8' }}>AVG CPA</p>
-                     <p style={{ margin: 0, fontSize: '16px', fontWeight: 950, color: '#1E293B' }}>Rp 1.4M</p>
+                     <p style={{ margin: 0, fontSize: '16px', fontWeight: 950, color: '#1E293B' }}>{rupiah(acquisition.avgCPA)}</p>
                   </div>
                </div>
             </div>
@@ -209,17 +215,17 @@ const DigitalMarketing: React.FC = () => {
                </div>
                <div style={{ marginBottom: '1.5rem' }}>
                   <p style={{ margin: 0, fontSize: '10px', fontWeight: 800, color: '#94A3B8' }}>LEADS QUALIFIED</p>
-                  <h3 style={{ margin: '4px 0', fontSize: '28px', fontWeight: 950, color: '#1E293B' }}>1,240</h3>
-                  <p style={{ margin: 0, fontSize: '10px', fontWeight: 700, color: '#8B5CF6' }}>Conversion Lead-to-Sample: 45%</p>
+                  <h3 style={{ margin: '4px 0', fontSize: '28px', fontWeight: 950, color: '#1E293B' }}>{Number(funnel.leadsQualified ?? 0).toLocaleString('id-ID')}</h3>
+                  <p style={{ margin: 0, fontSize: '10px', fontWeight: 700, color: '#8B5CF6' }}>Conversion Lead-to-Sample: {Number(funnel.leadToSampleRate ?? 0).toFixed(1).replace('.', ',')}%</p>
                </div>
                <div style={{ display: 'flex', gap: '1rem', paddingTop: '1.25rem', borderTop: '1px solid #F1F5F9' }}>
                   <div style={{ flex: 1 }}>
                      <p style={{ margin: 0, fontSize: '9px', fontWeight: 800, color: '#94A3B8' }}>PROSPECT</p>
-                     <p style={{ margin: 0, fontSize: '16px', fontWeight: 950, color: '#1E293B' }}>84</p>
+                     <p style={{ margin: 0, fontSize: '16px', fontWeight: 950, color: '#1E293B' }}>{Number(funnel.prospects ?? 0).toLocaleString('id-ID')}</p>
                   </div>
                   <div style={{ flex: 1, borderLeft: '1px solid #F1F5F9', paddingLeft: '1rem' }}>
                      <p style={{ margin: 0, fontSize: '9px', fontWeight: 800, color: '#94A3B8' }}>CLOSING RATE</p>
-                     <p style={{ margin: 0, fontSize: '16px', fontWeight: 950, color: '#1E293B' }}>64.2%</p>
+                     <p style={{ margin: 0, fontSize: '16px', fontWeight: 950, color: '#1E293B' }}>{Number(funnel.closingRate ?? 0).toFixed(1).replace('.', ',')}%</p>
                   </div>
                </div>
             </div>
@@ -230,17 +236,17 @@ const DigitalMarketing: React.FC = () => {
                </div>
                <div style={{ marginBottom: '1.5rem' }}>
                   <p style={{ margin: 0, fontSize: '10px', fontWeight: 800, color: '#94A3B8' }}>TOTAL AD SPEND</p>
-                  <h3 style={{ margin: '4px 0', fontSize: '28px', fontWeight: 950, color: '#1E293B' }}>Rp 342.5 Jt</h3>
-                  <p style={{ margin: 0, fontSize: '10px', fontWeight: 700, color: '#EF4444' }}>Used: 68% of Monthly Budget</p>
+                  <h3 style={{ margin: '4px 0', fontSize: '28px', fontWeight: 950, color: '#1E293B' }}>{rupiah(spend)}</h3>
+                  <p style={{ margin: 0, fontSize: '10px', fontWeight: 700, color: '#EF4444' }}>Used: {Number(budget.budgetUsagePercent ?? pct(spend, spendTarget)).toFixed(0)}% of Monthly Budget</p>
                </div>
                <div style={{ display: 'flex', gap: '1rem', paddingTop: '1.25rem', borderTop: '1px solid #F1F5F9' }}>
                   <div style={{ flex: 1 }}>
                      <p style={{ margin: 0, fontSize: '9px', fontWeight: 800, color: '#94A3B8' }}>COST PER LEAD</p>
-                     <p style={{ margin: 0, fontSize: '16px', fontWeight: 950, color: '#1E293B' }}>Rp 28k</p>
+                     <p style={{ margin: 0, fontSize: '16px', fontWeight: 950, color: '#1E293B' }}>{rupiah(budget.costPerLead)}</p>
                   </div>
                   <div style={{ flex: 1, borderLeft: '1px solid #F1F5F9', paddingLeft: '1rem' }}>
                      <p style={{ margin: 0, fontSize: '9px', fontWeight: 800, color: '#94A3B8' }}>COST / SAMPLE</p>
-                     <p style={{ margin: 0, fontSize: '16px', fontWeight: 950, color: '#1E293B' }}>Rp 145k</p>
+                     <p style={{ margin: 0, fontSize: '16px', fontWeight: 950, color: '#1E293B' }}>{rupiah(budget.costPerSample)}</p>
                   </div>
                </div>
             </div>
@@ -262,10 +268,10 @@ const DigitalMarketing: React.FC = () => {
                      </div>
                   </div>
                </div>
-               <LineChart data={[40, 55, 45, 78, 85, 60, 95, 110, 90, 120, 130, 140]} color="#2563EB" data2={[120, 110, 105, 95, 80, 85, 70, 65, 75, 70, 60, 55]} color2="#06B6D4" />
+               <LineChart data={trends.map((t: any) => Number(t.leads ?? 0))} color="#2563EB" data2={trends.map((t: any) => Number(t.cpl ?? 0))} color2="#06B6D4" />
                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '15px' }}>
-                  {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(m => (
-                     <span key={m} style={{ fontSize: '9px', fontWeight: 900, color: '#94A3B8' }}>{m}</span>
+                  {trends.map((t: any, i: number) => (
+                     <span key={i} style={{ fontSize: '9px', fontWeight: 900, color: '#94A3B8' }}>{t.date}</span>
                   ))}
                </div>
             </div>
@@ -283,10 +289,10 @@ const DigitalMarketing: React.FC = () => {
                      </div>
                   </div>
                </div>
-               <LineChart data={[60, 65, 82, 75, 95, 88, 70, 95, 110, 85, 120, 135]} color="#F59E0B" data2={[140, 130, 125, 115, 100, 105, 90, 85, 95, 90, 80, 75]} color2="#EF4444" />
+               <LineChart data={trends.map((t: any) => Number(t.closing ?? 0))} color="#F59E0B" data2={trends.map((t: any) => Number(t.cpa ?? 0))} color2="#EF4444" />
                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '15px' }}>
-                  {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(m => (
-                     <span key={m} style={{ fontSize: '9px', fontWeight: 900, color: '#94A3B8' }}>{m}</span>
+                  {trends.map((t: any, i: number) => (
+                     <span key={i} style={{ fontSize: '9px', fontWeight: 900, color: '#94A3B8' }}>{t.date}</span>
                   ))}
                </div>
             </div>
@@ -510,11 +516,12 @@ const DigitalMarketing: React.FC = () => {
                         </tr>
                      </thead>
                      <tbody>
-                        {DEFAULT_PLATFORMS.map((p) => {
+                        {platforms.map((p) => {
                            const ctr = ((p.clicks / p.views) * 100).toFixed(1);
                            const clickToLead = ((p.leads / p.clicks) * 100).toFixed(1);
-                           const leadToSample = ((p.sample / p.leads) * 100).toFixed(1);
-                           const sampleToDeal = ((p.deal / p.sample) * 100).toFixed(1);
+                           const hasSampleData = p.sample !== null && p.deal !== null;
+                           const leadToSample = hasSampleData ? ((p.sample! / p.leads) * 100).toFixed(1) : '—';
+                           const sampleToDeal = hasSampleData ? ((p.deal! / p.sample!) * 100).toFixed(1) : '—';
 
                            // Audit Signal styles
                            let sigBg = '#F0FDF4';
@@ -591,7 +598,7 @@ const DigitalMarketing: React.FC = () => {
                                  <td style={{ padding: '10px 8px', textAlign: 'center' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                                        <div style={{ background: '#F8FAFC', padding: '8px 20px', borderRadius: '14px', border: '1px solid #F1F5F9', minWidth: '100px' }}>
-                                          <span style={{ fontSize: '13px', fontWeight: 950, color: '#0F172A', display: 'block' }}>{p.sample.toLocaleString('id-ID')}</span>
+                                          <span style={{ fontSize: '13px', fontWeight: 950, color: '#0F172A', display: 'block' }}>{p.sample === null ? '—' : p.sample.toLocaleString('id-ID')}</span>
                                           <span style={{ fontSize: '11px', fontWeight: 800, color: '#0D9488' }}>{leadToSample}%</span>
                                        </div>
                                        <span style={{ color: '#CBD5E1', fontSize: '12px' }}>➔</span>
@@ -601,7 +608,7 @@ const DigitalMarketing: React.FC = () => {
                                  {/* Col 6: Deal */}
                                  <td style={{ padding: '10px 8px', textAlign: 'center' }}>
                                     <div style={{ background: '#F8FAFC', padding: '8px 20px', borderRadius: '14px', border: '1px solid #F1F5F9', minWidth: '100px', display: 'inline-block' }}>
-                                       <span style={{ fontSize: '13px', fontWeight: 950, color: p.signalType === 'critical' ? '#EF4444' : '#10B981', display: 'block' }}>{p.deal} Orders</span>
+                                       <span style={{ fontSize: '13px', fontWeight: 950, color: p.signalType === 'critical' ? '#EF4444' : '#10B981', display: 'block' }}>{p.deal === null ? '—' : `${p.deal} Orders`}</span>
                                        <span style={{ fontSize: '11px', fontWeight: 800, color: p.signalType === 'critical' ? '#EF4444' : '#10B981' }}>{sampleToDeal}%</span>
                                     </div>
                                  </td>

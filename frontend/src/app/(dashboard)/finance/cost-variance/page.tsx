@@ -1,6 +1,9 @@
-﻿"use client";
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   DnaPageContainer,
   DnaPageHeader,
@@ -29,19 +32,100 @@ interface CostVarianceBatch {
   mainCause: string;
 }
 
-const SAMPLE_VARIANCES: CostVarianceBatch[] = [
-  { id: "cv-1", batchNumber: "BCH-202609-001", productName: "Day Cream SPF 30 (50gr)", brandName: "Aura Glow", plannedQty: 5000, actualYieldQty: 4920, standardBomCost: 62500000, actualProductionCost: 64200000, varianceAmount: 1700000, variancePercentage: 2.7, mainCause: "Penyusutan ruahan mixing saat transfer ke hopper filling" },
-  { id: "cv-2", batchNumber: "BCH-202609-002", productName: "Facial Wash Tea Tree (100ml)", brandName: "Derma Pure", plannedQty: 10000, actualYieldQty: 10050, standardBomCost: 95000000, actualProductionCost: 93800000, varianceAmount: -1200000, variancePercentage: -1.3, mainCause: "Efisiensi pengisian cairan viscous (Favorable)" },
-  { id: "cv-3", batchNumber: "BCH-202609-003", productName: "Extrait De Parfum Noctivus (30ml)", brandName: "Conscentra", plannedQty: 2000, actualYieldQty: 1980, standardBomCost: 48000000, actualProductionCost: 48900000, varianceAmount: 900000, variancePercentage: 1.9, mainCause: "Reject kemasan botol kaca pecah saat sealing pump" },
-];
-
 export default function CostVariancePage() {
-  const [batches, setBatches] = useState<CostVarianceBatch[]>(SAMPLE_VARIANCES);
   const [search, setSearch] = useState("");
 
-  const totalStd = batches.reduce((acc, b) => acc + b.standardBomCost, 0);
-  const totalAct = batches.reduce((acc, b) => acc + b.actualProductionCost, 0);
+  // 1. Fetch live cost variances
+  const { data: rawVariances = [], isLoading } = useQuery<any[]>({
+    queryKey: ["finance-cost-variances"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/cost-variances");
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  // 2. Fetch cogs-requests as supplementary source
+  const { data: rawCogs = [] } = useQuery<any[]>({
+    queryKey: ["finance-cogs-requests-cv"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/cogs-requests");
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const batches: CostVarianceBatch[] = useMemo(() => {
+    if (rawVariances.length > 0) {
+      return rawVariances.map((v: any) => {
+        const std = Number(v.standardCost || 0);
+        const act = Number(v.actualCost || 0);
+        const varianceAmount = Number(v.varianceAmount || (act - std));
+        const variancePercentage = std > 0 ? Number(((varianceAmount / std) * 100).toFixed(1)) : 0;
+
+        return {
+          id: v.id,
+          batchNumber: v.jobOrderId || v.referenceNumber || v.id.slice(0, 8),
+          productName: v.description || v.productName || "Formula Batch",
+          brandName: v.brandName || "Maklon",
+          plannedQty: Number(v.plannedQty || 1),
+          actualYieldQty: Number(v.actualYieldQty || v.plannedQty || 1),
+          standardBomCost: std,
+          actualProductionCost: act,
+          varianceAmount,
+          variancePercentage,
+          mainCause: v.notes || v.varianceType || "Variansi biaya material & upah",
+        };
+      });
+    }
+
+    if (rawCogs.length > 0) {
+      return rawCogs.map((c: any) => {
+        const std = Number(c.hppTotal || c.totalCost || c.standardCost || 0);
+        const act = Number(c.actualCost || std);
+        const diff = act - std;
+        const pct = std > 0 ? Number(((diff / std) * 100).toFixed(1)) : 0;
+
+        return {
+          id: c.id,
+          batchNumber: c.jobOrderNumber || c.id.slice(0, 8),
+          productName: c.productName || c.description || "Batch Produksi",
+          brandName: c.pelanggan || c.customer || "Klien",
+          plannedQty: Number(c.quantity || 1000),
+          actualYieldQty: Number(c.quantity || 1000),
+          standardBomCost: std,
+          actualProductionCost: act,
+          varianceAmount: diff,
+          variancePercentage: pct,
+          mainCause: diff === 0 ? "Sesuai Standar Formulasi" : "Penyesuaian biaya material riil",
+        };
+      });
+    }
+
+    return [];
+  }, [rawVariances, rawCogs]);
+
+  const filteredBatches = useMemo(() => {
+    return batches.filter(
+      (b) =>
+        b.batchNumber.toLowerCase().includes(search.toLowerCase()) ||
+        b.productName.toLowerCase().includes(search.toLowerCase()) ||
+        b.brandName.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [batches, search]);
+
+  const totalStd = filteredBatches.reduce((acc, b) => acc + b.standardBomCost, 0);
+  const totalAct = filteredBatches.reduce((acc, b) => acc + b.actualProductionCost, 0);
   const netVariance = totalAct - totalStd;
+  const avgDevPct = totalStd > 0 ? ((netVariance / totalStd) * 100).toFixed(2) : "0.00";
 
   return (
     <DnaPageContainer>
@@ -80,9 +164,9 @@ export default function CostVariancePage() {
         />
         <DnaStatCard
           label="Deviasi Rata-rata"
-          value={`${((netVariance / totalStd) * 100).toFixed(2)}%`}
+          value={`${avgDevPct}%`}
           variant="slate"
-          delta={{ value: "Dalam Ambang Batas Toleransi ±3%", isPositive: true }}
+          delta={{ value: "Ambang Batas Toleransi ±3%", isPositive: Math.abs(Number(avgDevPct)) <= 3 }}
         />
       </DnaKpiGrid>
 
@@ -106,41 +190,49 @@ export default function CostVariancePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {batches.map((b) => (
-                <tr key={b.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3">
-                    <DnaCell.Code value={b.batchNumber} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-slate-900">{b.productName}</div>
-                    <div className="text-[11px] text-slate-400">{b.brandName}</div>
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono">
-                    <div className="text-slate-900 font-medium">{b.actualYieldQty.toLocaleString()} Pcs</div>
-                    <div className="text-[11px] text-slate-400">Plan: {b.plannedQty.toLocaleString()}</div>
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono text-slate-700">
-                    {formatRupiah(b.standardBomCost)}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono font-medium text-slate-900">
-                    {formatRupiah(b.actualProductionCost)}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold">
-                    <span className={b.varianceAmount <= 0 ? "text-emerald-600" : "text-rose-600"}>
-                      {b.varianceAmount <= 0 ? "-" : "+"}{formatRupiah(Math.abs(b.varianceAmount))}
-                      <span className="text-[10px] block font-normal">({b.variancePercentage}%)</span>
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-600 max-w-xs truncate" title={b.mainCause}>
-                    {b.mainCause}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <DnaBadge variant={b.varianceAmount <= 0 ? "emerald" : b.variancePercentage < 3 ? "amber" : "danger"}>
-                      {b.varianceAmount <= 0 ? "Efisien" : b.variancePercentage < 3 ? "Toleransi" : "Investigasi"}
-                    </DnaBadge>
+              {filteredBatches.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-12 text-center text-slate-400">
+                    Belum ada data variansi biaya produksi pada sistem.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredBatches.map((b) => (
+                  <tr key={b.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-4 py-3">
+                      <DnaCell.Code value={b.batchNumber} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-semibold text-slate-900">{b.productName}</div>
+                      <div className="text-[11px] text-slate-400">{b.brandName}</div>
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      <div className="text-slate-900 font-medium">{b.actualYieldQty.toLocaleString()} Pcs</div>
+                      <div className="text-[11px] text-slate-400">Plan: {b.plannedQty.toLocaleString()}</div>
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                      {formatRupiah(b.standardBomCost)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900">
+                      {formatRupiah(b.actualProductionCost)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums font-bold">
+                      <span className={b.varianceAmount <= 0 ? "text-emerald-600" : "text-rose-600"}>
+                        {b.varianceAmount <= 0 ? "-" : "+"}{formatRupiah(Math.abs(b.varianceAmount))}
+                        <span className="text-[10px] block font-normal">({b.variancePercentage}%)</span>
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 max-w-xs truncate" title={b.mainCause}>
+                      {b.mainCause}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <DnaBadge variant={b.varianceAmount <= 0 ? "emerald" : b.variancePercentage < 3 ? "amber" : "danger"}>
+                        {b.varianceAmount <= 0 ? "Efisien" : b.variancePercentage < 3 ? "Toleransi" : "Investigasi"}
+                      </DnaBadge>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </DnaTable>
         </div>

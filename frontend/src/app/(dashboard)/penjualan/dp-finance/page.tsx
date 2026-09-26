@@ -164,9 +164,9 @@ export default function DpConsolidatedPage() {
                           <span className="font-medium text-slate-700 text-xs">{po.supplier?.name || po.supplierName || "-"}</span>
                         </div>
                       </DnaTd>
-                      <DnaTd className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {total.toLocaleString("id-ID")}</DnaTd>
-                      <DnaTd className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {paid.toLocaleString("id-ID")}</DnaTd>
-                      <DnaTd className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">Rp {sisa.toLocaleString("id-ID")}</DnaTd>
+                      <DnaTd className="text-right tabular-nums tabular-nums py-4 font-black text-slate-900 text-xs">Rp {total.toLocaleString("id-ID")}</DnaTd>
+                      <DnaTd className="text-right tabular-nums tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {paid.toLocaleString("id-ID")}</DnaTd>
+                      <DnaTd className="text-right tabular-nums tabular-nums py-4 font-black text-rose-600 text-xs">Rp {sisa.toLocaleString("id-ID")}</DnaTd>
                       <DnaTd className="text-center py-4">{poStatusBadge(po.status)}</DnaTd>
                       <DnaTd className="pr-6 text-right py-4">
                         <DnaButton
@@ -259,9 +259,9 @@ export default function DpConsolidatedPage() {
                           <span className="font-medium text-slate-700 text-xs">{so.lead?.clientName || "-"}</span>
                         </div>
                       </DnaTd>
-                      <DnaTd className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {total.toLocaleString("id-ID")}</DnaTd>
-                      <DnaTd className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {paid.toLocaleString("id-ID")}</DnaTd>
-                      <DnaTd className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">Rp {sisa.toLocaleString("id-ID")}</DnaTd>
+                      <DnaTd className="text-right tabular-nums tabular-nums py-4 font-black text-slate-900 text-xs">Rp {total.toLocaleString("id-ID")}</DnaTd>
+                      <DnaTd className="text-right tabular-nums tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {paid.toLocaleString("id-ID")}</DnaTd>
+                      <DnaTd className="text-right tabular-nums tabular-nums py-4 font-black text-rose-600 text-xs">Rp {sisa.toLocaleString("id-ID")}</DnaTd>
                       <DnaTd className="text-center py-4">
                         <DnaBadge variant={paid === 0 ? "critical" : paid < total ? "warning" : "success"}>
                           {paid === 0 ? "Belum Bayar" : paid < total ? "Partial" : "Lunas"}

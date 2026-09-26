@@ -4,158 +4,290 @@
  * Buat Pembelian (Purchase Order Input Form)
  * Screen ID: SCR-038 & SCR-175
  *
- * Sesuai Spesifikasi:
- * - Visual DNA Design System (DnaPageHeader, DnaDataTableCard, DnaButton, DnaInput, DnaSelect, useDnaToast)
- * - Format Kode Universal Global (DL-SCM-PO-DDMMYYYY-0001 / PO-DDMMYYYY-0001)
- * - Tanggal PO Read-Only (Otomatis terisi tanggal hari ini - Poin 138)
- * - Label "Deadline" bukan "Jatuh Tempo" (Poin 37, 95)
- * - Diskon dihitung dalam Rupiah (Rp) dan Ongkir dicatat terpisah (Poin 101-102)
- * - Tanda Tangan Digital Penanggung Jawab PO (Poin 135)
- * - Multi-line Keranjang Pengadaan Barang
+ * Wired to the real NestJS backend:
+ * - GET  /master/suppliers   → daftar supplier mitra
+ * - GET  /master/warehouses  → gudang penerima
+ * - GET  /master/materials   → katalog bahan/kemasan (qty, unit, harga acuan)
+ * - POST /purchase/orders    → penerbitan PO (poNumber di-generate server-side)
  */
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { api, extractApiError } from "@/lib/api";
 import {
   Package,
-  Plus,
   Trash2,
   Save,
-  ArrowLeft,
-  Building2,
-  Calendar,
-  DollarSign,
-  Truck,
-  ShieldCheck,
-  CheckCircle2,
-  Info,
+  Plus,
 } from "lucide-react";
 import {
   DnaPageHeader,
-  DnaDataTableCard,
   DnaButton,
   DnaInput,
   DnaSelect,
+  DnaEmptyState,
+  DnaErrorState,
+  DnaLoadingSkeleton,
   useDnaToast,
 } from "@/components/dna";
 import { formatCurrency } from "@/lib/utils";
 
-interface CartLineItem {
+interface SupplierOption {
   id: string;
-  materialCode: string;
-  materialName: string;
-  category: string;
-  qty: number;
+  name: string;
+  categoryName?: string;
+}
+
+interface WarehouseOption {
+  id: string;
+  name: string;
+}
+
+interface MaterialOption {
+  id: string;
+  code: string;
+  name: string;
   unit: string;
   unitPrice: number;
-  subtotal: number;
+  type: string;
+  categoryName?: string;
+}
+
+interface CartLineItem {
+  id: string;
+  materialId: string;
+  qty: number;
+  unitPrice: number;
+}
+
+function unwrapList(payload: any): any[] {
+  const list = payload?.data?.data || payload?.data || payload;
+  if (Array.isArray(list)) return list;
+  if (Array.isArray(list?.data)) return list.data;
+  return [];
 }
 
 export default function CreatePurchaseOrderPage() {
   const router = useRouter();
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
 
-  const todayStr = new Date().toLocaleDateString("id-ID");
-  const defaultPoCode = `DL-SCM-PO-${todayStr.replace(/\//g, "")}-0005`;
+  const [supplierId, setSupplierId] = useState("");
+  const [warehouseId, setWarehouseId] = useState("");
+  const [estArrival, setEstArrival] = useState("");
+  const [noteText, setNoteText] = useState("");
+  const [cartItems, setCartItems] = useState<CartLineItem[]>([]);
 
-  // Form Header State
-  const [poCode] = useState(defaultPoCode);
-  const [poDate] = useState(todayStr); // Read-only hari ini per Poin 138
-  const [supplier, setSupplier] = useState("PT Chemindo Natural Indonesia");
-  const [supplierCategory, setSupplierCategory] = useState("Bahan Baku");
-  const [warehouse, setWarehouse] = useState("Gudang Bahan Baku A1 (Pabrik)");
-  const [deadlineDate, setDeadlineDate] = useState("20/09/2026");
-  const [paymentTerms, setPaymentTerms] = useState("DP 50% + Pelunasan Saat Tiba");
-  const [buyerPic, setBuyerPic] = useState("Dimas Pratama (SCM Buyer)");
-  const [isDigitalSigned, setIsDigitalSigned] = useState(true);
-  const [notes, setNotes] = useState("");
+  const [discountRp, setDiscountRp] = useState<number>(0);
+  const [shippingCostRp, setShippingCostRp] = useState<number>(0);
+  const [taxRate, setTaxRate] = useState<number>(0);
 
-  // Multi-line Cart State
-  const [cartItems, setCartItems] = useState<CartLineItem[]>([
-    {
-      id: "line-1",
-      materialCode: "RAW-ACT-001",
-      materialName: "Niacinamide PC Grade (DSM)",
-      category: "Bahan Baku",
-      qty: 50,
-      unit: "kg",
-      unitPrice: 350000,
-      subtotal: 17500000,
+  const suppliersQuery = useQuery<SupplierOption[]>({
+    queryKey: ["master-suppliers-po-form"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/master/suppliers");
+        return unwrapList(res.data).map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          categoryName: s.category?.name,
+        }));
+      } catch {
+        return [];
+      }
     },
-    {
-      id: "line-2",
-      materialCode: "RAW-EXT-004",
-      materialName: "Centella Asiatica Extract 10:1",
-      category: "Bahan Baku",
-      qty: 20,
-      unit: "kg",
-      unitPrice: 450000,
-      subtotal: 9000000,
+  });
+
+  const warehousesQuery = useQuery<WarehouseOption[]>({
+    queryKey: ["master-warehouses-po-form"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/master/warehouses/active");
+        return unwrapList(res.data).map((w: any) => ({ id: w.id, name: w.name }));
+      } catch {
+        return [];
+      }
     },
-  ]);
+  });
 
-  // Financial Calculations (Poin 101-102: Diskon dalam Rp, Ongkir terpisah)
-  const [discountRp, setDiscountRp] = useState<number>(500000);
-  const [shippingCostRp, setShippingCostRp] = useState<number>(750000);
-  const [taxRate, setTaxRate] = useState<number>(0); // 0% atau 11% PPN
+  const materialsQuery = useQuery<MaterialOption[]>({
+    queryKey: ["master-materials-po-form"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/master/materials", { params: { limit: 500 } });
+        return unwrapList(res.data).map((m: any) => ({
+          id: m.id,
+          code: m.code || "—",
+          name: m.name,
+          unit: m.unit || m.usageUnit || "unit",
+          unitPrice: Number(m.unitPrice ?? 0),
+          type: m.type || "—",
+          categoryName: m.category?.name,
+        }));
+      } catch {
+        return [];
+      }
+    },
+  });
 
-  const subtotalBarang = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
+  const suppliers = suppliersQuery.data ?? [];
+  const warehouses = warehousesQuery.data ?? [];
+  const materials = materialsQuery.data ?? [];
+
+  const materialById = useMemo(() => {
+    const map = new Map<string, MaterialOption>();
+    materials.forEach((m) => map.set(m.id, m));
+    return map;
+  }, [materials]);
+
+  const cartRows = cartItems.map((line) => {
+    const material = materialById.get(line.materialId);
+    return {
+      ...line,
+      materialName: material?.name || "—",
+      materialCode: material?.code || "—",
+      unit: material?.unit || "unit",
+      subtotal: Number(line.qty || 0) * Number(line.unitPrice || 0),
+    };
+  });
+
+  const subtotalBarang = cartRows.reduce((sum, item) => sum + item.subtotal, 0);
   const afterDiscount = Math.max(0, subtotalBarang - discountRp);
   const taxAmount = (afterDiscount * taxRate) / 100;
   const grandTotal = afterDiscount + shippingCostRp + taxAmount;
 
-  // Cart Handlers
   const handleAddItem = () => {
-    const newItem: CartLineItem = {
-      id: `line-${Date.now()}`,
-      materialCode: "RAW-MAT-00" + (cartItems.length + 1),
-      materialName: "Bahan Baru #" + (cartItems.length + 1),
-      category: supplierCategory,
-      qty: 10,
-      unit: "kg",
-      unitPrice: 150000,
-      subtotal: 1500000,
-    };
-    setCartItems([...cartItems, newItem]);
+    const first = materials[0];
+    setCartItems([
+      ...cartItems,
+      {
+        id: `line-${Date.now()}`,
+        materialId: first?.id || "",
+        qty: 1,
+        unitPrice: first?.unitPrice || 0,
+      },
+    ]);
   };
 
-  const handleRemoveItem = (id: string) => {
-    if (cartItems.length <= 1) {
-      toast.warning("Minimal 1 Item", "Pesanan pembelian wajib memiliki minimal 1 item barang.");
-      return;
-    }
-    setCartItems(cartItems.filter((it) => it.id !== id));
-  };
-
-  const handleUpdateItem = (id: string, field: keyof CartLineItem, val: any) => {
+  const handleSelectMaterial = (lineId: string, materialId: string) => {
+    const material = materialById.get(materialId);
     setCartItems(
-      cartItems.map((item) => {
-        if (item.id === id) {
-          const updated = { ...item, [field]: val };
-          if (field === "qty" || field === "unitPrice") {
-            updated.subtotal = Number(updated.qty || 0) * Number(updated.unitPrice || 0);
-          }
-          return updated;
-        }
-        return item;
-      })
+      cartItems.map((line) =>
+        line.id === lineId
+          ? {
+              ...line,
+              materialId,
+              unitPrice: line.unitPrice || material?.unitPrice || 0,
+            }
+          : line
+      )
     );
   };
 
+  const handleUpdateItem = (lineId: string, field: "qty" | "unitPrice", val: number) => {
+    setCartItems(
+      cartItems.map((line) => (line.id === lineId ? { ...line, [field]: val } : line))
+    );
+  };
+
+  const handleRemoveItem = (lineId: string) => {
+    setCartItems(cartItems.filter((line) => line.id !== lineId));
+  };
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.post("/purchase/orders", {
+        supplierId,
+        warehouseId: warehouseId || undefined,
+        items: cartItems.map((line) => ({
+          materialId: line.materialId,
+          quantity: Number(line.qty),
+          unitPrice: Number(line.unitPrice),
+        })),
+        discountManual: discountRp || undefined,
+        shippingCost: shippingCostRp || undefined,
+        taxPercent: taxRate || undefined,
+        estArrival: estArrival || undefined,
+        notes: noteText || undefined,
+      });
+      return res.data?.data || res.data;
+    },
+    onSuccess: (created: any) => {
+      queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
+      toast.success(
+        "PO Berhasil Dibuat",
+        `Purchase Order ${created?.poNumber || ""} diterbitkan dan siap diverifikasi Finance.`
+      );
+      router.push("/purchase");
+    },
+    onError: (error) => {
+      const { message } = extractApiError(error);
+      toast.error("Gagal Membuat PO", message || "Server menolak permintaan pembuatan PO.");
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supplier) {
-      toast.error("Supplier Wajib Diisi", "Mohon pilih supplier mitra pengadaan.");
+    if (!supplierId) {
+      toast.error("Supplier Wajib Dipilih", "Mohon pilih supplier mitra pengadaan.");
       return;
     }
     if (cartItems.length === 0) {
       toast.error("Keranjang Kosong", "Tambahkan minimal 1 item barang yang dipesan.");
       return;
     }
-
-    toast.success("PO Berhasil Dibuat", `Purchase Order ${poCode} diterbitkan dan siap diverifikasi Finance.`);
-    router.push("/purchase");
+    if (cartItems.some((line) => !line.materialId || Number(line.qty) <= 0)) {
+      toast.error("Item Tidak Lengkap", "Setiap baris wajib punya bahan dan qty lebih dari 0.");
+      return;
+    }
+    createMutation.mutate();
   };
+
+  const isLoading =
+    suppliersQuery.isLoading || warehousesQuery.isLoading || materialsQuery.isLoading;
+  const isError =
+    suppliersQuery.isError || warehousesQuery.isError || materialsQuery.isError;
+
+  const refetchAll = () => {
+    suppliersQuery.refetch();
+    warehousesQuery.refetch();
+    materialsQuery.refetch();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] pb-24 text-slate-900 font-sans">
+        <div className="p-6 lg:p-8 space-y-6 max-w-6xl mx-auto">
+          <DnaPageHeader
+            title="Buat Pembelian Baru (Purchase Order / PO)"
+            description="Form Penerbitan Dokumen Resmi Pengadaan Bahan Baku & Kemasan Pabrik"
+            backLink={{ href: "/purchase", label: "Kembali ke Daftar PO" }}
+          />
+          <DnaLoadingSkeleton rows={6} />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] pb-24 text-slate-900 font-sans">
+        <div className="p-6 lg:p-8 space-y-6 max-w-6xl mx-auto">
+          <DnaPageHeader
+            title="Buat Pembelian Baru (Purchase Order / PO)"
+            description="Form Penerbitan Dokumen Resmi Pengadaan Bahan Baku & Kemasan Pabrik"
+            backLink={{ href: "/purchase", label: "Kembali ke Daftar PO" }}
+          />
+          <DnaErrorState
+            title="Gagal Memuat Master Data"
+            message="Tidak dapat mengambil master supplier / gudang / bahan dari backend."
+            onRetry={refetchAll}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 text-slate-900 font-sans">
@@ -178,18 +310,31 @@ export default function CreatePurchaseOrderPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="font-bold text-slate-700 block mb-1 text-xs">
-                  Nomor Purchase Order (Auto Universal)
+                  Nomor Purchase Order
                 </label>
-                <DnaInput value={poCode} disabled className="bg-slate-100 font-mono text-xs font-bold text-blue-700" />
-                <span className="text-[10px] text-slate-400 mt-0.5 block">Format DL-SCM-PO-DDMMYYYY-XXXX</span>
+                <DnaInput
+                  value=""
+                  disabled
+                  placeholder="Digenerate sistem saat simpan"
+                  className="bg-slate-100 tabular-nums text-xs font-bold text-blue-700"
+                />
+                <span className="text-[10px] text-slate-400 mt-0.5 block">
+                  poNumber dibuat otomatis oleh server (idGenerator)
+                </span>
               </div>
 
               <div>
                 <label className="font-bold text-slate-700 block mb-1 text-xs">
                   Tanggal PO (Read-Only Hari Ini) *
                 </label>
-                <DnaInput value={poDate} disabled className="bg-slate-100 font-mono text-xs text-slate-700" />
-                <span className="text-[10px] text-slate-400 mt-0.5 block">Otomatis hari ini (Poin 138)</span>
+                <DnaInput
+                  value={new Date().toLocaleDateString("id-ID")}
+                  disabled
+                  className="bg-slate-100 tabular-nums text-xs text-slate-700"
+                />
+                <span className="text-[10px] text-slate-400 mt-0.5 block">
+                  Otomatis hari ini (BUS-RULE-016)
+                </span>
               </div>
 
               <div>
@@ -198,11 +343,13 @@ export default function CreatePurchaseOrderPage() {
                 </label>
                 <DnaInput
                   type="date"
-                  value={deadlineDate}
-                  onChange={(e) => setDeadlineDate(e.target.value)}
-                  className="font-mono text-xs font-bold text-rose-600"
+                  value={estArrival}
+                  onChange={(e) => setEstArrival(e.target.value)}
+                  className="tabular-nums text-xs font-bold text-rose-600"
                 />
-                <span className="text-[10px] text-slate-400 mt-0.5 block">Label Deadline (Poin 37, 95)</span>
+                <span className="text-[10px] text-slate-400 mt-0.5 block">
+                  Dikirim sebagai estArrival
+                </span>
               </div>
             </div>
 
@@ -210,42 +357,34 @@ export default function CreatePurchaseOrderPage() {
               <div>
                 <label className="font-bold text-slate-700 block mb-1 text-xs">Pilih Supplier Mitra *</label>
                 <DnaSelect
-                  options={[
-                    { value: "PT Chemindo Natural Indonesia", label: "PT Chemindo Natural Indonesia (Bahan Baku)" },
-                    { value: "CV Packaging Primatama", label: "CV Packaging Primatama (Bahan Kemas)" },
-                    { value: "PT Multi Bintang Printing", label: "PT Multi Bintang Printing (Kemasan Sekunder)" },
-                    { value: "PT Aroma Essentia Nusantara", label: "PT Aroma Essentia Nusantara (Fragrance)" },
-                  ]}
-                  value={supplier}
-                  onChange={(val) => setSupplier(val)}
+                  options={suppliers.map((s) => ({
+                    value: s.id,
+                    label: s.categoryName ? `${s.name} (${s.categoryName})` : s.name,
+                  }))}
+                  value={supplierId}
+                  onChange={(val) => setSupplierId(val)}
+                  placeholder="— Pilih Supplier —"
                 />
+                {suppliers.length === 0 && (
+                  <span className="text-[10px] text-rose-500 mt-0.5 block">
+                    Belum ada supplier terdaftar di master.
+                  </span>
+                )}
               </div>
 
-              <div>
-                <label className="font-bold text-slate-700 block mb-1 text-xs">Kategori Bahan (Filter Supplier) *</label>
-                <DnaSelect
-                  options={[
-                    { value: "Bahan Baku", label: "Bahan Baku (Active / Base Ingredients)" },
-                    { value: "Kemas Primer", label: "Bahan Kemas Primer (Botol / Jar / Tube)" },
-                    { value: "Kemas Sekunder", label: "Bahan Kemas Sekunder (Box / Label / Segel)" },
-                    { value: "Bahan Pembantu", label: "Bahan Pembantu & Reagen Lab" },
-                  ]}
-                  value={supplierCategory}
-                  onChange={(val) => setSupplierCategory(val)}
-                />
-              </div>
-
-              <div>
+              <div className="md:col-span-2">
                 <label className="font-bold text-slate-700 block mb-1 text-xs">Gudang Penerima *</label>
                 <DnaSelect
-                  options={[
-                    { value: "Gudang Bahan Baku A1 (Pabrik)", label: "Gudang Bahan Baku A1 (Pabrik)" },
-                    { value: "Gudang Kemasan B2 (Pabrik)", label: "Gudang Kemasan B2 (Pabrik)" },
-                    { value: "Gudang Karantina & QC", label: "Gudang Karantina & QC" },
-                  ]}
-                  value={warehouse}
-                  onChange={(val) => setWarehouse(val)}
+                  options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+                  value={warehouseId}
+                  onChange={(val) => setWarehouseId(val)}
+                  placeholder="— Pilih Gudang —"
                 />
+                {warehouses.length === 0 && (
+                  <span className="text-[10px] text-rose-500 mt-0.5 block">
+                    Belum ada gudang aktif terdaftar di master.
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -261,141 +400,115 @@ export default function CreatePurchaseOrderPage() {
                   Hanya kuantitas kondisi bagus yang akan dibayar pada faktur pembelian (Poin 53-55).
                 </p>
               </div>
-              <DnaButton type="button" variant="secondary" size="sm" onClick={handleAddItem}>
-                + Tambah Baris Bahan
+              <DnaButton
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleAddItem}
+                disabled={materials.length === 0}
+                icon={<Plus className="w-3.5 h-3.5" />}
+              >
+                Tambah Baris Bahan
               </DnaButton>
             </div>
 
-            <div className="space-y-2.5">
-              {cartItems.map((item, idx) => (
-                <div
-                  key={item.id}
-                  className="bg-slate-50/70 p-3 rounded-xl border border-slate-200 flex flex-wrap items-center gap-3 text-xs"
-                >
-                  <span className="font-bold text-slate-400 w-5 text-center">{idx + 1}</span>
-
-                  <div className="flex-1 min-w-[180px]">
-                    <label className="text-[10px] text-slate-400 font-bold block mb-0.5">Nama Bahan / Kemas</label>
-                    <DnaInput
-                      value={item.materialName}
-                      onChange={(e) => handleUpdateItem(item.id, "materialName", e.target.value)}
-                      placeholder="Nama Bahan"
-                    />
-                  </div>
-
-                  <div className="w-28">
-                    <label className="text-[10px] text-slate-400 font-bold block mb-0.5">Kode Bahan</label>
-                    <DnaInput
-                      value={item.materialCode}
-                      onChange={(e) => handleUpdateItem(item.id, "materialCode", e.target.value)}
-                      placeholder="KOD-001"
-                      className="font-mono text-[11px]"
-                    />
-                  </div>
-
-                  <div className="w-24">
-                    <label className="text-[10px] text-slate-400 font-bold block mb-0.5">Qty Pesan</label>
-                    <DnaInput
-                      type="number"
-                      value={item.qty}
-                      onChange={(e) => handleUpdateItem(item.id, "qty", Number(e.target.value))}
-                      className="font-bold"
-                    />
-                  </div>
-
-                  <div className="w-20">
-                    <label className="text-[10px] text-slate-400 font-bold block mb-0.5">Satuan</label>
-                    <DnaSelect
-                      options={[
-                        { value: "kg", label: "kg" },
-                        { value: "gram", label: "gram" },
-                        { value: "pcs", label: "pcs" },
-                        { value: "pack", label: "pack" },
-                      ]}
-                      value={item.unit}
-                      onChange={(val) => handleUpdateItem(item.id, "unit", val)}
-                    />
-                  </div>
-
-                  <div className="w-32">
-                    <label className="text-[10px] text-slate-400 font-bold block mb-0.5">Harga Satuan (Rp)</label>
-                    <DnaInput
-                      type="number"
-                      value={item.unitPrice}
-                      onChange={(e) => handleUpdateItem(item.id, "unitPrice", Number(e.target.value))}
-                      className="font-mono"
-                    />
-                  </div>
-
-                  <div className="w-32 text-right">
-                    <label className="text-[10px] text-slate-400 font-bold block mb-0.5">Subtotal</label>
-                    <span className="font-bold text-blue-600 font-mono block pt-2 text-xs">
-                      {formatCurrency(item.subtotal)}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveItem(item.id)}
-                    className="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-colors mt-4"
+            {materials.length === 0 ? (
+              <DnaEmptyState
+                title="Belum Ada Master Bahan"
+                description="Katalog bahan/kemasan kosong di /master/materials, sehingga baris PO tidak dapat diisi."
+              />
+            ) : cartRows.length === 0 ? (
+              <DnaEmptyState
+                icon={<Package className="w-6 h-6" />}
+                title="Keranjang Masih Kosong"
+                description="Klik “Tambah Baris Bahan” untuk memilih bahan dari master materials."
+              />
+            ) : (
+              <div className="space-y-2.5">
+                {cartRows.map((item, idx) => (
+                  <div
+                    key={item.id}
+                    className="bg-slate-50/70 p-3 rounded-xl border border-slate-200 flex flex-wrap items-end gap-3 text-xs"
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <span className="font-bold text-slate-400 w-5 text-center pb-2.5">{idx + 1}</span>
+
+                    <div className="flex-1 min-w-[220px]">
+                      <label className="text-[10px] text-slate-400 font-bold block mb-0.5">
+                        Bahan / Kemas (Master Materials)
+                      </label>
+                      <DnaSelect
+                        options={materials.map((m) => ({
+                          value: m.id,
+                          label: `${m.code} — ${m.name}`,
+                        }))}
+                        value={item.materialId}
+                        onChange={(val) => handleSelectMaterial(item.id, val)}
+                        placeholder="— Pilih Bahan —"
+                      />
+                    </div>
+
+                    <div className="w-24">
+                      <label className="text-[10px] text-slate-400 font-bold block mb-0.5">Satuan</label>
+                      <DnaInput value={item.unit} disabled className="bg-slate-100 text-[11px]" />
+                    </div>
+
+                    <div className="w-28">
+                      <label className="text-[10px] text-slate-400 font-bold block mb-0.5">Qty Pesan</label>
+                      <DnaInput
+                        type="number"
+                        min={1}
+                        value={item.qty}
+                        onChange={(e) => handleUpdateItem(item.id, "qty", Number(e.target.value))}
+                        className="font-bold"
+                      />
+                    </div>
+
+                    <div className="w-36">
+                      <label className="text-[10px] text-slate-400 font-bold block mb-0.5">
+                        Harga Satuan (Rp)
+                      </label>
+                      <DnaInput
+                        type="number"
+                        min={0}
+                        value={item.unitPrice}
+                        onChange={(e) => handleUpdateItem(item.id, "unitPrice", Number(e.target.value))}
+                        className="tabular-nums"
+                      />
+                    </div>
+
+                    <div className="w-32 text-right">
+                      <label className="text-[10px] text-slate-400 font-bold block mb-0.5">Subtotal</label>
+                      <span className="font-bold text-blue-600 tabular-nums block py-3 text-xs">
+                        {formatCurrency(item.subtotal)}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveItem(item.id)}
+                      className="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-colors mb-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Section 3: Kalkulasi Finansial (Diskon Rp & Ongkir) & Digital Signature */}
+          {/* Section 3: Catatan & Kalkulasi Finansial */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Syarat Pembayaran & Tanda Tangan Digital */}
             <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                3. Ketentuan Pembayaran & TTD Digital
+                3. Catatan Khusus PO
               </h3>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1 text-xs">Termin Pembayaran PO *</label>
-                <DnaSelect
-                  options={[
-                    { value: "DP 50% + Pelunasan Saat Tiba", label: "DP 50% + Pelunasan Saat Tiba (Maklon Standar)" },
-                    { value: "Full Payment Before Delivery (CBD)", label: "Cash Before Delivery (CBD 100%)" },
-                    { value: "TOP 14 Hari Kalender", label: "Term of Payment (TOP 14 Hari)" },
-                    { value: "TOP 30 Hari Kalender", label: "Term of Payment (TOP 30 Hari)" },
-                  ]}
-                  value={paymentTerms}
-                  onChange={(val) => setPaymentTerms(val)}
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1 text-xs">Penanggung Jawab PIC Purchasing *</label>
-                <DnaInput value={buyerPic} onChange={(e) => setBuyerPic(e.target.value)} className="text-xs" />
-              </div>
-
-              <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/60 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                  <div>
-                    <span className="font-bold text-xs text-emerald-900 block">Tanda Tangan Digital Resmi</span>
-                    <span className="text-[10px] text-emerald-700">Tervalidasi secara kriptografis (Poin 135)</span>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={isDigitalSigned}
-                  onChange={(e) => setIsDigitalSigned(e.target.checked)}
-                  className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
-                />
-              </div>
-
               <div>
                 <label className="font-bold text-slate-700 block mb-1 text-xs">Catatan Khusus PO</label>
                 <textarea
-                  className="w-full h-16 p-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full h-32 p-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="Catatan instruksi packing, lot expired date, atau syarat COA..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
                 />
               </div>
             </div>
@@ -409,20 +522,21 @@ export default function CreatePurchaseOrderPage() {
               <div className="space-y-2.5 text-xs text-slate-700">
                 <div className="flex justify-between items-center py-1">
                   <span>Subtotal Barang ({cartItems.length} Item):</span>
-                  <span className="font-bold font-mono text-slate-900">{formatCurrency(subtotalBarang)}</span>
+                  <span className="font-bold tabular-nums text-slate-900">{formatCurrency(subtotalBarang)}</span>
                 </div>
 
                 <div className="flex justify-between items-center py-1">
                   <div>
                     <span className="font-semibold block">Potongan Diskon Supplier (Rp):</span>
-                    <span className="text-[10px] text-slate-400">Dihitung dalam Rupiah, bukan % (Poin 101-102)</span>
+                    <span className="text-[10px] text-slate-400">Dikirim sebagai discountManual</span>
                   </div>
                   <div className="w-36">
                     <DnaInput
                       type="number"
+                      min={0}
                       value={discountRp}
                       onChange={(e) => setDiscountRp(Number(e.target.value))}
-                      className="font-mono text-right font-bold text-emerald-600 text-xs"
+                      className="tabular-nums text-right font-bold text-emerald-600 text-xs"
                     />
                   </div>
                 </div>
@@ -430,14 +544,15 @@ export default function CreatePurchaseOrderPage() {
                 <div className="flex justify-between items-center py-1">
                   <div>
                     <span className="font-semibold block">Biaya Ongkir (Rp):</span>
-                    <span className="text-[10px] text-slate-400">Dicatat terpisah dari harga barang (Poin 101)</span>
+                    <span className="text-[10px] text-slate-400">Dikirim sebagai shippingCost</span>
                   </div>
                   <div className="w-36">
                     <DnaInput
                       type="number"
+                      min={0}
                       value={shippingCostRp}
                       onChange={(e) => setShippingCostRp(Number(e.target.value))}
-                      className="font-mono text-right font-bold text-slate-800 text-xs"
+                      className="tabular-nums text-right font-bold text-slate-800 text-xs"
                     />
                   </div>
                 </div>
@@ -458,7 +573,9 @@ export default function CreatePurchaseOrderPage() {
 
                 <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
                   <span className="text-sm font-bold text-slate-900">Grand Total Tagihan PO:</span>
-                  <span className="text-lg font-black text-blue-600 font-mono">{formatCurrency(grandTotal)}</span>
+                  <span className="text-lg font-black text-blue-600 tabular-nums">
+                    {formatCurrency(grandTotal)}
+                  </span>
                 </div>
               </div>
 
@@ -466,8 +583,13 @@ export default function CreatePurchaseOrderPage() {
                 <DnaButton type="button" variant="secondary" onClick={() => router.push("/purchase")}>
                   Batal
                 </DnaButton>
-                <DnaButton type="submit" variant="primary" icon={<Save className="w-4 h-4" />}>
-                  Terbitkan Purchase Order
+                <DnaButton
+                  type="submit"
+                  variant="primary"
+                  icon={<Save className="w-4 h-4" />}
+                  disabled={createMutation.isPending}
+                >
+                  {createMutation.isPending ? "Menerbitkan..." : "Terbitkan Purchase Order"}
                 </DnaButton>
               </div>
             </div>

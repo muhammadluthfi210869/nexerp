@@ -21,6 +21,12 @@ import {
   useDnaToast,
   DnaLoadingSkeleton,
   DnaEmptyState,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 export default function ChangeRequestsPage() {
@@ -106,49 +112,49 @@ export default function ChangeRequestsPage() {
           searchPlaceholder="Cari permintaan perubahan..."
         >
           <div className="w-full">
-            <table className="w-full text-left border-collapse table-fixed text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider select-none">
-                <tr>
-                  <th className="py-3 px-4 w-[45%]">JUDUL & DESKRIPSI</th>
-                  <th className="py-3 px-4 w-[20%]">TANGGAL & PRIORITAS</th>
-                  <th className="py-3 px-4 text-center w-[20%]">STATUS</th>
-                  <th className="py-3 px-4 text-right w-[15%]">AKSI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-normal">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh className="py-3 px-4 w-[45%]">JUDUL & DESKRIPSI</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[20%]">TANGGAL & PRIORITAS</DnaTh>
+                  <DnaTh className="py-3 px-4 text-center w-[20%]">STATUS</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[15%]">AKSI</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredRequests.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-8 text-center">
+                  <DnaTableRow>
+                    <DnaTd colSpan={4} className="py-8 text-center">
                       <DnaEmptyState
                         title="Belum Ada Permintaan Perubahan"
                         description="Belum ada tiket perubahan sistem yang diajukan pada filter ini."
                       />
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredRequests.map((req: any) => (
-                    <tr
+                    <DnaTableRow
                       key={req.id}
                       onClick={() => setSelectedRequest(req)}
                       className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                     >
-                      <td className="py-3 px-4">
+                      <DnaTd className="py-3 px-4">
                         <span className="font-semibold text-slate-900 block truncate">
                           {req.title}
                         </span>
                         <span className="text-[11px] text-slate-500 block truncate">
                           {req.description}
                         </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="text-[11px] font-mono text-slate-600 block">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4">
+                        <span className="text-[11px] tabular-nums text-slate-600 block">
                           {req.createdAt || "-"}
                         </span>
                         <span className="inline-block text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 mt-0.5">
                           {req.priority || "MEDIUM"}
                         </span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
                         <DnaBadge
                           variant={
                             req.status === "DONE"
@@ -160,8 +166,8 @@ export default function ChangeRequestsPage() {
                         >
                           {req.status || "PENDING"}
                         </DnaBadge>
-                      </td>
-                      <td className="py-3 px-4 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                           <DnaButton
                             variant="ghost"
@@ -172,12 +178,12 @@ export default function ChangeRequestsPage() {
                             Detail
                           </DnaButton>
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       )}
