@@ -77,14 +77,13 @@ const methodsOf = (prototype: object) =>
 const buildFacade = (batchRecords: unknown) =>
   new ProductionService(
     {} as never, // prisma
-    {} as never, // legality
     {} as never, // eventEmitter
     {} as never, // idGenerator
-    {} as never, // stateTransition
     {} as never, // analytics
-    batchRecords as never,
+    batchRecords as never, // batchRecords
     {} as never, // planning
     {} as never, // actuals
+    {} as never, // execution
   );
 
 describe('Fase 3C — batch records live in their own service', () => {

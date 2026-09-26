@@ -3,6 +3,7 @@ import { ProductionService } from '../../src/modules/production/production.servi
 import { ProductionBatchRecordService } from '../../src/modules/production/production-batch-record.service';
 import { ProductionPlanningService } from '../../src/modules/production/production-planning.service';
 import { ProductionActualsService } from '../../src/modules/production/production-actuals.service';
+import { ProductionExecutionService } from '../../src/modules/production/production-execution.service';
 import { ProductionAnalyticsService } from '../../src/modules/production/production-analytics.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -45,6 +46,7 @@ describe('ProductionService — Unit', () => {
         ProductionBatchRecordService, // Fase 3C — batch-record cluster
         ProductionPlanningService, // Fase 3C — planning cluster
         ProductionActualsService, // Fase 3C — actuals cluster
+        ProductionExecutionService, // Fase 3C — execution cluster
         { provide: PrismaService, useValue: prisma },
         { provide: EventEmitter2, useValue: eventEmitter },
         { provide: IdGeneratorService, useValue: idGenerator },

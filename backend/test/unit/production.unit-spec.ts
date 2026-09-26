@@ -3,6 +3,7 @@ import { ProductionService } from '../../src/modules/production/production.servi
 import { ProductionBatchRecordService } from '../../src/modules/production/production-batch-record.service';
 import { ProductionPlanningService } from '../../src/modules/production/production-planning.service';
 import { ProductionActualsService } from '../../src/modules/production/production-actuals.service';
+import { ProductionExecutionService } from '../../src/modules/production/production-execution.service';
 import { ProductionAnalyticsService } from '../../src/modules/production/production-analytics.service';
 import { LegalityService } from '../../src/modules/legality/legality.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
@@ -24,6 +25,7 @@ describe('ProductionService — Unit (DI unresolved — $transaction mock)', () 
         ProductionBatchRecordService, // Fase 3C — batch-record cluster
         ProductionPlanningService, // Fase 3C — planning cluster
         ProductionActualsService, // Fase 3C — actuals cluster
+        ProductionExecutionService, // Fase 3C — execution cluster
         ProductionAnalyticsService, // Fase 3C — getMicroFlowDiagnostics lives here
         { provide: PrismaService, useValue: prisma },
         {
