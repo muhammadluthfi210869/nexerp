@@ -17,7 +17,13 @@ import { CreateMaterialDto, UpdateMaterialDto } from '../dto/material.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('scm/materials')
-export class MaterialsController {
+// Named `ScmMaterialsController`, not `MaterialsController`: `master/controllers/
+// materials.controller.ts` already owns that class name on `master/materials`, and
+// Nest builds Swagger operationIds as `${ClassName}_${methodName}` — so the five
+// method names the two shared produced duplicate operationIds, which
+// `openapi-typescript` wrote twice into frontend/src/types/api.ts and `tsc`
+// rejected with TS2300. Pinned by scripts/__tests__/backend-route-uniqueness.test.sh.
+export class ScmMaterialsController {
   constructor(private readonly materialsService: MaterialsService) {}
 
   @Get()

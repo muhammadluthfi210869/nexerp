@@ -15,18 +15,12 @@ import { UserRole } from '@prisma/client';
 import { FinancialReportsService } from './services/financial-reports.service';
 import { OperationalReportsService } from './services/operational-reports.service';
 import {
-  ProfitLossQueryDto,
-  BalanceSheetQueryDto,
   DateRangeQueryDto,
   GeneralLedgerQueryDto,
-  ArAgingQueryDto,
-  ApAgingQueryDto,
   BudgetVsActualQueryDto,
   CostVarianceQueryDto,
   StockReportQueryDto,
-  StockValuationQueryDto,
   GoodsMutationQueryDto,
-  SalesSummaryQueryDto,
   FollowUpCustomerQueryDto,
 } from './dto/report-query.dto';
 
@@ -40,57 +34,30 @@ export class ReportsController {
     private readonly operationalReports: OperationalReportsService,
   ) {}
 
+  // This module owns only the /reports/* paths no other controller declares.
+  //
+  // It used to also declare profit-loss, balance-sheet, trial-balance, cash-flow,
+  // ar-aging, ap-aging, stock-valuation and sales-summary. ExecutiveModule is
+  // imported before ReportsModule in `app.module.ts`, so Express answered every
+  // one of those eight from `executive/reports.controller.ts` and these handlers
+  // could never run — a second, contradicting implementation of the same report
+  // (this one groups AR/AP per customer, the live one per invoice; this one emits
+  // `coa_code`, the live one `code`). They were removed rather than the live ones
+  // because the frontend is built against the live shapes, including the
+  // `summary` block this module never returns.
+  //
+  // A new /reports path belongs here; re-declaring one of those eight will be
+  // caught by `scripts/__tests__/backend-route-uniqueness.test.sh`.
+
   // ==========================================
   // 1. FINANCIAL REPORTS
   // ==========================================
-
-  @Get('profit-loss')
-  @ApiOperation({ summary: 'Profit & Loss Statement with BUS-RULE-070 card ordering' })
-  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.HEAD_OPS)
-  getProfitLoss(@Query() query: ProfitLossQueryDto) {
-    return this.financialReports.getProfitLoss(query);
-  }
-
-  @Get('balance-sheet')
-  @ApiOperation({ summary: 'Balance sheet with Assets == Liabilities + Equity proof' })
-  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.HEAD_OPS)
-  getBalanceSheet(@Query() query: BalanceSheetQueryDto) {
-    return this.financialReports.getBalanceSheet(query);
-  }
-
-  @Get('trial-balance')
-  @ApiOperation({ summary: 'Trial balance with debit == credit balancing proof' })
-  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.HEAD_OPS)
-  getTrialBalance(@Query() query: DateRangeQueryDto) {
-    return this.financialReports.getTrialBalance(query);
-  }
 
   @Get('general-ledger')
   @ApiOperation({ summary: 'General ledger journal entries per COA' })
   @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.HEAD_OPS)
   getGeneralLedger(@Query() query: GeneralLedgerQueryDto) {
     return this.financialReports.getGeneralLedger(query);
-  }
-
-  @Get('cash-flow')
-  @ApiOperation({ summary: 'Cash flow statement (operating, investing, financing)' })
-  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.HEAD_OPS)
-  getCashFlow(@Query() query: DateRangeQueryDto) {
-    return this.financialReports.getCashFlow(query);
-  }
-
-  @Get('ar-aging')
-  @ApiOperation({ summary: 'AR aging with H-3, H-7, >tempo buckets per BUS-RULE-059' })
-  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.HEAD_OPS, UserRole.COMMERCIAL)
-  getArAging(@Query() query: ArAgingQueryDto) {
-    return this.financialReports.getArAging(query);
-  }
-
-  @Get('ap-aging')
-  @ApiOperation({ summary: 'AP aging for vendor invoices' })
-  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.HEAD_OPS, UserRole.SCM)
-  getApAging(@Query() query: ApAgingQueryDto) {
-    return this.financialReports.getApAging(query);
   }
 
   @Get('budget-vs-actual')
@@ -125,25 +92,11 @@ export class ReportsController {
     return this.operationalReports.getStockReport(query);
   }
 
-  @Get('stock-valuation')
-  @ApiOperation({ summary: 'Stock valuation using FIFO or AVERAGE method' })
-  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.HEAD_OPS, UserRole.WAREHOUSE)
-  getStockValuation(@Query() query: StockValuationQueryDto) {
-    return this.operationalReports.getStockValuation(query);
-  }
-
   @Get('mutation-goods')
   @ApiOperation({ summary: 'Goods mutation with opening, in, out, adj, closing quantities' })
   @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.HEAD_OPS, UserRole.WAREHOUSE)
   getGoodsMutation(@Query() query: GoodsMutationQueryDto) {
     return this.operationalReports.getGoodsMutation(query);
-  }
-
-  @Get('sales-summary')
-  @ApiOperation({ summary: 'Sales summary per customer, goods, owner, or month (BUS-RULE-069)' })
-  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.DIRECTOR, UserRole.HEAD_OPS, UserRole.COMMERCIAL)
-  getSalesSummary(@Query() query: SalesSummaryQueryDto) {
-    return this.operationalReports.getSalesSummary(query);
   }
 
   @Get('follow-up-customer')

@@ -82,6 +82,12 @@ run_test "lockfile-in-sync"                          "$SCRIPT_DIR/lockfile-in-sy
 run_test "ci-prisma-cwd"                             "$SCRIPT_DIR/ci-prisma-cwd.test.sh"
 # Backend reachability — one Nest root marks the whole WA self-QR tree as DEAD_CODE
 run_test "nest-multi-root-reachability"              "$SCRIPT_DIR/nest-multi-root-reachability.test.sh"
+# Route uniqueness — a duplicate route is dead code Express never reaches, and
+# P03's own detector misses the bare `@Get()`/`@Post()` form that declared some
+run_test "backend-route-uniqueness"                  "$SCRIPT_DIR/backend-route-uniqueness.test.sh"
+# Invoice aliases — a mapper that omits a field a screen reads prints NaN in a
+# money column with no error anywhere
+run_test "finance-invoice-alias-contract"            "$SCRIPT_DIR/finance-invoice-alias-contract.test.sh"
 # Backend lint — P03 refuses to certify over an eslint error, and CI only reaches it late
 run_test "backend-lint-clean"                        "$SCRIPT_DIR/backend-lint-clean.test.sh"
 

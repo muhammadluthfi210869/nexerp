@@ -2890,21 +2890,24 @@
         ]
       },
       "get": {
-        "operationId": "RndController_getFormulas",
-        "parameters": [],
+        "operationId": "FormulasController_findAll",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all formulas",
         "tags": [
-          "rnd"
+          "Formulas"
         ]
       }
     },
@@ -6146,7 +6149,7 @@
     },
     "/v1/scm/materials": {
       "get": {
-        "operationId": "MaterialsController_findAll",
+        "operationId": "ScmMaterialsController_findAll",
         "parameters": [],
         "responses": {
           "200": {
@@ -6154,11 +6157,11 @@
           }
         },
         "tags": [
-          "Materials"
+          "ScmMaterials"
         ]
       },
       "post": {
-        "operationId": "MaterialsController_create",
+        "operationId": "ScmMaterialsController_create",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -6176,13 +6179,13 @@
           }
         },
         "tags": [
-          "Materials"
+          "ScmMaterials"
         ]
       }
     },
     "/v1/scm/materials/{id}": {
       "get": {
-        "operationId": "MaterialsController_findOne",
+        "operationId": "ScmMaterialsController_findOne",
         "parameters": [
           {
             "name": "id",
@@ -6199,11 +6202,11 @@
           }
         },
         "tags": [
-          "Materials"
+          "ScmMaterials"
         ]
       },
       "put": {
-        "operationId": "MaterialsController_update",
+        "operationId": "ScmMaterialsController_update",
         "parameters": [
           {
             "name": "id",
@@ -6230,11 +6233,11 @@
           }
         },
         "tags": [
-          "Materials"
+          "ScmMaterials"
         ]
       },
       "delete": {
-        "operationId": "MaterialsController_remove",
+        "operationId": "ScmMaterialsController_remove",
         "parameters": [
           {
             "name": "id",
@@ -6251,7 +6254,7 @@
           }
         },
         "tags": [
-          "Materials"
+          "ScmMaterials"
         ]
       }
     },
@@ -10166,18 +10169,8 @@
     },
     "/v1/finance/bills": {
       "post": {
-        "operationId": "BillsController_create",
+        "operationId": "FinanceController_createBill",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateBillDto"
-              }
-            }
-          }
-        },
         "responses": {
           "201": {
             "description": ""
@@ -10188,37 +10181,13 @@
             "bearer": []
           }
         ],
-        "summary": "Create a new vendor bill with line items",
         "tags": [
-          "finance/bills"
+          "finance"
         ]
       },
       "get": {
-        "operationId": "BillsController_findAll",
-        "parameters": [
-          {
-            "name": "vendorId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "status",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "PENDING",
-                "PAID",
-                "PARTIAL",
-                "OVERDUE"
-              ]
-            }
-          }
-        ],
+        "operationId": "FinanceController_getBills",
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
@@ -10229,9 +10198,8 @@
             "bearer": []
           }
         ],
-        "summary": "List all bills, optionally filtered",
         "tags": [
-          "finance/bills"
+          "finance"
         ]
       }
     },
@@ -18727,18 +18695,8 @@
     },
     "/v1/hr/tickets": {
       "post": {
-        "operationId": "TicketsController_create",
+        "operationId": "HrController_createTicket",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTicketDto"
-              }
-            }
-          }
-        },
         "responses": {
           "201": {
             "description": ""
@@ -18749,16 +18707,16 @@
             "bearer": []
           }
         ],
-        "summary": "Create a new HR ticket",
+        "summary": "Create a request ticket (Leave, Overtime, Reimbursement)",
         "tags": [
-          "hr/tickets"
+          "hr"
         ]
       },
       "get": {
-        "operationId": "TicketsController_findAll",
+        "operationId": "HrController_getTickets",
         "parameters": [
           {
-            "name": "status",
+            "name": "employeeId",
             "required": true,
             "in": "query",
             "schema": {
@@ -18766,11 +18724,30 @@
             }
           },
           {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "APPROVED",
+                "REJECTED",
+                "DISBURSED"
+              ]
+            }
+          },
+          {
             "name": "type",
             "required": true,
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "LEAVE",
+                "OVERTIME",
+                "REIMBURSE"
+              ]
             }
           }
         ],
@@ -18784,9 +18761,9 @@
             "bearer": []
           }
         ],
-        "summary": "List all HR tickets (filter by status/type)",
+        "summary": "Get all tickets",
         "tags": [
-          "hr/tickets"
+          "hr"
         ]
       }
     },
@@ -19969,160 +19946,240 @@
     "/v1/reports/ar-aging": {
       "get": {
         "operationId": "ReportsController_getArAging",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "asOfDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "AR aging with H-3, H-7, >tempo buckets per BUS-RULE-059",
         "tags": [
-          "reports"
+          "Reports"
         ]
       }
     },
     "/v1/reports/ap-aging": {
       "get": {
         "operationId": "ReportsController_getApAging",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "asOfDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "supplierId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "AP aging for vendor invoices",
         "tags": [
-          "reports"
+          "Reports"
         ]
       }
     },
     "/v1/reports/sales-summary": {
       "get": {
         "operationId": "ReportsController_getSalesSummary",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Sales summary per customer, goods, owner, or month (BUS-RULE-069)",
         "tags": [
-          "reports"
+          "Reports"
         ]
       }
     },
     "/v1/reports/stock-valuation": {
       "get": {
         "operationId": "ReportsController_getStockValuation",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "warehouseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Stock valuation using FIFO or AVERAGE method",
         "tags": [
-          "reports"
+          "Reports"
         ]
       }
     },
     "/v1/reports/profit-loss": {
       "get": {
         "operationId": "ReportsController_getProfitLoss",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Profit & Loss Statement with BUS-RULE-070 card ordering",
         "tags": [
-          "reports"
+          "Reports"
         ]
       }
     },
     "/v1/reports/balance-sheet": {
       "get": {
         "operationId": "ReportsController_getBalanceSheet",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "date",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Balance sheet with Assets == Liabilities + Equity proof",
         "tags": [
-          "reports"
+          "Reports"
         ]
       }
     },
     "/v1/reports/trial-balance": {
       "get": {
         "operationId": "ReportsController_getTrialBalance",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Trial balance with debit == credit balancing proof",
         "tags": [
-          "reports"
+          "Reports"
         ]
       }
     },
     "/v1/reports/cash-flow": {
       "get": {
         "operationId": "ReportsController_getCashFlow",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Cash flow statement (operating, investing, financing)",
         "tags": [
-          "reports"
+          "Reports"
         ]
       }
     },
@@ -25680,90 +25737,6 @@
         "type": "object",
         "properties": {}
       },
-      "BillLineItemDto": {
-        "type": "object",
-        "properties": {
-          "itemCode": {
-            "type": "string",
-            "example": "RM-001"
-          },
-          "itemName": {
-            "type": "string",
-            "example": "Niacinamide Powder"
-          },
-          "qty": {
-            "type": "number",
-            "example": 5
-          },
-          "unit": {
-            "type": "string",
-            "example": "kg"
-          },
-          "price": {
-            "type": "number",
-            "example": 50000
-          },
-          "discount": {
-            "type": "number",
-            "example": 0
-          }
-        },
-        "required": [
-          "itemCode",
-          "itemName",
-          "qty",
-          "unit",
-          "price"
-        ]
-      },
-      "CreateBillDto": {
-        "type": "object",
-        "properties": {
-          "poNumber": {
-            "type": "string",
-            "example": "PO-2026-0099"
-          },
-          "vendorId": {
-            "type": "string",
-            "example": "uuid"
-          },
-          "procurementCategory": {
-            "type": "string",
-            "example": "Bahan Baku (11510)",
-            "description": "COA category code"
-          },
-          "invoiceDate": {
-            "type": "string",
-            "example": "2026-09-08"
-          },
-          "dueDate": {
-            "type": "string",
-            "example": "2026-10-08"
-          },
-          "pic": {
-            "type": "string",
-            "example": "Arie",
-            "description": "Person in charge"
-          },
-          "notes": {
-            "type": "string",
-            "example": "Bill for PO-2026-0099"
-          },
-          "lineItems": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BillLineItemDto"
-            }
-          }
-        },
-        "required": [
-          "vendorId",
-          "procurementCategory",
-          "dueDate",
-          "pic",
-          "lineItems"
-        ]
-      },
       "CancelBillDto": {
         "type": "object",
         "properties": {
@@ -27099,10 +27072,6 @@
         "properties": {}
       },
       "SubjectiveScoreDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "CreateTicketDto": {
         "type": "object",
         "properties": {}
       },

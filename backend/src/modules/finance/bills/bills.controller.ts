@@ -1,35 +1,26 @@
-import { Controller, Get, Post, Param, Body, Query, Req } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Req } from '@nestjs/common';
 import { BillsService } from './bills.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { PaymentStatus } from '@prisma/client';
-import { CreateBillDto, CancelBillDto } from './dto/create-bill.dto';
+import { CancelBillDto } from './dto/create-bill.dto';
 
+// The collection itself (`GET`/`POST finance/bills`) is owned by
+// `finance/finance.controller.ts`: it is registered first, so Express answered
+// every list/create from there and these two handlers could never run. They were
+// removed rather than the live ones because the frontend posts
+// `{vendorId, billRef, issueDate, dueDate, amount}` — the live DTO, not
+// `CreateBillDto` — and the live list already flattens `billNumber`/`vendorName`
+// for the bills screen. The per-bill routes below have no duplicate owner and
+// stay here, where they serve the `Bill` entity itself.
 @ApiTags('finance/bills')
 @ApiBearerAuth()
 @Controller('finance/bills')
 export class BillsController {
   constructor(private service: BillsService) {}
 
-  @Get()
-  @ApiOperation({ summary: 'List all bills, optionally filtered' })
-  findAll(
-    @Query('vendorId') vendorId?: string,
-    @Query('status') status?: PaymentStatus,
-  ) {
-    return this.service.findAll({ vendorId, status });
-  }
-
   @Get(':id')
   @ApiOperation({ summary: 'Get bill by ID with line items and allocations' })
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
-  }
-
-  @Post()
-  @ApiOperation({ summary: 'Create a new vendor bill with line items' })
-  create(@Req() req: any, @Body() dto: CreateBillDto) {
-    const userId = req.user?.id;
-    return this.service.create(userId, dto);
   }
 
   @Post(':id/post')

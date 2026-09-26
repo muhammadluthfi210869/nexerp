@@ -6,7 +6,7 @@ import { MaterialsService } from './services/materials.service';
 import { ScmService } from './services/scm.service';
 import { PurchaseOrdersController } from './controllers/purchase-orders.controller';
 import { InboundsController } from './controllers/inbounds.controller';
-import { MaterialsController } from './controllers/materials.controller';
+import { ScmMaterialsController } from './controllers/materials.controller';
 import { ScmController } from './controllers/scm.controller';
 import { PurchaseReturnsController } from './controllers/purchase-returns.controller';
 import { PurchaseReturnsService } from './services/purchase-returns.service';
@@ -41,7 +41,7 @@ import { LegalityModule } from '../legality/legality.module';
     PurchaseRequestsController,
     MrpShortageController,
     InboundsController,
-    MaterialsController,
+    ScmMaterialsController,
     ScmController,
     PurchaseReturnsController,
     PurchaseInvoicesController,

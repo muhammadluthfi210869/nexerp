@@ -250,12 +250,11 @@ export class RndController {
     return this.rndService.createLabTestResult(dto, rndActorFromRequest(req));
   }
 
-  @Get('formulas')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
-  @ApiOperation({ summary: 'List all formulas' })
-  getFormulas(@Req() req: any) {
-    return this.rndService.getFormulas(rndActorFromRequest(req));
-  }
+  // `GET rnd/formulas` used to be declared here too. `RndModule.controllers`
+  // lists FormulasController before RndController, so Express answered the path
+  // from `rnd/formulas/formulas.controller.ts` and this handler could never run.
+  // The formulas module owns that path; this controller owns `rnd/pipeline` and
+  // the rest of the R&D surface.
 
   @Get('pipeline')
   @Roles(UserRole.SUPER_ADMIN, UserRole.RND)
