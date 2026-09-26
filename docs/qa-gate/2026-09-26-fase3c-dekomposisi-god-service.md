@@ -347,3 +347,157 @@ ulang dengan daftar pelanggaran penuh, dan itu belum dilakukan.
 Tiga dari empat kegagalan (`dna_*` dua biji, `changed_complexity_check`) menyentuh
 wilayah frontend dan berkas lama, bukan wilayah yang 3C sentuh. Tapi itu
 penjelasan, bukan izin: gate-nya tetap merah.
+
+---
+
+## 9. Lanjutan 3C: penutupan kelas silent-swallow + slice batch record
+
+Dua commit setelah §8, keduanya belum di-push:
+
+| Commit | Isi |
+|---|---|
+| `83cfd2a0` | `fix(platform): close the silent-swallow class, not just the instances` |
+| `b89b6437` | `refactor(production): move batch records out of the god service (3C part 3)` |
+
+Urutannya bukan kebetulan. Slice batch record memuat satu dari swallow yang
+belum tertutup (site `production:work-order-plan-link`), dan memindahkan berkas
+yang masih berisi defect hanya memindahkan defect itu.
+
+### 9.1 Kenapa 3A belum menutup kelasnya
+
+Fase 3A memperbaiki situs swallow yang bisa ia enumerasi. `production.service.ts`
+**tidak ada di daftar berkas 3A**, dan begitu juga tiga berkas lain; di situlah
+tujuh swallow sisanya bersembunyi.
+
+Gate barunya (`backend/test/unit/no-silent-swallow.unit-spec.ts`) memindai seluruh
+pohon, bukan daftar yang diketahui, karena gate yang menghitung instance yang ia
+kenal mengukur perbaikannya, bukan kelasnya. Ia **mem-parse dengan TypeScript
+compiler API, bukan regex**, dan itu keputusan yang terbukti perlu: regex
+`catch\s*\{\s*\}` yang saya pakai sebelumnya menemukan 4, parser menemukan **8**.
+Empat yang lolos adalah `catch {` yang bloknya multi-baris. Parser juga tidak
+salah-tandai `catch {}` di dalam template literal (kasus browser-JS di
+`wa-self-qr`), sehingga gate ini tidak butuh escape hatch allowlist sama sekali.
+
+Empat sidik jari gate:
+
+| Test | Gunanya |
+|---|---|
+| `scans a non-empty tree` (`files.length > 300`) | anti-vakum: gate yang memindai 0 berkas juga melaporkan 0 pelanggaran |
+| positive control menanam dua bentuk lalu mengharapkannya ketemu | membuktikan gate bisa merah, bukan selamanya hijau |
+| `finds none in the real tree` | klaim yang sebenarnya, dengan nama pelanggar dicetak kalau gagal |
+
+Situs yang diperbaiki (7), semuanya lewat `logBestEffort(logger, '<entity>:<action>', err)`
+yang `warn` dan sengaja **tidak** melempar ulang — semuanya tulisan best-effort
+di samping baris otoritatif yang sudah commit, jadi melempar justru me-rollback
+kerja yang tidak boleh hilang:
+
+`production:finished-good-mirror`, `production:work-order-plan-link`,
+`marketing:member-user-mirror`, `wa-self-qr:destination-phone-lookup`,
+`wa-self-qr:client-destroy`, `wa-self-qr:qr-png-persist`,
+`warehouse:stock-shortage-alert`.
+
+`roles.guard.ts` adalah satu-satunya empty catch yang sah — pembacaan
+`constructor`/`name` hanya untuk label log, dan `'anonymous'` jawaban yang benar
+apa pun yang terjadi. Perilakunya tidak berubah, tapi empty catch-nya hilang dan
+fall-through-nya dinyatakan, karena empty catch tidak bisa dibedakan dari
+kegagalan yang dibuang oleh siapa pun yang membacanya nanti. Karena itu gate-nya
+tidak butuh pengecualian.
+
+### 9.2 Slice batch record (3C bagian 3)
+
+Tiga slice 3C sekarang dipotong pada dua sumbu berbeda, dan bedanya disengaja:
+
+| Slice | Sumbu | Guard |
+|---|---|---|
+| finance-report | kemutakhiran (hanya baca) | tidak menulis |
+| production-analytics | kemutakhiran (16 metode hanya baca) | `aggregate`/`groupBy` pindah, tulis tidak |
+| **batch record** | **kohesi domain** (baca, tulis, emit) | model yang dimiliki vs model stage-execution |
+
+Seam diukur dulu, bukan diasumsikan: baris **1853-2219**, tujuh metode
+berdampingan; `this.X` di dalam blok hanya `prisma` (13), `eventEmitter` (2),
+`logger` (1); tidak satu pun dari tujuh nama dirujuk di tempat lain di facade
+(0); pemanggil nyata hanya `production.controller.ts` (7 call site).
+
+Angka terakhir diukur ulang, tidak dipercaya. Grep seluruh repo atas ketujuh nama
+menghasilkan **11 berkas**; sepuluh di antaranya deskriptif — `swagger-spec.json`,
+`src/metadata.ts`, tipe frontend yang di-generate, dan dua kontrak YAML — dan tidak
+satu pun mengikat nama itu ke sebuah instance. Grep menjawab "string ini di mana",
+bukan "siapa memanggil siapa" — kesalahan yang fase ini sudah sekali lakukan lalu
+dibatalkan (§6.1), jadi pengulangannya disengaja sebagai verifikasi.
+
+Pemindahan dilakukan **verbatim oleh skrip**, bukan dengan mengetik ulang 367
+baris. Skrip itu gagal-tertutup: ia memastikan tiap nama muncul tepat sekali di
+dalam blok dan nol kali di luar, blok dimulai di deklarasi metode dan berakhir di
+kurung tutup, blok tidak menyentuh kolaborator lain, dan keempat sidik jari isi
+ada — semuanya sebelum satu byte ditulis. Blok yang hampir benar tetap tidak
+pernah ditulis.
+
+`ProductionService` menyisakan tujuh delegator berbentuk
+`(...args: Parameters<ProductionBatchRecordService['m']>)`, jadi arity tidak bisa
+menyimpang dari metode aslinya. Tidak ada call site yang berubah.
+
+`EventEmitter2` adalah satu-satunya pelanggaran aturan "prisma dan tidak ada lagi"
+dari slice analytics, dan itu sah: dua metode di sini menerbitkan domain event,
+yang memang cara codebase ini memisahkan modul. Service yang tidak bisa emit
+harus tetap menempel di facade.
+
+Berkas: `production.service.ts` **2459 → 2128** baris;
+`production-batch-record.service.ts` **412** baris.
+
+### 9.3 Satu asersi yang salah, diperbaiki sebelum commit
+
+Suite baru awalnya menegaskan `this.prisma.workOrder.` **tidak ada** di service
+hasil ekstraksi. Itu salah secara konstruksi — baris 1918 melakukan
+`workOrder.update({ data: { planId } })`. Model yang benar-benar disentuh blok itu:
+`productionPlan` (10), `salesOrder` (1), `user` (1), `workOrder` (1).
+
+Tiga yang terakhir bukan "asing": itu bahan dari sebuah batch record — sales order
+yang dipenuhinya, operator yang bertindak, dan work order yang ditautkan kembali.
+Asersinya sekarang menegaskan himpunan model yang terukur, dan menegaskan yang
+benar-benar akan mematahkan klaim seam: model stage-execution
+(`productionSchedule`, `productionStepLog`, `materialRequisition`, `machine`,
+`finishedGood`) tidak ikut pindah.
+
+Catatan yang sama berlaku untuk `production-analytics-extraction.unit-spec.ts`:
+daftar "still keeps the write path" menukar `transitionBatchRecord` dengan
+`startStage`. `transitionBatchRecord` sekarang delegator, dan `typeof` tidak bisa
+membedakan delegator dari body — membiarkannya di daftar akan terbaca sebagai
+lulus padahal menguji lebih sedikit. Suite batch record yang menguji body, lewat
+sidik jari.
+
+### 9.4 Verifikasi setelah dua commit
+
+| Gate | Hasil |
+|---|---|
+| `tsc --noEmit` | rc 0 |
+| `npm run lint` | rc 0 (0 error, 0 warning) |
+| `npm run test:unit` | **43/43 suite, 443/443 test** (sebelumnya 42/415) |
+| `bash scripts/__tests__/run-all.sh` | PASS 26, FAIL 0, SKIP 0 |
+| `node scripts/ssot/validate_ssot.js` | 19 pass, 0 fail, CERTIFIED |
+| `node scripts/ssot/audit_lifecycle_reconciliation.js` | 14/14 PASS |
+
+Enam modul Testing yang membangun `ProductionService` (4 e2e + 2 unit) mendapat
+`ProductionBatchRecordService` sebagai provider **nyata**, bukan stub — stub akan
+meluluskan wiring yang belum diuji. `_LIFECYCLE_REGISTRY.json` diregenerasi oleh
+skripnya, tidak pernah diedit tangan.
+
+### 9.5 Yang TIDAK dijalankan, dan apa artinya
+
+1. **P03 phase certification tidak dijalankan ulang** setelah `83cfd2a0` dan
+   `b89b6437`. Alasan: hasil terakhirnya (§8) sudah FAIL dan sudah tidak bisa
+   membersihkan apa pun — berkas buktinya memotong daftar `clones` dan
+   `violations` (5 dari 590), jadi menjalankannya lagi menghasilkan angka baru
+   tanpa mengubah kesimpulan. Angka di §8 karena itu berlaku untuk SHA
+   `5de307db`, bukan `b89b6437`, dan itu dinyatakan di sini alih-alih didiamkan.
+2. **Smoke test live** — masih butuh deploy.
+3. **Rollback teruji** — masih butuh deploy.
+
+### 9.6 Verdict setelah §9
+
+**BELUM SIAP KIRIM.** Tidak berubah dari §7, dan dua implementasi tambahan tidak
+mengubahnya: tiga dari empat gate minimum CLAUDE.md masih belum ada hasilnya.
+
+Satu hal yang **tidak** diklaim: bahwa slice batch record memberi nilai perilaku.
+Ia tidak mengubah perilaku apa pun, dan memang tidak dimaksudkan. Yang ia beri
+adalah berkas 412 baris yang bisa diaudit sendirian, dan suite yang gagal kalau
+badan-badannya diam-diam kembali ke facade.
