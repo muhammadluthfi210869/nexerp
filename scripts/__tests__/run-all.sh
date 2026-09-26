@@ -78,6 +78,8 @@ run_test "p22-pdf-live-probe-fail-closed"            "$SCRIPT_DIR/p22-pdf-live-p
 run_test "master-seed-fail-closed"                   "$SCRIPT_DIR/master-seed-guard.test.sh"
 # Deterministic install — a lock file out of sync passes locally and dies only in CI
 run_test "lockfile-in-sync"                          "$SCRIPT_DIR/lockfile-in-sync.test.sh"
+# CI prisma invocation — `npx --prefix backend` keeps the repo-root CWD and finds no schema
+run_test "ci-prisma-cwd"                             "$SCRIPT_DIR/ci-prisma-cwd.test.sh"
 
 echo ""
 echo "═══════════════════════════════════════════════════════════════"

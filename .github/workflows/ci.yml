@@ -71,9 +71,9 @@ jobs:
         env:
           DATABASE_URL: "postgresql://test_user:test_pass@localhost:5432/test_db?schema=public"
         run: |
-          npx --prefix backend prisma validate
+          npm --prefix backend run prisma:validate
           npm --prefix backend run prisma:generate
-          npx --prefix backend prisma migrate deploy
+          npm --prefix backend run prisma:migrate:deploy
 
       - name: "P03 Phase Certification & Architecture Gates"
         run: |
@@ -186,9 +186,9 @@ jobs:
         env:
           DATABASE_URL: "postgresql://test_user:test_pass@localhost:5432/test_db?schema=public"
         run: |
-          npx --prefix backend prisma validate
+          npm --prefix backend run prisma:validate
           npm --prefix backend run prisma:generate
-          npx --prefix backend prisma migrate deploy
+          npm --prefix backend run prisma:migrate:deploy
 
       - name: "FE <-> BE Contract Parity Gate (G3)"
         env:

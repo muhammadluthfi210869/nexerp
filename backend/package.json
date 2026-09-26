@@ -121,6 +121,8 @@
     "db:repair-migrations": "ts-node scripts/repair-migration-history.ts",
     "db:rehearse-marketing-phase2": "ts-node scripts/rehearse-marketing-phase2.ts",
     "prisma:generate": "prisma generate",
+    "prisma:validate": "prisma validate",
+    "prisma:migrate:deploy": "prisma migrate deploy",
     "seed:master": "node prisma/seed-fase1-master.js",
     "swagger:generate": "ts-node --transpile-only scripts/generate-swagger.ts"
   },
