@@ -46,26 +46,26 @@
       "screens_importing_ui_kit": 7
     },
     "implementation_inventory": {
-      "models_total": 208,
-      "models_classified": 208,
-      "api_operations_total": 991,
-      "api_operations_classified": 991,
+      "models_total": 211,
+      "models_classified": 211,
+      "api_operations_total": 995,
+      "api_operations_classified": 995,
       "screens_total": 278,
       "screens_classified": 278,
-      "backend_controllers": 112,
+      "backend_controllers": 114,
       "backend_controllers_reachable": 112,
-      "backend_controllers_dead": 0,
-      "backend_services": 141,
+      "backend_controllers_dead": 2,
+      "backend_services": 144,
       "backend_services_reachable": 140,
-      "backend_services_dead": 1,
-      "backend_modules": 75,
+      "backend_services_dead": 4,
+      "backend_modules": 77,
       "backend_modules_reachable": 75,
-      "backend_modules_dead": 0,
+      "backend_modules_dead": 2,
       "jobs_schedulers": 3,
-      "published_subscribed_events": 231,
-      "migrations": 50,
+      "published_subscribed_events": 238,
+      "migrations": 53,
       "barrel_exports": 4,
-      "backend_dependencies": 38,
+      "backend_dependencies": 40,
       "frontend_dependencies": 26,
       "compatibility_adapters": 10
     },
@@ -3473,6 +3473,36 @@
       "implementation_state": "IMPLEMENTED_EXACT",
       "owner": "Procurement & SCM Team",
       "rationale": "Domain model GoodsRequirementItem supporting scm workflow in scm.prisma.",
+      "reachable": true
+    },
+    "SelfQrDevice": {
+      "model": "SelfQrDevice",
+      "file": "backend/prisma/schema/self-qr.prisma",
+      "domain": "general",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Engineering Team",
+      "rationale": "Implementation model SelfQrDevice in backend/prisma/schema/self-qr.prisma.",
+      "reachable": true
+    },
+    "SelfQrNormalizedEvent": {
+      "model": "SelfQrNormalizedEvent",
+      "file": "backend/prisma/schema/self-qr.prisma",
+      "domain": "general",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Engineering Team",
+      "rationale": "Implementation model SelfQrNormalizedEvent in backend/prisma/schema/self-qr.prisma.",
+      "reachable": true
+    },
+    "SelfQrHistoryRun": {
+      "model": "SelfQrHistoryRun",
+      "file": "backend/prisma/schema/self-qr.prisma",
+      "domain": "general",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Engineering Team",
+      "rationale": "Implementation model SelfQrHistoryRun in backend/prisma/schema/self-qr.prisma.",
       "reachable": true
     },
     "SystemOverrideLog": {
@@ -9301,8 +9331,8 @@
       "implementation_state": "IMPLEMENTED_MAPPED",
       "implementation_method": "GET",
       "implementation_path": "/v1/dashboards/executive",
-      "implementation_controller": "ExecutiveController",
-      "implementation_symbol": "ExecutiveController_getExecutiveDashboard[0]",
+      "implementation_controller": "DashboardsController",
+      "implementation_symbol": "DashboardsController_getExecutiveDashboard",
       "owner": "Reporting & Analytics Team",
       "rationale": "Concrete implemented endpoint in runtime Swagger specification.",
       "reconciled": true
@@ -21378,13 +21408,13 @@
       "method": "GET",
       "path": "/v1/dashboards/executive",
       "normalized_path": "/dashboards/executive",
-      "operationId": "ExecutiveController_getExecutiveDashboard[0]",
-      "tag": "Executive",
-      "summary": "",
+      "operationId": "DashboardsController_getExecutiveDashboard",
+      "tag": "dashboards",
+      "summary": "Executive dashboard rollup",
       "lifecycle_classification": "CANONICAL",
       "implementation_state": "IMPLEMENTED_EXACT",
-      "owner": "Platform Team",
-      "rationale": "Swagger registered API endpoint.",
+      "owner": "Reporting & Analytics Team",
+      "rationale": "Executive dashboard rollup",
       "reachable": true
     },
     {
@@ -21987,6 +22017,32 @@
     },
     {
       "method": "GET",
+      "path": "/v1/master/suppliers/active",
+      "normalized_path": "/master/suppliers/active",
+      "operationId": "SuppliersController_findActive[0]",
+      "tag": "Suppliers",
+      "summary": "",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Platform Team",
+      "rationale": "Swagger registered API endpoint.",
+      "reachable": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/suppliers/active",
+      "normalized_path": "/suppliers/active",
+      "operationId": "SuppliersController_findActive[1]",
+      "tag": "Suppliers",
+      "summary": "",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Platform Team",
+      "rationale": "Swagger registered API endpoint.",
+      "reachable": true
+    },
+    {
+      "method": "GET",
       "path": "/v1/master/suppliers/{id}",
       "normalized_path": "/master/suppliers/{}",
       "operationId": "SuppliersController_findOne[0]",
@@ -22165,6 +22221,32 @@
       "implementation_state": "IMPLEMENTED_EXACT",
       "owner": "Platform Team",
       "rationale": "Create a customer",
+      "reachable": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/master/customers/active",
+      "normalized_path": "/master/customers/active",
+      "operationId": "CustomersController_findActive[0]",
+      "tag": "Master Data",
+      "summary": "List customers for dropdown/searchable select",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Platform Team",
+      "rationale": "List customers for dropdown/searchable select",
+      "reachable": true
+    },
+    {
+      "method": "GET",
+      "path": "/v1/customers/active",
+      "normalized_path": "/customers/active",
+      "operationId": "CustomersController_findActive[1]",
+      "tag": "Master Data",
+      "summary": "List customers for dropdown/searchable select",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Platform Team",
+      "rationale": "List customers for dropdown/searchable select",
       "reachable": true
     },
     {
@@ -31689,7 +31771,7 @@
       "imports_dna": true,
       "imports_ui_kit": false,
       "raw_buttons": 1,
-      "raw_inputs": 9,
+      "raw_inputs": 8,
       "hardcoded_hex_colors": [],
       "inline_styles_count": 0,
       "disposition": "PARTIALLY_MIGRATED"
@@ -32328,7 +32410,7 @@
       "file": "frontend/src/app/(dashboard)/quality/checklist/page.tsx",
       "imports_dna": true,
       "imports_ui_kit": false,
-      "raw_buttons": 8,
+      "raw_buttons": 6,
       "raw_inputs": 1,
       "hardcoded_hex_colors": [
         "#F8FAFC"
@@ -32733,7 +32815,7 @@
       "imports_dna": true,
       "imports_ui_kit": false,
       "raw_buttons": 0,
-      "raw_inputs": 7,
+      "raw_inputs": 2,
       "hardcoded_hex_colors": [],
       "inline_styles_count": 0,
       "disposition": "ALREADY_DNA"
@@ -34280,6 +34362,24 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/wa-self-qr/connect-page.controller.ts",
+      "controller_symbol": "ConnectPageController",
+      "domain": "wa-self-qr",
+      "owner": "Platform Team",
+      "rationale": "Unregistered controller unreachable from root AppModule dependency graph.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
+    },
+    {
+      "file": "backend/src/modules/wa-self-qr/wa-self-qr.controller.ts",
+      "controller_symbol": "WaSelfQrController",
+      "domain": "wa-self-qr",
+      "owner": "Platform Team",
+      "rationale": "Unregistered controller unreachable from root AppModule dependency graph.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
+    },
+    {
       "file": "backend/src/modules/wa-webhook/wa-gateway.controller.ts",
       "controller_symbol": "WaGatewayController",
       "domain": "wa-webhook",
@@ -35443,6 +35543,33 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/wa-self-qr/collector.service.ts",
+      "provider_symbol": "CollectorService",
+      "domain": "wa-self-qr",
+      "owner": "Platform Team",
+      "rationale": "Unreferenced service not provided in any active module or imported by active controllers.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
+    },
+    {
+      "file": "backend/src/modules/wa-self-qr/coverage.service.ts",
+      "provider_symbol": "CoverageService",
+      "domain": "wa-self-qr",
+      "owner": "Platform Team",
+      "rationale": "Unreferenced service not provided in any active module or imported by active controllers.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
+    },
+    {
+      "file": "backend/src/modules/wa-self-qr/storage.service.ts",
+      "provider_symbol": "StorageService",
+      "domain": "wa-self-qr",
+      "owner": "Platform Team",
+      "rationale": "Unreferenced service not provided in any active module or imported by active controllers.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
+    },
+    {
       "file": "backend/src/modules/wa-webhook/wa-webhook.service.ts",
       "provider_symbol": "WaWebhookService",
       "domain": "wa-webhook",
@@ -36219,6 +36346,15 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/wa-self-qr/wa-self-qr.module.ts",
+      "module_symbol": "WaSelfQrModule",
+      "domain": "wa-self-qr",
+      "owner": "Platform Team",
+      "rationale": "Submodule not imported in app.module.ts; scheduled for modular integration or retirement.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
+    },
+    {
       "file": "backend/src/modules/wa-webhook/wa-webhook.module.ts",
       "module_symbol": "WaWebhookModule",
       "domain": "wa-webhook",
@@ -36262,6 +36398,15 @@
       "rationale": "NestJS dependency injection module for prisma.module.ts.",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "reachable": true
+    },
+    {
+      "file": "backend/src/self-qr-app.module.ts",
+      "module_symbol": "SelfQrAppModule",
+      "domain": "platform",
+      "owner": "Platform Team",
+      "rationale": "Submodule not imported in app.module.ts; scheduled for modular integration or retirement.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
     },
     {
       "file": "backend/src/shared/shared.module.ts",
@@ -38357,6 +38502,76 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/wa-self-qr/storage.service.ts",
+      "provider_symbol": "StorageService",
+      "role": "PUBLISHER",
+      "event": "LEAD_VALIDATION_EVENTS.SELF_QR_EVENT_PERSISTED",
+      "owner": "Platform Team",
+      "rationale": "Event publisher in unregistered provider StorageService scheduled for retirement.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
+    },
+    {
+      "file": "backend/src/modules/wa-self-qr/whatsapp-webjs-transport.ts",
+      "provider_symbol": "WhatsappWebJsTransport",
+      "role": "PUBLISHER",
+      "event": "authenticated",
+      "owner": "Platform Team",
+      "rationale": "Event publisher in unregistered provider WhatsappWebJsTransport scheduled for retirement.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
+    },
+    {
+      "file": "backend/src/modules/wa-self-qr/whatsapp-webjs-transport.ts",
+      "provider_symbol": "WhatsappWebJsTransport",
+      "role": "PUBLISHER",
+      "event": "disconnected",
+      "owner": "Platform Team",
+      "rationale": "Event publisher in unregistered provider WhatsappWebJsTransport scheduled for retirement.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
+    },
+    {
+      "file": "backend/src/modules/wa-self-qr/whatsapp-webjs-transport.ts",
+      "provider_symbol": "WhatsappWebJsTransport",
+      "role": "PUBLISHER",
+      "event": "disconnected",
+      "owner": "Platform Team",
+      "rationale": "Event publisher in unregistered provider WhatsappWebJsTransport scheduled for retirement.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
+    },
+    {
+      "file": "backend/src/modules/wa-self-qr/whatsapp-webjs-transport.ts",
+      "provider_symbol": "WhatsappWebJsTransport",
+      "role": "PUBLISHER",
+      "event": "message",
+      "owner": "Platform Team",
+      "rationale": "Event publisher in unregistered provider WhatsappWebJsTransport scheduled for retirement.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
+    },
+    {
+      "file": "backend/src/modules/wa-self-qr/whatsapp-webjs-transport.ts",
+      "provider_symbol": "WhatsappWebJsTransport",
+      "role": "PUBLISHER",
+      "event": "qr",
+      "owner": "Platform Team",
+      "rationale": "Event publisher in unregistered provider WhatsappWebJsTransport scheduled for retirement.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
+    },
+    {
+      "file": "backend/src/modules/wa-self-qr/whatsapp-webjs-transport.ts",
+      "provider_symbol": "WhatsappWebJsTransport",
+      "role": "PUBLISHER",
+      "event": "ready",
+      "owner": "Platform Team",
+      "rationale": "Event publisher in unregistered provider WhatsappWebJsTransport scheduled for retirement.",
+      "lifecycle_classification": "DEAD_CODE",
+      "reachable": false
+    },
+    {
       "file": "backend/src/modules/warehouse/warehouse.service.ts",
       "provider_symbol": "WarehouseService",
       "role": "PUBLISHER",
@@ -40201,6 +40416,30 @@
       "reachable": true
     },
     {
+      "dir": "backend/prisma/migrations/20260925100000_p03_reconcile_change_requests",
+      "file": "backend/prisma/migrations/20260925100000_p03_reconcile_change_requests/migration.sql",
+      "owner": "Database Architecture Team",
+      "rationale": "Idempotent database migration script 20260925100000_p03_reconcile_change_requests.",
+      "status": "EXECUTED_MIGRATION",
+      "reachable": true
+    },
+    {
+      "dir": "backend/prisma/migrations/20260925120000_reconcile_schema_gaps",
+      "file": "backend/prisma/migrations/20260925120000_reconcile_schema_gaps/migration.sql",
+      "owner": "Database Architecture Team",
+      "rationale": "Idempotent database migration script 20260925120000_reconcile_schema_gaps.",
+      "status": "EXECUTED_MIGRATION",
+      "reachable": true
+    },
+    {
+      "dir": "backend/prisma/migrations/20260925140000_self_qr_tables",
+      "file": "backend/prisma/migrations/20260925140000_self_qr_tables/migration.sql",
+      "owner": "Database Architecture Team",
+      "rationale": "Idempotent database migration script 20260925140000_self_qr_tables.",
+      "status": "EXECUTED_MIGRATION",
+      "reachable": true
+    },
+    {
       "dir": "backend/prisma/migrations/add_assigned_phone",
       "file": "backend/prisma/migrations/add_assigned_phone/migration.sql",
       "owner": "Database Architecture Team",
@@ -40356,7 +40595,7 @@
     },
     {
       "name": "@prisma/client",
-      "version": "^7.10.0",
+      "version": "7.10.0",
       "domain": "backend-runtime",
       "owner": "Backend Platform Team",
       "rationale": "Direct production dependency imported in NestJS backend.",
@@ -40481,6 +40720,15 @@
       "reachable": true
     },
     {
+      "name": "qrcode",
+      "version": "^1.5.4",
+      "domain": "backend-runtime",
+      "owner": "Backend Platform Team",
+      "rationale": "Direct production dependency imported in NestJS backend.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
       "name": "reflect-metadata",
       "version": "^0.2.2",
       "domain": "backend-runtime",
@@ -40522,6 +40770,15 @@
       "domain": "backend-runtime",
       "owner": "Backend Platform Team",
       "rationale": "Runtime/CLI infrastructure dependency required by backend execution environment.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "name": "whatsapp-web.js",
+      "version": "1.34.7",
+      "domain": "backend-runtime",
+      "owner": "Backend Platform Team",
+      "rationale": "Direct production dependency imported in NestJS backend.",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "reachable": true
     },
