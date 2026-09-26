@@ -1,9 +1,9 @@
 {
   "manifest_version": "1.0.0",
-  "generated_at": "2026-09-26T09:28:28.829Z",
+  "generated_at": "2026-09-26T10:45:06.657Z",
   "base_commit_sha": "9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb",
-  "candidate_commit_sha": "7b7b5eb623d927591451da6754cda411ae6d89d1",
-  "total_changed_paths": 1185,
+  "candidate_commit_sha": "43adc69781a96b0cf4849b26f2384bd90a953298",
+  "total_changed_paths": 1195,
   "paths": [
     {
       "path": ".github/PULL_REQUEST_TEMPLATE/ssot-change.md",
@@ -582,6 +582,10 @@
       "applicable_analyzers": []
     },
     {
+      "path": "backend/src/modules/finance/bills/bills.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
       "path": "backend/src/modules/finance/cash.service.ts",
       "applicable_analyzers": []
     },
@@ -663,6 +667,10 @@
     },
     {
       "path": "backend/src/modules/hr/hr.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/hr/tickets/tickets.controller.ts",
       "applicable_analyzers": []
     },
     {
@@ -999,6 +1007,10 @@
     },
     {
       "path": "backend/src/modules/scm/controllers/inbounds.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/controllers/materials.controller.ts",
       "applicable_analyzers": []
     },
     {
@@ -2414,6 +2426,10 @@
       "applicable_analyzers": []
     },
     {
+      "path": "docs/qa-gate/2026-09-26-rute-mati-dan-shape-live.md",
+      "applicable_analyzers": []
+    },
+    {
       "path": "docs/qa-gate/2026-09-26-tahap2-batch1-master.md",
       "applicable_analyzers": []
     },
@@ -2654,6 +2670,10 @@
       "applicable_analyzers": []
     },
     {
+      "path": "frontend/src/app/(dashboard)/__tests__/live-shape-crash-guards.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
       "path": "frontend/src/app/(dashboard)/__tests__/tahap3-write-path.test.tsx",
       "applicable_analyzers": []
     },
@@ -2847,6 +2867,10 @@
     },
     {
       "path": "frontend/src/app/(dashboard)/executive/dashboard/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/__tests__/bills-live-shape.behavior.test.tsx",
       "applicable_analyzers": []
     },
     {
@@ -4306,6 +4330,14 @@
       "applicable_analyzers": []
     },
     {
+      "path": "frontend/src/types/api-schema.d.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/types/api.ts",
+      "applicable_analyzers": []
+    },
+    {
       "path": "frontend/test/master-screens-behavior.test.tsx",
       "applicable_analyzers": []
     },
@@ -4358,6 +4390,10 @@
       "applicable_analyzers": []
     },
     {
+      "path": "scripts/__tests__/backend-route-uniqueness.test.sh",
+      "applicable_analyzers": []
+    },
+    {
       "path": "scripts/__tests__/ci-prisma-cwd.test.sh",
       "applicable_analyzers": []
     },
@@ -4379,6 +4415,10 @@
     },
     {
       "path": "scripts/__tests__/fabrication-guards.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/finance-invoice-alias-contract.test.sh",
       "applicable_analyzers": []
     },
     {

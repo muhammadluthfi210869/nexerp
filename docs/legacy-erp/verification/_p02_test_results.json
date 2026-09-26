@@ -1,10 +1,12 @@
 {
-  "generated_at": "2026-09-26T09:28:43.020Z",
+  "generated_at": "2026-09-26T10:45:21.543Z",
   "phase": "P02",
-  "passed_tests": 14,
+  "passed_tests": 13,
   "total_tests": 14,
-  "verdict": "PASS",
-  "failures": [],
+  "verdict": "FAIL",
+  "failures": [
+    "caller_import_registration_scan: Missing controller in registry: \"backend/src/modules/scm/controllers/materials.controller.ts\"|\"ScmMaterialsController\" (count: 1); Extraneous controller in registry: \"backend/src/modules/scm/controllers/materials.controller.ts\"|\"MaterialsController\" (count: 1); Controller reachability mismatch: backend/src/modules/scm/controllers/materials.controller.ts::MaterialsController is marked reachable=true, but graph derived reachable=false"
+  ],
   "results": {
     "implementation_readiness_audit": {
       "status": "PASS",
@@ -65,13 +67,17 @@
       "implementation_event_mechanism": "NestJS EventEmitter2 + StateTransitionLog + Audit outbox"
     },
     "caller_import_registration_scan": {
-      "status": "PASS",
+      "status": "FAIL",
       "backend_controllers_registered": 114,
       "backend_services_registered": 144,
       "backend_modules_registered": 77,
       "reachable_count": 334,
       "dead_count": 1,
-      "errors": []
+      "errors": [
+        "Missing controller in registry: \"backend/src/modules/scm/controllers/materials.controller.ts\"|\"ScmMaterialsController\" (count: 1)",
+        "Extraneous controller in registry: \"backend/src/modules/scm/controllers/materials.controller.ts\"|\"MaterialsController\" (count: 1)",
+        "Controller reachability mismatch: backend/src/modules/scm/controllers/materials.controller.ts::MaterialsController is marked reachable=true, but graph derived reachable=false"
+      ]
     },
     "orphan_scan": {
       "status": "PASS",
