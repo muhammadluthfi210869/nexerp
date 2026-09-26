@@ -64,7 +64,7 @@
       "jobs_schedulers": 3,
       "published_subscribed_events": 238,
       "migrations": 55,
-      "barrel_exports": 4,
+      "barrel_exports": 5,
       "backend_dependencies": 40,
       "frontend_dependencies": 26,
       "compatibility_adapters": 10
@@ -39016,6 +39016,51 @@
           "kind": "NAMED_REEXPORT",
           "exported_name": "AutomationShell",
           "source": "./AutomationShell"
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/dna/dna-interactive/index.ts",
+      "owner": "Design System Team",
+      "rationale": "Public UI DNA component library barrel export boundary with 6 members.",
+      "lifecycle_classification": "CANONICAL",
+      "reachable": true,
+      "members": [
+        {
+          "file": "frontend/src/components/dna/dna-interactive/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./inputs"
+        },
+        {
+          "file": "frontend/src/components/dna/dna-interactive/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./layout"
+        },
+        {
+          "file": "frontend/src/components/dna/dna-interactive/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./modals"
+        },
+        {
+          "file": "frontend/src/components/dna/dna-interactive/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./result-print"
+        },
+        {
+          "file": "frontend/src/components/dna/dna-interactive/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./toast"
+        },
+        {
+          "file": "frontend/src/components/dna/dna-interactive/index.ts",
+          "kind": "STAR",
+          "exported_name": "*",
+          "source": "./workflow"
         }
       ]
     },
