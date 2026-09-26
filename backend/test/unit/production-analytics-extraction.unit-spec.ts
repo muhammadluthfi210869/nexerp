@@ -74,6 +74,7 @@ const buildFacade = (analytics: unknown) =>
     {} as never, // stateTransition
     analytics as never,
     {} as never, // batchRecords
+    {} as never, // planning
   );
 
 describe('Fase 3C — production analytics live in their own service', () => {

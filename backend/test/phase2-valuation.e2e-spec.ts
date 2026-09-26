@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { WarehouseService } from '../src/modules/warehouse/warehouse.service';
 import { ProductionService } from '../src/modules/production/production.service';
 import { ProductionBatchRecordService } from '../src/modules/production/production-batch-record.service';
+import { ProductionPlanningService } from '../src/modules/production/production-planning.service';
 import { PrismaService } from '../src/prisma/prisma/prisma.service';
 import { ScmService } from '../src/modules/scm/services/scm.service';
 import { FinanceService } from '../src/modules/finance/finance.service';
@@ -19,6 +20,7 @@ describe('Phase 2: Supply Chain Integrity & Valuation', () => {
         WarehouseService,
         ProductionService,
         ProductionBatchRecordService, // Fase 3C — batch-record cluster
+        ProductionPlanningService, // Fase 3C — planning cluster
         PrismaService,
         ScmService,
         FinanceService,
