@@ -55,8 +55,8 @@
       "backend_controllers": 114,
       "backend_controllers_reachable": 114,
       "backend_controllers_dead": 0,
-      "backend_services": 153,
-      "backend_services_reachable": 152,
+      "backend_services": 154,
+      "backend_services_reachable": 153,
       "backend_services_dead": 1,
       "backend_modules": 77,
       "backend_modules_reachable": 77,
@@ -35381,6 +35381,15 @@
       "reachable": true
     },
     {
+      "file": "backend/src/modules/production/production-work-order.service.ts",
+      "provider_symbol": "ProductionWorkOrderService",
+      "domain": "production",
+      "owner": "Production Team",
+      "rationale": "Business service encapsulated in production module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
       "file": "backend/src/modules/production/production.service.ts",
       "provider_symbol": "ProductionService",
       "domain": "production",
@@ -38103,8 +38112,8 @@
       "reachable": true
     },
     {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
+      "file": "backend/src/modules/production/production-work-order.service.ts",
+      "provider_symbol": "ProductionWorkOrderService",
       "role": "PUBLISHER",
       "event": "activity.logged",
       "owner": "Production Team",
@@ -38113,8 +38122,8 @@
       "reachable": true
     },
     {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
+      "file": "backend/src/modules/production/production-work-order.service.ts",
+      "provider_symbol": "ProductionWorkOrderService",
       "role": "PUBLISHER",
       "event": "activity.logged",
       "owner": "Production Team",
@@ -38123,12 +38132,52 @@
       "reachable": true
     },
     {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
+      "file": "backend/src/modules/production/production-work-order.service.ts",
+      "provider_symbol": "ProductionWorkOrderService",
       "role": "PUBLISHER",
       "event": "activity.logged",
       "owner": "Production Team",
       "rationale": "Event publisher for event activity.logged",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-work-order.service.ts",
+      "provider_symbol": "ProductionWorkOrderService",
+      "role": "PUBLISHER",
+      "event": "production.material.issued",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event production.material.issued",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-work-order.service.ts",
+      "provider_symbol": "ProductionWorkOrderService",
+      "role": "PUBLISHER",
+      "event": "production.material.shortage",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event production.material.shortage",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-work-order.service.ts",
+      "provider_symbol": "ProductionWorkOrderService",
+      "role": "PUBLISHER",
+      "event": "production.work_order.created",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event production.work_order.created",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-work-order.service.ts",
+      "provider_symbol": "ProductionWorkOrderService",
+      "role": "PUBLISHER",
+      "event": "warehouse.material.issued",
+      "owner": "Production Team",
+      "rationale": "Event publisher for event warehouse.material.issued",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "reachable": true
     },
@@ -38186,29 +38235,9 @@
       "file": "backend/src/modules/production/production.service.ts",
       "provider_symbol": "ProductionService",
       "role": "PUBLISHER",
-      "event": "production.material.issued",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event production.material.issued",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
       "event": "production.material.returned",
       "owner": "Production Team",
       "rationale": "Event publisher for event production.material.returned",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
-      "event": "production.material.shortage",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event production.material.shortage",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "reachable": true
     },
@@ -38229,26 +38258,6 @@
       "event": "production.qc_verified",
       "owner": "Production Team",
       "rationale": "Event publisher for event production.qc_verified",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
-      "event": "production.work_order.created",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event production.work_order.created",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "reachable": true
-    },
-    {
-      "file": "backend/src/modules/production/production.service.ts",
-      "provider_symbol": "ProductionService",
-      "role": "PUBLISHER",
-      "event": "warehouse.material.issued",
-      "owner": "Production Team",
-      "rationale": "Event publisher for event warehouse.material.issued",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "reachable": true
     },
