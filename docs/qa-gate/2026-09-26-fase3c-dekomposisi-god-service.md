@@ -183,10 +183,10 @@ ditempel manual, audit berikutnya akan tetap merah.
 
 ### 4.3 Yang **belum** dijalankan
 
-- **P03 phase certification** — dijalankan setelah commit (`certify_p03_phase.js`
-  menolak working tree kotor).
 - **Smoke test live** — butuh deploy.
 - **Rollback teruji** — butuh deploy.
+
+P03 sudah dijalankan setelah commit kedua; hasilnya di §8 dan **tidak hijau**.
 
 ---
 
@@ -279,6 +279,71 @@ Yang belum ada hasilnya, dan karena itu verdict-nya tetap belum siap:
 
 1. **Smoke test live** — butuh deploy.
 2. **Rollback teruji** — butuh deploy.
-3. **P03 phase certification** — baru bisa setelah commit; terakhir tercatat
-   17/21 dengan verdict FAIL pada basis beku `9229478d`, dan itu **tidak boleh**
-   diklaim hijau sampai dijalankan ulang di SHA ini.
+3. **P03 phase certification — sudah dijalankan, dan MERAH: 17/21, verdict FAIL,
+   token `null`** di SHA `5de307db`. Rinciannya di §8. Angka ini tidak boleh
+   disebut hijau, dan juga tidak boleh disebut "gagal karena 3C" — lihat §8.3
+   untuk apa yang bisa dan tidak bisa disimpulkan.
+
+---
+
+## 8. P03 Phase Certification (dijalankan setelah commit)
+
+`node scripts/ssot/certify_p03_phase.js` pada working tree bersih di SHA
+`5de307db`, 2026-09-26T16:43:25Z → 16:48:59Z (5m34s).
+
+```
+verdict: FAIL      token: null      passed_tests: 17 / 21
+candidate_sha: 5de307dbb9bae51d3906828a62ede079388ae87c
+base_sha:      9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb
+```
+
+### 8.1 Yang lulus (17)
+
+`clean_checkout_build` (599 file JS backend, 282 rute frontend), `typecheck`
+(backend + frontend exit 0), `lint` (backend 0 error 0 warning; frontend 3810
+warning dari plafon 8218, ratchet patuh), `unit_smoke` (backend 41/41 suite 412
+test; frontend 83 suite 670 test; 0 skip tak terduga), `container_build`,
+`ci_required_check_test` (15 penanda CI lengkap), `module_boundary_test` (41
+modul, 0 pelanggaran), `dependency_direction_test` (146 service, 0 pelanggaran),
+`circular_dependency_scan` (1306 file, 0 siklus), `unused_export_dependency_scan`
+(0 dependensi tak terpakai), `orphan_object_scan` (114 controller / 146 service /
+278 halaman, 0 objek tak dijelaskan), `dna_import_boundary_ast`,
+`dna_primitive_duplication_scan`, `dna_barrel_integrity`,
+`dna_reference_route_and_composition`, `dna_screen_coverage_manifest`,
+`dna_exception_registry_validation`.
+
+Perhatikan dua yang lulus ini justru menyangkut pekerjaan 3C:
+`module_boundary_test` dan `dependency_direction_test` keduanya 0 pelanggaran
+setelah dua kelas baru masuk. Memecah god service adalah operasi yang justru
+paling mudah menciptakan ketergantungan terlarang; di sini tidak terjadi.
+
+### 8.2 Yang gagal (4)
+
+| Check | Angka | Plafon | Catatan |
+|---|---|---|---|
+| `duplicate_code_scan` | **22.14%** token terduplikasi (121322/548086) | 1% | 57777 clone; didominasi `backend/prisma/seed-coa-v2.ts` dan `seed-golden-showcase.ts` (jendela 8 token pada berkas seed yang memang berulang) |
+| `changed_complexity_check` | **590 pelanggaran, 304 tanpa rationale**, dari 607 berkas berubah | kompleksitas 10 (absolut 15) | ratchet `zero_tolerance_changed_code` |
+| `dna_native_interactive_scan` | **65 layar** dengan elemen interaktif native tak tertangani | 0 | frontend |
+| `dna_hardcoded_visual_scan` | **22 layar** dengan visual hardcoded | 0 | frontend |
+
+Basis pembandingnya `9229478d` (2026-09-18), bukan delta branch ini. Karena itu
+angka-angka ini mengukur **seluruh 607 berkas yang berubah sejak basis beku itu**,
+termasuk seluruh kerja Fase 1, 2, dan 3.
+
+### 8.3 Apa yang boleh dan tidak boleh disimpulkan
+
+Yang **boleh**: `duplicate_code_scan` bergerak dari 22.16% (baseline sebelum
+pekerjaan ini) ke 22.14%. Arahnya benar, besarannya tidak berarti — memindahkan
+1149 baris tidak menurunkan duplikasi dua persen, karena yang mendominasi angka
+itu berkas seed COA, bukan service.
+
+Yang **tidak boleh**: mengklaim 3C tidak menyumbang pelanggaran apa pun.
+`changed_complexity_check` mencacah 590 pelanggaran tetapi berkas buktinya hanya
+memuat cuplikan 5 entri; 5 entri itu semuanya di `bussdev/`, `prisma/seed-*`, dan
+`auth/`, tidak satu pun di `production/` atau `finance/` — tapi cuplikan 5 dari
+590 bukan bukti tentang 585 sisanya. Untuk memastikannya, gate perlu dijalankan
+ulang dengan daftar pelanggaran penuh, dan itu belum dilakukan.
+
+Tiga dari empat kegagalan (`dna_*` dua biji, `changed_complexity_check`) menyentuh
+wilayah frontend dan berkas lama, bukan wilayah yang 3C sentuh. Tapi itu
+penjelasan, bukan izin: gate-nya tetap merah.
