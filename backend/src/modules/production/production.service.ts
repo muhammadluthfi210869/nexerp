@@ -15,6 +15,7 @@ import { ProductionBatchRecordService } from './production-batch-record.service'
 import { ProductionPlanningService } from './production-planning.service';
 import { ProductionActualsService } from './production-actuals.service';
 import { ProductionExecutionService } from './production-execution.service';
+import { ProductionAuditService } from './production-audit.service';
 
 @Injectable()
 export class ProductionService {
@@ -27,6 +28,7 @@ export class ProductionService {
     private planning: ProductionPlanningService,
     private actuals: ProductionActualsService,
     private execution: ProductionExecutionService,
+    private audit: ProductionAuditService,
   ) {}
 
 
@@ -289,112 +291,20 @@ export class ProductionService {
       });
   }
 
-  async getPendingAudits() {
-    const logs = await this.prisma.productionLog.findMany({
-      where: {
-        OR: [
-          { quarantineQty: { gt: 0 } },
-          { notes: { contains: 'QC_REQUIRED' } },
-        ],
-      },
-      include: {
-        workOrder: { include: { lead: true } },
-      },
-      orderBy: { loggedAt: 'desc' },
-    });
+  // --- QC AUDIT (extracted in Fase 3C, part 7) ---
+  //
+  // The bodies live in ProductionAuditService. The private stage calculator went
+  // with them and keeps no delegator here: nothing outside that block ever
+  // called it, so leaving one behind would just be dead wiring.
+  //
+  // `Parameters<...>` so the arity cannot drift from the real method.
 
-    const workOrderIds = logs
-      .map((l) => l.workOrderId)
-      .filter((id): id is string => id !== null);
-    const workOrders = await this.prisma.workOrder.findMany({
-      where: { id: { in: workOrderIds } },
-      select: { id: true, planId: true },
-    });
-    const planIds = [
-      ...new Set(
-        workOrders
-          .map((wo) => wo.planId)
-          .filter((id): id is string => id !== null),
-      ),
-    ];
-    const stepLogs = await this.prisma.productionStepLog.findMany({
-      where: { woId: { in: planIds } },
-      include: { qcAudits: { take: 1 } },
-    });
-
-    const auditedPlanIds = new Set(
-      stepLogs.filter((sl) => sl.qcAudits.length > 0).map((sl) => sl.woId),
-    );
-    const auditedWoIds = new Set(
-      workOrders
-        .filter((wo) => wo.planId && auditedPlanIds.has(wo.planId))
-        .map((wo) => wo.id),
-    );
-
-    return logs.filter(
-      (l) => l.workOrderId && !auditedWoIds.has(l.workOrderId),
-    );
+  getPendingAudits(...args: Parameters<ProductionAuditService['getPendingAudits']>) {
+    return this.audit.getPendingAudits(...args);
   }
 
-  async submitAudit(
-    logId: string,
-    auditorId: string,
-    status: any,
-    notes: string,
-  ) {
-    return await this.prisma.$transaction(async (tx: any) => {
-      const log = await tx.productionLog.findUnique({
-        where: { id: logId },
-      });
-
-      if (!log) throw new BadRequestException('Log entry not found');
-
-      // Create Audit Record
-      const audit = await tx.qCAudit.create({
-        data: {
-          stepLogId: logId,
-          qcId: auditorId, // In reality, use user from JWT
-          status,
-          notes,
-        },
-      });
-
-      // DECISION LOGIC:
-      // If PASS and in PENDING_QC, move WO forward
-      const wo = await tx.workOrder.findUnique({
-        where: { id: log.workOrderId },
-      });
-      if (wo.stage === 'PENDING_QC') {
-        if (status === 'GOOD') {
-          // Determine next stage
-          const next = this.calculateNextStage(log.stage);
-          await tx.workOrder.update({
-            where: { id: log.workOrderId },
-            data: { stage: next },
-          });
-        } else if (status === 'REJECT') {
-          await tx.workOrder.update({
-            where: { id: log.workOrderId },
-            data: { stage: 'REWORK' },
-          });
-        }
-      }
-
-      return audit;
-    });
-  }
-
-  private calculateNextStage(currentLogStage: string): any {
-    switch (currentLogStage) {
-      case 'MIXING':
-        return 'FILLING';
-      case 'FILLING':
-        return 'PACKING';
-      case 'PACKING':
-        return 'FINISHED_GOODS';
-      default:
-        return 'FINISHED_GOODS';
-    }
+  submitAudit(...args: Parameters<ProductionAuditService['submitAudit']>) {
+    return this.audit.submitAudit(...args);
   }
 
   async createMachine(dto: any) {

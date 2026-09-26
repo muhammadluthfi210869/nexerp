@@ -5,6 +5,7 @@ import { ProductionBatchRecordService } from '../src/modules/production/producti
 import { ProductionPlanningService } from '../src/modules/production/production-planning.service';
 import { ProductionActualsService } from '../src/modules/production/production-actuals.service';
 import { ProductionExecutionService } from '../src/modules/production/production-execution.service';
+import { ProductionAuditService } from '../src/modules/production/production-audit.service';
 import { WarehouseService } from '../src/modules/warehouse/warehouse.service';
 import { FinanceService } from '../src/modules/finance/finance.service';
 import { ArPaymentType } from '../src/modules/finance/dto/verify-ar-payment.dto';
@@ -35,6 +36,7 @@ describe('V4 System Validation: Unified Communication Protocol', () => {
         ProductionPlanningService, // Fase 3C — planning cluster
         ProductionActualsService, // Fase 3C — actuals cluster
         ProductionExecutionService, // Fase 3C — execution cluster
+        ProductionAuditService, // Fase 3C — QC audit cluster
         WarehouseService,
         FinanceService,
         StockLedgerService,

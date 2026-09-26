@@ -80,6 +80,7 @@ const buildFacade = (actuals: unknown) =>
     {} as never, // planning
     actuals as never, // actuals
     {} as never, // execution
+    {} as never, // audit
   );
 
 describe('Fase 3C — schedule actuals live in their own service', () => {

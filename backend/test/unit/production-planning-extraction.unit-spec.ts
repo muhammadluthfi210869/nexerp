@@ -84,6 +84,7 @@ const buildFacade = (planning: unknown) =>
     planning as never, // planning
     {} as never, // actuals
     {} as never, // execution
+    {} as never, // audit
   );
 
 describe('Fase 3C — production planning lives in its own service', () => {

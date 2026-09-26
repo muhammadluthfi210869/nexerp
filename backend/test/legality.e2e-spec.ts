@@ -6,6 +6,7 @@ import { ProductionBatchRecordService } from '../src/modules/production/producti
 import { ProductionPlanningService } from '../src/modules/production/production-planning.service';
 import { ProductionActualsService } from '../src/modules/production/production-actuals.service';
 import { ProductionExecutionService } from '../src/modules/production/production-execution.service';
+import { ProductionAuditService } from '../src/modules/production/production-audit.service';
 import { PrismaService } from '../src/prisma/prisma/prisma.service';
 import { RegStage, LifecycleStatus } from '@prisma/client';
 import { ForbiddenException } from '@nestjs/common';
@@ -26,6 +27,7 @@ describe('Legality Module Ultimate Audit (APJ V4 Implementation)', () => {
         ProductionPlanningService, // Fase 3C — planning cluster
         ProductionActualsService, // Fase 3C — actuals cluster
         ProductionExecutionService, // Fase 3C — execution cluster
+        ProductionAuditService, // Fase 3C — QC audit cluster
         PrismaService,
       ],
     }).compile();
