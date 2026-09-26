@@ -521,6 +521,9 @@ const allControllerFiles = walk(path.join(ROOT, 'backend/src')).filter(f => f.en
 const allServiceFiles = walk(path.join(ROOT, 'backend/src')).filter(f => f.endsWith('.service.ts'));
 const allModuleFiles = walk(path.join(ROOT, 'backend/src')).filter(f => f.endsWith('.module.ts'));
 
+// Roots are discovered inside the lib from every `*.main.ts` NestFactory.create()
+// call, so this generator and the independent auditor cannot disagree about which
+// entrypoints exist.
 const nestGraph = buildNestRegistrationGraph(ROOT);
 
 const backendControllers = allControllerFiles.map(f => {

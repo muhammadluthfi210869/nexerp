@@ -116,6 +116,56 @@ class NestRegistrationGraph {
   }
 }
 
+/**
+ * Discover the NestJS entrypoints: every `backend/src/main.ts` / `*.main.ts` that
+ * bootstraps a module via `NestFactory.create(X)`. This deployment runs two —
+ * `main.ts` (AppModule) and `self-qr.main.ts` (SelfQrAppModule, the standalone
+ * WhatsApp collector on port 3002).
+ *
+ * Derived from the entrypoint files, not from a hardcoded list, because the
+ * generator AND the independent auditor build this graph: a list in one caller
+ * and not the other makes the registry and the audit disagree, and a third
+ * containerised process would regress silently.
+ */
+function discoverRootModules(rootDir, ts) {
+  const srcDir = path.join(rootDir, 'backend/src');
+  const mainFiles = walkDir(srcDir).filter(f => {
+    const base = path.basename(f);
+    return base === 'main.ts' || base.endsWith('.main.ts');
+  });
+  const roots = [];
+  for (const file of mainFiles) {
+    const code = fs.readFileSync(file, 'utf8');
+    const sf = ts.createSourceFile(file, code, ts.ScriptTarget.Latest, true);
+
+    const imports = new Map();
+    for (const stmt of sf.statements) {
+      if (!ts.isImportDeclaration(stmt) || !ts.isStringLiteral(stmt.moduleSpecifier)) continue;
+      const named = stmt.importClause?.namedBindings;
+      if (!named || !ts.isNamedImports(named)) continue;
+      const resolved = resolveImportPath(file, stmt.moduleSpecifier.text);
+      for (const el of named.elements) {
+        imports.set(el.name.text, resolved ? relativePath(rootDir, resolved) : null);
+      }
+    }
+
+    const visit = (node) => {
+      if (
+        ts.isCallExpression(node) &&
+        node.expression.getText(sf).startsWith('NestFactory.create') &&
+        node.arguments.length > 0 &&
+        ts.isIdentifier(node.arguments[0])
+      ) {
+        const symbol = node.arguments[0].text;
+        roots.push({ file: imports.get(symbol) || relativePath(rootDir, file), symbol });
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(sf);
+  }
+  return roots;
+}
+
 function buildNestRegistrationGraph(rootDir, options = {}) {
   const ts = getTs(rootDir);
   const rootModuleFile = options.rootModuleFile || path.join(rootDir, 'backend/src/app.module.ts');
@@ -271,9 +321,18 @@ function buildNestRegistrationGraph(rootDir, options = {}) {
     parsedModules.set(relPath, classes);
   }
 
-  // BFS from root module
-  const rootRel = relativePath(rootDir, rootModuleFile);
-  const queue = [{ file: rootRel, symbol: options.rootModuleSymbol || 'AppModule' }];
+  // BFS from every discovered entrypoint. Walking only from AppModule reported
+  // the whole wa-self-qr production subtree as DEAD_CODE.
+  const discovered = options.rootModules && options.rootModules.length
+    ? options.rootModules
+    : discoverRootModules(rootDir, ts);
+  const roots = discovered.length
+    ? discovered
+    : [{ file: rootModuleFile, symbol: options.rootModuleSymbol || 'AppModule' }];
+  const queue = roots.map(r => ({
+    file: path.isAbsolute(r.file) ? relativePath(rootDir, r.file) : r.file,
+    symbol: r.symbol || 'AppModule',
+  }));
   const reachableModules = new Set();
   const reachableControllers = new Set();
   const reachableProviders = new Set();

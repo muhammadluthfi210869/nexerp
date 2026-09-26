@@ -80,6 +80,8 @@ run_test "master-seed-fail-closed"                   "$SCRIPT_DIR/master-seed-gu
 run_test "lockfile-in-sync"                          "$SCRIPT_DIR/lockfile-in-sync.test.sh"
 # CI prisma invocation — `npx --prefix backend` keeps the repo-root CWD and finds no schema
 run_test "ci-prisma-cwd"                             "$SCRIPT_DIR/ci-prisma-cwd.test.sh"
+# Backend reachability — one Nest root marks the whole WA self-QR tree as DEAD_CODE
+run_test "nest-multi-root-reachability"              "$SCRIPT_DIR/nest-multi-root-reachability.test.sh"
 
 echo ""
 echo "═══════════════════════════════════════════════════════════════"

@@ -53,14 +53,14 @@
       "screens_total": 278,
       "screens_classified": 278,
       "backend_controllers": 114,
-      "backend_controllers_reachable": 112,
-      "backend_controllers_dead": 2,
+      "backend_controllers_reachable": 114,
+      "backend_controllers_dead": 0,
       "backend_services": 144,
-      "backend_services_reachable": 140,
-      "backend_services_dead": 4,
+      "backend_services_reachable": 143,
+      "backend_services_dead": 1,
       "backend_modules": 77,
-      "backend_modules_reachable": 75,
-      "backend_modules_dead": 2,
+      "backend_modules_reachable": 77,
+      "backend_modules_dead": 0,
       "jobs_schedulers": 3,
       "published_subscribed_events": 238,
       "migrations": 53,
@@ -34366,18 +34366,18 @@
       "controller_symbol": "ConnectPageController",
       "domain": "wa-self-qr",
       "owner": "Platform Team",
-      "rationale": "Unregistered controller unreachable from root AppModule dependency graph.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Backend controller handling wa-self-qr REST endpoints.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/wa-self-qr/wa-self-qr.controller.ts",
       "controller_symbol": "WaSelfQrController",
       "domain": "wa-self-qr",
       "owner": "Platform Team",
-      "rationale": "Unregistered controller unreachable from root AppModule dependency graph.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Backend controller handling wa-self-qr REST endpoints.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/wa-webhook/wa-gateway.controller.ts",
@@ -35547,27 +35547,27 @@
       "provider_symbol": "CollectorService",
       "domain": "wa-self-qr",
       "owner": "Platform Team",
-      "rationale": "Unreferenced service not provided in any active module or imported by active controllers.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Business service encapsulated in wa-self-qr module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/wa-self-qr/coverage.service.ts",
       "provider_symbol": "CoverageService",
       "domain": "wa-self-qr",
       "owner": "Platform Team",
-      "rationale": "Unreferenced service not provided in any active module or imported by active controllers.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Business service encapsulated in wa-self-qr module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/wa-self-qr/storage.service.ts",
       "provider_symbol": "StorageService",
       "domain": "wa-self-qr",
       "owner": "Platform Team",
-      "rationale": "Unreferenced service not provided in any active module or imported by active controllers.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Business service encapsulated in wa-self-qr module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/wa-webhook/wa-webhook.service.ts",
@@ -36350,9 +36350,9 @@
       "module_symbol": "WaSelfQrModule",
       "domain": "wa-self-qr",
       "owner": "Platform Team",
-      "rationale": "Submodule not imported in app.module.ts; scheduled for modular integration or retirement.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "NestJS dependency injection module for wa-self-qr.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/wa-webhook/wa-webhook.module.ts",
@@ -36404,9 +36404,9 @@
       "module_symbol": "SelfQrAppModule",
       "domain": "platform",
       "owner": "Platform Team",
-      "rationale": "Submodule not imported in app.module.ts; scheduled for modular integration or retirement.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "NestJS dependency injection module for platform.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/shared/shared.module.ts",
@@ -38507,9 +38507,9 @@
       "role": "PUBLISHER",
       "event": "LEAD_VALIDATION_EVENTS.SELF_QR_EVENT_PERSISTED",
       "owner": "Platform Team",
-      "rationale": "Event publisher in unregistered provider StorageService scheduled for retirement.",
-      "lifecycle_classification": "DEAD_CODE",
-      "reachable": false
+      "rationale": "Event publisher for event LEAD_VALIDATION_EVENTS.SELF_QR_EVENT_PERSISTED",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
     },
     {
       "file": "backend/src/modules/wa-self-qr/whatsapp-webjs-transport.ts",

@@ -7,11 +7,11 @@
     "P21",
     "P22"
   ],
-  "candidate_sha": null,
+  "candidate_sha": "327dd924ed1be3e0f8232027828b9fcb44d865e9",
   "verdict": "FAIL",
   "token": null,
-  "started_at": "2026-09-24T22:46:59.526Z",
-  "completed_at": "2026-09-24T22:46:59.528Z",
+  "started_at": "2026-09-26T09:12:17.188Z",
+  "completed_at": "2026-09-26T09:12:17.342Z",
   "checks": [
     {
       "id": "supported_node",
@@ -24,14 +24,28 @@
     },
     {
       "id": "prisma_toolchain_pinned",
-      "exit_code": 1,
+      "exit_code": 0,
       "duration_ms": 0,
       "details": {
         "prisma": "7.10.0",
-        "client": "^7.10.0"
+        "client": "7.10.0"
+      }
+    },
+    {
+      "id": "pre_run_source_integrity",
+      "exit_code": 1,
+      "duration_ms": 0,
+      "details": {
+        "disallowed": [
+          "docs/legacy-erp/verification/_LIFECYCLE_REGISTRY.json",
+          "scripts/__tests__/run-all.sh",
+          "scripts/ssot/generate_lifecycle_registry.js",
+          "scripts/ssot/lib/nest_registration_graph.js",
+          "scripts/ssot/test_lifecycle_reconciliation_negative.js"
+        ]
       }
     }
   ],
-  "failure": "Error: prisma_toolchain_pinned failed: {\"prisma\":\"7.10.0\",\"client\":\"^7.10.0\"}\n    at assertCheck (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p03_phase.js:123:18)\n    at main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p03_phase.js:198:3)\n    at C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p03_phase.js:360:11\n    at Object.<anonymous> (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p03_phase.js:375:3)\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
+  "failure": "Error: pre_run_source_integrity failed: {\"disallowed\":[\"docs/legacy-erp/verification/_LIFECYCLE_REGISTRY.json\",\"scripts/__tests__/run-all.sh\",\"scripts/ssot/generate_lifecycle_registry.js\",\"scripts/ssot/lib/nest_registration_graph.js\",\"scripts/ssot/test_lifecycle_reconciliation_negative.js\"]}\n    at assertCheck (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p03_phase.js:123:18)\n    at main (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p03_phase.js:209:3)\n    at C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p03_phase.js:360:11\n    at Object.<anonymous> (C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\scripts\\ssot\\certify_p03_phase.js:375:3)\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\n    at Object..js (node:internal/modules/cjs/loader:1839:10)\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
   "metrics": null
 }
