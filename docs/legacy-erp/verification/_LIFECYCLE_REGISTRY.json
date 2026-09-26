@@ -55,8 +55,8 @@
       "backend_controllers": 114,
       "backend_controllers_reachable": 114,
       "backend_controllers_dead": 0,
-      "backend_services": 150,
-      "backend_services_reachable": 149,
+      "backend_services": 151,
+      "backend_services_reachable": 150,
       "backend_services_dead": 1,
       "backend_modules": 77,
       "backend_modules_reachable": 77,
@@ -35320,6 +35320,15 @@
     {
       "file": "backend/src/modules/production/production-analytics.service.ts",
       "provider_symbol": "ProductionAnalyticsService",
+      "domain": "production",
+      "owner": "Production Team",
+      "rationale": "Business service encapsulated in production module.",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "reachable": true
+    },
+    {
+      "file": "backend/src/modules/production/production-audit.service.ts",
+      "provider_symbol": "ProductionAuditService",
       "domain": "production",
       "owner": "Production Team",
       "rationale": "Business service encapsulated in production module.",
