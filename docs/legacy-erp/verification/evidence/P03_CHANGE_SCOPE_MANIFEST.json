@@ -1,9 +1,9 @@
 {
   "manifest_version": "1.0.0",
-  "generated_at": "2026-09-26T11:01:35.403Z",
+  "generated_at": "2026-09-26T15:32:46.650Z",
   "base_commit_sha": "9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb",
-  "candidate_commit_sha": "7cb1ab70c00024ef401183a86f86270b3bef070c",
-  "total_changed_paths": 1195,
+  "candidate_commit_sha": "dc95efb3fd486dce799313269198704c9c3a38db",
+  "total_changed_paths": 1208,
   "paths": [
     {
       "path": ".github/PULL_REQUEST_TEMPLATE/ssot-change.md",
@@ -99,6 +99,18 @@
     },
     {
       "path": "backend/prisma/migrations/20260921140000_p10_procurement_controls/migration.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260926100000_user_tenant_binding/migration.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260926110000_fase2_ledger_indexes/migration.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/auth.prisma",
       "applicable_analyzers": []
     },
     {
@@ -1246,6 +1258,10 @@
       "applicable_analyzers": []
     },
     {
+      "path": "backend/src/platform/audit/audit.interceptor.ts",
+      "applicable_analyzers": []
+    },
+    {
       "path": "backend/src/platform/audit/audit.service.ts",
       "applicable_analyzers": []
     },
@@ -1306,6 +1322,18 @@
       "applicable_analyzers": []
     },
     {
+      "path": "backend/src/platform/tenant/tenant.context.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/tenant/tenant.interceptor.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/tenant/tenant.middleware.ts",
+      "applicable_analyzers": []
+    },
+    {
       "path": "backend/src/prisma/prisma.module.ts",
       "applicable_analyzers": []
     },
@@ -1347,6 +1375,10 @@
     },
     {
       "path": "backend/test/finance/auto-journal-balance.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/finance/coa-seed-integrity.e2e-spec.ts",
       "applicable_analyzers": []
     },
     {
@@ -1734,6 +1766,10 @@
       "applicable_analyzers": []
     },
     {
+      "path": "backend/test/unit/audit-log-coverage.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
       "path": "backend/test/unit/bussdev.controller.unit-spec.ts",
       "applicable_analyzers": []
     },
@@ -1743,6 +1779,10 @@
     },
     {
       "path": "backend/test/unit/creative.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/finance-coa-integrity.unit-spec.ts",
       "applicable_analyzers": []
     },
     {
@@ -1795,6 +1835,10 @@
     },
     {
       "path": "backend/test/unit/rnd.service.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/tenant-context.unit-spec.ts",
       "applicable_analyzers": []
     },
     {
@@ -2423,6 +2467,10 @@
     },
     {
       "path": "docs/qa-gate/2026-09-25-p22-uat-preflight-browser-agent.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-26-fase1-tenant-binding-dan-audit-trail.md",
       "applicable_analyzers": []
     },
     {
@@ -4419,6 +4467,10 @@
     },
     {
       "path": "scripts/__tests__/finance-invoice-alias-contract.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/finance-ledger-indexes.test.sh",
       "applicable_analyzers": []
     },
     {
