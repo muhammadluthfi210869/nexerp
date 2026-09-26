@@ -100,7 +100,14 @@ function runAudit(options = {}) {
 if (require.main === module) {
   const isFast = process.argv.includes('--fast') || process.argv.includes('--skip-subprocess');
   console.log(`Running Phase P03 Reproducible Build, Architecture Gates & CI Certification Suite${isFast ? ' (Fast Mode)' : ''}...\n`);
-  const audit = runAudit({
+  // runProductionAudit, not runAudit: `runAudit` leaves `baseSha` unset, so
+  // checkDuplicateCode falls back to `resolveDiffBase` -> HEAD~1 -> a diff of one
+  // commit. On 2026-09-26 that made this CLI report 21/21 PASS with
+  // `changed_files_scanned: 0` and a 0% duplication figure while the runner
+  // (`certify_p03_phase.js`) measured 595 files at 27.04% against the phase base
+  // and failed. The module's own doc calls this the production entrypoint; it now
+  // assembles the same strict bundle CI does.
+  const audit = runProductionAudit({
     typecheck: isFast ? { skipSubprocess: true } : {},
     lint: isFast ? { skipSubprocess: true } : {},
     unit_smoke: isFast ? { skipSubprocess: true } : {},

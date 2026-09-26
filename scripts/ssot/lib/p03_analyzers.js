@@ -1324,6 +1324,23 @@ function controllerBasePaths(code) {
   return single ? [cleaned(single[1])] : [];
 }
 
+/**
+ * Machine-written sources. Clone-scanning them measures a generator's output,
+ * not anyone's code: `frontend/src/types/api.ts` is openapi-typescript's
+ * rendering of `backend/swagger-spec.json`, and on its own it carried 155488 of
+ * the 159337 duplicated tokens this gate reported (97.6%) -- its repetitive
+ * type declarations are duplicated by construction, and so is the 27.04% figure
+ * they produced.
+ *
+ * Exact paths, not a header heuristic: the marker would also catch hand-written
+ * files that merely mention generation (`backend/prisma.config.ts` does).
+ * ponytail: add a path here when a new generator lands; a `npm run sync:types`
+ * output is the only generated .ts this scan sees today.
+ */
+const GENERATED_CLONE_SCAN_EXCLUSIONS = new Set([
+  'frontend/src/types/api.ts',
+]);
+
 // Gate 12: checkDuplicateCode (Real token clone detector + route collisions)
 // -----------------------------------------------------------------------------
 function checkDuplicateCode(root, overrides = {}) {
@@ -1394,6 +1411,12 @@ function checkDuplicateCode(root, overrides = {}) {
         .filter(f => (f.endsWith('.ts') || f.endsWith('.tsx')) && !f.endsWith('.d.ts') && !f.includes('test') && !f.includes('spec'));
     } catch (_) {}
   }
+  // Applied to an explicit `changedFiles` list as well, so the audit's strict
+  // scope bundle cannot reintroduce a generated file through the back door.
+  targetFiles = targetFiles.filter(f => {
+    const rel = normalizePath(f);
+    return ![...GENERATED_CLONE_SCAN_EXCLUSIONS].some(g => rel.endsWith(g));
+  });
 
   let totalTokens = 0;
   let duplicatedTokens = 0;
