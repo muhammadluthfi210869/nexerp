@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductionService } from '../../src/modules/production/production.service';
+import { ProductionAnalyticsService } from '../../src/modules/production/production-analytics.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IdGeneratorService } from '../../src/modules/system/id-generator.service';
@@ -34,6 +35,10 @@ describe('ProductionService — Unit', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductionService,
+        // Fase 3C: the sixteen analytics reads now live here. The real class is
+        // provided (not a stub) so the four analytics assertions below still
+        // exercise the actual query builders against the mock prisma.
+        ProductionAnalyticsService,
         { provide: PrismaService, useValue: prisma },
         { provide: EventEmitter2, useValue: eventEmitter },
         { provide: IdGeneratorService, useValue: idGenerator },
