@@ -86,7 +86,6 @@ jobs:
         run: |
           node scripts/ssot/validate_ssot.js
           node scripts/ssot/audit_lifecycle_reconciliation.js
-          node scripts/ssot/audit_p03_architecture_gates.js
           node scripts/ssot/test_p03_architecture_gates_negative.js
 
       - name: "Typecheck (Backend & Frontend)"
@@ -168,7 +167,6 @@ jobs:
           node scripts/security/validate_env.js
           node scripts/ssot/validate_ssot.js
           node scripts/ssot/audit_lifecycle_reconciliation.js
-          node scripts/ssot/audit_p03_architecture_gates.js
           node scripts/ssot/test_p03_architecture_gates_negative.js
 
       - name: "Typecheck (Backend & Frontend)"

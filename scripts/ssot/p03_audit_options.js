@@ -19,7 +19,7 @@ const FALLBACK_PHASE_BASE_SHA = '9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb';
 function isValidCommitSha(ref) {
   if (!ref || typeof ref !== 'string') return false;
   try {
-    const fullSha = execSync(`git rev-parse --verify ${ref.trim()}^{commit}`, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
+    const fullSha = execSync(`git rev-parse --verify "${ref.trim()}^{commit}"`, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
     return fullSha.length === 40 ? fullSha : false;
   } catch (_) {
     return false;
