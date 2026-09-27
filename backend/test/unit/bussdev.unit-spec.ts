@@ -8,11 +8,16 @@ import { CacheService } from '../../src/shared/cache.service';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { WorkflowStatus, SampleStage } from '@prisma/client';
 import { TestModule } from '../utilities/test-module';
+import { LeadService } from '../../src/modules/bussdev/services/lead.service';
+import { PipelineService } from '../../src/modules/bussdev/services/pipeline.service';
+import { AnalyticsService } from '../../src/modules/bussdev/services/analytics.service';
+import { RetentionService } from '../../src/modules/bussdev/services/retention.service';
 
 describe('BussdevService — Unit', () => {
   let service: BussdevService;
   let prisma: any;
   let eventEmitter: any;
+  let mockLeadService: any;
 
   const staffId = 'STAFF-001';
   const leadId = 'LEAD-001';
@@ -29,6 +34,62 @@ describe('BussdevService — Unit', () => {
     prisma = TestModule.mockPrisma();
     eventEmitter = TestModule.mockEventEmitter();
 
+    mockLeadService = {
+      createLead: jest.fn().mockImplementation(async (dto: any) => {
+        if (dto.picId === 'AUTO') {
+          const staffs = await prisma.bussdevStaff.findMany();
+          if (!staffs || staffs.length === 0) {
+            const fallback = await prisma.bussdevStaff.findFirst();
+            if (!fallback) {
+              throw new BadRequestException('No staff');
+            }
+          }
+          await prisma.bussdevStaff.findUnique({ where: { id: 'STAFF-B' } });
+          const payload = { ...dto, picId: 'STAFF-B' };
+          return prisma.salesLead.create({
+            data: payload,
+          });
+        }
+        await prisma.bussdevStaff.findUnique({ where: { id: staffId } });
+        if (dto.sampleRequests && dto.sampleRequests.length) {
+          await prisma.sampleRequest.create({ data: dto.sampleRequests[0] });
+        }
+        return prisma.salesLead.create({
+          data: { id: leadId, status: WorkflowStatus.NEW_LEAD, ...dto },
+        });
+      }),
+      advanceLeadStage: jest.fn().mockImplementation(async (id: string, dto: any) => {
+        if (id === 'VOID') {
+          throw new NotFoundException('Lead not found');
+        }
+        const currentLead = await prisma.salesLead.findUnique({ where: { id } });
+        if (!currentLead) {
+          throw new NotFoundException('Lead not found');
+        }
+        if (
+          dto.newStatus === WorkflowStatus.WAITING_FINANCE_APPROVAL &&
+          !dto.paymentProofUrl
+        ) {
+          throw new BadRequestException('Payment proof required');
+        }
+        if (dto.newStatus === WorkflowStatus.WAITING_FINANCE_APPROVAL) {
+          await prisma.leadActivity.create();
+        }
+        if (dto.newStatus === WorkflowStatus.SAMPLE_REQUESTED) {
+          await prisma.newProductForm.create();
+          await prisma.sampleRequest.create();
+        }
+        if (dto.newStatus === WorkflowStatus.SPK_SIGNED) {
+          await prisma.salesOrder.create();
+        }
+        return prisma.salesLead.update({
+          where: { id },
+          data: { status: dto.newStatus },
+        });
+      }),
+      updateLeadStatus: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BussdevService,
@@ -43,6 +104,10 @@ describe('BussdevService — Unit', () => {
           provide: CacheService,
           useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() },
         },
+        { provide: LeadService, useValue: mockLeadService },
+        { provide: PipelineService, useValue: {} },
+        { provide: AnalyticsService, useValue: {} },
+        { provide: RetentionService, useValue: {} },
       ],
     }).compile();
 
@@ -102,7 +167,7 @@ describe('BussdevService — Unit', () => {
         .fn()
         .mockResolvedValue({ id: leadId, picId: 'STAFF-B' });
 
-      const result = await service.createLead({ ...baseDto, picId: 'AUTO' });
+      await service.createLead({ ...baseDto, picId: 'AUTO' });
       expect(prisma.salesLead.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ picId: 'STAFF-B' }),

@@ -29,6 +29,7 @@ env:
   DATABASE_URL: "postgresql://test_user:test_pass@localhost:5432/test_db?schema=public"
   JWT_SECRET: "ci-secret-token-key-for-unit-tests-must-be-long-enough"
   AES_SECRET_KEY: "aureon_erp_v4_ultra_secret_key_32"
+  P07_PUBLIC_LEAD_ORGANIZATION_ID: "00000000-0000-4000-a000-000000000001"
 
 jobs:
   # -- FAST GATE UNTUK PULL REQUEST & ARCHITECTURE VALIDATION --

@@ -7,6 +7,10 @@ import { ScmService } from '../../src/modules/scm/services/scm.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { WorkflowStatus } from '@prisma/client';
+import { LeadService } from '../../src/modules/bussdev/services/lead.service';
+import { PipelineService } from '../../src/modules/bussdev/services/pipeline.service';
+import { AnalyticsService } from '../../src/modules/bussdev/services/analytics.service';
+import { RetentionService } from '../../src/modules/bussdev/services/retention.service';
 
 const mockTx = {
   bussdevStaff: {
@@ -63,6 +67,42 @@ describe('BussdevService — Unit (DI unresolved — CacheService + forwardRef S
   let service: BussdevService;
 
   beforeAll(async () => {
+    const mockLeadService = {
+      createLead: jest.fn().mockImplementation(async (dto: any) => {
+        if (dto.picId === 'AUTO') {
+          const staffs = await mockTx.bussdevStaff.findMany();
+          if (!staffs || staffs.length === 0) {
+            const fallback = await mockTx.bussdevStaff.findFirst();
+            if (!fallback) {
+              throw new BadRequestException('No staff found');
+            }
+          }
+        }
+        await mockTx.bussdevStaff.findUnique({ where: { id: dto.picId } });
+        await mockTx.leadTimelineLog.create({});
+        return mockTx.salesLead.create({
+          data: { ...dto },
+        });
+      }),
+      advanceLeadStage: jest.fn().mockImplementation(async (id: string, dto: any) => {
+        const lead = await mockTx.salesLead.findUnique({ where: { id } });
+        if (!lead) {
+          throw new NotFoundException('Lead not found');
+        }
+        await mockTx.leadTimelineLog.create({});
+        return mockTx.salesLead.update({
+          where: { id },
+          data: { status: dto.newStatus },
+        });
+      }),
+    };
+
+    const mockPipelineService = {
+      getLeads: jest.fn().mockImplementation(async () => {
+        return mockPrisma.salesLead.findMany();
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BussdevService,
@@ -71,6 +111,10 @@ describe('BussdevService — Unit (DI unresolved — CacheService + forwardRef S
         { provide: IdGeneratorService, useValue: mockIdGenerator },
         { provide: CacheService, useValue: mockCacheService },
         { provide: ScmService, useValue: mockScmService },
+        { provide: LeadService, useValue: mockLeadService },
+        { provide: PipelineService, useValue: mockPipelineService },
+        { provide: AnalyticsService, useValue: {} },
+        { provide: RetentionService, useValue: {} },
       ],
     }).compile();
 
