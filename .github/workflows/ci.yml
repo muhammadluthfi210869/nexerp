@@ -26,6 +26,9 @@ env:
   REGISTRY: ghcr.io
   IMAGE_PREFIX: "ghcr.io/${{ github.repository }}"
   NODE_OPTIONS: --max-old-space-size=8192
+  DATABASE_URL: "postgresql://test_user:test_pass@localhost:5432/test_db?schema=public"
+  JWT_SECRET: "ci-secret-token-key-for-unit-tests-must-be-long-enough"
+  AES_SECRET_KEY: "aureon_erp_v4_ultra_secret_key_32"
 
 jobs:
   # -- FAST GATE UNTUK PULL REQUEST & ARCHITECTURE VALIDATION --
