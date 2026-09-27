@@ -1,0 +1,118 @@
+{
+  "_comment": [
+    "Reconciliation of the legacy routes declared in docs/legacy-erp/contracts/06_SCREEN_CONTRACT.json",
+    "`data_source` against the live backend (backend/swagger-spec.json).",
+    "",
+    "WHY: the screen contract is the legacy ERP's API vocabulary. The rebuilt backend names its",
+    "own routes differently, so 76 declared routes matched no live route and the parity gate could",
+    "not exit 0. Every such route is classified here EXPLICITLY — the gate blocks on any route that",
+    "is neither matched nor classified, so nothing can silently drop out of the contract.",
+    "",
+    "STATUS:",
+    "  ALIAS        same resource, the declared path still resolves (no entry needed — already matched)",
+    "  RENAMED      the resource exists under a different live path in `target`",
+    "  ABSENT       the backend exposes no route for this resource — the screen is UNBACKED",
+    "  OUT_OF_SCOPE the declared route belongs to a legacy surface not carried into this rebuild",
+    "",
+    "ABSENT entries stay visible in the report on purpose. They are the honest list of screens whose",
+    "declared data source has no backend yet; they are not deleted, only excused from blocking.",
+    "",
+    "Each `target` was verified against backend/swagger-spec.json by exact path match."
+  ],
+  "generated_for": "docs/legacy-erp/contracts/06_SCREEN_CONTRACT.json",
+  "routes": {
+    "GET activity-logs": { "status": "RENAMED", "target": "GET /v1/system/audit-logs" },
+    "GET activity-logs/:p": { "status": "ABSENT", "note": "audit log has no per-id live route" },
+    "GET api-tokens": { "status": "ABSENT", "note": "no token-management surface in the rebuild" },
+    "GET audit/logs": { "status": "RENAMED", "target": "GET /v1/system/audit-logs" },
+    "GET audit/logs/:p": { "status": "ABSENT", "note": "audit log has no per-id live route" },
+    "GET auth/reset-password/validate": { "status": "ABSENT", "note": "reset flow is token-in-link, no validate endpoint" },
+
+    "GET checklist/categories": { "status": "RENAMED", "target": "GET /v1/qc/checklists/categories" },
+    "GET checklist/categories/:p": { "status": "RENAMED", "target": "GET /v1/qc/checklists/categories" },
+    "GET checklists": { "status": "RENAMED", "target": "GET /v1/qc/checklists" },
+    "GET checklists/:p": { "status": "RENAMED", "target": "GET /v1/qc/checklists/{id}" },
+    "GET checklists/:p/progress": { "status": "ABSENT", "note": "no per-checklist progress route" },
+
+    "GET coa": { "status": "RENAMED", "target": "GET /v1/finance/accounts" },
+    "GET coa/:p": { "status": "ABSENT", "note": "finance accounts expose list + patch, no per-id GET" },
+    "GET coa-auto": { "status": "ABSENT", "note": "auto-journal configs exist, COA-auto mapping does not" },
+    "GET coa-auto/:p": { "status": "ABSENT", "note": "auto-journal configs exist, COA-auto mapping does not" },
+
+    "GET customer-categories": { "status": "RENAMED", "target": "GET /v1/master/categories" },
+    "GET customer-categories/:p": { "status": "RENAMED", "target": "GET /v1/master/categories/{id}" },
+    "GET supplier-categories": { "status": "RENAMED", "target": "GET /v1/master/categories" },
+    "GET supplier-categories/:p": { "status": "RENAMED", "target": "GET /v1/master/categories/{id}" },
+    "GET goods-categories": { "status": "RENAMED", "target": "GET /v1/master/categories" },
+
+    "GET goods": { "status": "RENAMED", "target": "GET /v1/master/materials" },
+    "GET goods/:p": { "status": "RENAMED", "target": "GET /v1/master/materials/{id}" },
+
+    "GET employees/:p/kpi": { "status": "RENAMED", "target": "GET /v1/hr/kpi/employees" },
+    "GET feature-flags": { "status": "ABSENT", "note": "no feature-flag surface in the rebuild" },
+
+    "GET finance/cash-banks": { "status": "RENAMED", "target": "GET /v1/finance/bank-accounts" },
+    "GET finance/cash-banks/:p": { "status": "RENAMED", "target": "GET /v1/finance/bank-accounts/{id}" },
+    "GET finance/journal-entries": { "status": "RENAMED", "target": "GET /v1/finance/journal" },
+    "GET finance/journal-entries/:p": { "status": "ABSENT", "note": "journal exposes list + reverse, no per-id GET" },
+    "GET finance/tax-setup": { "status": "RENAMED", "target": "GET /v1/finance/taxes" },
+    "GET finance/tax-setup/:p": { "status": "ABSENT", "note": "taxes expose list + PATCH/DELETE, no per-id GET" },
+
+    "GET i18n/translations": { "status": "ABSENT", "note": "no i18n/translation surface in the rebuild" },
+    "GET integrations": { "status": "RENAMED", "target": "GET /v1/marketing/social/integrations" },
+
+    "GET production/delivery-out": { "status": "ABSENT", "note": "delivery-out lives on commercial sales-orders, not production" },
+    "GET production/delivery-out/:p": { "status": "ABSENT", "note": "delivery-out lives on commercial sales-orders, not production" },
+    "GET production/production-filling": { "status": "RENAMED", "target": "GET /v1/production/schedule-filling" },
+    "GET production/production-mixing": { "status": "RENAMED", "target": "GET /v1/production/schedule-mixing" },
+    "GET production/production-packaging": { "status": "RENAMED", "target": "GET /v1/production/schedule-packaging" },
+    "GET production/qc-inspections": { "status": "RENAMED", "target": "GET /v1/production/qc/pending" },
+    "GET production/schedule-mixing/:p": { "status": "RENAMED", "target": "GET /v1/production/schedule-mixing" },
+
+    "GET profile": { "status": "RENAMED", "target": "GET /v1/auth/profile" },
+    "GET public/delivery-outs/verify/:p": { "status": "OUT_OF_SCOPE", "note": "public unauthenticated verify surface not carried into the rebuild" },
+
+    "GET purchase/goods-receipts/:p": { "status": "ABSENT", "note": "goods receipts expose list + status/QC actions, no per-id GET" },
+    "GET purchase/return-out": { "status": "RENAMED", "target": "GET /v1/purchase/returns" },
+    "GET purchase/return-out/:p": { "status": "RENAMED", "target": "GET /v1/purchase/returns/{id}" },
+
+    "GET rnd/request-cogs": { "status": "RENAMED", "target": "GET /v1/finance/cogs-requests" },
+    "GET rnd/request-cogs/:p": { "status": "RENAMED", "target": "GET /v1/finance/cogs-requests/{id}" },
+
+    "GET sales/down-payments": { "status": "RENAMED", "target": "GET /v1/commercial/down-payments" },
+    "GET sales/leads": { "status": "RENAMED", "target": "GET /v1/crm/leads" },
+    "GET sales/leads/:p": { "status": "RENAMED", "target": "GET /v1/crm/leads/{id}" },
+    "GET sales/sales-invoices": { "status": "RENAMED", "target": "GET /v1/commercial/invoices" },
+    "GET sales/sales-orders": { "status": "RENAMED", "target": "GET /v1/commercial/sales-orders" },
+    "GET sales/sales-orders/:p": { "status": "RENAMED", "target": "GET /v1/commercial/sales-orders/{id}" },
+    "GET sales/sales-payments": { "status": "RENAMED", "target": "GET /v1/commercial/payments" },
+    "GET sales/sales-return-in": { "status": "ABSENT", "note": "no sales-return-in route in the rebuild" },
+    "GET sales/sales-return-in/:p": { "status": "ABSENT", "note": "no sales-return-in route in the rebuild" },
+    "GET sales/sales-returns": { "status": "ABSENT", "note": "sales returns exist for purchase only; no commercial equivalent" },
+    "GET sales/sales-returns/:p": { "status": "ABSENT", "note": "sales returns exist for purchase only; no commercial equivalent" },
+    "GET sales/sales-targets": { "status": "RENAMED", "target": "GET /v1/marketing/targets" },
+    "GET sales/sales-targets/:p": { "status": "ABSENT", "note": "targets expose list + create, no per-id GET" },
+    "GET sales/samples": { "status": "RENAMED", "target": "GET /v1/rnd/samples" },
+    "GET sales/samples/:p": { "status": "RENAMED", "target": "GET /v1/rnd/samples/{id}" },
+    "GET sales/samples/:p/payments": { "status": "ABSENT", "note": "sample payments are actions on /v1/rnd/sample/{id}/*, not a list route" },
+
+    "GET settings/backup": { "status": "ABSENT", "note": "no backup surface in the rebuild" },
+    "GET settings/general": { "status": "RENAMED", "target": "GET /v1/system/config" },
+    "GET settings/license": { "status": "ABSENT", "note": "no license surface in the rebuild" },
+
+    "GET system/about": { "status": "RENAMED", "target": "GET /v1/system/config" },
+    "GET system/cache": { "status": "ABSENT", "note": "digimar exposes cache invalidate only, no cache read" },
+
+    "GET warehouse-access": { "status": "RENAMED", "target": "GET /v1/warehouse/warehouses/{id}/check-access" },
+    "GET warehouse/goods-transfer": { "status": "RENAMED", "target": "GET /v1/warehouse/transfers" },
+    "GET warehouse/goods-transfer/:p": { "status": "ABSENT", "note": "transfers expose list + execute, no per-id GET" },
+    "GET warehouse/stock-adjustment": { "status": "RENAMED", "target": "GET /v1/warehouse/adjustments" },
+    "GET warehouse/stock-adjustment/:p": { "status": "ABSENT", "note": "adjustments expose list + approve/reject, no per-id GET" },
+    "GET warehouse/stock-opname": { "status": "RENAMED", "target": "GET /v1/warehouse/opname" },
+    "GET warehouse/stock-opname/:p": { "status": "ABSENT", "note": "opname exposes list + approve, no per-id GET" },
+    "GET warehouses": { "status": "RENAMED", "target": "GET /v1/warehouse/warehouses" },
+    "GET warehouses/:p": { "status": "RENAMED", "target": "GET /v1/master/warehouses/{id}" },
+
+    "GET webhooks": { "status": "RENAMED", "target": "GET /v1/webhooks/whatsapp" }
+  }
+}

@@ -5,6 +5,7 @@ import {
   IsArray,
   ValidateNested,
   IsNumber,
+  IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { InboundStatus } from '@prisma/client';
@@ -14,9 +15,29 @@ export class InboundItemDto {
   @IsNotEmpty()
   materialId!: string;
 
+  @IsOptional()
   @IsNumber()
-  @IsNotEmpty()
-  qtyActual!: number;
+  qtyActual?: number;
+
+  @IsOptional()
+  @IsNumber()
+  quantity?: number;
+
+  @IsOptional()
+  @IsNumber()
+  qtyGood?: number;
+
+  @IsOptional()
+  @IsNumber()
+  qtyReject?: number;
+
+  @IsOptional()
+  @IsNumber()
+  qtyFree?: number;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }
 
 export class CreateInboundDto {
@@ -27,6 +48,22 @@ export class CreateInboundDto {
   @IsString()
   @IsNotEmpty()
   warehouseId!: string;
+
+  @IsOptional()
+  @IsString()
+  doNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  driverName?: string;
+
+  @IsOptional()
+  @IsString()
+  vehiclePlate?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 
   @IsArray()
   @ValidateNested({ each: true })

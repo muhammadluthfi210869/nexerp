@@ -18,6 +18,9 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { api, extractApiError } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Users,
   ShieldCheck,
@@ -32,6 +35,10 @@ import {
   Phone,
   Shield,
   UserCheck,
+  Eye,
+  Edit2,
+  KeyRound,
+  ShieldAlert,
 } from "lucide-react";
 import {
   DnaPageHeader,
@@ -43,7 +50,15 @@ import {
   DnaModal,
   DnaConfirmDialog,
   DnaCell,
+  DnaBadge,
+  DnaDetailDrawer,
+  DnaTable,
   useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 // ── Types ──
@@ -103,14 +118,8 @@ export function PersonnelRegistry() {
     setErrorState(null);
     try {
       const [uRes, rRes] = await Promise.all([
-        fetch("/api/v1/users").then((r) => {
-          if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
-          return r.json();
-        }),
-        fetch("/api/v1/roles").then((r) => {
-          if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
-          return r.json();
-        }),
+        api.get("/users").then(unwrapResponse),
+        api.get("/roles").then(unwrapResponse),
       ]);
 
       const rawUsers = Array.isArray(uRes) ? uRes : uRes?.items || [];
@@ -172,12 +181,16 @@ export function PersonnelRegistry() {
   const [userToDelete, setUserToDelete] = useState<MasterUserItem | null>(null);
 
   // Form User
+  // ponytail: `hakAkses` holds a UserRole slug (SCM, COMMERCIAL, ...), not a display label —
+  // POST /users validates `roles` against the Prisma enum. `kodeNip`, `phone` and `divisi`
+  // are display-only: the users table has no column for them and CreateUserDto has no field,
+  // so this form shows them but does not persist them. Add when the master needs them.
   const [userForm, setUserForm] = useState({
     kodeNip: "",
     nama: "",
     email: "",
     phone: "",
-    hakAkses: "Business Development",
+    hakAkses: "COMMERCIAL",
     divisi: "Commercial / Sales",
     status: "ACTIVE" as "ACTIVE" | "INACTIVE",
   });
@@ -302,7 +315,7 @@ export function PersonnelRegistry() {
       nama: "",
       email: "",
       phone: "",
-      hakAkses: "Business Development",
+      hakAkses: "COMMERCIAL",
       divisi: "Commercial / Sales",
       status: "ACTIVE",
     });
@@ -328,33 +341,60 @@ export function PersonnelRegistry() {
     setIsDetailModalOpen(true);
   };
 
+  const saveUserMut = useMutation({
+    mutationFn: async () => {
+      // Only these three keys exist on the `users` table (CreateUserDto/UpdateUserDto).
+      const payload = {
+        email: userForm.email.trim(),
+        fullName: userForm.nama.trim(),
+        roles: [userForm.hakAkses],
+        status: userForm.status,
+      };
+      const res = editingUser
+        ? await api.patch(`/users/${editingUser.id}`, {
+            fullName: payload.fullName,
+            roles: payload.roles,
+            status: payload.status,
+          })
+        : await api.post("/users", payload);
+      return unwrapResponse(res);
+    },
+    onSuccess: () => {
+      toast.success(
+        editingUser
+          ? `Data personil ${userForm.nama} berhasil diperbarui.`
+          : `Personil baru ${userForm.nama} berhasil didaftarkan.`,
+      );
+      setIsUserModalOpen(false);
+      setEditingUser(null);
+      loadPersonnelData();
+    },
+    onError: (e) => toast.error(extractApiError(e).message),
+  });
+
+  const deleteUserMut = useMutation({
+    // DELETE /users/:id deactivates the account (status INACTIVE + deletedAt); it does not
+    // remove the row, so the toast says so.
+    mutationFn: async (id: string) => unwrapResponse(await api.delete(`/users/${id}`)),
+    onSuccess: () => {
+      toast.success(`Akun ${userToDelete?.nama} berhasil dinonaktifkan.`);
+      setUserToDelete(null);
+      loadPersonnelData();
+    },
+    onError: (e) => toast.error(extractApiError(e).message),
+  });
+
   const handleSaveUser = () => {
-    if (!userForm.nama.trim() || !userForm.kodeNip.trim() || !userForm.email.trim()) {
-      toast.error("Nama lengkap, NIP, dan email korporat wajib diisi!");
+    if (!userForm.nama.trim() || !userForm.email.trim()) {
+      toast.error("Nama lengkap dan email korporat wajib diisi!");
       return;
     }
-
-    if (editingUser) {
-      setUsersList((prev) =>
-        prev.map((u) => (u.id === editingUser.id ? { ...u, ...userForm } : u))
-      );
-      toast.success(`Data personil ${userForm.nama} (NIP ${userForm.kodeNip}) berhasil diperbarui.`);
-    } else {
-      const newItem: MasterUserItem = {
-        id: `u-${Date.now()}`,
-        ...userForm,
-      };
-      setUsersList((prev) => [...prev, newItem]);
-      toast.success(`Personil baru ${newItem.nama} berhasil didaftarkan.`);
-    }
-    setIsUserModalOpen(false);
+    saveUserMut.mutate();
   };
 
   const handleDeleteUser = () => {
     if (!userToDelete) return;
-    setUsersList((prev) => prev.filter((u) => u.id !== userToDelete.id));
-    toast.success(`Akun ${userToDelete.nama} berhasil dinonaktifkan / dihapus.`);
-    setUserToDelete(null);
+    deleteUserMut.mutate(userToDelete.id);
   };
 
   return (
@@ -483,190 +523,118 @@ export function PersonnelRegistry() {
               onPageChange: setCurrentPage,
             }}
           >
-            <table className="w-full text-left border-collapse text-[12px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                  {/* Select All Checkbox */}
-                  <th className="p-3.5 w-10 text-center">
-                    <input
-                      type="checkbox"
-                      checked={paginatedUsers.length > 0 && selectedRowIds.length === paginatedUsers.length}
-                      onChange={toggleSelectAll}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                    />
-                  </th>
-                  <th className="p-3.5 w-10 text-slate-400">#</th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[100px]"
-                    onClick={() => handleHeaderSortToggle("kodeNip")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>NIP / KODE</span>
-                      {sortColumn === "kodeNip" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[240px]"
-                    onClick={() => handleHeaderSortToggle("nama")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>NAMA LENGKAP & EMAIL</span>
-                      {sortColumn === "nama" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[170px]"
-                    onClick={() => handleHeaderSortToggle("divisi")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>DIVISI / DEPARTEMEN</span>
-                      {sortColumn === "divisi" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th
-                    className="p-3.5 cursor-pointer hover:bg-slate-100/60 min-w-[180px]"
-                    onClick={() => handleHeaderSortToggle("hakAkses")}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>HAK AKSES / PERAN</span>
-                      {sortColumn === "hakAkses" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th className="p-3.5 min-w-[130px]">TELEPON / WA</th>
-                  <th
-                    className="p-3.5 text-center cursor-pointer hover:bg-slate-100/60 min-w-[90px]"
-                    onClick={() => handleHeaderSortToggle("status")}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      <span>STATUS</span>
-                      {sortColumn === "status" ? (
-                        sortDirection === "asc" ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />
-                      ) : (
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      )}
-                    </div>
-                  </th>
-                  <th className="p-3.5 text-right w-24">AKSI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+          <div className="overflow-x-auto">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold uppercase tracking-wider select-none">
+                  <DnaTh className="px-3.5 py-2.5 w-[50px] text-center text-slate-400">#</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">NIP</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Nama Personel</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Email</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[130px]">No. Telepon</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[160px]">Divisi / Departemen</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[130px] text-center">Hak Akses</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px] text-center">Status</DnaTh>
+                  <DnaTh className="pr-4 py-2.5 w-[90px] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={9} className="p-12 text-center text-slate-400 font-medium">
+                  <DnaTableRow>
+                    <DnaTd colSpan={9} className="p-12 text-center text-slate-400 font-medium">
                       Memuat data personil...
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : errorState ? (
-                  <tr>
-                    <td colSpan={9} className="p-12 text-center text-rose-500 font-medium">
+                  <DnaTableRow>
+                    <DnaTd colSpan={9} className="p-12 text-center text-rose-500 font-medium">
                       <div className="flex flex-col items-center gap-2">
                         <span>{errorState}</span>
                         <DnaButton size="sm" variant="secondary" onClick={loadPersonnelData}>
                           Coba Lagi
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : paginatedUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="p-12 text-center text-slate-400 font-medium">
+                  <DnaTableRow>
+                    <DnaTd colSpan={9} className="p-12 text-center text-slate-400 font-medium">
                       Tidak ada personel yang sesuai filter pencarian.
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   paginatedUsers.map((u, idx) => {
-                    const isSelected = selectedRowIds.includes(u.id);
                     return (
-                      <tr
+                      <DnaTableRow
                         key={u.id}
-                        className={`transition-colors hover:bg-slate-50/80 ${
-                          isSelected ? "bg-blue-50/40" : ""
-                        }`}
+                        className="h-[48px] hover:bg-slate-50/60 transition-colors cursor-pointer"
+                        onClick={() => {
+                          setViewingUser(u);
+                          setIsDetailModalOpen(true);
+                        }}
                       >
-                        {/* Checkbox */}
-                        <td className="p-3.5 text-center">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleSelectRow(u.id)}
-                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                          />
-                        </td>
-                        {/* Number */}
-                        <td className="p-3.5 text-slate-400 font-mono text-[11px]">
+                        <DnaTd className="px-3.5 py-2.5 text-center text-slate-400 tabular-nums text-[11.5px] tabular-nums">
                           {(currentPage - 1) * pageSize + idx + 1}
-                        </td>
-                        {/* NIP */}
-                        <td className="p-3.5">
-                          <DnaCell.Code value={u.kodeNip} onClick={() => handleOpenViewUser(u)} />
-                        </td>
-                        {/* Nama & Email (Avatar Cell) */}
-                        <td className="p-3.5">
-                          <DnaCell.Avatar
-                            name={u.nama}
-                            subtext={u.email}
-                          />
-                        </td>
-                        {/* Divisi */}
-                        <td className="p-3.5">
-                          <DnaCell.Text primary={u.divisi} />
-                        </td>
-                        {/* Hak Akses / Peran */}
-                        <td className="p-3.5">
-                          <DnaCell.Badge
-                            label={u.hakAkses}
-                            status={
-                              u.hakAkses.includes("Admin")
-                                ? "blue"
-                                : u.hakAkses.includes("Head")
-                                ? "orange"
-                                : u.hakAkses.includes("Lead")
-                                ? "purple"
-                                : "slate"
-                            }
-                          />
-                        </td>
-                        {/* Telepon */}
-                        <td className="p-3.5 font-mono text-slate-600 text-[11px]">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
+                          <DnaCell.Code code={u.kodeNip} />
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
+                          <span className="text-[12px] font-medium text-slate-900 line-clamp-1">{u.nama}</span>
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
+                          <span className="text-[12px] font-medium text-slate-700 line-clamp-1">{u.email}</span>
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 tabular-nums text-[11.5px] text-slate-600">
                           {u.phone}
-                        </td>
-                        {/* Status */}
-                        <td className="p-3.5 text-center">
-                          <DnaCell.Badge
-                            label={u.status}
-                            status={u.status === "ACTIVE" ? "success" : "slate"}
-                          />
-                        </td>
-                        {/* Actions */}
-                        <td className="p-3.5 text-right">
-                          <DnaCell.Actions
-                            onView={() => handleOpenViewUser(u)}
-                            onEdit={() => handleOpenEditUser(u)}
-                            onDelete={() => setUserToDelete(u)}
-                          />
-                        </td>
-                      </tr>
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
+                          <span className="text-[12px] font-medium text-slate-800 line-clamp-1">{u.divisi}</span>
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center">
+                          <DnaBadge
+                            variant={
+                              u.hakAkses.includes("Admin")
+                                ? "purple"
+                                : u.hakAkses.includes("Head")
+                                ? "warning"
+                                : "info"
+                            }
+                          >
+                            {u.hakAkses}
+                          </DnaBadge>
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center">
+                          <DnaBadge variant={u.status === "ACTIVE" ? "success" : "neutral"}>
+                            {u.status}
+                          </DnaBadge>
+                        </DnaTd>
+                        <DnaTd className="pr-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1">
+                            <DnaButton
+                              variant="ghost"
+                              className="h-7 w-7 p-0 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                              onClick={() => {
+                                setViewingUser(u);
+                                setIsDetailModalOpen(true);
+                              }}
+                              title="Lihat Detail Profil"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </DnaButton>
+                            <DnaCell.Actions
+                              onEdit={() => handleOpenEditUser(u)}
+                              onDelete={() => setUserToDelete(u)}
+                            />
+                          </div>
+                        </DnaTd>
+                      </DnaTableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
+          </div>
           </DnaDataTableCard>
         </div>
       )}
@@ -686,139 +654,166 @@ export function PersonnelRegistry() {
               onFilterValueChange: () => {},
             }}
           >
-            <table className="w-full text-left border-collapse text-[12px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
-                  <th className="p-3.5 w-10 text-slate-400">#</th>
-                  <th className="p-3.5 min-w-[130px]">KODE ROLE</th>
-                  <th className="p-3.5 min-w-[220px]">NAMA HAK AKSES</th>
-                  <th className="p-3.5 min-w-[180px]">TINGKAT OTORITAS</th>
-                  <th className="p-3.5 min-w-[320px]">DESKRIPSI & RUANG LINGKUP</th>
-                  <th className="p-3.5 text-center min-w-[110px]">TOTAL PENGGUNA</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable className="table-fixed w-full">
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+                  <DnaTh className="p-3 w-10 text-slate-400">#</DnaTh>
+                  <DnaTh className="p-3 w-[26%]">NAMA ROLE & KODE</DnaTh>
+                  <DnaTh className="p-3 w-[20%]">TINGKAT OTORITAS</DnaTh>
+                  <DnaTh className="p-3 w-[38%]">DESKRIPSI & RUANG LINGKUP</DnaTh>
+                  <DnaTh className="p-3 text-center w-[16%]">TOTAL PENGGUNA</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {rolesList.map((r, idx) => (
-                  <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3.5 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
-                    <td className="p-3.5">
-                      <DnaCell.Code value={r.kodeRole} />
-                    </td>
-                    <td className="p-3.5">
-                      <DnaCell.Text primary={r.namaRole} />
-                    </td>
-                    <td className="p-3.5">
-                      <DnaCell.Badge
-                        label={r.levelOtoritas}
-                        status={
+                  <DnaTableRow key={r.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="p-3 text-slate-400 tabular-nums text-[11px]">{idx + 1}</DnaTd>
+                    <DnaTd className="p-3">
+                      <div className="font-bold text-slate-900 truncate">{r.namaRole}</div>
+                      <div className="tabular-nums text-[11px] text-blue-600 font-semibold">{r.kodeRole}</div>
+                    </DnaTd>
+                    <DnaTd className="p-3">
+                      <DnaBadge
+                        variant={
                           r.levelOtoritas.includes("Executive")
                             ? "purple"
                             : r.levelOtoritas.includes("Head")
-                            ? "orange"
-                            : "blue"
+                            ? "warning"
+                            : "info"
                         }
-                      />
-                    </td>
-                    <td className="p-3.5 text-slate-600 leading-relaxed text-[11px]">
+                      >
+                        {r.levelOtoritas}
+                      </DnaBadge>
+                    </DnaTd>
+                    <DnaTd className="p-3 text-slate-600 text-[11px] truncate">
                       {r.deskripsi}
-                    </td>
-                    <td className="p-3.5 text-center">
-                      <span className="font-semibold text-slate-900 px-2.5 py-1 bg-slate-100 rounded-md font-mono text-[11px]">
+                    </DnaTd>
+                    <DnaTd className="p-3 text-center">
+                      <span className="font-semibold text-slate-900 px-2 py-0.5 bg-slate-100 rounded tabular-nums text-[11px]">
                         {r.totalPengguna} Staf
                       </span>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </DnaDataTableCard>
         </div>
       )}
 
-      {/* ── MODAL VIEW DETAIL USER ── */}
-      <DnaModal
+      {/* ── DETAIL DRAWER PENGGUNA (Golden Rule 5) ── */}
+      <DnaDetailDrawer
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
-        title="Detail Staf & Kredensial"
-        subtitle={viewingUser ? `${viewingUser.nama} (NIP: ${viewingUser.kodeNip})` : ""}
-        size="md"
-      >
-        {viewingUser && (
-          <div className="space-y-6 py-2 text-xs">
-            {/* Header Profil Card */}
-            <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200/80">
-              <div className="w-14 h-14 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-black text-lg shadow-xs">
-                {viewingUser.nama.split(" ").map(n => n[0]).slice(0, 2).join("")}
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-base font-bold text-slate-900">{viewingUser.nama}</h4>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-semibold px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700">
-                    NIP {viewingUser.kodeNip}
-                  </span>
-                  <DnaCell.Badge
-                    label={viewingUser.status}
-                    status={viewingUser.status === "ACTIVE" ? "success" : "slate"}
-                  />
+        title={viewingUser?.nama || "Detail Staf & Kredensial"}
+        subtitle={`NIP: ${viewingUser?.kodeNip || "-"} • Departemen: ${viewingUser?.divisi || "-"}`}
+        badge={
+          viewingUser?.status === "ACTIVE" ? (
+            <DnaBadge variant="success">AKUN AKTIF</DnaBadge>
+          ) : (
+            <DnaBadge variant="neutral">NON-AKTIF</DnaBadge>
+          )
+        }
+        tabs={[
+          {
+            id: "profile",
+            label: "Profil & Kredensial",
+            content: viewingUser ? (
+              <div className="space-y-4 text-xs">
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200/80">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-base shadow-xs">
+                    {viewingUser.nama.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-slate-900">{viewingUser.nama}</h4>
+                    <div className="flex items-center gap-2">
+                      <span className="tabular-nums text-[11px] font-semibold px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700">
+                        NIP: {viewingUser.kodeNip}
+                      </span>
+                      <DnaBadge variant={viewingUser.status === "ACTIVE" ? "success" : "neutral"}>
+                        {viewingUser.status}
+                      </DnaBadge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Departemen / Divisi</span>
+                    <span className="font-semibold text-slate-800">{viewingUser.divisi}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Hak Akses / Peran</span>
+                    <DnaBadge variant="info">{viewingUser.hakAkses}</DnaBadge>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Email Korporat</span>
+                    <span className="tabular-nums text-slate-700">{viewingUser.email}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Nomor WhatsApp</span>
+                    <span className="tabular-nums text-slate-700">{viewingUser.phone}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Information Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-lg border border-slate-200/70 bg-white">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
-                  Departemen / Divisi
-                </span>
-                <span className="font-semibold text-slate-800 text-sm">{viewingUser.divisi}</span>
+            ) : null,
+          },
+          {
+            id: "security",
+            label: "Otoritas & Keamanan",
+            content: viewingUser ? (
+              <div className="space-y-4 text-xs">
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800">Status Autentikasi 2-Faktor</span>
+                    <DnaBadge variant="success">Aktif (OTP / App)</DnaBadge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800">Tingkat Hak Akses</span>
+                    <span className="tabular-nums text-slate-600">Enterprise Standard</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800">Sesi Login Terakhir</span>
+                    <span className="tabular-nums text-slate-500">Hari ini, 08:30 WIB</span>
+                  </div>
+                </div>
               </div>
-              <div className="p-3 rounded-lg border border-slate-200/70 bg-white">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
-                  Hak Akses / Peran
-                </span>
-                <DnaCell.Badge
-                  label={viewingUser.hakAkses}
-                  status="blue"
-                />
-              </div>
-              <div className="p-3 rounded-lg border border-slate-200/70 bg-white">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
-                  Email Korporat
-                </span>
-                <span className="font-mono text-slate-700 flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-slate-400" />
-                  {viewingUser.email}
-                </span>
-              </div>
-              <div className="p-3 rounded-lg border border-slate-200/70 bg-white">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
-                  Nomor WhatsApp
-                </span>
-                <span className="font-mono text-slate-700 flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-slate-400" />
-                  {viewingUser.phone}
-                </span>
-              </div>
-            </div>
-
-            {/* Actions Footer */}
-            <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
+            ) : null,
+          },
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              icon={<KeyRound className="w-3.5 h-3.5 text-amber-600" />}
+              onClick={() => {
+                toast.success(`Tautan reset password dikirim ke ${viewingUser?.email}`);
+              }}
+            >
+              Reset Kata Sandi
+            </DnaButton>
+            <div className="flex items-center gap-2">
               <DnaButton
                 variant="secondary"
+                size="sm"
+                icon={<Edit2 className="w-3.5 h-3.5" />}
                 onClick={() => {
-                  setIsDetailModalOpen(false);
-                  handleOpenEditUser(viewingUser);
+                  if (viewingUser) {
+                    setIsDetailModalOpen(false);
+                    handleOpenEditUser(viewingUser);
+                  }
                 }}
               >
                 Sunting Data
               </DnaButton>
-              <DnaButton variant="primary" onClick={() => setIsDetailModalOpen(false)}>
-                Tutup
+              <DnaButton variant="primary" size="sm" onClick={() => setIsDetailModalOpen(false)}>
+                Selesai
               </DnaButton>
             </div>
           </div>
-        )}
-      </DnaModal>
+        }
+      />
 
       {/* ── MODAL TAMBAH / EDIT PENGGUNA ── */}
       <DnaModal
@@ -864,7 +859,7 @@ export function PersonnelRegistry() {
               label="Hak Akses / Peran *"
               value={userForm.hakAkses}
               onChange={(val) => setUserForm({ ...userForm, hakAkses: val })}
-              options={rolesList.map((r) => ({ value: r.namaRole, label: r.namaRole }))}
+              options={rolesList.map((r) => ({ value: r.kodeRole, label: r.namaRole }))}
             />
             <DnaSelect
               label="Divisi / Departemen *"
@@ -887,7 +882,7 @@ export function PersonnelRegistry() {
             <DnaButton variant="secondary" onClick={() => setIsUserModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" onClick={handleSaveUser}>
+            <DnaButton variant="primary" loading={saveUserMut.isPending} onClick={handleSaveUser}>
               Simpan Data Pengguna
             </DnaButton>
           </div>

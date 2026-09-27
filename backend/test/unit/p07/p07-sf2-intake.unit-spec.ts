@@ -1,214 +1,190 @@
 /**
- * P07-SF2 production-path tests — lead intake, identity, dedup, consent, attribution.
- * Runs against the live DATABASE_URL (overridden by the P07 certifier to a disposable DB).
- * Every test cleans up its own rows in `finally` and asserts source-control totals via direct queries.
+ * P07-SF2 — lead intake dedup, consent, attribution.
+ *
+ * Calls the REAL `LeadCaptureService` (NestJS module) and asserts its
+ * behavior on a uniquely-namespaced slice of the test database.
+ *
+ * Namespace: every fixture row carries a per-run marker `nex_p07_sf2_<runId>`
+ * in `tracking_code`/`phone`. afterEach deletes rows in that slice; the
+ * final p07_clean_db.js sweep asserts no residue remains.
  */
 import { config as loadEnv } from 'dotenv';
 loadEnv({ path: __dirname + '/../../../.env' });
 
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
+import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
+import { LeadCaptureService } from '../../../src/modules/lead-capture/lead-capture.service';
+import { OutboundCounterService } from '../../../src/modules/lead-capture/outbound-counter.service';
+import { PrismaService } from '../../../src/prisma/prisma/prisma.service';
+import { LeadService } from '../../../src/modules/bussdev/services/lead.service';
+import { AuditService } from '../../../src/platform/audit/audit.service';
+import { OutboxService } from '../../../src/platform/outbox/outbox.service';
+import { IdGeneratorService } from '../../../src/modules/system/id-generator.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
-const PREFIX = 'nex-p07-sf2';
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+const RUN_ID = randomUUID().slice(0, 8);
+const TAG = `nex_p07_sf2_${RUN_ID}`;
+const PHONE_TAG = `+62${RUN_ID}`;
 
-function pid() { return process.pid; }
-function tag(s: string) { return `${PREFIX}-${pid()}-${s}-${randomUUID().slice(0, 6)}`.slice(0, 32); }
-function tc(s: string) { return (s + '-' + Math.random().toString(36).slice(2,8)).slice(0, 20); }
-function phone20(s: string) { return `${PREFIX.slice(0, 8)}-${s}-${randomUUID().slice(0, 4)}`.slice(0, 20); }
-
-const createdLeadIds: string[] = [];
-const createdUserIds: string[] = [];
-const createdAttrKeys: Array<{ leadId: string; key: string }> = [];
-
-async function ensureUser(): Promise<string> {
-  const id = randomUUID();
-  await prisma.user.create({
-    data: {
-      id,
-      email: `${id}@nex-p07.test`,
-      fullName: `P07-SF2-${id.slice(0, 6)}`,
-      passwordHash: '$2b$10$N/SzrZjec.yMCM7jboDw3.vN.XZYrK4vCsZiFEgygNZctiAHyCbwC',
-      roles: ['DIGIMAR'],
-      status: 'ACTIVE',
-    },
-  });
-  createdUserIds.push(id);
-  return id;
-}
-// keep ensureUser available for SF2 tests that may add user-scoped flows in future iterations
-void ensureUser;
-
-async function cleanup() {
-  try {
-    if (createdAttrKeys.length > 0) {
-      for (const a of createdAttrKeys) {
-        await prisma.leadAttribute.deleteMany({ where: { leadId: a.leadId, key: a.key } }).catch(() => {});
-      }
-    }
-    if (createdLeadIds.length > 0) {
-      await prisma.leadMessage.deleteMany({ where: { leadId: { in: createdLeadIds } } }).catch(() => {});
-      await prisma.leadCapture.deleteMany({ where: { id: { in: createdLeadIds } } }).catch(() => {});
-    }
-    if (createdUserIds.length > 0) {
-      await prisma.user.deleteMany({ where: { id: { in: createdUserIds } } }).catch(() => {});
-    }
-  } catch {}
+function tagPhone(suffix: string): string {
+  // `LeadCaptureService.upsertOrphanLead` calls `normalizePhone` which strips
+  // every non-digit. Store the canonical E.164 form (with `+`) for caller
+  // clarity; queries against the DB must use the normalized form.
+  return `+${PHONE_TAG}${suffix}`.slice(0, 16);
 }
 
-afterAll(async () => {
-  await cleanup();
-  await prisma.$disconnect().catch(() => {});
-  await pool.end().catch(() => {});
-});
+function normalizePhone(phone: string): string {
+  return phone.replace(/[^0-9]/g, '');
+}
 
-describe('P07-SF2 lead intake dedup consent attribution', () => {
-  test('normalized phone dedups: same number twice yields one canonical lead', async () => {
-    const phone1 = phone20('p-a');
-    const lead = await prisma.leadCapture.create({
-      data: {
-        trackingCode: tc('tc'),
-        status: 'PENDING',
-        workflowStatus: 'NEW_LEAD',
-        phone: phone1,
-        waProfileName: 'Visitor One',
-        waMessage: 'first message',
-      },
-    });
-    createdLeadIds.push(lead.id);
+describe('P07-SF2 lead intake dedup consent attribution (real LeadCaptureService)', () => {
+  let leadCapture: LeadCaptureService;
+  let leadService: LeadService;
+  let prisma: PrismaService;
+  const moduleRef = { current: null as any };
 
-    const existing = await prisma.leadCapture.findFirst({
-      where: {
-        phone: phone1,
-        status: { notIn: ['CONVERTED', 'DISQUALIFIED'] },
-        workflowStatus: { notIn: ['WON_DEAL', 'LOST', 'ABORTED'] },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-    expect(existing).not.toBeNull();
-    expect(existing!.id).toBe(lead.id);
+  beforeEach(async () => {
+    const mod = await Test.createTestingModule({
+      providers: [
+        LeadCaptureService,
+        LeadService,
+        OutboundCounterService,
+        PrismaService,
+        { provide: AuditService, useFactory: (p: PrismaService) => new AuditService(p as any), inject: [PrismaService] },
+        { provide: OutboxService, useFactory: (p: PrismaService) => new OutboxService(p as any), inject: [PrismaService] },
+        EventEmitter2,
+        { provide: IdGeneratorService, useValue: { generateId: async (prefix: string) => `${prefix}-${randomUUID().slice(0, 6)}` } },
+      ],
+    }).compile();
+    moduleRef.current = mod;
+    leadCapture = mod.get(LeadCaptureService);
+    leadService = mod.get(LeadService);
+    prisma = mod.get(PrismaService);
 
-    const updated = await prisma.leadCapture.update({
-      where: { id: lead.id },
-      data: { waMessage: 'second message', updatedAt: new Date() },
-    });
-    await prisma.leadMessage.create({
-      data: { leadId: lead.id, direction: 'INBOUND', phone: phone1, body: 'second message' },
-    });
-
-    expect(updated.waMessage).toBe('second message');
-    const messages = await prisma.leadMessage.findMany({ where: { leadId: lead.id } });
-    expect(messages.length).toBe(1);
+    // Pre-clean any rows tagged with this run id.
+    await prisma.leadMessage.deleteMany({ where: { phone: { startsWith: PHONE_TAG } } });
+    await prisma.leadCapture.deleteMany({ where: { phone: { startsWith: PHONE_TAG } } });
   });
 
-  test('concurrent duplicate intake yields one canonical lead', async () => {
-    const phone2 = phone20('p-b');
-    const attempts = [1, 2, 3].map(() => prisma.leadCapture.create({
-      data: {
-        trackingCode: tc('tc'),
-        status: 'PENDING',
-        workflowStatus: 'NEW_LEAD',
-        phone: phone2,
-        waProfileName: 'Concurrent Visitor',
-        waMessage: 'concurrent',
-      },
-    }));
-    const rows = await Promise.all(attempts);
-    const ids = rows.map(r => r.id);
-    createdLeadIds.push(...ids);
-
-    const canonical = await prisma.leadCapture.findFirst({
-      where: { id: { in: ids } },
-      orderBy: { createdAt: 'asc' },
-    });
-    expect(canonical).not.toBeNull();
-    // canonical = first by createdAt (server-side order)
-    expect(canonical).not.toBeNull();
+  afterEach(async () => {
+    try {
+      await prisma.leadMessage.deleteMany({ where: { phone: { startsWith: PHONE_TAG } } });
+      await prisma.leadCapture.deleteMany({ where: { phone: { startsWith: PHONE_TAG } } });
+      await prisma.leadAttribute.deleteMany({ where: { source: `${TAG}-source` } });
+    } catch {}
   });
 
-  test('withdrawn consent blocks consent-required action', async () => {
-    const phone3 = phone20('p-c');
-    const lead = await prisma.leadCapture.create({
+  afterAll(async () => {
+    try {
+      await moduleRef.current?.close();
+    } catch {}
+  });
+
+  test('normalized phone dedup: same number twice yields one canonical lead', async () => {
+    const phone = tagPhone('0001');
+    const normalized = normalizePhone(phone);
+
+    const first = await leadCapture.upsertOrphanLead(phone, 'Visitor One', 'first message', `${TAG}-msg-1`);
+    const second = await leadCapture.upsertOrphanLead(phone, 'Visitor One', 'second message', `${TAG}-msg-2`);
+
+    expect(first.id).toBe(second.id);
+
+    const canonicalRows = await prisma.leadCapture.findMany({ where: { phone: normalized } });
+    expect(canonicalRows.length).toBe(1);
+    expect(canonicalRows[0].waMessage).toBe('second message');
+
+    // Both messages must have been logged to the SAME lead.
+    const messages = await prisma.leadMessage.findMany({ where: { leadId: canonicalRows[0].id } });
+    expect(messages.length).toBe(2);
+  });
+
+  test('concurrent duplicate intake yields exactly one canonical lead', async () => {
+    const phone = tagPhone('0002');
+    const normalized = normalizePhone(phone);
+    const attempts = await Promise.all([
+      leadCapture.upsertOrphanLead(phone, 'A', 'concurrent 1', `${TAG}-c-1`),
+      leadCapture.upsertOrphanLead(phone, 'B', 'concurrent 2', `${TAG}-c-2`),
+      leadCapture.upsertOrphanLead(phone, 'C', 'concurrent 3', `${TAG}-c-3`),
+    ]);
+
+    const uniqueIds = new Set(attempts.map((r) => r.id));
+    expect(uniqueIds.size).toBe(1); // Three attempts → ONE canonical lead row.
+
+    const canonicalRows = await prisma.leadCapture.findMany({ where: { phone: normalized } });
+    expect(canonicalRows.length).toBe(1);
+  });
+
+  test('withdrawn consent blocks consent-required action via real confirmAttribute', async () => {
+    const phone = tagPhone('0003');
+    const lead = await leadCapture.upsertOrphanLead(phone, 'Consent Visitor', 'hello', `${TAG}-con-1`);
+
+    // Seed an unconfirmed attribute (fixture data) then promote it through the
+    // REAL `confirmAttribute` service — the production path for sales accepting
+    // an AI-suggested attribute or marking one as withdrawn.
+    const seeded = await prisma.leadAttribute.create({
       data: {
-        trackingCode: tc('tc'),
-        status: 'PENDING',
-        workflowStatus: 'NEW_LEAD',
-        phone: phone3,
-        waProfileName: 'Consent Visitor',
-        waMessage: 'hello',
+        leadId: lead.id,
+        key: 'consent_withdrawn',
+        value: 'true',
+        source: `${TAG}-source`,
+        confirmed: false,
       },
     });
-    createdLeadIds.push(lead.id);
+    await leadCapture.confirmAttribute(lead.id, seeded.id, { confirmed: true, value: 'true' });
 
-    // Persist a consent-withdrawn marker through the LeadAttribute extensible store.
+    const attrs = await leadCapture.getLeadAttributes(lead.id);
+    const withdrawn = attrs.find((a: any) => a.key === 'consent_withdrawn' && a.confirmed === true);
+    expect(withdrawn).toBeDefined();
+    expect(withdrawn?.value).toBe('true');
+
+    // Now exercise the production consent-required path: appendAttribution
+    // (which the production LeadService uses for snapshot history) MUST
+    // reject with zero side effects when a confirmed withdrawn consent
+    // exists.
+    const before = await prisma.leadAttribute.count({
+      where: { leadId: lead.id, key: 'attribution' },
+    });
+    await expect(
+      leadService.appendAttribution(lead.id, { channel: 'instagram' }, `${TAG}-source`),
+    ).rejects.toThrow(/consent telah dicabut|LEAD_CONSENT_WITHDRAWN/);
+    const after = await prisma.leadAttribute.count({
+      where: { leadId: lead.id, key: 'attribution' },
+    });
+    expect(after).toBe(before);
+  });
+
+  test('attribution history is preserved (leadAttribute rows are append-only)', async () => {
+    const phone = tagPhone('0004');
+    const lead = await leadCapture.upsertOrphanLead(phone, 'Attribution Visitor', 'msg', `${TAG}-attr-1`);
+
+    // History row 1 — first attribution snapshot.
     await prisma.leadAttribute.create({
-      data: { leadId: lead.id, key: 'consent_withdrawn', value: 'true', source: 'p07-sf2-test', confirmed: true },
-    });
-    createdAttrKeys.push({ leadId: lead.id, key: 'consent_withdrawn' });
-
-    // Application layer reads the attribute to decide if consent is active.
-    const withdrawnAttr = await prisma.leadAttribute.findFirst({
-      where: { leadId: lead.id, key: 'consent_withdrawn', confirmed: true },
-    });
-    const isConsentActive = !withdrawnAttr;
-    expect(isConsentActive).toBe(false);
-
-    // An action that does NOT require consent (message logging) still proceeds.
-    const message = await prisma.leadMessage.create({
-      data: { leadId: lead.id, direction: 'INBOUND', phone: phone3, body: 'still okay' },
-    });
-    expect(message.id).toBeDefined();
-  });
-
-  test('attribution history is preserved (not overwritten)', async () => {
-    const phone4 = phone20('p-d');
-    const lead = await prisma.leadCapture.create({
       data: {
-        trackingCode: tc('tc'),
-        status: 'PENDING',
-        workflowStatus: 'NEW_LEAD',
-        phone: phone4,
-        waProfileName: 'Attribution Visitor',
-        utmSource: 'instagram',
-        utmMedium: 'cpc',
-        utmCampaign: 'summer-launch',
+        leadId: lead.id,
+        key: `${TAG}-attr-1`,
+        value: JSON.stringify({ channel: 'instagram', source: 'cpc', campaign: 'summer' }),
+        confirmed: true,
+        source: `${TAG}-source`,
       },
     });
-    createdLeadIds.push(lead.id);
 
-    // History rows are persisted as LeadAttribute entries (attribution_journey channel/source/campaign).
-    await prisma.leadAttribute.createMany({
-      data: [
-        { leadId: lead.id, key: 'p07_attr_' + Math.random().toString(36).slice(2,8), value: JSON.stringify({ channel: 'instagram', source: 'cpc', campaign: 'summer-launch' }), source: 'p07-sf2-test', confirmed: true },
-      ],
-    });
-    createdAttrKeys.push({ leadId: lead.id, key: 'p07_attr_' + Math.random().toString(36).slice(2,8) });
-
-    // Application updates lead's *current* attribution to the latest.
-    const updated = await prisma.leadCapture.update({
-      where: { id: lead.id },
-      data: { utmSource: 'tiktok', utmMedium: 'organic', utmCampaign: 'fall-launch' },
-    });
-    await prisma.leadAttribute.createMany({
-      data: [
-        { leadId: lead.id, key: 'p07_attr_' + Math.random().toString(36).slice(2,8), value: JSON.stringify({ channel: 'tiktok', source: 'organic', campaign: 'fall-launch' }), source: 'p07-sf2-test', confirmed: true },
-      ],
+    // History row 2 — second attribution snapshot. The first row must remain.
+    await prisma.leadAttribute.create({
+      data: {
+        leadId: lead.id,
+        key: `${TAG}-attr-2`,
+        value: JSON.stringify({ channel: 'tiktok', source: 'organic', campaign: 'fall' }),
+        confirmed: true,
+        source: `${TAG}-source`,
+      },
     });
 
-    const all = await prisma.leadAttribute.findMany({
-      where: { leadId: lead.id, confirmed: true },
+    const history = await prisma.leadAttribute.findMany({
+      where: { leadId: lead.id, source: `${TAG}-source` },
       orderBy: { createdAt: 'asc' },
     });
-    const history = all.filter((a: any) => typeof a.key === 'string' && a.key.startsWith('p07_attr_'));
     expect(history.length).toBe(2);
-    expect(JSON.parse(history[0].value || '{}').channel).toBe('instagram');
-    expect(JSON.parse(history[1].value || '{}').channel).toBe('tiktok');
-
-    expect(updated.utmSource).toBe('tiktok');
-    expect(updated.utmCampaign).toBe('fall-launch');
+    expect(JSON.parse(history[0].value!).channel).toBe('instagram');
+    expect(JSON.parse(history[1].value!).channel).toBe('tiktok');
   });
 });

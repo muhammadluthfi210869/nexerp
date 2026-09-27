@@ -69,12 +69,25 @@ const TRANSITION_MAP: Record<EntityType, Record<string, string[]>> = {
     CANCELLED: [],
   },
   SOStatus: {
-    PENDING_DP: ['LOCKED_ACTIVE', 'CANCELLED'],
-    LOCKED_ACTIVE: ['READY_TO_PRODUCE', 'COMPLETED', 'CANCELLED'],
-    READY_TO_PRODUCE: ['COMPLETED', 'CANCELLED'],
+    PENDING_DP: ['LOCKED_ACTIVE', 'ACTIVE', 'CANCELLED'],
+    LOCKED_ACTIVE: [
+      'READY_TO_PRODUCE',
+      'AMENDMENT_REVIEW',
+      'COMPLETED',
+      'CANCELLED',
+    ],
+    ACTIVE: [
+      'LOCKED_ACTIVE',
+      'READY_TO_PRODUCE',
+      'AMENDMENT_REVIEW',
+      'CANCELLED',
+    ],
+    AMENDMENT_REVIEW: ['LOCKED_ACTIVE', 'ACTIVE', 'CANCELLED'],
+    READY_TO_PRODUCE: ['IN_PRODUCTION', 'COMPLETED', 'CANCELLED'],
+    IN_PRODUCTION: ['SHIPPED', 'COMPLETED', 'CANCELLED'],
+    SHIPPED: ['COMPLETED', 'CANCELLED'],
     COMPLETED: [],
     CANCELLED: [],
-    ACTIVE: ['LOCKED_ACTIVE', 'CANCELLED'],
   },
   FormulaStatus: {
     DRAFT: ['WAITING_APPROVAL', 'ARCHIVED'],
@@ -144,6 +157,10 @@ const GATE_CONTROLLED_TRANSITIONS: Record<string, GateInfo> = {
     gate: 'G2_PRODUCTION',
     description: 'DP ≥ 50% harus diverifikasi Finance (Gate 2)',
   },
+  'PENDING_DP→ACTIVE': {
+    gate: 'G2_PRODUCTION',
+    description: 'DP ≥ 50% harus diverifikasi Finance (Gate 2)',
+  },
 };
 
 @Injectable()
@@ -187,7 +204,7 @@ export class StateTransitionService {
    * Check if a transition is gate-controlled and return gate info.
    */
   getGateInfo(
-    entityType: EntityType,
+    _entityType: EntityType,
     fromState: string,
     toState: string,
   ): GateInfo | null {

@@ -24,7 +24,23 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import { DnaButton, DnaBadge, DnaInput, DnaStatCard, DnaDataTableCard, DnaModal, DnaSelect, DnaTextarea, DnaCell } from "@/components/dna";
+import {
+  DnaButton,
+  DnaBadge,
+  DnaInput,
+  DnaStatCard,
+  DnaDataTableCard,
+  DnaModal,
+  DnaSelect,
+  DnaTextarea,
+  DnaCell,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import { toast } from "sonner";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
@@ -394,27 +410,27 @@ export default function PurchasingPage() {
                     </DnaButton>
                   )}
                 </div>
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50/50 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                      <th className="py-2 px-4">Barang</th>
-                      <th className="py-2 px-4 text-center">Qty</th>
-                      <th className="py-2 px-4 text-right">Harga</th>
-                      <th className="py-2 px-4 text-right">Subtotal</th>
-                      <th className="w-12"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow className="border-b border-slate-200 bg-slate-50/50 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                      <DnaTh className="py-2 px-4">Barang</DnaTh>
+                      <DnaTh className="py-2 px-4 text-center">Qty</DnaTh>
+                      <DnaTh className="py-2 px-4 text-right">Harga</DnaTh>
+                      <DnaTh className="py-2 px-4 text-right">Subtotal</DnaTh>
+                      <DnaTh className="w-12"></DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {items.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="py-12 text-center">
+                      <DnaTableRow>
+                        <DnaTd colSpan={5} className="py-12 text-center">
                           <ShoppingCart className="h-8 w-8 text-slate-200 mx-auto mb-2" />
                           <p className="text-slate-300 font-medium text-sm">Belum ada barang. Pilih barang di atas.</p>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     ) : items.map((item) => (
-                      <tr key={item.materialId}>
-                        <td className="py-3 px-4">
+                      <DnaTableRow key={item.materialId}>
+                        <DnaTd className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
                               <Package className="h-4 w-4" />
@@ -424,8 +440,8 @@ export default function PurchasingPage() {
                               <p className="text-[10px] text-slate-400">Unit: {item.unit}</p>
                             </div>
                           </div>
-                        </td>
-                        <td className="py-3 px-4 text-center">
+                        </DnaTd>
+                        <DnaTd className="py-3 px-4 text-center">
                           <DnaInput
                             type="number"
                             value={item.qty}
@@ -433,8 +449,8 @@ export default function PurchasingPage() {
                             className="w-20 text-center font-bold text-xs"
                             min={0}
                           />
-                        </td>
-                        <td className="py-3 px-4 text-right">
+                        </DnaTd>
+                        <DnaTd className="py-3 px-4 text-right">
                           <DnaInput
                             type="number"
                             value={item.price}
@@ -442,17 +458,17 @@ export default function PurchasingPage() {
                             className="w-28 text-right font-bold text-xs"
                             min={0}
                           />
-                        </td>
-                        <td className="py-3 px-4 text-right font-bold text-blue-600 text-sm">
+                        </DnaTd>
+                        <DnaTd className="py-3 px-4 text-right font-bold text-blue-600 text-sm">
                           Rp {(item.qty * item.price).toLocaleString()}
-                        </td>
-                        <td className="py-3 px-4 text-right">
+                        </DnaTd>
+                        <DnaTd className="py-3 px-4 text-right">
                           <DnaButton variant="ghost" size="icon" onClick={() => removeItem(item.materialId)} icon={<Trash2 className="h-4 w-4" />} />
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
 
               <div className="bg-slate-50 rounded-2xl p-6 space-y-2 border border-slate-200">
@@ -492,7 +508,7 @@ export default function PurchasingPage() {
                     <p className="text-[10px] text-slate-500">PO disahkan dengan tanda tangan digital terenkripsi ERP</p>
                   </div>
                 </div>
-                <DnaBadge status="success">DIGITAL SIGNED</DnaBadge>
+                <DnaBadge variant="success">DIGITAL SIGNED</DnaBadge>
               </div>
 
               <DnaTextarea
@@ -580,33 +596,33 @@ export default function PurchasingPage() {
             </div>
 
             <DnaDataTableCard>
-              <table className="w-full text-left border-collapse text-[12px]">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
-                    <th className="py-3 px-4">No. PO</th>
-                    <th className="py-3 px-4">Supplier</th>
-                    <th className="py-3 px-4">Tgl</th>
-                    <th className="py-3 px-4">Pembuat</th>
-                    <th className="py-3 px-4 text-right">Nilai</th>
-                    <th className="py-3 px-4 text-center">Status</th>
-                    <th className="py-3 px-4 text-right">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                    <DnaTh className="py-3 px-4">No. PO</DnaTh>
+                    <DnaTh className="py-3 px-4">Supplier</DnaTh>
+                    <DnaTh className="py-3 px-4">Tgl</DnaTh>
+                    <DnaTh className="py-3 px-4">Pembuat</DnaTh>
+                    <DnaTh className="py-3 px-4 text-right">Nilai</DnaTh>
+                    <DnaTh className="py-3 px-4 text-center">Status</DnaTh>
+                    <DnaTh className="py-3 px-4 text-right">Aksi</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {(!filteredPurchaseOrders || filteredPurchaseOrders.length === 0) ? (
-                    <tr>
-                      <td colSpan={7} className="py-6">
+                    <DnaTableRow>
+                      <DnaTd colSpan={7} className="py-6">
                         <EmptyState
                           icon={<ShoppingCart className="h-8 w-8 text-slate-300" />}
                           title="Belum Ada PO"
                           description="Buat purchase order baru untuk memulai pengadaan."
                           action={<DnaButton variant="primary" onClick={() => setIsPOModalOpen(true)}>Buat PO Baru</DnaButton>}
                         />
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ) : filteredPurchaseOrders?.map((po: any) => (
-                    <tr key={po.id} className="hover:bg-slate-50/80">
-                      <td className="py-3 px-4">
+                    <DnaTableRow key={po.id} className="hover:bg-slate-50/80">
+                      <DnaTd className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-xl bg-white text-slate-900 flex items-center justify-center shadow-sm border border-slate-200">
                             <ClipboardList className="h-4 w-4" />
@@ -616,22 +632,22 @@ export default function PurchasingPage() {
                             <p className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase">{po.createdAt ? new Date(po.createdAt).toLocaleDateString() : '-'}</p>
                           </div>
                         </div>
-                      </td>
-                      <td className="py-3 px-4"><DnaCell.Text primary={po.supplier?.name || '-'} /></td>
-                      <td className="py-3 px-4"><DnaCell.Date value={po.estArrival} /></td>
-                      <td className="py-3 px-4">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4"><DnaCell.Text primary={po.supplier?.name || '-'} /></DnaTd>
+                      <DnaTd className="py-3 px-4"><DnaCell.Date value={po.estArrival} /></DnaTd>
+                      <DnaTd className="py-3 px-4">
                         <div className="flex items-center gap-1.5">
                           <User className="h-3 w-3 text-slate-400" />
                           <span className="text-[10px] font-medium text-slate-600">{po.scm?.fullName || '-'}</span>
                         </div>
-                      </td>
-                      <td className="py-3 px-4 text-right"><DnaCell.Currency value={Number(po.totalValue || 0)} /></td>
-                      <td className="py-3 px-4 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right"><DnaCell.Currency value={Number(po.totalValue || 0)} /></DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
                         <DnaBadge status={STATUS_BADGE_MAP[po.status] || "default"}>
                           {po.status?.replace('_', ' ') || 'DRAFT'}
                         </DnaBadge>
-                      </td>
-                      <td className="py-3 px-4 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         <div className="flex justify-end gap-1.5">
                           {(po.status === 'DRAFT' || po.status === 'PENDING_APPROVAL') && (
                             <>
@@ -650,11 +666,11 @@ export default function PurchasingPage() {
                           )}
                           <DnaButton variant="ghost" size="icon" icon={<Eye className="h-4 w-4" />} />
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </DnaDataTableCard>
           </div>
 
@@ -667,27 +683,27 @@ export default function PurchasingPage() {
             </div>
 
             <DnaDataTableCard>
-              <table className="w-full text-left border-collapse text-[12px]">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
-                    <th className="py-3 px-4">ID</th>
-                    <th className="py-3 px-4">Gudang</th>
-                    <th className="py-3 px-4">Pembuat</th>
-                    <th className="py-3 px-4 text-right">Jml Item</th>
-                    <th className="py-3 px-4 text-center">Status</th>
-                    <th className="py-3 px-4 text-right">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                    <DnaTh className="py-3 px-4">ID</DnaTh>
+                    <DnaTh className="py-3 px-4">Gudang</DnaTh>
+                    <DnaTh className="py-3 px-4">Pembuat</DnaTh>
+                    <DnaTh className="py-3 px-4 text-right">Jml Item</DnaTh>
+                    <DnaTh className="py-3 px-4 text-center">Status</DnaTh>
+                    <DnaTh className="py-3 px-4 text-right">Aksi</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {(!prs || prs.length === 0) ? (
-                    <tr>
-                      <td colSpan={6} className="py-16 text-center">
+                    <DnaTableRow>
+                      <DnaTd colSpan={6} className="py-16 text-center">
                         <p className="text-slate-400 font-medium">Belum ada permintaan pembelian.</p>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ) : prs?.map((pr: any) => (
-                    <tr key={pr.id} className="hover:bg-slate-50/80">
-                      <td className="py-3 px-4">
+                    <DnaTableRow key={pr.id} className="hover:bg-slate-50/80">
+                      <DnaTd className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold text-[10px] italic">
                             PR
@@ -697,21 +713,21 @@ export default function PurchasingPage() {
                             <p className="text-[9px] font-bold text-slate-400 mt-0.5">{new Date(pr.createdAt).toLocaleDateString()}</p>
                           </div>
                         </div>
-                      </td>
-                      <td className="py-3 px-4"><DnaCell.Text primary={pr.warehouse?.name || '-'} /></td>
-                      <td className="py-3 px-4">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4"><DnaCell.Text primary={pr.warehouse?.name || '-'} /></DnaTd>
+                      <DnaTd className="py-3 px-4">
                         <div className="flex items-center gap-1.5">
                           <User className="h-3 w-3 text-slate-400" />
                           <span className="text-[10px] font-medium text-slate-600">{pr.creator?.fullName || pr.createdBy || '-'}</span>
                         </div>
-                      </td>
-                      <td className="py-3 px-4 text-right"><DnaCell.Number value={pr.items?.length || 0} /></td>
-                      <td className="py-3 px-4 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right"><DnaCell.Number value={pr.items?.length || 0} /></DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
                         <DnaBadge status={STATUS_BADGE_MAP[pr.status] || "default"}>
                           {pr.status?.replace('_', ' ') || 'DRAFT'}
                         </DnaBadge>
-                      </td>
-                      <td className="py-3 px-4 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         <div className="flex justify-end gap-1.5">
                           {pr.status === 'SUBMITTED' && (
                             <>
@@ -725,11 +741,11 @@ export default function PurchasingPage() {
                           )}
                           <DnaButton variant="ghost" size="icon" icon={<Eye className="h-4 w-4" />} />
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </DnaDataTableCard>
           </div>
         </>

@@ -1,3 +1,11 @@
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import React, { useState } from 'react';
 import { 
   ArrowLeft, 
@@ -297,37 +305,37 @@ export const MemberProfileView: React.FC<MemberProfileViewProps> = ({
           </div>
 
           <div className="overflow-x-auto mt-2">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="py-3 px-3">Task</th>
-                  <th className="py-3 px-2">Start Date</th>
-                  <th className="py-3 px-2">Due Date</th>
-                  <th className="py-3 px-2">Days Left</th>
-                  <th className="py-3 px-2">Status</th>
-                  <th className="py-3 px-2">Priority</th>
-                  <th className="py-3 px-2 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <DnaTh className="py-3 px-3">Task</DnaTh>
+                  <DnaTh className="py-3 px-2">Start Date</DnaTh>
+                  <DnaTh className="py-3 px-2">Due Date</DnaTh>
+                  <DnaTh className="py-3 px-2">Days Left</DnaTh>
+                  <DnaTh className="py-3 px-2">Status</DnaTh>
+                  <DnaTh className="py-3 px-2">Priority</DnaTh>
+                  <DnaTh className="py-3 px-2 text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {dailyTasks.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="py-8 text-center text-slate-400">
+                  <DnaTableRow>
+                    <DnaTd colSpan={7} className="py-8 text-center text-slate-400">
                       Belum ada daily task untuk {member.name}.
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   dailyTasks.map(task => {
                     const daysInfo = calculateDaysLeft(task.dueDate);
                     const isDone = task.status === 'Completed';
 
                     return (
-                      <tr 
+                      <DnaTableRow 
                         key={task.id}
                         className="hover:bg-slate-50/80 transition group cursor-pointer"
                         onClick={() => onViewTaskDetail(task)}
                       >
-                        <td className="py-3 px-3">
+                        <DnaTd className="py-3 px-3">
                           <div className="flex items-center gap-2.5">
                             <button
                               onClick={(e) => {
@@ -351,20 +359,20 @@ export const MemberProfileView: React.FC<MemberProfileViewProps> = ({
                               )}
                             </div>
                           </div>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 text-slate-500 whitespace-nowrap">{formatDateIndo(task.startDate)}</td>
-                        <td className="py-3 px-2 text-slate-500 whitespace-nowrap">{formatDateIndo(task.dueDate)}</td>
+                        <DnaTd className="py-3 px-2 text-slate-500 whitespace-nowrap">{formatDateIndo(task.startDate)}</DnaTd>
+                        <DnaTd className="py-3 px-2 text-slate-500 whitespace-nowrap">{formatDateIndo(task.dueDate)}</DnaTd>
 
-                        <td className="py-3 px-2 whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 whitespace-nowrap">
                           <span className={`font-semibold ${
                             daysInfo.isLate ? 'text-rose-600' : daysInfo.isToday ? 'text-amber-600' : 'text-emerald-600'
                           }`}>
                             {daysInfo.text}
                           </span>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                        <DnaTd className="py-3 px-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                           <select
                             value={task.status}
                             onChange={(e) => onUpdateTaskStatus(task.id, e.target.value as TaskStatus)}
@@ -374,15 +382,15 @@ export const MemberProfileView: React.FC<MemberProfileViewProps> = ({
                             <option value="Completed">Completed</option>
                             <option value="Late">Late</option>
                           </select>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 whitespace-nowrap">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getPriorityBadgeClass(task.priority)}`}>
                             {task.priority}
                           </span>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 text-right whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 text-right whitespace-nowrap">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -392,13 +400,13 @@ export const MemberProfileView: React.FC<MemberProfileViewProps> = ({
                           >
                             Detail
                           </button>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </div>
       )}
@@ -421,38 +429,38 @@ export const MemberProfileView: React.FC<MemberProfileViewProps> = ({
           </div>
 
           <div className="overflow-x-auto mt-2">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="py-3 px-3">Task</th>
-                  <th className="py-3 px-2">Project</th>
-                  <th className="py-3 px-2">Start Date</th>
-                  <th className="py-3 px-2">Due Date</th>
-                  <th className="py-3 px-2">Days Left</th>
-                  <th className="py-3 px-2">Status</th>
-                  <th className="py-3 px-2">Priority</th>
-                  <th className="py-3 px-2 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <DnaTh className="py-3 px-3">Task</DnaTh>
+                  <DnaTh className="py-3 px-2">Project</DnaTh>
+                  <DnaTh className="py-3 px-2">Start Date</DnaTh>
+                  <DnaTh className="py-3 px-2">Due Date</DnaTh>
+                  <DnaTh className="py-3 px-2">Days Left</DnaTh>
+                  <DnaTh className="py-3 px-2">Status</DnaTh>
+                  <DnaTh className="py-3 px-2">Priority</DnaTh>
+                  <DnaTh className="py-3 px-2 text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {projectTasks.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-8 text-center text-slate-400">
+                  <DnaTableRow>
+                    <DnaTd colSpan={8} className="py-8 text-center text-slate-400">
                       Belum ada project task untuk {member.name}.
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   projectTasks.map(task => {
                     const daysInfo = calculateDaysLeft(task.dueDate);
                     const isDone = task.status === 'Completed';
 
                     return (
-                      <tr 
+                      <DnaTableRow 
                         key={task.id}
                         className="hover:bg-slate-50/80 transition group cursor-pointer"
                         onClick={() => onViewTaskDetail(task)}
                       >
-                        <td className="py-3 px-3">
+                        <DnaTd className="py-3 px-3">
                           <div className="flex items-center gap-2.5">
                             <button
                               onClick={(e) => {
@@ -476,26 +484,26 @@ export const MemberProfileView: React.FC<MemberProfileViewProps> = ({
                               )}
                             </div>
                           </div>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2">
+                        <DnaTd className="py-3 px-2">
                           <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold text-[10px]">
                             {task.project || 'General'}
                           </span>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 text-slate-500 whitespace-nowrap">{formatDateIndo(task.startDate)}</td>
-                        <td className="py-3 px-2 text-slate-500 whitespace-nowrap">{formatDateIndo(task.dueDate)}</td>
+                        <DnaTd className="py-3 px-2 text-slate-500 whitespace-nowrap">{formatDateIndo(task.startDate)}</DnaTd>
+                        <DnaTd className="py-3 px-2 text-slate-500 whitespace-nowrap">{formatDateIndo(task.dueDate)}</DnaTd>
 
-                        <td className="py-3 px-2 whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 whitespace-nowrap">
                           <span className={`font-semibold ${
                             daysInfo.isLate ? 'text-rose-600' : daysInfo.isToday ? 'text-amber-600' : 'text-emerald-600'
                           }`}>
                             {daysInfo.text}
                           </span>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                        <DnaTd className="py-3 px-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                           <select
                             value={task.status}
                             onChange={(e) => onUpdateTaskStatus(task.id, e.target.value as TaskStatus)}
@@ -506,15 +514,15 @@ export const MemberProfileView: React.FC<MemberProfileViewProps> = ({
                             <option value="Completed">Completed</option>
                             <option value="Late">Late</option>
                           </select>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 whitespace-nowrap">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getPriorityBadgeClass(task.priority)}`}>
                             {task.priority}
                           </span>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 text-right whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 text-right whitespace-nowrap">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -524,13 +532,13 @@ export const MemberProfileView: React.FC<MemberProfileViewProps> = ({
                           >
                             Detail
                           </button>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </div>
       )}

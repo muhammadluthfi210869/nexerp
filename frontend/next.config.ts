@@ -43,11 +43,12 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+    const rawBackendUrl = process.env.INTERNAL_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    const backendOrigin = rawBackendUrl.replace(/\/v1\/?$/, "");
     return [
       {
         source: "/api/:path*",
-        destination: `${backendUrl}/v1/:path*`,
+        destination: `${backendOrigin}/v1/:path*`,
       },
       // =========================================================================
       // FASE 1: MASTER DATA COMPREHENSIVE PARITY (35/35 URLs — 0 404s)

@@ -19,12 +19,12 @@ import {
 } from "lucide-react";
 import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaSelect, DnaTextarea } from "@/components/dna";
 import {
-  DnaTable as Table,
-  DnaTableBody as TableBody,
-  DnaTd as TableCell,
-  DnaTh as TableHead,
-  DnaTableHead as TableHeader,
-  DnaTableRow as TableRow,
+  DnaTable,
+  DnaTableBody,
+  DnaTd,
+  DnaTh,
+  DnaTableHead,
+  DnaTableRow,
   DnaDialog as Dialog,
   DnaDialogContent as DialogContent,
   DnaDialogHeader as DialogHeader,
@@ -55,7 +55,7 @@ export default function BayarSamplePage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: samples, isLoading, isError } = useQuery<SamplePayment[]>({
+  const { data: samples, isLoading, isError, error: queryError } = useQuery<SamplePayment[]>({
     queryKey: ["bussdev-samples-payment"],
     queryFn: async () => {
       const resp = await api.get("/bussdev/samples");
@@ -117,8 +117,16 @@ export default function BayarSamplePage() {
       {isLoading ? (
         <QueryLoading message="Memuat data pembayaran sample..." />
       ) : isError ? (
+        // P08 acceptance 5: a 401/403 is surfaced as an access refusal, not as a
+        // generic load failure.
         <QueryError
-          error="Gagal memuat data sample"
+          error={
+            [401, 403].includes(
+              (queryError as { response?: { status?: number } })?.response?.status ?? 0
+            )
+              ? "Akses ditolak — Anda tidak memiliki izin ke pembayaran sample"
+              : "Gagal memuat data sample"
+          }
           onRetry={() => queryClient.invalidateQueries({ queryKey: ["bussdev-samples-payment"] })}
         />
       ) : (
@@ -159,39 +167,39 @@ export default function BayarSamplePage() {
               </div>
             }
           >
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50/70">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
+            <DnaTable className="table-dense">
+              <DnaTableHead className="bg-slate-50/70">
+                <DnaTableRow className="hover:bg-transparent border-slate-100">
+                  <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
                     Kode Sample
-                  </TableHead>
-                  <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                  </DnaTh>
+                  <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">
                     Customer
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                  </DnaTh>
+                  <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
                     Total
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                  </DnaTh>
+                  <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
                     Sudah Bayar
-                  </TableHead>
-                  <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                  </DnaTh>
+                  <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
                     Sisa
-                  </TableHead>
-                  <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                  </DnaTh>
+                  <DnaTh className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">
                     Status Bayar
-                  </TableHead>
-                  <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
+                  </DnaTh>
+                  <DnaTh className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">
                     Aksi
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+                  </DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredSamples.map((sample) => (
-                  <TableRow
+                  <DnaTableRow
                     key={sample.id}
                     className="group hover:bg-emerald-50/30 transition-all duration-300 border-b border-slate-50"
                   >
-                    <TableCell className="pl-6 py-4">
+                    <DnaTd className="pl-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                           <FileCheck2 className="h-4 w-4" />
@@ -200,24 +208,24 @@ export default function BayarSamplePage() {
                           {sample.code}
                         </span>
                       </div>
-                    </TableCell>
-                    <TableCell className="py-4">
+                    </DnaTd>
+                    <DnaTd className="py-4">
                       <p className="font-black text-slate-900 text-xs uppercase italic">
                         {sample.customerName}
                       </p>
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">
+                    </DnaTd>
+                    <DnaTd className="text-right tabular-nums py-4 font-semibold text-slate-900 text-xs">
                       Rp {sample.totalAmount.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">
+                    </DnaTd>
+                    <DnaTd className="text-right tabular-nums py-4 font-semibold text-emerald-600 text-xs">
                       Rp {sample.paidAmount.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">
+                    </DnaTd>
+                    <DnaTd className="text-right tabular-nums py-4 font-semibold text-rose-600 text-xs">
                       Rp {sample.remainingAmount.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-center py-4">
+                    </DnaTd>
+                    <DnaTd className="text-center py-4">
                       <DnaBadge
-                        status={
+                        variant={
                           sample.paymentStatus === "PAID"
                             ? "success"
                             : sample.paymentStatus === "PARTIAL"
@@ -231,8 +239,8 @@ export default function BayarSamplePage() {
                             ? "Partial"
                             : "Belum Bayar"}
                       </DnaBadge>
-                    </TableCell>
-                    <TableCell className="pr-6 text-right py-4">
+                    </DnaTd>
+                    <DnaTd className="pr-6 text-right py-4">
                       {sample.remainingAmount > 0 && (
                         <DnaButton
                           onClick={() => {
@@ -248,21 +256,21 @@ export default function BayarSamplePage() {
                           Bayar
                         </DnaButton>
                       )}
-                    </TableCell>
-                  </TableRow>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
                 {filteredSamples.length === 0 && (
-                  <TableRow>
-                    <TableCell
+                  <DnaTableRow>
+                    <DnaTd
                       colSpan={7}
                       className="text-center py-10 text-slate-400 italic"
                     >
                       Tidak ada sample payment ditemukan.
-                    </TableCell>
-                  </TableRow>
+                    </DnaTd>
+                  </DnaTableRow>
                 )}
-              </TableBody>
-            </Table>
+              </DnaTableBody>
+            </DnaTable>
           </DnaDataTableCard>
         </>
       )}

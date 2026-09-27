@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { AlertTriangle, RotateCcw, Home } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/dna";
 
 export default function Error({
   error,

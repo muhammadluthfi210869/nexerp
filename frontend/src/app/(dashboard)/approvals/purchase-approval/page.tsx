@@ -13,7 +13,7 @@ import {
   Package,
   Loader2,
 } from "lucide-react";
-import { DnaButton, DnaBadge, DnaInput, DnaDataTableCard, DnaModal, DnaSelect, DnaCell } from "@/components/dna";
+import { DnaButton, DnaBadge, DnaInput, DnaDataTableCard, DnaModal, DnaSelect, DnaCell, DnaTable, DnaTableHead, DnaTh, DnaTableBody, DnaTableRow, DnaTd } from "@/components/dna";
 import { ConflictModal } from "@/components/scm/ConflictModal";
 import { toast } from "sonner";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -251,20 +251,20 @@ export default function PurchaseApprovalPage() {
         </div>
       ) : (
         <DnaDataTableCard>
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
-                <th className="py-3 px-4">No. PO</th>
-                <th className="py-3 px-4">Supplier</th>
-                <th className="py-3 px-4">Item</th>
-                <th className="py-3 px-4 text-right">Qty</th>
-                <th className="py-3 px-4 text-right">Harga</th>
-                <th className="py-3 px-4">Tgl PO</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-right">Aksi</th>
+          <DnaTable>
+            <DnaTableHead>
+              <tr>
+                <DnaTh>No. PO</DnaTh>
+                <DnaTh>Supplier</DnaTh>
+                <DnaTh>Item</DnaTh>
+                <DnaTh align="right">Qty</DnaTh>
+                <DnaTh align="right">Harga</DnaTh>
+                <DnaTh>Tgl PO</DnaTh>
+                <DnaTh align="center">Status</DnaTh>
+                <DnaTh align="right">Aksi</DnaTh>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredOrders.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-16 text-center">
@@ -273,26 +273,39 @@ export default function PurchaseApprovalPage() {
                   </td>
                 </tr>
               ) : filteredOrders.map((po: any) => (
-                <tr key={po.id} className="hover:bg-slate-50/80">
-                  <td className="py-3 px-4">
-                    <span className="font-bold text-xs uppercase italic text-slate-900">{po.poNumber || '-'}</span>
-                  </td>
-                  <td className="py-3 px-4"><DnaCell.Text primary={po.supplier?.name || po.supplierName || '-'} /></td>
-                  <td className="py-3 px-4">
+                <DnaTableRow key={po.id}>
+                  <DnaTd>
+                    <DnaCell.Code
+                      value={po.poNumber || '-'}
+                      onClick={() => {
+                        setSelectedPO(po);
+                        setPoDiscount(Number(po.discountAmount || po.discountManual || 0));
+                        setPoShippingCost(Number(po.shippingCost || 0));
+                        const sources: Record<string, "PO" | "STOCK"> = {};
+                        (po.items || []).forEach((it: any, idx: number) => {
+                          sources[it.id || it.materialId || idx] =
+                            Number(it.currentStock || 0) >= Number(it.quantity || it.qty || 0) ? "STOCK" : "PO";
+                        });
+                        setLineSources(sources);
+                      }}
+                    />
+                  </DnaTd>
+                  <DnaTd><DnaCell.Text primary={po.supplier?.name || po.supplierName || '-'} /></DnaTd>
+                  <DnaTd>
                     <div className="flex items-center gap-1.5">
-                      <Package className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="text-xs">
+                      <Package className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="text-xs truncate max-w-[200px]">
                         {(po.items || []).map((i: any) => i.itemName || i.name).filter(Boolean).slice(0, 2).join(', ')}
                         {(po.items || []).length > 2 ? ` +${(po.items || []).length - 2}` : ''}
                       </span>
                     </div>
-                  </td>
-                  <td className="py-3 px-4 text-right">
+                  </DnaTd>
+                  <DnaTd align="right">
                     <DnaCell.Number value={(po.items || []).reduce((s: number, i: any) => s + Number(i.quantity || i.qty || 0), 0)} />
-                  </td>
-                  <td className="py-3 px-4 text-right"><DnaCell.Currency value={Number(po.totalValue || 0)} /></td>
-                  <td className="py-3 px-4"><DnaCell.Date value={po.estArrival} /></td>
-                  <td className="py-3 px-4 text-center">
+                  </DnaTd>
+                  <DnaTd align="right"><DnaCell.Currency value={Number(po.totalValue || 0)} /></DnaTd>
+                  <DnaTd><DnaCell.Date value={po.estArrival} /></DnaTd>
+                  <DnaTd align="center">
                     <DnaBadge status={
                       po.status === 'APPROVED' || po.status === 'ORDERED' ? "success" :
                       po.status === 'PENDING_APPROVAL' || po.status === 'SUBMITTED' ? "warning" :
@@ -300,8 +313,8 @@ export default function PurchaseApprovalPage() {
                     }>
                       {po.status?.replace('_', ' ') || 'DRAFT'}
                     </DnaBadge>
-                  </td>
-                  <td className="py-3 px-4 text-right">
+                  </DnaTd>
+                  <DnaTd align="right">
                     <div className="flex justify-end gap-1.5">
                       {(po.status === 'PENDING_APPROVAL' || po.status === 'DRAFT' || po.status === 'SUBMITTED') && (
                         <>
@@ -325,11 +338,11 @@ export default function PurchaseApprovalPage() {
                         setLineSources(sources);
                       }} />
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </DnaDataTableCard>
       )}
 

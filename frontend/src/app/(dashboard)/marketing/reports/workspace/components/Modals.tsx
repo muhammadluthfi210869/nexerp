@@ -626,7 +626,7 @@ export const BrandModal: React.FC<BrandModalProps> = ({
                 onChange={e => setColor(e.target.value)}
                 className="w-9 h-9 rounded-lg border border-slate-200 p-0.5 cursor-pointer"
               />
-              <span className="font-mono text-xs text-slate-600">{color}</span>
+              <span className="tabular-nums text-xs text-slate-600">{color}</span>
             </div>
           </div>
 

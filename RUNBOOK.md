@@ -182,6 +182,32 @@ curl -s http://127.0.0.1:3001/v1/marketing/members \
   -H "Authorization: Bearer $JWT" | jq '.data | length'
 ```
 
+### Rehearsal: Disaster Recovery Drill (P21)
+
+Jalankan di **maintenance window** — drill ini mematikan stack, `DROP DATABASE erp_database`,
+lalu me-restore snapshot. Downtime terukur ~1–3 menit (budget RTO 900s).
+
+```bash
+# 1. Snapshot SEGAR lebih dulu — transaksi setelah snapshot terakhir akan hilang.
+bash scripts/db-snapshot.sh
+
+# 2. Drill (stop stack → drop DB → restore → up → health + hitung tabel)
+bash scripts/dr-drill.sh                                            # snapshot terbaru
+bash scripts/dr-drill.sh backups/snapshot-20260925-120000.sql.gz    # atau eksplisit
+
+# 3. Bukti RTO untuk QA gate Fase 5
+#    Log: /var/log/erp/dr-drill-YYYYMMDD-HHMM.log (fallback: ./logs/)
+```
+
+Gagal = exit 1 tanpa diam-diam: snapshot kosong, restore error (`ON_ERROR_STOP=1`),
+health bukan 200, tabel < 50 (restore parsial), atau RTO > `RTO_LIMIT_S`.
+
+> Prasyarat drill di VPS: kode yang jalan di VPS harus sudah memuat perbaikan `dr-drill.sh`
+> (compose kanonik + health `:3001` + restore via `psql`). Versi lama menunjuk
+> `docker-compose.prod.yml`, port 3002, dan memakai `pg_restore` untuk arsip plain-SQL —
+> drill-nya selalu gagal sejak langkah 2. Jadi **tutup deploy drift dulu**
+> (`bash scripts/deploy.sh <sha>`), baru drill.
+
 ---
 
 ## Disk Cleanup

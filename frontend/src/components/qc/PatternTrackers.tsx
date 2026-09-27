@@ -17,7 +17,7 @@ import {
   AreaChart,
   Area,
 } from "recharts";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/dna";
 
 export const SupplierRadar = ({ data }: any) => {
   return (

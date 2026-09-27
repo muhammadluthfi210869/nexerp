@@ -15,6 +15,10 @@ import {
 import { DnaTable } from "@/components/dna";
 import { DollarSign, Printer, FileSpreadsheet, Search, Calendar, Eye, CheckCircle2, Clock } from "lucide-react";
 
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { useMemo } from "react";
+
 interface SalesSummaryItem {
   id: string;
   customer: string;
@@ -25,60 +29,34 @@ interface SalesSummaryItem {
   outstanding: number;
 }
 
-const SALES_SUMMARY_DATA: SalesSummaryItem[] = [
-  {
-    id: "ss-1",
-    customer: "PT Cantika Jelita Nusantara",
-    contractType: "Jasa Maklon",
-    invoiceCount: 4,
-    totalAmount: 285000000,
-    totalReceived: 211250000,
-    outstanding: 73750000
-  },
-  {
-    id: "ss-2",
-    customer: "CV Derma Medika",
-    contractType: "Jasa Maklon",
-    invoiceCount: 2,
-    totalAmount: 120000000,
-    totalReceived: 58000000,
-    outstanding: 62000000
-  },
-  {
-    id: "ss-3",
-    customer: "Glow & Shine Co",
-    contractType: "Jasa Maklon",
-    invoiceCount: 3,
-    totalAmount: 195000000,
-    totalReceived: 195000000,
-    outstanding: 0
-  },
-  {
-    id: "ss-4",
-    customer: "Alpha Men Grooming",
-    contractType: "Jual Putus",
-    invoiceCount: 2,
-    totalAmount: 65000000,
-    totalReceived: 65000000,
-    outstanding: 0
-  },
-  {
-    id: "ss-5",
-    customer: "CV Herbal Alami Indonesia",
-    contractType: "Jasa Maklon",
-    invoiceCount: 1,
-    totalAmount: 45000000,
-    totalReceived: 0,
-    outstanding: 45000000
-  }
-];
-
 export default function ReportSalesSummaryPage() {
-  const [data] = useState<SalesSummaryItem[]>(SALES_SUMMARY_DATA);
   const [search, setSearch] = useState("");
   const [contractTypeFilter, setContractTypeFilter] = useState("ALL");
   const [startDate, setStartDate] = useState("2026-09-01");
   const [endDate, setEndDate] = useState("2026-09-30");
+
+  const { data: reportData, isLoading } = useQuery({
+    queryKey: ["reports-sales-summary", startDate, endDate],
+    queryFn: async () => {
+      const res = await api.get("/reports/sales-summary", {
+        params: { startDate, endDate },
+      });
+      return res.data;
+    },
+  });
+
+  const data: SalesSummaryItem[] = useMemo(() => {
+    const rawList = reportData?.data || [];
+    return rawList.map((it: any) => ({
+      id: it.id || it.customer,
+      customer: it.customer || "Pelanggan",
+      contractType: it.contractType || "Jasa Maklon",
+      invoiceCount: it.invoiceCount || 0,
+      totalAmount: it.totalAmount || 0,
+      totalReceived: it.totalReceived || 0,
+      outstanding: it.outstanding || 0,
+    }));
+  }, [reportData]);
 
   const filtered = data.filter((d) => {
     const matchSearch = d.customer.toLowerCase().includes(search.toLowerCase());
@@ -203,14 +181,14 @@ export default function ReportSalesSummaryPage() {
                       {item.contractType}
                     </DnaBadge>
                   </td>
-                  <td className="px-4 py-3 text-center font-mono font-semibold">{item.invoiceCount}</td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-slate-900">
+                  <td className="px-4 py-3 text-center tabular-nums font-semibold">{item.invoiceCount}</td>
+                  <td className="px-4 py-3 text-right tabular-nums font-bold text-slate-900">
                     {formatRupiah(item.totalAmount)}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-emerald-600">
+                  <td className="px-4 py-3 text-right tabular-nums font-bold text-emerald-600">
                     {formatRupiah(item.totalReceived)}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-rose-600">
+                  <td className="px-4 py-3 text-right tabular-nums font-bold text-rose-600">
                     {formatRupiah(item.outstanding)}
                   </td>
                   <td className="px-4 py-3 text-right">

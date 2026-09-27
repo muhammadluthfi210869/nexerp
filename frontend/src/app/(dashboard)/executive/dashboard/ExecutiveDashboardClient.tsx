@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import {
   TrendingUp,
@@ -13,7 +12,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Card, StatCard, TableWrapper, DnaBadge } from "@/components/dna";
+import { Card } from "@/components/dna";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -31,7 +30,14 @@ export default function ExecutiveDashboardClient() {
 
   const { data: metrics } = useQuery({
     queryKey: ["executive-metrics"],
-    queryFn: async () => (await api.get("/executive/metrics")).data,
+    queryFn: async () => {
+      try {
+        const res = await api.get("/dashboards/executive");
+        return res.data;
+      } catch {
+        return (await api.get("/executive/metrics")).data;
+      }
+    },
     enabled: isExecutive,
     retry: false,
     refetchInterval: isExecutive ? 30000 : false,

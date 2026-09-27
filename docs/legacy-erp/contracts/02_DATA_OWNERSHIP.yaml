@@ -930,7 +930,132 @@ communication:
       STATUS_CHANGED, SYSTEM}. Never deleted (NFR §5 exception).
 
 # ===========================================
-# 11. CROSS-MODULE WRITE RULES
+# 11. CREATIVE / DESIGN AND LEGALITAS PERMIT OWNERSHIP (8 entities)
+# ===========================================
+# Canonical owner established by DEC-2026-09-20-051 (design/artwork approval) and
+# DEC-2026-09-20-053 (permit record + expiry monitoring). Both subjects previously
+# had NO owner: `artwork_status`, `design_locked` and `legal_artwork_approved` were
+# consumed as bare precondition predicates in 03_WORKFLOW_STATE_MACHINE.yaml with no
+# entity, writer or reader declared behind them.
+#
+# Tenant scope: these tables are read through their parent Lead / organization.
+# Per-table `organizationId` for the P08 slice is stated in schema.prisma SECTION 11
+# and is not yet present in the running database — recorded as backlog per
+# DEC-2026-09-20-059, not silently assumed fixed.
+
+creative_design:
+
+  - entity: DesignTask
+    authoritative_writer:
+      module: creative
+      primary_role: Director          # matches the running creative controller guard
+      manual_override: [SuperAdmin, Administrator]
+    readers:
+      all: [Director, RnDManager, RnDAdmin, RnDChemist, ApotekerPenanggungJawab,
+            BusDevManager, BusDevStaff, LegalitasAdmin, LegalitasStaff,
+            Executive, Auditor, SuperAdmin, Administrator, Viewer]
+    audit_required: true
+    notes: |
+      The design/artwork approval work item. `kanbanState` is owned by
+      `creative_pipeline` in 03_WORKFLOW_STATE_MACHINE.yaml.
+      Owner decision 2026-09-20: a client-approved artwork is NOT hard-locked.
+      `isLocked` becomes true only once `revisionCount` reaches the bound of 3
+      (BUS-RULE-111); a supervisor may reopen and the allowance restarts.
+      Read scope is deliberately broad — every PIC who appears on the milestone
+      checklist progress/tracking can read (owner decision 2026-09-20).
+
+  - entity: DesignVersion
+    authoritative_writer:
+      module: creative
+      primary_role: Director
+    readers:
+      all: [per parent DesignTask access]
+    audit_required: true
+    notes: |
+      One immutable artwork version per (taskId, versionNumber). Uploads after
+      `isLocked` are rejected; a reopen raises the allowance instead of rewriting
+      a version. `printSpecs` holds the Tab A/B finishing and paper spec.
+
+  - entity: DesignFeedback
+    authoritative_writer:
+      module: creative
+      primary_role: per approval stage (see BUS-RULE-111)
+    readers:
+      all: [per parent DesignTask access]
+    audit_required: true
+    notes: |
+      The approval decision. `versionId` ties the decision to the exact artwork
+      version approved — a stored fact, never inferred from timestamps.
+      `fromDivision` records whose gate it was (APJ / client / internal);
+      `signatureHash` + `ipAddress` are the e-signature evidence.
+      Governed writes here participate in the audit/outbox atomicity rule
+      (BUS-RULE-113).
+
+legalitas_permits:
+
+  - entity: LegalStaff
+    authoritative_writer:
+      module: legality
+      primary_role: LegalitasAdmin
+    readers:
+      all: [LegalitasAdmin, LegalitasStaff, ApotekerPenanggungJawab,
+            Executive, Auditor, SuperAdmin, Administrator]
+    deletable_by: [SuperAdmin]
+    notes: Permit-record PIC master. Referenced by all three permit record types.
+
+  - entity: HkiRecord
+    authoritative_writer:
+      module: legality
+      primary_role: LegalitasAdmin
+      manual_override: [SuperAdmin, Administrator]
+    readers:
+      all: [LegalitasAdmin, LegalitasStaff, ApotekerPenanggungJawab,
+            Executive, Auditor, SuperAdmin, Administrator, Viewer]
+    audit_required: true
+    notes: |
+      HKI / Merek permit record. Record + expiry monitoring only — no submission
+      workflow in scope (owner decision 2026-09-20, DEC-2026-09-20-053).
+      `expiryDate` is the single expiry input for BUS-RULE-112.
+
+  - entity: BpomRecord
+    authoritative_writer:
+      module: legality
+      primary_role: LegalitasAdmin
+      manual_override: [SuperAdmin, Administrator]
+    readers:
+      all: [LegalitasAdmin, LegalitasStaff, ApotekerPenanggungJawab,
+            Executive, Auditor, SuperAdmin, Administrator, Viewer]
+    audit_required: true
+    notes: BPOM permit record. Same subject and expiry policy as HkiRecord.
+
+  - entity: HalalRecord
+    authoritative_writer:
+      module: legality
+      primary_role: LegalitasAdmin
+      manual_override: [SuperAdmin, Administrator]
+    readers:
+      all: [LegalitasAdmin, LegalitasStaff, ApotekerPenanggungJawab,
+            Executive, Auditor, SuperAdmin, Administrator, Viewer]
+    audit_required: true
+    notes: |
+      Halal permit record. Same subject and expiry policy as HkiRecord.
+      `stage` is a free string in the running schema (not an enum) — preserved
+      as-is; BUS-RULE-112 does not depend on `stage`.
+
+  - entity: LegalTimelineLog
+    authoritative_writer:
+      module: legality
+      primary_role: system            # appended by the owning permit service
+      manual_override: [LegalitasAdmin]
+    readers:
+      all: [per parent permit record access]
+    notes: |
+      Append-only permit history. Polymorphic by (recordId, recordType) string
+      rather than FK — preserved from the running schema. Never updated or
+      deleted; the authoritative audit trail also lives in AuditLog.
+
+# ===========================================
+# 12. CROSS-MODULE WRITE RULES
 # ===========================================
 # Authoritative list of all cross-module write operations. Any write not
 # listed here is FORBIDDEN. Source: 03_WORKFLOW_STATE_MACHINE.yaml +
@@ -1080,7 +1205,7 @@ cross_module_writes:
     reverse_trigger: invoice.remaining == 0 → deliveryGateStatus = RELEASED
 
 # ===========================================
-# 12. DELEGATION OVERRIDES
+# 13. DELEGATION OVERRIDES
 # ===========================================
 # Explicit cross-role delegations where one role grants write to another.
 # Each entry MUST have audit_required: true (NFR §6).
@@ -1135,7 +1260,7 @@ delegations:
     audit_required: true
 
 # ===========================================
-# 13. DATA SENSITIVITY TIERS
+# 14. DATA SENSITIVITY TIERS
 # ===========================================
 # Drives encryption, access logging, and UU PDP compliance (NFR §10).
 
@@ -1219,7 +1344,7 @@ data_sensitivity:
     reader_restriction: [RnDManager, RnDAdmin, RnDChemist, ProductionAdmin, ApotekerPenanggungJawab, Executive, Auditor]
 
 # ===========================================
-# 14. LEGACY → NEX OWNERSHIP MAPPING
+# 15. LEGACY → NEX OWNERSHIP MAPPING
 # ===========================================
 # For migration P1-P7 (per 01_DOMAIN_MODEL §15.3). Used by ETL scripts.
 
@@ -1429,7 +1554,7 @@ legacy_mapping:
     notes: 4,989 rows migrated; never purged.
 
 # ===========================================
-# 15. VALIDATION CHECKLIST
+# 16. VALIDATION CHECKLIST
 # ===========================================
 
 validation:

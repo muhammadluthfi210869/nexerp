@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -28,7 +28,8 @@ export default function CreativeBoardClient({ initialTasks }: any) {
 
   // SSE Listener for real-time updates
   useEffect(() => {
-    const eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/events/creative`);
+    const sseUrl = typeof window !== 'undefined' ? '/api/events/creative' : `${process.env.NEXT_PUBLIC_API_URL ?? 'http://backend:3001/v1'}/events/creative`;
+    const eventSource = new EventSource(sseUrl);
     
     eventSource.onmessage = (event) => {
       const payload = JSON.parse(event.data);
@@ -91,7 +92,7 @@ export default function CreativeBoardClient({ initialTasks }: any) {
       queryClient.invalidateQueries({ queryKey: ["creative-board"] });
       setIsModalOpen(false);
     },
-    onError: (err: any) => toast.error("Failed to create project"),
+    onError: () => toast.error("Failed to create project"),
   });
 
   const handleTaskClick = (task: any) => {

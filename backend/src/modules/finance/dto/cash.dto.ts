@@ -20,6 +20,7 @@ export enum CashDisburseCategory {
 export enum CashReceiveCategory {
   PENERIMAAN_PIUTANG = 'PENERIMAAN_PIUTANG',
   DP_PENJUALAN = 'DP_PENJUALAN',
+  DP_LEGALITAS = 'DP_LEGALITAS',
   PENDAPATAN_LAIN = 'PENDAPATAN_LAIN',
   MODAL = 'MODAL',
   LAINNYA = 'LAINNYA',

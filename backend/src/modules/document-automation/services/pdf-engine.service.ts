@@ -1,4 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 
 @Injectable()
 export class PdfEngineService {
@@ -463,7 +467,44 @@ export class PdfEngineService {
     </body></html>`;
   }
 
+  private createDeterministicPdf(summary: string): Buffer {
+    const safeSummary = summary.replace(/[()\\]/g, '');
+    const content = `BT /F1 12 Tf 50 750 Td (${safeSummary}) Tj ET`;
+    const streamLen = Buffer.byteLength(content, 'utf-8');
+    const pdf = `%PDF-1.4
+1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
+2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj
+3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj
+4 0 obj << /Length ${streamLen} >> stream
+${content}
+endstream endobj
+5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000244 00000 n 
+0000000300 00000 n 
+trailer << /Size 6 /Root 1 0 R >>
+startxref
+377
+%%EOF`;
+    return Buffer.from(pdf, 'utf-8');
+  }
+
   private async htmlToPdf(html: string): Promise<Buffer> {
+    // The deterministic engine is a test stand-in, and only that: it emits one line of text,
+    // so a caller receiving one has been handed a placeholder, not their document. It is
+    // opt-in by FAST_PDF alone. It used to also fire on NODE_ENV === 'test', and the fallback
+    // below used to hide render failures behind it — which is how every "Download PDF" on the
+    // server returned HTTP 200 and a one-line PDF while the production image had no browser.
+    if (process.env.FAST_PDF === '1') {
+      return this.createDeterministicPdf('NEX ERP Deterministic Document Snapshot');
+    }
+
+    let pdfBuffer: Buffer;
     try {
       const htmlPdfNode = await import('html-pdf-node');
       const file = { content: html };
@@ -472,11 +513,20 @@ export class PdfEngineService {
         margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
         printBackground: true,
       };
-      const pdfBuffer = await htmlPdfNode.default.generatePdf(file, options);
-      return pdfBuffer;
+      pdfBuffer = await htmlPdfNode.default.generatePdf(file, options);
     } catch (error) {
-      this.logger.error(`PDF generation failed, returning HTML: ${error}`);
-      return Buffer.from(html, 'utf-8');
+      this.logger.error(`PDF render failed: ${error}`);
+      throw new ServiceUnavailableException(
+        'PDF renderer unavailable — dokumen tidak dapat dibuat. Hubungi administrator (cek Chromium di server).',
+      );
     }
+
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      this.logger.error('PDF renderer returned an empty buffer');
+      throw new ServiceUnavailableException(
+        'PDF renderer returned no document — dokumen tidak dapat dibuat.',
+      );
+    }
+    return pdfBuffer;
   }
 }

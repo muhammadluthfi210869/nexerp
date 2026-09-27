@@ -1,42 +1,45 @@
 "use client";
 
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { 
-  Activity, 
-  Search, 
+import {
+  Activity,
   AlertCircle,
   CheckCircle2,
-  Clock,
-  AlertTriangle,
   ShieldCheck,
-  FileCheck,
-  Beaker,
-  BookOpen,
-  Award,
   Stethoscope,
   Bookmark,
   Zap
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { DnaDataTableCard, DnaCard, DnaStatCard, DnaBadge, DnaButton, DnaCell } from "@/components/dna";
 
 export default function LegalityDashboard() {
   const { data: metrics, isLoading } = useQuery({
     queryKey: ["legality-dashboard"],
     queryFn: async () => {
-      const [dashboard, pipeline, expiry] = await Promise.all([
-        api.get("/legality/dashboard"),
-        api.get("/legality/pipeline/stats"),
-        api.get("/legality/expiry?limit=10"),
-      ]);
-      return { 
-        ...dashboard.data, 
-        pipeline: pipeline.data,
-        expiryData: expiry.data,
-      };
+      try {
+        const dashRes = await api.get("/dashboards/legality");
+        const [pipeline, expiry] = await Promise.all([
+          api.get("/legality/pipeline/stats").catch(() => ({ data: {} })),
+          api.get("/legality/expiry?limit=10").catch(() => ({ data: [] })),
+        ]);
+        return {
+          ...dashRes.data,
+          pipeline: pipeline.data,
+          expiryData: expiry.data,
+        };
+      } catch {
+        const [dashboard, pipeline, expiry] = await Promise.all([
+          api.get("/legality/dashboard"),
+          api.get("/legality/pipeline/stats"),
+          api.get("/legality/expiry?limit=10"),
+        ]);
+        return {
+          ...dashboard.data,
+          pipeline: pipeline.data,
+          expiryData: expiry.data,
+        };
+      }
     },
     refetchInterval: 30000,
   });

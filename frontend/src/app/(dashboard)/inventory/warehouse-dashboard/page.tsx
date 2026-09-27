@@ -1,18 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Warehouse,
   Boxes,
   AlertTriangle,
   ArrowRightLeft,
-  Search,
   Package,
-  ArrowDownRight,
-  ArrowUpRight,
-  TrendingDown,
-  Eye,
   Plus,
 } from "lucide-react";
 import {
@@ -20,10 +14,18 @@ import {
   DnaKpiGrid,
   DnaStatCard,
   DnaDataTableCard,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
   DnaButton,
   DnaBadge,
-  useDnaToast,
 } from "@/components/dna";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 
 interface LowStockItem {
   id: string;
@@ -46,40 +48,75 @@ interface RecentMutationItem {
   warehouse: string;
 }
 
-const LOW_STOCK_DATA: LowStockItem[] = [
-  { id: "1", code: "BBK-0002", name: "Niacinamide PC Grade", currentStock: 248, minStock: 300, unit: "gr", category: "Bahan Baku" },
-  { id: "2", code: "KSR-0001", name: "Dus Inner Box Serum Day", currentStock: 1200, minStock: 3000, unit: "pcs", category: "Kemasan Sekunder" },
-  { id: "3", code: "BBK-0044", name: "Cetyl Alcohol", currentStock: 15, minStock: 50, unit: "kg", category: "Bahan Baku" },
-  { id: "4", code: "KPR-0012", name: "Tutup Pump Treatment 20mm", currentStock: 850, minStock: 2000, unit: "pcs", category: "Kemasan Primer" },
-  { id: "5", code: "BPB-0005", name: "Lakban Fragile Merah 2 Inch", currentStock: 8, minStock: 24, unit: "roll", category: "Bahan Pembantu" }
-];
-
-const RECENT_MUTATIONS_DATA: RecentMutationItem[] = [
-  { id: "1", date: "2026-09-14", mutationNo: "DO-2026-0004", type: "OUTBOUND", material: "Serum Niacinamide 10% 20ml", qty: -100, unit: "pcs", warehouse: "Gudang Barang Jadi" },
-  { id: "2", date: "2026-09-13", mutationNo: "ADJ-2026-0003", type: "ADJUSTMENT", material: "Niacinamide PC Grade", qty: 5, unit: "gr", warehouse: "Gudang Barang Jadi" },
-  { id: "3", date: "2026-09-12", mutationNo: "TRF-2026-0004", type: "TRANSFER", material: "Hairdensyl Complex", qty: -100, unit: "gr", warehouse: "Gudang Bahan Baku" },
-  { id: "4", date: "2026-09-11", mutationNo: "DO-2026-0003", type: "OUTBOUND", material: "Moisturizer Gel Aloe 50gr", qty: -1500, unit: "pcs", warehouse: "Gudang Barang Jadi" },
-  { id: "5", date: "2026-09-09", mutationNo: "ADJ-2026-0002", type: "ADJUSTMENT", material: "IPM (Isopropyl Myristate)", qty: -15, unit: "gr", warehouse: "Gudang Kemasan" }
-];
-
 export default function WarehouseDashboard() {
   const router = useRouter();
-  const { toast } = useDnaToast();
-  const [lowStocks] = useState<LowStockItem[]>(LOW_STOCK_DATA);
-  const [recentMutations] = useState<RecentMutationItem[]>(RECENT_MUTATIONS_DATA);
+
+  // 1. Fetch Catalog
+  const { data: rawCatalog = [], isLoading: isCatalogLoading } = useQuery({
+    queryKey: ["warehouse-catalog"],
+    queryFn: async () => {
+      const res = await api.get("/warehouse/catalog");
+      return unwrapResponse<any[]>(res);
+    },
+  });
+
+  // 2. Fetch Transactions
+  const { data: rawTransactions = [], isLoading: isTxLoading } = useQuery({
+    queryKey: ["warehouse-transactions"],
+    queryFn: async () => {
+      const res = await api.get("/warehouse/transactions");
+      return unwrapResponse<any[]>(res);
+    },
+  });
+
+  // 3. Process KPI metrics
+  const catalogList = useMemo(() => Array.isArray(rawCatalog) ? rawCatalog : [], [rawCatalog]);
+  const txList = useMemo(() => Array.isArray(rawTransactions) ? rawTransactions : [], [rawTransactions]);
+
+  const totalItems = catalogList.length;
+  const totalQuantity = useMemo(() => {
+    return catalogList.reduce((acc, item) => acc + (Number(item.stock) || 0), 0);
+  }, [catalogList]);
+
+  const lowStocks: LowStockItem[] = useMemo(() => {
+    return catalogList
+      .filter((item) => (Number(item.stock) || 0) <= (Number(item.minStock) || 0))
+      .map((item) => ({
+        id: item.id,
+        code: item.sku || item.code || item.id.slice(0, 8),
+        name: item.name || "Material",
+        currentStock: Number(item.stock) || 0,
+        minStock: Number(item.minStock) || 0,
+        unit: item.unit || "pcs",
+        category: item.category || "General",
+      }));
+  }, [catalogList]);
+
+  const recentMutations: RecentMutationItem[] = useMemo(() => {
+    return txList.slice(0, 10).map((tx) => ({
+      id: tx.id,
+      date: tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("id-ID") : "-",
+      mutationNo: tx.referenceNo || `TX-${tx.id.slice(0, 6)}`,
+      type: (tx.type as any) || "TRANSFER",
+      material: tx.inventory?.material?.name || tx.material?.name || "Bahan / Barang",
+      qty: Number(tx.quantity) || 0,
+      unit: tx.inventory?.material?.unit || tx.material?.unit || "pcs",
+      warehouse: tx.inventory?.warehouse?.name || "Gudang Utama",
+    }));
+  }, [txList]);
 
   const getTypeBadge = (type: string) => {
     switch (type) {
       case "INBOUND":
-        return <DnaBadge status="success">Masuk</DnaBadge>;
+        return <DnaBadge variant="success">Masuk</DnaBadge>;
       case "OUTBOUND":
-        return <DnaBadge status="danger">Keluar</DnaBadge>;
+        return <DnaBadge variant="critical">Keluar</DnaBadge>;
       case "TRANSFER":
-        return <DnaBadge status="info">Transfer</DnaBadge>;
+        return <DnaBadge variant="info">Transfer</DnaBadge>;
       case "ADJUSTMENT":
-        return <DnaBadge status="warning">Penyesuaian</DnaBadge>;
+        return <DnaBadge variant="warning">Penyesuaian</DnaBadge>;
       default:
-        return <DnaBadge status="default">{type}</DnaBadge>;
+        return <DnaBadge variant="default">{type}</DnaBadge>;
     }
   };
 
@@ -94,14 +131,14 @@ export default function WarehouseDashboard() {
             <DnaButton
               variant="outline"
               icon={<ArrowRightLeft className="h-4 w-4" />}
-              onClick={() => router.push("/goods-transfer/create")}
+              onClick={() => router.push("/inventory/mutation")}
             >
               + Mutasi Antar Gudang
             </DnaButton>
             <DnaButton
               variant="primary"
               icon={<Plus className="h-4 w-4" />}
-              onClick={() => router.push("/delivery-out/create")}
+              onClick={() => router.push("/inventory/outbound")}
             >
               + Buat Pengiriman DO
             </DnaButton>
@@ -109,111 +146,139 @@ export default function WarehouseDashboard() {
         }
       />
 
-      {/* 4 KPI Cards (1:1 Legacy G-SERP) */}
+      {/* 4 KPI Cards */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
           title="Total Jenis Barang"
-          value="6.116"
+          value={totalItems.toLocaleString("id-ID")}
           icon={Package}
           variant="default"
           subtext="Master item SKU terdaftar"
         />
         <DnaStatCard
           title="Total Kuantitas Stok"
-          value="3.561.786"
+          value={totalQuantity.toLocaleString("id-ID")}
           icon={Boxes}
           variant="success"
           subtext="Total unit di seluruh gudang"
         />
         <DnaStatCard
           title="Barang Low Stock"
-          value="394"
+          value={lowStocks.length.toLocaleString("id-ID")}
           icon={AlertTriangle}
           variant="danger"
           subtext="Segera terbitkan purchase request"
         />
         <DnaStatCard
-          title="Mutasi Bulan Ini"
-          value="319"
+          title="Mutasi Tercatat"
+          value={txList.length.toLocaleString("id-ID")}
           icon={ArrowRightLeft}
           variant="warning"
           subtext="Pergerakan fisik barang tercatat"
         />
       </DnaKpiGrid>
 
-      {/* 2 Clean Parity Tables */}
+      {/* 2 Parity Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Table 1: Peringatan Stok Minimum */}
         <DnaDataTableCard title="Peringatan Stok Rendah (Under Min Stock)">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-                <tr>
-                  <th className="py-2.5 px-3">Kode</th>
-                  <th className="py-2.5 px-3">Nama Barang</th>
-                  <th className="py-2.5 px-3 text-right">Stok Saat Ini</th>
-                  <th className="py-2.5 px-3 text-right">Min Stok</th>
-                  <th className="py-2.5 px-3 text-center">Status</th>
-                  <th className="py-2.5 px-3 text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {lowStocks.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-2.5 px-3 font-semibold text-blue-600">{item.code}</td>
-                    <td className="py-2.5 px-3 font-medium text-slate-900 truncate max-w-[140px]">{item.name}</td>
-                    <td className="py-2.5 px-3 text-right font-bold text-rose-600">
-                      {item.currentStock.toLocaleString()} {item.unit}
-                    </td>
-                    <td className="py-2.5 px-3 text-right text-slate-500">
-                      {item.minStock.toLocaleString()} {item.unit}
-                    </td>
-                    <td className="py-2.5 px-3 text-center">
-                      <DnaBadge status="danger" className="text-[10px]">Perlu PR</DnaBadge>
-                    </td>
-                    <td className="py-2.5 px-3 text-center">
-                      <DnaButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.push("/purchase-request/create")}
-                      >
-                        Order
-                      </DnaButton>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh>Kode</DnaTh>
+                  <DnaTh>Nama Barang</DnaTh>
+                  <DnaTh className="text-right">Stok Saat Ini</DnaTh>
+                  <DnaTh className="text-right">Min Stok</DnaTh>
+                  <DnaTh className="text-center">Status</DnaTh>
+                  <DnaTh className="text-center">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
+                {isCatalogLoading ? (
+                  <DnaTableRow>
+                    <DnaTd colSpan={6} className="text-center py-6 text-slate-500">
+                      Memuat data katalog material...
+                    </DnaTd>
+                  </DnaTableRow>
+                ) : lowStocks.length === 0 ? (
+                  <DnaTableRow>
+                    <DnaTd colSpan={6} className="text-center py-6 text-slate-500">
+                      Seluruh material berada di atas batas minimum buffer stock.
+                    </DnaTd>
+                  </DnaTableRow>
+                ) : (
+                  lowStocks.map((item) => (
+                    <DnaTableRow key={item.id}>
+                      <DnaTd className="font-semibold text-blue-600">{item.code}</DnaTd>
+                      <DnaTd className="font-medium text-slate-900 truncate max-w-[140px]">{item.name}</DnaTd>
+                      <DnaTd className="text-right font-bold text-rose-600 tabular-nums">
+                        {item.currentStock.toLocaleString("id-ID")} {item.unit}
+                      </DnaTd>
+                      <DnaTd className="text-right text-slate-500 tabular-nums">
+                        {item.minStock.toLocaleString("id-ID")} {item.unit}
+                      </DnaTd>
+                      <DnaTd className="text-center">
+                        <DnaBadge variant="critical" className="text-[10px]">Perlu PR</DnaBadge>
+                      </DnaTd>
+                      <DnaTd className="text-center">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.push("/pembelian/scm-pembelian/create")}
+                        >
+                          Order
+                        </DnaButton>
+                      </DnaTd>
+                    </DnaTableRow>
+                  ))
+                )}
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
 
         {/* Table 2: Mutasi Terakhir */}
         <DnaDataTableCard title="Riwayat Mutasi & Pergerakan Terkini">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-                <tr>
-                  <th className="py-2.5 px-3">Tanggal</th>
-                  <th className="py-2.5 px-3">No. Mutasi</th>
-                  <th className="py-2.5 px-3">Tipe</th>
-                  <th className="py-2.5 px-3">Barang</th>
-                  <th className="py-2.5 px-3 text-right">Kuantitas</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {recentMutations.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-2.5 px-3 text-slate-600">{item.date}</td>
-                    <td className="py-2.5 px-3 font-semibold text-slate-800">{item.mutationNo}</td>
-                    <td className="py-2.5 px-3">{getTypeBadge(item.type)}</td>
-                    <td className="py-2.5 px-3 font-medium text-slate-900 truncate max-w-[140px]">{item.material}</td>
-                    <td className={`py-2.5 px-3 text-right font-bold ${item.qty < 0 ? "text-rose-600" : "text-emerald-600"}`}>
-                      {item.qty > 0 ? `+${item.qty}` : item.qty} {item.unit}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh>Tanggal</DnaTh>
+                  <DnaTh>No. Mutasi</DnaTh>
+                  <DnaTh>Tipe</DnaTh>
+                  <DnaTh>Barang</DnaTh>
+                  <DnaTh className="text-right">Kuantitas</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
+                {isTxLoading ? (
+                  <DnaTableRow>
+                    <DnaTd colSpan={5} className="text-center py-6 text-slate-500">
+                      Memuat riwayat transaksi mutasi...
+                    </DnaTd>
+                  </DnaTableRow>
+                ) : recentMutations.length === 0 ? (
+                  <DnaTableRow>
+                    <DnaTd colSpan={5} className="text-center py-6 text-slate-500">
+                      Belum ada transaksi mutasi fisik yang tercatat.
+                    </DnaTd>
+                  </DnaTableRow>
+                ) : (
+                  recentMutations.map((item) => (
+                    <DnaTableRow key={item.id}>
+                      <DnaTd className="text-slate-600 tabular-nums">{item.date}</DnaTd>
+                      <DnaTd className="font-semibold text-slate-800">{item.mutationNo}</DnaTd>
+                      <DnaTd>{getTypeBadge(item.type)}</DnaTd>
+                      <DnaTd className="font-medium text-slate-900 truncate max-w-[140px]">{item.material}</DnaTd>
+                      <DnaTd className={`text-right font-bold tabular-nums ${item.qty < 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                        {item.qty > 0 ? `+${item.qty}` : item.qty} {item.unit}
+                      </DnaTd>
+                    </DnaTableRow>
+                  ))
+                )}
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       </div>

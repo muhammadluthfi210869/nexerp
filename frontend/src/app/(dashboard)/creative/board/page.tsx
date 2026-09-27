@@ -1,14 +1,16 @@
-import React from "react";
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 import CreativeBoardClient from "./CreativeBoardClient";
 
 export const dynamic = "force-dynamic";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+const API_URL = typeof window !== "undefined"
+  ? "/api"
+  : (process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://backend:3001/v1");
 
 async function fetchFromApi(path: string) {
   try {
-    const res = await fetch(`${API_URL}${path}`, { cache: "no-store" });
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    const res = await fetch(`${API_URL}${cleanPath}`, { cache: "no-store" });
     if (!res.ok) return [];
     return res.json();
   } catch {

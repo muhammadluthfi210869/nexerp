@@ -4,18 +4,24 @@ import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
   TableRow,
-  StatCard, 
-  KpiCard, 
-  TableWrapper, 
-  SectionLabel, 
-  DnaBadge 
+  StatCard,
+  KpiCard,
+  TableWrapper,
+  SectionLabel,
+  DnaBadge,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { ShieldCheck, AlertTriangle, TrendingDown, FlaskConical, Loader2 } from "lucide-react";
 
@@ -80,36 +86,36 @@ export default function QCReportPage() {
             <div>
               <SectionLabel>Analisis Reject per Item</SectionLabel>
               <TableWrapper>
-                <Table>
-                  <TableHeader className="bg-slate-50/50">
-                    <TableRow>
-                      <TableHead className="text-table-header text-slate-400 py-4 px-4">Date</TableHead>
-                      <TableHead className="text-table-header text-slate-400 text-center py-4 px-4">Part</TableHead>
-                      <TableHead className="text-table-header text-slate-400 text-center py-4 px-4">Severity</TableHead>
-                      <TableHead className="text-table-header text-slate-400 text-center py-4 px-4">Category</TableHead>
-                      <TableHead className="text-table-header text-slate-400 py-4 px-4">Cause</TableHead>
-                      <TableHead className="text-table-header text-slate-400 py-4 px-4">Description</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <DnaTable>
+                  <DnaTableHead className="bg-slate-50/50">
+                    <DnaTableRow>
+                      <DnaTh className="text-table-header text-slate-400 py-4 px-4">Date</DnaTh>
+                      <DnaTh className="text-table-header text-slate-400 text-center py-4 px-4">Part</DnaTh>
+                      <DnaTh className="text-table-header text-slate-400 text-center py-4 px-4">Severity</DnaTh>
+                      <DnaTh className="text-table-header text-slate-400 text-center py-4 px-4">Category</DnaTh>
+                      <DnaTh className="text-table-header text-slate-400 py-4 px-4">Cause</DnaTh>
+                      <DnaTh className="text-table-header text-slate-400 py-4 px-4">Description</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {rejects.map((r) => (
-                      <TableRow key={r.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                        <TableCell className="py-3 px-4 text-slate-500 text-xs tabular-nums">{formatDate(r.createdAt)}</TableCell>
-                        <TableCell className="py-3 px-4 text-center">
+                      <DnaTableRow key={r.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                        <DnaTd className="py-3 px-4 text-slate-500 text-xs tabular-nums">{formatDate(r.createdAt)}</DnaTd>
+                        <DnaTd className="py-3 px-4 text-center">
                           <DnaBadge>{r.phase || "—"}</DnaBadge>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-center">
-                          <DnaBadge status={r.severity === "CRITICAL" ? "critical" : r.severity === "MAJOR" ? "warning" : "default"}>
+                        </DnaTd>
+                        <DnaTd className="py-3 px-4 text-center">
+                          <DnaBadge variant={r.severity === "CRITICAL" ? "critical" : r.severity === "MAJOR" ? "warning" : "default"}>
                             {r.severity || "—"}
                           </DnaBadge>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-center text-slate-500">{r.defectCategory || "—"}</TableCell>
-                        <TableCell className="py-3 px-4 text-slate-500">{r.defectType || "—"}</TableCell>
-                        <TableCell className="py-3 px-4 text-slate-400 text-xs max-w-xs truncate">{r.notes || "—"}</TableCell>
-                      </TableRow>
+                        </DnaTd>
+                        <DnaTd className="py-3 px-4 text-center text-slate-500">{r.defectCategory || "—"}</DnaTd>
+                        <DnaTd className="py-3 px-4 text-slate-500">{r.defectType || "—"}</DnaTd>
+                        <DnaTd className="py-3 px-4 text-slate-400 text-xs max-w-xs truncate">{r.notes || "—"}</DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </TableBody>
-                </Table>
+                  </DnaTableBody>
+                </DnaTable>
               </TableWrapper>
             </div>
           )}

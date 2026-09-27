@@ -29,6 +29,12 @@ import {
   DnaSelect,
   DnaTextarea,
   DnaCell,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { toast } from "sonner";
 
@@ -72,13 +78,13 @@ export default function ApjReleasePage() {
   const { data: releases = [], isLoading } = useQuery({
     queryKey: ["apj-releases"],
     queryFn: async () => {
-      const resp = await api.get("/legality/apj-releases");
+      const resp = await api.get("/qc/apj-releases");
       return resp.data;
     },
   });
 
   const createMutation = useMutation({
-    mutationFn: async (payload: any) => api.post("/legality/apj-releases", payload),
+    mutationFn: async (payload: any) => api.post("/qc/apj-releases", payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["apj-releases"] });
       toast.success("APJ Release Record Created Successfully");
@@ -156,13 +162,13 @@ export default function ApjReleasePage() {
   const keputusanBadge = (k: string) => {
     switch (k) {
       case "RELEASE":
-        return <DnaBadge status="success">{k}</DnaBadge>;
+        return <DnaBadge variant="success">{k}</DnaBadge>;
       case "HOLD":
-        return <DnaBadge status="warning">{k}</DnaBadge>;
+        return <DnaBadge variant="warning">{k}</DnaBadge>;
       case "REJECT":
-        return <DnaBadge status="critical">{k}</DnaBadge>;
+        return <DnaBadge variant="critical">{k}</DnaBadge>;
       default:
-        return <DnaBadge status="default">{k}</DnaBadge>;
+        return <DnaBadge variant="default">{k}</DnaBadge>;
     }
   };
 
@@ -224,34 +230,34 @@ export default function ApjReleasePage() {
               </div>
             }
           >
-            <table className="w-full border-collapse text-[12px]">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[8px]">
-                  <th className="px-4 py-4 text-left">BATCH RECORD</th>
-                  <th className="px-4 py-4 text-center">KEPUTUSAN</th>
-                  <th className="px-4 py-4 text-left">NIE</th>
-                  <th className="px-4 py-4 text-center">STATUS</th>
-                  <th className="px-4 py-4 text-left">CREATED</th>
-                  <th className="px-4 py-4 text-right">ACTIONS</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="bg-slate-50/50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[8px]">
+                  <DnaTh className="px-4 py-4 text-left">BATCH RECORD</DnaTh>
+                  <DnaTh className="px-4 py-4 text-center">KEPUTUSAN</DnaTh>
+                  <DnaTh className="px-4 py-4 text-left">NIE</DnaTh>
+                  <DnaTh className="px-4 py-4 text-center">STATUS</DnaTh>
+                  <DnaTh className="px-4 py-4 text-left">CREATED</DnaTh>
+                  <DnaTh className="px-4 py-4 text-right">ACTIONS</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <DnaTableRow>
+                    <DnaTd colSpan={6} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       Syncing release records...
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : filteredReleases.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <DnaTableRow>
+                    <DnaTd colSpan={6} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       Tidak ada data release APJ ditemukan
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredReleases.map((release: any) => (
-                    <tr key={release.id} className="hover:bg-slate-50/80">
-                      <td className="px-4 py-3">
+                    <DnaTableRow key={release.id} className="hover:bg-slate-50/80">
+                      <DnaTd className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-xl bg-amber-50 flex items-center justify-center shadow-sm shrink-0">
                             <FileText className="h-4 w-4 text-amber-500" />
@@ -260,16 +266,16 @@ export default function ApjReleasePage() {
                             {release.batchRecord}
                           </span>
                         </div>
-                      </td>
-                      <td className="px-4 py-3 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-3 text-center">
                         {keputusanBadge(release.keputusan)}
-                      </td>
-                      <td className="px-4 py-3">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-3">
                         <span className="text-[10px] font-bold text-slate-700 uppercase">
                           {release.nie || "—"}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-3 text-center">
                         <DnaBadge
                           status={
                             release.status === "RELEASED"
@@ -281,15 +287,15 @@ export default function ApjReleasePage() {
                         >
                           {release.status || "—"}
                         </DnaBadge>
-                      </td>
-                      <td className="px-4 py-3">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-3">
                         <span className="text-[10px] font-bold text-slate-400 uppercase">
                           {release.createdAt
                             ? new Date(release.createdAt).toLocaleDateString("id-ID")
                             : "—"}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
+                      </DnaTd>
+                      <DnaTd className="px-4 py-3 text-right">
                         <DnaButton
                           size="sm"
                           variant="outline"
@@ -298,12 +304,12 @@ export default function ApjReleasePage() {
                         >
                           DETAILS
                         </DnaButton>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </DnaDataTableCard>
         )}
 

@@ -1,0 +1,25 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "..",
+  "roots": ["<rootDir>/src/modules/wa-self-qr"],
+  "testEnvironment": "node",
+  "testMatch": [
+    "**/__tests__/*.spec.ts"
+  ],
+  "maxWorkers": 1,
+  "cacheDirectory": "<rootDir>/.jest-cache/self-qr",
+  "transform": {
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "diagnostics": false,
+        "tsconfig": "<rootDir>/tsconfig.self-qr-test.json"
+      }
+    ]
+  },
+  "moduleNameMapper": {
+    "^whatsapp-web\\.js$": "<rootDir>/test/__mocks__/whatsapp-web.js.js",
+    "^qrcode$": "<rootDir>/test/__mocks__/qrcode.js",
+    "^@/(.*)$": "<rootDir>/src/$1"
+  }
+}

@@ -6,7 +6,8 @@ import { ArrowLeft, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface DnaPageTabItem {
-  key: string;
+  key?: string;
+  id?: string;
   label: string;
   icon?: React.ReactNode;
   count?: number;
@@ -24,6 +25,7 @@ export interface DnaPageHeaderProps {
   backHref?: string;
   backText?: string;
   badge?: React.ReactNode;
+  badgeText?: string;
   breadcrumbs?: any[];
   breadcrumbItems?: any[];
   tabs?: DnaPageTabItem[];
@@ -35,6 +37,7 @@ export interface DnaPageHeaderProps {
   extraActions?: React.ReactNode;
   action?: React.ReactNode;
   actions?: React.ReactNode;
+  actionButtons?: React.ReactNode;
   className?: string;
 }
 
@@ -47,6 +50,7 @@ export function DnaPageHeader({
   backHref,
   backText,
   badge,
+  badgeText,
   breadcrumbs,
   tabs,
   activeTab,
@@ -57,11 +61,13 @@ export function DnaPageHeader({
   extraActions,
   action,
   actions,
+  actionButtons,
   className,
 }: DnaPageHeaderProps) {
   const effectiveBackLink = backLink || (backHref ? { href: backHref, label: backText || "Kembali" } : undefined);
   const effectiveSubtitle = subtitle || description;
-  const rightActions = action || actions || extraActions;
+  const effectiveBadge = badge || (badgeText ? <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/80">{badgeText}</span> : undefined);
+  const rightActions = action || actions || actionButtons || extraActions;
   return (
     <div
       className={cn(
@@ -79,9 +85,12 @@ export function DnaPageHeader({
             <ArrowLeft className="w-3.5 h-3.5" /> {effectiveBackLink.label}
           </Link>
         )}
-        <h1 className="text-[26px] md:text-[28px] font-black text-slate-900 tracking-tight uppercase">
-          {title} {titleAccent && <span className="text-amber-500 font-serif lowercase italic font-normal ml-1.5">{titleAccent}</span>}
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-[26px] md:text-[28px] font-black text-slate-900 tracking-tight uppercase">
+            {title} {titleAccent && <span className="text-amber-500 font-serif lowercase italic font-normal ml-1.5">{titleAccent}</span>}
+          </h1>
+          {effectiveBadge}
+        </div>
         {effectiveSubtitle && (
           <p className="text-[12px] text-slate-500 mt-0.5">
             {effectiveSubtitle}
@@ -94,12 +103,13 @@ export function DnaPageHeader({
         {tabs && tabs.length > 0 && onTabChange && (
           <div className="bg-white border border-slate-200/90 rounded-xl p-1 shadow-2xs flex items-center gap-1">
             {tabs.map((tab) => {
-              const isActive = activeTab === tab.key;
+              const tabKey = (tab.key || tab.id || tab.label) as string;
+              const isActive = activeTab === tabKey;
               return (
                 <button
-                  key={tab.key}
+                  key={tabKey}
                   type="button"
-                  onClick={() => onTabChange(tab.key)}
+                  onClick={() => onTabChange(tabKey)}
                   className={cn(
                     "h-8 px-3.5 rounded-lg text-[12px] transition-all flex items-center gap-2 cursor-pointer border-none font-semibold",
                     isActive

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   DnaPageContainer,
   DnaPageHeader,
@@ -15,6 +17,11 @@ import {
   DnaModal,
   DnaCell,
   useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import {
   Shield,
@@ -28,6 +35,7 @@ import {
   RefreshCw,
   Clock,
   Terminal,
+  Loader2,
 } from "lucide-react";
 
 interface AuditLogRecord {
@@ -35,116 +43,31 @@ interface AuditLogRecord {
   timestamp: string;
   user: string;
   role: string;
-  module: "Penjualan" | "Pembelian" | "Gudang" | "Produksi" | "Finance" | "Quality" | "System";
-  action: "CREATE" | "UPDATE" | "DELETE" | "APPROVE" | "REJECT" | "LOGIN";
+  module: string;
+  action: string;
   targetRef: string;
   description: string;
   ipAddress: string;
-  status: "SUCCESS" | "WARNING" | "FAILED";
+  status: string;
   metadata?: Record<string, any>;
 }
 
-const INITIAL_LOGS: AuditLogRecord[] = [
-  {
-    id: "log-101",
-    timestamp: "2026-09-16 15:10:24",
-    user: "dr. Rian Pratama",
-    role: "Apoteker Penanggung Jawab (APJ)",
-    module: "Quality",
-    action: "APPROVE",
-    targetRef: "APJ-REL-2026-004",
-    description: "Otorisasi Rilis Batch Produk Jadi Sunscreen SPF 50",
-    ipAddress: "192.168.1.45",
-    status: "SUCCESS",
-    metadata: { batch: "FG-GLOW-SUN50", nie: "NA18261700192", lotQty: 20000 },
-  },
-  {
-    id: "log-102",
-    timestamp: "2026-09-16 14:45:12",
-    user: "Fitri Handayani",
-    role: "Sales Executive",
-    module: "Penjualan",
-    action: "CREATE",
-    targetRef: "SO-2026-0512",
-    description: "Pembuatan Sales Order Baru PT Glow Skin Global",
-    ipAddress: "192.168.1.18",
-    status: "SUCCESS",
-    metadata: { client: "PT Glow Skin Global", totalAmount: 347000000 },
-  },
-  {
-    id: "log-103",
-    timestamp: "2026-09-16 13:30:00",
-    user: "Ahmad Subarjo",
-    role: "Warehouse Head",
-    module: "Gudang",
-    action: "UPDATE",
-    targetRef: "TRF-2026-0002",
-    description: "Konfirmasi Penerimaan Mutasi Bahan Kemas ke Gudang Produksi",
-    ipAddress: "192.168.1.88",
-    status: "SUCCESS",
-    metadata: { origin: "Gudang Kemasan", destination: "Gudang Produksi" },
-  },
-  {
-    id: "log-104",
-    timestamp: "2026-09-16 12:15:44",
-    user: "Budi Hermawan",
-    role: "Commercial Director",
-    module: "Penjualan",
-    action: "REJECT",
-    targetRef: "SO-2026-0499",
-    description: "Penolakan SO karena Plafon Piutang Melebihi Batas Limit",
-    ipAddress: "192.168.1.12",
-    status: "WARNING",
-    metadata: { client: "CV Sinar Kosmetika Utama", overdueDays: 18 },
-  },
-  {
-    id: "log-105",
-    timestamp: "2026-09-16 11:05:30",
-    user: "Siti Rahmawati",
-    role: "Finance AP Specialist",
-    module: "Finance",
-    action: "APPROVE",
-    targetRef: "PO-2026-004",
-    description: "Verifikasi Invoice Pembelian Bahan Baku PT Chemindo",
-    ipAddress: "192.168.1.22",
-    status: "SUCCESS",
-    metadata: { invoiceAmount: 14000000, supplier: "PT Chemindo Natural" },
-  },
-  {
-    id: "log-106",
-    timestamp: "2026-09-16 09:12:10",
-    user: "admin.it",
-    role: "System Administrator",
-    module: "System",
-    action: "LOGIN",
-    targetRef: "AUTH-SESSION-892",
-    description: "Autentikasi Berhasil via SSO 2FA Google Workspace",
-    ipAddress: "192.168.1.5",
-    status: "SUCCESS",
-    metadata: { authMethod: "OIDC_2FA", browser: "Chrome 128 / Windows" },
-  },
-  {
-    id: "log-107",
-    timestamp: "2026-09-16 08:30:15",
-    user: "Hendri Kurniawan",
-    role: "Mixing Operator",
-    module: "Produksi",
-    action: "UPDATE",
-    targetRef: "SCH-MIX-2026-001",
-    description: "Update Realisasi Tangki Mixing Tank 01 Suhu 75°C",
-    ipAddress: "192.168.2.14",
-    status: "SUCCESS",
-    metadata: { temperature: "75C", rpm: "1200", durationMinutes: 45 },
-  },
-];
-
 export default function AuditLogsPage() {
   const toast = useDnaToast();
-  const [logs, setLogs] = useState<AuditLogRecord[]>(INITIAL_LOGS);
   const [searchQuery, setSearchQuery] = useState("");
   const [moduleFilter, setModuleFilter] = useState("ALL");
   const [actionFilter, setActionFilter] = useState("ALL");
   const [selectedLog, setSelectedLog] = useState<AuditLogRecord | null>(null);
+
+  const { data: logsData, isLoading, refetch, isFetching } = useQuery<AuditLogRecord[]>({
+    queryKey: ["audit-logs"],
+    queryFn: async () => {
+      const res = await api.get("/system/audit-logs");
+      return res.data;
+    },
+  });
+
+  const logs = logsData || [];
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
@@ -173,8 +96,11 @@ export default function AuditLogsPage() {
           <div className="flex items-center gap-2">
             <DnaButton
               variant="secondary"
-              icon={<RefreshCw className="w-4 h-4" />}
-              onClick={() => toast.success("Data Terkini", "Log audit berhasil dimutakhirkan.")}
+              icon={isFetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              onClick={() => {
+                refetch();
+                toast.success("Data Terkini", "Log audit berhasil dimutakhirkan.");
+              }}
             >
               Segarkan Log
             </DnaButton>
@@ -269,36 +195,36 @@ export default function AuditLogsPage() {
       <DnaDataTableCard title="Buku Audit Trail Aktivitas ERP (1:1 Standar G-SERP)">
         <div className="overflow-x-auto">
           <DnaTable className="w-full text-left text-[12px]">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
-              <tr>
-                <th className="px-4 py-3 w-12 text-center">#</th>
-                <th className="px-4 py-3">Waktu & Tanggal</th>
-                <th className="px-4 py-3">Pengguna (User)</th>
-                <th className="px-4 py-3">Modul</th>
-                <th className="px-4 py-3 text-center">Tindakan</th>
-                <th className="px-4 py-3">Objek / No. Ref</th>
-                <th className="px-4 py-3">Alamat IP</th>
-                <th className="px-4 py-3 text-center">Status</th>
-                <th className="px-4 py-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="px-4 py-3 w-12 text-center">#</DnaTh>
+                <DnaTh className="px-4 py-3">Waktu & Tanggal</DnaTh>
+                <DnaTh className="px-4 py-3">Pengguna (User)</DnaTh>
+                <DnaTh className="px-4 py-3">Modul</DnaTh>
+                <DnaTh className="px-4 py-3 text-center">Tindakan</DnaTh>
+                <DnaTh className="px-4 py-3">Objek / No. Ref</DnaTh>
+                <DnaTh className="px-4 py-3">Alamat IP</DnaTh>
+                <DnaTh className="px-4 py-3 text-center">Status</DnaTh>
+                <DnaTh className="px-4 py-3 text-center">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredLogs.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="px-4 py-12 text-center text-slate-400">
                     Tidak ada catatan aktivitas yang cocok dengan kriteria filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredLogs.map((log, index) => (
-                  <tr key={log.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="px-4 py-3 text-center text-slate-400 font-mono text-xs">{index + 1}</td>
-                    <td className="px-4 py-3 font-mono text-slate-600 whitespace-nowrap">{log.timestamp}</td>
-                    <td className="px-4 py-3">
+                  <DnaTableRow key={log.id} className="hover:bg-slate-50/70 transition-colors">
+                    <DnaTd className="px-4 py-3 text-center text-slate-400 tabular-nums text-xs">{index + 1}</DnaTd>
+                    <DnaTd className="px-4 py-3 tabular-nums text-slate-600 whitespace-nowrap">{log.timestamp}</DnaTd>
+                    <DnaTd className="px-4 py-3">
                       <DnaCell.Text primary={log.user} secondary={log.role} />
-                    </td>
-                    <td className="px-4 py-3 font-medium text-slate-700">{log.module}</td>
-                    <td className="px-4 py-3 text-center">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-3 font-medium text-slate-700">{log.module}</DnaTd>
+                    <DnaTd className="px-4 py-3 text-center">
                       <span
                         className={`text-[10px] font-black px-2 py-0.5 rounded-md border ${
                           log.action === "APPROVE"
@@ -314,19 +240,19 @@ export default function AuditLogsPage() {
                       >
                         {log.action}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 font-mono font-semibold text-slate-900">{log.targetRef}</td>
-                    <td className="px-4 py-3 font-mono text-slate-500">{log.ipAddress}</td>
-                    <td className="px-4 py-3 text-center">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-3 tabular-nums font-semibold text-slate-900">{log.targetRef}</DnaTd>
+                    <DnaTd className="px-4 py-3 tabular-nums text-slate-500">{log.ipAddress}</DnaTd>
+                    <DnaTd className="px-4 py-3 text-center">
                       <DnaBadge
                         variant={
-                          log.status === "SUCCESS" ? "emerald" : log.status === "WARNING" ? "amber" : "danger"
+                          log.status === "SUCCESS" ? "emerald" : log.status === "WARNING" ? "amber" : "critical"
                         }
                       >
                         {log.status}
                       </DnaBadge>
-                    </td>
-                    <td className="px-4 py-3 text-center">
+                    </DnaTd>
+                    <DnaTd className="px-4 py-3 text-center">
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -335,11 +261,11 @@ export default function AuditLogsPage() {
                       >
                         Detail
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
+            </DnaTableBody>
           </DnaTable>
         </div>
       </DnaDataTableCard>
@@ -356,7 +282,7 @@ export default function AuditLogsPage() {
             <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Waktu Kejadian:</span>
-                <span className="font-mono font-bold text-slate-800">{selectedLog.timestamp} WIB</span>
+                <span className="tabular-nums font-bold text-slate-800">{selectedLog.timestamp} WIB</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Pengguna & Peran:</span>
@@ -368,11 +294,11 @@ export default function AuditLogsPage() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Referensi Dokumen:</span>
-                <span className="font-mono font-bold text-slate-900">{selectedLog.targetRef}</span>
+                <span className="tabular-nums font-bold text-slate-900">{selectedLog.targetRef}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Alamat IP / Klien:</span>
-                <span className="font-mono text-slate-600">{selectedLog.ipAddress}</span>
+                <span className="tabular-nums text-slate-600">{selectedLog.ipAddress}</span>
               </div>
             </div>
 
@@ -386,7 +312,7 @@ export default function AuditLogsPage() {
             {selectedLog.metadata && (
               <div className="space-y-1">
                 <span className="font-semibold text-slate-700 block">Metadata Payload (JSON):</span>
-                <pre className="p-3 bg-slate-950 text-emerald-400 rounded-xl font-mono text-[11px] overflow-x-auto">
+                <pre className="p-3 bg-slate-950 text-emerald-400 rounded-xl tabular-nums text-[11px] overflow-x-auto">
                   {JSON.stringify(selectedLog.metadata, null, 2)}
                 </pre>
               </div>

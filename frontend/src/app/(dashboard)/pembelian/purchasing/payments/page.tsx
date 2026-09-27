@@ -23,7 +23,24 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { DnaInput, DnaBadge, DnaButton, DnaStatCard, DnaDataTableCard, DnaModal, DnaSelect, DnaTextarea, DnaCheckbox, DnaCell } from "@/components/dna";
+import {
+  DnaInput,
+  DnaBadge,
+  DnaButton,
+  DnaStatCard,
+  DnaDataTableCard,
+  DnaModal,
+  DnaSelect,
+  DnaTextarea,
+  DnaCheckbox,
+  DnaCell,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { toast } from "sonner";
 
@@ -133,48 +150,48 @@ export default function PurchasePaymentPrototype() {
             </div>
           }
         >
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                <th className="py-4 px-4">Faktur / Asal</th>
-                <th className="py-4 px-4">PO / Pemasok</th>
-                <th className="py-4 px-4">Tanggal</th>
-                <th className="py-4 px-4 text-right">Total</th>
-                <th className="py-4 px-4 text-right">Sisa Tagihan</th>
-                <th className="py-4 px-4 text-center">Status</th>
-                <th className="py-4 px-4 text-right pr-10">Penyelesaian</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="bg-slate-50/50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                <DnaTh className="py-4 px-4">Faktur / Asal</DnaTh>
+                <DnaTh className="py-4 px-4">PO / Pemasok</DnaTh>
+                <DnaTh className="py-4 px-4">Tanggal</DnaTh>
+                <DnaTh className="py-4 px-4 text-right">Total</DnaTh>
+                <DnaTh className="py-4 px-4 text-right">Sisa Tagihan</DnaTh>
+                <DnaTh className="py-4 px-4 text-center">Status</DnaTh>
+                <DnaTh className="py-4 px-4 text-right pr-10">Penyelesaian</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {isLoading && (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center">
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="py-8 text-center">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600" />
                     <p className="text-[10px] font-bold uppercase mt-4 text-slate-400">Memuat faktur...</p>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               )}
               {isError && (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center">
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="py-8 text-center">
                     <AlertCircle className="h-6 w-6 mx-auto text-rose-500" />
                     <p className="text-[10px] font-bold uppercase mt-4 text-slate-400">Gagal memuat faktur</p>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               )}
               {!isLoading && !isError && invList.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center">
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="py-8 text-center">
                     <p className="text-[10px] font-bold uppercase text-slate-300">Belum ada faktur yang harus dibayar</p>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               )}
               {!isLoading && !isError && invList.map((inv: any) => {
                 const outstanding = Number(inv.outstandingAmount);
                 const status = statusLabel(inv.status);
                 return (
-                  <tr key={inv.id} className="hover:bg-slate-50/80">
-                    <td className="py-4 px-4 pl-10">
+                  <DnaTableRow key={inv.id} className="hover:bg-slate-50/80">
+                    <DnaTd className="py-4 px-4 pl-10">
                       <div className="flex items-center gap-4">
                         <div className="h-11 w-11 rounded-2xl bg-white text-slate-900 flex items-center justify-center shadow-sm border border-slate-200">
                           <FileIcon className="h-5 w-5" />
@@ -184,29 +201,29 @@ export default function PurchasePaymentPrototype() {
                           <span className="text-[10px] font-bold text-slate-400 uppercase">PO: {inv.po?.poNumber || "-"}</span>
                         </div>
                       </div>
-                    </td>
-                    <td className="py-4 px-4">
+                    </DnaTd>
+                    <DnaTd className="py-4 px-4">
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-900 text-xs uppercase">{inv.po?.poNumber || "-"}</span>
                         <span className="text-[10px] font-bold text-emerald-600 uppercase italic">{inv.supplier?.name || "-"}</span>
                       </div>
-                    </td>
-                    <td className="py-4 px-4">
+                    </DnaTd>
+                    <DnaTd className="py-4 px-4">
                       <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tighter">{formatDate(inv.issuedAt)}</span>
-                    </td>
-                    <td className="py-4 px-4 text-right"><DnaCell.Currency value={Number(inv.amountDue)} /></td>
-                    <td className="py-4 px-4 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-4 px-4 text-right"><DnaCell.Currency value={Number(inv.amountDue)} /></DnaTd>
+                    <DnaTd className="py-4 px-4 text-right">
                       <span className={cn(
                         "font-bold text-sm tabular-nums",
                         outstanding > 0 ? "text-rose-600" : "text-emerald-500"
                       )}>Rp {outstanding.toLocaleString()}</span>
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <DnaBadge status={inv.status === "PAID" ? "success" : "critical"}>
+                    </DnaTd>
+                    <DnaTd className="py-4 px-4 text-center">
+                      <DnaBadge variant={inv.status === "PAID" ? "success" : "critical"}>
                         {status}
                       </DnaBadge>
-                    </td>
-                    <td className="py-4 px-4 pr-10">
+                    </DnaTd>
+                    <DnaTd className="py-4 px-4 pr-10">
                       <div className="flex justify-end gap-2">
                         <DnaButton variant="ghost" size="icon" icon={<Eye className="h-4 w-4" />} />
                         {outstanding > 0 && (
@@ -220,12 +237,12 @@ export default function PurchasePaymentPrototype() {
                           </DnaButton>
                         )}
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </DnaDataTableCard>
 
         {/* Payment Modal */}

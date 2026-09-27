@@ -1,32 +1,22 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Factory,
   Plus,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  Play,
-  Pause,
   ArrowRight,
   Eye,
   Printer,
   FileSpreadsheet,
-  Search,
-  Filter,
-  Sparkles,
-  Layers,
   FlaskConical,
   Package,
   ShieldAlert,
   Calendar,
-  CheckCheck,
-  ChevronRight,
-  XCircle
+  Layers,
+  CheckCircle2
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -36,23 +26,30 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
+  DnaDetailDrawer,
   DnaModal,
-  DnaTabNav,
-  useDnaToast
+  DnaInput,
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import Link from "next/link";
 
 interface WorkOrderItem {
   id: string;
-  code: string; // e.g. SPK-2026-0042
-  batchNumber: string; // e.g. BATCH-GLW-0909
-  salesOrderCode: string; // e.g. SO-2026-0188
+  code: string;
+  batchNumber: string;
+  salesOrderCode: string;
   customerName: string;
   brandName: string;
   productName: string;
   category: string;
-  netto: string; // e.g. 30 ml
-  targetQty: number; // PCS
+  netto: string;
+  targetQty: number;
   goodQty: number;
   rejectQty: number;
   startDate: string;
@@ -64,142 +61,13 @@ interface WorkOrderItem {
   notes: string;
 }
 
-const FALLBACK_WORK_ORDERS: WorkOrderItem[] = [
-  {
-    id: "wo-1",
-    code: "SPK-2026-0042",
-    batchNumber: "BATCH-GLW-0909",
-    salesOrderCode: "SO-2026-0188",
-    customerName: "PT Cantika Jelita Nusantara",
-    brandName: "GlowGoddess",
-    productName: "Niacinamide 10% Brightening Serum",
-    category: "Skincare",
-    netto: "30 ml",
-    targetQty: 5000,
-    goodQty: 2450,
-    rejectQty: 12,
-    startDate: "2026-09-08",
-    targetDate: "2026-09-12",
-    currentStage: "FILLING",
-    progressPct: 55,
-    status: "IN_PROGRESS",
-    picOperator: "Budi Santoso",
-    notes: "Filling Line 2 (Rotary Auto) kecepatan 45 bpm."
-  },
-  {
-    id: "wo-2",
-    code: "SPK-2026-0043",
-    batchNumber: "BATCH-AURA-0910",
-    salesOrderCode: "SO-2026-0190",
-    customerName: "CV Aura Skin Estetika",
-    brandName: "AuraGlow",
-    productName: "Centella Asiatica Soothing Gel Cream",
-    category: "Skincare",
-    netto: "50 gr",
-    targetQty: 3000,
-    goodQty: 3000,
-    rejectQty: 0,
-    startDate: "2026-09-09",
-    targetDate: "2026-09-11",
-    currentStage: "MIXING",
-    progressPct: 30,
-    status: "IN_PROGRESS",
-    picOperator: "Hendra Wijaya",
-    notes: "Proses homogenizer bejana 500L, target suhu 70°C."
-  },
-  {
-    id: "wo-3",
-    code: "SPK-2026-0040",
-    batchNumber: "BATCH-ELX-0905",
-    salesOrderCode: "SO-2026-0182",
-    customerName: "PT Elixir Botanika Internasional",
-    brandName: "ElixirHerb",
-    productName: "Rosemary Purifying Hair Tonic",
-    category: "Haircare",
-    netto: "100 ml",
-    targetQty: 10000,
-    goodQty: 9940,
-    rejectQty: 48,
-    startDate: "2026-09-05",
-    targetDate: "2026-09-09",
-    currentStage: "PACKING",
-    progressPct: 90,
-    status: "IN_PROGRESS",
-    picOperator: "Rina Marlina",
-    notes: "Pemasangan shrink wrap botol & master carton 48 pcs/box."
-  },
-  {
-    id: "wo-4",
-    code: "SPK-2026-0038",
-    batchNumber: "BATCH-LUM-0901",
-    salesOrderCode: "SO-2026-0175",
-    customerName: "PT Sinar Kosmetika Abadi",
-    brandName: "LuminaCare",
-    productName: "Hyaluronic Acid Hydrating Toner",
-    category: "Skincare",
-    netto: "150 ml",
-    targetQty: 8000,
-    goodQty: 7980,
-    rejectQty: 15,
-    startDate: "2026-09-01",
-    targetDate: "2026-09-06",
-    currentStage: "QC_HOLD",
-    progressPct: 95,
-    status: "QC_HOLD",
-    picOperator: "Ahmad Fauzi",
-    notes: "Karantina QC menunggu hasil inkubasi mikrobiologi 3x24 jam."
-  },
-  {
-    id: "wo-5",
-    code: "SPK-2026-0035",
-    batchNumber: "BATCH-DERM-0828",
-    salesOrderCode: "SO-2026-0168",
-    customerName: "PT Derma Lab Medika",
-    brandName: "DermaPure",
-    productName: "Salicylic Acid 2% Acne Spot Gel",
-    category: "Skincare",
-    netto: "15 gr",
-    targetQty: 4000,
-    goodQty: 3985,
-    rejectQty: 10,
-    startDate: "2026-08-28",
-    targetDate: "2026-09-02",
-    currentStage: "FINISHED",
-    progressPct: 100,
-    status: "COMPLETED",
-    picOperator: "Budi Santoso",
-    notes: "Selesai rilis APJ, telah dipindahkan ke WH-03 (Produk Jadi)."
-  },
-  {
-    id: "wo-6",
-    code: "SPK-2026-0044",
-    batchNumber: "BATCH-VELV-0912",
-    salesOrderCode: "SO-2026-0195",
-    customerName: "PT Velvet Beauty Kreasi",
-    brandName: "VelvetLips",
-    productName: "Matte Velvet Lip Cream Shade 04 Terracotta",
-    category: "Decorative",
-    netto: "4.5 ml",
-    targetQty: 6000,
-    goodQty: 0,
-    rejectQty: 0,
-    startDate: "2026-09-10",
-    targetDate: "2026-09-15",
-    currentStage: "WAITING_MATERIAL",
-    progressPct: 10,
-    status: "DRAFT",
-    picOperator: "Hendra Wijaya",
-    notes: "Menunggu penimbangan pigmen warna di ruang timbang steril."
-  }
-];
-
 const STAGE_LABELS: Record<string, { label: string; badge: "default" | "warning" | "critical" | "info" | "purple" | "success" }> = {
-  WAITING_MATERIAL: { label: "Timbang & Bahan", badge: "default" },
-  MIXING: { label: "1. Mixing Ruahan", badge: "info" },
-  FILLING: { label: "2. Filling Primer", badge: "purple" },
-  PACKING: { label: "3. Packaging Sekunder", badge: "warning" },
-  QC_HOLD: { label: "Karantina QC / APJ", badge: "critical" },
-  FINISHED: { label: "Selesai (Gudang WH-03)", badge: "success" },
+  WAITING_MATERIAL: { label: "Timbang Bahan", badge: "default" },
+  MIXING: { label: "1. Mixing", badge: "info" },
+  FILLING: { label: "2. Filling", badge: "purple" },
+  PACKING: { label: "3. Packaging", badge: "warning" },
+  QC_HOLD: { label: "Karantina QC", badge: "critical" },
+  FINISHED: { label: "Selesai", badge: "success" },
 };
 
 const NEXT_STAGE_FLOW: Record<string, "WAITING_MATERIAL" | "MIXING" | "FILLING" | "PACKING" | "QC_HOLD" | "FINISHED"> = {
@@ -212,16 +80,15 @@ const NEXT_STAGE_FLOW: Record<string, "WAITING_MATERIAL" | "MIXING" | "FILLING" 
 };
 
 export default function WorkOrdersPage() {
-  const queryClient = useQueryClient();
   const toast = useDnaToast();
 
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
 
-  // Modals state
+  // Modals & Drawer state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [detailItem, setDetailItem] = useState<WorkOrderItem | null>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [advanceItem, setAdvanceItem] = useState<WorkOrderItem | null>(null);
 
   // Form states for Create WO
@@ -257,9 +124,9 @@ export default function WorkOrdersPage() {
             code: item.code || `SPK-2026-${String(idx + 1).padStart(4, "0")}`,
             batchNumber: item.batchNumber || item.batchCode || `BATCH-${item.id}`,
             salesOrderCode: item.salesOrderCode || item.soNumber || `SO-${item.id}`,
-            customerName: item.customerName || item.customer?.name || "Klien Maklon",
-            brandName: item.brandName || item.brand || "Brand Kosmetik",
-            productName: item.productName || item.product?.name || "Produk Kosmetik",
+            customerName: item.customerName || item.customer?.name || "PT Cantika Glow Nusantara",
+            brandName: item.brandName || item.brand || "GlowAura",
+            productName: item.productName || item.product?.name || "Brightening Serum 30ml",
             category: item.category || "Skincare",
             netto: item.netto || "30 ml",
             targetQty: Number(item.targetQty) || 5000,
@@ -275,18 +142,20 @@ export default function WorkOrdersPage() {
           }));
         }
       } catch (err) {
-        console.warn("Using fallback work orders", err);
+        console.warn("Failed to fetch active work orders", err);
       }
-      return FALLBACK_WORK_ORDERS;
+      return [];
     }
   });
 
-  const workOrders = serverWorkOrders || FALLBACK_WORK_ORDERS;
+  const [localWorkOrders, setLocalWorkOrders] = useState<WorkOrderItem[]>([]);
+  const workOrders = useMemo(() => {
+    return [...localWorkOrders, ...(serverWorkOrders || [])];
+  }, [localWorkOrders, serverWorkOrders]);
 
   // Filtered list
   const filteredWorkOrders = useMemo(() => {
     return workOrders.filter((wo) => {
-      // Tab filter
       if (activeTab === "WAITING" && wo.currentStage !== "WAITING_MATERIAL") return false;
       if (activeTab === "MIXING" && wo.currentStage !== "MIXING") return false;
       if (activeTab === "FILLING" && wo.currentStage !== "FILLING") return false;
@@ -294,10 +163,6 @@ export default function WorkOrdersPage() {
       if (activeTab === "QC_HOLD" && wo.currentStage !== "QC_HOLD") return false;
       if (activeTab === "FINISHED" && wo.currentStage !== "FINISHED") return false;
 
-      // Category filter
-      if (selectedCategory !== "ALL" && wo.category !== selectedCategory) return false;
-
-      // Search
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchCode = wo.code.toLowerCase().includes(q);
@@ -310,7 +175,7 @@ export default function WorkOrdersPage() {
       }
       return true;
     });
-  }, [workOrders, activeTab, selectedCategory, searchQuery]);
+  }, [workOrders, activeTab, searchQuery]);
 
   // KPI Calculations
   const totalActive = workOrders.filter((w) => w.status !== "COMPLETED" && w.status !== "CANCELLED").length;
@@ -349,7 +214,7 @@ export default function WorkOrdersPage() {
       notes: formNotes || ""
     };
 
-    workOrders.unshift(newWo);
+    setLocalWorkOrders([newWo, ...localWorkOrders]);
     setIsCreateModalOpen(false);
     toast.success("SPK Berhasil Diterbitkan", `Surat Perintah Kerja ${newWo.code} untuk ${newWo.productName} telah dibuat.`);
   };
@@ -376,24 +241,35 @@ export default function WorkOrdersPage() {
 
   return (
     <DnaPageContainer>
+      {/* 1. Header Page with Unified Top-Right Tabs */}
       <DnaPageHeader
         title="Work Orders (Surat Perintah Kerja)"
-        subtitle="Pusat orkestrasi dan monitoring seluruh batch produksi maklon kosmetik (Mixing, Filling, Packaging, hingga Rilis APJ)"
-        badge={
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-            <Factory className="w-3.5 h-3.5" />
-            <span>CPKB Certified Flow</span>
-          </div>
-        }
+        description="Pusat orkestrasi dan monitoring batch produksi maklon kosmetik (Mixing, Filling, Packaging, hingga Rilis APJ)."
+        badge={<DnaBadge variant="neutral">CPKB-FLOW</DnaBadge>}
+        breadcrumbs={[
+          { label: "Produksi Pabrik", href: "/production" },
+          { label: "Work Orders", href: "/production/work-orders" }
+        ]}
+        tabs={[
+          { id: "ALL", label: `Semua (${workOrders.length})` },
+          { id: "WAITING", label: "Timbang Bahan" },
+          { id: "MIXING", label: `Mixing (${inMixing})` },
+          { id: "FILLING", label: `Filling (${inFilling})` },
+          { id: "PACKING", label: `Packing (${inPacking})` },
+          { id: "QC_HOLD", label: `Karantina QC (${qcHoldCount})` },
+          { id: "FINISHED", label: `Selesai (${completedCount})` }
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         actions={
           <div className="flex items-center gap-2">
             <Link href="/production/spk">
-              <DnaButton variant="secondary" size="md">
+              <DnaButton variant="secondary">
                 <Printer className="w-4 h-4 mr-1.5" />
                 Cetak SPK EBMR
               </DnaButton>
             </Link>
-            <DnaButton variant="primary" size="md" onClick={() => setIsCreateModalOpen(true)}>
+            <DnaButton variant="primary" onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="w-4 h-4 mr-1.5" />
               Buat SPK Baru
             </DnaButton>
@@ -401,186 +277,115 @@ export default function WorkOrdersPage() {
         }
       />
 
-      {/* KPI Grid */}
+      {/* 2. KPI Grid */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          label="Total SPK Aktif"
+          label="TOTAL SPK AKTIF"
           value={`${totalActive} Batch`}
           icon={<Factory className="w-5 h-5 text-blue-600" />}
-          delta={{ value: "+12% vs minggu lalu", isPositive: true }}
-          variant="blue"
+          subValue="Dalam Lini Produksi"
         />
         <DnaStatCard
-          label="Mixing (Ruahan)"
+          label="MIXING (RUAHAN)"
           value={`${inMixing} Batch`}
           icon={<FlaskConical className="w-5 h-5 text-indigo-600" />}
-          subtext="Tahap 1 (Bulk)"
-          variant="info"
+          subValue="Tahap 1 (Bulk Mixing)"
         />
         <DnaStatCard
-          label="Filling & Packing"
+          label="FILLING & PACKAGING"
           value={`${inFilling + inPacking} Batch`}
           icon={<Package className="w-5 h-5 text-amber-600" />}
-          subtext="Tahap 2 & 3"
-          variant="warning"
+          subValue="Tahap 2 & 3"
         />
         <DnaStatCard
-          label="Karantina QC / APJ"
+          label="KARANTINA QC / APJ"
           value={`${qcHoldCount} Batch`}
           icon={<ShieldAlert className="w-5 h-5 text-rose-600" />}
-          subtext="Menunggu Rilis"
-          variant="critical"
+          subValue="Menunggu Rilis Mutu"
         />
       </DnaKpiGrid>
 
-      {/* Main Table Card */}
+      {/* 3. DataTable Card (Zero redundant title, zero horizontal scroll, max 6 cols) */}
       <DnaDataTableCard
-        title="Daftar Work Orders (SPK)"
-        badge={
-          <DnaBadge variant="default">
-            {filteredWorkOrders.length} SPK Ditemukan
-          </DnaBadge>
-        }
-        customToolbar={
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 w-full">
-            {/* Tab Filter */}
-            <DnaTabNav
-              tabs={[
-                { id: "ALL", label: "Semua Stage", badge: workOrders.length },
-                { id: "WAITING", label: "Timbang/Bahan", badge: workOrders.filter((w) => w.currentStage === "WAITING_MATERIAL").length },
-                { id: "MIXING", label: "Mixing", badge: inMixing },
-                { id: "FILLING", label: "Filling", badge: inFilling },
-                { id: "PACKING", label: "Packaging", badge: inPacking },
-                { id: "QC_HOLD", label: "Karantina QC", badge: qcHoldCount },
-                { id: "FINISHED", label: "Selesai", badge: completedCount }
-              ]}
-              activeTab={activeTab}
-              onChange={setActiveTab}
-            />
-
-            {/* Filter Search & Category */}
-            <div className="flex items-center gap-2">
-              <div className="relative min-w-[220px]">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Cari No SPK, Batch, Klien..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
-                />
-              </div>
-
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700"
-              >
-                <option value="ALL">Semua Kategori</option>
-                <option value="Skincare">Skincare</option>
-                <option value="Haircare">Haircare</option>
-                <option value="Bodycare">Bodycare</option>
-                <option value="Decorative">Decorative</option>
-              </select>
-            </div>
-          </div>
-        }
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Cari No. SPK, Batch, Klien, Brand, Produk..."
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-              <tr>
-                <th className="px-3.5 py-3">No. SPK & Batch</th>
-                <th className="px-3.5 py-3">Klien & Brand</th>
-                <th className="px-3.5 py-3">Produk & Netto</th>
-                <th className="px-3.5 py-3 text-right">Target (PCS)</th>
-                <th className="px-3.5 py-3 text-right">Good / Reject</th>
-                <th className="px-3.5 py-3">Jadwal & PIC</th>
-                <th className="px-3.5 py-3">Tahap Produksi</th>
-                <th className="px-3.5 py-3">Progress</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredWorkOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
+        <div className="w-full">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-[18%]">No. SPK & Batch</DnaTh>
+                <DnaTh className="py-3 px-4 w-[24%]">Klien & Brand</DnaTh>
+                <DnaTh className="py-3 px-4 w-[24%]">Produk & Target</DnaTh>
+                <DnaTh className="py-3 px-4 w-[14%]">Jadwal & PIC</DnaTh>
+                <DnaTh className="py-3 px-4 w-[14%]">Tahap & Progress</DnaTh>
+                <DnaTh className="py-3 px-4 w-[6%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
+              {isLoading ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
+                    Memuat data Work Orders...
+                  </DnaTd>
+                </DnaTableRow>
+              ) : filteredWorkOrders.length === 0 ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
+                    <Factory className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada data Work Order yang sesuai dengan filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredWorkOrders.map((wo) => {
                   const stageInfo = STAGE_LABELS[wo.currentStage] || { label: wo.currentStage, badge: "default" };
                   return (
-                    <tr key={wo.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="px-3.5 py-3">
-                        <div className="font-semibold text-slate-800">{wo.code}</div>
-                        <div className="text-[10px] text-blue-600 font-mono flex items-center gap-1">
-                          <Layers className="w-3 h-3" />
-                          {wo.batchNumber}
+                    <DnaTableRow key={wo.id} className="hover:bg-slate-50/70 transition-colors">
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="tabular-nums text-xs font-bold text-slate-900 truncate">{wo.code}</p>
+                        <p className="text-[11px] text-blue-600 tabular-nums flex items-center gap-1 truncate">
+                          <Layers className="w-3 h-3 shrink-0" /> {wo.batchNumber}
+                        </p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="font-semibold text-slate-900 text-xs truncate">{wo.customerName}</p>
+                        <p className="text-[11px] text-slate-500 font-medium truncate">{wo.brandName}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="font-semibold text-slate-900 text-xs truncate">{wo.productName}</p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {wo.targetQty.toLocaleString()} Pcs • {wo.netto}
+                        </p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="tabular-nums text-xs text-slate-700 truncate">{wo.targetDate}</p>
+                        <p className="text-[11px] text-slate-400 truncate">{wo.picOperator}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <div className="flex items-center gap-1.5">
+                          <DnaBadge variant={stageInfo.badge}>{stageInfo.label}</DnaBadge>
                         </div>
-                      </td>
-                      <td className="px-3.5 py-3">
-                        <div className="font-medium text-slate-900">{wo.customerName}</div>
-                        <div className="text-[10px] text-slate-500 font-semibold">{wo.brandName}</div>
-                      </td>
-                      <td className="px-3.5 py-3">
-                        <div className="font-medium text-slate-800">{wo.productName}</div>
-                        <div className="text-[10px] text-slate-500">
-                          {wo.category} • <span className="font-semibold text-slate-700">{wo.netto}</span>
-                        </div>
-                      </td>
-                      <td className="px-3.5 py-3 text-right font-semibold text-slate-800">
-                        {wo.targetQty.toLocaleString()} PCS
-                      </td>
-                      <td className="px-3.5 py-3 text-right">
-                        <span className="text-emerald-700 font-medium">{wo.goodQty.toLocaleString()}</span>
-                        {" / "}
-                        <span className="text-rose-600 font-medium">{wo.rejectQty.toLocaleString()}</span>
-                      </td>
-                      <td className="px-3.5 py-3">
-                        <div className="text-[11px] text-slate-700 flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-slate-400" />
-                          {wo.targetDate}
-                        </div>
-                        <div className="text-[10px] text-slate-500">{wo.picOperator}</div>
-                      </td>
-                      <td className="px-3.5 py-3">
-                        <DnaBadge variant={stageInfo.badge}>
-                          {stageInfo.label}
-                        </DnaBadge>
-                      </td>
-                      <td className="px-3.5 py-3 min-w-[120px]">
-                        <div className="flex items-center justify-between text-[10px] mb-1 font-semibold text-slate-700">
-                          <span>{wo.progressPct}%</span>
-                        </div>
-                        <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              wo.progressPct >= 100
-                                ? "bg-emerald-500"
-                                : wo.currentStage === "QC_HOLD"
-                                ? "bg-rose-500"
-                                : "bg-blue-600"
-                            }`}
-                            style={{ width: `${wo.progressPct}%` }}
-                          />
-                        </div>
-                      </td>
-                      <td className="px-3.5 py-3 text-center">
-                        <div className="flex items-center justify-center gap-1">
+                        <p className="text-[10px] text-slate-500 tabular-nums mt-0.5 truncate">
+                          {wo.progressPct}% • G:{wo.goodQty} R:{wo.rejectQty}
+                        </p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
                           <DnaButton
-                            variant="secondary"
+                            variant="ghost"
                             size="sm"
-                            onClick={() => setDetailItem(wo)}
+                            onClick={() => {
+                              setDetailItem(wo);
+                              setIsDetailDrawerOpen(true);
+                            }}
                             title="Lihat Detail SPK"
                           >
-                            <Eye className="w-3.5 h-3.5" />
+                            <Eye className="w-4 h-4 text-slate-600" />
                           </DnaButton>
-
                           {wo.currentStage !== "FINISHED" && (
                             <DnaButton
-                              variant="primary"
+                              variant="ghost"
                               size="sm"
                               onClick={() => {
                                 setAdvanceItem(wo);
@@ -590,187 +395,155 @@ export default function WorkOrdersPage() {
                               }}
                               title="Majukan Tahap Produksi"
                             >
-                              <ArrowRight className="w-3.5 h-3.5" />
+                              <ArrowRight className="w-4 h-4 text-blue-600" />
                             </DnaButton>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   );
                 })
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
-      {/* MODAL BUAT SPK BARU */}
+      {/* 4. Modal Buat SPK Baru */}
       <DnaModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         title="Buat Surat Perintah Kerja (SPK) Baru"
-        size="lg"
+        size="md"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <DnaButton variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" onClick={handleCreateWo}>
+              Terbitkan SPK
+            </DnaButton>
+          </div>
+        }
       >
-        <form onSubmit={handleCreateWo} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+        <form onSubmit={handleCreateWo} className="space-y-3 text-xs">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">
                 No. Sales Order (SO) <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                required
-                placeholder="Contoh: SO-2026-0195"
+              <DnaInput
+                placeholder="SO-2026-0195"
                 value={formSoCode}
                 onChange={(e) => setFormSoCode(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
               />
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Nama Klien / Perusahaan <span className="text-rose-500">*</span>
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">
+                Nama Klien <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                required
-                placeholder="Contoh: PT Cantika Jelita"
+              <DnaInput
+                placeholder="PT Cantika Jelita"
                 value={formCustomer}
                 onChange={(e) => setFormCustomer(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">
                 Nama Brand <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                required
-                placeholder="Contoh: GlowGoddess"
+              <DnaInput
+                placeholder="GlowGoddess"
                 value={formBrand}
                 onChange={(e) => setFormBrand(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
               />
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">
                 Nama Produk Maklon <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                required
-                placeholder="Contoh: Ceramide Barrier Cream"
+              <DnaInput
+                placeholder="Ceramide Barrier Cream"
                 value={formProduct}
                 onChange={(e) => setFormProduct(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Kategori Produk</label>
-              <select
-                value={formCategory}
-                onChange={(e) => setFormCategory(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="Skincare">Skincare</option>
-                <option value="Haircare">Haircare</option>
-                <option value="Bodycare">Bodycare</option>
-                <option value="Decorative">Decorative</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Netto / Isi per Pcs</label>
-              <input
-                type="text"
-                placeholder="Contoh: 30 ml atau 50 gr"
-                value={formNetto}
-                onChange={(e) => setFormNetto(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">
                 Target Qty (PCS) <span className="text-rose-500">*</span>
               </label>
-              <input
+              <DnaInput
                 type="number"
-                min="100"
-                required
-                value={formTargetQty}
+                value={formTargetQty.toString()}
                 onChange={(e) => setFormTargetQty(Number(e.target.value))}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
               />
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">PIC Operator Produksi</label>
-              <input
-                type="text"
-                value={formPic}
-                onChange={(e) => setFormPic(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Netto Kemasan</label>
+              <DnaInput
+                placeholder="30 ml"
+                value={formNetto}
+                onChange={(e) => setFormNetto(e.target.value)}
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Tanggal Mulai</label>
-              <input
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Tanggal Mulai</label>
+              <DnaInput
                 type="date"
                 value={formStartDate}
                 onChange={(e) => setFormStartDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Target Selesai</label>
-              <input
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Target Selesai</label>
+              <DnaInput
                 type="date"
                 value={formTargetDate}
                 onChange={(e) => setFormTargetDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Catatan Khusus / Instruksi Kerja</label>
-            <textarea
-              rows={2}
+          <div className="space-y-1">
+            <label className="font-bold text-slate-700 uppercase">Instruksi Khusus</label>
+            <DnaInput
               placeholder="Instruksi bejana, spesifikasi kemasan, atau catatan penimbangan..."
               value={formNotes}
               onChange={(e) => setFormNotes(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
             />
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-            <DnaButton type="button" variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
-              Batal
-            </DnaButton>
-            <DnaButton type="submit" variant="primary">
-              Terbitkan SPK
-            </DnaButton>
           </div>
         </form>
       </DnaModal>
 
-      {/* MODAL ADVANCE STAGE */}
+      {/* 5. Modal Majukan Tahap */}
       <DnaModal
         isOpen={!!advanceItem}
         onClose={() => setAdvanceItem(null)}
         title={`Majukan Tahap Produksi: ${advanceItem?.code}`}
         size="md"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <DnaButton variant="secondary" onClick={() => setAdvanceItem(null)}>
+              Batal
+            </DnaButton>
+            <DnaButton variant="primary" onClick={handleAdvanceStage}>
+              Konfirmasi Maju Tahap
+            </DnaButton>
+          </div>
+        }
       >
         {advanceItem && (
-          <div className="space-y-4">
-            <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-lg text-xs space-y-1">
+          <div className="space-y-4 text-xs">
+            <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-lg space-y-1">
               <div className="font-semibold text-blue-900">{advanceItem.productName} ({advanceItem.brandName})</div>
               <div className="text-blue-700">
                 Tahap Saat Ini: <span className="font-bold">{STAGE_LABELS[advanceItem.currentStage]?.label}</span>
@@ -781,142 +554,130 @@ export default function WorkOrdersPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Good Output Qty (PCS)</label>
-                <input
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 uppercase">Good Output Qty (PCS)</label>
+                <DnaInput
                   type="number"
-                  value={advanceGoodQty}
+                  value={advanceGoodQty.toString()}
                   onChange={(e) => setAdvanceGoodQty(Number(e.target.value))}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white font-semibold text-emerald-700"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Reject Qty (PCS)</label>
-                <input
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 uppercase">Reject Qty (PCS)</label>
+                <DnaInput
                   type="number"
-                  value={advanceRejectQty}
+                  value={advanceRejectQty.toString()}
                   onChange={(e) => setAdvanceRejectQty(Number(e.target.value))}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white font-semibold text-rose-600"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Catatan Verifikasi Tahap</label>
-              <textarea
-                rows={2}
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Catatan Verifikasi Tahap</label>
+              <DnaInput
                 placeholder="Catatan parameter, kondisi mesin, atau deviasi jika ada..."
                 value={advanceNotes}
                 onChange={(e) => setAdvanceNotes(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
               />
             </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <DnaButton variant="secondary" onClick={() => setAdvanceItem(null)}>
-                Batal
-              </DnaButton>
-              <DnaButton variant="primary" onClick={handleAdvanceStage}>
-                Konfirmasi Maju Tahap
-              </DnaButton>
-            </div>
           </div>
         )}
       </DnaModal>
 
-      {/* MODAL DETAIL SPK */}
-      <DnaModal
-        isOpen={!!detailItem}
-        onClose={() => setDetailItem(null)}
-        title={`Detail SPK: ${detailItem?.code}`}
-        size="lg"
-      >
-        {detailItem && (
-          <div className="space-y-4 text-xs">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold uppercase">No. SPK</div>
-                <div className="font-bold text-slate-900">{detailItem.code}</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold uppercase">Batch Number</div>
-                <div className="font-bold text-blue-700 font-mono">{detailItem.batchNumber}</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold uppercase">No. Sales Order</div>
-                <div className="font-medium text-slate-800">{detailItem.salesOrderCode}</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold uppercase">Status</div>
-                <DnaBadge variant={STAGE_LABELS[detailItem.currentStage]?.badge || "default"}>
-                  {STAGE_LABELS[detailItem.currentStage]?.label}
-                </DnaBadge>
-              </div>
-            </div>
+      {/* 6. Quick Peek Drawer (Rule 5) */}
+      <DnaDetailDrawer
+        isOpen={isDetailDrawerOpen}
+        onClose={() => setIsDetailDrawerOpen(false)}
+        title={detailItem?.code || "Detail SPK"}
+        subtitle={detailItem ? `${detailItem.productName} • ${detailItem.customerName}` : undefined}
+        badge={detailItem ? <DnaBadge variant={STAGE_LABELS[detailItem.currentStage]?.badge || "default"}>{STAGE_LABELS[detailItem.currentStage]?.label}</DnaBadge> : undefined}
+        tabs={[
+          {
+            id: "summary",
+            label: "Ringkasan Batch",
+            content: detailItem ? (
+              <div className="space-y-4 text-xs">
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="tabular-nums font-bold text-slate-900">{detailItem.code}</span>
+                    <span className="tabular-nums text-blue-600 font-semibold">{detailItem.batchNumber}</span>
+                  </div>
+                  <p className="font-bold text-slate-900 text-sm">{detailItem.productName}</p>
+                  <p className="text-slate-600">{detailItem.customerName} ({detailItem.brandName})</p>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2 p-3 bg-white border border-slate-100 rounded-lg">
-                <div className="font-semibold text-slate-800 border-b border-slate-100 pb-1">Informasi Produk</div>
-                <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span className="text-slate-500">Nama Produk:</span>
-                  <span className="font-semibold text-slate-900">{detailItem.productName}</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="text-slate-500 block mb-1">Target Produksi</span>
+                    <p className="tabular-nums font-bold text-slate-900 text-sm">{detailItem.targetQty.toLocaleString()} Pcs</p>
+                    <span className="text-[10px] text-slate-400">Netto: {detailItem.netto}</span>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="text-slate-500 block mb-1">Output Saat Ini</span>
+                    <p className="tabular-nums font-bold text-emerald-700 text-sm">{detailItem.goodQty.toLocaleString()} Pcs</p>
+                    <span className="text-[10px] text-rose-500">Reject: {detailItem.rejectQty.toLocaleString()} Pcs</span>
+                  </div>
                 </div>
-                <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span className="text-slate-500">Klien / Brand:</span>
-                  <span className="font-medium text-slate-800">{detailItem.customerName} ({detailItem.brandName})</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span className="text-slate-500">Kategori & Netto:</span>
-                  <span className="font-medium text-slate-800">{detailItem.category} • {detailItem.netto}</span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-slate-500">Target Qty:</span>
-                  <span className="font-bold text-slate-900">{detailItem.targetQty.toLocaleString()} PCS</span>
+
+                <div className="p-3 bg-white rounded-lg border border-slate-200 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-700 uppercase">Progress Pengerjaan</span>
+                    <span className="tabular-nums font-bold text-blue-600">{detailItem.progressPct}%</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        detailItem.progressPct >= 100 ? "bg-emerald-500" : "bg-blue-600"
+                      }`}
+                      style={{ width: `${detailItem.progressPct}%` }}
+                    />
+                  </div>
                 </div>
               </div>
+            ) : null
+          },
+          {
+            id: "schedule",
+            label: "Jadwal & PIC",
+            content: detailItem ? (
+              <div className="space-y-3 text-xs">
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Tanggal Mulai:</span>
+                    <span className="tabular-nums font-bold text-slate-800">{detailItem.startDate}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Target Selesai:</span>
+                    <span className="tabular-nums font-bold text-slate-800">{detailItem.targetDate}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">PIC Operator:</span>
+                    <span className="font-semibold text-slate-900">{detailItem.picOperator}</span>
+                  </div>
+                </div>
 
-              <div className="space-y-2 p-3 bg-white border border-slate-100 rounded-lg">
-                <div className="font-semibold text-slate-800 border-b border-slate-100 pb-1">Jadwal & Realisasi</div>
-                <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span className="text-slate-500">Periode Produksi:</span>
-                  <span className="font-medium text-slate-800">{detailItem.startDate} s/d {detailItem.targetDate}</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span className="text-slate-500">PIC Operator:</span>
-                  <span className="font-medium text-slate-800">{detailItem.picOperator}</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span className="text-slate-500">Good Output:</span>
-                  <span className="font-bold text-emerald-700">{detailItem.goodQty.toLocaleString()} PCS</span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-slate-500">Reject Qty:</span>
-                  <span className="font-bold text-rose-600">{detailItem.rejectQty.toLocaleString()} PCS</span>
+                <div className="p-3 bg-white rounded-lg border border-slate-200 space-y-1">
+                  <span className="font-bold text-slate-700">Catatan Khusus:</span>
+                  <p className="text-slate-600">{detailItem.notes || "Tidak ada catatan instruksi."}</p>
                 </div>
               </div>
-            </div>
-
-            {detailItem.notes && (
-              <div className="p-3 bg-amber-50/60 border border-amber-200 rounded-lg">
-                <div className="font-semibold text-amber-900 mb-0.5">Catatan Instruksi:</div>
-                <div className="text-amber-800">{detailItem.notes}</div>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-              <Link href="/production/spk">
-                <DnaButton variant="secondary" size="sm">
-                  <Printer className="w-3.5 h-3.5 mr-1.5" />
-                  Cetak EBMR Resmi
-                </DnaButton>
-              </Link>
-              <DnaButton variant="primary" size="sm" onClick={() => setDetailItem(null)}>
-                Tutup
+            ) : null
+          }
+        ]}
+        footerActions={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <DnaButton variant="secondary" onClick={() => setIsDetailDrawerOpen(false)}>
+              Tutup
+            </DnaButton>
+            <Link href="/production/spk">
+              <DnaButton variant="primary">
+                <Printer className="w-4 h-4 mr-1.5" />
+                Cetak Dokumen SPK
               </DnaButton>
-            </div>
+            </Link>
           </div>
-        )}
-      </DnaModal>
+        }
+      />
     </DnaPageContainer>
   );
 }

@@ -84,9 +84,14 @@ export class CanonicalErrorFilter implements ExceptionFilter {
       msg = res;
     } else if (res && typeof res === 'object') {
       msg = Array.isArray(res.message) ? res.message.join(', ') : (res.message || err.message);
-      code = res.error || res.code || code;
+      // Canonical business/authorization codes win over Nest's generic HTTP
+      // label. P08 services (and the P07 gate before them) attach their
+      // contractual code as `reason_code`; `res.error` is only the generic
+      // "Bad Request"/"Forbidden" word and used to shadow it, so an HTTP client
+      // could never switch on the code the contract names.
+      code = res.code || res.reason_code || res.error || code;
     }
-    return { status, code, message: msg };
+    return { status, code, message: msg, fieldErrors: res?.fieldErrors };
   }
 
   private fromError(err: any): ErrorPayload {

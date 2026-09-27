@@ -19,7 +19,19 @@ import {
   Calendar,
   ArrowUpRight,
 } from "lucide-react";
-import { DnaButton, DnaBadge, DnaInput, StatCard, TableWrapper } from "@/components/dna";
+import {
+  DnaButton,
+  DnaBadge,
+  DnaInput,
+  StatCard,
+  TableWrapper,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import {
   Table,
   TableBody,
@@ -27,14 +39,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/dna";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/components/dna";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -212,30 +224,30 @@ export default function DocumentDraftsPage() {
 
       {/* Drafts Table */}
       <TableWrapper>
-        <Table>
-          <TableHeader className="bg-slate-50/70">
-            <TableRow>
-              <TableHead className="py-3 pl-6 text-[10px] font-black text-slate-400 uppercase">
+        <DnaTable>
+          <DnaTableHead className="bg-slate-50/70">
+            <DnaTableRow>
+              <DnaTh className="py-3 pl-6 text-[10px] font-black text-slate-400 uppercase">
                 Document
-              </TableHead>
-              <TableHead className="py-3 text-[10px] font-black text-slate-400 uppercase">
+              </DnaTh>
+              <DnaTh className="py-3 text-[10px] font-black text-slate-400 uppercase">
                 Type
-              </TableHead>
-              <TableHead className="py-3 text-[10px] font-black text-slate-400 uppercase text-center">
+              </DnaTh>
+              <DnaTh className="py-3 text-[10px] font-black text-slate-400 uppercase text-center">
                 Status
-              </TableHead>
-              <TableHead className="py-3 text-[10px] font-black text-slate-400 uppercase">
+              </DnaTh>
+              <DnaTh className="py-3 text-[10px] font-black text-slate-400 uppercase">
                 Auto-Approve
-              </TableHead>
-              <TableHead className="py-3 text-[10px] font-black text-slate-400 uppercase">
+              </DnaTh>
+              <DnaTh className="py-3 text-[10px] font-black text-slate-400 uppercase">
                 Created
-              </TableHead>
-              <TableHead className="py-3 pr-6 text-[10px] font-black text-slate-400 uppercase text-right">
+              </DnaTh>
+              <DnaTh className="py-3 pr-6 text-[10px] font-black text-slate-400 uppercase text-right">
                 Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+              </DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {filteredDrafts?.map((draft: any) => {
               const statusConfig = STATUS_CONFIG[draft.status] || STATUS_CONFIG.DRAFT;
               const StatusIcon = statusConfig.icon;
@@ -247,7 +259,7 @@ export default function DocumentDraftsPage() {
               );
 
               return (
-                <TableRow
+                <DnaTableRow
                   key={draft.id}
                   className="group hover:bg-blue-50/30 cursor-pointer transition-all"
                   onClick={() => {
@@ -255,7 +267,7 @@ export default function DocumentDraftsPage() {
                     setIsPreviewOpen(true);
                   }}
                 >
-                  <TableCell className="py-4 pl-6">
+                  <DnaTd className="py-4 pl-6">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                         <FileText className="h-4 w-4" />
@@ -269,19 +281,19 @@ export default function DocumentDraftsPage() {
                         </p>
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
+                  </DnaTd>
+                  <DnaTd>
                     <span className="rounded-lg border border-slate-200 text-slate-600 font-bold uppercase text-[9px] px-2 py-1">
                       {TYPE_LABELS[draft.documentType] || draft.documentType}
                     </span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <DnaBadge status={statusConfig.color as any}>
+                  </DnaTd>
+                  <DnaTd className="text-center">
+                    <DnaBadge variant={statusConfig.color as any}>
                       <StatusIcon className="h-3 w-3 inline mr-1" />
                       {statusConfig.label}
                     </DnaBadge>
-                  </TableCell>
-                  <TableCell>
+                  </DnaTd>
+                  <DnaTd>
                     {draft.autoApproveAt ? (
                       <div className="flex items-center gap-1 text-[10px] text-slate-500">
                         <Clock className="h-3 w-3" />
@@ -295,13 +307,13 @@ export default function DocumentDraftsPage() {
                     ) : (
                       <span className="text-[10px] text-slate-300">Manual</span>
                     )}
-                  </TableCell>
-                  <TableCell>
+                  </DnaTd>
+                  <DnaTd>
                     <span className="text-[10px] text-slate-400">
                       {new Date(draft.createdAt).toLocaleDateString("id-ID")}
                     </span>
-                  </TableCell>
-                  <TableCell className="pr-6 text-right">
+                  </DnaTd>
+                  <DnaTd className="pr-6 text-right">
                     <div
                       className="flex justify-end gap-1"
                       onClick={(e) => e.stopPropagation()}
@@ -332,20 +344,20 @@ export default function DocumentDraftsPage() {
                         </>
                       )}
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </DnaTd>
+                </DnaTableRow>
               );
             })}
             {filteredDrafts?.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-12 text-slate-400">
+              <DnaTableRow>
+                <DnaTd colSpan={6} className="text-center py-12 text-slate-400">
                   <FileText className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p className="italic">No document drafts found</p>
-                </TableCell>
-              </TableRow>
+                </DnaTd>
+              </DnaTableRow>
             )}
-          </TableBody>
-        </Table>
+          </DnaTableBody>
+        </DnaTable>
       </TableWrapper>
 
       {/* Preview Modal */}

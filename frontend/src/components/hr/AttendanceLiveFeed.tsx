@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/dna";
+import { Badge } from "@/components/dna";
 import { 
   Fingerprint, 
   MapPin, 
@@ -65,7 +65,7 @@ export async function AttendanceLiveFeed({ fullWidth = false }: { fullWidth?: bo
                        {row.status || "PRESENT"}
                      </span>
                      <Badge variant="outline" className="text-[8px] font-mono border-slate-200">
-                        {row.deviceIp || "127.0.0.1"}
+                        {row.deviceIp || "—"}
                      </Badge>
                   </div>
                 </div>

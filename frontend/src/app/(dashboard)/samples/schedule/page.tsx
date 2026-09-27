@@ -34,7 +34,13 @@ import {
   DnaBadge,
   DnaModal,
   DnaTabNav,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface ProductionScheduleItem {
@@ -60,66 +66,29 @@ interface ProductionScheduleItem {
   notes?: string;
 }
 
-const MOCK_SCHEDULES: ProductionScheduleItem[] = [
-  {
-    id: "sch-01",
-    scheduleCode: "SCH-MIX-202603-001",
-    scheduleType: "MIXING",
-    scheduleTypeLabel: "Jadwal Mixing Bejana",
-    scheduleDate: "2026-03-10 08:30",
-    batchRecordCode: "BR-202603-0012",
-    clientName: "PT Cantika Glow Nusantara",
-    brandName: "GlowAura Skin",
-    productName: "Brightening Glow Serum 10% Niacinamide 30ml",
-    targetQtyPcs: 5000,
-    baseResultKg: 150.0,
-    upscalePercent: 10.0,
-    upscaleResultKg: 165.0,
-    assignedLineOrMachine: "Vacuum Homogenizer Tank #02 (Capacity 200L)",
-    picOperator: "Ahmad Maulana (Operator Mixing)",
-    status: "SCHEDULED",
-    statusLabel: "Terjadwal (Menunggu Penimbangan)",
-    notes: "Formula Rev 2.0. Pemanasan Fase A suhu 75°C, Homogenizer 3.000 RPM."
-  },
-  {
-    id: "sch-02",
-    scheduleCode: "SCH-FIL-202603-002",
-    scheduleType: "FILLING",
-    scheduleTypeLabel: "Jadwal Filling Kemasan",
-    scheduleDate: "2026-03-11 09:00",
-    batchRecordCode: "BR-202603-0012",
-    clientName: "PT Cantika Glow Nusantara",
-    brandName: "GlowAura Skin",
-    productName: "Brightening Glow Serum 10% Niacinamide 30ml",
-    targetQtyPcs: 5000,
-    packagingMaterialName: "Botol Dropper Frosted Glass 30ml (KMS-BTL-030)",
-    packagingQtyNeeded: 5000,
-    assignedLineOrMachine: "Automatic Liquid Filling Line #01 (4 Nozzles)",
-    picOperator: "Rian Hendra (Operator Filling)",
-    status: "SCHEDULED",
-    statusLabel: "Terjadwal (Menunggu Bulk)",
-    notes: "Uji bobot per 100 botol (Target: 30.0g ± 0.5g)."
-  },
-  {
-    id: "sch-03",
-    scheduleCode: "SCH-PCK-202603-003",
-    scheduleType: "PACKAGING",
-    scheduleTypeLabel: "Jadwal Packaging & Box",
-    scheduleDate: "2026-03-12 13:00",
-    batchRecordCode: "BR-202603-0012",
-    clientName: "PT Cantika Glow Nusantara",
-    brandName: "GlowAura Skin",
-    productName: "Brightening Glow Serum 10% Niacinamide 30ml",
-    targetQtyPcs: 5000,
-    packagingMaterialName: "Inner Box Printing Hologram Foil (KMS-BOX-001)",
-    packagingQtyNeeded: 5000,
-    assignedLineOrMachine: "Packaging Conveyor Line #03",
-    picOperator: "Siti Rahma (Lead Packing)",
-    status: "SCHEDULED",
-    statusLabel: "Terjadwal",
-    notes: "Pemasangan shrink plastic wrap per box dan master carton isi 48 pcs."
-  }
-];
+const mapToScheduleItem = (s: any): ProductionScheduleItem => {
+  const type = s.stage === "FILLING" ? "FILLING" : (s.stage === "PACKAGING" || s.stage === "PACKING" ? "PACKAGING" : "MIXING");
+  const typeLabel = type === "MIXING" ? "Jadwal Mixing Bejana" : (type === "FILLING" ? "Jadwal Filling Kemasan" : "Jadwal Packaging & Box");
+  return {
+    id: s.id,
+    scheduleCode: `SCH-${type.slice(0, 3)}-${s.id.slice(0, 6).toUpperCase()}`,
+    scheduleType: type,
+    scheduleTypeLabel: typeLabel,
+    scheduleDate: s.startTime ? new Date(s.startTime).toISOString().replace("T", " ").substring(0, 16) : "-",
+    batchRecordCode: s.workOrder?.woNumber || `BR-${s.id.slice(0, 6)}`,
+    clientName: s.workOrder?.lead?.clientName || "Klien Internal",
+    brandName: s.workOrder?.lead?.brandName || "Brand",
+    productName: s.workOrder?.productName || "Produk Kosmetik",
+    targetQtyPcs: Number(s.targetQty) || 0,
+    baseResultKg: Number(s.targetQty) ? Number(s.targetQty) / 1000 : 0,
+    upscalePercent: Number(s.upscalePercent) || 0,
+    assignedLineOrMachine: s.machine?.name || "Mesin Standar",
+    picOperator: s.operatorName || "Operator Terjadwal",
+    status: s.status || "SCHEDULED",
+    statusLabel: s.status === "COMPLETED" ? "Selesai" : (s.status === "IN_PROGRESS" ? "Sedang Berjalan" : "Terjadwal"),
+    notes: s.notes || "",
+  };
+};
 
 export default function ProductionSchedulePage() {
   const toast = useDnaToast();
@@ -131,9 +100,12 @@ export default function ProductionSchedulePage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [modalScheduleType, setModalScheduleType] = useState<"MIXING" | "FILLING" | "PACKAGING">("MIXING");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form State
   const [createForm, setCreateForm] = useState({
+    workOrderId: "",
+    machineId: "",
     batchRecordCode: "BR-202603-0012",
     scheduleDate: new Date().toISOString().split("T")[0] + " 08:30",
     targetQtyPcs: 5000,
@@ -150,19 +122,43 @@ export default function ProductionSchedulePage() {
     queryKey: ["rnd-production-schedules"],
     queryFn: async () => {
       try {
-        const res = await api.get("/rnd/schedules");
-        return unwrapResponse(res.data) as ProductionScheduleItem[];
+        const res = await api.get("/production/schedules");
+        return unwrapResponse(res.data) as any[];
       } catch (e) {
-        return null;
+        return [];
+      }
+    }
+  });
+
+  const { data: machines = [] } = useQuery({
+    queryKey: ["production-machines"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/production/machines");
+        return unwrapResponse(res.data) || [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const { data: workOrders = [] } = useQuery({
+    queryKey: ["production-work-orders"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/production/work-orders");
+        return unwrapResponse(res.data) || [];
+      } catch {
+        return [];
       }
     }
   });
 
   const schedules: ProductionScheduleItem[] = useMemo(() => {
-    if (rawSchedules && Array.isArray(rawSchedules) && rawSchedules.length > 0) {
-      return rawSchedules;
+    if (rawSchedules && Array.isArray(rawSchedules)) {
+      return rawSchedules.map(mapToScheduleItem);
     }
-    return MOCK_SCHEDULES;
+    return [];
   }, [rawSchedules]);
 
   // Filtering
@@ -193,12 +189,46 @@ export default function ProductionSchedulePage() {
   const fillingCount = schedules.filter(s => s.scheduleType === "FILLING").length;
   const packagingCount = schedules.filter(s => s.scheduleType === "PACKAGING").length;
 
-  const handleCreateSchedule = () => {
-    toast.success(
-      `Jadwal ${modalScheduleType} Dibuat`,
-      `Jadwal ${modalScheduleType} untuk Batch Record ${createForm.batchRecordCode} berhasil didaftarkan ke timeline produksi.`
-    );
-    setIsCreateModalOpen(false);
+  const handleCreateSchedule = async () => {
+    const selectedWO = workOrders.find((w: any) => w.id === createForm.workOrderId || w.woNumber === createForm.batchRecordCode);
+    const workOrderId = selectedWO?.id || createForm.workOrderId || (workOrders[0]?.id || "");
+    const selectedMachine = machines.find((m: any) => m.id === createForm.machineId || m.name === createForm.assignedMachine);
+    const machineId = selectedMachine?.id || createForm.machineId || (machines[0]?.id || "");
+
+    if (!workOrderId || !machineId) {
+      toast.warning("Data Belum Lengkap", "Pilih Work Order dan Mesin produksi yang valid.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const startParsed = new Date(createForm.scheduleDate);
+      const validDate = isNaN(startParsed.getTime()) ? new Date() : startParsed;
+      const startTime = validDate.toISOString();
+      const endTime = new Date(validDate.getTime() + 4 * 3600 * 1000).toISOString();
+
+      await api.post("/production/schedules", {
+        workOrderId,
+        machineId,
+        stage: modalScheduleType,
+        startTime,
+        endTime,
+        targetQty: Number(createForm.targetQtyPcs) || 1000,
+        upscalePercent: Number(createForm.upscalePercent) || 0,
+        notes: createForm.notes || undefined,
+      });
+
+      toast.success(
+        `Jadwal ${modalScheduleType} Dibuat`,
+        `Jadwal ${modalScheduleType} berhasil didaftarkan ke timeline produksi.`
+      );
+      setIsCreateModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["rnd-production-schedules"] });
+    } catch (err: any) {
+      toast.error("Gagal Menerbitkan Jadwal", err?.response?.data?.message || "Terjadi kesalahan pada server.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusBadge = (status: ProductionScheduleItem["status"]) => {
@@ -299,39 +329,39 @@ export default function ProductionSchedulePage() {
         searchPlaceholder="Cari Kode Jadwal, Batch Record, Produk, Klien, Mesin, PIC..."
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-4">Kode & Jadwal</th>
-                <th className="py-3 px-4">Tipe Proses</th>
-                <th className="py-3 px-4">Batch Record & Klien</th>
-                <th className="py-3 px-4">Nama Produk</th>
-                <th className="py-3 px-4 text-right">Target (PCS)</th>
-                <th className="py-3 px-4">Mesin / Line Alokasi</th>
-                <th className="py-3 px-4">Operator PIC</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4">Kode & Jadwal</DnaTh>
+                <DnaTh className="py-3 px-4">Tipe Proses</DnaTh>
+                <DnaTh className="py-3 px-4">Batch Record & Klien</DnaTh>
+                <DnaTh className="py-3 px-4">Nama Produk</DnaTh>
+                <DnaTh className="py-3 px-4 text-right">Target (PCS)</DnaTh>
+                <DnaTh className="py-3 px-4">Mesin / Line Alokasi</DnaTh>
+                <DnaTh className="py-3 px-4">Operator PIC</DnaTh>
+                <DnaTh className="py-3 px-4">Status</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredSchedules.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-12 text-center text-slate-400">
                     <Calendar className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada jadwal yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredSchedules.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4">
-                      <p className="font-mono text-xs font-bold text-slate-900">{row.scheduleCode}</p>
+                  <DnaTableRow key={row.id} className="hover:bg-slate-50/70 transition-colors">
+                    <DnaTd className="py-3 px-4">
+                      <p className="tabular-nums text-xs font-bold text-slate-900">{row.scheduleCode}</p>
                       <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
                         <Clock className="w-3 h-3" />
                         <span>{row.scheduleDate}</span>
                       </div>
-                    </td>
-                    <td className="py-3 px-4">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4">
                       <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded border ${
                         row.scheduleType === "MIXING"
                           ? "text-blue-700 bg-blue-50 border-blue-200"
@@ -341,30 +371,30 @@ export default function ProductionSchedulePage() {
                       }`}>
                         {row.scheduleTypeLabel}
                       </span>
-                    </td>
-                    <td className="py-3 px-4 text-xs">
-                      <p className="font-mono font-bold text-indigo-700">{row.batchRecordCode}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-xs">
+                      <p className="tabular-nums font-bold text-indigo-700">{row.batchRecordCode}</p>
                       <p className="text-slate-600">{row.clientName} ({row.brandName})</p>
-                    </td>
-                    <td className="py-3 px-4 text-xs font-semibold text-slate-900">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-xs font-semibold text-slate-900">
                       {row.productName}
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-slate-900">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-right tabular-nums font-bold text-slate-900">
                       {row.targetQtyPcs.toLocaleString()} Pcs
                       {row.upscaleResultKg && (
                         <div className="text-[10px] text-indigo-600 font-normal">({row.upscaleResultKg} Kg)</div>
                       )}
-                    </td>
-                    <td className="py-3 px-4 text-xs font-medium text-slate-800">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-xs font-medium text-slate-800">
                       {row.assignedLineOrMachine}
-                    </td>
-                    <td className="py-3 px-4 text-xs">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-xs">
                       <p className="font-medium text-slate-800">{row.picOperator}</p>
-                    </td>
-                    <td className="py-3 px-4">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4">
                       {getStatusBadge(row.status)}
-                    </td>
-                    <td className="py-3 px-4 text-center">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-center">
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -376,12 +406,12 @@ export default function ProductionSchedulePage() {
                       >
                         <Eye className="w-4 h-4 text-slate-600" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -397,8 +427,8 @@ export default function ProductionSchedulePage() {
             <DnaButton variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" onClick={handleCreateSchedule}>
-              Simpan Jadwal
+            <DnaButton variant="primary" onClick={handleCreateSchedule} disabled={isSubmitting}>
+              {isSubmitting ? "Menyimpan..." : "Simpan Jadwal"}
             </DnaButton>
           </div>
         }
@@ -418,15 +448,26 @@ export default function ProductionSchedulePage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Batch Record Acuan *</label>
+              <label className="font-bold text-slate-700 uppercase">Work Order Acuan *</label>
               <select
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-                value={createForm.batchRecordCode}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, batchRecordCode: e.target.value }))}
+                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 tabular-nums text-slate-800"
+                value={createForm.workOrderId}
+                onChange={(e) => {
+                  const wo = workOrders.find((w: any) => w.id === e.target.value);
+                  setCreateForm(prev => ({
+                    ...prev,
+                    workOrderId: e.target.value,
+                    batchRecordCode: wo?.woNumber || prev.batchRecordCode,
+                    targetQtyPcs: wo?.targetQty ? Number(wo.targetQty) : prev.targetQtyPcs,
+                  }));
+                }}
               >
-                <option value="BR-202603-0012">BR-202603-0012 - GlowAura Serum 30ml (5.000 Pcs)</option>
-                <option value="BR-202603-0015">BR-202603-0015 - MiracleSkin Cream 50g (3.000 Pcs)</option>
-                <option value="BR-202603-0018">BR-202603-0018 - DermaPure Toner 100ml (2.000 Pcs)</option>
+                <option value="">-- Pilih Work Order --</option>
+                {workOrders.map((wo: any) => (
+                  <option key={wo.id} value={wo.id}>
+                    {wo.woNumber} - {wo.productName || "Produk"} ({wo.targetQty || 0} Pcs)
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -435,17 +476,17 @@ export default function ProductionSchedulePage() {
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Waktu Pelaksanaan *</label>
               <input
-                type="text"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
-                value={createForm.scheduleDate}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, scheduleDate: e.target.value }))}
+                type="datetime-local"
+                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 tabular-nums text-slate-800"
+                value={createForm.scheduleDate.replace(" ", "T")}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, scheduleDate: e.target.value.replace("T", " ") }))}
               />
             </div>
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Target Qty (PCS) *</label>
               <input
                 type="number"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono font-bold text-slate-900"
+                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 tabular-nums font-bold text-slate-900"
                 value={createForm.targetQtyPcs}
                 onChange={(e) => setCreateForm(prev => ({ ...prev, targetQtyPcs: Number(e.target.value) }))}
               />
@@ -455,9 +496,9 @@ export default function ProductionSchedulePage() {
           {modalScheduleType === "MIXING" && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-2">
               <span className="font-bold text-blue-900 uppercase">Perhitungan Upscale Bejana Mixing:</span>
-              <div className="grid grid-cols-2 gap-3 text-blue-800 font-mono">
-                <div>Base Result: 150.0 Kg</div>
-                <div>Upscale Buffer: +10% (165.0 Kg)</div>
+              <div className="grid grid-cols-2 gap-3 text-blue-800 tabular-nums">
+                <div>Base Result: {(createForm.targetQtyPcs * 0.03).toFixed(1)} Kg</div>
+                <div>Upscale Buffer: +10% ({(createForm.targetQtyPcs * 0.033).toFixed(1)} Kg)</div>
               </div>
             </div>
           )}
@@ -465,12 +506,27 @@ export default function ProductionSchedulePage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Mesin / Lini Alokasi *</label>
-              <input
-                type="text"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-                value={createForm.assignedMachine}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, assignedMachine: e.target.value }))}
-              />
+              {machines.length > 0 ? (
+                <select
+                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
+                  value={createForm.machineId}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, machineId: e.target.value }))}
+                >
+                  <option value="">-- Pilih Mesin --</option>
+                  {machines.map((m: any) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.machineCode})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
+                  value={createForm.assignedMachine}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, assignedMachine: e.target.value }))}
+                />
+              )}
             </div>
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 uppercase">Operator PIC *</label>
@@ -510,7 +566,7 @@ export default function ProductionSchedulePage() {
           <div className="space-y-4 text-xs">
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="font-mono font-bold text-slate-900">{selectedSchedule.scheduleCode}</span>
+                <span className="tabular-nums font-bold text-slate-900">{selectedSchedule.scheduleCode}</span>
                 {getStatusBadge(selectedSchedule.status)}
               </div>
               <p className="font-bold text-slate-800 text-sm">{selectedSchedule.productName}</p>
@@ -524,7 +580,7 @@ export default function ProductionSchedulePage() {
               </div>
               <div className="p-3 bg-white rounded-lg border border-slate-200">
                 <span className="text-slate-500">Target Qty:</span>
-                <p className="font-mono font-bold text-slate-900">{selectedSchedule.targetQtyPcs.toLocaleString()} Pcs</p>
+                <p className="tabular-nums font-bold text-slate-900">{selectedSchedule.targetQtyPcs.toLocaleString()} Pcs</p>
               </div>
             </div>
 

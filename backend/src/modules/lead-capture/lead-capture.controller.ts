@@ -10,80 +10,109 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
 
 import { LeadCaptureService } from './lead-capture.service';
 import { KommoService } from './kommo.service';
-import { LeadStatus, WorkflowStatus } from '@prisma/client';
+import { LeadStatus, WorkflowStatus, UserRole } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 // ── DTO (inline for simplicity) ──
+// Every field carries a validation decorator: the global pipe runs with
+// `whitelist` + `forbidNonWhitelisted`, so an undeclared field is a hard 400.
+// That is exactly what keeps a client from injecting `organizationId`.
 
 class TrackDto {
-  intent?: string;
-  pageUrl?: string;
-  pageTitle?: string;
-  referrer?: string;
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
-  utmContent?: string;
-  utmTerm?: string;
-  deviceType?: string;
-  browser?: string;
-  ipAddress?: string;
-  city?: string;
-  country?: string;
-  sessionId?: string;
-  assignedName?: string; // Round-robin agent name
-  assignedPhone?: string; // Round-robin agent phone number
+  @IsOptional() @IsString() intent?: string;
+  @IsOptional() @IsString() pageUrl?: string;
+  @IsOptional() @IsString() pageTitle?: string;
+  @IsOptional() @IsString() referrer?: string;
+  @IsOptional() @IsString() utmSource?: string;
+  @IsOptional() @IsString() utmMedium?: string;
+  @IsOptional() @IsString() utmCampaign?: string;
+  @IsOptional() @IsString() utmContent?: string;
+  @IsOptional() @IsString() utmTerm?: string;
+  @IsOptional() @IsString() deviceType?: string;
+  @IsOptional() @IsString() browser?: string;
+  @IsOptional() @IsString() ipAddress?: string;
+  @IsOptional() @IsString() city?: string;
+  @IsOptional() @IsString() country?: string;
+  @IsOptional() @IsString() sessionId?: string;
+  @IsOptional() @IsString() assignedName?: string; // Round-robin agent name
+  @IsOptional() @IsString() assignedPhone?: string; // Round-robin agent phone
 }
 
 class WhatsAppUpdateDto {
-  phone!: string;
-  waName?: string;
-  waMessage?: string;
-  msgId?: string;
+  @IsString() phone!: string;
+  @IsOptional() @IsString() waName?: string;
+  @IsOptional() @IsString() waMessage?: string;
+  @IsOptional() @IsString() msgId?: string;
 }
 
 class UpdateLeadDto {
-  fullName?: string;
-  company?: string;
-  email?: string;
-  phone?: string;
-  notes?: string;
-  status?: LeadStatus;
-  workflowStatus?: WorkflowStatus;
-  assignedTo?: string;
-  lostReason?: string;
-  aiStatus?: string;
+  @IsOptional() @IsString() fullName?: string;
+  @IsOptional() @IsString() company?: string;
+  @IsOptional() @IsString() email?: string;
+  @IsOptional() @IsString() phone?: string;
+  @IsOptional() @IsString() notes?: string;
+  @IsOptional() @IsEnum(LeadStatus) status?: LeadStatus;
+  @IsOptional() @IsEnum(WorkflowStatus) workflowStatus?: WorkflowStatus;
+  @IsOptional() @IsUUID() assignedTo?: string;
+  @IsOptional() @IsString() lostReason?: string;
+  @IsOptional() @IsString() aiStatus?: string;
 }
 
 class UpdateAttributeDto {
-  confirmed?: boolean;
-  value?: string;
+  @IsOptional() @IsBoolean() confirmed?: boolean;
+  @IsOptional() @IsString() value?: string;
 }
 
 class BulkUpdateDto {
-  ids!: string[];
-  status?: LeadStatus;
-  workflowStatus?: WorkflowStatus;
-  assignedTo?: string;
+  @IsArray() @IsUUID('4', { each: true }) ids!: string[];
+  @IsOptional() @IsEnum(LeadStatus) status?: LeadStatus;
+  @IsOptional() @IsEnum(WorkflowStatus) workflowStatus?: WorkflowStatus;
+  @IsOptional() @IsUUID() assignedTo?: string;
 }
 
 class ListQueryDto {
-  status?: LeadStatus;
-  workflowStatus?: WorkflowStatus;
-  source?: string;
-  search?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  @IsOptional() @IsEnum(LeadStatus) status?: LeadStatus;
+  @IsOptional() @IsEnum(WorkflowStatus) workflowStatus?: WorkflowStatus;
+  @IsOptional() @IsString() source?: string;
+  @IsOptional() @IsString() search?: string;
+  @IsOptional() @IsString() dateFrom?: string;
+  @IsOptional() @IsString() dateTo?: string;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) limit?: number;
+  @IsOptional() @IsString() sortBy?: string;
+  @IsOptional() @IsIn(['asc', 'desc']) sortOrder?: 'asc' | 'desc';
 }
 
 // ── Controller ──
+
+// CRM lead administration. Applied to every non-public route: the only
+// endpoints reachable without a token are the documented intake/webhook ones.
+const ADMIN_ROLES: UserRole[] = [
+  UserRole.MARKETING,
+  UserRole.DIGIMAR,
+  UserRole.HEAD_OPS,
+  UserRole.COMMERCIAL,
+  UserRole.SUPER_ADMIN,
+];
 
 @Controller('lead-capture')
 export class LeadCaptureController {
@@ -117,26 +146,36 @@ export class LeadCaptureController {
   // ════════════════════════════════════════════
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   async list(@Query() query: ListQueryDto) {
     return this.service.listLeads(query);
   }
 
   @Get('stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   async stats() {
     return this.service.getStats();
   }
 
   @Get('dashboard')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   async dashboard(@Query() query: { dateFrom?: string; dateTo?: string }) {
     return this.service.getDashboardAnalytics(query);
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   async update(@Param('id') id: string, @Body() dto: UpdateLeadDto) {
     return this.service.updateLead(id, dto);
   }
 
   @Post('bulk-update')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   async bulkUpdate(@Body() dto: BulkUpdateDto) {
     return this.service.bulkUpdate(dto.ids, dto);
   }
@@ -171,6 +210,8 @@ export class LeadCaptureController {
   }
 
   @Post('kommo-sync')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   @HttpCode(HttpStatus.OK)
   async kommoSync() {
     // Cari semua lead yang punya nomor HP tapi belum ada nama
@@ -190,11 +231,15 @@ export class LeadCaptureController {
   }
 
   @Get('kommo-status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   async kommoStatus() {
     return this.kommo.getAccountStatus();
   }
 
   @Post('kommo-pull')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   @HttpCode(HttpStatus.OK)
   async kommoPull(@Body() body?: { dateFrom?: string; dateTo?: string }) {
     try {
@@ -219,6 +264,8 @@ export class LeadCaptureController {
   }
 
   @Post('import-csv')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   @HttpCode(HttpStatus.OK)
   async importCsv(@Body() body: { leads: any[] }) {
     if (!body.leads || !Array.isArray(body.leads)) {
@@ -238,11 +285,15 @@ export class LeadCaptureController {
   }
 
   @Get('round-robin/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   async getRoundRobinStatus() {
     return this.service.getRoundRobinStatus();
   }
 
   @Post('round-robin/agents')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   async upsertAgent(
     @Body()
     dto: {
@@ -257,12 +308,16 @@ export class LeadCaptureController {
   }
 
   @Delete('round-robin/agents/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   async deleteAgent(@Param('id') id: string) {
     return this.service.deleteRoundRobinAgent(id);
   }
 
   // Fase 3.1 — jalankan AI extraction manual untuk satu lead
   @Post(':id/ai-extract')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   @HttpCode(HttpStatus.OK)
   async aiExtract(@Param('id') id: string) {
     const result = await this.service.extractAiForLead(id);
@@ -277,6 +332,8 @@ export class LeadCaptureController {
 
   // Fase 3.3 — terapkan saran pipeline stage (workflowStatus)
   @Post(':id/ai-stage-confirm')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   @HttpCode(HttpStatus.OK)
   async confirmAiStage(@Param('id') id: string) {
     const updated = await this.service.confirmAiStage(id);
@@ -285,12 +342,16 @@ export class LeadCaptureController {
 
   // Fase 3.2 — ambil atribut lead (AI suggestion + confirmed)
   @Get(':id/attributes')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   async getAttributes(@Param('id') id: string) {
     return this.service.getLeadAttributes(id);
   }
 
   // Fase 3.2 — konfirmasi / tolak / edit satu atribut AI
   @Patch(':id/attributes/:attrId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   @HttpCode(HttpStatus.OK)
   async confirmAttr(
     @Param('id') id: string,
@@ -301,11 +362,15 @@ export class LeadCaptureController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   async get(@Param('id') id: string) {
     return this.service.getLead(id);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ADMIN_ROLES)
   async delete(@Param('id') id: string) {
     return this.service.deleteLead(id);
   }

@@ -1,22 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
   Package,
   Plus,
-  Eye,
   Beaker,
   Clock,
   CheckCircle2,
-  AlertCircle,
-  Truck,
-  Sparkles,
-  FileText,
-  Search,
-  Filter,
 } from "lucide-react";
 import {
   DnaPageHeader,
@@ -24,9 +17,16 @@ import {
   DnaDataTableCard,
   DnaCell,
   DnaModal,
+  DnaDetailDrawer,
   DnaButton,
   DnaInput,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface SampleOrder {
@@ -95,7 +95,7 @@ function SampleSalesContent() {
   const [formPrice, setFormPrice] = useState("250000");
   const [formNotes, setFormNotes] = useState("");
 
-  const { data: orders = [], isLoading } = useQuery<SampleOrder[]>({
+  const { data: orders = [] } = useQuery<SampleOrder[]>({
     queryKey: ["bussdev-samples"],
     queryFn: async () => {
       try {
@@ -224,6 +224,41 @@ function SampleSalesContent() {
   const inProcess = orders.filter((o) => o.status === "PROCESS").length;
   const approved = orders.filter((o) => o.status === "COMPLETED").length;
 
+  const createSampleMut = useMutation({
+    mutationFn: async () => {
+      const resp = await api.post("/bussdev/samples", {
+        customerName: formCustomer,
+        brandName: formBrand || undefined,
+        productName: formProduct,
+        physicalForm: formForm,
+        volumeNetto: formNetto,
+        color: formColor,
+        fragrance: formFragrance,
+        benefitClaims: formClaims,
+        qty: Number(formQty) || 1,
+        unitPrice: Number(formPrice) || 0,
+        description: formNotes || undefined,
+      });
+      return resp.data;
+    },
+    onSuccess: (data: any) => {
+      toast.success(
+        "Sample Order Dibuat",
+        `Permintaan ${data?.code || data?.sampleCode || formProduct} berhasil dikirim ke antrean Lab R&D.`
+      );
+      setIsCreateOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["bussdev-samples"] });
+      // Reset form
+      setFormCustomer("");
+      setFormBrand("");
+      setFormProduct("");
+      setFormNotes("");
+    },
+    onError: (err: any) => {
+      toast.error("Gagal Mengirim Sample", err?.response?.data?.message || err?.message || "Terjadi kesalahan sistem.");
+    },
+  });
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formCustomer || !formProduct) {
@@ -231,44 +266,23 @@ function SampleSalesContent() {
       return;
     }
 
-    const newOrder: SampleOrder = {
-      id: `smp-${Date.now()}`,
-      code: `SMP-2026-0${orders.length + 82}`,
-      createdAt: new Date().toISOString().split("T")[0],
-      customerName: formCustomer,
-      brandName: formBrand || "Private Label",
-      productName: formProduct,
-      physicalForm: formForm,
-      volumeNetto: formNetto,
-      color: formColor,
-      fragrance: formFragrance,
-      benefitClaims: formClaims,
-      formulator: "Apt. Sarah Sp.FK",
-      qty: Number(formQty) || 1,
-      unitPrice: Number(formPrice) || 250000,
-      sampleFeeOffset: Number(formPrice) || 250000,
-      status: "PENDING",
-      targetDate: "2026-03-28",
-      notes: formNotes,
-    };
-
-    queryClient.setQueryData(["bussdev-samples"], (old: SampleOrder[] = []) => [newOrder, ...old]);
-    toast.success("Sample Order Dibuat", `Permintaan ${newOrder.code} berhasil dikirim ke antrean Lab R&D.`);
-    setIsCreateOpen(false);
-
-    // Reset form
-    setFormCustomer("");
-    setFormBrand("");
-    setFormProduct("");
-    setFormNotes("");
+    createSampleMut.mutate();
   };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 space-y-6">
-      {/* Top Header */}
+      {/* Top Header with Unified Tabs */}
       <DnaPageHeader
         title="PENJUALAN & PERMINTAAN SAMPLE"
         description="Pusat kendali permintaan formulasi riset sample R&D maklon kosmetik, benchmark spesifikasi fisik, status approval klien, dan pemotongan biaya komitmen sample ke PO produksi."
+        tabs={[
+          { key: "ALL", label: "Semua", count: totalCount },
+          { key: "PENDING", label: "Menunggu Lab", count: pendingLab },
+          { key: "PROCESS", label: "Formulasi Lab", count: inProcess },
+          { key: "COMPLETED", label: "Approved", count: approved },
+        ]}
+        activeTab={statusFilter}
+        onTabChange={setStatusFilter}
         actions={
           <div className="flex items-center gap-3">
             <DnaButton
@@ -322,213 +336,176 @@ function SampleSalesContent() {
 
       {/* Main Table Card */}
       <DnaDataTableCard
-        title="Daftar Permintaan & Pengujian Sample Maklon"
         count={filteredOrders.length}
         totalItems={totalCount}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="w-64">
-              <DnaInput
-                placeholder="Cari kode, klien, produk..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                icon={<Search className="w-4 h-4 text-slate-400" />}
-              />
-            </div>
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-              {["ALL", "PENDING", "PROCESS", "SHIPPED", "COMPLETED"].map((st) => (
-                <button
-                  key={st}
-                  onClick={() => setStatusFilter(st)}
-                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
-                    statusFilter === st
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  {st === "ALL" ? "Semua" : statusLabelMap[st] || st}
-                </button>
-              ))}
-            </div>
-          </div>
-        }
+        toolbarProps={{
+          searchPlaceholder: "Cari kode sample, pelanggan, brand, atau produk...",
+          searchValue: searchTerm,
+          onSearchChange: setSearchTerm,
+        }}
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-3 w-10 text-center">#</th>
-                <th className="py-3 px-3">Kode</th>
-                <th className="py-3 px-3">Tanggal</th>
-                <th className="py-3 px-3">Pelanggan</th>
-                <th className="py-3 px-3">Nama Produk</th>
-                <th className="py-3 px-3 text-center">Rev</th>
-                <th className="py-3 px-3">Formulator</th>
-                <th className="py-3 px-3">Catatan Formulasi</th>
-                <th className="py-3 px-3 text-right">Total</th>
-                <th className="py-3 px-3 text-center">Status</th>
-                <th className="py-3 px-3 text-right">#</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
+        <div className="w-full">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <DnaTh className="py-3 px-3 w-[18%]">Kode & Tanggal</DnaTh>
+                <DnaTh className="py-3 px-3 w-[22%]">Pelanggan & Brand</DnaTh>
+                <DnaTh className="py-3 px-3 w-[22%]">Produk & Tekstur</DnaTh>
+                <DnaTh className="py-3 px-3 w-[16%]">Formulator & Target</DnaTh>
+                <DnaTh className="py-3 px-3 w-[12%] text-center">Status</DnaTh>
+                <DnaTh className="py-3 px-3 w-[10%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={11} className="text-center py-12 text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="text-center py-12 text-slate-400">
                     <Package className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
                     <p className="font-semibold text-slate-600">Tidak ada sample ditemukan</p>
                     <p className="text-xs text-slate-400">Coba sesuaikan kata kunci pencarian atau filter status.</p>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
-                filteredOrders.map((sample, idx) => (
-                  <tr key={sample.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-3 text-center text-slate-400 font-mono text-xs">{idx + 1}</td>
-                    <td className="py-3 px-3 font-mono font-semibold text-blue-600 text-xs whitespace-nowrap">{sample.code}</td>
-                    <td className="py-3 px-3 text-slate-600 text-xs whitespace-nowrap">{sample.createdAt}</td>
-                    <td className="py-3 px-3 font-semibold text-slate-900 text-xs whitespace-nowrap">{sample.customerName}</td>
-                    <td className="py-3 px-3 text-slate-800 text-xs whitespace-nowrap">{sample.productName}</td>
-                    <td className="py-3 px-3 text-center font-mono text-xs text-slate-700">1</td>
-                    <td className="py-3 px-3 text-slate-700 text-xs whitespace-nowrap">{sample.formulator || "R&D Lab"}</td>
-                    <td className="py-3 px-3 text-slate-600 text-xs max-w-xs truncate" title={sample.notes}>{sample.notes || "—"}</td>
-                    <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 text-xs whitespace-nowrap">
-                      Rp {sample.unitPrice.toLocaleString("id-ID")}
-                    </td>
-                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                filteredOrders.map((sample) => (
+                  <DnaTableRow key={sample.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="py-3 px-3">
+                      <p className="tabular-nums font-bold text-blue-600 truncate">{sample.code}</p>
+                      <p className="text-[11px] text-slate-400 tabular-nums truncate">{sample.createdAt}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3">
+                      <p className="font-semibold text-slate-900 truncate">{sample.customerName}</p>
+                      <p className="text-[11px] text-slate-400 truncate">{sample.brandName || "Private Label"}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3">
+                      <p className="font-semibold text-slate-800 truncate">{sample.productName}</p>
+                      <p className="text-[11px] text-slate-400 truncate">{sample.physicalForm} • {sample.volumeNetto}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3">
+                      <p className="text-slate-700 font-medium truncate">{sample.formulator || "R&D Lab"}</p>
+                      <p className="text-[10px] text-slate-400 tabular-nums">Tgt: {sample.targetDate || "—"}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-center">
                       <DnaCell.Badge
                         status={statusBadgeMap[sample.status] || "default"}
                         label={statusLabelMap[sample.status] || sample.status}
                       />
-                    </td>
-                    <td className="py-3 px-3 text-right whitespace-nowrap">
-                      <DnaCell.Actions
-                        onView={() => setDetailOrder(sample)}
-                        extraActions={
-                          <button
-                            type="button"
-                            onClick={() => {
-                              toast.info("Update Status Lab", `Buka lembar formulasi untuk ${sample.code}`);
-                            }}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border-none bg-transparent cursor-pointer"
-                            title="Update Status Lab"
-                          >
-                            <Beaker className="w-3.5 h-3.5" />
-                          </button>
-                        }
-                      />
-                    </td>
-                  </tr>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-right">
+                      <div className="flex justify-end gap-1">
+                        <DnaButton variant="ghost" size="sm" onClick={() => setDetailOrder(sample)}>
+                          Detail
+                        </DnaButton>
+                      </div>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
-      {/* Modal Detail Spesifikasi Sample */}
-      <DnaModal
+      {/* Drawer Detail Spesifikasi Sample */}
+      <DnaDetailDrawer
         isOpen={!!detailOrder}
         onClose={() => setDetailOrder(null)}
-        title="Spesifikasi & Formulasi Sample"
-        size="lg"
+        title={detailOrder?.code || "Spesifikasi & Formulasi Sample"}
+        subtitle={detailOrder ? `${detailOrder.customerName} • ${detailOrder.brandName}` : undefined}
+        badge={
+          detailOrder ? (
+            <DnaCell.Badge
+              status={statusBadgeMap[detailOrder.status] || "default"}
+              label={statusLabelMap[detailOrder.status] || detailOrder.status}
+            />
+          ) : undefined
+        }
+        actions={
+          detailOrder ? (
+            <div className="flex items-center justify-between w-full">
+              <DnaButton
+                variant="primary"
+                onClick={() => {
+                  toast.success("Sample Disetujui", `Sample ${detailOrder.code} berhasil disetujui klien!`);
+                  setDetailOrder(null);
+                }}
+              >
+                Approve Sample
+              </DnaButton>
+              <DnaButton variant="secondary" onClick={() => setDetailOrder(null)}>
+                Tutup
+              </DnaButton>
+            </div>
+          ) : undefined
+        }
       >
         {detailOrder && (
-          <div className="space-y-6">
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+          <div className="space-y-4 text-xs">
+            {/* Identitas Klien & Target */}
+            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Kode Permintaan
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Klien Pemesan</span>
+                <span className="font-semibold text-slate-800 text-xs">{detailOrder.customerName}</span>
+                <p className="text-[10px] text-slate-400">{detailOrder.brandName || "-"}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Target Selesai Lab</span>
+                <span className="tabular-nums font-semibold text-slate-700 text-xs">{detailOrder.targetDate || "-"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Harga Sample Satuan</span>
+                <span className="tabular-nums font-bold text-slate-800 text-xs">Rp {detailOrder.unitPrice.toLocaleString("id-ID")}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Kompensasi ke PO (Offset)</span>
+                <span className="tabular-nums font-bold text-emerald-600 text-xs">
+                  Rp {detailOrder.sampleFeeOffset?.toLocaleString("id-ID") || "0"}
                 </span>
-                <h3 className="text-base font-bold text-slate-900">{detailOrder.code}</h3>
-                <p className="text-xs text-slate-500">Tanggal: {detailOrder.createdAt}</p>
-              </div>
-              <DnaCell.Badge
-                status={statusBadgeMap[detailOrder.status] || "default"}
-                label={statusLabelMap[detailOrder.status] || detailOrder.status}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Identitas Klien & Target</h4>
-                <div>
-                  <label className="text-xs text-slate-500">Klien Pemesan</label>
-                  <p className="font-semibold text-slate-900">{detailOrder.customerName}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-slate-500">Brand Kosmetik</label>
-                  <p className="font-semibold text-slate-900">{detailOrder.brandName || "-"}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-slate-500">Target Selesai Lab</label>
-                  <p className="font-semibold text-slate-900">{detailOrder.targetDate || "-"}</p>
-                </div>
-              </div>
-
-              <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Komitmen Biaya Maklon</h4>
-                <div>
-                  <label className="text-xs text-slate-500">Harga Sample Satuan</label>
-                  <p className="font-bold text-slate-900">Rp {detailOrder.unitPrice.toLocaleString("id-ID")}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-slate-500">Kompensasi ke PO Produksi (Offset)</label>
-                  <p className="font-bold text-emerald-600">Rp {detailOrder.sampleFeeOffset?.toLocaleString("id-ID") || "0"}</p>
-                  <p className="text-[10px] text-slate-400 italic">Dipotong saat klien rilis Down Payment Produksi</p>
-                </div>
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Spesifikasi Fisik & Organoleptik</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                <div className="bg-slate-50 p-2.5 rounded-lg">
-                  <span className="text-slate-400 block mb-1">Bentuk Fisik</span>
+            {/* Spesifikasi Fisik & Organoleptik */}
+            <div className="bg-slate-50/60 p-4 rounded-xl border border-slate-200 space-y-3">
+              <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Spesifikasi Fisik & Organoleptik</p>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200/60">
+                  <span className="text-slate-400 block mb-0.5 text-[10px]">Bentuk Fisik</span>
                   <span className="font-semibold text-slate-800">{detailOrder.physicalForm || "Liquid"}</span>
                 </div>
-                <div className="bg-slate-50 p-2.5 rounded-lg">
-                  <span className="text-slate-400 block mb-1">Netto Kemasan</span>
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200/60">
+                  <span className="text-slate-400 block mb-0.5 text-[10px]">Netto Kemasan</span>
                   <span className="font-semibold text-slate-800">{detailOrder.volumeNetto || "30 ml"}</span>
                 </div>
-                <div className="bg-slate-50 p-2.5 rounded-lg">
-                  <span className="text-slate-400 block mb-1">Warna Target</span>
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200/60">
+                  <span className="text-slate-400 block mb-0.5 text-[10px]">Warna Target</span>
                   <span className="font-semibold text-slate-800">{detailOrder.color || "Transparan"}</span>
                 </div>
-                <div className="bg-slate-50 p-2.5 rounded-lg">
-                  <span className="text-slate-400 block mb-1">Aroma Target</span>
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200/60">
+                  <span className="text-slate-400 block mb-0.5 text-[10px]">Aroma Target</span>
                   <span className="font-semibold text-slate-800">{detailOrder.fragrance || "Soft"}</span>
                 </div>
               </div>
-              <div className="pt-2">
-                <label className="text-xs text-slate-500 block mb-1">Klaim Manfaat & Bahan Aktif Request</label>
-                <p className="text-xs bg-slate-50 p-2.5 rounded-lg font-medium text-slate-700">
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                  Klaim Manfaat & Bahan Aktif
+                </label>
+                <p className="bg-white p-2.5 rounded-lg font-medium text-slate-700 border border-slate-200/60">
                   {detailOrder.benefitClaims || "-"}
                 </p>
               </div>
+
               <div>
-                <label className="text-xs text-slate-500 block mb-1">Catatan Khusus Klien / R&D</label>
-                <p className="text-xs bg-amber-50/50 p-2.5 rounded-lg text-slate-700 border border-amber-100">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                  Catatan Formulasi R&D
+                </label>
+                <p className="bg-amber-50/60 p-2.5 rounded-lg text-slate-700 border border-amber-200/60">
                   {detailOrder.notes || "-"}
                 </p>
               </div>
             </div>
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <DnaButton variant="secondary" onClick={() => setDetailOrder(null)}>
-                Tutup
-              </DnaButton>
-              <DnaButton
-                variant="primary"
-                onClick={() => {
-                  toast.success("Status Diperbarui", `Sample ${detailOrder.code} disetujui untuk pengiriman.`);
-                  setDetailOrder(null);
-                }}
-              >
-                Konfirmasi Status Sample
-              </DnaButton>
-            </div>
           </div>
         )}
-      </DnaModal>
+      </DnaDetailDrawer>
 
       {/* Modal Buat Permintaan Sample Baru */}
       <DnaModal

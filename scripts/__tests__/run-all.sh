@@ -52,9 +52,47 @@ run_test "db-snapshot-script-exists"                 "$SCRIPT_DIR/db-snapshot.te
 run_test "ci-has-ghcr-push-images"                   "$SCRIPT_DIR/ci-ghcr.test.sh"
 run_test "init-db-idempotent-on-restart"             "$SCRIPT_DIR/init-db-idempotency.test.sh"
 run_test "contracts-mgmt-task-and-routes"            "$SCRIPT_DIR/contracts-mgmt-task.test.sh"
+run_test "validate-env-ci-checkout-safe"             "$SCRIPT_DIR/validate-env-ci-checkout.test.sh"
 
 # Phase 5 — Top-level docs
 run_test "docs-link-integrity"                       "$SCRIPT_DIR/docs-link-integrity.test.sh"
+
+# Phase 6 — Phase-gate integrity (a gate that cannot detect residue is not a gate)
+run_test "clean-db-no-phantom-tables"                "$SCRIPT_DIR/clean-db-phantom-tables.test.sh"
+run_test "gate-tables-are-migration-created"          "$SCRIPT_DIR/gate-tables-are-migration-created.test.sh"
+# A residue gate that reports "clean" without having looked is worse than none.
+run_test "clean-db-gates-fail-closed"                 "$SCRIPT_DIR/clean-db-gates-fail-closed.test.sh"
+run_test "clean-db-admin-connection"                  "$SCRIPT_DIR/clean-db-admin-connection.test.sh"
+
+# Phase 2 — Fabrication guards (mock data cannot reappear silently)
+run_test "no-fabricated-mock-page-guards"            "$SCRIPT_DIR/fabrication-guards.test.sh"
+
+# Phase 7 — P21 migration & disaster recovery (canonical names + fail-closed)
+run_test "p21-dr-tooling-contract"                   "$SCRIPT_DIR/p21-disaster-recovery.test.sh"
+
+# Fase 5/P22 — UAT pre-flight browser gate (a sweep must not report on a foreign build)
+run_test "p22-uat-preflight-gate-fail-closed"        "$SCRIPT_DIR/p22-uat-preflight.test.sh"
+# Fase 5/P22 — PDF live probe must reject a 200 that is only a placeholder
+run_test "p22-pdf-live-probe-fail-closed"            "$SCRIPT_DIR/p22-pdf-live-probe.test.sh"
+# Master data — the seeder must not report success over a CSV directory it never read
+run_test "master-seed-fail-closed"                   "$SCRIPT_DIR/master-seed-guard.test.sh"
+# Deterministic install — a lock file out of sync passes locally and dies only in CI
+run_test "lockfile-in-sync"                          "$SCRIPT_DIR/lockfile-in-sync.test.sh"
+# CI prisma invocation — `npx --prefix backend` keeps the repo-root CWD and finds no schema
+run_test "ci-prisma-cwd"                             "$SCRIPT_DIR/ci-prisma-cwd.test.sh"
+# Backend reachability — one Nest root marks the whole WA self-QR tree as DEAD_CODE
+run_test "nest-multi-root-reachability"              "$SCRIPT_DIR/nest-multi-root-reachability.test.sh"
+# Route uniqueness — a duplicate route is dead code Express never reaches, and
+# P03's own detector misses the bare `@Get()`/`@Post()` form that declared some
+run_test "backend-route-uniqueness"                  "$SCRIPT_DIR/backend-route-uniqueness.test.sh"
+# Invoice aliases — a mapper that omits a field a screen reads prints NaN in a
+# money column with no error anywhere
+run_test "finance-invoice-alias-contract"            "$SCRIPT_DIR/finance-invoice-alias-contract.test.sh"
+# Backend lint — P03 refuses to certify over an eslint error, and CI only reaches it late
+run_test "backend-lint-clean"                        "$SCRIPT_DIR/backend-lint-clean.test.sh"
+# Ledger foreign keys — Postgres indexes the referenced side only, and Prisma
+# adds nothing, so every FK on the ledger tables is a full scan by default
+run_test "finance-ledger-indexes"                    "$SCRIPT_DIR/finance-ledger-indexes.test.sh"
 
 echo ""
 echo "═══════════════════════════════════════════════════════════════"

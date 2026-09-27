@@ -2,29 +2,18 @@
 
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, extractApiError } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   FileSpreadsheet,
   Plus,
-  Search,
-  Filter,
   Eye,
   CheckCircle2,
-  Clock,
-  XCircle,
   AlertCircle,
   FileText,
   DollarSign,
   Upload,
-  Calendar,
-  CreditCard,
-  Building2,
-  Receipt,
-  Trash2,
-  AlertTriangle,
   Send,
-  HelpCircle
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -34,9 +23,21 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
+  DnaInput,
+  DnaSelect,
   DnaModal,
-  DnaTabNav,
-  useDnaToast
+  DnaDetailDrawer,
+  useDnaToast,
+  DnaLoadingSkeleton,
+  DnaErrorState,
+  DnaEmptyState,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
 
 export interface BillItemDetail {
@@ -72,179 +73,94 @@ export interface PurchaseBill {
   pic: string;
 }
 
-const INITIAL_BILLS: PurchaseBill[] = [
-  {
-    id: "b-1",
-    billNumber: "FP-202609-000001",
-    poNumber: "PO-202608-000033",
-    vendorName: "PT Sumber Organik Nusantara",
-    procurementCategory: "Bahan Baku (110401)",
-    invoiceDate: "2026-08-31",
-    dueDate: "2026-09-30",
-    subtotal: 15000000,
-    totalDiscountRp: 500000,
-    taxAmount: 1595000,
-    grandTotal: 16095000,
-    paidAmount: 0,
-    dpDeduction: 0,
-    paymentStatus: "UNPAID",
-    unpaidReason: "Menunggu termin jatuh tempo 30 hari sesuai kesepakatan PO.",
-    notes: "Pengadaan bahan aktif pelembab batch September.",
-    pic: "Mega Utami",
-    items: [
-      {
-        id: "bi-1",
-        itemCode: "BBK00028",
-        itemName: "Super Moisturing Max (Drum 25kg)",
-        qty: 100,
-        unit: "Kg",
-        price: 150000,
-        discountRp: 500000,
-        total: 14500000,
-        rejectQty: 0
-      }
-    ]
-  },
-  {
-    id: "b-2",
-    billNumber: "FP-202609-000002",
-    poNumber: "PO-202609-000004",
-    vendorName: "PT Kemasan Jaya Makmur",
-    procurementCategory: "Bahan Kemas (110402)",
-    invoiceDate: "2026-09-02",
-    dueDate: "2026-09-16",
-    subtotal: 28500000,
-    totalDiscountRp: 0,
-    taxAmount: 3135000,
-    grandTotal: 31635000,
-    paidAmount: 31635000,
-    dpDeduction: 14250000,
-    paymentStatus: "PAID",
-    notes: "Pelunasan cetak botol tube via transfer Bank Mandiri.",
-    pic: "Mega Utami",
-    items: [
-      {
-        id: "bi-2",
-        itemCode: "KMS00012",
-        itemName: "Botol Tube 100ml Doff White + Flip Cap",
-        qty: 8000,
-        unit: "Pcs",
-        price: 3500,
-        discountRp: 0,
-        total: 28000000,
-        rejectQty: 0
-      },
-      {
-        id: "bi-3",
-        itemCode: "KMS00105",
-        itemName: "Master Carton Box K125/M125",
-        qty: 100,
-        unit: "Pcs",
-        price: 5000,
-        discountRp: 0,
-        total: 500000,
-        rejectQty: 0
-      }
-    ]
-  },
-  {
-    id: "b-3",
-    billNumber: "FP-202609-000003",
-    poNumber: "PO-202608-000019",
-    vendorName: "PT Chemindo Resins Global",
-    procurementCategory: "Reagen & Bahan Lab (510201)",
-    invoiceDate: "2026-09-05",
-    dueDate: "2026-09-19",
-    subtotal: 8200000,
-    totalDiscountRp: 200000,
-    taxAmount: 880000,
-    grandTotal: 8880000,
-    paidAmount: 4000000,
-    dpDeduction: 0,
-    paymentStatus: "PARTIAL",
-    unpaidReason: "Pembayaran tahap 1 telah dibayarkan 50%, sisa 50% saat hasil QC Release.",
-    notes: "Bahan uji lab reagen batch serum.",
-    pic: "Rini Sulistyo",
-    items: [
-      {
-        id: "bi-4",
-        itemCode: "BBK00045",
-        itemName: "Cetyl Alcohol Flakes Pure",
-        qty: 200,
-        unit: "Kg",
-        price: 41000,
-        discountRp: 200000,
-        total: 8000000,
-        rejectQty: 0
-      }
-    ]
-  },
-  {
-    id: "b-4",
-    billNumber: "FP-202608-000088",
-    poNumber: "PO-202608-000015",
-    vendorName: "PT Aroma Alam Lestari",
-    procurementCategory: "Bahan Baku (110401)",
-    invoiceDate: "2026-08-20",
-    dueDate: "2026-09-03",
-    subtotal: 12500000,
-    totalDiscountRp: 0,
-    taxAmount: 1375000,
-    grandTotal: 13875000,
-    paidAmount: 0,
-    dpDeduction: 0,
-    paymentStatus: "UNPAID",
-    unpaidReason: "Invoice overdue 6 hari. Menunggu otorisasi Direktur Keuangan.",
-    notes: "Pengadaan wewangian premium grade.",
-    pic: "Rini Sulistyo",
-    items: [
-      {
-        id: "bi-5",
-        itemCode: "BBK00092",
-        itemName: "Fragrance Sweet Vanilla",
-        qty: 25,
-        unit: "Kg",
-        price: 500000,
-        discountRp: 0,
-        total: 12500000,
-        rejectQty: 0
-      }
-    ]
-  }
-];
-
 const PROCUREMENT_CATEGORIES = [
   "Bahan Baku (110401)",
   "Bahan Kemas (110402)",
   "Reagen & Bahan Lab (510201)",
   "Perlengkapan Produksi & Sanitasi (510301)",
-  "Jasa Maklon Eksternal (510401)"
+  "Jasa Maklon Eksternal (510401)",
 ];
 
 export default function FakturPembelianPage() {
   const toast = useDnaToast();
   const queryClient = useQueryClient();
-  const [dataList, setDataList] = useState<PurchaseBill[]>(INITIAL_BILLS);
 
-  // Filters (Poin 7: Navbar 3 tabs utama)
+  const { data: rawBills, isLoading, isError, refetch } = useQuery({
+    queryKey: ["purchase-invoices"],
+    queryFn: async () => {
+      const res = await api.get("/purchase/invoices");
+      return unwrapResponse(res) || [];
+    },
+  });
+
+  const dataList: PurchaseBill[] = useMemo(() => {
+    if (!rawBills || !Array.isArray(rawBills)) return [];
+    return rawBills.map((b: any) => ({
+      id: b.id,
+      billNumber: b.billNumber || b.invoiceNumber || "",
+      poNumber: b.purchaseOrder?.poNumber || b.poNumber || b.poId || "-",
+      vendorName: b.supplier?.name || b.supplierName || b.vendor?.name || b.vendorName || "-",
+      procurementCategory: b.procurementCategory || "Bahan Baku (110401)",
+      invoiceDate: b.invoiceDate ? b.invoiceDate.split("T")[0] : "",
+      dueDate: b.dueDate ? b.dueDate.split("T")[0] : "",
+      subtotal: Number(b.subtotal || 0),
+      totalDiscountRp: Number(b.totalDiscount || b.discount || 0),
+      taxAmount: Number(b.taxAmount || 0),
+      grandTotal: Number(b.grandTotal || 0),
+      paidAmount: Number(b.paidAmount || 0),
+      dpDeduction: Number(b.downPaymentDeduction || 0),
+      paymentStatus: b.paymentStatus || (Number(b.paidAmount) >= Number(b.grandTotal) ? "PAID" : Number(b.paidAmount) > 0 ? "PARTIAL" : "UNPAID"),
+      unpaidReason: b.unpaidReason || "",
+      notes: b.notes || "",
+      pic: b.pic || "Finance Staff",
+      items: (b.items || []).map((it: any) => ({
+        id: it.id,
+        itemCode: it.itemCode || it.material?.sku || "MAT-001",
+        itemName: it.itemName || it.material?.name || "Item",
+        qty: Number(it.qty || it.quantity || 0),
+        unit: it.unit || it.material?.unit || "Kg",
+        price: Number(it.price || it.unitPrice || 0),
+        discountRp: Number(it.discount || 0),
+        total: Number(it.total || it.totalPrice || 0),
+        rejectQty: Number(it.rejectQty || 0),
+      })),
+    }));
+  }, [rawBills]);
+
+  // The bill form needs a supplier UUID (CreatePurchaseInvoiceDto.vendorId is @IsUUID), so the
+  // picker is backed by the master list rather than a free-text name.
+  const { data: rawSuppliers } = useQuery({
+    queryKey: ["master-suppliers-for-bill"],
+    queryFn: async () => unwrapResponse(await api.get("/master/suppliers")),
+    staleTime: 300000,
+  });
+
+  const supplierOptions = useMemo<Array<{ value: string; label: string }>>(() => {
+    const items = Array.isArray(rawSuppliers) ? rawSuppliers : rawSuppliers?.items;
+    if (!Array.isArray(items)) return [];
+    return items.map((s: any) => ({ value: s.id, label: s.name || s.supplierName || s.email || s.id }));
+  }, [rawSuppliers]);
+
+  // Filters
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBill, setSelectedBill] = useState<PurchaseBill | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [reasonModalBill, setReasonModalBill] = useState<PurchaseBill | null>(null);
   const [newReasonText, setNewReasonText] = useState("");
 
-  // Create Form State (Poin 4: Tanggal invoice custom)
+  // Create Form State
   const [billNumber, setBillNumber] = useState("");
   const [poNumber, setPoNumber] = useState("");
-  const [vendorName, setVendorName] = useState("");
+  // The backend keys a bill on `vendorId` (@IsUUID), so the form carries a supplier UUID, not a
+  // typed name. See the DnaSelect in the create modal.
+  const [vendorId, setVendorId] = useState("");
+  const [importFile, setImportFile] = useState<File | null>(null);
   const [procurementCategory, setProcurementCategory] = useState(PROCUREMENT_CATEGORIES[0]);
-  const [invoiceDate, setInvoiceDate] = useState("2026-09-09");
-  const [dueDate, setDueDate] = useState("2026-10-09");
+  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
+  const [dueDate, setDueDate] = useState(new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0]);
   const [formNotes, setFormNotes] = useState("");
-  const [unpaidReason, setUnpaidReason] = useState("Menunggu termin jatuh tempo reguler 30 hari.");
   const [items, setItems] = useState<BillItemDetail[]>([
     {
       id: "item-1",
@@ -255,8 +171,8 @@ export default function FakturPembelianPage() {
       price: 150000,
       discountRp: 0,
       total: 1500000,
-      rejectQty: 0
-    }
+      rejectQty: 0,
+    },
   ]);
 
   // Calculate KPIs
@@ -265,21 +181,21 @@ export default function FakturPembelianPage() {
     const totalCount = list.length;
     const totalGrand = list.reduce((sum, b) => sum + b.grandTotal, 0);
     const totalUnpaid = list
-      .filter(b => b.paymentStatus === "UNPAID" || b.paymentStatus === "PARTIAL")
+      .filter((b) => b.paymentStatus === "UNPAID" || b.paymentStatus === "PARTIAL")
       .reduce((sum, b) => sum + (b.grandTotal - b.paidAmount), 0);
-    const paidCount = list.filter(b => b.paymentStatus === "PAID").length;
+    const paidCount = list.filter((b) => b.paymentStatus === "PAID").length;
 
     return {
       totalCount,
       totalGrand,
       totalUnpaid,
-      paidCount
+      paidCount,
     };
   }, [dataList]);
 
-  // Filtered list based on Poin 7 (Semua / Sudah Dibayar / Belum Dibayar)
+  // Filtered list
   const filteredList = useMemo(() => {
-    return dataList.filter(item => {
+    return dataList.filter((item) => {
       const matchSearch =
         item.billNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.poNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -287,15 +203,18 @@ export default function FakturPembelianPage() {
         (item.unpaidReason && item.unpaidReason.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchTab =
-        activeTab === "ALL" ? true :
-        activeTab === "PAID" ? item.paymentStatus === "PAID" :
-        activeTab === "UNPAID" ? (item.paymentStatus === "UNPAID" || item.paymentStatus === "PARTIAL") : true;
+        activeTab === "ALL"
+          ? true
+          : activeTab === "PAID"
+          ? item.paymentStatus === "PAID"
+          : activeTab === "UNPAID"
+          ? item.paymentStatus === "UNPAID" || item.paymentStatus === "PARTIAL"
+          : true;
 
       return matchSearch && matchTab;
     });
   }, [dataList, searchQuery, activeTab]);
 
-  // Add Item to Form
   const handleAddItem = () => {
     setItems([
       ...items,
@@ -308,8 +227,8 @@ export default function FakturPembelianPage() {
         price: 0,
         discountRp: 0,
         total: 0,
-        rejectQty: 0
-      }
+        rejectQty: 0,
+      },
     ]);
   };
 
@@ -321,7 +240,7 @@ export default function FakturPembelianPage() {
       const q = field === "qty" ? value : current.qty;
       const p = field === "price" ? value : current.price;
       const d = field === "discountRp" ? value : current.discountRp;
-      current.total = Math.max(0, (q * p) - d);
+      current.total = Math.max(0, q * p - d);
     }
 
     newItems[index] = current;
@@ -332,92 +251,189 @@ export default function FakturPembelianPage() {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const formSubtotal = useMemo(() => {
-    return items.reduce((sum, it) => sum + (it.qty * it.price), 0);
-  }, [items]);
+  // POST /purchase/invoices. `invoiceNumber` (the vendor's own number) is what the backend
+  // stores on the row; it also auto-generates the internal `billNumber` (FP...) itself, so the
+  // FP number shown in the modal is not what this form sends.
+  //
+  // ponytail: `poNumber` typed below is display-only. purchase-invoices.service.ts sets
+  // `poNumber: po?.poNumber` — i.e. from the linked PO record — and the DTO has no plain
+  // `poNumber` field, so a typed value is dropped. Add when a 3-way match by typed PO exists.
+  const createBillMut = useMutation({
+    mutationFn: async () =>
+      unwrapResponse(
+        await api.post("/purchase/invoices", {
+          vendorId,
+          invoiceNumber: billNumber.trim(),
+          procurementCategory,
+          invoiceDate,
+          dueDate,
+          notes: formNotes.trim() || undefined,
+          items: items.map((it) => ({
+            itemCode: it.itemCode || undefined,
+            itemName: it.itemName,
+            qty: Number(it.qty) || 0,
+            unit: it.unit,
+            price: Number(it.price) || 0,
+            discount: Number(it.discountRp) || 0,
+          })),
+        }),
+      ),
+    onSuccess: () => {
+      toast.success(`Faktur Pembelian ${billNumber} berhasil dicatat & masuk ke daftar Hutang Dagang (AP).`);
+      setIsCreateOpen(false);
+      setBillNumber("");
+      setPoNumber("");
+      setVendorId("");
+      setFormNotes("");
+      queryClient.invalidateQueries({ queryKey: ["purchase-invoices"] });
+    },
+    onError: (e) => toast.error(extractApiError(e).message),
+  });
 
-  const formTotalDiscount = useMemo(() => {
-    return items.reduce((sum, it) => sum + (it.discountRp || 0), 0);
-  }, [items]);
-
-  const formTax = useMemo(() => {
-    return (formSubtotal - formTotalDiscount) * 0.11;
-  }, [formSubtotal, formTotalDiscount]);
-
-  const formGrandTotal = useMemo(() => {
-    return (formSubtotal - formTotalDiscount) + formTax;
-  }, [formSubtotal, formTotalDiscount, formTax]);
+  const importMut = useMutation({
+    // The endpoint takes `{ rows }` and returns one result per row, so the summary counts the
+    // server's own verdicts instead of asserting how many landed.
+    mutationFn: async (rows: unknown[]) =>
+      unwrapResponse(await api.post("/purchase/invoices/import", { rows })) as Array<{
+        success: boolean;
+        billNumber?: string;
+        error?: string;
+      }>,
+    onSuccess: (results) => {
+      const list = Array.isArray(results) ? results : [];
+      const ok = list.filter((r) => r.success).length;
+      const rejected = list.length - ok;
+      if (ok === 0) {
+        toast.error(
+          "Impor faktur gagal",
+          list[0]?.error || "Tidak ada baris yang diterima backend. Periksa nama vendor terhadap master supplier.",
+        );
+      } else if (rejected > 0) {
+        toast.warning(`${ok} faktur pembelian ditambahkan, ${rejected} baris ditolak backend.`);
+      } else {
+        toast.success(`${ok} faktur pembelian berhasil diimpor.`);
+      }
+      setIsImportModalOpen(false);
+      setImportFile(null);
+      queryClient.invalidateQueries({ queryKey: ["purchase-invoices"] });
+    },
+    onError: (e) => toast.error(extractApiError(e).message),
+  });
 
   const handleCreateBill = () => {
     if (!billNumber.trim()) {
       toast.error("Nomor Faktur Pembelian (Vendor Invoice No) wajib diisi");
       return;
     }
-    if (!vendorName.trim()) {
-      toast.error("Nama Supplier / Vendor wajib diisi");
+    if (!vendorId) {
+      toast.error("Pilih supplier / vendor dari daftar master terlebih dahulu");
       return;
     }
-    if (items.length === 0 || !items[0].itemName) {
+    if (items.length === 0 || !items[0].itemName.trim()) {
       toast.error("Isi minimal 1 detail item barang");
       return;
     }
-
-    const newBill: PurchaseBill = {
-      id: `b-${Date.now()}`,
-      billNumber,
-      poNumber: poNumber || "PO-DIRECT",
-      vendorName,
-      procurementCategory,
-      invoiceDate,
-      dueDate,
-      subtotal: formSubtotal,
-      totalDiscountRp: formTotalDiscount,
-      taxAmount: formTax,
-      grandTotal: formGrandTotal,
-      paidAmount: 0,
-      dpDeduction: 0,
-      paymentStatus: "UNPAID",
-      unpaidReason,
-      notes: formNotes,
-      pic: "Finance Staff (Anda)",
-      items
-    };
-
-    setDataList([newBill, ...dataList]);
-    setIsCreateOpen(false);
-    setBillNumber("");
-    setPoNumber("");
-    setVendorName("");
-    setFormNotes("");
-    toast.success(`Faktur Pembelian ${billNumber} berhasil dicatat & masuk ke daftar Hutang Dagang (AP).`);
+    createBillMut.mutate();
   };
 
   const handleSaveReason = () => {
     if (!reasonModalBill) return;
-    setDataList(dataList.map(b => {
-      if (b.id === reasonModalBill.id) {
-        return { ...b, unpaidReason: newReasonText };
-      }
-      return b;
-    }));
+    // `bill.unpaidReason` exists on the table, but the invoices controller exposes no PATCH:
+    // only POST /, POST /import, GET / and GET /:id. There is nothing to write to, so this
+    // stops claiming an update instead of dropping the edit.
+    toast.warning(
+      "Catatan belum tersimpan",
+      "Backend belum menyediakan rute ubah faktur (PATCH /purchase/invoices/:id). Catatan tidak dipersist.",
+    );
     setReasonModalBill(null);
-    toast.success("Catatan alasan belum lunas berhasil diperbarui.");
   };
 
-  const handleImportExcel = () => {
-    setIsImportModalOpen(false);
-    toast.success("File Excel berhasil diproses: 3 Faktur Pembelian baru ditambahkan.");
+  const IMPORT_HEADERS = "vendor,invoice number,due date,item,qty,unit,price,notes";
+
+  const handleDownloadImportTemplate = () => {
+    const blob = new Blob([`${IMPORT_HEADERS}\nPT Contoh Supplier,INV/2026/09/0001,2026-10-26,Kemasan PET 250ml,100,pcs,2500,\n`], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "template_import_faktur_pembelian.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Rows are matched to a supplier by NAME against the master supplier list, because the import
+  // endpoint needs `vendorId` (@IsUUID) and a CSV cannot carry UUIDs. A row whose vendor name is
+  // not in the master is sent without vendorId and comes back rejected by the backend, which is
+  // counted as "ditolak" rather than silently dropped.
+  const handleImportExcel = async () => {
+    if (!importFile) {
+      toast.error("Pilih file CSV terlebih dahulu");
+      return;
+    }
+    let csv = "";
+    try {
+      csv = await importFile.text();
+    } catch {
+      toast.error("Gagal membaca file. Pastikan file CSV yang dipilih valid.");
+      return;
+    }
+
+    const lines = csv.split(/\r?\n/).filter((l) => l.trim());
+    if (lines.length < 2) {
+      toast.error("File CSV kosong atau hanya berisi baris header.");
+      return;
+    }
+    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    const rows = lines.slice(1).map((line) => {
+      const cells = line.split(",").map((c) => c.trim());
+      const row: Record<string, string> = {};
+      headers.forEach((h, i) => (row[h] = cells[i] ?? ""));
+      const vendorLabel = row["vendor"] || row["supplier"] || row["nama supplier"] || "";
+      const supplier = supplierOptions.find((s) => s.label.toLowerCase() === vendorLabel.toLowerCase());
+      return {
+        vendorId: supplier?.value,
+        invoiceNumber: row["invoice number"] || undefined,
+        dueDate: row["due date"] || undefined,
+        notes: row["notes"] || `Impor ${importFile.name}`,
+        items: [
+          {
+            itemName: row["item"] || "Item impor",
+            qty: Number(row["qty"]) || 1,
+            unit: row["unit"] || "pcs",
+            price: Number(row["price"]) || 0,
+          },
+        ],
+      };
+    });
+
+    importMut.mutate(rows);
   };
 
   return (
     <DnaPageContainer>
-      {/* Header */}
+      {/* Header with Top-Right Tabs */}
       <DnaPageHeader
         title="Faktur Pembelian (Purchase Invoices)"
         description="Kelola tagihan masuk dari supplier, pencatatan hutang dagang (AP), dan verifikasi termin jatuh tempo."
         badge={<DnaBadge variant="neutral">SCR-046 / FIN-PUR-BILL</DnaBadge>}
+        tabs={[
+          { key: "ALL", label: "Semua Faktur", count: dataList.length },
+          {
+            key: "UNPAID",
+            label: "Belum Dibayar",
+            count: dataList.filter((d) => d.paymentStatus === "UNPAID" || d.paymentStatus === "PARTIAL").length,
+          },
+          {
+            key: "PAID",
+            label: "Sudah Dibayar",
+            count: dataList.filter((d) => d.paymentStatus === "PAID").length,
+          },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         actions={
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <DnaButton
               variant="outline"
               size="sm"
@@ -440,7 +456,7 @@ export default function FakturPembelianPage() {
               icon={<Plus className="w-4 h-4" />}
               onClick={() => setIsCreateOpen(true)}
             >
-              + Input Faktur Pembelian
+              + Input Faktur
             </DnaButton>
           </div>
         }
@@ -472,191 +488,183 @@ export default function FakturPembelianPage() {
         />
       </DnaKpiGrid>
 
-      {/* Navigation Tabs (Poin 7) */}
-      <div className="mb-4">
-        <DnaTabNav
-          tabs={[
-            { id: "ALL", label: "Semua", count: dataList.length },
-            { id: "UNPAID", label: "Belum Dibayar", count: dataList.filter(d => d.paymentStatus === "UNPAID" || d.paymentStatus === "PARTIAL").length },
-            { id: "PAID", label: "Sudah Dibayar", count: dataList.filter(d => d.paymentStatus === "PAID").length }
-          ]}
-          activeTab={activeTab}
-          onChange={setActiveTab}
-        />
-      </div>
-
       {/* Main Table Card */}
-      <DnaDataTableCard
-        title="Daftar Faktur Pembelian (Accounts Payable Bills)"
-        description="Pencatatan faktur supplier dengan rincian diskon Rupiah dan alasan belum lunas."
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari No Faktur, PO, vendor, alasan belum lunas..."
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700 uppercase tracking-wider">
-              <tr>
-                <th className="py-3 px-4">No. Faktur</th>
-                <th className="py-3 px-4">No. PO</th>
-                <th className="py-3 px-4">Tgl Invoice</th>
-                <th className="py-3 px-4">Jatuh Tempo</th>
-                <th className="py-3 px-4">Supplier / Vendor</th>
-                <th className="py-3 px-4">Kategori COA</th>
-                <th className="py-3 px-4 text-right">Grand Total (Rp)</th>
-                <th className="py-3 px-4 text-right">Sisa Hutang</th>
-                <th className="py-3 px-4">Status Bayar</th>
-                <th className="py-3 px-4">Alasan Belum Lunas</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-normal">
-              {filteredList.length === 0 ? (
-                <tr>
-                  <td colSpan={11} className="py-12 text-center text-slate-400">
-                    <FileText className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                    Tidak ada faktur pembelian yang sesuai filter.
-                  </td>
-                </tr>
-              ) : (
-                filteredList.map((row) => {
-                  const remaining = Math.max(0, row.grandTotal - row.paidAmount);
-                  return (
-                    <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 font-mono font-bold text-indigo-600 text-xs whitespace-nowrap">
-                        {row.billNumber}
-                      </td>
-                      <td className="py-3 px-4 font-mono text-slate-600 text-xs whitespace-nowrap">
-                        {row.poNumber}
-                      </td>
-                      <td className="py-3 px-4 text-xs whitespace-nowrap">
-                        {row.invoiceDate}
-                      </td>
-                      <td className="py-3 px-4 text-xs whitespace-nowrap font-medium text-slate-800">
-                        {row.dueDate}
-                      </td>
-                      <td className="py-3 px-4 text-xs font-semibold text-slate-900">
-                        {row.vendorName}
-                      </td>
-                      <td className="py-3 px-4 text-xs">
-                        <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-mono">
-                          {row.procurementCategory}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-right text-xs font-mono font-bold text-slate-900">
-                        Rp {row.grandTotal.toLocaleString("id-ID")}
-                      </td>
-                      <td className="py-3 px-4 text-right text-xs font-mono font-bold">
-                        {remaining > 0 ? (
-                          <span className="text-amber-600">Rp {remaining.toLocaleString("id-ID")}</span>
-                        ) : (
-                          <span className="text-emerald-600">Rp 0</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        {row.paymentStatus === "PAID" && (
-                          <DnaBadge variant="success">Sudah Dibayar</DnaBadge>
-                        )}
-                        {row.paymentStatus === "PARTIAL" && (
-                          <DnaBadge variant="warning">Sebagian</DnaBadge>
-                        )}
-                        {row.paymentStatus === "UNPAID" && (
-                          <DnaBadge variant="critical">Belum Dibayar</DnaBadge>
-                        )}
-                      </td>
-                      {/* Poin 8: Alasan Belum Lunas */}
-                      <td className="py-3 px-4 text-xs max-w-xs">
-                        {row.paymentStatus !== "PAID" ? (
-                          <div
-                            onClick={() => {
-                              setReasonModalBill(row);
-                              setNewReasonText(row.unpaidReason || "");
-                            }}
-                            className="cursor-pointer hover:text-indigo-600 text-slate-600 truncate flex items-center gap-1 group"
-                            title="Klik untuk edit catatan alasan belum lunas"
-                          >
-                            <span className="truncate">{row.unpaidReason || "Klik untuk isi alasan..."}</span>
-                            <span className="text-[10px] text-indigo-500 opacity-0 group-hover:opacity-100">Edit</span>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 italic text-[11px]">- (Lunas) -</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <DnaButton
-                            variant="ghost"
-                            size="sm"
-                            icon={<Eye className="w-3.5 h-3.5" />}
-                            onClick={() => {
-                              setSelectedBill(row);
-                              setIsDetailOpen(true);
-                            }}
-                          >
-                            Detail
-                          </DnaButton>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      {isError && (
+        <div className="mb-4">
+          <DnaErrorState
+            title="Gagal Memuat Faktur Pembelian"
+            message="Terjadi kesalahan saat mengambil data faktur pembelian dari server."
+            onRetry={() => refetch()}
+          />
         </div>
-      </DnaDataTableCard>
+      )}
 
-      {/* Modal Detail Faktur */}
-      {selectedBill && (
-        <DnaModal
-          isOpen={isDetailOpen}
-          onClose={() => setIsDetailOpen(false)}
-          title={`Detail Faktur Pembelian: ${selectedBill.billNumber}`}
-          description={`Tagihan dari supplier ${selectedBill.vendorName} (${selectedBill.poNumber})`}
-          size="xl"
-          footer={
-            <div className="flex items-center justify-between w-full">
-              <div className="text-xs text-slate-500">
-                Dicatat oleh: <span className="font-semibold text-slate-700">{selectedBill.pic}</span>
-              </div>
-              <DnaButton variant="outline" size="sm" onClick={() => setIsDetailOpen(false)}>
+      {isLoading ? (
+        <DnaLoadingSkeleton rows={6} />
+      ) : (
+        <DnaDataTableCard
+          toolbarProps={{
+            searchProps: {
+              value: searchQuery,
+              onChange: setSearchQuery,
+              placeholder: "Cari No Faktur, PO, vendor, alasan belum lunas...",
+            },
+          }}
+        >
+          <div className="overflow-x-auto">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
+                  <DnaTh className="px-4 py-2.5 w-[170px]">No. Faktur</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[160px]">No. Purchase Order</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Tgl Faktur</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Jatuh Tempo</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Supplier</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[160px]">Kategori Pengadaan</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px] text-right">Nilai Tagihan</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px] text-right">Sisa Hutang</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px] text-center">Status Bayar</DnaTh>
+                  <DnaTh className="pr-4 py-2.5 w-[70px] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
+                {filteredList.length === 0 ? (
+                  <DnaTableRow>
+                    <DnaTd colSpan={10} className="py-8 text-center">
+                      <DnaEmptyState
+                        title="Tidak Ada Faktur Pembelian"
+                        description="Belum ada data faktur pembelian atau tidak ada hasil yang sesuai dengan filter."
+                      />
+                    </DnaTd>
+                  </DnaTableRow>
+                ) : (
+                  filteredList.map((row) => {
+                    const remaining = Math.max(0, row.grandTotal - row.paidAmount);
+                    return (
+                      <DnaTableRow
+                        key={row.id}
+                        onClick={() => setSelectedBill(row)}
+                        className="h-[48px] hover:bg-slate-50/60 transition-colors cursor-pointer"
+                      >
+                        <DnaTd className="px-4 py-2.5">
+                          <DnaCell.Code code={row.billNumber} />
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
+                          <DnaCell.Code code={row.poNumber} />
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
+                          <DnaCell.Text text={row.invoiceDate} />
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
+                          <DnaCell.Text text={row.dueDate} />
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
+                          <span className="text-[12px] font-medium text-slate-900 line-clamp-1">{row.vendorName}</span>
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
+                          <span className="text-[12px] font-medium text-slate-700 line-clamp-1">{row.procurementCategory}</span>
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-right">
+                          <DnaCell.Numeric value={row.grandTotal} prefix="Rp " />
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-right tabular-nums tabular-nums">
+                          {remaining > 0 ? (
+                            <span className="text-[12px] font-semibold text-rose-600">
+                              Rp {remaining.toLocaleString("id-ID")}
+                            </span>
+                          ) : (
+                            <span className="text-[12px] font-semibold text-emerald-600">Lunas</span>
+                          )}
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center">
+                          {row.paymentStatus === "PAID" ? (
+                            <DnaBadge variant="success">Sudah Dibayar</DnaBadge>
+                          ) : row.paymentStatus === "PARTIAL" ? (
+                            <DnaBadge variant="warning">Sebagian</DnaBadge>
+                          ) : (
+                            <DnaBadge variant="critical">Belum Dibayar</DnaBadge>
+                          )}
+                        </DnaTd>
+                        <DnaTd className="pr-4 py-2.5 text-right">
+                          <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                            <DnaButton
+                              variant="ghost"
+                              className="h-7 w-7 p-0 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                              onClick={() => setSelectedBill(row)}
+                              title="Lihat Detail"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </DnaButton>
+                          </div>
+                        </DnaTd>
+                      </DnaTableRow>
+                    );
+                  })
+                )}
+              </DnaTableBody>
+            </DnaTable>
+          </div>
+        </DnaDataTableCard>
+      )}
+
+      {/* DnaDetailDrawer for Bill Inspection */}
+      <DnaDetailDrawer
+        isOpen={!!selectedBill}
+        onClose={() => setSelectedBill(null)}
+        title={selectedBill?.billNumber || "Rincian Faktur Pembelian"}
+        subtitle={selectedBill ? `Supplier: ${selectedBill.vendorName} • PO: ${selectedBill.poNumber}` : undefined}
+        badge={
+          selectedBill ? (
+            <DnaBadge variant={selectedBill.paymentStatus === "PAID" ? "success" : "warning"}>
+              {selectedBill.paymentStatus === "PAID" ? "Lunas" : "Belum Lunas"}
+            </DnaBadge>
+          ) : undefined
+        }
+        footer={
+          <div className="flex items-center justify-between w-full">
+            <div className="text-xs text-slate-500">
+              Dicatat oleh: <span className="font-semibold text-slate-700">{selectedBill?.pic}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {selectedBill && selectedBill.paymentStatus !== "PAID" && (
+                <DnaButton
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setReasonModalBill(selectedBill);
+                    setNewReasonText(selectedBill.unpaidReason || "");
+                  }}
+                >
+                  Edit Alasan Belum Lunas
+                </DnaButton>
+              )}
+              <DnaButton variant="outline" size="sm" onClick={() => setSelectedBill(null)}>
                 Tutup
               </DnaButton>
             </div>
-          }
-        >
-          <div className="space-y-4 text-xs">
+          </div>
+        }
+      >
+        {selectedBill && (
+          <div className="space-y-5 text-xs">
             {/* Summary Cards */}
-            <div className="grid grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
-                <span className="text-slate-500 block">Tgl Faktur (Custom)</span>
-                <span className="font-bold text-slate-900 font-mono">{selectedBill.invoiceDate}</span>
-                <span className="text-slate-500 block text-[11px]">Jatuh Tempo: {selectedBill.dueDate}</span>
+                <span className="text-slate-500 block text-[11px]">Tgl Faktur / Jatuh Tempo</span>
+                <span className="font-bold text-slate-900 tabular-nums text-sm block">{selectedBill.invoiceDate}</span>
+                <span className="text-amber-700 block text-[11px] font-medium mt-0.5">Jatuh Tempo: {selectedBill.dueDate}</span>
               </div>
-              <div>
-                <span className="text-slate-500 block">Kategori COA</span>
-                <span className="font-medium text-slate-800">{selectedBill.procurementCategory}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Grand Total Tagihan</span>
-                <span className="font-bold text-slate-900 font-mono text-sm">
+              <div className="text-right">
+                <span className="text-slate-500 block text-[11px]">Grand Total Tagihan</span>
+                <span className="font-bold text-slate-900 tabular-nums text-sm block">
                   Rp {selectedBill.grandTotal.toLocaleString("id-ID")}
                 </span>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Status Pembayaran</span>
-                <div className="mt-0.5">
-                  {selectedBill.paymentStatus === "PAID" ? (
-                    <DnaBadge variant="success">LUNAS</DnaBadge>
-                  ) : (
-                    <DnaBadge variant="warning">Sisa Rp {(selectedBill.grandTotal - selectedBill.paidAmount).toLocaleString("id-ID")}</DnaBadge>
-                  )}
-                </div>
+                <span className="text-slate-500 block text-[11px] mt-0.5">Kategori: {selectedBill.procurementCategory}</span>
               </div>
             </div>
 
             {selectedBill.unpaidReason && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-900">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-amber-900">
                 <span className="font-bold block mb-1">Catatan Alasan Belum Lunas:</span>
                 {selectedBill.unpaidReason}
               </div>
@@ -664,75 +672,75 @@ export default function FakturPembelianPage() {
 
             {/* Items Table */}
             <div>
-              <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">Rincian Barang & Diskon Nominal (Rp)</h4>
-              <div className="border border-slate-200 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-xs text-slate-600">
-                  <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
-                    <tr>
-                      <th className="py-2.5 px-3">Kode</th>
-                      <th className="py-2.5 px-3">Nama Barang</th>
-                      <th className="py-2.5 px-3 text-right">Qty (Kondisi Bagus)</th>
-                      <th className="py-2.5 px-3 text-right">Harga Satuan</th>
-                      <th className="py-2.5 px-3 text-right">Diskon (Rp)</th>
-                      <th className="py-2.5 px-3 text-right">Total Netto</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono">
+              <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">
+                Rincian Barang & Diskon Nominal (Rp)
+              </h4>
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3">Kode</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Nama Barang</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Qty</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Harga</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Diskon (Rp)</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Subtotal</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedBill.items.map((it) => (
-                      <tr key={it.id} className="hover:bg-slate-50">
-                        <td className="py-2.5 px-3 text-indigo-600 font-medium">{it.itemCode}</td>
-                        <td className="py-2.5 px-3 font-sans font-semibold text-slate-800">{it.itemName}</td>
-                        <td className="py-2.5 px-3 text-right text-slate-700">
+                      <DnaTableRow key={it.id} className="hover:bg-slate-50">
+                        <DnaTd className="py-2 px-3 text-indigo-600 font-medium">{it.itemCode}</DnaTd>
+                        <DnaTd className="py-2 px-3 font-sans font-semibold text-slate-800">{it.itemName}</DnaTd>
+                        <DnaTd className="py-2 px-3 text-right text-slate-700">
                           {it.qty} {it.unit}
-                        </td>
-                        <td className="py-2.5 px-3 text-right text-slate-600">
+                        </DnaTd>
+                        <DnaTd className="py-2 px-3 text-right text-slate-600">
                           Rp {it.price.toLocaleString("id-ID")}
-                        </td>
-                        <td className="py-2.5 px-3 text-right text-emerald-600 font-bold">
+                        </DnaTd>
+                        <DnaTd className="py-2 px-3 text-right text-emerald-600 font-bold">
                           - Rp {(it.discountRp || 0).toLocaleString("id-ID")}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-slate-900">
+                        </DnaTd>
+                        <DnaTd className="py-2 px-3 text-right font-bold text-slate-900">
                           Rp {it.total.toLocaleString("id-ID")}
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
 
-            {/* Totals Breakdown */}
-            <div className="flex justify-end pt-2">
-              <div className="w-64 space-y-1.5 text-xs">
-                <div className="flex justify-between text-slate-600">
-                  <span>Subtotal Bruto:</span>
-                  <span className="font-mono">Rp {selectedBill.subtotal.toLocaleString("id-ID")}</span>
+            {/* Financial Summary */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1.5 text-xs">
+              <div className="flex justify-between text-slate-600">
+                <span>Subtotal Bruto:</span>
+                <span className="tabular-nums">Rp {selectedBill.subtotal.toLocaleString("id-ID")}</span>
+              </div>
+              <div className="flex justify-between text-emerald-600 font-medium">
+                <span>Total Diskon:</span>
+                <span className="tabular-nums">- Rp {selectedBill.totalDiscountRp.toLocaleString("id-ID")}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>PPN (11%):</span>
+                <span className="tabular-nums">Rp {selectedBill.taxAmount.toLocaleString("id-ID")}</span>
+              </div>
+              {selectedBill.dpDeduction > 0 && (
+                <div className="flex justify-between text-purple-600 font-medium">
+                  <span>Potongan DP:</span>
+                  <span className="tabular-nums">- Rp {selectedBill.dpDeduction.toLocaleString("id-ID")}</span>
                 </div>
-                <div className="flex justify-between text-emerald-600 font-medium">
-                  <span>Total Diskon (Rp):</span>
-                  <span className="font-mono">- Rp {selectedBill.totalDiscountRp.toLocaleString("id-ID")}</span>
-                </div>
-                <div className="flex justify-between text-slate-600">
-                  <span>PPN (11%):</span>
-                  <span className="font-mono">Rp {selectedBill.taxAmount.toLocaleString("id-ID")}</span>
-                </div>
-                {selectedBill.dpDeduction > 0 && (
-                  <div className="flex justify-between text-purple-600 font-medium">
-                    <span>Potongan DP:</span>
-                    <span className="font-mono">- Rp {selectedBill.dpDeduction.toLocaleString("id-ID")}</span>
-                  </div>
-                )}
-                <div className="border-t border-slate-200 pt-1.5 flex justify-between font-bold text-slate-900 text-sm">
-                  <span>Grand Total:</span>
-                  <span className="font-mono text-indigo-700">Rp {selectedBill.grandTotal.toLocaleString("id-ID")}</span>
-                </div>
+              )}
+              <div className="border-t border-slate-200 pt-2 flex justify-between font-bold text-slate-900 text-sm">
+                <span>Grand Total:</span>
+                <span className="tabular-nums text-indigo-700">Rp {selectedBill.grandTotal.toLocaleString("id-ID")}</span>
               </div>
             </div>
           </div>
-        </DnaModal>
-      )}
+        )}
+      </DnaDetailDrawer>
 
-      {/* Modal Edit Alasan Belum Lunas (Poin 8) */}
+      {/* Modal Edit Alasan Belum Lunas */}
       {reasonModalBill && (
         <DnaModal
           isOpen={!!reasonModalBill}
@@ -780,6 +788,7 @@ export default function FakturPembelianPage() {
               variant="primary"
               size="sm"
               icon={<Send className="w-4 h-4" />}
+              loading={createBillMut.isPending}
               onClick={handleCreateBill}
             >
               Simpan Faktur Pembelian
@@ -796,17 +805,17 @@ export default function FakturPembelianPage() {
                 placeholder="Contoh: INV/2026/09/0088"
                 value={billNumber}
                 onChange={(e) => setBillNumber(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
             <div>
-              <label className="block text-slate-700 font-bold mb-1">Nama Supplier / Vendor *</label>
-              <input
-                type="text"
-                placeholder="Contoh: PT Sumber Organik Nusantara"
-                value={vendorName}
-                onChange={(e) => setVendorName(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              <DnaSelect
+                label="Supplier / Vendor"
+                required
+                value={vendorId}
+                onChange={(val) => setVendorId(val)}
+                options={supplierOptions}
+                placeholder={supplierOptions.length === 0 ? "Memuat master supplier..." : "Pilih supplier..."}
               />
             </div>
             <div>
@@ -816,19 +825,24 @@ export default function FakturPembelianPage() {
                 placeholder="Contoh: PO-202609-000005"
                 value={poNumber}
                 onChange={(e) => setPoNumber(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
+              {/* Only informational: the backend stores the PO number from the linked PO/GR
+                  record, not from this box. See createBillMut. */}
+              <p className="text-[10px] text-amber-600 mt-1">
+                Referensi saja — tidak tersimpan sampai PO ditautkan.
+              </p>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-slate-700 font-bold mb-1">Tanggal Faktur Vendor (Custom) *</label>
+              <label className="block text-slate-700 font-bold mb-1">Tanggal Faktur Vendor *</label>
               <input
                 type="date"
                 value={invoiceDate}
                 onChange={(e) => setInvoiceDate(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -837,7 +851,7 @@ export default function FakturPembelianPage() {
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -846,120 +860,88 @@ export default function FakturPembelianPage() {
                 aria-label="Kategori Pengadaan"
                 value={procurementCategory}
                 onChange={(e) => setProcurementCategory(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
               >
                 {PROCUREMENT_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* Items Section */}
-          <div className="border-t border-slate-200 pt-3">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-bold text-slate-800 text-xs">Rincian Barang & Diskon Nominal (Rp)</h4>
-              <DnaButton variant="secondary" size="sm" icon={<Plus className="w-3 h-3" />} onClick={handleAddItem}>
-                Tambah Baris
+          {/* Dynamic Items Table */}
+          <div className="border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-800 uppercase text-[10px]">
+                Item Barang ({items.length})
+              </span>
+              <DnaButton type="button" size="sm" variant="secondary" onClick={handleAddItem}>
+                + Tambah Item
               </DnaButton>
             </div>
 
-            <div className="space-y-2 max-h-60 overflow-y-auto">
+            <div className="space-y-2">
               {items.map((item, idx) => (
-                <div key={item.id} className="grid grid-cols-12 gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200 items-center">
-                  <div className="col-span-2">
+                <div key={item.id} className="bg-white p-2.5 rounded-lg border border-slate-200 flex items-center gap-2">
+                  <span className="font-bold text-slate-400 w-4">{idx + 1}</span>
+                  <div className="w-28">
                     <input
-                      type="text"
-                      placeholder="Kode Item"
+                      placeholder="Kode"
                       value={item.itemCode}
                       onChange={(e) => handleUpdateItem(idx, "itemCode", e.target.value)}
-                      className="w-full text-xs border border-slate-300 rounded p-1 font-mono"
+                      className="w-full text-xs border border-slate-200 rounded p-1.5 tabular-nums"
                     />
                   </div>
-                  <div className="col-span-3">
+                  <div className="flex-1">
                     <input
-                      type="text"
                       placeholder="Nama Barang"
                       value={item.itemName}
                       onChange={(e) => handleUpdateItem(idx, "itemName", e.target.value)}
-                      className="w-full text-xs border border-slate-300 rounded p-1"
+                      className="w-full text-xs border border-slate-200 rounded p-1.5"
                     />
                   </div>
-                  <div className="col-span-1">
+                  <div className="w-16">
                     <input
                       type="number"
-                      min="1"
                       placeholder="Qty"
                       value={item.qty}
-                      onChange={(e) => handleUpdateItem(idx, "qty", parseFloat(e.target.value) || 0)}
-                      className="w-full text-xs border border-slate-300 rounded p-1 text-right font-mono"
+                      onChange={(e) => handleUpdateItem(idx, "qty", Number(e.target.value))}
+                      className="w-full text-xs border border-slate-200 rounded p-1.5 text-right tabular-nums"
                     />
                   </div>
-                  <div className="col-span-2">
+                  <div className="w-24">
                     <input
                       type="number"
-                      placeholder="Harga Rp"
+                      placeholder="Harga"
                       value={item.price}
-                      onChange={(e) => handleUpdateItem(idx, "price", parseFloat(e.target.value) || 0)}
-                      className="w-full text-xs border border-slate-300 rounded p-1 text-right font-mono"
+                      onChange={(e) => handleUpdateItem(idx, "price", Number(e.target.value))}
+                      className="w-full text-xs border border-slate-200 rounded p-1.5 text-right tabular-nums"
                     />
                   </div>
-                  <div className="col-span-2">
-                    <input
-                      type="number"
-                      placeholder="Diskon Rp"
-                      value={item.discountRp}
-                      onChange={(e) => handleUpdateItem(idx, "discountRp", parseFloat(e.target.value) || 0)}
-                      className="w-full text-xs border border-slate-300 rounded p-1 text-right font-mono text-emerald-700"
-                    />
+                  <div className="w-24 text-right font-bold text-indigo-700 tabular-nums text-[11px]">
+                    Rp {item.total.toLocaleString("id-ID")}
                   </div>
-                  <div className="col-span-1 text-right font-mono font-bold text-xs text-slate-800">
-                    {item.total.toLocaleString("id-ID")}
-                  </div>
-                  <div className="col-span-1 text-center">
-                    {items.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveItem(idx)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveItem(idx)}
+                    className="text-slate-400 hover:text-rose-500 p-1"
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
-            </div>
-
-            {/* Form Calculation Summary */}
-            <div className="flex justify-end pt-3">
-              <div className="w-72 bg-slate-50 p-2.5 rounded-lg border border-slate-200 space-y-1 text-xs">
-                <div className="flex justify-between text-slate-600">
-                  <span>Subtotal:</span>
-                  <span className="font-mono">Rp {formSubtotal.toLocaleString("id-ID")}</span>
-                </div>
-                <div className="flex justify-between text-emerald-600 font-medium">
-                  <span>Total Diskon (Rp):</span>
-                  <span className="font-mono">- Rp {formTotalDiscount.toLocaleString("id-ID")}</span>
-                </div>
-                <div className="flex justify-between text-slate-600">
-                  <span>PPN (11%):</span>
-                  <span className="font-mono">Rp {formTax.toLocaleString("id-ID")}</span>
-                </div>
-                <div className="border-t border-slate-200 pt-1 flex justify-between font-bold text-slate-900">
-                  <span>Grand Total:</span>
-                  <span className="font-mono text-indigo-700">Rp {formGrandTotal.toLocaleString("id-ID")}</span>
-                </div>
-              </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-slate-700 font-bold mb-1">Catatan Alasan Belum Lunas (Poin 8) *</label>
-            <input
-              type="text"
-              value={unpaidReason}
-              onChange={(e) => setUnpaidReason(e.target.value)}
+            <label className="block text-slate-700 font-bold mb-1">Catatan Tambahan</label>
+            <textarea
+              rows={2}
+              placeholder="Catatan tambahan untuk faktur ini..."
+              value={formNotes}
+              onChange={(e) => setFormNotes(e.target.value)}
               className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
@@ -970,34 +952,42 @@ export default function FakturPembelianPage() {
       <DnaModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
-        title="Import Faktur Pembelian dari File Excel"
-        description="Unggah file .xlsx / .csv yang berisi rincian faktur pembelian, item barang, dan diskon nominal."
+        title="Import Faktur Pembelian dari CSV"
+        description="Unggah file CSV untuk memproses faktur massal."
         size="md"
         footer={
           <div className="flex items-center justify-end gap-2.5 w-full">
             <DnaButton variant="outline" size="sm" onClick={() => setIsImportModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton
-              variant="primary"
-              size="sm"
-              icon={<Upload className="w-4 h-4" />}
-              onClick={handleImportExcel}
-            >
-              Proses Import Data
+            <DnaButton variant="primary" size="sm" loading={importMut.isPending} onClick={handleImportExcel}>
+              Proses File
             </DnaButton>
           </div>
         }
       >
         <div className="space-y-3 text-xs">
-          <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 cursor-pointer">
-            <Upload className="w-8 h-8 mx-auto mb-2 text-indigo-600" />
-            <div className="font-bold text-slate-800">Klik untuk upload file Excel (.xlsx / .csv)</div>
-            <div className="text-slate-500 text-[11px] mt-1">Maksimal ukuran file 10MB</div>
+          {/* ponytail: only CSV is accepted. The parse is a browser-side split(","), so .xlsx would
+              need a spreadsheet reader dependency. Add when bulk import from real Excel is wanted. */}
+          <div className="p-6 border-2 border-dashed border-slate-200 rounded-xl text-center">
+            <Upload className="w-8 h-8 text-indigo-500 mx-auto mb-2" />
+            <DnaInput
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
+            />
+            <p className="text-[11px] text-slate-400 mt-2">
+              Format didukung: <span className="font-semibold">.csv</span>. Nama vendor pada kolom
+              &quot;vendor&quot; harus sama persis dengan nama di master supplier.
+            </p>
           </div>
-          <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] text-slate-600">
-            <span className="font-bold block mb-1">Petunjuk Kolom Excel:</span>
-            NoFaktur, TanggalInvoice, Vendor, NoPO, KategoriCOA, KodeItem, Qty, HargaSatuan, DiskonRp, JatuhTempo
+          <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+            <span className="text-slate-600">
+              Kolom: <span className="font-mono text-[11px]">{IMPORT_HEADERS}</span>
+            </span>
+            <DnaButton variant="ghost" size="sm" onClick={handleDownloadImportTemplate}>
+              Unduh Template
+            </DnaButton>
           </div>
         </div>
       </DnaModal>

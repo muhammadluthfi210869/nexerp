@@ -31,14 +31,22 @@ import {
   Percent,
   Eye,
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { DnaInput } from "@/components/dna/DnaInput";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DnaBadge } from "@/components/dna/DnaBadge";
-import { DnaButton } from "@/components/dna/DnaButton";
-import { TableWrapper } from "@/components/dna/TableWrapper";
-import { SectionLabel } from "@/components/dna/SectionLabel";
+import {
+  Card,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaDataTableCard,
+  DnaDetailDrawer,
+  DnaBadge,
+  DnaButton,
+  DnaInput,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import { toast } from "sonner";
 
 interface SalesMember {
@@ -145,6 +153,7 @@ export default function CRMLeadsClient() {
   const [batchSearch, setBatchSearch] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedBatchDetail, setSelectedBatchDetail] = useState<OperationalLeadBatch | null>(null);
+  const [selectedLeadDetail, setSelectedLeadDetail] = useState<LeadConversion | null>(null);
 
   // Form State for Buat Leads
   const [formTanggal, setFormTanggal] = useState(new Date().toISOString().slice(0, 10));
@@ -485,280 +494,317 @@ export default function CRMLeadsClient() {
     };
   }, [leads]);
 
+  const kpiCards = useMemo(() => {
+    const totalLeads = leads.length;
+    const newLeads = leads.filter((l) => l.status === "New").length;
+    const contactedLeads = leads.filter((l) => l.status === "Contacted").length;
+    const qualifiedLeads = leads.filter((l) => l.status === "Qualified" || l.status === "WON").length;
+    return [
+      {
+        key: "TOTAL",
+        title: "TOTAL LEADS MASUK",
+        value: `${totalLeads} Lead`,
+        deltaText: "Inbound Realtime",
+        isDeltaPositive: true,
+        icon: <Users className="w-4 h-4" />,
+        iconBg: "bg-blue-50",
+        iconColor: "text-blue-600",
+      },
+      {
+        key: "NEW",
+        title: "LEAD BARU (UNTOUCHED)",
+        value: `${newLeads} Lead`,
+        deltaText: "Perlu dihubungi",
+        isDeltaPositive: false,
+        icon: <Clock4 className="w-4 h-4" />,
+        iconBg: "bg-amber-50",
+        iconColor: "text-amber-600",
+      },
+      {
+        key: "CONTACTED",
+        title: "DALAM PROSPEK",
+        value: `${contactedLeads} Lead`,
+        deltaText: "Follow-up sales",
+        isDeltaPositive: true,
+        icon: <PhoneCall className="w-4 h-4" />,
+        iconBg: "bg-sky-50",
+        iconColor: "text-sky-600",
+      },
+      {
+        key: "QUALIFIED",
+        title: "DEAL / QUALIFIED",
+        value: `${qualifiedLeads} Lead`,
+        deltaText: "Konversi tercapai",
+        isDeltaPositive: true,
+        icon: <CheckCircle2 className="w-4 h-4" />,
+        iconBg: "bg-emerald-50",
+        iconColor: "text-emerald-600",
+      },
+    ];
+  }, [leads]);
+
   return (
-    <div className="space-y-6">
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => setActiveTab(v as "operational" | "leads" | "sales" | "stats")}
-        className="space-y-6"
-      >
-        <TabsList className="bg-slate-100 p-1 rounded-xl border border-slate-200">
-          <TabsTrigger
-            value="operational"
-            className="rounded-lg px-6 py-2.5 font-bold text-[11px] uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all"
-          >
-            📑 Distribusi Leads
-          </TabsTrigger>
-          <TabsTrigger
-            value="leads"
-            className="rounded-lg px-6 py-2.5 font-bold text-[11px] uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all"
-          >
-            📋 Inbound Leads & WA
-          </TabsTrigger>
-          <TabsTrigger
-            value="sales"
-            className="rounded-lg px-6 py-2.5 font-bold text-[11px] uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all"
-          >
-            👥 Konfigurasi Sales
-          </TabsTrigger>
-          <TabsTrigger
-            value="stats"
-            className="rounded-lg px-6 py-2.5 font-bold text-[11px] uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all"
-          >
-            📊 Statistik Rotasi
-          </TabsTrigger>
-        </TabsList>
+    <div className="space-y-6 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
+      <DnaPageHeader
+        title="CRM & LEAD MANAGEMENT"
+        tabs={[
+          { key: "operational", label: "Distribusi Leads", count: batches.length },
+          { key: "leads", label: "Inbound Leads & WA", count: filteredLeads.length },
+          { key: "sales", label: "Konfigurasi Sales", count: editedSales.length },
+          { key: "stats", label: "Statistik Rotasi" },
+        ]}
+        activeTab={activeTab}
+        onTabChange={(v) => setActiveTab(v as any)}
+      />
 
-        {/* ========================================================================= */}
-        {/* TAB 1: OPERATIONAL LEADS (1:1 G-SERP ROW 103 & 104 - EXACT 5 COLUMNS) */}
-        {/* ========================================================================= */}
-        <TabsContent value="operational" className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-            <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <Input
-                placeholder="Cari tanggal, catatan, penerima..."
-                value={batchSearch}
-                onChange={(e) => setBatchSearch(e.target.value)}
-                className="pl-9 h-9 text-xs"
-              />
-            </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <DnaButton
-                variant="primary"
-                onClick={() => setIsCreateModalOpen(true)}
-                icon={<Plus className="w-4 h-4" />}
-              >
-                Buat Leads
-              </DnaButton>
-            </div>
-          </div>
+      <DnaKpiGrid cards={kpiCards} />
 
-          <TableWrapper>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-200">
-                    <th className="p-4 text-center w-12 text-slate-500 font-bold text-[11px] uppercase tracking-wider">#</th>
-                    <th className="p-4 text-left w-36 text-slate-500 font-bold text-[11px] uppercase tracking-wider">Tanggal Leads</th>
-                    <th className="p-4 text-left text-slate-500 font-bold text-[11px] uppercase tracking-wider">Catatan</th>
-                    <th className="p-4 text-center w-36 text-slate-500 font-bold text-[11px] uppercase tracking-wider">Total Qty Leads</th>
-                    <th className="p-4 text-center w-28 text-slate-500 font-bold text-[11px] uppercase tracking-wider">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredBatches.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="p-8 text-center text-slate-400 text-xs">
-                        Tidak ada data distribusi leads ditemukan.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredBatches.map((batch, index) => (
-                      <tr key={batch.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="p-4 text-center text-xs font-bold text-slate-500">{index + 1}</td>
-                        <td className="p-4 text-xs font-bold text-slate-800">{batch.tanggalLeads}</td>
-                        <td className="p-4 text-xs text-slate-700">{batch.catatan}</td>
-                        <td className="p-4 text-center text-xs font-bold text-blue-600">
-                          <span className="bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full">
-                            {batch.totalQtyLeads} Leads
-                          </span>
-                        </td>
-                        <td className="p-4 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <button
-                              onClick={() => setSelectedBatchDetail(batch)}
-                              className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
-                              title="Lihat Alokasi"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteBatch(batch.id)}
-                              className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
-                              title="Hapus"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </TableWrapper>
-        </TabsContent>
+      {/* ========================================================================= */}
+      {/* TAB 1: OPERATIONAL LEADS (1:1 G-SERP ROW 103 & 104)                       */}
+      {/* ========================================================================= */}
+      {activeTab === "operational" && (
+        <DnaDataTableCard
+          toolbarProps={{
+            searchQuery: batchSearch,
+            onSearchChange: setBatchSearch,
+            searchPlaceholder: "Cari tanggal, catatan, penerima...",
+            actionButton: {
+              label: "Buat Leads",
+              onClick: () => setIsCreateModalOpen(true),
+            },
+          }}
+          paginationProps={{
+            currentPage: 1,
+            totalPages: 1,
+            totalEntries: filteredBatches.length,
+            pageSize: 10,
+            onPageChange: () => {},
+          }}
+        >
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                <DnaTh className="p-3.5 w-12 text-center text-slate-400">#</DnaTh>
+                <DnaTh className="p-3.5 w-40">TANGGAL LEADS</DnaTh>
+                <DnaTh className="p-3.5">CATATAN DISTRIBUSI</DnaTh>
+                <DnaTh className="p-3.5 w-40 text-center">TOTAL QTY LEADS</DnaTh>
+                <DnaTh className="p-3.5 w-24 text-center">AKSI</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
+              {filteredBatches.length === 0 ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={5} className="p-8 text-center text-slate-400 text-xs">
+                    Tidak ada data distribusi leads ditemukan.
+                  </DnaTd>
+                </DnaTableRow>
+              ) : (
+                filteredBatches.map((batch, index) => (
+                  <DnaTableRow key={batch.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="p-3.5 text-center text-slate-400 tabular-nums">{index + 1}</DnaTd>
+                    <DnaTd className="p-3.5 font-bold text-slate-800">{batch.tanggalLeads}</DnaTd>
+                    <DnaTd className="p-3.5 text-slate-700">
+                      <p className="font-semibold text-slate-900">{batch.catatan}</p>
+                      <p className="text-[11px] text-slate-400">{batch.items.map((i) => i.penerima).join(", ")}</p>
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center">
+                      <span className="bg-blue-50 border border-blue-200 text-blue-700 px-2.5 py-1 rounded-full font-bold text-xs">
+                        {batch.totalQtyLeads} Leads
+                      </span>
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => setSelectedBatchDetail(batch)}
+                          className="p-1.5 text-slate-400 hover:text-blue-600 transition-colors"
+                          title="Lihat Alokasi"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBatch(batch.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
+                          title="Hapus"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </DnaTd>
+                  </DnaTableRow>
+                ))
+              )}
+            </DnaTableBody>
+          </DnaTable>
+        </DnaDataTableCard>
+      )}
 
-        {/* ========================================================================= */}
-        {/* TAB 2: INBOUND LEADS & WHATSAPP ROTATION                                  */}
-        {/* ========================================================================= */}
-        <TabsContent value="leads" className="space-y-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-              <div className="relative w-full md:w-64">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <Input
-                  placeholder="Cari lead, nama, brand, no hp..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 text-xs"
-                />
-              </div>
+      {/* ========================================================================= */}
+      {/* TAB 2: INBOUND LEADS & WHATSAPP ROTATION                                  */}
+      {/* ========================================================================= */}
+      {activeTab === "leads" && (
+        <DnaDataTableCard
+          toolbarProps={{
+            searchQuery: searchQuery,
+            onSearchChange: setSearchQuery,
+            searchPlaceholder: "Cari lead, nama, brand, no HP...",
+            filterColumns: [
+              {
+                key: "status",
+                label: "Status",
+                type: "select",
+                options: ["New", "Contacted", "Qualified", "Lost"],
+              },
+              {
+                key: "traffic",
+                label: "Traffic",
+                type: "select",
+                options: filterOptions.traffics,
+              },
+            ],
+            selectedColumn: statusFilter ? "status" : trafficFilter ? "traffic" : undefined,
+            onSelectColumn: (col) => {
+              if (!col) {
+                setStatusFilter("");
+                setTrafficFilter("");
+              }
+            },
+            filterValue: statusFilter || trafficFilter,
+            onFilterValueChange: (val) => {
+              if (["New", "Contacted", "Qualified", "Lost"].includes(val)) {
+                setStatusFilter(val);
+              } else {
+                setTrafficFilter(val);
+              }
+            },
+            actionButton: {
+              label: "Ekspor CSV",
+              onClick: handleExportCSV,
+            },
+          }}
+          paginationProps={{
+            currentPage: 1,
+            totalPages: 1,
+            totalEntries: filteredLeads.length,
+            pageSize: 15,
+            onPageChange: () => {},
+          }}
+        >
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                <DnaTh className="p-3.5 w-10 text-center text-slate-400">#</DnaTh>
+                <DnaTh className="p-3.5 w-36">TANGGAL & WAKTU</DnaTh>
+                <DnaTh className="p-3.5">PROSPEK & PERUSAHAAN</DnaTh>
+                <DnaTh className="p-3.5 w-36">KONTAK WHATSAPP</DnaTh>
+                <DnaTh className="p-3.5 w-44">SUMBER & SALES</DnaTh>
+                <DnaTh className="p-3.5 w-32">STATUS</DnaTh>
+                <DnaTh className="p-3.5 w-20 text-center">AKSI</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
+              {filteredLeads.map((lead, idx) => {
+                const date = new Date(lead.timestamp);
+                const formattedDate = date.toLocaleDateString("id-ID", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                });
+                const formattedTime = date.toLocaleTimeString("id-ID", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
 
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg text-slate-600 font-bold focus:outline-none"
-              >
-                <option value="">Semua Status</option>
-                <option value="New">New</option>
-                <option value="Contacted">Contacted</option>
-                <option value="Qualified">Qualified</option>
-                <option value="Lost">Lost</option>
-              </select>
+                return (
+                  <DnaTableRow key={lead.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="p-3.5 text-center text-slate-400 tabular-nums">{idx + 1}</DnaTd>
+                    <DnaTd className="p-3.5">
+                      <div className="font-semibold text-slate-800">{formattedDate}</div>
+                      <div className="text-[11px] text-slate-400">{formattedTime} WIB</div>
+                    </DnaTd>
+                    <DnaTd className="p-3.5 cursor-pointer" onClick={() => setSelectedLeadDetail(lead)}>
+                      <div className="font-bold text-slate-900 hover:text-blue-600 transition-colors">
+                        {lead.nama || "-"}
+                      </div>
+                      <div className="text-[11px] text-slate-500">{lead.perusahaan || "Perusahaan Belum Terdaftar"}</div>
+                    </DnaTd>
+                    <DnaTd className="p-3.5">
+                      {lead.hp ? (
+                        <a
+                          href={`https://wa.me/${lead.hp.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-emerald-600 hover:underline inline-flex items-center gap-1 font-bold text-xs"
+                        >
+                          <PhoneCall className="w-3.5 h-3.5 text-emerald-500" /> {lead.hp}
+                        </a>
+                      ) : (
+                        <span className="text-slate-400">-</span>
+                      )}
+                    </DnaTd>
+                    <DnaTd className="p-3.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <DnaBadge variant="info">{lead.source || "Dreamlab"}</DnaBadge>
+                        <span className="text-[11px] text-slate-500 font-medium">({lead.trafficSource || "Direct"})</span>
+                      </div>
+                      <div className="text-[11px] text-slate-600 font-semibold mt-0.5">
+                        PIC: {lead.assignedTo || "Unassigned"}
+                      </div>
+                    </DnaTd>
+                    <DnaTd className="p-3.5">
+                      <select
+                        value={lead.status}
+                        onChange={(e) =>
+                          updateStatusMutation.mutate({ id: lead.id, status: e.target.value })
+                        }
+                        className={`text-[11px] font-bold py-1 px-2 border rounded-lg cursor-pointer ${getStatusBadgeStyle(
+                          lead.status
+                        )} focus:outline-none`}
+                      >
+                        <option value="New">New</option>
+                        <option value="Contacted">Contacted</option>
+                        <option value="Qualified">Qualified</option>
+                        <option value="Lost">Lost</option>
+                      </select>
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => setSelectedLeadDetail(lead)}
+                          className="p-1.5 text-slate-400 hover:text-blue-600 transition-colors"
+                          title="Lihat Detail"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteLead(lead.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
+                          title="Hapus Lead"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </DnaTd>
+                  </DnaTableRow>
+                );
+              })}
 
-              <select
-                value={trafficFilter}
-                onChange={(e) => setTrafficFilter(e.target.value)}
-                className="h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg text-slate-600 font-bold focus:outline-none"
-              >
-                <option value="">Semua Kanal Traffic</option>
-                {filterOptions.traffics.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
+              {filteredLeads.length === 0 && (
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="p-8 text-center text-slate-400 text-xs">
+                    {leadsLoading ? "Memuat data lead..." : "Belum ada lead masuk"}
+                  </DnaTd>
+                </DnaTableRow>
+              )}
+            </DnaTableBody>
+          </DnaTable>
+        </DnaDataTableCard>
+      )}
 
-            <div className="flex items-center gap-2 self-end md:self-auto">
-              <DnaButton
-                variant="outline"
-                onClick={handleExportCSV}
-                icon={<Download className="w-4 h-4" />}
-              >
-                Ekspor CSV
-              </DnaButton>
-              <DnaButton
-                variant="outline"
-                onClick={handleClearAllLeads}
-                icon={<Trash2 className="w-4 h-4 text-rose-500" />}
-                className="hover:border-rose-200 hover:bg-rose-50"
-              >
-                Bersihkan Data
-              </DnaButton>
-            </div>
-          </div>
-
-          <TableWrapper>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-200">
-                    <th className="p-4 text-left w-36 text-slate-500 font-bold text-[11px] uppercase tracking-wider">Tanggal</th>
-                    <th className="p-4 text-left text-slate-500 font-bold text-[11px] uppercase tracking-wider">Nama</th>
-                    <th className="p-4 text-left text-slate-500 font-bold text-[11px] uppercase tracking-wider">Brand</th>
-                    <th className="p-4 text-left w-36 text-slate-500 font-bold text-[11px] uppercase tracking-wider">No. HP</th>
-                    <th className="p-4 text-left text-slate-500 font-bold text-[11px] uppercase tracking-wider">Sumber</th>
-                    <th className="p-4 text-left text-slate-500 font-bold text-[11px] uppercase tracking-wider">Traffic</th>
-                    <th className="p-4 text-left text-slate-500 font-bold text-[11px] uppercase tracking-wider">Sales</th>
-                    <th className="p-4 text-left w-36 text-slate-500 font-bold text-[11px] uppercase tracking-wider">Status</th>
-                    <th className="p-4 text-center w-20 text-slate-500 font-bold text-[11px] uppercase tracking-wider">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredLeads.map((lead) => {
-                    const date = new Date(lead.timestamp);
-                    const formattedDate = date.toLocaleDateString("id-ID", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    });
-
-                    return (
-                      <tr key={lead.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="p-4 text-xs font-bold text-slate-700">{formattedDate}</td>
-                        <td className="p-4 text-xs font-bold text-slate-900">{lead.nama || "-"}</td>
-                        <td className="p-4 text-xs text-slate-600">{lead.perusahaan || "-"}</td>
-                        <td className="p-4 text-xs">
-                          {lead.hp ? (
-                            <a
-                              href={`https://wa.me/${lead.hp.replace(/\D/g, "")}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-emerald-600 hover:underline inline-flex items-center gap-1 font-bold"
-                            >
-                              <PhoneCall className="w-3 h-3" /> {lead.hp}
-                            </a>
-                          ) : (
-                            <span className="text-slate-400">-</span>
-                          )}
-                        </td>
-                        <td className="p-4 text-xs">
-                          <DnaBadge status="default">{lead.source || "Dreamlab"}</DnaBadge>
-                        </td>
-                        <td className="p-4 text-xs">
-                          <DnaBadge status="info">{lead.trafficSource || "Direct"}</DnaBadge>
-                        </td>
-                        <td className="p-4 text-xs font-bold text-slate-800">{lead.assignedTo || "-"}</td>
-                        <td className="p-4 text-xs">
-                          <select
-                            value={lead.status}
-                            onChange={(e) =>
-                              updateStatusMutation.mutate({ id: lead.id, status: e.target.value })
-                            }
-                            className={`text-[11px] font-bold py-1 px-2 border rounded-lg cursor-pointer ${getStatusBadgeStyle(
-                              lead.status
-                            )} focus:outline-none`}
-                          >
-                            <option value="New">New</option>
-                            <option value="Contacted">Contacted</option>
-                            <option value="Qualified">Qualified</option>
-                            <option value="Lost">Lost</option>
-                          </select>
-                        </td>
-                        <td className="p-4 text-center">
-                          <button
-                            onClick={() => handleDeleteLead(lead.id)}
-                            className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
-                            title="Hapus Lead"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-
-                  {filteredLeads.length === 0 && (
-                    <tr>
-                      <td colSpan={9} className="p-8 text-center text-slate-400 text-xs">
-                        {leadsLoading ? "Memuat data lead..." : "Belum ada lead masuk"}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </TableWrapper>
-        </TabsContent>
-
-        {/* ========================================================================= */}
-        {/* TAB 3: SALES CONFIGURATION                                                */}
-        {/* ========================================================================= */}
-        <TabsContent value="sales" className="space-y-6 max-w-4xl">
+      {/* ========================================================================= */}
+      {/* TAB 3: SALES CONFIGURATION                                                */}
+      {/* ========================================================================= */}
+      {activeTab === "sales" && (
+        <div className="space-y-6 max-w-4xl">
           <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-xl flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
             <div>
@@ -855,12 +901,14 @@ export default function CRMLeadsClient() {
               )}
             </div>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* ========================================================================= */}
-        {/* TAB 4: ROTATION STATS                                                     */}
-        {/* ========================================================================= */}
-        <TabsContent value="stats" className="space-y-6">
+      {/* ========================================================================= */}
+      {/* TAB 4: ROTATION STATS                                                     */}
+      {/* ========================================================================= */}
+      {activeTab === "stats" && (
+        <div className="space-y-6">
           {statsLoading ? (
             <div className="p-12 text-center text-xs text-slate-400">Menghitung statistik rotasi...</div>
           ) : leads.length === 0 ? (
@@ -913,8 +961,8 @@ export default function CRMLeadsClient() {
               </Card>
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* MODAL: BUAT LEADS (G-SERP ROW 104 FORM WITH DYNAMIC SUB-TABLE BASKET)      */}
@@ -938,7 +986,7 @@ export default function CRMLeadsClient() {
                   <label className="text-[11px] font-bold text-slate-600 block mb-1">
                     Tanggal Leads <span className="text-rose-500">*</span>
                   </label>
-                  <Input
+                  <DnaInput
                     type="date"
                     required
                     value={formTanggal}
@@ -948,7 +996,7 @@ export default function CRMLeadsClient() {
                 </div>
                 <div>
                   <label className="text-[11px] font-bold text-slate-600 block mb-1">Catatan</label>
-                  <Input
+                  <DnaInput
                     placeholder="Contoh: Leads Iklan TikTok Batch 1"
                     value={formCatatan}
                     onChange={(e) => setFormCatatan(e.target.value)}
@@ -993,7 +1041,7 @@ export default function CRMLeadsClient() {
                         </select>
                       </div>
                       <div className="col-span-4">
-                        <Input
+                        <DnaInput
                           type="number"
                           min="1"
                           required
@@ -1042,76 +1090,153 @@ export default function CRMLeadsClient() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL: DETAIL ALOKASI LEADS                                               */}
+      {/* DRAWER 1: DETAIL ALOKASI BATCH LEADS                                       */}
       {/* ========================================================================= */}
-      {selectedBatchDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150">
-            <div className="flex items-center justify-between border-b pb-3">
+      <DnaDetailDrawer
+        isOpen={!!selectedBatchDetail}
+        onClose={() => setSelectedBatchDetail(null)}
+        title="Detail Distribusi Leads"
+        subtitle={selectedBatchDetail?.id}
+        badge={selectedBatchDetail ? `${selectedBatchDetail.totalQtyLeads} Leads` : undefined}
+        badgeVariant="primary"
+        actions={
+          <DnaButton variant="outline" onClick={() => setSelectedBatchDetail(null)}>
+            Tutup
+          </DnaButton>
+        }
+      >
+        {selectedBatchDetail && (
+          <div className="space-y-5">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
               <div>
-                <h3 className="font-bold text-slate-800 text-base">Detail Distribusi Leads</h3>
-                <p className="text-xs text-slate-500 mt-0.5">{selectedBatchDetail.id}</p>
-              </div>
-              <button
-                onClick={() => setSelectedBatchDetail(null)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div>
-                <span className="text-slate-400 block font-medium">Tanggal Leads:</span>
-                <span className="font-bold text-slate-800">{selectedBatchDetail.tanggalLeads}</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Tanggal Leads</span>
+                <span className="text-sm font-bold text-slate-800">{selectedBatchDetail.tanggalLeads}</span>
               </div>
               <div>
-                <span className="text-slate-400 block font-medium">Total Qty Leads:</span>
-                <span className="font-bold text-blue-600">{selectedBatchDetail.totalQtyLeads} Leads</span>
-              </div>
-              <div className="col-span-2">
-                <span className="text-slate-400 block font-medium">Catatan:</span>
-                <span className="text-slate-700">{selectedBatchDetail.catatan}</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Catatan Distribusi</span>
+                <span className="text-xs text-slate-700">{selectedBatchDetail.catatan}</span>
               </div>
             </div>
 
-            <div className="border border-slate-200 rounded-xl overflow-hidden mt-4">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
-                  <tr>
-                    <th className="p-3">#</th>
-                    <th className="p-3">Penerima Leads</th>
-                    <th className="p-3 text-center">Qty Leads</th>
-                    <th className="p-3 text-center">Alokasi (%)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {selectedBatchDetail.items.map((item, idx) => {
-                    const pct = Math.round((item.qty / selectedBatchDetail.totalQtyLeads) * 100);
-                    return (
-                      <tr key={idx}>
-                        <td className="p-3 text-slate-400">{idx + 1}</td>
-                        <td className="p-3 font-bold text-slate-800">{item.penerima}</td>
-                        <td className="p-3 text-center font-bold text-slate-700">{item.qty}</td>
-                        <td className="p-3 text-center font-bold text-blue-600">{pct}%</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <DnaButton
-                variant="outline"
-                onClick={() => setSelectedBatchDetail(null)}
-              >
-                Tutup
-              </DnaButton>
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Rincian Penerima Leads</h4>
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="p-3">#</DnaTh>
+                      <DnaTh className="p-3">Penerima Leads</DnaTh>
+                      <DnaTh className="p-3 text-center">Qty</DnaTh>
+                      <DnaTh className="p-3 text-center">Porsi (%)</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
+                    {selectedBatchDetail.items.map((item, idx) => {
+                      const pct = Math.round((item.qty / selectedBatchDetail.totalQtyLeads) * 100);
+                      return (
+                        <DnaTableRow key={idx}>
+                          <DnaTd className="p-3 text-slate-400">{idx + 1}</DnaTd>
+                          <DnaTd className="p-3 font-bold text-slate-800">{item.penerima}</DnaTd>
+                          <DnaTd className="p-3 text-center font-bold text-slate-700">{item.qty}</DnaTd>
+                          <DnaTd className="p-3 text-center font-bold text-blue-600">{pct}%</DnaTd>
+                        </DnaTableRow>
+                      );
+                    })}
+                  </DnaTableBody>
+                </DnaTable>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </DnaDetailDrawer>
+
+      {/* ========================================================================= */}
+      {/* DRAWER 2: DETAIL PROSPEK INBOUND LEAD                                      */}
+      {/* ========================================================================= */}
+      <DnaDetailDrawer
+        isOpen={!!selectedLeadDetail}
+        onClose={() => setSelectedLeadDetail(null)}
+        title={selectedLeadDetail?.nama || "Detail Lead Inbound"}
+        subtitle={selectedLeadDetail?.perusahaan || "Perusahaan Belum Terdaftar"}
+        badge={selectedLeadDetail?.status}
+        badgeVariant={
+          selectedLeadDetail?.status === "Qualified" || selectedLeadDetail?.status === "WON"
+            ? "success"
+            : selectedLeadDetail?.status === "Contacted"
+            ? "warning"
+            : "neutral"
+        }
+        actions={
+          <>
+            {selectedLeadDetail?.hp && (
+              <a
+                href={`https://wa.me/${selectedLeadDetail.hp.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1.5 shadow-sm transition-colors"
+              >
+                <PhoneCall className="w-3.5 h-3.5" /> Hubungi via WhatsApp
+              </a>
+            )}
+            <DnaButton variant="outline" onClick={() => setSelectedLeadDetail(null)}>
+              Tutup
+            </DnaButton>
+          </>
+        }
+      >
+        {selectedLeadDetail && (
+          <div className="space-y-5 text-xs">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Waktu Masuk</span>
+                  <span className="font-semibold text-slate-800">
+                    {new Date(selectedLeadDetail.timestamp).toLocaleString("id-ID")}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Status Saat Ini</span>
+                  <span className="font-bold text-slate-900">{selectedLeadDetail.status}</span>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Nomor WhatsApp</span>
+                <span className="font-bold text-emerald-600 tabular-nums text-sm">{selectedLeadDetail.hp || "-"}</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Atribut Landing Page & Traffic</h4>
+              <div className="grid grid-cols-2 gap-3 border border-slate-200 p-3.5 rounded-xl">
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Kanal Traffic</span>
+                  <span className="font-bold text-slate-800">{selectedLeadDetail.trafficSource || "Direct"}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Sumber Brand</span>
+                  <span className="font-bold text-slate-800">{selectedLeadDetail.source || "Dreamlab"}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Produk Peminatan</span>
+                  <span className="font-bold text-blue-600">{selectedLeadDetail.produk || "Formulasi Kosmetik"}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Sales Bertugas</span>
+                  <span className="font-bold text-slate-800">{selectedLeadDetail.assignedTo || "Unassigned"}</span>
+                </div>
+              </div>
+            </div>
+
+            {selectedLeadDetail.pageUrl && (
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">URL Landing Page</span>
+                <span className="text-slate-600 break-all text-[11px] tabular-nums">{selectedLeadDetail.pageUrl}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </DnaDetailDrawer>
     </div>
   );
 }

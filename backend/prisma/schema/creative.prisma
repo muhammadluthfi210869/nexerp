@@ -47,7 +47,8 @@ model DesignVersion {
   createdAt  DateTime @default(now())
   uploadedBy String?  @db.Uuid
 
-  task DesignTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  task      DesignTask       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  feedbacks DesignFeedback[]
 
   @@map("design_versions")
 }
@@ -62,6 +63,11 @@ model DesignFeedback {
   content        String?
   approvalStatus ApprovalStatus?
 
+  // BUS-RULE-110: the artwork version this decision was made ON. A stored fact,
+  // never inferred from "whichever version happened to be latest at the time".
+  versionId String?        @db.Uuid
+  version   DesignVersion? @relation(fields: [versionId], references: [id], onDelete: SetNull)
+
   // Legal E-Signature (PIN verification meta)
   signatureHash String? // Hash of the PIN + Meta
   ipAddress     String?
@@ -70,5 +76,6 @@ model DesignFeedback {
 
   task DesignTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
+  @@index([versionId])
   @@map("design_feedbacks")
 }

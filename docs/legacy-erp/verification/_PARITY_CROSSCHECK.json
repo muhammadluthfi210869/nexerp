@@ -1,0 +1,22 @@
+{
+ "generated_at": "2026-09-26T10:15:46.140Z",
+ "called_strings": 456,
+ "renamed": {
+  "total": 49,
+  "target_called": 27,
+  "target_missed": 22
+ },
+ "unwired": {
+  "total": 45,
+  "exact": 21,
+  "suffix": 2,
+  "missed": 22
+ },
+ "absent": 26,
+ "out_of_scope": 1,
+ "corrected": {
+  "really_unwired": 44,
+  "backend_missing": 27,
+  "overstated_by": 50
+ }
+}

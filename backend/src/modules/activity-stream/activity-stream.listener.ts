@@ -20,6 +20,7 @@ export class ActivityStreamListener {
     try {
       // 1. Persist to Database
       const log = await this.service.createLog(event);
+      if (!log) return;
 
       // 2. Push to WebSockets (Real-time HUD)
       this.gateway.broadcastLog(log);

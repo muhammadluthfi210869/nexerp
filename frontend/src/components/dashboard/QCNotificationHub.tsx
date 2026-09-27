@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   FlaskConical,
-  AlertCircle,
-  Bell,
   CheckCircle2,
   ChevronRight,
   ShieldAlert,
@@ -74,14 +72,10 @@ function playSound(soundUrl?: string) {
 
 export function QCNotificationHub() {
   const [notifications, setNotifications] = useState<QCEvent[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const eventSource = new EventSource(
-      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/events/qc`
-    );
-
-    eventSource.onopen = () => setIsConnected(true);
+    const sseUrl = typeof window !== 'undefined' ? '/api/events/qc' : `${process.env.NEXT_PUBLIC_API_URL ?? "http://backend:3001/v1"}/events/qc`;
+    const eventSource = new EventSource(sseUrl);
 
     const supportedTypes = new Set(Object.keys(eventConfig));
 
@@ -110,7 +104,6 @@ export function QCNotificationHub() {
     }
 
     eventSource.onerror = () => {
-      setIsConnected(false);
       eventSource.close();
     };
 

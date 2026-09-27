@@ -3,7 +3,21 @@
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, BarChart3, DollarSign, Eye, MousePointerClick, Plus, Users } from "lucide-react";
-import { DnaButton, DnaDrawer, DnaInput, DnaKpiGrid, DnaPageContainer, DnaPageHeader, DnaTextarea } from "@/components/dna";
+import {
+  DnaButton,
+  DnaDrawer,
+  DnaInput,
+  DnaKpiGrid,
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaTextarea,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import { extractApiError } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { MarketingBrand, useMarketingBrands, useMarketingReports, useUpsertChannelMetric } from "@/hooks/useCanonicalMarketing";
@@ -22,7 +36,7 @@ export function MarketingReporting() {
     {message&&<div aria-live="polite" className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">{message}</div>}
     <DnaKpiGrid items={[{label:"TOTAL REACH",value:format(total.reach),subtext:"Akumulasi hasil filter",icon:Users,variant:"blue"},{label:"VIEWS",value:format(total.views),subtext:"Raw fact",icon:Eye,variant:"purple"},{label:"LEADS",value:format(total.leads),subtext:"Attribution tercatat",icon:MousePointerClick,variant:"amber"},{label:"ROAS",value:total.spend?`${(total.revenue/total.spend).toFixed(2)}×`:"—",subtext:`Spend ${money(total.spend)}`,icon:DollarSign,variant:"emerald"}]}/>
     <section className="rounded-xl border border-slate-200 bg-white shadow-sm"><div className="grid gap-3 border-b border-slate-100 p-4 sm:grid-cols-2"><select aria-label="Filter brand" value={brandId} onChange={e=>setBrandId(e.target.value)} className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm"><option value="">Semua brand</option>{brands.data?.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select><DnaInput aria-label="Filter channel" value={channel} onChange={e=>setChannel(e.target.value)} placeholder="Channel, contoh Instagram"/></div>
-      {reports.isLoading?<div className="space-y-2 p-4">{Array.from({length:5}).map((_,i)=><div key={i} className="h-14 animate-pulse rounded bg-slate-100"/>)}</div>:reports.isError?<State text="Reporting gagal dimuat." action={<DnaButton variant="outline" onClick={()=>reports.refetch()}>Coba lagi</DnaButton>}/>:metrics.length===0?<State text="Belum ada metrik terverifikasi untuk filter ini." action={canWrite?<DnaButton variant="primary" onClick={()=>setOpen(true)}>Input metrik</DnaButton>:undefined}/>:<div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-50 text-[11px] uppercase text-slate-500"><tr>{["Channel","Periode","Source","Reach","Views","Leads","CPL","ROAS"].map(h=><th key={h} className="px-4 py-3">{h}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{metrics.map((m:any)=><tr key={m.id}><td className="px-4 py-3 font-bold">{m.channel}</td><td className="px-4 py-3">{new Date(m.periodStart).toLocaleDateString("id-ID")} – {new Date(m.periodEnd).toLocaleDateString("id-ID")}</td><td className="px-4 py-3">{m.source}</td><td className="px-4 py-3 tabular-nums">{format(number(m.reach))}</td><td className="px-4 py-3 tabular-nums">{format(number(m.views))}</td><td className="px-4 py-3 tabular-nums">{format(number(m.leads))}</td><td className="px-4 py-3">{m.cpl==null?"—":money(number(m.cpl))}</td><td className="px-4 py-3">{m.roas==null?"—":`${number(m.roas).toFixed(2)}×`}</td></tr>)}</tbody></table></div>}</section>
+      {reports.isLoading?<div className="space-y-2 p-4">{Array.from({length:5}).map((_,i)=><div key={i} className="h-14 animate-pulse rounded bg-slate-100"/>)}</div>:reports.isError?<State text="Reporting gagal dimuat." action={<DnaButton variant="outline" onClick={()=>reports.refetch()}>Coba lagi</DnaButton>}/>:metrics.length===0?<State text="Belum ada metrik terverifikasi untuk filter ini." action={canWrite?<DnaButton variant="primary" onClick={()=>setOpen(true)}>Input metrik</DnaButton>:undefined}/>:<div className="overflow-x-auto"><DnaTable><DnaTableHead><DnaTableRow>{["Channel","Periode","Source","Reach","Views","Leads","CPL","ROAS"].map(h=><DnaTh key={h} className="px-4 py-3">{h}</DnaTh>)}</DnaTableRow></DnaTableHead><DnaTableBody>{metrics.map((m:any)=><DnaTableRow key={m.id}><DnaTd className="px-4 py-3 font-bold">{m.channel}</DnaTd><DnaTd className="px-4 py-3">{new Date(m.periodStart).toLocaleDateString("id-ID")} – {new Date(m.periodEnd).toLocaleDateString("id-ID")}</DnaTd><DnaTd className="px-4 py-3">{m.source}</DnaTd><DnaTd className="px-4 py-3 tabular-nums">{format(number(m.reach))}</DnaTd><DnaTd className="px-4 py-3 tabular-nums">{format(number(m.views))}</DnaTd><DnaTd className="px-4 py-3 tabular-nums">{format(number(m.leads))}</DnaTd><DnaTd className="px-4 py-3">{m.cpl==null?"—":money(number(m.cpl))}</DnaTd><DnaTd className="px-4 py-3">{m.roas==null?"—":`${number(m.roas).toFixed(2)}×`}</DnaTd></DnaTableRow>)}</DnaTableBody></DnaTable></div>}</section>
     <MetricModal open={open} onClose={()=>setOpen(false)} brands={brands.data??[]} saving={save.isPending} onSave={async data=>{try{await save.mutateAsync(data);setOpen(false);setMessage("Metrik berhasil disimpan dan agregat dihitung ulang oleh server.")}catch(e){setMessage(extractApiError(e).message)}}}/>
   </DnaPageContainer>
 }

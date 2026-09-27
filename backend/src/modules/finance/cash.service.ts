@@ -8,7 +8,7 @@ import {
   CashDisburseCategory,
   CashReceiveCategory,
 } from './dto/cash.dto';
-import { PeriodStatus } from '@prisma/client';
+import { PeriodStatus, AccountType } from '@prisma/client';
 
 @Injectable()
 export class CashService {
@@ -235,6 +235,31 @@ export class CashService {
               description: `DP Penjualan: ${dto.entityName}`,
             },
           });
+        }
+      }
+
+      if (dto.category === CashReceiveCategory.DP_LEGALITAS) {
+        if (creditAccount.type !== AccountType.LIABILITY) {
+          throw new BadRequestException(
+            'DP Legalitas wajib dikreditkan ke akun kewajiban Client Escrow (Liability), bukan Pendapatan. [BUS-RULE-060]',
+          );
+        }
+        if (dto.referenceId) {
+          const cust = await tx.customer.findUnique({
+            where: { id: dto.referenceId },
+          });
+          if (cust) {
+            await tx.clientEscrow.create({
+              data: {
+                customerId: cust.id,
+                amount: dto.amount,
+                depositDate: entryDate,
+                status: 'HELD',
+                purpose: 'DP Legalitas / HKI / BPOM',
+                notes: dto.notes,
+              },
+            });
+          }
         }
       }
 

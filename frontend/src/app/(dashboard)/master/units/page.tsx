@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Ruler,
   Plus,
   Edit3,
   Power,
+  Eye,
   Type,
+  FileSpreadsheet,
+  Layers,
 } from "lucide-react";
 import {
   DnaPageHeader,
@@ -15,18 +18,21 @@ import {
   DnaButton,
   DnaDataTableCard,
   DnaTable,
-  DnaTableHead,
-  DNA_TABLE_CLASSES,
   DnaCell,
   DnaModal,
+  DnaDetailDrawer,
   DnaInput,
   DnaTextarea,
   useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
-import { cn } from "@/lib/utils";
 
 interface Unit {
   id: string;
@@ -48,10 +54,13 @@ const EMPTY_FORM: UnitForm = { code: "", name: "", symbol: "", description: "" }
 
 export default function MasterUnitsPage() {
   const queryClient = useQueryClient();
-  const { showToast } = useDnaToast();
+  const { success, error } = useDnaToast();
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<UnitForm>(EMPTY_FORM);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
 
   const {
     data: units,
@@ -78,12 +87,12 @@ export default function MasterUnitsPage() {
       return res.data;
     },
     onSuccess: (_data, variables) => {
-      showToast({ type: "success", title: "Satuan Ditambahkan", message: `${variables.code} berhasil disimpan.` });
+      success(`Satuan ${variables.code} berhasil disimpan.`);
       queryClient.invalidateQueries({ queryKey: ["units"] });
       closeModal();
     },
     onError: (err: any) => {
-      showToast({ type: "error", title: "Gagal", message: err.response?.data?.message || "Tidak bisa menambah satuan." });
+      error(err.response?.data?.message || "Tidak bisa menambah satuan.");
     },
   });
 
@@ -98,9 +107,12 @@ export default function MasterUnitsPage() {
       return res.data;
     },
     onSuccess: () => {
-      showToast({ type: "success", title: "Satuan Diperbarui", message: `Perubahan berhasil disimpan.` });
+      success(`Perubahan satuan berhasil disimpan.`);
       queryClient.invalidateQueries({ queryKey: ["units"] });
       closeModal();
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || "Gagal memperbarui satuan.");
     },
   });
 
@@ -110,8 +122,11 @@ export default function MasterUnitsPage() {
       return res.data;
     },
     onSuccess: () => {
-      showToast({ type: "warning", title: "Status Diubah", message: "Satuan dinonaktifkan." });
+      success("Status satuan berhasil diperbarui.");
       queryClient.invalidateQueries({ queryKey: ["units"] });
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || "Gagal mengubah status satuan.");
     },
   });
 
@@ -140,7 +155,7 @@ export default function MasterUnitsPage() {
 
   function handleSubmit() {
     if (!form.code.trim() || !form.name.trim()) {
-      showToast({ type: "error", title: "Validasi Gagal", message: "Kode dan nama satuan wajib diisi." });
+      error("Kode dan nama satuan wajib diisi.");
       return;
     }
     if (editingId) {
@@ -150,6 +165,19 @@ export default function MasterUnitsPage() {
     }
   }
 
+  const filteredUnits = useMemo(() => {
+    if (!units) return [];
+    if (!searchQuery.trim()) return units;
+    const q = searchQuery.toLowerCase();
+    return units.filter(
+      (u) =>
+        u.code.toLowerCase().includes(q) ||
+        u.name.toLowerCase().includes(q) ||
+        (u.symbol && u.symbol.toLowerCase().includes(q)) ||
+        (u.description && u.description.toLowerCase().includes(q))
+    );
+  }, [units, searchQuery]);
+
   const total = units?.length || 0;
   const active = units?.filter((u) => u.isActive).length || 0;
 
@@ -157,7 +185,7 @@ export default function MasterUnitsPage() {
     <div className="space-y-6 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
       <DnaPageHeader
         title="MASTER SATUAN (UoM)"
-        badge={<DnaBadge status="info">MASTER DATA</DnaBadge>}
+        badge={<DnaBadge variant="info">MASTER DATA</DnaBadge>}
         subtitle="Konfigurasi unit of measure (PCS, KG, GR, ML, L, dll) yang dipakai di seluruh transaksi inventory, produksi, dan pembelian."
         breadcrumbItems={[
           { label: "Master", href: "/master" },
@@ -166,7 +194,7 @@ export default function MasterUnitsPage() {
         actions={
           <DnaButton variant="primary" onClick={openCreate} className="flex items-center gap-1.5">
             <Plus className="w-3.5 h-3.5" />
-            <span>+ Tambah Satuan</span>
+            <span>Tambah Satuan</span>
           </DnaButton>
         }
       />
@@ -178,113 +206,225 @@ export default function MasterUnitsPage() {
       </div>
 
       <DnaDataTableCard
-        title="DAFTAR SATUAN UKUR"
-        count={total}
-        badge={<DnaBadge status="neutral">UoM MASTER</DnaBadge>}
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari kode, nama satuan, simbol, atau deskripsi...",
+          actionButton: {
+            label: "Tambah Satuan",
+            onClick: openCreate,
+          },
+        }}
       >
-        <DnaTable>
-          <DnaTableHead>
-            <tr>
-              <th className={cn(DNA_TABLE_CLASSES.th, "w-12 text-center")}>#</th>
-              <th className={DNA_TABLE_CLASSES.th}>Kode</th>
-              <th className={DNA_TABLE_CLASSES.th}>Nama Satuan</th>
-              <th className={cn(DNA_TABLE_CLASSES.th, "text-center")}>Simbol</th>
-              <th className={DNA_TABLE_CLASSES.th}>Deskripsi</th>
-              <th className={cn(DNA_TABLE_CLASSES.th, "text-center")}>Status</th>
-              <th className={cn(DNA_TABLE_CLASSES.th, "text-center w-32")}>Aksi</th>
-            </tr>
-          </DnaTableHead>
-          <tbody className={DNA_TABLE_CLASSES.tbody}>
-            {isLoading ? (
-              <tr>
-                <td colSpan={7} className="p-6 text-center text-xs text-slate-400">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                    <span>Memuat data satuan...</span>
-                  </div>
-                </td>
-              </tr>
-            ) : isError ? (
-              <tr>
-                <td colSpan={7} className="p-6 text-center text-xs text-rose-500">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <span>Gagal memuat data satuan: {(unitsError as any)?.message || "Terjadi kesalahan"}</span>
-                    <button
-                      type="button"
-                      onClick={() => refetch()}
-                      className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors inline-block"
-                    >
-                      Coba Lagi
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ) : !units || units.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="p-6 text-center text-xs text-slate-400">
-                  Belum ada satuan. Klik "Tambah Satuan" untuk membuat.
-                </td>
-              </tr>
-            ) : (
-              units?.map((u, idx) => (
-              <tr key={u.id} className={DNA_TABLE_CLASSES.tr}>
-                <td className={cn(DNA_TABLE_CLASSES.td, "text-center font-mono text-slate-400")}>
-                  {idx + 1}
-                </td>
-                <td className={DNA_TABLE_CLASSES.td}>
-                  <DnaCell.Code value={u.code} />
-                </td>
-                <td className={DNA_TABLE_CLASSES.td}>
-                  <DnaCell.Text primary={u.name} />
-                </td>
-                <td className={cn(DNA_TABLE_CLASSES.td, "text-center")}>
-                  {u.symbol ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 font-mono text-[11px]">
-                      <Type className="w-3 h-3" /> {u.symbol}
-                    </span>
-                  ) : (
-                    <span className="text-slate-300">—</span>
-                  )}
-                </td>
-                <td className={cn(DNA_TABLE_CLASSES.td, "text-xs text-slate-600")}>
-                  {u.description || <span className="text-slate-300">—</span>}
-                </td>
-                <td className={cn(DNA_TABLE_CLASSES.td, "text-center")}>
-                  <DnaBadge status={u.isActive ? "success" : "neutral"}>
-                    {u.isActive ? "AKTIF" : "NON-AKTIF"}
-                  </DnaBadge>
-                </td>
-                <td className={cn(DNA_TABLE_CLASSES.td, "text-center")}>
-                  <div className="flex items-center justify-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(u)}
-                      className="p-1 text-slate-500 hover:text-blue-600 rounded transition-colors"
-                      title="Sunting"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm(`Nonaktifkan satuan "${u.code}"?`)) {
-                          toggleMutation.mutate(u.id);
-                        }
-                      }}
-                      className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
-                      title="Nonaktifkan"
-                      disabled={!u.isActive}
-                    >
-                      <Power className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))
-          )}
-          </tbody>
-        </DnaTable>
+        <div className="overflow-x-auto">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-slate-600 text-[11px] font-bold tracking-wider uppercase select-none">
+                <DnaTh className="px-3.5 py-2.5 w-12 text-center text-slate-400">#</DnaTh>
+                <DnaTh className="px-3.5 py-2.5 w-[130px]">Kode Satuan</DnaTh>
+                <DnaTh className="px-3.5 py-2.5 w-[110px]">Simbol</DnaTh>
+                <DnaTh className="px-3.5 py-2.5">Nama Lengkap</DnaTh>
+                <DnaTh className="px-3.5 py-2.5">Deskripsi</DnaTh>
+                <DnaTh className="px-3.5 py-2.5 text-center w-[120px]">Status</DnaTh>
+                <DnaTh className="px-3.5 py-2.5 text-center w-[120px] whitespace-nowrap">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
+              {isLoading ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="px-3.5 py-8 text-center text-xs text-slate-400">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      <span>Memuat data satuan...</span>
+                    </div>
+                  </DnaTd>
+                </DnaTableRow>
+              ) : isError ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="px-3.5 py-8 text-center text-xs text-rose-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <span>Gagal memuat data satuan: {(unitsError as any)?.message || "Terjadi kesalahan"}</span>
+                      <button
+                        type="button"
+                        onClick={() => refetch()}
+                        className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium rounded-md border border-rose-200 transition-colors inline-block"
+                      >
+                        Coba Lagi
+                      </button>
+                    </div>
+                  </DnaTd>
+                </DnaTableRow>
+              ) : filteredUnits.length === 0 ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="px-3.5 py-8 text-center text-xs text-slate-400">
+                    Belum ada satuan yang sesuai filter.
+                  </DnaTd>
+                </DnaTableRow>
+              ) : (
+                filteredUnits.map((u, idx) => (
+                  <DnaTableRow
+                    key={u.id}
+                    className="h-[48px] hover:bg-slate-50/80 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setSelectedUnit(u);
+                      setIsDetailDrawerOpen(true);
+                    }}
+                  >
+                    <DnaTd className="px-3.5 py-2.5 text-center tabular-nums text-slate-400 text-[11px] tabular-nums">
+                      {idx + 1}
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5">
+                      <DnaCell.Code>{u.code}</DnaCell.Code>
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5">
+                      <DnaCell.Text className="tabular-nums text-[11.5px] text-slate-600 font-semibold">
+                        {u.symbol || "-"}
+                      </DnaCell.Text>
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5">
+                      <DnaCell.Text className="font-semibold text-slate-900">{u.name}</DnaCell.Text>
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5">
+                      <DnaCell.Text className="text-slate-600">
+                        {u.description || <span className="text-slate-300">-</span>}
+                      </DnaCell.Text>
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5 text-center">
+                      <DnaBadge variant={u.isActive ? "success" : "neutral"}>
+                        {u.isActive ? "AKTIF" : "NON-AKTIF"}
+                      </DnaBadge>
+                    </DnaTd>
+                    <DnaTd className="px-3.5 py-2.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-1">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
+                          onClick={() => {
+                            setSelectedUnit(u);
+                            setIsDetailDrawerOpen(true);
+                          }}
+                          title="Lihat Detail Satuan"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </DnaButton>
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
+                          onClick={() => openEdit(u)}
+                          title="Sunting Satuan"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </DnaButton>
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          className={`h-7 w-7 p-0 ${u.isActive ? "text-slate-400 hover:text-rose-600" : "text-emerald-500 hover:text-emerald-700"}`}
+                          onClick={() => toggleMutation.mutate(u.id)}
+                          title={u.isActive ? "Nonaktifkan" : "Aktifkan"}
+                        >
+                          <Power className="w-3.5 h-3.5" />
+                        </DnaButton>
+                      </div>
+                    </DnaTd>
+                  </DnaTableRow>
+                ))
+              )}
+            </DnaTableBody>
+          </DnaTable>
+        </div>
       </DnaDataTableCard>
+
+      {/* ── DETAIL DRAWER SATUAN (Golden Rule 5) ── */}
+      <DnaDetailDrawer
+        isOpen={isDetailDrawerOpen}
+        onClose={() => setIsDetailDrawerOpen(false)}
+        title={selectedUnit ? `${selectedUnit.code} — ${selectedUnit.name}` : "Detail Satuan"}
+        subtitle={`Simbol: ${selectedUnit?.symbol || "-"} • Status: ${selectedUnit?.isActive ? "Aktif" : "Non-Aktif"}`}
+        badge={
+          selectedUnit?.isActive ? (
+            <DnaBadge variant="success">SATUAN AKTIF</DnaBadge>
+          ) : (
+            <DnaBadge variant="neutral">NON-AKTIF</DnaBadge>
+          )
+        }
+        tabs={[
+          {
+            id: "specs",
+            label: "Detail & Konfigurasi",
+            content: selectedUnit ? (
+              <div className="space-y-4 text-xs">
+                <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Kode Singkat Satuan</span>
+                    <span className="tabular-nums font-bold text-blue-600 text-sm">{selectedUnit.code}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Simbol Representasi</span>
+                    <span className="tabular-nums font-semibold text-slate-800 text-sm">
+                      {selectedUnit.symbol || "-"}
+                    </span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-slate-500 block text-[11px]">Nama Satuan Lengkap</span>
+                    <span className="font-bold text-slate-900 text-sm">{selectedUnit.name}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-slate-500 block text-[11px]">Keterangan Penggunaan</span>
+                    <span className="text-slate-700">
+                      {selectedUnit.description || "Tidak ada keterangan penggunaan khusus."}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <span className="font-bold text-slate-900 block">Pemakaian di Master Barang</span>
+                      <span className="text-slate-500 text-[11px]">Bahan Baku, Kemasan, Barang Jadi & Ruahan</span>
+                    </div>
+                  </div>
+                  <DnaBadge variant="info">Multi-Modul</DnaBadge>
+                </div>
+              </div>
+            ) : null,
+          },
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              icon={<FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />}
+              onClick={() => {
+                success(`Daftar pemetaan satuan ${selectedUnit?.code} diekspor.`);
+              }}
+            >
+              Export Pemetaan
+            </DnaButton>
+            <div className="flex items-center gap-2">
+              <DnaButton
+                variant="secondary"
+                size="sm"
+                icon={<Edit3 className="w-3.5 h-3.5" />}
+                onClick={() => {
+                  if (selectedUnit) {
+                    setIsDetailDrawerOpen(false);
+                    openEdit(selectedUnit);
+                  }
+                }}
+              >
+                Sunting Satuan
+              </DnaButton>
+              <DnaButton variant="primary" size="sm" onClick={() => setIsDetailDrawerOpen(false)}>
+                Selesai
+              </DnaButton>
+            </div>
+          </div>
+        }
+      />
 
       <DnaModal
         isOpen={isOpen}

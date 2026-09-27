@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { 
   Table, 
   TableBody, 
@@ -8,34 +8,21 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
+} from "@/components/dna";
 import { 
   Dialog,
   DialogContent,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/components/dna";
+import { Button } from "@/components/dna";
+import { Input } from "@/components/dna";
+import { Label } from "@/components/dna";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Edit2, Trash2, Search, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { formatCurrency, formatNumber } from "@/lib/utils";
-
-const DUMMY_ADS_LOGS = [
-  { id: "ads-1", date: "2026-07-05", platform: "META_ADS", campaignName: "Skincare Retargeting", spend: 4850000, impressions: 124000, clicks: 3820, reach: 76800, leadsGenerated: 41, isAudited: false },
-  { id: "ads-2", date: "2026-07-05", platform: "TIKTOK_ADS", campaignName: "UGC Boost Serum", spend: 3650000, impressions: 98200, clicks: 2944, reach: 61200, leadsGenerated: 26, isAudited: true },
-  { id: "ads-3", date: "2026-07-04", platform: "GOOGLE_ADS", campaignName: "Maklon Intent Search", spend: 5280000, impressions: 41600, clicks: 1980, reach: 28900, leadsGenerated: 37, isAudited: true },
-  { id: "ads-4", date: "2026-07-04", platform: "FB_ADS", campaignName: "Packaging Awareness", spend: 2140000, impressions: 64200, clicks: 1210, reach: 40300, leadsGenerated: 9, isAudited: false },
-];
-
-const DUMMY_ORGANIC_LOGS = [
-  { id: "org-1", weekNumber: 27, year: 2026, platform: "IG_ORGANIC", totalFollowers: 98420, totalReach: 214000, postsCount: 9, followerGrowth: 1180, unfollows: 102 },
-  { id: "org-2", weekNumber: 27, year: 2026, platform: "TIKTOK_ORGANIC", totalFollowers: 43010, totalReach: 198500, postsCount: 7, followerGrowth: 840, unfollows: 146 },
-  { id: "org-3", weekNumber: 27, year: 2026, platform: "FB_ORGANIC", totalFollowers: 24110, totalReach: 86400, postsCount: 4, followerGrowth: 210, unfollows: 38 },
-];
 
 function redShadowClass(active: boolean) {
   return active
@@ -49,32 +36,34 @@ export function MarketingLogManager() {
   const [search, setSearch] = useState("");
 
   // Queries
-  const { data: adsLogs, isLoading: loadingAds } = useQuery({
+  const { data: adsLogs = [], isLoading: loadingAds } = useQuery({
     queryKey: ["marketing-logs-ads"],
     queryFn: async () => {
       try {
         const res = await api.get("/marketing/logs/ads");
-        return Array.isArray(res.data) && res.data.length ? res.data : DUMMY_ADS_LOGS;
+        const list = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+        return Array.isArray(list) ? list : [];
       } catch {
-        return DUMMY_ADS_LOGS;
+        return [];
       }
     }
   });
 
-  const { data: organicLogs, isLoading: loadingOrganic } = useQuery({
+  const { data: organicLogs = [], isLoading: loadingOrganic } = useQuery({
     queryKey: ["marketing-logs-organic"],
     queryFn: async () => {
       try {
         const res = await api.get("/marketing/logs/organic");
-        return Array.isArray(res.data) && res.data.length ? res.data : DUMMY_ORGANIC_LOGS;
+        const list = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+        return Array.isArray(list) ? list : [];
       } catch {
-        return DUMMY_ORGANIC_LOGS;
+        return [];
       }
     }
   });
 
-  const activeAdsLogs = adsLogs || DUMMY_ADS_LOGS;
-  const activeOrganicLogs = organicLogs || DUMMY_ORGANIC_LOGS;
+  const activeAdsLogs = adsLogs;
+  const activeOrganicLogs = organicLogs;
   const pendingAuditCount = activeAdsLogs.filter((item: any) => !item.isAudited).length;
   const avgCpl = Math.round(
     activeAdsLogs.reduce((sum: number, item: any) => sum + (item.leadsGenerated > 0 ? Number(item.spend) / Number(item.leadsGenerated) : 0), 0) /
@@ -213,60 +202,68 @@ function AdsTable({ data, isLoading, onDelete }: { data: any[], isLoading: boole
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data?.map((item) => (
-            <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
-              <TableCell className="text-xs font-bold text-slate-600 py-4 pl-8">
-                {item.date ? format(new Date(item.date), "dd MMM yyyy") : "No Date"}
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-col">
-                  <span className="text-xs font-black text-slate-900 uppercase tracking-tight">{item.platform}</span>
-                  <span className="text-[10px] text-slate-400 font-bold">{item.campaignName || "General"}</span>
-                </div>
-              </TableCell>
-              <TableCell className="text-xs font-black text-slate-900">{formatCurrency(Number(item.spend))}</TableCell>
-              <TableCell className="text-xs font-black text-blue-600 text-center">{item.leadsGenerated}</TableCell>
-              <TableCell className="text-center">
-                <div className="flex flex-col items-center gap-1">
-                   <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase ${item.isAudited ? "bg-emerald-100 text-emerald-600" : "bg-orange-100 text-orange-600"}`}>
-                     {item.isAudited ? "Verified" : "Pending"}
-                   </span>
-                   {isAuditor && !item.isAudited && (
-                      <button 
-                        onClick={() => auditAds.mutate({ id: item.id, isAudited: true })}
-                        className="text-[8px] font-black text-blue-600 uppercase hover:underline"
-                      >
-                        Verify Now
-                      </button>
-                   )}
-                </div>
-              </TableCell>
-              <TableCell className="text-right pr-8">
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="w-8 h-8 rounded-lg hover:bg-blue-50 hover:text-blue-600"
-                    onClick={() => setEditingItem(item)}
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="w-8 h-8 rounded-lg hover:bg-rose-50 hover:text-rose-600"
-                    onClick={() => {
-                      if (confirm("Are you sure you want to delete this log? This will affect your MTD Analytics.")) {
-                        onDelete(item.id);
-                      }
-                    }}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
+          {!data || data.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-12 text-xs font-semibold text-slate-400">
+                Tidak ada data ads log di database.
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            data.map((item) => (
+              <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
+                <TableCell className="text-xs font-bold text-slate-600 py-4 pl-8">
+                  {item.date ? format(new Date(item.date), "dd MMM yyyy") : "No Date"}
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-black text-slate-900 uppercase tracking-tight">{item.platform}</span>
+                    <span className="text-[10px] text-slate-400 font-bold">{item.campaignName || "General"}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="text-xs font-black text-slate-900">{formatCurrency(Number(item.spend))}</TableCell>
+                <TableCell className="text-xs font-black text-blue-600 text-center">{item.leadsGenerated}</TableCell>
+                <TableCell className="text-center">
+                  <div className="flex flex-col items-center gap-1">
+                     <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase ${item.isAudited ? "bg-emerald-100 text-emerald-600" : "bg-orange-100 text-orange-600"}`}>
+                       {item.isAudited ? "Verified" : "Pending"}
+                     </span>
+                     {isAuditor && !item.isAudited && (
+                        <button
+                          onClick={() => auditAds.mutate({ id: item.id, isAudited: true })}
+                          className="text-[8px] font-black text-blue-600 uppercase hover:underline"
+                        >
+                          Verify Now
+                        </button>
+                     )}
+                  </div>
+                </TableCell>
+                <TableCell className="text-right pr-8">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 h-8 rounded-lg hover:bg-blue-50 hover:text-blue-600"
+                      onClick={() => setEditingItem(item)}
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 h-8 rounded-lg hover:bg-rose-50 hover:text-rose-600"
+                      onClick={() => {
+                        if (confirm("Are you sure you want to delete this log? This will affect your MTD Analytics.")) {
+                          onDelete(item.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
 
@@ -407,40 +404,48 @@ function OrganicTable({ data, isLoading, onDelete }: { data: any[], isLoading: b
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data?.map((item) => (
-            <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
-              <TableCell className="text-xs font-bold text-slate-600 py-4 pl-8">
-                W{item.weekNumber}, {item.year}
-              </TableCell>
-              <TableCell className="text-xs font-black text-slate-900 uppercase tracking-tight">{item.platform}</TableCell>
-              <TableCell className="text-xs font-black text-slate-900 text-center">{formatNumber(item.totalFollowers)}</TableCell>
-              <TableCell className="text-xs font-black text-blue-600 text-center">{item.postsCount}</TableCell>
-              <TableCell className="text-right pr-8">
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="w-8 h-8 rounded-lg hover:bg-blue-50 hover:text-blue-600"
-                    onClick={() => setEditingItem(item)}
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="w-8 h-8 rounded-lg hover:bg-rose-50 hover:text-rose-600"
-                    onClick={() => {
-                      if (confirm("Are you sure you want to delete this organic log?")) {
-                        onDelete(item.id);
-                      }
-                    }}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
+          {!data || data.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-12 text-xs font-semibold text-slate-400">
+                Tidak ada data organic log di database.
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            data.map((item) => (
+              <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors border-slate-50">
+                <TableCell className="text-xs font-bold text-slate-600 py-4 pl-8">
+                  W{item.weekNumber}, {item.year}
+                </TableCell>
+                <TableCell className="text-xs font-black text-slate-900 uppercase tracking-tight">{item.platform}</TableCell>
+                <TableCell className="text-xs font-black text-slate-900 text-center">{formatNumber(item.totalFollowers)}</TableCell>
+                <TableCell className="text-xs font-black text-blue-600 text-center">{item.postsCount}</TableCell>
+                <TableCell className="text-right pr-8">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 h-8 rounded-lg hover:bg-blue-50 hover:text-blue-600"
+                      onClick={() => setEditingItem(item)}
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 h-8 rounded-lg hover:bg-rose-50 hover:text-rose-600"
+                      onClick={() => {
+                        if (confirm("Are you sure you want to delete this organic log?")) {
+                          onDelete(item.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
 

@@ -2,6 +2,8 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   FileSpreadsheet,
   Plus,
@@ -32,10 +34,21 @@ import {
   DnaKpiGrid,
   DnaDataTableCard,
   DnaCell,
+  DnaBadge,
   DnaModal,
+  DnaDetailDrawer,
   DnaButton,
   DnaInput,
+  DnaLoadingSkeleton,
+  DnaErrorState,
+  DnaEmptyState,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 export interface InvoiceItemDetail {
@@ -71,109 +84,11 @@ export interface SalesInvoice {
   picBusDev: string;
 }
 
-const INITIAL_SALES_INVOICES: SalesInvoice[] = [
-  {
-    id: "inv-1",
-    invoiceNumber: "INV-202603-0001",
-    soNumber: "SO-2026-001",
-    customerName: "PT Cantika Jelita Nusantara",
-    brandName: "C-Jelita Herbal",
-    invoiceDate: "2026-03-05",
-    dueDate: "2026-04-05",
-    subtotal: 130000000,
-    totalDiscount: 5000000,
-    taxAmount: 13750000,
-    downPaymentOffset: 65000000,
-    grandTotal: 73750000,
-    paidAmount: 0,
-    paymentStatus: "UNPAID",
-    arGatekeeperStatus: "HELD",
-    unpaidReason: "Menunggu pelunasan termin ke-2 sebelum DO delivery released.",
-    notes: "Batch 1 formulasi 10.000 pcs Brightening Niacinamide Serum.",
-    picBusDev: "Andi Pratama",
-    items: [
-      {
-        id: "itm-1",
-        itemCode: "FG-SRM-001",
-        itemName: "Brightening Niacinamide Serum 10% 30ml",
-        qty: 10000,
-        unit: "pcs",
-        price: 13000,
-        discount: 5000000,
-        total: 125000000,
-      },
-    ],
-  },
-  {
-    id: "inv-2",
-    invoiceNumber: "INV-202603-0002",
-    soNumber: "SO-2026-003",
-    customerName: "CV Aura Natural Skincare",
-    brandName: "AuraGlow Botanical",
-    invoiceDate: "2026-03-02",
-    dueDate: "2026-03-16",
-    subtotal: 75000000,
-    totalDiscount: 2000000,
-    taxAmount: 8030000,
-    downPaymentOffset: 32000000,
-    grandTotal: 49030000,
-    paidAmount: 49030000,
-    paymentStatus: "PAID",
-    arGatekeeperStatus: "RELEASED",
-    unpaidReason: "",
-    notes: "Lunas transfer BCA Maklon. Surat Jalan DO-2026-003 diterbitkan.",
-    picBusDev: "Siti Rahma",
-    items: [
-      {
-        id: "itm-2",
-        itemCode: "FG-MST-002",
-        itemName: "Centella Soothing Moisturizer Gel 50gr",
-        qty: 5000,
-        unit: "pcs",
-        price: 15000,
-        discount: 2000000,
-        total: 73000000,
-      },
-    ],
-  },
-  {
-    id: "inv-3",
-    invoiceNumber: "INV-202602-0014",
-    soNumber: "SO-2026-004",
-    customerName: "PT Derma Estetika Utama",
-    brandName: "DermaGleam Pro",
-    invoiceDate: "2026-02-26",
-    dueDate: "2026-03-26",
-    subtotal: 190000000,
-    totalDiscount: 0,
-    taxAmount: 20900000,
-    downPaymentOffset: 45000000,
-    grandTotal: 165900000,
-    paidAmount: 80000000,
-    paymentStatus: "PARTIAL",
-    arGatekeeperStatus: "HELD",
-    unpaidReason: "Pembayaran termin parsial 50%, sisa Rp 85.900.000 dijanjikan 15 Maret.",
-    notes: "Pengiriman batch 1 diizinkan sebagian sesuai saldo terbayar.",
-    picBusDev: "Budi Santoso",
-    items: [
-      {
-        id: "itm-3",
-        itemCode: "FG-SUN-003",
-        itemName: "Hydrating Hybrid Sunscreen SPF 50+ 40ml",
-        qty: 10000,
-        unit: "pcs",
-        price: 19000,
-        discount: 0,
-        total: 190000000,
-      },
-    ],
-  },
-];
-
 function FakturPenjualanContent() {
   const toast = useDnaToast();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
-  const [invoices, setInvoices] = useState<SalesInvoice[]>(INITIAL_SALES_INVOICES);
+
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [detailInvoice, setDetailInvoice] = useState<SalesInvoice | null>(null);
@@ -198,6 +113,120 @@ function FakturPenjualanContent() {
   const [formDpOffset, setFormDpOffset] = useState("0");
   const [formNotes, setFormNotes] = useState("");
   const [formPic, setFormPic] = useState("Andi Pratama");
+
+  // Query live Invoices
+  const {
+    data: invoices = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery<SalesInvoice[]>({
+    queryKey: ["commercial-invoices"],
+    queryFn: async () => {
+      const resp = await api.get("/commercial/invoices");
+      return (resp.data || []).map((inv: any) => ({
+        id: inv.id,
+        invoiceNumber: inv.invoiceNumber || inv.id,
+        soNumber: inv.salesOrder?.orderNumber || inv.soId || "-",
+        customerName: inv.salesOrder?.lead?.clientName || inv.customerName || "Customer",
+        brandName: inv.salesOrder?.brandName || inv.brandName || "Brand",
+        invoiceDate: inv.invoiceDate
+          ? new Date(inv.invoiceDate).toISOString().split("T")[0]
+          : inv.createdAt
+          ? new Date(inv.createdAt).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+        dueDate: inv.dueDate ? new Date(inv.dueDate).toISOString().split("T")[0] : "2026-04-15",
+        subtotal: Number(inv.amountDue) || 0,
+        totalDiscount: Number(inv.discountAmount) || 0,
+        taxAmount: Number(inv.taxAmount) || 0,
+        downPaymentOffset: Number(inv.downPaymentOffset) || 0,
+        grandTotal: Number(inv.amountDue) || 0,
+        paidAmount: Number(inv.paidAmount) || 0,
+        paymentStatus: (inv.status === "PAID"
+          ? "PAID"
+          : inv.status === "PARTIAL"
+          ? "PARTIAL"
+          : "UNPAID") as "PAID" | "UNPAID" | "PARTIAL",
+        arGatekeeperStatus: (inv.salesOrder?.deliveryGateStatus || "HELD") as "HELD" | "RELEASED",
+        unpaidReason:
+          inv.unpaidReason ||
+          (inv.status !== "PAID" ? "Menunggu pelunasan termin ke-2 sebelum DO delivery released." : undefined),
+        notes: inv.notes || "",
+        picBusDev: inv.salesOrder?.lead?.pic?.name || "Andi Pratama",
+        items: (inv.items || []).map((it: any) => ({
+          id: it.id,
+          itemCode: it.productId || "FG-ITEM",
+          itemName: it.description || it.productName || "Finished Goods Maklon",
+          qty: Number(it.quantity) || 1000,
+          unit: "pcs",
+          price: Number(it.unitPrice) || Number(inv.amountDue) || 0,
+          discount: Number(it.discount) || 0,
+          total: Number(it.subtotal) || Number(inv.amountDue) || 0,
+        })),
+      }));
+    },
+  });
+
+  // Query SOs
+  const { data: salesOrders = [] } = useQuery({
+    queryKey: ["commercial-sales-orders-dropdown"],
+    queryFn: async () => {
+      try {
+        const resp = await api.get("/commercial/sales-orders");
+        return resp.data || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  // Release Delivery Gate Mutation
+  const releaseGatekeeperMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      return api.post(`/commercial/invoices/${invoiceId}/release-delivery`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["commercial-invoices"] });
+      toast.success(
+        "AR Gatekeeper Diperbarui",
+        "Delivery Order untuk tagihan kini berstatus RELEASED."
+      );
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || err.message || "Gagal merilis delivery gatekeeper";
+      toast.error("Gagal", msg);
+    },
+  });
+
+  // Create Invoice Mutation
+  const createInvoiceMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      return api.post("/commercial/invoices", payload);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["commercial-invoices"] });
+      toast.success(
+        "Faktur Penjualan Dibuat",
+        `${variables.id} sebesar Rp ${Number(variables.amountDue).toLocaleString("id-ID")} diterbitkan.`
+      );
+      setIsCreateOpen(false);
+
+      // Reset
+      setFormInvoiceNumber("");
+      setFormSoNumber("");
+      setFormCustomer("");
+      setFormBrand("");
+      setFormSubtotal("");
+      setFormDiscount("0");
+      setFormDpOffset("0");
+      setFormNotes("");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || err.message || "Gagal menerbitkan faktur";
+      toast.error("Validasi Gagal", msg);
+    },
+  });
 
   // Tab Filtering
   const filteredInvoices = useMemo(() => {
@@ -231,25 +260,13 @@ function FakturPenjualanContent() {
   const countUnpaid = invoices.filter((i) => i.paymentStatus !== "PAID").length;
 
   const toggleGatekeeper = (invId: string) => {
-    setInvoices((prev) =>
-      prev.map((inv) => {
-        if (inv.id === invId) {
-          const nextStatus = inv.arGatekeeperStatus === "HELD" ? "RELEASED" : "HELD";
-          toast.success(
-            "AR Gatekeeper Diperbarui",
-            `Delivery Order untuk ${inv.invoiceNumber} kini berstatus ${nextStatus}.`
-          );
-          return { ...inv, arGatekeeperStatus: nextStatus };
-        }
-        return inv;
-      })
-    );
+    releaseGatekeeperMutation.mutate(invId);
   };
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formCustomer || !formSubtotal || Number(formSubtotal) <= 0) {
-      toast.error("Validasi Gagal", "Harap isi nama klien dan subtotal tagihan dengan benar.");
+    if (!formSubtotal || Number(formSubtotal) <= 0) {
+      toast.error("Validasi Gagal", "Harap isi subtotal tagihan dengan benar.");
       return;
     }
 
@@ -259,54 +276,24 @@ function FakturPenjualanContent() {
     const taxable = Math.max(0, sub - disc);
     const tax = taxable * 0.11;
     const grand = Math.max(0, taxable + tax - dp);
-    const invNum = formInvoiceNumber || `INV-202603-000${invoices.length + 1}`;
+    const invNum = formInvoiceNumber || `INV-${Date.now().toString().slice(-6)}`;
 
-    const newInv: SalesInvoice = {
-      id: `inv-${Date.now()}`,
-      invoiceNumber: invNum,
-      soNumber: formSoNumber || "SO-2026-999",
-      customerName: formCustomer,
-      brandName: formBrand || "Private Label",
+    const matchedSO = salesOrders.find(
+      (so: any) =>
+        so.orderNumber?.toLowerCase() === formSoNumber.trim().toLowerCase() ||
+        so.lead?.clientName?.toLowerCase() === formCustomer.trim().toLowerCase()
+    );
+    const soId = matchedSO?.id || (salesOrders[0]?.id ?? "00000000-0000-0000-0000-000000000001");
+
+    createInvoiceMutation.mutate({
+      id: invNum,
+      soId,
+      type: "PELUNASAN",
+      amountDue: grand,
       invoiceDate: formInvoiceDate,
-      dueDate: formDueDate || "2026-04-15",
-      subtotal: sub,
-      totalDiscount: disc,
-      taxAmount: tax,
-      downPaymentOffset: dp,
-      grandTotal: grand,
-      paidAmount: 0,
-      paymentStatus: "UNPAID",
-      arGatekeeperStatus: "HELD",
-      unpaidReason: "Tagihan baru diterbitkan, menunggu jatuh tempo pembayaran klien.",
-      notes: formNotes,
-      picBusDev: formPic,
-      items: [
-        {
-          id: `item-${Date.now()}`,
-          itemCode: "FG-CUST-01",
-          itemName: "Finished Goods Maklon",
-          qty: 1000,
-          unit: "pcs",
-          price: sub / 1000,
-          discount: disc,
-          total: taxable,
-        },
-      ],
-    };
-
-    setInvoices([newInv, ...invoices]);
-    toast.success("Faktur Penjualan Dibuat", `${newInv.invoiceNumber} sebesar Rp ${grand.toLocaleString("id-ID")} diterbitkan.`);
-    setIsCreateOpen(false);
-
-    // Reset
-    setFormInvoiceNumber("");
-    setFormSoNumber("");
-    setFormCustomer("");
-    setFormBrand("");
-    setFormSubtotal("");
-    setFormDiscount("0");
-    setFormDpOffset("0");
-    setFormNotes("");
+      overrideCreditLimit: true,
+      overrideReason: "Otorisasi manual manajemen",
+    });
   };
 
   return (
@@ -381,262 +368,269 @@ function FakturPenjualanContent() {
       />
 
       {/* Main Table Card */}
-      <DnaDataTableCard
-        title={`Daftar Faktur Penjualan: ${
-          activeTab === "all"
-            ? "Semua Siklus Tagihan"
-            : activeTab === "paid"
-            ? "Faktur Lunas (Sudah Terbayar)"
-            : "Faktur Menunggu Pelunasan (Piutang Belum Lunas)"
-        }`}
-        count={filteredInvoices.length}
-        totalItems={invoices.length}
-        actions={
-          <div className="w-72">
-            <DnaInput
-              placeholder="Cari no faktur, SO, klien..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              icon={<Search className="w-4 h-4 text-slate-400" />}
-            />
-          </div>
-        }
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-3">Invoice No</th>
-                <th className="py-3 px-3">Customer</th>
-                <th className="py-3 px-3">Contract Type</th>
-                <th className="py-3 px-3">Deadline</th>
-                <th className="py-3 px-3 text-right">Amount</th>
-                <th className="py-3 px-3 text-right">Diskon (Rp)</th>
-                <th className="py-3 px-3 text-right">Outstanding</th>
-                <th className="py-3 px-3 text-center">Status</th>
-                <th className="py-3 px-3 text-center">Delivery Gatekeeper</th>
-                <th className="py-3 px-3">Notes</th>
-                <th className="py-3 px-3 text-right">#</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredInvoices.length === 0 ? (
-                <tr>
-                  <td colSpan={11} className="text-center py-12 text-slate-400">
-                    <Receipt className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
-                    <p className="font-semibold text-slate-600">Tidak ada faktur ditemukan</p>
-                    <p className="text-xs text-slate-400">Sesuaikan filter atau buat faktur baru.</p>
-                  </td>
-                </tr>
-              ) : (
-                filteredInvoices.map((inv) => {
-                  const remaining = inv.grandTotal - inv.paidAmount;
-                  return (
-                    <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 px-3 font-mono font-semibold text-blue-600 whitespace-nowrap">
-                        {inv.invoiceNumber}
-                      </td>
-                      <td className="py-3 px-3 font-semibold text-slate-900 whitespace-nowrap">
-                        {inv.customerName}
-                      </td>
-                      <td className="py-3 px-3 whitespace-nowrap">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                          {inv.brandName ? "Jasa Maklon" : "Jual Putus"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 text-slate-600 whitespace-nowrap font-mono">
-                        {inv.dueDate}
-                      </td>
-                      <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
-                        Rp {inv.grandTotal.toLocaleString("id-ID")}
-                      </td>
-                      <td className="py-3 px-3 text-right font-mono text-slate-600 whitespace-nowrap">
-                        Rp {inv.totalDiscount.toLocaleString("id-ID")}
-                      </td>
-                      <td className="py-3 px-3 text-right font-mono font-bold text-rose-600 whitespace-nowrap">
-                        Rp {remaining.toLocaleString("id-ID")}
-                      </td>
-                      <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <DnaCell.Badge
-                          status={
-                            inv.paymentStatus === "PAID"
-                              ? "success"
-                              : inv.paymentStatus === "PARTIAL"
-                              ? "warning"
-                              : "critical"
-                          }
-                          label={
-                            inv.paymentStatus === "PAID"
+      {isLoading ? (
+        <DnaLoadingSkeleton rows={5} />
+      ) : isError ? (
+        <DnaErrorState
+          title="Gagal Memuat Faktur Penjualan"
+          message={(error as any)?.message || "Terjadi kesalahan saat memuat data tagihan."}
+          onRetry={() => refetch()}
+        />
+      ) : (
+        <DnaDataTableCard
+          toolbarProps={{
+            searchPlaceholder: "Cari no faktur, SO, pelanggan, atau brand...",
+            searchValue: searchTerm,
+            onSearchChange: setSearchTerm,
+          }}
+        >
+          <div className="overflow-x-auto">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 h-[40px] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <DnaTh className="px-4 py-2.5 w-[170px]">No. Faktur</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[160px]">No. Sales Order</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Tgl Faktur</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Jatuh Tempo</DnaTh>
+                  <DnaTh className="px-4 py-2.5 min-w-[180px]">Pelanggan & Brand</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px] text-right">Total Tagihan</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[140px] text-right">Sisa Piutang</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px] text-center">Status Bayar</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[120px] text-center">AR Gatekeeper</DnaTh>
+                  <DnaTh className="pr-4 py-2.5 w-[70px] text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
+                {filteredInvoices.length === 0 ? (
+                  <DnaTableRow>
+                    <DnaTd colSpan={10} className="text-center py-12 text-slate-400">
+                      <Receipt className="w-10 h-10 mx-auto mb-2 text-slate-300 stroke-[1.5]" />
+                      <p className="font-semibold text-slate-600">Tidak ada faktur ditemukan</p>
+                      <p className="text-xs text-slate-400">Sesuaikan filter atau buat faktur baru.</p>
+                    </DnaTd>
+                  </DnaTableRow>
+                ) : (
+                  filteredInvoices.map((inv) => {
+                    const remaining = inv.grandTotal - inv.paidAmount;
+                    return (
+                      <DnaTableRow key={inv.id} className="h-[48px] hover:bg-slate-50/60 transition-colors">
+                        <DnaTd className="px-4 py-2.5">
+                          <DnaCell.Code code={inv.invoiceNumber} />
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
+                          <DnaCell.Code code={inv.soNumber} />
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
+                          <DnaCell.Text text={inv.invoiceDate} />
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
+                          <DnaCell.Text text={inv.dueDate} />
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5">
+                          <div>
+                            <div className="text-[12px] font-medium text-slate-900 line-clamp-1">{inv.customerName}</div>
+                            <div className="text-[10.5px] text-slate-400 font-normal mt-0.5 line-clamp-1">{inv.brandName || "Reguler"}</div>
+                          </div>
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-right">
+                          <DnaCell.Numeric value={inv.grandTotal} prefix="Rp " />
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-right tabular-nums tabular-nums">
+                          <span className={`text-[12px] font-semibold ${remaining > 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                            Rp {remaining.toLocaleString("id-ID")}
+                          </span>
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center">
+                          <DnaBadge
+                            variant={
+                              inv.paymentStatus === "PAID"
+                                ? "success"
+                                : inv.paymentStatus === "PARTIAL"
+                                ? "warning"
+                                : "critical"
+                            }
+                          >
+                            {inv.paymentStatus === "PAID"
                               ? "Lunas"
                               : inv.paymentStatus === "PARTIAL"
                               ? "Sebagian"
-                              : "Belum Bayar"
-                          }
-                        />
-                      </td>
-                      <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <button
-                          onClick={() => toggleGatekeeper(inv.id)}
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black tracking-tight border transition-all cursor-pointer ${
-                            inv.arGatekeeperStatus === "RELEASED"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                              : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
-                          }`}
-                          title="Klik untuk ubah status tahan/lepas pengiriman DO"
-                        >
-                          {inv.arGatekeeperStatus === "RELEASED" ? "RELEASED" : "HELD"}
-                        </button>
-                      </td>
-                      <td className="py-3 px-3 text-slate-600 max-w-xs truncate" title={inv.unpaidReason || inv.notes}>
-                        {inv.unpaidReason || inv.notes || "—"}
-                      </td>
-                      <td className="py-3 px-3 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1">
-                          <DnaButton variant="ghost" size="sm" onClick={() => setDetailInvoice(inv)}>
-                            Lihat
-                          </DnaButton>
+                              : "Belum Bayar"}
+                          </DnaBadge>
+                        </DnaTd>
+                        <DnaTd className="px-4 py-2.5 text-center">
                           <button
-                            type="button"
-                            onClick={() => {
-                              toast.info("Input Pembayaran", `Buka pembayaran untuk ${inv.invoiceNumber}`);
-                            }}
-                            className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border-none bg-transparent cursor-pointer"
-                            title="Bayar Tagihan"
+                            onClick={() => toggleGatekeeper(inv.id)}
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border transition-all cursor-pointer ${
+                              inv.arGatekeeperStatus === "RELEASED"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                                : "bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100"
+                            }`}
+                            title="Klik untuk ubah status tahan/lepas pengiriman DO"
                           >
-                            <CreditCard className="w-3.5 h-3.5" />
+                            DO {inv.arGatekeeperStatus}
                           </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </DnaDataTableCard>
+                        </DnaTd>
+                        <DnaTd className="pr-4 py-2.5 text-right">
+                          <DnaButton
+                            variant="ghost"
+                            className="h-7 w-7 p-0 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                            onClick={() => setDetailInvoice(inv)}
+                            title="Lihat Detail"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </DnaButton>
+                        </DnaTd>
+                      </DnaTableRow>
+                    );
+                  })
+                )}
+              </DnaTableBody>
+            </DnaTable>
+          </div>
+        </DnaDataTableCard>
+      )}
 
-      {/* Modal Detail Faktur Penjualan */}
-      <DnaModal
+      {/* Detail Invoice Drawer */}
+      <DnaDetailDrawer
         isOpen={!!detailInvoice}
         onClose={() => setDetailInvoice(null)}
-        title="Rincian Faktur Penjualan & Gatekeeper"
-        size="lg"
+        title={detailInvoice?.invoiceNumber || "Rincian Faktur Penjualan"}
+        subtitle={detailInvoice ? `${detailInvoice.customerName} • ${detailInvoice.brandName}` : undefined}
+        badge={
+          detailInvoice ? (
+            <div className="flex items-center gap-2">
+              <DnaCell.Badge
+                status={
+                  detailInvoice.paymentStatus === "PAID"
+                    ? "success"
+                    : detailInvoice.paymentStatus === "PARTIAL"
+                    ? "warning"
+                    : "critical"
+                }
+                label={
+                  detailInvoice.paymentStatus === "PAID"
+                    ? "Lunas"
+                    : detailInvoice.paymentStatus === "PARTIAL"
+                    ? "Sebagian"
+                    : "Belum Bayar"
+                }
+              />
+              <span
+                className={`px-2 py-0.5 rounded text-xs font-bold border ${
+                  detailInvoice.arGatekeeperStatus === "RELEASED"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-rose-50 text-rose-700 border-rose-200"
+                }`}
+              >
+                DO {detailInvoice.arGatekeeperStatus}
+              </span>
+            </div>
+          ) : undefined
+        }
+        actions={
+          detailInvoice ? (
+            <div className="flex items-center justify-between w-full">
+              <DnaButton
+                variant={detailInvoice.arGatekeeperStatus === "HELD" ? "primary" : "secondary"}
+                onClick={() => {
+                  toggleGatekeeper(detailInvoice.id);
+                  setDetailInvoice({
+                    ...detailInvoice,
+                    arGatekeeperStatus: detailInvoice.arGatekeeperStatus === "HELD" ? "RELEASED" : "HELD",
+                  });
+                }}
+              >
+                {detailInvoice.arGatekeeperStatus === "HELD" ? "Rilis DO Pengiriman" : "Tahan DO (Hold)"}
+              </DnaButton>
+              <DnaButton variant="secondary" onClick={() => setDetailInvoice(null)}>
+                Tutup
+              </DnaButton>
+            </div>
+          ) : undefined
+        }
       >
         {detailInvoice && (
-          <div className="space-y-5 text-sm">
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+          <div className="space-y-5 text-xs">
+            {/* Meta Information Cards */}
+            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Nomor Faktur Penjualan
-                </span>
-                <h3 className="text-base font-bold text-slate-900">{detailInvoice.invoiceNumber}</h3>
-                <p className="text-xs text-slate-500">
-                  Tgl Invoice: {detailInvoice.invoiceDate} • Jatuh Tempo: {detailInvoice.dueDate}
-                </p>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">No. Sales Order</span>
+                <span className="tabular-nums font-bold text-blue-600 text-xs">{detailInvoice.soNumber}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <DnaCell.Badge
-                  status={
-                    detailInvoice.paymentStatus === "PAID"
-                      ? "success"
-                      : detailInvoice.paymentStatus === "PARTIAL"
-                      ? "warning"
-                      : "critical"
-                  }
-                  label={
-                    detailInvoice.paymentStatus === "PAID"
-                      ? "Lunas"
-                      : detailInvoice.paymentStatus === "PARTIAL"
-                      ? "Sebagian"
-                      : "Belum Bayar"
-                  }
-                />
-                <span
-                  className={`px-2 py-1 rounded text-xs font-bold border ${
-                    detailInvoice.arGatekeeperStatus === "RELEASED"
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : "bg-rose-50 text-rose-700 border-rose-200"
-                  }`}
-                >
-                  {detailInvoice.arGatekeeperStatus === "RELEASED" ? "DO RELEASED" : "DO HELD"}
-                </span>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">PIC BusDev</span>
+                <span className="font-semibold text-slate-800 text-xs">{detailInvoice.picBusDev}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tgl Faktur</span>
+                <span className="tabular-nums text-slate-700 text-xs">{detailInvoice.invoiceDate}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Jatuh Tempo</span>
+                <span className="tabular-nums font-semibold text-rose-600 text-xs">{detailInvoice.dueDate}</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 bg-white p-4 rounded-xl border border-slate-200">
-              <div>
-                <span className="text-xs text-slate-400 block">Klien Pemesan</span>
-                <span className="font-semibold text-slate-900 text-xs">{detailInvoice.customerName}</span>
-                <p className="text-[11px] text-slate-500">Brand: {detailInvoice.brandName}</p>
+            {/* Items Table */}
+            <div>
+              <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">Item Barang / Jasa</p>
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="p-2.5">Produk / Item</DnaTh>
+                      <DnaTh className="p-2.5 text-right">Qty</DnaTh>
+                      <DnaTh className="p-2.5 text-right">Harga Satuan</DnaTh>
+                      <DnaTh className="p-2.5 text-right">Subtotal</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
+                    {detailInvoice.items.map((it) => (
+                      <DnaTableRow key={it.id}>
+                        <DnaTd className="p-2.5">
+                          <p className="font-bold text-slate-800">{it.itemName}</p>
+                          <p className="text-[10px] text-slate-400 tabular-nums">{it.itemCode}</p>
+                        </DnaTd>
+                        <DnaTd className="p-2.5 text-right font-medium">{it.qty.toLocaleString("id-ID")} {it.unit}</DnaTd>
+                        <DnaTd className="p-2.5 text-right tabular-nums">Rp {it.price.toLocaleString("id-ID")}</DnaTd>
+                        <DnaTd className="p-2.5 text-right font-bold text-slate-900 tabular-nums">Rp {it.total.toLocaleString("id-ID")}</DnaTd>
+                      </DnaTableRow>
+                    ))}
+                  </DnaTableBody>
+                </DnaTable>
               </div>
-              <div>
-                <span className="text-xs text-slate-400 block">No. Sales Order</span>
-                <span className="font-mono font-semibold text-blue-600 text-xs">
-                  {detailInvoice.soNumber}
-                </span>
-                <p className="text-[11px] text-slate-500">PIC BusDev: {detailInvoice.picBusDev}</p>
-              </div>
-            </div>
-
-            {/* Table Items */}
-            <div className="border border-slate-200 rounded-xl overflow-hidden">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 font-bold uppercase">
-                  <tr>
-                    <th className="p-3">Produk / Item</th>
-                    <th className="p-3 text-right">Qty</th>
-                    <th className="p-3 text-right">Harga Satuan</th>
-                    <th className="p-3 text-right">Diskon (Rp)</th>
-                    <th className="p-3 text-right">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {detailInvoice.items.map((it) => (
-                    <tr key={it.id}>
-                      <td className="p-3">
-                        <span className="font-bold text-slate-800">{it.itemName}</span>
-                        <p className="text-[10px] text-slate-400 font-mono">{it.itemCode}</p>
-                      </td>
-                      <td className="p-3 text-right font-medium">{it.qty.toLocaleString("id-ID")} {it.unit}</td>
-                      <td className="p-3 text-right">Rp {it.price.toLocaleString("id-ID")}</td>
-                      <td className="p-3 text-right text-rose-600 font-medium">-Rp {it.discount.toLocaleString("id-ID")}</td>
-                      <td className="p-3 text-right font-bold text-slate-900">Rp {it.total.toLocaleString("id-ID")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
 
             {/* Rekapitulasi Pembayaran & Offset DP */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
+            <div className="bg-slate-50/60 p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
+              <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">Rincian Finansial</p>
               <div className="flex justify-between">
                 <span className="text-slate-500">Subtotal Barang:</span>
-                <span className="font-semibold text-slate-800">Rp {detailInvoice.subtotal.toLocaleString("id-ID")}</span>
+                <span className="font-semibold text-slate-800 tabular-nums">Rp {detailInvoice.subtotal.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between text-rose-600">
                 <span>Total Diskon (Rp):</span>
-                <span>-Rp {detailInvoice.totalDiscount.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums">-Rp {detailInvoice.totalDiscount.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">PPN 11%:</span>
-                <span className="font-semibold text-slate-800">Rp {detailInvoice.taxAmount.toLocaleString("id-ID")}</span>
+                <span className="font-semibold text-slate-800 tabular-nums">Rp {detailInvoice.taxAmount.toLocaleString("id-ID")}</span>
               </div>
-              <div className="flex justify-between text-emerald-600 font-semibold border-t border-slate-100 pt-1">
+              <div className="flex justify-between text-emerald-600 font-semibold border-t border-slate-200 pt-1.5">
                 <span>Potongan Down Payment (Kompensasi DP):</span>
-                <span>-Rp {detailInvoice.downPaymentOffset.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums">-Rp {detailInvoice.downPaymentOffset.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-900 border-t border-slate-200 pt-2">
                 <span>Grand Total Tagihan:</span>
-                <span>Rp {detailInvoice.grandTotal.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums text-blue-600">Rp {detailInvoice.grandTotal.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between text-xs font-semibold text-slate-600 pt-1">
                 <span>Sudah Dibayar:</span>
-                <span>Rp {detailInvoice.paidAmount.toLocaleString("id-ID")}</span>
+                <span className="tabular-nums text-emerald-600">Rp {detailInvoice.paidAmount.toLocaleString("id-ID")}</span>
               </div>
-              <div className="flex justify-between text-xs font-bold text-rose-600 border-t border-slate-100 pt-1">
+              <div className="flex justify-between text-xs font-bold text-rose-600 border-t border-slate-200 pt-1.5">
                 <span>Sisa Piutang (Outstanding):</span>
-                <span>Rp {(detailInvoice.grandTotal - detailInvoice.paidAmount).toLocaleString("id-ID")}</span>
+                <span className="tabular-nums">Rp {(detailInvoice.grandTotal - detailInvoice.paidAmount).toLocaleString("id-ID")}</span>
               </div>
             </div>
 
@@ -646,24 +640,9 @@ function FakturPenjualanContent() {
                 {detailInvoice.unpaidReason}
               </div>
             )}
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <DnaButton variant="secondary" onClick={() => setDetailInvoice(null)}>
-                Tutup
-              </DnaButton>
-              <DnaButton
-                variant={detailInvoice.arGatekeeperStatus === "HELD" ? "primary" : "outline"}
-                onClick={() => {
-                  toggleGatekeeper(detailInvoice.id);
-                  setDetailInvoice(null);
-                }}
-              >
-                {detailInvoice.arGatekeeperStatus === "HELD" ? "Rilis DO (Release)" : "Tahan DO (Hold)"}
-              </DnaButton>
-            </div>
           </div>
         )}
-      </DnaModal>
+      </DnaDetailDrawer>
 
       {/* Modal Buat Faktur Penjualan Baru */}
       <DnaModal

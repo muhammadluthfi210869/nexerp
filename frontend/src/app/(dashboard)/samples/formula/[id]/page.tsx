@@ -40,6 +40,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { FormShell } from "@/components/layout/FormShell";
 import { toast } from "sonner";
@@ -190,7 +196,7 @@ export default function FormulationPhaseBuilder() {
   });
 
   const lockProductionMutation = useMutation({
-    mutationFn: () => api.post(`/rnd/formulas/${id}/lock-production`),
+    mutationFn: () => api.patch(`/rnd/formulas/${id}/lock-production`),
     onSuccess: () => {
       toast.success("Formula LOCKED for Production. Data synced to SCM/Mixing.");
       queryClient.invalidateQueries({ queryKey: ["formula", id] });
@@ -759,17 +765,17 @@ function PhaseBlock({ phaseIndex, control, register, remove, materials, targetYi
        </div>
 
        {/* Phase Table */}
-       <table className="w-full text-left">
-          <thead>
-             <tr className="bg-white border-b border-slate-50">
-                 <th className="py-3 pl-6 text-table-header text-slate-400 uppercase tracking-tight">Ingredient Protocol</th>
-                 <th className="py-3 text-table-header text-slate-400 uppercase tracking-tight text-right w-32">Dosage (%)</th>
-                 <th className="py-3 text-table-header text-slate-400 uppercase tracking-tight text-right w-24">Weight (gr)</th>
-                 <th className="py-3 text-table-header text-slate-400 uppercase tracking-tight text-right w-28">Est. Cost</th>
-                {!isReadOnly && <th className="w-12"></th>}
-             </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
+       <DnaTable>
+          <DnaTableHead>
+             <DnaTableRow className="bg-white border-b border-slate-50">
+                 <DnaTh className="py-3 pl-6 text-table-header text-slate-400 uppercase tracking-tight">Ingredient Protocol</DnaTh>
+                 <DnaTh className="py-3 text-table-header text-slate-400 uppercase tracking-tight text-right w-32">Dosage (%)</DnaTh>
+                 <DnaTh className="py-3 text-table-header text-slate-400 uppercase tracking-tight text-right w-24">Weight (gr)</DnaTh>
+                 <DnaTh className="py-3 text-table-header text-slate-400 uppercase tracking-tight text-right w-28">Est. Cost</DnaTh>
+                {!isReadOnly && <DnaTh className="w-12"></DnaTh>}
+             </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
              {itemFields.map((item, idx) => (
                 <IngredientRow 
                   key={item.id}
@@ -784,8 +790,8 @@ function PhaseBlock({ phaseIndex, control, register, remove, materials, targetYi
                   isReadOnly={isReadOnly}
                 />
              ))}
-          </tbody>
-       </table>
+          </DnaTableBody>
+       </DnaTable>
 
        {/* Phase Footer */}
        <div className="p-4 bg-slate-50/50 flex flex-col md:flex-row gap-4 items-start md:items-center">
@@ -845,8 +851,8 @@ function IngredientRow({ phaseIndex, itemIndex, control, register, remove, mater
   }, [item?.dosagePercentage, item?.isDummy, item?.dummyPrice, material]);
 
   return (
-    <tr className="group hover:bg-slate-50 transition-colors">
-       <td className="py-4 pl-6">
+    <DnaTableRow className="group hover:bg-slate-50 transition-colors">
+       <DnaTd className="py-4 pl-6">
           {item?.isDummy ? (
             <div className="flex flex-col gap-1.5">
                <div className="flex items-center gap-2">
@@ -919,8 +925,8 @@ function IngredientRow({ phaseIndex, itemIndex, control, register, remove, mater
                 </Select>
             </div>
           )}
-       </td>
-       <td className="text-right">
+       </DnaTd>
+       <DnaTd className="text-right">
           <div className="relative inline-block">
              <DnaInput 
               type="number" 
@@ -931,21 +937,21 @@ function IngredientRow({ phaseIndex, itemIndex, control, register, remove, mater
              />
              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300">%</span>
           </div>
-       </td>
-       <td className="text-right">
+       </DnaTd>
+       <DnaTd className="text-right">
           <span className="text-xs font-black text-slate-900">{weight.toFixed(2)} gr</span>
-       </td>
-       <td className="text-right">
+       </DnaTd>
+       <DnaTd className="text-right">
           <span className="text-[10px] font-black text-slate-600">Rp {hpp.toLocaleString()}</span>
-       </td>
+       </DnaTd>
        {!isReadOnly && (
-         <td className="text-right pr-4">
+         <DnaTd className="text-right pr-4">
             <Button variant="ghost" size="icon" onClick={remove} className="text-slate-300 hover:text-rose-500 h-8 w-8">
                <Trash2 className="h-3.5 w-3.5" />
             </Button>
-         </td>
+         </DnaTd>
        )}
-    </tr>
+    </DnaTableRow>
   );
 }
 

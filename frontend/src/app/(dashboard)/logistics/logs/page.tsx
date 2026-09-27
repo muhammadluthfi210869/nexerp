@@ -16,7 +16,20 @@ import {
   BarChart3,
   Activity
 } from "lucide-react";
-import { StatCard, KpiCard, TableWrapper, DnaButton, DnaInput, DnaBadge } from "@/components/dna";
+import {
+  StatCard,
+  KpiCard,
+  TableWrapper,
+  DnaButton,
+  DnaInput,
+  DnaBadge,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import { TableShell } from "@/components/layout/TableShell";
 
 export default function ShippingLogsPage() {
@@ -62,21 +75,21 @@ export default function ShippingLogsPage() {
 
         <TableWrapper>
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-6 py-4 text-table-header text-slate-400">SHIPMENT ID / DO</th>
-                  <th className="px-6 py-4 text-table-header text-slate-400">CONSIGNEE</th>
-                  <th className="px-6 py-4 text-table-header text-slate-400">LOGISTICS META</th>
-                  <th className="px-6 py-4 text-table-header text-slate-400">ARRIVAL</th>
-                  <th className="px-6 py-4 text-table-header text-slate-400 text-center">RESULT</th>
-                  <th className="px-6 py-4 text-table-header text-slate-400 text-right">MANIFEST</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="bg-slate-50/50 border-b border-slate-100">
+                  <DnaTh className="px-6 py-4 text-table-header text-slate-400">SHIPMENT ID / DO</DnaTh>
+                  <DnaTh className="px-6 py-4 text-table-header text-slate-400">CONSIGNEE</DnaTh>
+                  <DnaTh className="px-6 py-4 text-table-header text-slate-400">LOGISTICS META</DnaTh>
+                  <DnaTh className="px-6 py-4 text-table-header text-slate-400">ARRIVAL</DnaTh>
+                  <DnaTh className="px-6 py-4 text-table-header text-slate-400 text-center">RESULT</DnaTh>
+                  <DnaTh className="px-6 py-4 text-table-header text-slate-400 text-right">MANIFEST</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {shippingLogs?.map((log: any) => (
-                  <tr key={log.id} className="group hover:bg-slate-50/50 transition-all cursor-default">
-                    <td className="px-6 py-6">
+                  <DnaTableRow key={log.id} className="group hover:bg-slate-50/50 transition-all cursor-default">
+                    <DnaTd className="px-6 py-6">
                        <div className="flex items-center gap-4">
                           <div className="h-10 w-10 rounded-xl bg-white text-slate-900 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-slate-200">
                              <History className="h-4 w-4 text-slate-400" />
@@ -86,11 +99,11 @@ export default function ShippingLogsPage() {
                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{log.do}</p>
                           </div>
                        </div>
-                    </td>
-                    <td className="px-6 py-6">
+                    </DnaTd>
+                    <DnaTd className="px-6 py-6">
                        <p className="text-[11px] font-black text-brand-black uppercase italic">{log.client}</p>
-                    </td>
-                    <td className="px-6 py-6">
+                    </DnaTd>
+                    <DnaTd className="px-6 py-6">
                        <div className="flex items-center gap-6">
                           <div>
                              <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">LEAD TIME</p>
@@ -101,27 +114,27 @@ export default function ShippingLogsPage() {
                              <p className="text-[10px] font-black text-brand-black tabular uppercase">{log.fuel}</p>
                           </div>
                        </div>
-                    </td>
-                    <td className="px-6 py-6">
+                    </DnaTd>
+                    <DnaTd className="px-6 py-6">
                        <div className="flex items-center gap-2">
                           <Calendar className="h-3 w-3 text-slate-300" />
                           <p className="text-[10px] font-black text-slate-500 uppercase tabular">{log.date}</p>
                        </div>
-                    </td>
-                    <td className="px-6 py-6 text-center">
+                    </DnaTd>
+                    <DnaTd className="px-6 py-6 text-center">
 <DnaBadge status={log.status === 'SUCCESS' ? "success" : "critical"}>
                            {log.status}
                         </DnaBadge>
-                    </td>
-                    <td className="px-6 py-6 text-right">
+                    </DnaTd>
+                    <DnaTd className="px-6 py-6 text-right">
                         <DnaButton variant="outline" size="sm" className="italic">
                            VIEW RECEIPT <ChevronRight className="ml-2 h-3 w-3" />
                         </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </TableWrapper>
     </TableShell>

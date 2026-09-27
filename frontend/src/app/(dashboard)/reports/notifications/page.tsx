@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -26,7 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
-import { StatCard, DnaInput, DnaButton, TableWrapper, DnaBadge } from "@/components/dna";
+import { StatCard, DnaInput, DnaButton, DnaBadge } from "@/components/dna";
 
 interface Notification {
   id: string;
@@ -89,6 +89,14 @@ export default function NotificationsPage() {
   } = useQuery<Notification[]>({
     queryKey: ["executive-notifications"],
     queryFn: async () => {
+      try {
+        const dashRes = await api.get("/dashboards/notifications");
+        if (Array.isArray(dashRes.data?.notifications)) {
+          return dashRes.data.notifications;
+        }
+      } catch {
+        // Fallback to standard /notifications
+      }
       const res = await api.get("/notifications");
       return (res.data || []).map((n: any) => ({
         id: n.id,

@@ -1,0 +1,80 @@
+[
+  {
+    "file": "frontend/src/app/(dashboard)/marketing/management-task/page.tsx",
+    "line": 1,
+    "type": "ROUTING_SHELL",
+    "detail": "Client page (61 lines) that only redirects — no data surface"
+  },
+  {
+    "file": "frontend/src/app/(dashboard)/penjualan/crm-leads/CRMLeadsClient.tsx",
+    "line": 91,
+    "type": "STATIC_DATA_ARRAY",
+    "detail": "const INITIAL_BATCHES: OperationalLeadBatch[] = ["
+  },
+  {
+    "file": "frontend/src/app/(dashboard)/penjualan/sales-target/page.tsx",
+    "line": 68,
+    "type": "STATIC_DATA_ARRAY",
+    "detail": "const INITIAL_TARGETS: SalesTargetItem[] = ["
+  },
+  {
+    "file": "frontend/src/app/(dashboard)/production/batch-record-rnd/page.tsx",
+    "line": 54,
+    "type": "STATIC_DATA_ARRAY",
+    "detail": "const INITIAL_BATCH_RECORDS: BatchRecord[] = [];"
+  },
+  {
+    "file": "frontend/src/app/(dashboard)/production/filling/page.tsx",
+    "line": 64,
+    "type": "STATIC_DATA_ARRAY",
+    "detail": "const INITIAL_FILLING_DATA: FillingProductionItem[] = [];"
+  },
+  {
+    "file": "frontend/src/app/(dashboard)/production/mixing/page.tsx",
+    "line": 61,
+    "type": "STATIC_DATA_ARRAY",
+    "detail": "const INITIAL_MIXING_DATA: MixingProductionItem[] = [];"
+  },
+  {
+    "file": "frontend/src/app/(dashboard)/production/packaging/page.tsx",
+    "line": 64,
+    "type": "STATIC_DATA_ARRAY",
+    "detail": "const INITIAL_PACKAGING_DATA: PackagingProductionItem[] = [];"
+  },
+  {
+    "file": "frontend/src/app/(dashboard)/production/schedule-filling/page.tsx",
+    "line": 55,
+    "type": "STATIC_DATA_ARRAY",
+    "detail": "const INITIAL_SCHEDULES: ScheduleFillingItem[] = [];"
+  },
+  {
+    "file": "frontend/src/app/(dashboard)/production/schedule-mixing/page.tsx",
+    "line": 57,
+    "type": "STATIC_DATA_ARRAY",
+    "detail": "const INITIAL_SCHEDULES: ScheduleMixingItem[] = [];"
+  },
+  {
+    "file": "frontend/src/app/(dashboard)/production/schedule-packaging/page.tsx",
+    "line": 55,
+    "type": "STATIC_DATA_ARRAY",
+    "detail": "const INITIAL_SCHEDULES: SchedulePackagingItem[] = [];"
+  },
+  {
+    "file": "frontend/src/app/(dashboard)/samples/omni-crm/OmniCrmClient.tsx",
+    "line": 1,
+    "type": "NO_API_INTEGRATION",
+    "detail": "Client page (914 lines) with zero API/React-Query calls, incl. transitively imported children"
+  },
+  {
+    "file": "frontend/src/app/(dashboard)/visual-dna/page.tsx",
+    "line": 1,
+    "type": "NO_API_INTEGRATION",
+    "detail": "Client page (1017 lines) with zero API/React-Query calls, incl. transitively imported children"
+  },
+  {
+    "file": "frontend/src/app/(dashboard)/warehouse/WarehouseDashboardClient.tsx",
+    "line": 1,
+    "type": "NO_API_INTEGRATION",
+    "detail": "Client page (609 lines) with zero API/React-Query calls, incl. transitively imported children"
+  }
+]

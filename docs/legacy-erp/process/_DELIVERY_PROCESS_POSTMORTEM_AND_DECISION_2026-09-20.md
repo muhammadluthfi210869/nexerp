@@ -53,10 +53,31 @@ inventory all known failures once
 → implement one business subphase
 → run its focused test
 → finish all subphases
+→ verify material seams and one risk-appropriate golden thread
 → run one thin final verification
 → one independent audit
 → continue to the next phase
 ```
+
+## Final consolidated operating design
+
+The operational method has been consolidated into `../verification/_FAST_DELIVERY_EXECUTION_STANDARD.md` and its prompt template. That authority includes the lessons learned from P01–P06 and the later efficiency review:
+
+- optimize usable business output per elapsed hour rather than checks per phase;
+- design phases as three to six vertical business subphases with at most five primary acceptance behaviors;
+- assign `LOW`, `MEDIUM` or `HIGH` risk and use the minimum sufficient proof for that tier;
+- freeze shared interfaces before parallel backend/UI work;
+- cap work in progress at two implementation lanes;
+- test each subphase through its smallest owning native command;
+- protect integration with material seam assertions and one narrow phase golden thread;
+- run one thin final verification only after targeted green;
+- run cumulative regression at P10, P15, P19 and P22 instead of reopening every historical phase;
+- block only reproducible P0/P1 and defer P2/P3;
+- stop immediately after acceptance and P0/P1 closure;
+- use a maximum of one normal correction cycle and improve scope/seams when the target is missed;
+- select models by task shape, while treating process discipline as more important than provider choice.
+
+Future agents are routed to the active standard through repository `AGENTS.md` and `docs/legacy-erp/AGENTS.md`. Historical certifier-oriented documents remain records only and must not regain authority through copying or reuse.
 
 ## Time budgets
 

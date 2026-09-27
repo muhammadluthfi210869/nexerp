@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/dna";
 import { TrendingDown, TrendingUp, Info } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/dna";
 
 interface CogsHppCardProps {
   totalCogs: number;

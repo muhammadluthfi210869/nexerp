@@ -1,22 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
-import { 
-  ShieldAlert, 
-  Wallet, 
-  Activity, 
-  Truck, 
-  Users, 
-  FlaskConical, 
-  Zap, 
+import {
+  ShieldAlert,
+  Wallet,
+  Activity,
+  Zap,
   Clock,
-  CheckCircle2,
   AlertCircle,
   ArrowRight,
   TrendingDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, Badge } from "@/components/dna";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 const ProblemCard = ({ title, icon: Icon, color, issues }: { title: string, icon: any, color: string, issues: any[] }) => (
   <Card className="rounded-2xl p-5 border border-slate-100 bg-white flex flex-col h-full shadow-sm hover:shadow-md transition-all">
@@ -70,64 +67,78 @@ const ProblemCard = ({ title, icon: Icon, color, issues }: { title: string, icon
   </Card>
 );
 
+type Issue = { severity: "critical" | "normal"; message: string; time: string };
+type Group = {
+  title: string;
+  icon: any;
+  color: string;
+  detailed?: { alerts?: string[] };
+  counts: { label: string; value: number | undefined }[];
+};
+
+/** Live counts + the backend's own alert strings -> what ProblemCard renders. */
+function toIssues(group: Group): Issue[] {
+  const fromCounts = group.counts
+    .filter((c): c is { label: string; value: number } => (c.value ?? 0) > 0)
+    .map((c) => ({ severity: "critical" as const, message: `${c.value} ${c.label}`, time: "" }));
+  const fromBackend = (group.detailed?.alerts ?? []).map((message) => ({
+    severity: "normal" as const,
+    message,
+    time: "",
+  }));
+  return [...fromCounts, ...fromBackend];
+}
+
 export default function NotificationHubClient() {
-  const diagnosticData = [
+  const { data } = useQuery({
+    queryKey: ["executive-alerts"],
+    queryFn: () => api.get("/executive/alerts").then((res) => res.data),
+  });
+  const a = data ?? {};
+
+  const diagnosticData: Group[] = [
     {
       title: "KEUANGAN (CASH RISK)",
       icon: Wallet,
       color: "red",
-      issues: [
-        { severity: 'critical', message: "5 Client overdue > 60 hari (Rp 120jt)", time: "2H AGO" },
-        { severity: 'normal', message: "Budget Marketing melebihi batas 5%", time: "5H AGO" },
-        { severity: 'critical', message: "HPP Produksi naik 12% pada Item B-12", time: "1D AGO" }
-      ]
+      detailed: a.cashflow,
+      counts: [
+        { label: "Invoice overdue", value: a.cashflow?.overdueInvoices },
+        { label: "Invoice nilai besar belum dibayar", value: a.cashflow?.largeUnpaid },
+      ],
     },
     {
       title: "PRODUKSI (OPS DELAY)",
       icon: Activity,
       color: "amber",
-      issues: [
-        { severity: 'critical', message: "Mesin RO-02 Downtime (Repair Needed)", time: "NOW" },
-        { severity: 'critical', message: "5 Order SPK melewati deadline (Overdue)", time: "3H AGO" },
-        { severity: 'normal', message: "Kapasitas produksi sisa 15% (Bottleneck)", time: "8H AGO" }
-      ]
-    },
-    {
-      title: "SCM (STOCK CRITICAL)",
-      icon: Truck,
-      color: "indigo",
-      issues: [
-        { severity: 'critical', message: "Stok Botol Serum-30ml Kosong", time: "1H AGO" },
-        { severity: 'normal', message: "Vendor B-Chemical telat kirim 3 hari", time: "6H AGO" }
-      ]
+      detailed: a.production,
+      counts: [
+        { label: "Work order lewat deadline", value: a.production?.overdue },
+        { label: "Work order mendekati deadline", value: a.production?.nearDeadline },
+        { label: "Bottleneck terdeteksi", value: a.production?.bottlenecks },
+      ],
     },
     {
       title: "MARKETING & SALES",
       icon: Zap,
       color: "amber",
-      issues: [
-        { severity: 'critical', message: "20 Leads belum difollow-up (> 48 jam)", time: "2H AGO" },
-        { severity: 'normal', message: "Conversion rate drop ke 8.4%", time: "1D AGO" }
-      ]
+      detailed: a.sales,
+      counts: [
+        { label: "Lead belum difollow-up", value: a.sales?.unfollowed },
+        { label: "Deal macet di pipeline", value: a.sales?.stuck },
+      ],
     },
     {
-      title: "R&D / QUALITY",
-      icon: FlaskConical,
+      title: "REPEAT ORDER & LOST RISK",
+      icon: TrendingDown,
       color: "indigo",
-      issues: [
-        { severity: 'critical', message: "SLA Sample Client C-01 Telat 4 Hari", time: "4H AGO" },
-        { severity: 'normal', message: "Revision Rate naik (Avg 4.2x / Sample)", time: "2D AGO" }
-      ]
+      detailed: { alerts: [...(a.repeatOrder?.alerts ?? []), ...(a.lostRisk?.alerts ?? [])] },
+      counts: [
+        { label: "Client jatuh tempo reorder", value: a.repeatOrder?.readyThisWeek },
+        { label: "Client berisiko churn", value: a.lostRisk?.churnRisk },
+        { label: "Deal berisiko", value: a.lostRisk?.dealAtRisk },
+      ],
     },
-    {
-      title: "HUMAN RESOURCE",
-      icon: Users,
-      color: "slate",
-      issues: [
-        { severity: 'normal', message: "3 Karyawan Kontrak Expired (Next 7D)", time: "12H AGO" },
-        { severity: 'normal', message: "Laporan KPI Divisi Gudang Belum Selesai", time: "1D AGO" }
-      ]
-    }
   ];
 
   return (
@@ -161,15 +172,15 @@ export default function NotificationHubClient() {
            <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
            <span className="text-[10px] font-black text-rose-600 uppercase tracking-tighter whitespace-nowrap italic">SYSTEM ALERT</span>
         </div>
-        <div className="flex items-center gap-8 overflow-hidden whitespace-nowrap">
+        <div className="flex items-center gap-8 overflow-x-auto whitespace-nowrap">
            {[
-             { label: "5 ORDER", val: "TELAT PRODUKSI", color: "text-rose-600" },
-             { label: "12 CLIENT", val: "BELUM BAYAR", color: "text-rose-600" },
-             { label: "20 LEADS", val: "BELUM FOLLOW UP", color: "text-amber-600" },
+             { count: a.production?.overdue, val: "TELAT PRODUKSI", color: "text-rose-600" },
+             { count: a.cashflow?.overdueInvoices, val: "BELUM BAYAR", color: "text-rose-600" },
+             { count: a.sales?.unfollowed, val: "BELUM FOLLOW UP", color: "text-amber-600" },
            ].map((alert, i) => (
              <div key={i} className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                <p className="text-[9px] font-black text-brand-black uppercase"><span className={alert.color}>{alert.label}</span> {alert.val}</p>
+                <p className="text-[9px] font-black text-brand-black uppercase"><span className={alert.color}>{alert.count ?? 0}</span> {alert.val}</p>
              </div>
            ))}
         </div>
@@ -183,7 +194,7 @@ export default function NotificationHubClient() {
             title={dept.title}
             icon={dept.icon}
             color={dept.color}
-            issues={dept.issues}
+            issues={toIssues(dept)}
           />
         ))}
       </div>

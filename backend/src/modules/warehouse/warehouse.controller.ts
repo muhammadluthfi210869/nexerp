@@ -68,6 +68,12 @@ export class WarehouseController {
     return this.warehouseService.getActiveWarehouses();
   }
 
+  @Get('transactions')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async getTransactions(@Query('materialId') materialId?: string) {
+    return this.warehouseService.getAllTransactions(materialId);
+  }
+
   @Get('history/:materialId')
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async getHistory(@Param('materialId') materialId: string) {
@@ -106,9 +112,11 @@ export class WarehouseController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async approveOpname(
     @Param('id') id: string,
-    @Body() body: { userId: string },
+    @Body() body: { userId?: string },
+    @Request() req: any,
   ) {
-    return this.warehouseService.approveOpname(id, body.userId);
+    const userId = body?.userId || req?.user?.id || req?.user?.sub || 'SYSTEM';
+    return this.warehouseService.approveOpname(id, userId);
   }
 
   @Post('release/:workOrderId')
@@ -140,8 +148,12 @@ export class WarehouseController {
   @Idempotent()
   @UseInterceptors(IdempotencyInterceptor)
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
-  async createTransfer(@Body() data: any) {
-    return this.warehouseService.createTransferOrder(data);
+  async createTransfer(@Body() data: any, @Request() req: any) {
+    const createdById = data.createdById || req?.user?.id || req?.user?.sub;
+    return this.warehouseService.createTransferOrder({
+      ...data,
+      createdById,
+    });
   }
 
   @Get('transfers')
@@ -156,9 +168,19 @@ export class WarehouseController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async executeTransfer(
     @Param('id') id: string,
-    @Body() body: { userId: string },
+    @Body() body: { userId?: string },
+    @Request() req: any,
   ) {
-    return this.warehouseService.executeTransferOrder(id, body.userId);
+    const userId = body?.userId || req?.user?.id || req?.user?.sub;
+    return this.warehouseService.executeTransferOrder(id, userId);
+  }
+
+  @Get('warehouses/:id/check-access')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async checkWarehouseAccess(@Param('id') id: string, @Request() req: any) {
+    const userId = req?.user?.id || req?.user?.sub;
+    await this.warehouseService.assertWarehouseAccess(userId, id, 'canRead');
+    return { status: 'ALLOWED', warehouseId: id };
   }
 
   // === PHASE 2: Stock Opname ===
@@ -230,12 +252,31 @@ export class WarehouseController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async approveAdjustment(
     @Param('id') id: string,
-    @Body() body: { status: string; userId: string },
+    @Body() body: { status?: string; userId?: string },
+    @Request() req?: any,
   ) {
+    const userId = body?.userId || req?.user?.id || req?.user?.sub || 'SYSTEM';
     return this.warehouseService.approveAdjustment(
       id,
-      body.status,
-      body.userId,
+      body?.status || 'APPROVED',
+      userId,
+    );
+  }
+
+  @Post('adjustments/:id/reject')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  async rejectAdjustment(
+    @Param('id') id: string,
+    @Body() body: { notes?: string; userId?: string },
+    @Request() req?: any,
+  ) {
+    const userId = body?.userId || req?.user?.id || req?.user?.sub || 'SYSTEM';
+    return this.warehouseService.approveAdjustment(
+      id,
+      'REJECTED',
+      userId,
     );
   }
 
@@ -245,6 +286,36 @@ export class WarehouseController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
   async getReleaseRequests() {
     return this.warehouseService.getReleaseRequests();
+  }
+
+  // === FEFO / FIFO PICKING ===
+
+  @Post('picking/validate')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE, UserRole.PRODUCTION)
+  async validatePicking(
+    @Body() body: { materialId: string; batchId: string; quantity: number },
+  ) {
+    return this.warehouseService.validateFefoPick(body);
+  }
+
+  @Post('picking/execute')
+  @Idempotent()
+  @UseInterceptors(IdempotencyInterceptor)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE, UserRole.PRODUCTION)
+  async executePicking(
+    @Body()
+    body: {
+      materialId: string;
+      batchId: string;
+      quantity: number;
+      referenceNo: string;
+      performedBy?: string;
+    },
+    @Request() req: any,
+  ) {
+    const performedBy =
+      body.performedBy || req?.user?.id || req?.user?.email || 'WAREHOUSE';
+    return this.warehouseService.pickBatch({ ...body, performedBy });
   }
 
   // === QUARANTINE RELEASE ===
@@ -340,7 +411,7 @@ export class WarehouseController {
     UserRole.PURCHASING,
     UserRole.DIRECTOR,
   )
-  async getStockSummary(@Query('groupBy') groupBy?: string) {
+  async getStockSummary(@Query('groupBy') _groupBy?: string) {
     return this.warehouseService.getStockSummaryByBahanType();
   }
 }

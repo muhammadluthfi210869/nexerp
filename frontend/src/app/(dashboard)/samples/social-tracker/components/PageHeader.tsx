@@ -208,7 +208,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             <div className="text-[12px] text-[#787774] dark:text-[#909090] mb-1 uppercase font-semibold">
               Total Reach
             </div>
-            <div className="text-2xl font-bold font-mono text-[#37352f] dark:text-white">
+            <div className="text-2xl font-bold tabular-nums text-[#37352f] dark:text-white">
               {formatNumber(totalReach)}
             </div>
             <div className="text-emerald-600 dark:text-emerald-400 text-[11px] mt-1 font-medium flex items-center gap-0.5">
@@ -221,7 +221,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             <div className="text-[12px] text-[#787774] dark:text-[#909090] mb-1 uppercase font-semibold">
               Engagement
             </div>
-            <div className="text-2xl font-bold font-mono text-[#37352f] dark:text-white">
+            <div className="text-2xl font-bold tabular-nums text-[#37352f] dark:text-white">
               {formatNumber(18294)}
             </div>
             <div className="text-emerald-600 dark:text-emerald-400 text-[11px] mt-1 font-medium flex items-center gap-0.5">
@@ -234,7 +234,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             <div className="text-[12px] text-[#787774] dark:text-[#909090] mb-1 uppercase font-semibold">
               Followers Gained
             </div>
-            <div className="text-2xl font-bold font-mono text-[#37352f] dark:text-white">
+            <div className="text-2xl font-bold tabular-nums text-[#37352f] dark:text-white">
               +2,140
             </div>
             <div className="text-emerald-600 dark:text-emerald-400 text-[11px] mt-1 font-medium flex items-center gap-0.5">
@@ -247,7 +247,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             <div className="text-[12px] text-[#787774] dark:text-[#909090] mb-1 uppercase font-semibold">
               Content Status
             </div>
-            <div className="text-2xl font-bold font-mono text-[#37352f] dark:text-white">
+            <div className="text-2xl font-bold tabular-nums text-[#37352f] dark:text-white">
               {scheduledPosts} Scheduled
             </div>
             <div className="text-[#787774] dark:text-[#909090] text-[11px] mt-1">

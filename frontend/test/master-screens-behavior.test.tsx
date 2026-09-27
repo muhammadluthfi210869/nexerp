@@ -342,26 +342,21 @@ describe('Canonical P06 Master Screens — Behavioral Acceptance Tests', () => {
 
   describe('5. Master Personnel Screen', () => {
     it('renders personnel data correctly', async () => {
-      global.fetch = vi.fn().mockImplementation(async (url: string) => {
-        if (url.includes('/users')) {
-          return {
-            ok: true,
-            json: async () => [
-              {
-                id: 'usr-1',
-                email: 'budi@dreamlab.id',
-                fullName: 'Budi Santoso',
-                roles: ['Formulator'],
-                status: 'ACTIVE',
-              },
-            ],
-          };
-        }
-        return {
-          ok: true,
-          json: async () => [],
-        };
-      }) as any;
+      // PersonnelRegistry loads through the axios `api` client (mocked at the top
+      // of this file), not through fetch: /users then /roles, in that order.
+      vi.mocked(api.get)
+        .mockResolvedValueOnce({
+          data: [
+            {
+              id: 'usr-1',
+              email: 'budi@dreamlab.id',
+              fullName: 'Budi Santoso',
+              roles: ['Formulator'],
+              status: 'ACTIVE',
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ data: [] });
 
       renderWithClient(<PersonnelRegistry />);
 
@@ -371,10 +366,7 @@ describe('Canonical P06 Master Screens — Behavioral Acceptance Tests', () => {
     });
 
     it('renders empty state when API returns []', async () => {
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => [],
-      }) as any;
+      vi.mocked(api.get).mockResolvedValue({ data: [] });
 
       renderWithClient(<PersonnelRegistry />);
 
@@ -384,34 +376,23 @@ describe('Canonical P06 Master Screens — Behavioral Acceptance Tests', () => {
     });
 
     it('renders error state and recovers upon retry click', async () => {
-      let fail = true;
-      global.fetch = vi.fn().mockImplementation(async (url: string) => {
-        if (fail) {
-          return {
-            ok: false,
-            status: 500,
-            statusText: 'Internal Server Error',
-          };
-        }
-        if (url.includes('/users')) {
-          return {
-            ok: true,
-            json: async () => [
-              {
-                id: 'usr-2',
-                email: 'siti@dreamlab.id',
-                fullName: 'Siti Rahma',
-                roles: ['Operator'],
-                status: 'ACTIVE',
-              },
-            ],
-          };
-        }
-        return {
-          ok: true,
-          json: async () => [],
-        };
-      }) as any;
+      // First load: the /users call rejects with the message the screen shows.
+      // Retry then re-runs both queries, so the queue is users, roles, users, roles.
+      vi.mocked(api.get)
+        .mockRejectedValueOnce(new Error('HTTP 500: Internal Server Error'))
+        .mockResolvedValueOnce({ data: [] })
+        .mockResolvedValueOnce({
+          data: [
+            {
+              id: 'usr-2',
+              email: 'siti@dreamlab.id',
+              fullName: 'Siti Rahma',
+              roles: ['Operator'],
+              status: 'ACTIVE',
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ data: [] });
 
       renderWithClient(<PersonnelRegistry />);
 
@@ -422,7 +403,6 @@ describe('Canonical P06 Master Screens — Behavioral Acceptance Tests', () => {
       const retryBtn = screen.getByRole('button', { name: /Coba Lagi/i });
       expect(retryBtn).toBeInTheDocument();
 
-      fail = false;
       fireEvent.click(retryBtn);
 
       await waitFor(() => {

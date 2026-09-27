@@ -1,27 +1,47 @@
 "use client";
 
+/**
+ * Wired to GET /scm/purchase-returns (+ POST /:id/approve, PATCH /:id/status).
+ * The previous revision rendered an in-file `INITIAL_PURCHASE_RETURN_DATA` array of
+ * invented returns, so an operator could "approve" a record that existed only in the
+ * bundle. There is no static array and no fallback here.
+ *
+ * Honest limits of the live model: PurchaseReturn carries no free-text "return reason"
+ * and no PO reference — it links to an inbound GR. The reason column is therefore the
+ * record's own notes, not a fabricated classification.
+ */
+
 import React from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   ApprovalPageShell,
   type ApprovalColumn,
   type ApprovalDetailData,
-  DnaCell,
   DnaBadge,
-  formatRupiah,
+  DnaCell,
+  DnaErrorState,
 } from "@/components/dna";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
+
+const EMPTY = "—";
 
 interface PurchaseReturnItem {
   id: string;
   code: string;
-  refPo: string;
+  refInbound: string;
   supplier: string;
   warehouse: string;
   returnReason: string;
+  debitNote: string;
   totalAmount: number;
   requesterName: string;
   creatorRole: string;
+  // Aliases read by ApprovalPageShell's search and stat aggregation.
+  title: string;
+  partnerName: string;
   date: string;
-  dueDate: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   notes: string;
   lineItems: Array<{
@@ -32,101 +52,104 @@ interface PurchaseReturnItem {
     unit: string;
     unitPrice: number;
     total: number;
-    notes?: string;
   }>;
 }
 
-const INITIAL_PURCHASE_RETURN_DATA: PurchaseReturnItem[] = [
-  {
-    id: "prt-1",
-    code: "RET-PO-2026-0042",
-    refPo: "PO-2026-0812",
-    supplier: "PT Chemindo Makmur Abadi",
-    warehouse: "Gudang Bahan Baku (GBB-01)",
-    returnReason: "Reject QC Lab: Viskositas dan pH di luar spesifikasi CoA",
-    totalAmount: 24500000,
-    requesterName: "Bambang Trianto",
-    creatorRole: "QC Inspector",
-    date: "25/08/2026",
-    dueDate: "29/08/2026",
-    status: "PENDING",
-    notes: "Lot RAW-CARB-940 batch CN2608 ditemukan menggumpal dan pH 4.1 (batas standar 5.0 - 6.5). Klaim penggantian batch baru atau Nota Kredit.",
-    lineItems: [
-      {
-        id: "prti-1",
-        itemCode: "RAW-CARB-940",
-        itemName: "Carbomer 940 Polymer Grade",
-        qty: 50,
-        unit: "Kg",
-        unitPrice: 490000,
-        total: 24500000,
-        notes: "Drum tersegel ditandai Karantina REJECT QC.",
-      },
-    ],
-  },
-  {
-    id: "prt-2",
-    code: "RET-PO-2026-0039",
-    refPo: "PO-2026-0798",
-    supplier: "CV Botol Packaging Sejahtera",
-    warehouse: "Gudang Kemasan (GK-02)",
-    returnReason: "Pecah & Gores pada leher botol kaca saat unboxing kedatangan",
-    totalAmount: 11200000,
-    requesterName: "Agus Supriyadi",
-    creatorRole: "Kepala Gudang Kemasan",
-    date: "21/08/2026",
-    dueDate: "27/08/2026",
-    status: "APPROVED",
-    notes: "Supplier telah menerbitkan Surat Kesanggupan Retur Barang pengganti maksimal 3 hari kerja.",
-    lineItems: [
-      {
-        id: "prti-2",
-        itemCode: "PKG-BTL-050",
-        itemName: "Botol Kaca Amber 50ml Dropper Pipet",
-        qty: 3200,
-        unit: "Pcs",
-        unitPrice: 3500,
-        total: 11200000,
-        notes: "Retur fisik telah diambil armada ekspedisi supplier.",
-      },
-    ],
-  },
-  {
-    id: "prt-3",
-    code: "RET-PO-2026-0035",
-    refPo: "PO-2026-0775",
-    supplier: "PT Sentra Kimia Nusantara",
-    warehouse: "Gudang Bahan Baku (GBB-01)",
-    returnReason: "Masa Expired < 12 Bulan saat penerimaan",
-    totalAmount: 8500000,
-    requesterName: "Siti Rahma, S.Farm",
-    creatorRole: "Procurement Specialist",
-    date: "18/08/2026",
-    dueDate: "24/08/2026",
-    status: "REJECTED",
-    notes: "Ditolak: Perjanjian PO khusus diskon clearance menyepakati batas minimum shelf-life 8 bulan.",
-    lineItems: [
-      {
-        id: "prti-3",
-        itemCode: "RAW-VITE-01",
-        itemName: "Vitamin E Tocopherol Acetate 98%",
-        qty: 10,
-        unit: "Kg",
-        unitPrice: 850000,
-        total: 8500000,
-        notes: "Sesuai klausul addendum PO harga promosi.",
-      },
-    ],
-  },
-];
+/** PurchaseReturnStatus → the shell/modal vocabulary. */
+function approvalStatusOf(status?: string): "PENDING" | "APPROVED" | "REJECTED" {
+  const key = (status || "").toUpperCase();
+  if (key === "COMPLETED") return "APPROVED";
+  if (key === "CANCELLED") return "REJECTED";
+  return "PENDING";
+}
+
+function formatDate(value?: string | null): string {
+  if (!value) return EMPTY;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return EMPTY;
+  return d.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function toItem(raw: any): PurchaseReturnItem {
+  const rows: any[] = Array.isArray(raw?.items) ? raw.items : [];
+  const lineItems = rows.map((li: any, idx: number) => ({
+    id: li?.id ?? `li-${idx}`,
+    itemCode: li?.material?.code ?? EMPTY,
+    itemName: li?.material?.name ?? "Material belum tertaut",
+    qty: Number(li?.quantity) || 0,
+    unit: li?.material?.unit ?? EMPTY,
+    unitPrice: Number(li?.unitPrice) || 0,
+    total: Number(li?.totalPrice) || 0,
+  }));
+  return {
+    id: raw?.id,
+    code: raw?.returnNumber ?? EMPTY,
+    refInbound: raw?.inboundId ? raw.inboundId.slice(0, 8) : EMPTY,
+    supplier: raw?.supplier?.name ?? "Supplier belum tertaut",
+    warehouse: raw?.warehouse?.name ?? EMPTY,
+    returnReason: raw?.notes ?? EMPTY,
+    debitNote: raw?.debitNoteNumber ?? EMPTY,
+    totalAmount: Number(raw?.totalValue) || 0,
+    requesterName: raw?.creator?.fullName ?? EMPTY,
+    creatorRole: "Pembuat Retur",
+    title: raw?.notes ?? EMPTY,
+    partnerName: raw?.supplier?.name ?? EMPTY,
+    date: formatDate(raw?.date ?? raw?.createdAt),
+    status: approvalStatusOf(raw?.status),
+    notes: raw?.notes ?? EMPTY,
+    lineItems,
+  };
+}
 
 export default function PurchaseReturnApprovalPage() {
+  const qc = useQueryClient();
+  const queryKey = ["purchase-returns-approval"];
+
+  const { data, isLoading, isError, error, refetch } = useQuery<any[]>({
+    queryKey,
+    queryFn: async () => {
+      const resp = await api.get("/scm/purchase-returns");
+      const body = unwrapResponse<any>(resp);
+      return Array.isArray(body) ? body : (body?.data ?? []);
+    },
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.post(`/scm/purchase-returns/${id}/approve`).then((r) => unwrapResponse(r)),
+    onSuccess: () => {
+      toast.success("Retur pembelian disetujui.");
+      qc.invalidateQueries({ queryKey });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Gagal menyetujui retur pembelian."),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: (id: string) =>
+      api
+        .patch(`/scm/purchase-returns/${id}/status`, {
+          status: "CANCELLED",
+          notes: "Ditolak dari layar persetujuan retur pembelian.",
+        })
+        .then((r) => unwrapResponse(r)),
+    onSuccess: () => {
+      toast.success("Retur pembelian dibatalkan.");
+      qc.invalidateQueries({ queryKey });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Gagal membatalkan retur pembelian."),
+  });
+
+  const items = React.useMemo<PurchaseReturnItem[]>(
+    () => (Array.isArray(data) ? data.map(toItem) : []),
+    [data],
+  );
+
   const columns: ApprovalColumn<PurchaseReturnItem>[] = [
     {
       header: "No. Retur",
       accessor: "code",
       sortable: true,
-      render: (item) => <DnaCell.code>{item.code}</DnaCell.code>,
+      render: (item) => <DnaCell.Code value={item.code} subtitle={`GR: ${item.refInbound}`} />,
     },
     {
       header: "Supplier",
@@ -137,15 +160,7 @@ export default function PurchaseReturnApprovalPage() {
       ),
     },
     {
-      header: "Ref. PO",
-      accessor: "refPo",
-      sortable: true,
-      render: (item) => (
-        <span className="text-blue-600 font-mono font-medium text-xs whitespace-nowrap">{item.refPo}</span>
-      ),
-    },
-    {
-      header: "Alasan Retur",
+      header: "Catatan Retur",
       accessor: "returnReason",
       render: (item) => (
         <p className="text-xs text-slate-700 line-clamp-2 max-w-xs">{item.returnReason}</p>
@@ -155,7 +170,7 @@ export default function PurchaseReturnApprovalPage() {
       header: "Pemohon",
       accessor: "requesterName",
       render: (item) => (
-        <span className="font-medium text-slate-700 whitespace-nowrap">{item.requesterName}</span>
+        <DnaCell.Text primary={item.requesterName} secondary={`Tgl: ${item.date}`} />
       ),
     },
     {
@@ -166,15 +181,11 @@ export default function PurchaseReturnApprovalPage() {
       ),
     },
     {
-      header: "Total Nilai Klaim",
+      header: "Total Nilai Retur",
       accessor: "totalAmount",
       align: "right",
       sortable: true,
-      render: (item) => (
-        <span className="font-mono font-bold text-slate-900">
-          {formatRupiah(item.totalAmount)}
-        </span>
-      ),
+      render: (item) => <DnaCell.Currency value={item.totalAmount} />,
     },
     {
       header: "Status",
@@ -203,49 +214,70 @@ export default function PurchaseReturnApprovalPage() {
   const buildDetailData = (item: PurchaseReturnItem): ApprovalDetailData => ({
     id: item.id,
     code: item.code,
-    title: `Retur Pembelian: ${item.supplier} (${item.refPo})`,
+    title: `Retur Pembelian: ${item.supplier}`,
     category: "RETUR PEMBELIAN VENDOR",
     status: item.status,
     date: item.date,
-    dueDate: item.dueDate,
     creatorName: item.requesterName,
     creatorRole: item.creatorRole,
     partnerName: item.supplier,
     partnerLabel: "Supplier Vendor",
     warehouseName: item.warehouse,
     totalAmount: item.totalAmount,
-    notes: `${item.returnReason} — Catatan Tambahan: ${item.notes}`,
+    notes: `Catatan: ${item.notes} | Nota Debit: ${item.debitNote}`,
     lineItems: item.lineItems,
     timeline: [
       {
         id: "tl-1",
-        action: "Tiket Retur Dibuat oleh Gudang / QC",
+        action: "Retur pembelian tercatat di sistem",
         actor: item.requesterName,
         role: item.creatorRole,
-        timestamp: `${item.date} 10:00 WIB`,
+        timestamp: item.date,
         status: "completed",
-        notes: "Barang reject dipisahkan ke area karantina retur gudang.",
       },
       {
         id: "tl-2",
-        action: "Konfirmasi Nota Debit & Penyesuaian Hutang Dagang (AP)",
-        actor: "Finance AP Specialist",
-        role: "Accounting Dept",
-        timestamp: `${item.date} 13:45 WIB`,
-        status: "completed",
-        notes: "Penyesuaian faktur pembelian disiapkan menunggu approval manajemen.",
-      },
-      {
-        id: "tl-3",
-        action: "Otorisasi Direktur Operasional / SCM Head",
-        actor: "Head of Supply Chain",
+        action: "Otorisasi retur pembelian (stok & nota debit)",
+        actor: "Menunggu keputusan approver",
         role: "Management",
-        timestamp: item.status === "APPROVED" ? `${item.date} 16:30 WIB` : "Menunggu Eksekusi",
-        status: item.status === "APPROVED" ? "completed" : item.status === "REJECTED" ? "failed" : "pending",
-        notes: item.status === "REJECTED" ? item.notes : undefined,
+        timestamp: item.status === "PENDING" ? "Menunggu eksekusi" : item.date,
+        status:
+          item.status === "APPROVED"
+            ? "completed"
+            : item.status === "REJECTED"
+            ? "failed"
+            : "pending",
       },
     ],
   });
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-slate-400">Memuat daftar retur pembelian...</div>;
+  }
+
+  if (isError) {
+    const errStatus = (error as { response?: { status?: number } })?.response?.status;
+    const denied = errStatus === 401 || errStatus === 403;
+    return (
+      <div className="p-8">
+        <DnaErrorState
+          title={denied ? "Akses ditolak" : "Gagal memuat data"}
+          message={
+            denied
+              ? "Akun ini tidak berwenang membaca daftar retur pembelian."
+              : "Daftar retur pembelian tidak dapat diambil dari server."
+          }
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="p-8 text-center text-slate-400">Belum ada retur pembelian pada sistem.</div>
+    );
+  }
 
   return (
     <ApprovalPageShell
@@ -257,10 +289,12 @@ export default function PurchaseReturnApprovalPage() {
         { label: "Persetujuan", href: "/approvals/purchase" },
         { label: "Retur Pembelian" },
       ]}
-      items={INITIAL_PURCHASE_RETURN_DATA}
+      items={items}
       columns={columns}
       getDetailData={buildDetailData}
-      searchPlaceholder="Cari nomor retur, ref PO, nama vendor..."
+      onApprove={(id) => approveMutation.mutateAsync(id)}
+      onReject={(id) => rejectMutation.mutateAsync(id)}
+      searchPlaceholder="Cari nomor retur, nama vendor, catatan..."
     />
   );
 }

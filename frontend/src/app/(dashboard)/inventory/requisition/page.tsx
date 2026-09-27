@@ -35,8 +35,25 @@ import {
   DnaBadge,
   DnaModal,
   DnaTabNav,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
+
+// Form option list (production divisions requesting material), not business data.
+const TARGET_DIVISIONS = [
+  "Ruang Mixing Produksi - Line A",
+  "Ruang Mixing Produksi - Line B",
+  "Line Packaging & Boxing - Line C",
+  "Ruang Filling & Sealing",
+  "Laboratorium R&D / Formularium",
+  "Quality Control (QC Field Lab)",
+  "Maintenance & Engineering",
+];
 
 interface RequisitionItem {
   id: string;
@@ -65,107 +82,6 @@ interface MaterialRequisition {
   items: RequisitionItem[];
 }
 
-const INITIAL_REQUISITIONS: MaterialRequisition[] = [
-  {
-    id: "req-1",
-    requisitionNumber: "REQ-202609-0012",
-    requestDate: "2026-09-09",
-    fromWarehouse: "Gudang Bahan Baku Utama (WH-01)",
-    toDivision: "Ruang Mixing Produksi - Line A",
-    spkNumber: "SPK-2026-09-008",
-    batchNumber: "LOT-BL-2609-01",
-    purpose: "Bahan Baku Batch 1 Body Lotion Brightening 100ml (PO-202608-000033)",
-    totalItems: 4,
-    requestedBy: "Rahmat Hidayat (Supervisor Mixing)",
-    status: "APPROVED",
-    items: [
-      { id: "ri-1", materialCode: "BBK00028", materialName: "Super Moisturing Max", category: "BAHAN_BAKU", requestedQty: 45.5, availableStock: 120.0, unit: "Kg" },
-      { id: "ri-2", materialCode: "BBK00031", materialName: "Niacinamide PC (Vitamin B3)", category: "BAHAN_BAKU", requestedQty: 15.0, availableStock: 85.0, unit: "Kg" },
-      { id: "ri-3", materialCode: "BBK00045", materialName: "Cetyl Alcohol Flakes", category: "BAHAN_BAKU", requestedQty: 30.0, availableStock: 250.0, unit: "Kg" },
-      { id: "ri-4", materialCode: "BBK00092", materialName: "Fragrance Sweet Vanilla", category: "BAHAN_BAKU", requestedQty: 3.5, availableStock: 18.0, unit: "Kg" }
-    ]
-  },
-  {
-    id: "req-2",
-    requisitionNumber: "REQ-202609-0013",
-    requestDate: "2026-09-09",
-    fromWarehouse: "Gudang Kemas & Box (WH-02)",
-    toDivision: "Line Packaging & Boxing - Line C",
-    spkNumber: "SPK-2026-09-006",
-    batchNumber: "LOT-FS-2609-03",
-    purpose: "Kemas Primer & Sekunder Facial Wash Tea Tree 100ml",
-    totalItems: 3,
-    requestedBy: "Siti Rahma (Lead Packing)",
-    status: "PENDING",
-    items: [
-      { id: "ri-5", materialCode: "KMS00012", materialName: "Botol Tube 100ml Doff White + Flip Cap", category: "BAHAN_KEMAS", requestedQty: 5000, availableStock: 12500, unit: "Pcs" },
-      { id: "ri-6", materialCode: "KMS00088", materialName: "Inner Box Printing Ivory 300gsm", category: "BAHAN_KEMAS", requestedQty: 5000, availableStock: 5200, unit: "Pcs" },
-      { id: "ri-7", materialCode: "KMS00105", materialName: "Master Carton Box K125/M125 (Isi 48)", category: "BAHAN_KEMAS", requestedQty: 105, availableStock: 350, unit: "Pcs" }
-    ]
-  },
-  {
-    id: "req-3",
-    requisitionNumber: "REQ-202609-0010",
-    requestDate: "2026-09-08",
-    fromWarehouse: "Gudang Bahan Baku Utama (WH-01)",
-    toDivision: "Laboratorium R&D / Formularium",
-    spkNumber: "SAMPLE-2026-089",
-    purpose: "Bahan Uji Coba Trial Formula Serum Peptide Anti-Aging",
-    totalItems: 2,
-    requestedBy: "Dr. Farah (R&D Chemist)",
-    status: "COMPLETED",
-    items: [
-      { id: "ri-8", materialCode: "BBK00112", materialName: "Copper Tripeptide-1 Solution 5%", category: "BAHAN_BAKU", requestedQty: 0.5, availableStock: 2.2, unit: "Kg" },
-      { id: "ri-9", materialCode: "BBK00015", materialName: "Hyaluronic Acid Multi-Molecular", category: "BAHAN_BAKU", requestedQty: 1.0, availableStock: 14.5, unit: "Kg" }
-    ]
-  },
-  {
-    id: "req-4",
-    requisitionNumber: "REQ-202609-0008",
-    requestDate: "2026-09-07",
-    fromWarehouse: "Gudang Bahan Baku Utama (WH-01)",
-    toDivision: "Ruang Filling & Sealing",
-    spkNumber: "SPK-2026-08-044",
-    purpose: "Bahan Tambahan Emulsifier Batch 2 Hair Tonic",
-    totalItems: 1,
-    requestedBy: "Budi Santoso (Foreman)",
-    status: "REJECTED",
-    approvalNotes: "Stok fisik di WH-01 sedang dalam masa karantina QA Re-testing. Mohon gunakan Batch Alternatif.",
-    items: [
-      { id: "ri-10", materialCode: "BBK00067", materialName: "Polysorbate 20 Pure Grade", category: "BAHAN_BAKU", requestedQty: 25.0, availableStock: 0, unit: "Kg" }
-    ]
-  }
-];
-
-const MASTER_WAREHOUSES = [
-  "Gudang Bahan Baku Utama (WH-01)",
-  "Gudang Kemas & Box (WH-02)",
-  "Gudang Produk Jadi (WH-03)",
-  "Gudang Karantina & QC (WH-04)",
-  "Gudang Retur & Reject (WH-05)"
-];
-
-const TARGET_DIVISIONS = [
-  "Ruang Mixing Produksi - Line A",
-  "Ruang Mixing Produksi - Line B",
-  "Line Packaging & Boxing - Line C",
-  "Ruang Filling & Sealing",
-  "Laboratorium R&D / Formularium",
-  "Quality Control (QC Field Lab)",
-  "Maintenance & Engineering"
-];
-
-const AVAILABLE_MATERIALS = [
-  { code: "BBK00028", name: "Super Moisturing Max", category: "BAHAN_BAKU", unit: "Kg", stock: 120.0 },
-  { code: "BBK00031", name: "Niacinamide PC (Vitamin B3)", category: "BAHAN_BAKU", unit: "Kg", stock: 85.0 },
-  { code: "BBK00045", name: "Cetyl Alcohol Flakes", category: "BAHAN_BAKU", unit: "Kg", stock: 250.0 },
-  { code: "BBK00092", name: "Fragrance Sweet Vanilla", category: "BAHAN_BAKU", unit: "Kg", stock: 18.0 },
-  { code: "BBK00112", name: "Copper Tripeptide-1 Solution 5%", category: "BAHAN_BAKU", unit: "Kg", stock: 2.2 },
-  { code: "KMS00012", name: "Botol Tube 100ml Doff White + Flip Cap", category: "BAHAN_KEMAS", unit: "Pcs", stock: 12500 },
-  { code: "KMS00088", name: "Inner Box Printing Ivory 300gsm", category: "BAHAN_KEMAS", unit: "Pcs", stock: 5200 },
-  { code: "KMS00105", name: "Master Carton Box K125/M125 (Isi 48)", category: "BAHAN_KEMAS", unit: "Pcs", stock: 350 }
-];
-
 export default function MaterialRequisitionPage() {
   return (
     <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Permintaan Barang...</div>}>
@@ -178,7 +94,89 @@ function MaterialRequisitionContent() {
   const searchParams = useSearchParams();
   const toast = useDnaToast();
   const queryClient = useQueryClient();
-  const [dataList, setDataList] = useState<MaterialRequisition[]>(INITIAL_REQUISITIONS);
+
+  // Queries
+  const { data: rawRequirements = [], isLoading } = useQuery({
+    queryKey: ["scm-goods-requirements"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/scm/goods-requirements");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: warehouseList = [] } = useQuery({
+    queryKey: ["warehouse-warehouses"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/warehouses");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: catalogMaterials = [] } = useQuery({
+    queryKey: ["warehouse-catalog"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/catalog");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: rawSalesOrders = [] } = useQuery({
+    queryKey: ["commercial-sales-orders"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/commercial/sales-orders");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const dataList: MaterialRequisition[] = useMemo(() => {
+    if (!rawRequirements || !Array.isArray(rawRequirements)) return [];
+    return rawRequirements.map((r: any) => ({
+      id: r.id,
+      requisitionNumber: r.code || `REQ-${r.id.slice(0, 8).toUpperCase()}`,
+      requestDate: r.date ? new Date(r.date).toISOString().split("T")[0] : "-",
+      fromWarehouse: r.notes?.includes("[Gudang:")
+        ? r.notes.split("[Gudang:")[1]?.split("]")[0]?.trim()
+        : "Gudang Bahan Baku",
+      toDivision: r.notes?.includes("[Divisi:")
+        ? r.notes.split("[Divisi:")[1]?.split("]")[0]?.trim()
+        : "Ruang Mixing Produksi",
+      spkNumber: r.notes?.includes("[SPK:")
+        ? r.notes.split("[SPK:")[1]?.split("]")[0]?.trim()
+        : r.salesOrderId
+        ? `SO-${r.salesOrderId.slice(0, 8)}`
+        : "-",
+      purpose: r.notes?.replace(/\[.*?\]/g, "").trim() || "Kebutuhan Material Produksi",
+      totalItems: (r.items || []).length,
+      requestedBy: "Tim Produksi",
+      status: (r.status as MaterialRequisition["status"]) || "PENDING",
+      items: (r.items || []).map((it: any) => ({
+        id: it.id,
+        materialCode: it.material?.code || it.materialId?.slice(0, 8) || "MAT-01",
+        materialName: it.material?.name || "Bahan Baku",
+        category: "BAHAN_BAKU" as const,
+        requestedQty: Number(it.qty || 0),
+        availableStock: Number(it.material?.stockQty || it.material?.stock || 0),
+        unit: it.material?.unit || "Kg",
+        notes: it.notes || "-",
+      })),
+    }));
+  }, [rawRequirements]);
 
   // Filters & State
   const [activeTab, setActiveTab] = useState<string>("ALL");
@@ -198,12 +196,14 @@ function MaterialRequisitionContent() {
   }, [searchParams]);
 
   // Form State
-  const [fromWarehouse, setFromWarehouse] = useState(MASTER_WAREHOUSES[0]);
-  const [toDivision, setToDivision] = useState(TARGET_DIVISIONS[0]);
+  const [fromWarehouse, setFromWarehouse] = useState("");
+  const [toDivision, setToDivision] = useState("Ruang Mixing Produksi - Line A");
+  const [selectedSalesOrderId, setSelectedSalesOrderId] = useState("");
   const [spkNumber, setSpkNumber] = useState("");
   const [batchNumber, setBatchNumber] = useState("");
   const [purpose, setPurpose] = useState("");
   const [cartItems, setCartItems] = useState<Array<{
+    materialId: string;
     materialCode: string;
     materialName: string;
     category: "BAHAN_BAKU" | "BAHAN_KEMAS" | "CONSUMABLE";
@@ -212,9 +212,22 @@ function MaterialRequisitionContent() {
     unit: string;
     notes?: string;
   }>>([]);
-  const [selectedMaterialCode, setSelectedMaterialCode] = useState("");
+  const [selectedMaterialId, setSelectedMaterialId] = useState("");
   const [itemQty, setItemQty] = useState<number>(1);
   const [itemNote, setItemNote] = useState("");
+
+  useEffect(() => {
+    if (warehouseList.length > 0 && !fromWarehouse) {
+      setFromWarehouse(warehouseList[0].name);
+    }
+  }, [warehouseList, fromWarehouse]);
+
+  useEffect(() => {
+    if (rawSalesOrders.length > 0 && !selectedSalesOrderId) {
+      setSelectedSalesOrderId(rawSalesOrders[0].id);
+      setSpkNumber(rawSalesOrders[0].orderNumber || rawSalesOrders[0].id.slice(0, 8));
+    }
+  }, [rawSalesOrders, selectedSalesOrderId]);
 
   // Calculate KPIs
   const kpis = useMemo(() => {
@@ -256,11 +269,11 @@ function MaterialRequisitionContent() {
 
   // Cart Handlers
   const handleAddItemToCart = () => {
-    if (!selectedMaterialCode) {
+    if (!selectedMaterialId) {
       toast.error("Pilih material terlebih dahulu");
       return;
     }
-    const mat = AVAILABLE_MATERIALS.find(m => m.code === selectedMaterialCode);
+    const mat = catalogMaterials.find((m: any) => m.id === selectedMaterialId);
     if (!mat) return;
 
     if (itemQty <= 0) {
@@ -268,37 +281,38 @@ function MaterialRequisitionContent() {
       return;
     }
 
-    const existing = cartItems.find(c => c.materialCode === mat.code);
+    const existing = cartItems.find((c) => c.materialId === mat.id);
     if (existing) {
-      setCartItems(cartItems.map(c => c.materialCode === mat.code ? { ...c, requestedQty: c.requestedQty + itemQty } : c));
+      setCartItems(cartItems.map((c) => c.materialId === mat.id ? { ...c, requestedQty: c.requestedQty + itemQty } : c));
     } else {
       setCartItems([
         ...cartItems,
         {
-          materialCode: mat.code,
+          materialId: mat.id,
+          materialCode: mat.code || mat.id.slice(0, 8),
           materialName: mat.name,
-          category: mat.category as any,
+          category: "BAHAN_BAKU",
           requestedQty: itemQty,
-          availableStock: mat.stock,
-          unit: mat.unit,
-          notes: itemNote
+          availableStock: Number(mat.stock || mat.currentStock || 0),
+          unit: mat.unit || "Kg",
+          notes: itemNote,
         }
       ]);
     }
 
-    setSelectedMaterialCode("");
+    setSelectedMaterialId("");
     setItemQty(1);
     setItemNote("");
     toast.success(`${mat.name} ditambahkan ke daftar permintaan`);
   };
 
-  const handleRemoveFromCart = (code: string) => {
-    setCartItems(cartItems.filter(c => c.materialCode !== code));
+  const handleRemoveFromCart = (id: string) => {
+    setCartItems(cartItems.filter((c) => c.materialId !== id));
   };
 
-  const handleCreateRequisition = () => {
-    if (!spkNumber.trim()) {
-      toast.error("Nomor SPK / Referensi Order wajib diisi");
+  const handleCreateRequisition = async () => {
+    if (!selectedSalesOrderId) {
+      toast.error("Pilih Sales Order terlebih dahulu");
       return;
     }
     if (!purpose.trim()) {
@@ -310,60 +324,53 @@ function MaterialRequisitionContent() {
       return;
     }
 
-    const todayStr = new Date().toISOString().split("T")[0];
-    const newNo = `REQ-202609-00${String(dataList.length + 10).padStart(2, "0")}`;
+    try {
+      await api.post("/scm/goods-requirements", {
+        salesOrderId: selectedSalesOrderId,
+        date: new Date().toISOString(),
+        notes: `[Gudang: ${fromWarehouse}] [Divisi: ${toDivision}] [SPK: ${spkNumber}] ${batchNumber ? `[Batch: ${batchNumber}] ` : ""}${purpose}`.trim(),
+        items: cartItems.map((c) => ({
+          materialId: c.materialId,
+          qty: c.requestedQty,
+          notes: c.notes || undefined,
+        })),
+      });
 
-    const newReq: MaterialRequisition = {
-      id: `req-${Date.now()}`,
-      requisitionNumber: newNo,
-      requestDate: todayStr,
-      fromWarehouse,
-      toDivision,
-      spkNumber,
-      batchNumber: batchNumber || undefined,
-      purpose,
-      totalItems: cartItems.length,
-      requestedBy: "Logistics Admin (Anda)",
-      status: "PENDING",
-      items: cartItems.map((c, idx) => ({
-        id: `ri-${Date.now()}-${idx}`,
-        ...c
-      }))
-    };
-
-    setDataList([newReq, ...dataList]);
-    setIsCreateOpen(false);
-    setCartItems([]);
-    setSpkNumber("");
-    setBatchNumber("");
-    setPurpose("");
-    toast.success(`Permintaan Barang ${newNo} berhasil diajukan dan menunggu persetujuan Kepala Gudang.`);
+      toast.success("Permintaan Barang (Goods Requirement) berhasil diajukan.");
+      queryClient.invalidateQueries({ queryKey: ["scm-goods-requirements"] });
+      setIsCreateOpen(false);
+      setCartItems([]);
+      setBatchNumber("");
+      setPurpose("");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Gagal mengajukan permintaan barang");
+    }
   };
 
-  const handleApprove = (id: string) => {
-    setDataList(dataList.map(item => {
-      if (item.id === id) {
-        return { ...item, status: "APPROVED" };
+  const handleApprove = async (id: string) => {
+    try {
+      await api.patch(`/scm/goods-requirements/${id}/status`, { status: "APPROVED" });
+      toast.success("Permintaan barang disetujui. Petugas gudang dapat menyiapkan barang (Picking).");
+      queryClient.invalidateQueries({ queryKey: ["scm-goods-requirements"] });
+      if (selectedReq && selectedReq.id === id) {
+        setSelectedReq({ ...selectedReq, status: "APPROVED" });
       }
-      return item;
-    }));
-    if (selectedReq && selectedReq.id === id) {
-      setSelectedReq({ ...selectedReq, status: "APPROVED" });
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Gagal menyetujui permintaan barang");
     }
-    toast.success("Permintaan barang disetujui. Petugas gudang dapat menyiapkan barang (Picking).");
   };
 
-  const handleHandoverComplete = (id: string) => {
-    setDataList(dataList.map(item => {
-      if (item.id === id) {
-        return { ...item, status: "COMPLETED" };
+  const handleHandoverComplete = async (id: string) => {
+    try {
+      await api.patch(`/scm/goods-requirements/${id}/status`, { status: "COMPLETED" });
+      toast.success("Barang telah diserahterimakan dan status diperbarui.");
+      queryClient.invalidateQueries({ queryKey: ["scm-goods-requirements"] });
+      if (selectedReq && selectedReq.id === id) {
+        setSelectedReq({ ...selectedReq, status: "COMPLETED" });
       }
-      return item;
-    }));
-    if (selectedReq && selectedReq.id === id) {
-      setSelectedReq({ ...selectedReq, status: "COMPLETED" });
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Gagal mengonfirmasi serah terima");
     }
-    toast.success("Barang telah diserahterimakan dan stok gudang terpotong secara otomatis.");
   };
 
   const getStatusBadge = (status: MaterialRequisition["status"]) => {
@@ -385,7 +392,7 @@ function MaterialRequisitionContent() {
       <DnaPageHeader
         title="Permintaan Barang"
         description="Kelola pengajuan pengeluaran bahan baku, kemas, dan pendukung dari gudang ke divisi produksi / R&D."
-        badge={<DnaBadge variant="neutral">SCR-033 / SCM-WH-REQ</DnaBadge>}
+        badge={<DnaBadge variant="default">SCR-033 / SCM-WH-REQ</DnaBadge>}
         actions={
           <div className="flex items-center gap-2.5">
             <DnaButton
@@ -472,60 +479,60 @@ function MaterialRequisitionContent() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700 uppercase tracking-wider">
-              <tr>
-                <th className="py-3 px-4">No. Permintaan</th>
-                <th className="py-3 px-4">Tanggal</th>
-                <th className="py-3 px-4">Gudang Asal</th>
-                <th className="py-3 px-4">Tujuan / Divisi</th>
-                <th className="py-3 px-4">No. SPK</th>
-                <th className="py-3 px-4">Keperluan</th>
-                <th className="py-3 px-4 text-center">Item</th>
-                <th className="py-3 px-4">Pemohon</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-normal">
+          <DnaTable className="w-full text-left text-sm text-slate-600">
+            <DnaTableHead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700 uppercase tracking-wider">
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4">No. Permintaan</DnaTh>
+                <DnaTh className="py-3 px-4">Tanggal</DnaTh>
+                <DnaTh className="py-3 px-4">Gudang Asal</DnaTh>
+                <DnaTh className="py-3 px-4">Tujuan / Divisi</DnaTh>
+                <DnaTh className="py-3 px-4">No. SPK</DnaTh>
+                <DnaTh className="py-3 px-4">Keperluan</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Item</DnaTh>
+                <DnaTh className="py-3 px-4">Pemohon</DnaTh>
+                <DnaTh className="py-3 px-4">Status</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody className="divide-y divide-slate-100 font-normal">
               {filteredList.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={10} className="py-12 text-center text-slate-400">
                     <Package className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada dokumen permintaan barang yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredList.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-indigo-600 text-xs whitespace-nowrap">
+                  <DnaTableRow key={row.id} className="hover:bg-slate-50/70 transition-colors">
+                    <DnaTd className="py-3 px-4 font-bold text-indigo-600 text-xs whitespace-nowrap tabular-nums">
                       {row.requisitionNumber}
-                    </td>
-                    <td className="py-3 px-4 text-xs whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-xs whitespace-nowrap tabular-nums">
                       {row.requestDate}
-                    </td>
-                    <td className="py-3 px-4 text-xs font-medium text-slate-800 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-xs font-medium text-slate-800 whitespace-nowrap">
                       {row.fromWarehouse}
-                    </td>
-                    <td className="py-3 px-4 text-xs font-semibold text-slate-900 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-xs font-semibold text-slate-900 whitespace-nowrap">
                       {row.toDivision}
-                    </td>
-                    <td className="py-3 px-4 text-xs font-mono font-medium text-slate-900 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-xs font-medium text-slate-900 whitespace-nowrap tabular-nums">
                       {row.spkNumber}
-                    </td>
-                    <td className="py-3 px-4 text-xs text-slate-700 max-w-xs truncate">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-xs text-slate-700 max-w-xs truncate">
                       {row.purpose}
-                    </td>
-                    <td className="py-3 px-4 text-center text-xs font-semibold text-slate-800">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-center text-xs font-semibold text-slate-800 tabular-nums">
                       {row.totalItems} Material
-                    </td>
-                    <td className="py-3 px-4 text-xs text-slate-600">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-xs text-slate-600">
                       {row.requestedBy}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 whitespace-nowrap">
                       {getStatusBadge(row.status)}
-                    </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1.5">
                         <DnaButton
                           variant="ghost"
@@ -559,12 +566,12 @@ function MaterialRequisitionContent() {
                           </DnaButton>
                         )}
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -620,7 +627,7 @@ function MaterialRequisitionContent() {
             <div className="grid grid-cols-3 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
               <div>
                 <span className="text-slate-500 block">No. SPK / Referensi</span>
-                <span className="font-bold text-slate-900 font-mono text-sm">{selectedReq.spkNumber}</span>
+                <span className="font-bold text-slate-900 tabular-nums text-sm">{selectedReq.spkNumber}</span>
               </div>
               <div>
                 <span className="text-slate-500 block">Status Pengajuan</span>
@@ -643,38 +650,38 @@ function MaterialRequisitionContent() {
             <div>
               <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">Daftar Material yang Diminta</h4>
               <div className="border border-slate-200 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-xs text-slate-600">
-                  <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
-                    <tr>
-                      <th className="py-2.5 px-3">Kode</th>
-                      <th className="py-2.5 px-3">Nama Material</th>
-                      <th className="py-2.5 px-3">Kategori</th>
-                      <th className="py-2.5 px-3 text-right">Stok Gudang</th>
-                      <th className="py-2.5 px-3 text-right">Qty Diminta</th>
-                      <th className="py-2.5 px-3">Satuan</th>
-                      <th className="py-2.5 px-3 text-center">Status Stok</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
+                <DnaTable className="w-full text-left text-xs text-slate-600">
+                  <DnaTableHead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3">Kode</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Nama Material</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Kategori</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Stok Gudang</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Qty Diminta</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Satuan</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-center">Status Stok</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody className="divide-y divide-slate-100">
                     {selectedReq.items.map((it) => {
                       const isSufficient = it.availableStock >= it.requestedQty;
                       return (
-                        <tr key={it.id} className="hover:bg-slate-50">
-                          <td className="py-2.5 px-3 font-mono font-medium text-indigo-600">{it.materialCode}</td>
-                          <td className="py-2.5 px-3 font-semibold text-slate-800">{it.materialName}</td>
-                          <td className="py-2.5 px-3">
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-slate-200 font-mono text-slate-700">
+                        <DnaTableRow key={it.id} className="hover:bg-slate-50">
+                          <DnaTd className="py-2.5 px-3 font-medium text-indigo-600 tabular-nums">{it.materialCode}</DnaTd>
+                          <DnaTd className="py-2.5 px-3 font-semibold text-slate-800">{it.materialName}</DnaTd>
+                          <DnaTd className="py-2.5 px-3">
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-medium">
                               {it.category}
                             </span>
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-mono font-medium text-slate-600">
+                          </DnaTd>
+                          <DnaTd className="py-2.5 px-3 text-right font-medium text-slate-600 tabular-nums">
                             {it.availableStock.toLocaleString("id-ID")}
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-mono font-bold text-indigo-700">
+                          </DnaTd>
+                          <DnaTd className="py-2.5 px-3 text-right font-bold text-indigo-700 tabular-nums">
                             {it.requestedQty.toLocaleString("id-ID")}
-                          </td>
-                          <td className="py-2.5 px-3 text-slate-500">{it.unit}</td>
-                          <td className="py-2.5 px-3 text-center">
+                          </DnaTd>
+                          <DnaTd className="py-2.5 px-3 text-slate-500">{it.unit}</DnaTd>
+                          <DnaTd className="py-2.5 px-3 text-center">
                             {isSufficient ? (
                               <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[10px] font-semibold">
                                 Tersedia
@@ -684,12 +691,12 @@ function MaterialRequisitionContent() {
                                 Stok Defisit
                               </span>
                             )}
-                          </td>
-                        </tr>
+                          </DnaTd>
+                        </DnaTableRow>
                       );
                     })}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
           </div>
@@ -730,9 +737,13 @@ function MaterialRequisitionContent() {
                 onChange={(e) => setFromWarehouse(e.target.value)}
                 className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
               >
-                {MASTER_WAREHOUSES.map((wh) => (
-                  <option key={wh} value={wh}>{wh}</option>
-                ))}
+                {warehouseList.length === 0 ? (
+                  <option value="">Gudang Belum Tersedia</option>
+                ) : (
+                  warehouseList.map((wh) => (
+                    <option key={wh.id} value={wh.name}>{wh.name}</option>
+                  ))
+                )}
               </select>
             </div>
             <div>
@@ -743,7 +754,7 @@ function MaterialRequisitionContent() {
                 onChange={(e) => setToDivision(e.target.value)}
                 className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
               >
-                {TARGET_DIVISIONS.map((div) => (
+                {TARGET_DIVISIONS.map((div: string) => (
                   <option key={div} value={div}>{div}</option>
                 ))}
               </select>
@@ -752,14 +763,29 @@ function MaterialRequisitionContent() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-700 font-bold mb-1">No. SPK / No. Order Referensi *</label>
-              <input
-                type="text"
-                placeholder="Contoh: SPK-2026-09-012"
-                value={spkNumber}
-                onChange={(e) => setSpkNumber(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
-              />
+              <label className="block text-slate-700 font-bold mb-1">Referensi Sales Order *</label>
+              <select
+                aria-label="Referensi Sales Order"
+                value={selectedSalesOrderId}
+                onChange={(e) => {
+                  setSelectedSalesOrderId(e.target.value);
+                  const found = rawSalesOrders.find((so: any) => so.id === e.target.value);
+                  if (found) {
+                    setSpkNumber(found.orderNumber || found.id.slice(0, 8));
+                  }
+                }}
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                {rawSalesOrders.length === 0 ? (
+                  <option value="">Tidak ada Sales Order aktif</option>
+                ) : (
+                  rawSalesOrders.map((so: any) => (
+                    <option key={so.id} value={so.id}>
+                      {so.orderNumber || so.id.slice(0, 8)} - {so.customer?.name || "Customer"}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
             <div>
               <label className="block text-slate-700 font-bold mb-1">No. Batch / Lot (Opsional)</label>
@@ -768,7 +794,7 @@ function MaterialRequisitionContent() {
                 placeholder="Contoh: LOT-2026-09"
                 value={batchNumber}
                 onChange={(e) => setBatchNumber(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 tabular-nums"
               />
             </div>
           </div>
@@ -795,14 +821,14 @@ function MaterialRequisitionContent() {
                 <label className="block text-[11px] text-slate-600 font-medium mb-1">Pilih Material / Bahan</label>
                 <select
                   aria-label="Pilih Material"
-                  value={selectedMaterialCode}
-                  onChange={(e) => setSelectedMaterialCode(e.target.value)}
+                  value={selectedMaterialId}
+                  onChange={(e) => setSelectedMaterialId(e.target.value)}
                   className="w-full text-xs border border-slate-300 rounded-lg p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
                   <option value="">-- Pilih Material --</option>
-                  {AVAILABLE_MATERIALS.map((m) => (
-                    <option key={m.code} value={m.code}>
-                      [{m.code}] {m.name} (Stok: {m.stock} {m.unit})
+                  {catalogMaterials.map((m: any) => (
+                    <option key={m.id} value={m.id}>
+                      [{m.sku || m.code || m.id.slice(0, 6)}] {m.name} (Stok: {m.stock || 0} {m.unit || "PCS"})
                     </option>
                   ))}
                 </select>
@@ -815,7 +841,7 @@ function MaterialRequisitionContent() {
                   step="any"
                   value={itemQty}
                   onChange={(e) => setItemQty(parseFloat(e.target.value) || 0)}
-                  className="w-full text-xs border border-slate-300 rounded-lg p-1.5 text-right font-mono"
+                  className="w-full text-xs border border-slate-300 rounded-lg p-1.5 text-right tabular-nums"
                 />
               </div>
               <div className="col-span-3">
@@ -835,26 +861,26 @@ function MaterialRequisitionContent() {
           {/* Cart Table */}
           {cartItems.length > 0 && (
             <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <table className="w-full text-left text-xs text-slate-600">
-                <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
-                  <tr>
-                    <th className="py-2 px-3">Kode</th>
-                    <th className="py-2 px-3">Nama Material</th>
-                    <th className="py-2 px-3 text-right">Stok Real</th>
-                    <th className="py-2 px-3 text-right">Qty Diminta</th>
-                    <th className="py-2 px-3">Satuan</th>
-                    <th className="py-2 px-3 text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <DnaTable className="w-full text-left text-xs text-slate-600">
+                <DnaTableHead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
+                  <DnaTableRow>
+                    <DnaTh className="py-2 px-3">Kode</DnaTh>
+                    <DnaTh className="py-2 px-3">Nama Material</DnaTh>
+                    <DnaTh className="py-2 px-3 text-right">Stok Real</DnaTh>
+                    <DnaTh className="py-2 px-3 text-right">Qty Diminta</DnaTh>
+                    <DnaTh className="py-2 px-3">Satuan</DnaTh>
+                    <DnaTh className="py-2 px-3 text-center">Aksi</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody className="divide-y divide-slate-100">
                   {cartItems.map((c) => (
-                    <tr key={c.materialCode}>
-                      <td className="py-2 px-3 font-mono font-medium text-indigo-600">{c.materialCode}</td>
-                      <td className="py-2 px-3 font-semibold text-slate-800">{c.materialName}</td>
-                      <td className="py-2 px-3 text-right font-mono text-slate-600">{c.availableStock}</td>
-                      <td className="py-2 px-3 text-right font-mono font-bold text-indigo-700">{c.requestedQty}</td>
-                      <td className="py-2 px-3 text-slate-500">{c.unit}</td>
-                      <td className="py-2 px-3 text-center">
+                    <DnaTableRow key={c.materialCode}>
+                      <DnaTd className="py-2 px-3 font-medium text-indigo-600 tabular-nums">{c.materialCode}</DnaTd>
+                      <DnaTd className="py-2 px-3 font-semibold text-slate-800">{c.materialName}</DnaTd>
+                      <DnaTd className="py-2 px-3 text-right tabular-nums text-slate-600">{c.availableStock}</DnaTd>
+                      <DnaTd className="py-2 px-3 text-right font-bold text-indigo-700 tabular-nums">{c.requestedQty}</DnaTd>
+                      <DnaTd className="py-2 px-3 text-slate-500">{c.unit}</DnaTd>
+                      <DnaTd className="py-2 px-3 text-center">
                         <button
                           type="button"
                           onClick={() => handleRemoveFromCart(c.materialCode)}
@@ -862,11 +888,11 @@ function MaterialRequisitionContent() {
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </div>
           )}
         </div>

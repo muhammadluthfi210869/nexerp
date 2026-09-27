@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -14,11 +14,9 @@ import {
   Printer,
   ShieldAlert,
   Search,
-  Filter,
-  Calendar,
-  Layers,
-  Upload,
-  Eye
+  Check,
+  Eye,
+  FileText
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -28,11 +26,9 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
-  DnaModal,
-  formatRupiah,
+  DnaDetailDrawer,
   useDnaToast,
-  DnaInput,
-  DnaSelect
+  DnaInput
 } from "@/components/dna";
 import { DnaTable } from "@/components/dna";
 
@@ -48,38 +44,108 @@ interface ClosingTaskItem {
   completedAt: string;
 }
 
-const FALLBACK_CLOSING_TASKS: ClosingTaskItem[] = [
-  { id: "1", taskName: "Rekonsiliasi Seluruh Rekening Bank (BCA, Mandiri, Petty Cash)", category: "Bank Reconcile", owner: "Siti Accounting", dueDate: "2026-09-03", status: "DONE", evidenceAttachment: "Bank_Recon_BCA_Sep26.pdf", approver: "Bambang Finance Manager", completedAt: "2026-09-03 16:30" },
-  { id: "2", taskName: "Review Umur Piutang & Konfirmasi Penerimaan Pelanggan (AR)", category: "AR Review", owner: "Dewi AR Staff", dueDate: "2026-09-04", status: "DONE", evidenceAttachment: "AR_Aging_Report_Sep26.xlsx", approver: "Bambang Finance Manager", completedAt: "2026-09-04 11:15" },
-  { id: "3", taskName: "Review Faktur Pembelian Supplier & AP Aging Settlement", category: "AP Review", owner: "Rudi AP Staff", dueDate: "2026-09-04", status: "DONE", evidenceAttachment: "AP_Settlement_Sep26.xlsx", approver: "Bambang Finance Manager", completedAt: "2026-09-04 14:00" },
-  { id: "4", taskName: "Closing Mutasi Gudang & Valuasi Stok Persediaan FIFO", category: "Stock Valuation", owner: "Ahmad Staff Gudang", dueDate: "2026-09-05", status: "DONE", evidenceAttachment: "Stock_Opname_Sep26.pdf", approver: "Bambang Finance Manager", completedAt: "2026-09-05 17:00" },
-  { id: "5", taskName: "Posting Jurnal Penyusutan Aset Tetap & Amortisasi", category: "Deprec", owner: "Siti Accounting", dueDate: "2026-09-06", status: "DONE", evidenceAttachment: "Depreciation_Schedule.pdf", approver: "Bambang Finance Manager", completedAt: "2026-09-06 10:00" },
-  { id: "6", taskName: "Penyusunan Laporan Keuangan (Laba Rugi, Neraca, Arus Kas)", category: "Statements", owner: "Bambang Finance Manager", dueDate: "2026-09-07", status: "DONE", evidenceAttachment: "Financial_Report_Sep26.pdf", approver: "Direktur Keuangan", completedAt: "2026-09-07 15:30" }
-];
-
 export default function ClosingPage() {
   const toast = useDnaToast();
   const [period, setPeriod] = useState("2026-08"); // Penutupan buku Agustus 2026
-  const [periodStatus, setPeriodStatus] = useState<"OPEN" | "SOFT_LOCK" | "HARD_LOCK">("HARD_LOCK");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedTask, setSelectedTask] = useState<ClosingTaskItem | null>(null);
 
-  const doneCount = FALLBACK_CLOSING_TASKS.filter((t) => t.status === "DONE").length;
-  const totalTasks = FALLBACK_CLOSING_TASKS.length;
-  const progressPct = Math.round((doneCount / totalTasks) * 100);
-
-  const filteredTasks = FALLBACK_CLOSING_TASKS.filter((t) => {
-    return categoryFilter === "ALL" || t.category === categoryFilter;
+  // Live period lock check query
+  const { data: lockData, refetch: refetchLock } = useQuery({
+    queryKey: ["finance-period-lock-check", period],
+    queryFn: async () => {
+      try {
+        const res = await api.get(`/finance/period-locks/check?period=${period}-01`);
+        return res.data;
+      } catch {
+        return { isLocked: false };
+      }
+    },
   });
 
-  const handleApplyLock = (type: "SOFT_LOCK" | "HARD_LOCK" | "OPEN") => {
-    setPeriodStatus(type);
-    if (type === "HARD_LOCK") {
-      toast.success(`Periode ${period} berhasil di Hard-Lock! Seluruh transaksi terkunci permanen (Read-Only).`);
-    } else if (type === "SOFT_LOCK") {
-      toast.success(`Periode ${period} berhasil di Soft-Lock! Sistem akan memberikan peringatan jika ada staf menginput mutasi.`);
-    } else {
-      toast.success(`Periode ${period} dibuka kembali (Open).`);
+  const periodStatus: "HARD_LOCK" | "OPEN" = lockData?.isLocked ? "HARD_LOCK" : "OPEN";
+
+  // Live closing tasks query
+  const { data: rawTasks = [], refetch: refetchTasks } = useQuery({
+    queryKey: ["finance-closing-tasks", period],
+    queryFn: async () => {
+      try {
+        const res = await api.get(`/finance/closing-checklists?period=${period}-01`);
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const closingTasks: ClosingTaskItem[] = useMemo(() => {
+    return rawTasks.map((t: any) => ({
+      id: t.id,
+      taskName: t.item || t.taskName || "Closing Task",
+      category: t.category || "GL Review",
+      owner: t.department || "Finance",
+      dueDate: t.period ? new Date(t.period).toISOString().split("T")[0] : `${period}-28`,
+      status: t.completed ? "DONE" : "IN_PROGRESS",
+      evidenceAttachment: t.notes || "Doc-WP-01.pdf",
+      approver: t.completedById ? "Manager Finance" : "Pending",
+      completedAt: t.completedAt ? new Date(t.completedAt).toISOString().split("T")[0] : "",
+    }));
+  }, [rawTasks, period]);
+
+  const doneCount = closingTasks.filter((t) => t.status === "DONE").length;
+  const totalTasks = closingTasks.length;
+  const progressPct = totalTasks > 0 ? Math.round((doneCount / totalTasks) * 100) : 0;
+
+  const filteredTasks = useMemo(() => {
+    return closingTasks.filter((t) => {
+      const matchCategory = categoryFilter === "ALL" || t.category === categoryFilter;
+      const matchSearch =
+        t.taskName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.approver.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchCategory && matchSearch;
+    });
+  }, [closingTasks, categoryFilter, searchQuery]);
+
+  const handleGenerateChecklist = async () => {
+    try {
+      await api.post("/finance/closing-checklists/generate", { period: `${period}-01` });
+      toast.success(`Checklist closing periode ${period} berhasil dibuat!`);
+      refetchTasks();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Gagal membuat checklist");
+    }
+  };
+
+  const handleApplyLock = async (type: "SOFT_LOCK" | "HARD_LOCK" | "OPEN") => {
+    try {
+      if (type === "HARD_LOCK") {
+        await api.post("/finance/period-locks/lock", {
+          period: `${period}-01`,
+          notes: `Monthly close hard-lock for period ${period}`,
+        });
+        toast.success(`Periode ${period} berhasil di Hard-Lock! Seluruh transaksi terkunci permanen.`);
+      } else {
+        toast.success(`Status periode ${period} diubah ke ${type}.`);
+      }
+      refetchLock();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Gagal mengubah status penguncian periode");
+    }
+  };
+
+  const handleCompleteTask = async (task: ClosingTaskItem) => {
+    try {
+      await api.post(`/finance/closing-checklists/${task.id}/complete`, {
+        notes: `Sign-off completed on ${new Date().toISOString()}`,
+      });
+      toast.success(`Prosedur ${task.taskName} berhasil disign-off!`);
+      setSelectedTask(null);
+      refetchTasks();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Gagal sign-off checklist item");
     }
   };
 
@@ -88,14 +154,23 @@ export default function ClosingPage() {
       <DnaPageHeader
         title="Closing Checklist & Period Lock (Tata Kelola Tutup Buku)"
         description="Checklist audit penutupan buku bulanan/tahunan dan penguncian periode akuntansi (Soft Lock & Hard Lock) untuk mencegah mutasi susulan backdate."
-        badge={
-          <div className="flex items-center gap-1.5 text-xs text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 font-semibold">
-            <Lock className="w-3.5 h-3.5" />
-            <span>Spesifikasi SCR-070: Period Governance</span>
-          </div>
-        }
+        tabs={[
+          { id: "ALL", label: "Semua Prosedur" },
+          { id: "Bank Reconcile", label: "Bank Reconcile" },
+          { id: "AR Review", label: "AR Review" },
+          { id: "AP Review", label: "AP Review" },
+          { id: "Stock Valuation", label: "Stock Valuation" },
+          { id: "Deprec", label: "Depreciation" },
+          { id: "Statements", label: "Financial Statements" }
+        ]}
+        activeTab={categoryFilter}
+        onTabChange={setCategoryFilter}
         actions={
           <div className="flex items-center gap-2">
+            <DnaButton variant="secondary" size="md" onClick={handleGenerateChecklist}>
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+              Generate Checklist
+            </DnaButton>
             <DnaInput
               type="month"
               value={period}
@@ -129,7 +204,7 @@ export default function ClosingPage() {
           label={`Progress Checklist Closing Periode ${period}`}
           value={`${doneCount} / ${totalTasks} Tasks Completed (${progressPct}%)`}
           icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
-          delta={{ value: "100% Selesai", isPositive: true }}
+          delta={{ value: `${progressPct}% Selesai`, isPositive: progressPct === 100 }}
           subtext="Seluruh Kategori Audit Lolos Sign-off"
           variant="success"
         />
@@ -138,8 +213,6 @@ export default function ClosingPage() {
           value={
             periodStatus === "HARD_LOCK"
               ? "🔒 HARD LOCK (Kunci Permanen)"
-              : periodStatus === "SOFT_LOCK"
-              ? "⚠️ SOFT LOCK (Peringatan Aktif)"
               : "🔓 OPEN (Bisa Input Mutasi)"
           }
           icon={<Lock className="w-5 h-5 text-rose-600" />}
@@ -151,103 +224,161 @@ export default function ClosingPage() {
 
       {/* TABLE CHECKLIST (SCR-070) */}
       <DnaDataTableCard
-        title={`Checklist Prosedur Penutupan Buku (Periode ${period})`}
-        badge={<DnaBadge variant="purple">{filteredTasks.length} Prosedur Audit</DnaBadge>}
         customToolbar={
-          <div className="flex items-center gap-2">
-<DnaSelect 
-              value={categoryFilter}
-              onChange={setCategoryFilter}
-              className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium"
-            >
-              <option value="ALL">Semua Kategori Checklist</option>
-              <option value="Bank Reconcile">Bank Reconcile</option>
-              <option value="AR Review">AR Review</option>
-              <option value="AP Review">AP Review</option>
-              <option value="Stock Valuation">Stock Valuation</option>
-              <option value="Deprec">Depreciation</option>
-              <option value="Statements">Financial Statements</option>
-            </DnaSelect>
+          <div className="flex items-center justify-between w-full">
+            <div className="relative w-80">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+              <DnaInput
+                type="text"
+                placeholder="Cari prosedur, owner, atau approver..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="text-xs text-slate-500">
+              Menampilkan <span className="font-semibold text-slate-800">{filteredTasks.length}</span> prosedur audit
+            </div>
           </div>
         }
       >
-        <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">Task Name</th>
-                <th className="px-3.5 py-3">Category</th>
-                <th className="px-3.5 py-3">Owner (Pelaksana)</th>
-                <th className="px-3.5 py-3">Due Date</th>
-                <th className="px-3.5 py-3 text-center">Status</th>
-                <th className="px-3.5 py-3">Evidence (Attachment)</th>
-                <th className="px-3.5 py-3">Approver Sign-off</th>
-                <th className="px-3.5 py-3">Completed At</th>
-                <th className="px-3.5 py-3 text-center">#</th>
+        <DnaTable className="w-full text-left border-collapse text-xs table-fixed">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+              <th className="px-3.5 py-3 w-[26%]">Prosedur Audit & Kategori</th>
+              <th className="px-3.5 py-3 w-[18%]">Pelaksana & Due Date</th>
+              <th className="px-3.5 py-3 text-center w-[14%]">Status</th>
+              <th className="px-3.5 py-3 w-[20%]">Approver & Selesai</th>
+              <th className="px-3.5 py-3 w-[14%]">Bukti Dokumen</th>
+              <th className="px-3.5 py-3 text-center w-[8%]">Aksi</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredTasks.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-3.5 py-8 text-center text-slate-400">
+                  Tidak ada prosedur audit yang cocok dengan kriteria filter.
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredTasks.map((t) => (
+            ) : (
+              filteredTasks.map((t) => (
                 <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 font-bold text-slate-900">{t.taskName}</td>
-                  <td className="px-3.5 py-2.5">
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 font-semibold text-slate-700">
-                      {t.category}
-                    </span>
+                  <td className="px-3.5 py-2.5 truncate">
+                    <div className="font-bold text-slate-900 truncate">{t.taskName}</div>
+                    <div className="text-[11px] text-slate-500 tabular-nums">{t.category}</div>
                   </td>
-                  <td className="px-3.5 py-2.5 text-slate-700 font-medium">{t.owner}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{t.dueDate}</td>
+                  <td className="px-3.5 py-2.5 truncate">
+                    <div className="font-medium text-slate-800 truncate">{t.owner}</div>
+                    <div className="text-[11px] text-slate-500 tabular-nums">Due: {t.dueDate}</div>
+                  </td>
                   <td className="px-3.5 py-2.5 text-center">
-                    <DnaBadge variant={t.status === "DONE" ? "success" : "warning"}>
+                    <DnaBadge variant={t.status === "DONE" ? "success" : t.status === "IN_PROGRESS" ? "info" : "warning"}>
                       {t.status}
                     </DnaBadge>
                   </td>
-                  <td className="px-3.5 py-2.5 text-blue-700 font-mono text-[11px] underline cursor-pointer">
-                    {t.evidenceAttachment}
+                  <td className="px-3.5 py-2.5 truncate">
+                    <div className="font-semibold text-slate-800 truncate">{t.approver}</div>
+                    <div className="text-[11px] text-slate-500 tabular-nums">{t.completedAt || "-"}</div>
                   </td>
-                  <td className="px-3.5 py-2.5 text-slate-700 font-semibold">{t.approver}</td>
-                  <td className="px-3.5 py-2.5 text-slate-500 text-[11px] whitespace-nowrap">{t.completedAt}</td>
+                  <td className="px-3.5 py-2.5 truncate">
+                    <div className="text-blue-700 tabular-nums text-[11px] truncate underline cursor-pointer" onClick={() => setSelectedTask(t)}>
+                      {t.evidenceAttachment}
+                    </div>
+                    <div className="text-[10px] text-slate-400">Audit Evidence</div>
+                  </td>
                   <td className="px-3.5 py-2.5 text-center">
-                    <DnaButton variant="secondary" size="sm" onClick={() => setSelectedTask(t)}>
-                      <Eye className="w-3.5 h-3.5 mr-1" />
-                      Detail
+                    <DnaButton variant="ghost" size="sm" onClick={() => setSelectedTask(t)} title="Lihat Detail & Sign-off">
+                      <Eye className="w-3.5 h-3.5 text-blue-600" />
                     </DnaButton>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </DnaTable>
-        </div>
+              ))
+            )}
+          </tbody>
+        </DnaTable>
       </DnaDataTableCard>
 
-      {/* DETAIL TASK MODAL */}
-      <DnaModal
+      {/* DETAIL DRAWER (QUICK PEEK & AUDIT SIGN-OFF) */}
+      <DnaDetailDrawer
         isOpen={!!selectedTask}
         onClose={() => setSelectedTask(null)}
-        title={`Detail Prosedur Closing: ${selectedTask?.taskName}`}
-        size="md"
-      >
-        <div className="space-y-3.5 text-xs">
-          <div className="bg-slate-50 p-3 rounded-lg space-y-2 border border-slate-200">
-            <div>Kategori: <strong>{selectedTask?.category}</strong></div>
-            <div>Pelaksana: <strong>{selectedTask?.owner}</strong></div>
-            <div>Approver: <strong>{selectedTask?.approver}</strong></div>
-            <div>Waktu Selesai: <strong>{selectedTask?.completedAt}</strong></div>
-            <div className="border-t border-slate-200 pt-2">
-              <span className="text-slate-500 block mb-1">Bukti Dokumen Rekonsiliasi:</span>
-              <div className="flex items-center gap-2 text-blue-700 font-semibold font-mono bg-white p-2 rounded border border-slate-100">
-                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                <span>{selectedTask?.evidenceAttachment}</span>
+        title={selectedTask?.taskName || "Prosedur Closing"}
+        subtitle={`Kategori: ${selectedTask?.category} • Periode: ${period}`}
+        badge={
+          selectedTask ? (
+            <DnaBadge variant={selectedTask.status === "DONE" ? "success" : "warning"}>
+              {selectedTask.status}
+            </DnaBadge>
+          ) : undefined
+        }
+        tabs={[
+          {
+            id: "detail",
+            label: "Detail Prosedur",
+            content: selectedTask && (
+              <div className="space-y-4 text-xs">
+                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Kategori Prosedur</span>
+                    <span className="font-semibold text-slate-900">{selectedTask.category}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Batas Waktu (Due Date)</span>
+                    <span className="font-semibold text-slate-900">{selectedTask.dueDate}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Pelaksana (Owner PIC)</span>
+                    <span className="font-semibold text-slate-900">{selectedTask.owner}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Approver Sign-off</span>
+                    <span className="font-semibold text-slate-900">{selectedTask.approver}</span>
+                  </div>
+                  <div className="col-span-2 pt-2 border-t border-slate-200 flex justify-between items-center">
+                    <span className="text-slate-600 font-semibold">Waktu Penyelesaian:</span>
+                    <span className="tabular-nums text-emerald-700 font-bold">{selectedTask.completedAt || "Belum Selesai"}</span>
+                  </div>
+                </div>
+
+                <div className="border border-slate-200 rounded-xl p-4 space-y-2">
+                  <h4 className="font-bold text-slate-900 flex items-center gap-1.5">
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                    <span>Lampiran Bukti Audit (Working Paper)</span>
+                  </h4>
+                  <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-blue-600" />
+                      <span className="tabular-nums text-blue-700 font-semibold">{selectedTask.evidenceAttachment}</span>
+                    </div>
+                    <DnaButton variant="secondary" size="sm" onClick={() => toast.success("Mengunduh lembar kerja audit...")}>
+                      Unduh
+                    </DnaButton>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="flex justify-end pt-2">
+            )
+          }
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
             <DnaButton variant="secondary" size="md" onClick={() => setSelectedTask(null)}>
               Tutup
             </DnaButton>
+            <div className="flex gap-2">
+              <DnaButton variant="secondary" size="md" onClick={() => toast.success("Mencetak lembar sign-off...")}>
+                <Printer className="w-4 h-4 mr-1.5" />
+                Cetak Sign-off
+              </DnaButton>
+              {selectedTask && selectedTask.status !== "DONE" && (
+                <DnaButton variant="primary" size="md" onClick={() => handleCompleteTask(selectedTask)}>
+                  <Check className="w-4 h-4 mr-1.5" />
+                  Sign-off Selesai
+                </DnaButton>
+              )}
+            </div>
           </div>
-        </div>
-      </DnaModal>
+        }
+      />
     </DnaPageContainer>
   );
 }

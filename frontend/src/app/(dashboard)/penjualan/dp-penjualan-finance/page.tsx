@@ -4,8 +4,8 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { ArrowDownCircle, Save, RotateCcw, Building2, User, Package, Hash, FileText, Upload, X, ReceiptText, ChevronDown, ChevronUp } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/dna";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/dna";
 import { DnaInput, DnaButton, DnaBadge } from "@/components/dna";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/components/dna";
 
 export default function DPPenjualanPage() {
   const queryClient = useQueryClient();
@@ -179,19 +179,19 @@ export default function DPPenjualanPage() {
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">Total Fee / Honor Bruto</span>
-                    <span className="font-bold text-slate-700 font-mono">Rp 0</span>
+                    <span className="font-bold text-slate-700 tabular-nums">Rp 0</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">Pengurangan (PTKP)</span>
-                    <span className="font-bold text-slate-700 font-mono">- Rp 0</span>
+                    <span className="font-bold text-slate-700 tabular-nums">- Rp 0</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">PKP (Penghasilan Kena Pajak)</span>
-                    <span className="font-bold text-slate-700 font-mono">Rp 0</span>
+                    <span className="font-bold text-slate-700 tabular-nums">Rp 0</span>
                   </div>
                   <div className="border-t border-slate-100 pt-1.5 mt-1.5 flex justify-between">
                     <span className="text-[10px] font-black uppercase text-slate-400">PPh 21 Terutang (5%)</span>
-                    <span className="font-black text-amber-600 font-mono">Rp 0</span>
+                    <span className="font-black text-amber-600 tabular-nums">Rp 0</span>
                   </div>
                 </div>
                 <p className="text-[9px] text-slate-400 italic">Tarif PPh 21: 5% dari PKP (s.d. Rp 60 juta/thn)</p>
@@ -206,19 +206,19 @@ export default function DPPenjualanPage() {
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">Total Pembayaran Bunga/Dividen/Royalty</span>
-                    <span className="font-bold text-slate-700 font-mono">Rp 0</span>
+                    <span className="font-bold text-slate-700 tabular-nums">Rp 0</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">Objek PPh 23 (15%)</span>
-                    <span className="font-bold text-slate-700 font-mono">Rp 0</span>
+                    <span className="font-bold text-slate-700 tabular-nums">Rp 0</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">Tidak Objek PPh 23</span>
-                    <span className="font-bold text-slate-700 font-mono">Rp 0</span>
+                    <span className="font-bold text-slate-700 tabular-nums">Rp 0</span>
                   </div>
                   <div className="border-t border-slate-100 pt-1.5 mt-1.5 flex justify-between">
                     <span className="text-[10px] font-black uppercase text-slate-400">PPh 23 Terutang (15%)</span>
-                    <span className="font-black text-purple-600 font-mono">Rp 0</span>
+                    <span className="font-black text-purple-600 tabular-nums">Rp 0</span>
                   </div>
                 </div>
                 <p className="text-[9px] text-slate-400 italic">Tarif PPh 23: 15% dari bruto (bunga, dividen, royalty)</p>
@@ -304,7 +304,7 @@ export default function DPPenjualanPage() {
                     <p className="text-[8px] font-black uppercase text-slate-400 tracking-wider">Order Number</p>
                     <div className="flex items-center gap-2">
                       <Hash className="w-3.5 h-3.5 text-slate-400" />
-                      <p className="font-black text-slate-900 text-sm font-mono">{selectedSO.orderNumber}</p>
+                      <p className="font-black text-slate-900 text-sm tabular-nums">{selectedSO.orderNumber}</p>
                     </div>
                   </div>
                 </div>
@@ -319,7 +319,7 @@ export default function DPPenjualanPage() {
                             <Package className="w-3 h-3 text-slate-400" />
                             <span className="font-medium text-slate-700 uppercase">{item.product?.name || item.name}</span>
                           </div>
-                          <span className="font-black text-slate-900 font-mono tabular-nums">{item.quantity} pcs</span>
+                          <span className="font-black text-slate-900 tabular-nums tabular-nums">{item.quantity} pcs</span>
                         </div>
                       ))
                     ) : (
@@ -331,15 +331,15 @@ export default function DPPenjualanPage() {
                 <div className="space-y-3 pt-3 border-t border-blue-100">
                   <div className="flex justify-between items-center">
                     <p className="text-[8px] font-black uppercase text-slate-400 tracking-wider">Total Tagihan</p>
-                    <p className="text-lg font-black text-slate-900 font-mono tabular-nums">{formatCurrency(selectedSOTotal)}</p>
+                    <p className="text-lg font-black text-slate-900 tabular-nums tabular-nums">{formatCurrency(selectedSOTotal)}</p>
                   </div>
                   <div className="flex justify-between items-center">
                     <p className="text-[8px] font-black uppercase text-green-600 tracking-wider">Sudah Dibayar</p>
-                    <p className="text-sm font-black text-green-600 font-mono tabular-nums">{formatCurrency(selectedSOPaid)}</p>
+                    <p className="text-sm font-black text-green-600 tabular-nums tabular-nums">{formatCurrency(selectedSOPaid)}</p>
                   </div>
                   <div className="flex justify-between items-center">
                     <p className="text-[8px] font-black uppercase text-red-600 tracking-wider">Sisa Tagihan</p>
-                    <p className="text-sm font-black text-red-600 font-mono tabular-nums">{formatCurrency(selectedSOTotal - selectedSOPaid)}</p>
+                    <p className="text-sm font-black text-red-600 tabular-nums tabular-nums">{formatCurrency(selectedSOTotal - selectedSOPaid)}</p>
                   </div>
                 </div>
               </div>
@@ -388,7 +388,7 @@ export default function DPPenjualanPage() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0"
-                  className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black text-slate-900 font-mono tabular-nums placeholder:text-slate-300 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                  className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black text-slate-900 tabular-nums tabular-nums placeholder:text-slate-300 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
                 />
               </div>
             </div>

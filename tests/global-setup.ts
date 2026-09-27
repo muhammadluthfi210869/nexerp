@@ -33,11 +33,11 @@ async function tryLogin(request: APIRequestContext, context: BrowserContext) {
 }
 
 function seedBackend() {
-  const backendDir = path.join(process.cwd(), 'backend');
+  const backendDir = process.cwd().endsWith('backend') ? process.cwd() : path.join(process.cwd(), 'backend');
 
   execFileSync(
     process.execPath,
-    ['-r', 'ts-node/register/transpile-only', './prisma/seed-personnel.ts'],
+    ['-r', 'ts-node/register/transpile-only', './prisma/seed-personnel-production.ts'],
     {
       cwd: backendDir,
       stdio: 'inherit',
@@ -54,9 +54,19 @@ function seedBackend() {
       env: process.env,
     },
   );
+
+  execFileSync(
+    process.execPath,
+    ['-r', 'ts-node/register/transpile-only', './prisma/seed-e2e-production.ts'],
+    {
+      cwd: backendDir,
+      stdio: 'inherit',
+      env: process.env,
+    },
+  );
 }
 
-async function globalSetup(config: FullConfig) {
+async function globalSetup(_config: FullConfig) {
   seedBackend();
 
   const browser = await chromium.launch();

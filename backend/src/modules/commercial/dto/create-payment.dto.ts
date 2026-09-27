@@ -22,4 +22,8 @@ export class CreatePaymentDto {
   @IsString()
   @IsOptional()
   coaId?: string;
+
+  @IsNumber()
+  @IsOptional()
+  pph23Deduction?: number;
 }

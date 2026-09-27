@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Body,
+  Param,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -12,6 +13,13 @@ import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';
 import { UserRole, User } from '@prisma/client';
 import { QCAuditsService } from '../services/qc-audits.service';
+import {
+  QcReleaseService,
+  ExecuteReleaseDto,
+  PartialDispositionDto,
+  RetestDto,
+} from '../services/qc-release.service';
+import { QcTraceabilityService } from '../services/qc-traceability.service';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 
 @ApiTags('qc')
@@ -21,6 +29,8 @@ import { PrismaService } from '../../../prisma/prisma/prisma.service';
 export class QcController {
   constructor(
     private readonly qcService: QCAuditsService,
+    private readonly releaseService: QcReleaseService,
+    private readonly traceabilityService: QcTraceabilityService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -78,5 +88,101 @@ export class QcController {
       orderBy: { createdAt: 'desc' },
     });
     return rejects;
+  }
+
+  // --- QC & APJ Release (BUS-RULE-047) ---
+
+  @Post('release')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.APJ, UserRole.DIRECTOR)
+  @ApiOperation({ summary: 'Release quarantined stock to AVAILABLE' })
+  executeRelease(
+    @Request() req: { user: User },
+    @Body() dto: ExecuteReleaseDto,
+  ) {
+    return this.releaseService.executeRelease(
+      { id: req.user.id, roles: req.user.roles, fullName: req.user.fullName },
+      dto,
+    );
+  }
+
+  @Get('release/batches')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.APJ, UserRole.DIRECTOR)
+  @ApiOperation({ summary: 'Get batches eligible for or already released' })
+  getReleaseBatches() {
+    return this.releaseService.getReleaseBatches();
+  }
+
+  @Get('apj-releases')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.APJ, UserRole.DIRECTOR)
+  @ApiOperation({ summary: 'Get APJ release records' })
+  getApjReleases() {
+    return this.releaseService.getReleaseBatches();
+  }
+
+  @Post('apj-releases')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.APJ, UserRole.DIRECTOR)
+  @ApiOperation({ summary: 'Submit APJ release record' })
+  createApjRelease(
+    @Request() req: { user: User },
+    @Body() dto: ExecuteReleaseDto,
+  ) {
+    return this.releaseService.executeRelease(
+      { id: req.user.id, roles: req.user.roles, fullName: req.user.fullName },
+      dto,
+    );
+  }
+
+  // --- Partial Dispositions & Retest ---
+
+  @Post('disposition/partial')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.APJ, UserRole.DIRECTOR)
+  @ApiOperation({ summary: 'Execute partial disposition (Pass, Rework, Scrap)' })
+  executePartialDisposition(
+    @Request() req: { user: User },
+    @Body() dto: PartialDispositionDto,
+  ) {
+    return this.releaseService.executePartialDisposition(
+      { id: req.user.id, roles: req.user.roles },
+      dto,
+    );
+  }
+
+  @Post('audits/:id/retest')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.DIRECTOR)
+  @ApiOperation({ summary: 'Execute retest audit for a rework or held batch' })
+  executeRetest(
+    @Param('id') id: string,
+    @Request() req: { user: User },
+    @Body() dto: RetestDto,
+  ) {
+    return this.releaseService.executeRetest(id, { id: req.user.id, roles: req.user.roles }, dto);
+  }
+
+  // --- Bidirectional Recall Traceability ---
+
+  @Get('traceability/backward/:batchNumber')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.QC_LAB,
+    UserRole.DIRECTOR,
+    UserRole.PRODUCTION,
+    UserRole.SCM,
+  )
+  @ApiOperation({ summary: 'Backward traceability tree (FG -> Stages -> Raw Material lots)' })
+  getBackwardTraceability(@Param('batchNumber') batchNumber: string) {
+    return this.traceabilityService.getBackwardTraceability(batchNumber);
+  }
+
+  @Get('traceability/forward/:materialBatch')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.QC_LAB,
+    UserRole.DIRECTOR,
+    UserRole.PRODUCTION,
+    UserRole.SCM,
+  )
+  @ApiOperation({ summary: 'Forward recall traceability (Material Lot -> Affected Batches & Deliveries)' })
+  getForwardRecallTraceability(@Param('materialBatch') materialBatch: string) {
+    return this.traceabilityService.getForwardRecallTraceability(materialBatch);
   }
 }

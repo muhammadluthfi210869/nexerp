@@ -10,6 +10,7 @@ import {
   Res,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { DocumentAutomationService } from '../services/document-automation.service';
@@ -20,8 +21,21 @@ import {
   UpdateDraftDto,
   FilterDraftsDto,
 } from '../dto/draft.dto';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { RolesGuard } from '../../auth/roles.guard';
+import { Roles } from '../../auth/roles.decorator';
+import { UserRole } from '@prisma/client';
 
 @Controller('document-automation')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(
+  UserRole.SUPER_ADMIN,
+  UserRole.ADMIN,
+  UserRole.COMMERCIAL,
+  UserRole.FINANCE,
+  UserRole.DIRECTOR,
+  UserRole.HEAD_OPS,
+)
 export class DocumentAutomationController {
   constructor(
     private readonly docAutomationService: DocumentAutomationService,

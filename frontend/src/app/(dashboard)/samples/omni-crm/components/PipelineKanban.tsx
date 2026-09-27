@@ -292,7 +292,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({
             </div>
           </div>
 
-          <span className="text-xs font-bold font-mono px-2.5 py-1 bg-white border border-emerald-200 rounded-lg text-emerald-800">
+          <span className="text-xs font-bold tabular-nums px-2.5 py-1 bg-white border border-emerald-200 rounded-lg text-emerald-800">
             {filteredLeads.length} Leads Terpantau
           </span>
         </div>
@@ -316,7 +316,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({
                   </span>
                 )}
                 {assignedOwner && !isBusDev && (
-                  <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-blue-200 font-mono">
+                  <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-blue-200 tabular-nums">
                     Owner: {assignedOwner.name} ({assignedOwner.formattedPhone || assignedOwner.phone})
                   </span>
                 )}
@@ -375,7 +375,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({
                 >
                   <span className="truncate max-w-[140px]">{pipe.name}</span>
                   <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold ${
+                    className={`text-[10px] px-1.5 py-0.5 rounded-md tabular-nums font-bold ${
                       isSelected ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-600'
                     }`}
                   >
@@ -459,14 +459,14 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({
                   <span className="font-bold text-[12px] text-slate-900 truncate">
                     {stage.name}
                   </span>
-                  <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-mono text-[10px] font-bold border border-slate-200">
+                  <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md tabular-nums text-[10px] font-bold border border-slate-200">
                     {leadsInStage.length}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between text-[11px] text-slate-500">
                   <span>Estimasi Omset:</span>
-                  <span className="font-semibold text-emerald-700 font-mono tabular-nums">
+                  <span className="font-semibold text-emerald-700 tabular-nums tabular-nums">
                     Rp {(stageValue / 1000000).toFixed(0)} Jt
                   </span>
                 </div>
@@ -496,7 +496,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({
                           <h4 className="font-semibold text-[12px] text-slate-900 group-hover:text-blue-600 truncate">
                             {lead.name}
                           </h4>
-                          <span className="text-[10px] font-mono text-slate-400 shrink-0">
+                          <span className="text-[10px] tabular-nums text-slate-400 shrink-0">
                             #{lead.id}
                           </span>
                         </div>
@@ -545,7 +545,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({
                               <span>{msgCount}</span>
                             </button>
 
-                            <span className="font-mono font-bold text-slate-900 tabular-nums">
+                            <span className="tabular-nums font-bold text-slate-900 tabular-nums">
                               Rp {((lead.value || 0) / 1000000).toFixed(0)} Jt
                             </span>
                           </div>

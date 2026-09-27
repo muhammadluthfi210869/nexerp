@@ -1,31 +1,23 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   ArrowRightLeft,
   Plus,
-  Search,
-  Filter,
   Eye,
   CheckCircle2,
   Clock,
-  XCircle,
   FileSpreadsheet,
   AlertTriangle,
   Send,
-  Trash2,
-  FileText,
   Boxes,
   Warehouse,
-  ShieldCheck,
-  Package,
-  Calendar,
-  Building2,
   ArrowRight,
-  Printer
+  Printer,
+  Trash2
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -36,12 +28,18 @@ import {
   DnaButton,
   DnaBadge,
   DnaModal,
-  DnaTabNav,
+  DnaDetailDrawer,
   DnaInput,
   DnaSelect,
   DnaTextarea,
   DnaTable,
-  useDnaToast
+  useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
 
 interface TransferItem {
@@ -71,92 +69,109 @@ interface WarehouseTransfer {
   items: TransferItem[];
 }
 
-const INITIAL_TRANSFERS: WarehouseTransfer[] = [
-  {
-    id: "trf-1",
-    transferNumber: "TRF-WH-202609-0008",
-    transferDate: "2026-09-09",
-    fromWarehouse: "Gudang Bahan Baku Utama (WH-01)",
-    toWarehouse: "Gudang Karantina & QC (WH-04)",
-    referenceDoc: "SPK-2026-09-008",
-    totalItems: 2,
-    totalQty: 55.0,
-    senderPic: "Bambang Sudiro (WH-01)",
-    status: "IN_TRANSIT",
-    notes: "Pengiriman sampel ruahan dan bahan aktif untuk re-testing kestabilan mikrobiologi.",
-    items: [
-      { id: "ti-1", materialCode: "BBK00028", materialName: "Super Moisturing Max", transferQty: 50.0, availableStockOrigin: 120.0, unit: "Kg", batchLot: "LOT-BB-2609-001" },
-      { id: "ti-2", materialCode: "BBK00092", materialName: "Fragrance Sweet Vanilla", transferQty: 5.0, availableStockOrigin: 18.0, unit: "Kg", batchLot: "LOT-FG-2608-004" }
-    ]
-  },
-  {
-    id: "trf-2",
-    transferNumber: "TRF-WH-202609-0007",
-    transferDate: "2026-09-08",
-    fromWarehouse: "Gudang Kemas & Box (WH-02)",
-    toWarehouse: "Gudang Produk Jadi (WH-03)",
-    referenceDoc: "SPK-2026-09-006",
-    totalItems: 1,
-    totalQty: 300,
-    senderPic: "Siti Rahma (WH-02)",
-    receiverPic: "Rahmat Hidayat (WH-03)",
-    receivedDate: "2026-09-08 16:30",
-    status: "COMPLETED",
-    notes: "Transfer master carton box cadangan untuk line packaging shift malam.",
-    items: [
-      { id: "ti-3", materialCode: "KMS00105", materialName: "Master Carton Box K125/M125 (Isi 48)", transferQty: 300, availableStockOrigin: 1200, unit: "Pcs", batchLot: "LOT-KM-2608-012" }
-    ]
-  },
-  {
-    id: "trf-3",
-    transferNumber: "TRF-WH-202609-0005",
-    transferDate: "2026-09-05",
-    fromWarehouse: "Gudang Bahan Baku Utama (WH-01)",
-    toWarehouse: "Gudang Retur & Reject (WH-05)",
-    referenceDoc: "RET-PO-202609-0004",
-    totalItems: 1,
-    totalQty: 25.0,
-    senderPic: "Bambang Sudiro (WH-01)",
-    receiverPic: "Agus Santoso (WH-05)",
-    receivedDate: "2026-09-05 11:15",
-    status: "COMPLETED",
-    notes: "Pemindahan drum rusak fisik hasil reject QC ke gudang retur vendor.",
-    items: [
-      { id: "ti-4", materialCode: "REJ00004", materialName: "Drum Bahan Baku Rusak Segel", transferQty: 25.0, availableStockOrigin: 25.0, unit: "Kg", batchLot: "LOT-SON-2609-001" }
-    ]
-  }
-];
-
-const MASTER_WAREHOUSES = [
-  "Gudang Bahan Baku Utama (WH-01)",
-  "Gudang Kemas & Box (WH-02)",
-  "Gudang Produk Jadi (WH-03)",
-  "Gudang Karantina & QC (WH-04)",
-  "Gudang Retur & Reject (WH-05)"
-];
-
-const AVAILABLE_TRANSFER_ITEMS = [
-  { code: "BBK00028", name: "Super Moisturing Max", unit: "Kg", stock: 120.0, lot: "LOT-BB-2609-001" },
-  { code: "BBK00031", name: "Niacinamide PC (Vitamin B3)", unit: "Kg", stock: 85.0, lot: "LOT-NC-2608-019" },
-  { code: "KMS00012", name: "Botol Tube 100ml Doff White", unit: "Pcs", stock: 12500, lot: "LOT-KM-2609-002" },
-  { code: "KMS00105", name: "Master Carton Box K125/M125", unit: "Pcs", stock: 350, lot: "LOT-KM-2608-012" }
-];
-
 export default function WarehouseTransfersPage() {
   const toast = useDnaToast();
   const queryClient = useQueryClient();
-  const [dataList, setDataList] = useState<WarehouseTransfer[]>(INITIAL_TRANSFERS);
+
+  const { data: rawTransfers = [], isLoading } = useQuery({
+    queryKey: ["warehouse-transfers"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/transfers");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: rawWarehouses = [] } = useQuery({
+    queryKey: ["master-warehouses"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/master/warehouses");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: rawCatalog = [] } = useQuery({
+    queryKey: ["warehouse-catalog"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/catalog");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const warehouseOptions = useMemo(() => {
+    if (rawWarehouses.length > 0) {
+      return rawWarehouses.map((w: any) => w.name || w.code);
+    }
+    return [
+      "Gudang Bahan Baku Utama (WH-01)",
+      "Gudang Kemas & Box (WH-02)",
+      "Gudang Produk Jadi (WH-03)",
+      "Gudang Karantina & QC (WH-04)",
+      "Gudang Retur & Reject (WH-05)",
+    ];
+  }, [rawWarehouses]);
+
+  const availableItems = useMemo(() => {
+    if (rawCatalog.length > 0) {
+      return rawCatalog.map((c: any) => ({
+        code: c.code || "MAT-01",
+        name: c.name || "Material",
+        unit: c.unit || "Kg",
+        stock: Number(c.stockQty || c.currentStock || 0),
+        lot: c.batchNumber || "-",
+      }));
+    }
+    return [];
+  }, [rawCatalog]);
+
+  const dataList: WarehouseTransfer[] = useMemo(() => {
+    if (!rawTransfers || !Array.isArray(rawTransfers)) return [];
+    return rawTransfers.map((t: any) => ({
+      id: t.id,
+      transferNumber: t.transferNumber || `TRF-${t.id.slice(0, 8).toUpperCase()}`,
+      transferDate: t.createdAt ? new Date(t.createdAt).toISOString().split("T")[0] : "-",
+      fromWarehouse: t.fromWarehouse?.name || t.sourceWarehouse?.name || "Gudang Asal",
+      toWarehouse: t.toWarehouse?.name || t.destWarehouse?.name || "Gudang Tujuan",
+      referenceDoc: t.referenceNo || t.referenceDoc || "-",
+      totalItems: t.items?.length || 0,
+      totalQty: (t.items || []).reduce((sum: number, it: any) => sum + Number(it.quantity || it.transferQty || 0), 0),
+      senderPic: t.senderPic || t.createdBy?.fullName || "Petugas Gudang",
+      receiverPic: t.receiverPic,
+      receivedDate: t.executedAt ? new Date(t.executedAt).toLocaleString("id-ID") : undefined,
+      status: (t.status === "COMPLETED" ? "COMPLETED" : t.status === "CANCELLED" ? "CANCELLED" : "IN_TRANSIT") as any,
+      notes: t.notes || "-",
+      items: (t.items || []).map((it: any, idx: number) => ({
+        id: it.id || `ti-${idx}`,
+        materialCode: it.material?.code || "MAT-01",
+        materialName: it.material?.name || "Material",
+        transferQty: Number(it.quantity || it.transferQty || 0),
+        availableStockOrigin: Number(it.availableStock || 0),
+        unit: it.material?.unit || "Kg",
+        batchLot: it.batchNumber || "-",
+      })),
+    }));
+  }, [rawTransfers]);
 
   // Filters
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTransfer, setSelectedTransfer] = useState<WarehouseTransfer | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Create Form State
-  const [fromWarehouse, setFromWarehouse] = useState(MASTER_WAREHOUSES[0]);
-  const [toWarehouse, setToWarehouse] = useState(MASTER_WAREHOUSES[3]);
+  const [fromWarehouse, setFromWarehouse] = useState(warehouseOptions[0] || "WH-01");
+  const [toWarehouse, setToWarehouse] = useState(warehouseOptions[1] || "WH-02");
   const [referenceDoc, setReferenceDoc] = useState("");
   const [formNotes, setFormNotes] = useState("");
   const [cartItems, setCartItems] = useState<Array<{
@@ -175,152 +190,128 @@ export default function WarehouseTransfersPage() {
   const kpis = useMemo(() => {
     const list = dataList;
     const totalTransfers = list.length;
-    const inTransitCount = list.filter(t => t.status === "IN_TRANSIT").length;
-    const completedCount = list.filter(t => t.status === "COMPLETED").length;
+    const inTransitCount = list.filter((t) => t.status === "IN_TRANSIT").length;
+    const completedCount = list.filter((t) => t.status === "COMPLETED").length;
     const totalVolume = list.reduce((sum, t) => sum + t.totalQty, 0);
 
     return {
       totalTransfers,
       inTransitCount,
       completedCount,
-      totalVolume
+      totalVolume,
     };
   }, [dataList]);
 
   // Filtered List
   const filteredList = useMemo(() => {
-    return dataList.filter(item => {
+    return dataList.filter((item) => {
       const matchSearch =
         item.transferNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.referenceDoc.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.fromWarehouse.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.toWarehouse.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.senderPic.toLowerCase().includes(searchQuery.toLowerCase());
+        item.toWarehouse.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchTab =
         activeTab === "ALL" ? true :
-        activeTab === "IN_TRANSIT" ? item.status === "IN_TRANSIT" :
-        activeTab === "COMPLETED" ? item.status === "COMPLETED" : true;
+        item.status === activeTab;
 
       return matchSearch && matchTab;
     });
   }, [dataList, searchQuery, activeTab]);
 
-  const handleAddItemToTransfer = () => {
+  const handleConfirmReceive = async (trfId: string) => {
+    try {
+      await api.post(`/warehouse/transfers/${trfId}/execute`, { userId: "system" });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-transfers"] });
+      toast.success("Barang transfer telah diverifikasi fisik dan stok gudang tujuan otomatis bertambah.");
+      if (selectedTransfer && selectedTransfer.id === trfId) {
+        setSelectedTransfer({
+          ...selectedTransfer,
+          status: "COMPLETED",
+          receiverPic: "Petugas Gudang Penerima (Anda)",
+          receivedDate: new Date().toLocaleString("id-ID"),
+        });
+      }
+    } catch (err: any) {
+      toast.error("Gagal Eksekusi Transfer", err?.response?.data?.message || err.message);
+    }
+  };
+
+  const handleAddItemToCart = () => {
     if (!selectedMatCode) {
-      toast.error("Pilih material barang terlebih dahulu");
+      toast.error("Pilih material yang ingin ditransfer.");
       return;
     }
-    const mat = AVAILABLE_TRANSFER_ITEMS.find(m => m.code === selectedMatCode);
-    if (!mat) return;
+    const item = availableItems.find((i) => i.code === selectedMatCode);
+    if (!item) return;
 
     if (itemTransferQty <= 0) {
-      toast.error("Jumlah transfer harus lebih dari 0");
-      return;
-    }
-    if (itemTransferQty > mat.stock) {
-      toast.error(`Kuantitas transfer melebihi stok tersedia (${mat.stock} ${mat.unit})`);
+      toast.error("Jumlah transfer harus lebih dari 0.");
       return;
     }
 
-    const existing = cartItems.find(c => c.materialCode === mat.code);
-    if (existing) {
-      setCartItems(cartItems.map(c => c.materialCode === mat.code ? { ...c, transferQty: c.transferQty + itemTransferQty } : c));
-    } else {
-      setCartItems([
-        ...cartItems,
-        {
-          materialCode: mat.code,
-          materialName: mat.name,
-          transferQty: itemTransferQty,
-          availableStockOrigin: mat.stock,
-          unit: mat.unit,
-          batchLot: mat.lot
-        }
-      ]);
-    }
+    setCartItems((prev) => [
+      ...prev,
+      {
+        materialCode: item.code,
+        materialName: item.name,
+        transferQty: itemTransferQty,
+        availableStockOrigin: item.stock,
+        unit: item.unit,
+        batchLot: item.lot,
+      },
+    ]);
 
     setSelectedMatCode("");
     setItemTransferQty(1);
-    toast.success(`${mat.name} ditambahkan ke daftar transfer`);
   };
 
-  const handleRemoveFromCart = (code: string) => {
-    setCartItems(cartItems.filter(c => c.materialCode !== code));
-  };
-
-  const handleCreateTransfer = () => {
+  const handleCreateTransfer = async () => {
     if (fromWarehouse === toWarehouse) {
-      toast.error("Gudang asal dan gudang tujuan tidak boleh sama");
-      return;
-    }
-    if (!referenceDoc.trim()) {
-      toast.error("Nomor Dokumen Referensi / SPK wajib diisi");
+      toast.error("Gudang asal dan gudang tujuan tidak boleh sama.");
       return;
     }
     if (cartItems.length === 0) {
-      toast.error("Tambahkan minimal 1 item barang yang akan dipindahkan");
+      toast.error("Tambahkan minimal 1 item barang yang akan dipindahkan.");
       return;
     }
 
-    const newNo = `TRF-WH-202609-00${String(dataList.length + 9).padStart(2, "0")}`;
-    const totalQty = cartItems.reduce((sum, i) => sum + i.transferQty, 0);
+    try {
+      const fromWhObj = (rawWarehouses as any[]).find((w: any) => w.name === fromWarehouse || w.id === fromWarehouse);
+      const toWhObj = (rawWarehouses as any[]).find((w: any) => w.name === toWarehouse || w.id === toWarehouse);
 
-    const newTransfer: WarehouseTransfer = {
-      id: `trf-${Date.now()}`,
-      transferNumber: newNo,
-      transferDate: new Date().toISOString().split("T")[0],
-      fromWarehouse,
-      toWarehouse,
-      referenceDoc,
-      totalItems: cartItems.length,
-      totalQty,
-      senderPic: "Petugas Gudang Asal (Anda)",
-      status: "IN_TRANSIT",
-      notes: formNotes || "Mutasi fisik antar gudang internal.",
-      items: cartItems.map((c, idx) => ({
-        id: `ti-${Date.now()}-${idx}`,
-        ...c
-      }))
-    };
-
-    setDataList([newTransfer, ...dataList]);
-    setIsCreateOpen(false);
-    setCartItems([]);
-    setReferenceDoc("");
-    setFormNotes("");
-    toast.success(`Surat Transfer ${newNo} berhasil diterbitkan (Status: In Transit).`);
-  };
-
-  const handleConfirmReceived = (id: string) => {
-    setDataList(dataList.map(item => {
-      if (item.id === id) {
-        return {
-          ...item,
-          status: "COMPLETED",
-          receiverPic: "Petugas Gudang Penerima (Anda)",
-          receivedDate: new Date().toLocaleString("id-ID")
-        };
-      }
-      return item;
-    }));
-    if (selectedTransfer && selectedTransfer.id === id) {
-      setSelectedTransfer({
-        ...selectedTransfer,
-        status: "COMPLETED",
-        receiverPic: "Petugas Gudang Penerima (Anda)",
-        receivedDate: new Date().toLocaleString("id-ID")
+      await api.post("/warehouse/transfers", {
+        fromWarehouseId: fromWhObj?.id || (rawWarehouses as any[])[0]?.id,
+        toWarehouseId: toWhObj?.id || (rawWarehouses as any[])[1]?.id,
+        notes: formNotes || "Transfer stok antar gudang internal.",
+        referenceNo: referenceDoc || undefined,
+        items: cartItems.map((it) => {
+          const catMat = (rawCatalog as any[]).find((m: any) => m.code === it.materialCode || m.name === it.materialName);
+          return {
+            materialId: catMat?.id || it.materialCode,
+            quantity: it.transferQty,
+            batchNumber: it.batchLot || undefined,
+          };
+        }),
       });
+
+      queryClient.invalidateQueries({ queryKey: ["warehouse-transfers"] });
+      setIsCreateOpen(false);
+      setCartItems([]);
+      setReferenceDoc("");
+      setFormNotes("");
+      toast.success("Dokumen transfer gudang diterbitkan dan status IN_TRANSIT.");
+    } catch (err: any) {
+      toast.error("Gagal Menerbitkan Transfer", err?.response?.data?.message || err.message);
     }
-    toast.success("Barang transfer telah diverifikasi fisik dan stok gudang tujuan otomatis bertambah.");
   };
 
   const getStatusBadge = (status: WarehouseTransfer["status"]) => {
     switch (status) {
       case "IN_TRANSIT":
-        return <DnaBadge variant="info">Sedang Dikirim (In Transit)</DnaBadge>;
+        return <DnaBadge variant="info">Sedang Dikirim</DnaBadge>;
       case "COMPLETED":
-        return <DnaBadge variant="success">Selesai Serah Terima</DnaBadge>;
+        return <DnaBadge variant="success">Selesai Terima</DnaBadge>;
       case "CANCELLED":
         return <DnaBadge variant="critical">Dibatalkan</DnaBadge>;
     }
@@ -328,13 +319,25 @@ export default function WarehouseTransfersPage() {
 
   return (
     <DnaPageContainer>
-      {/* Header */}
+      {/* Header with Top-Right Unified Tabs (Rule 2) */}
       <DnaPageHeader
         title="Transfer Antar Gudang (Inter-Warehouse Transfers)"
         description="Pemindahan persediaan material fisik antar lokasi gudang internal dengan alur serah terima 2-Step Handover."
-        badge={<DnaBadge variant="neutral">SCR-088 / WH-TRANSFER</DnaBadge>}
+        badge={
+          <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 font-semibold">
+            <ArrowRightLeft className="w-3.5 h-3.5" />
+            <span>2-Step Handover Verified</span>
+          </div>
+        }
+        tabs={[
+          { id: "ALL", label: "Semua Transfer", count: dataList.length },
+          { id: "IN_TRANSIT", label: "Sedang Dikirim (In Transit)", count: dataList.filter((d) => d.status === "IN_TRANSIT").length },
+          { id: "COMPLETED", label: "Selesai Serah Terima", count: dataList.filter((d) => d.status === "COMPLETED").length },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         actions={
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <DnaButton
               variant="outline"
               size="sm"
@@ -362,9 +365,10 @@ export default function WarehouseTransfersPage() {
           value={`${kpis.totalTransfers} Mutasi`}
           icon={<ArrowRightLeft className="w-5 h-5 text-indigo-600" />}
           delta={{ value: "+3 minggu ini", isPositive: true }}
+          variant="info"
         />
         <DnaStatCard
-          label="Sedang Dalam Pengiriman"
+          label="Sedang Dikirim"
           value={`${kpis.inTransitCount} Mutasi`}
           icon={<Clock className="w-5 h-5 text-blue-500" />}
           variant={kpis.inTransitCount > 0 ? "warning" : "default"}
@@ -373,229 +377,229 @@ export default function WarehouseTransfersPage() {
           label="Selesai Diterima"
           value={`${kpis.completedCount} Mutasi`}
           icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+          variant="success"
         />
         <DnaStatCard
           label="Total Volume Berpindah"
           value={`${kpis.totalVolume.toLocaleString("id-ID")} Qty`}
           icon={<Boxes className="w-5 h-5 text-purple-600" />}
+          variant="purple"
         />
       </DnaKpiGrid>
 
-      {/* Navigation Tabs */}
-      <div className="mb-4">
-        <DnaTabNav
-          tabs={[
-            { id: "ALL", label: "Semua Transfer", count: dataList.length },
-            { id: "IN_TRANSIT", label: "Sedang Dikirim (In Transit)", count: dataList.filter(d => d.status === "IN_TRANSIT").length },
-            { id: "COMPLETED", label: "Selesai Serah Terima", count: dataList.filter(d => d.status === "COMPLETED").length }
-          ]}
-          activeTab={activeTab}
-          onChange={setActiveTab}
-        />
-      </div>
-
-      {/* Main Table Card */}
+      {/* Main Table Card (Rule 1: No title prop, Rule 4: Clean responsive columns) */}
       <DnaDataTableCard
-        title="Daftar Surat Pemindahan Barang Antar Gudang"
-        description="Stok baru bertambah di gudang tujuan setelah petugas penerima mengonfirmasi penerimaan fisik."
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari No Transfer, Dokumen SPK, Gudang Asal/Tujuan..."
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari No Transfer, Dokumen SPK, Gudang Asal/Tujuan...",
+        }}
       >
         <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left text-sm text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700 uppercase tracking-wider">
-              <tr>
-                <th className="py-3 px-4">No. Transfer</th>
-                <th className="py-3 px-4">Tanggal</th>
-                <th className="py-3 px-4">Gudang Asal</th>
-                <th className="py-3 px-4">Gudang Tujuan</th>
-                <th className="py-3 px-4">Dokumen Referensi</th>
-                <th className="py-3 px-4 text-center">Total Item</th>
-                <th className="py-3 px-4 text-right">Total Qty</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-normal">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="px-4 py-3 h-[40px] w-[140px]">No. Transfer</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[110px]">Tanggal</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Gudang Asal</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Gudang Tujuan</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[140px]">Referensi Dokumen</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">PIC Pengirim</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[140px]">Volume & Item</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-center w-[130px]">Status</DnaTh>
+                <DnaTh className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredList.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-12 text-center text-slate-400">
                     <ArrowRightLeft className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                    Tidak ada dokumen transfer antar gudang yang sesuai filter.
-                  </td>
-                </tr>
+                    Tidak ada data transfer antar gudang yang sesuai filter.
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredList.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-indigo-600 text-xs">
-                      {row.transferNumber}
-                    </td>
-                    <td className="py-3 px-4 text-xs whitespace-nowrap">
+                  <DnaTableRow
+                    key={row.id}
+                    onClick={() => setSelectedTransfer(row)}
+                    className="hover:bg-slate-50/60 transition-colors cursor-pointer group h-[48px]"
+                  >
+                    {/* Kolom 1: No. Transfer */}
+                    <DnaTd className="px-4 py-2">
+                      <DnaCell.Code value={row.transferNumber} />
+                    </DnaTd>
+
+                    {/* Kolom 2: Tanggal */}
+                    <DnaTd className="px-3 py-2 text-slate-600 whitespace-nowrap">
                       {row.transferDate}
-                    </td>
-                    <td className="py-3 px-4 text-xs font-medium text-slate-800">
-                      {row.fromWarehouse}
-                    </td>
-                    <td className="py-3 px-4 text-xs font-semibold text-slate-900">
-                      {row.toWarehouse}
-                    </td>
-                    <td className="py-3 px-4 text-xs font-mono text-slate-700">
-                      {row.referenceDoc}
-                    </td>
-                    <td className="py-3 px-4 text-center text-xs font-semibold text-slate-800">
-                      {row.totalItems} Jenis
-                    </td>
-                    <td className="py-3 px-4 text-right text-xs font-mono font-bold text-indigo-700">
-                      {row.totalQty.toLocaleString("id-ID")}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
+                    </DnaTd>
+
+                    {/* Kolom 3: Gudang Asal */}
+                    <DnaTd className="px-3 py-2 text-slate-800 font-medium truncate max-w-[160px]">
+                      {row.fromWarehouse.split("(")[0]}
+                    </DnaTd>
+
+                    {/* Kolom 4: Gudang Tujuan */}
+                    <DnaTd className="px-3 py-2 text-slate-800 font-medium truncate max-w-[160px]">
+                      {row.toWarehouse.split("(")[0]}
+                    </DnaTd>
+
+                    {/* Kolom 5: Referensi Dokumen */}
+                    <DnaTd className="px-3 py-2">
+                      <DnaCell.Code value={row.referenceDoc} />
+                    </DnaTd>
+
+                    {/* Kolom 6: PIC Pengirim */}
+                    <DnaTd className="px-3 py-2 text-slate-800 truncate max-w-[140px]">
+                      {row.senderPic}
+                    </DnaTd>
+
+                    {/* Kolom 7: Volume & Item (1 Natural Pair) */}
+                    <DnaTd className="px-3 py-2 text-right">
+                      <DnaCell.DoubleText
+                        primary={`${row.totalQty.toLocaleString("id-ID")} Unit`}
+                        secondary={`${row.totalItems} macam item`}
+                      />
+                    </DnaTd>
+
+                    {/* Kolom 8: Status */}
+                    <DnaTd className="px-3 py-2 text-center">
                       {getStatusBadge(row.status)}
-                    </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <DnaButton
-                          variant="ghost"
-                          size="sm"
-                          icon={<Eye className="w-3.5 h-3.5" />}
-                          onClick={() => {
-                            setSelectedTransfer(row);
-                            setIsDetailOpen(true);
-                          }}
-                        >
-                          Detail
-                        </DnaButton>
-                        {row.status === "IN_TRANSIT" && (
-                          <DnaButton
-                            variant="secondary"
-                            size="sm"
-                            icon={<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
-                            onClick={() => handleConfirmReceived(row.id)}
-                          >
-                            Terima Fisik
-                          </DnaButton>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+
+                    {/* Kolom 9: Aksi */}
+                    <DnaTd className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedTransfer(row)}
+                        className="text-slate-400 hover:text-blue-600"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </DnaButton>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
+            </DnaTableBody>
           </DnaTable>
         </div>
       </DnaDataTableCard>
 
-      {/* Modal Detail Transfer */}
-      {selectedTransfer && (
-        <DnaModal
-          isOpen={isDetailOpen}
-          onClose={() => setIsDetailOpen(false)}
-          title={`Surat Transfer Barang: ${selectedTransfer.transferNumber}`}
-          description={`Pemindahan dari ${selectedTransfer.fromWarehouse} ➔ ${selectedTransfer.toWarehouse}`}
-          size="xl"
-          footer={
-            <div className="flex items-center justify-between w-full">
-              <div className="text-xs text-slate-500">
-                Pengirim: <span className="font-semibold text-slate-700">{selectedTransfer.senderPic}</span>
-                {selectedTransfer.receiverPic && (
-                  <span> | Penerima: <span className="font-semibold text-slate-700">{selectedTransfer.receiverPic}</span></span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <DnaButton
-                  variant="outline"
-                  size="sm"
-                  icon={<Printer className="w-4 h-4" />}
-                  onClick={() => toast.success("Mencetak Surat Transfer Barang Antar Gudang...")}
-                >
-                  Cetak Bukti Transfer
-                </DnaButton>
-                {selectedTransfer.status === "IN_TRANSIT" && (
-                  <DnaButton
-                    variant="primary"
-                    size="sm"
-                    icon={<CheckCircle2 className="w-4 h-4" />}
-                    onClick={() => {
-                      handleConfirmReceived(selectedTransfer.id);
-                      setIsDetailOpen(false);
-                    }}
-                  >
-                    Konfirmasi Penerimaan Fisik
-                  </DnaButton>
-                )}
-                <DnaButton variant="primary" size="sm" onClick={() => setIsDetailOpen(false)}>
-                  Tutup
-                </DnaButton>
+      {/* Quick Peek Drawer (Rule 5) */}
+      <DnaDetailDrawer
+        isOpen={!!selectedTransfer}
+        onClose={() => setSelectedTransfer(null)}
+        title={selectedTransfer?.transferNumber || "Detail Transfer"}
+        subtitle={`Dokumen Ref: ${selectedTransfer?.referenceDoc}`}
+        badge={selectedTransfer && getStatusBadge(selectedTransfer.status)}
+        footerActions={
+          <div className="flex items-center gap-2">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              onClick={() => toast.success(`Mencetak Bukti Transfer ${selectedTransfer?.transferNumber}...`)}
+            >
+              <Printer className="w-4 h-4 mr-1.5" />
+              Cetak Bukti Transfer
+            </DnaButton>
+            {selectedTransfer && selectedTransfer.status === "IN_TRANSIT" && (
+              <DnaButton
+                variant="primary"
+                size="sm"
+                onClick={() => handleConfirmReceive(selectedTransfer.id)}
+              >
+                Konfirmasi Terima Fisik
+              </DnaButton>
+            )}
+          </div>
+        }
+      >
+        {selectedTransfer && (
+          <div className="space-y-6 text-xs">
+            {/* 2-Step Handover Route Card */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                Jalur Serah Terima (2-Step Handover)
+              </h4>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-white border border-slate-200 rounded-lg">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Gudang Asal (Pengirim)</span>
+                  <div className="font-semibold text-slate-800 mt-1">{selectedTransfer.fromWarehouse}</div>
+                  <div className="text-[11px] text-slate-500 mt-1">PIC: {selectedTransfer.senderPic}</div>
+                </div>
+                <div className="p-3 bg-white border border-slate-200 rounded-lg">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Gudang Tujuan (Penerima)</span>
+                  <div className="font-semibold text-blue-700 mt-1">{selectedTransfer.toWarehouse}</div>
+                  <div className="text-[11px] text-slate-500 mt-1">
+                    {selectedTransfer.receiverPic ? `PIC: ${selectedTransfer.receiverPic}` : "Menunggu Serah Terima"}
+                  </div>
+                </div>
               </div>
             </div>
-          }
-        >
-          <div className="space-y-4 text-xs">
-            {/* Header Cards */}
-            <div className="grid grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
-              <div>
-                <span className="text-slate-500 block">No. Referensi / SPK</span>
-                <span className="font-bold text-slate-900 font-mono">{selectedTransfer.referenceDoc}</span>
+
+            {/* Handover Status Info */}
+            {selectedTransfer.status === "COMPLETED" && (
+              <div className="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-xl text-emerald-800 space-y-1">
+                <div className="font-semibold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  Verifikasi Fisik Telah Selesai
+                </div>
+                <p className="text-emerald-700 text-[11px]">
+                  Diterima oleh {selectedTransfer.receiverPic} pada {selectedTransfer.receivedDate}. Stok gudang tujuan telah bertambah otomatis.
+                </p>
               </div>
-              <div>
-                <span className="text-slate-500 block">Total Volume Berpindah</span>
-                <span className="font-bold text-indigo-700 font-mono text-sm">{selectedTransfer.totalQty.toLocaleString("id-ID")} Unit</span>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Tanggal Transfer</span>
-                <span className="font-medium text-slate-800">{selectedTransfer.transferDate}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Status Mutasi</span>
-                <div className="mt-0.5">{getStatusBadge(selectedTransfer.status)}</div>
+            )}
+
+            {/* Transfer Items Table */}
+            <div className="space-y-2">
+              <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                Daftar Barang yang Dipindahkan
+              </h4>
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <DnaTable className="w-full text-left text-xs">
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3">Nama Material</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Qty Transfer</DnaTh>
+                      <DnaTh className="py-2.5 px-3">No. Batch/Lot</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
+                    {selectedTransfer.items.map((it) => (
+                      <DnaTableRow key={it.id}>
+                        <DnaTd className="py-2.5 px-3 font-sans">
+                          <div className="font-semibold text-slate-800">{it.materialName}</div>
+                          <div className="text-[10px] text-slate-400 tabular-nums">{it.materialCode}</div>
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right font-bold text-slate-900">
+                          {it.transferQty.toLocaleString("id-ID")} {it.unit}
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-slate-600">{it.batchLot}</DnaTd>
+                      </DnaTableRow>
+                    ))}
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
 
             {selectedTransfer.notes && (
-              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-indigo-900">
-                <span className="font-bold block mb-0.5">Catatan Instruksi Pemindahan:</span>
-                {selectedTransfer.notes}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <span className="font-semibold block text-slate-700 mb-1">Catatan Dokumen:</span>
+                <p className="text-slate-600 leading-relaxed">{selectedTransfer.notes}</p>
               </div>
             )}
-
-            {/* Items Table */}
-            <div>
-              <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">Daftar Barang yang Dipindahkan</h4>
-              <div className="border border-slate-200 rounded-lg overflow-hidden">
-                <DnaTable className="w-full text-left text-xs text-slate-600">
-                  <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
-                    <tr>
-                      <th className="py-2.5 px-3">Kode</th>
-                      <th className="py-2.5 px-3">Nama Material / Barang</th>
-                      <th className="py-2.5 px-3 text-right">Qty Transfer</th>
-                      <th className="py-2.5 px-3">Satuan</th>
-                      <th className="py-2.5 px-3">No. Batch / Lot</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono">
-                    {selectedTransfer.items.map((it) => (
-                      <tr key={it.id} className="hover:bg-slate-50">
-                        <td className="py-2.5 px-3 text-indigo-600 font-medium">{it.materialCode}</td>
-                        <td className="py-2.5 px-3 font-sans font-semibold text-slate-800">{it.materialName}</td>
-                        <td className="py-2.5 px-3 text-right font-bold text-indigo-700">{it.transferQty.toLocaleString("id-ID")}</td>
-                        <td className="py-2.5 px-3 text-slate-500">{it.unit}</td>
-                        <td className="py-2.5 px-3 text-slate-700">{it.batchLot}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </DnaTable>
-              </div>
-            </div>
           </div>
-        </DnaModal>
-      )}
+        )}
+      </DnaDetailDrawer>
 
       {/* Modal Buat Transfer Baru */}
       <DnaModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
-        title="Form Transfer Barang Antar Gudang"
-        description="Pilih gudang asal dan gudang tujuan serta item barang yang akan dipindahkan fisiknya."
+        title="Buat Surat Pemindahan Barang Antar Gudang"
+        description="Penerbitan surat transfer material fisik antar lokasi gudang internal dengan sistem 2-Step Handover."
         size="2xl"
         footer={
           <div className="flex items-center justify-end gap-2.5 w-full">
@@ -608,7 +612,7 @@ export default function WarehouseTransfersPage() {
               icon={<Send className="w-4 h-4" />}
               onClick={handleCreateTransfer}
             >
-              Terbitkan Surat Transfer
+              Terbitkan Dokumen Transfer
             </DnaButton>
           </div>
         }
@@ -617,26 +621,26 @@ export default function WarehouseTransfersPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-bold mb-1">Gudang Asal (Pengirim) *</label>
-<DnaSelect 
+              <DnaSelect
                 aria-label="Gudang Asal"
                 value={fromWarehouse}
                 onChange={setFromWarehouse}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white"
               >
-                {MASTER_WAREHOUSES.map((wh) => (
+                {warehouseOptions.map((wh: string) => (
                   <option key={wh} value={wh}>{wh}</option>
                 ))}
               </DnaSelect>
             </div>
             <div>
               <label className="block text-slate-700 font-bold mb-1">Gudang Tujuan (Penerima) *</label>
-<DnaSelect 
+              <DnaSelect
                 aria-label="Gudang Tujuan"
                 value={toWarehouse}
                 onChange={setToWarehouse}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white"
               >
-                {MASTER_WAREHOUSES.map((wh) => (
+                {warehouseOptions.map((wh: string) => (
                   <option key={wh} value={wh}>{wh}</option>
                 ))}
               </DnaSelect>
@@ -644,110 +648,97 @@ export default function WarehouseTransfersPage() {
           </div>
 
           <div>
-            <label className="block text-slate-700 font-bold mb-1">No. Dokumen Referensi / SPK / Permintaan *</label>
+            <label className="block text-slate-700 font-bold mb-1">Nomor Dokumen Referensi</label>
             <DnaInput
               type="text"
-              placeholder="Contoh: SPK-2026-09-012 / REQ-202609-0010"
+              placeholder="Contoh: SPK-2026-09-009 / REQ-PROD-01"
               value={referenceDoc}
               onChange={(e) => setReferenceDoc(e.target.value)}
-              className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums"
             />
           </div>
 
-          {/* Item Adder */}
-          <div className="border-t border-slate-200 pt-3">
-            <h4 className="font-bold text-slate-800 text-xs mb-2 flex items-center justify-between">
-              <span>Pilih Material yang Dipindahkan</span>
-              <span className="text-[11px] font-normal text-slate-500">{cartItems.length} Item dalam Daftar</span>
+          {/* Item Selector */}
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <h4 className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
+              Pilih Material yang Akan Dipindahkan
             </h4>
-            <div className="grid grid-cols-12 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 items-end">
-              <div className="col-span-7">
-                <label className="block text-[11px] text-slate-600 font-medium mb-1">Pilih Material / Barang</label>
-  <DnaSelect 
-                  aria-label="Pilih Material Transfer"
+            <div className="grid grid-cols-3 gap-2">
+              <div className="col-span-2">
+                <DnaSelect
+                  aria-label="Pilih Material"
                   value={selectedMatCode}
                   onChange={setSelectedMatCode}
-                  className="w-full text-xs border border-slate-300 rounded-lg p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white"
                 >
-                  <option value="">-- Pilih Material Gudang Asal --</option>
-                  {AVAILABLE_TRANSFER_ITEMS.map((m) => (
-                    <option key={m.code} value={m.code}>
-                      [{m.code}] {m.name} (Tersedia: {m.stock} {m.unit})
+                  <option value="">-- Pilih Barang dari Gudang Asal --</option>
+                  {availableItems.map((item) => (
+                    <option key={item.code} value={item.code}>
+                      {item.code} - {item.name} (Stok: {item.stock} {item.unit})
                     </option>
                   ))}
                 </DnaSelect>
               </div>
-              <div className="col-span-3">
-                <label className="block text-[11px] text-slate-600 font-medium mb-1">Qty Transfer</label>
+              <div className="flex gap-2">
                 <DnaInput
                   type="number"
-                  min="0.1"
-                  step="any"
+                  min="1"
+                  placeholder="Qty"
                   value={itemTransferQty}
                   onChange={(e) => setItemTransferQty(parseFloat(e.target.value) || 0)}
-                  className="w-full text-xs border border-slate-300 rounded-lg p-1.5 text-right font-mono"
+                  className="w-20 text-xs border border-slate-300 rounded-lg p-2 tabular-nums"
                 />
-              </div>
-              <div className="col-span-2">
-                <DnaButton
-                  variant="secondary"
-                  size="sm"
-                  className="w-full"
-                  icon={<Plus className="w-3.5 h-3.5" />}
-                  onClick={handleAddItemToTransfer}
-                >
-                  Tambah
+                <DnaButton variant="secondary" size="sm" onClick={handleAddItemToCart}>
+                  + Tambah
                 </DnaButton>
               </div>
             </div>
-          </div>
 
-          {/* Cart Table */}
-          {cartItems.length > 0 && (
-            <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <DnaTable className="w-full text-left text-xs text-slate-600">
-                <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
-                  <tr>
-                    <th className="py-2 px-3">Kode</th>
-                    <th className="py-2 px-3">Nama Material</th>
-                    <th className="py-2 px-3 text-right">Stok Asal</th>
-                    <th className="py-2 px-3 text-right">Qty Dipindahkan</th>
-                    <th className="py-2 px-3">Satuan</th>
-                    <th className="py-2 px-3 text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {cartItems.map((c) => (
-                    <tr key={c.materialCode}>
-                      <td className="py-2 px-3 font-mono font-medium text-indigo-600">{c.materialCode}</td>
-                      <td className="py-2 px-3 font-semibold text-slate-800">{c.materialName}</td>
-                      <td className="py-2 px-3 text-right font-mono text-slate-600">{c.availableStockOrigin}</td>
-                      <td className="py-2 px-3 text-right font-mono font-bold text-indigo-700">{c.transferQty}</td>
-                      <td className="py-2 px-3 text-slate-500">{c.unit}</td>
-                      <td className="py-2 px-3 text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFromCart(c.materialCode)}
-                          className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </DnaTable>
-            </div>
-          )}
+            {/* Cart Items List */}
+            {cartItems.length > 0 && (
+              <div className="border border-slate-200 rounded-lg bg-white overflow-hidden mt-2">
+                <DnaTable className="w-full text-left text-xs">
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2 px-3">Item</DnaTh>
+                      <DnaTh className="py-2 px-3 text-right">Qty</DnaTh>
+                      <DnaTh className="py-2 px-3">Lot</DnaTh>
+                      <DnaTh className="py-2 px-3 text-right">Aksi</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
+                    {cartItems.map((c, idx) => (
+                      <DnaTableRow key={idx}>
+                        <DnaTd className="py-2 px-3">{c.materialName}</DnaTd>
+                        <DnaTd className="py-2 px-3 text-right tabular-nums font-bold">{c.transferQty} {c.unit}</DnaTd>
+                        <DnaTd className="py-2 px-3 tabular-nums text-slate-500">{c.batchLot}</DnaTd>
+                        <DnaTd className="py-2 px-3 text-right">
+                          <DnaButton
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCartItems(cartItems.filter((_, i) => i !== idx))}
+                            className="text-red-500 hover:text-red-700 h-7 w-7 p-0"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </DnaButton>
+                        </DnaTd>
+                      </DnaTableRow>
+                    ))}
+                  </DnaTableBody>
+                </DnaTable>
+              </div>
+            )}
+          </div>
 
           <div>
             <label className="block text-slate-700 font-bold mb-1">Catatan Tambahan</label>
             <DnaTextarea
               rows={2}
-              placeholder="Contoh: Pemindahan material ruahan untuk line mixing shift malam."
+              placeholder="Instruksi khusus transfer / kondisi kemasan..."
               value={formNotes}
               onChange={(e) => setFormNotes(e.target.value)}
-              className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full text-xs border border-slate-300 rounded-lg p-2"
             />
           </div>
         </div>

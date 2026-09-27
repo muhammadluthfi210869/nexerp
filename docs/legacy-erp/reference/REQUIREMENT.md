@@ -183,4 +183,38 @@ Contoh: `SO-29062026-0001`
 
 ---
 
-*Catatan: seluruh poin sudah final berdasarkan klarifikasi Upii — tidak ada lagi item ambigu, kecuali referensi visual format G-SERP (poin 26, 75) yang perlu screenshot tambahan saat implementasi jika AI CLI membutuhkan detail persis.*
+# 16. Modul Human Resources, Recruitment, Payroll, Kasbon & Training (Kebutuhan Riil Operasional 2026-09-22)
+
+1. **Recruitment & ATS (Candidate Lifecycle)**:
+   - Data kandidat yang masuk: nama candidate, departemen yang dilamar, email, durasi seleksi, import/upload CV, hasil evaluasi CV.
+   - Pipeline tahapan seleksi bertingkat dengan status: `Screening CV` -> `Interview HR` -> `User Interview` -> `Offering` -> `DONE` / `REJECT`.
+   - Data historis kandidat lolos dan tidak lolos tersimpan rapi.
+   - Sistem reminder/notifikasi otomatis jika kandidat dinyatakan lolos ke tahap berikutnya.
+
+2. **Data Karyawan, Onboarding & Training**:
+   - Master data karyawan: nama, tanggal lahir (hitung umur otomatis), jenis kelamin, jabatan, departemen, jenis kontrak (PKWT/Tetap), durasi kontrak, gaji pokok, tanggal masuk, status aktif (maintenance data karyawan).
+   - Masa onboarding standar 3 hari.
+   - Pencatatan jam training per karyawan: input jenis training, durasi (berapa jam), goal/target pelatihan (teks input bebas), tanggal pelaksanaan, dan fitur import/upload sertifikat pelatihan.
+
+3. **Payroll Komprehensif, Komponen Upah & Kasbon (Loan)**:
+   - Upah Tetap: Gaji Pokok + Tunjangan Jabatan.
+   - Tunjangan Transport: 2 kolom terpisah yaitu **Transport Flat** dan **Transport Tentatif** (berbasis kehadiran aktual).
+   - Overtime (Lembur): terhubung ke roster shift dan presensi.
+   - Pinjaman / Kasbon Karyawan (*Employee Loan*): cicilan pinjaman dipotong langsung dari komponen gaji bulanan, dilengkapi reminder sisa hutang (kurang berapa dari total pinjaman).
+   - Kolom BPJS: BPJS Kesehatan dan BPJS Ketenagakerjaan wajib ada di slip/tabel walau nilainya kosong/nol.
+   - Deskripsi/catatan rincian gaji bersifat opsional (bisa tidak diisi).
+   - Aturan PPh 21: di atas UMR/PTKP dipotong pajak, di bawah UMR bebas potong.
+   - Slip Gaji Lengkap (*Salary Slip / Sleepsalary*): rincian nama, jabatan, detail komponen pendapatan, potongan, dan take-home pay.
+   - Reminder notifikasi pelaporan gaji dan jadwal cut-off payroll.
+
+4. **KPI, Grafik Bulanan & Leaderboard Karyawan**:
+   - Kolom penilaian KPI per karyawan terintegrasi.
+   - Grafik tren penilaian performa per bulan.
+   - Leaderboard peringkat karyawan terbaik (*Top Performers Rank*).
+
+5. **Notifikasi & Reminder Terpusat**:
+   - Notifikasi otomatis untuk reminder kontrak habis (H-30), reminder sisa kasbon, reminder pelaporan payroll, reminder onboarding/training, dan notifikasi kelolosan kandidat rekrutmen.
+
+---
+
+*Catatan: seluruh poin sudah final berdasarkan klarifikasi Upii dan kebutuhan operasional owner 2026-09-22.*

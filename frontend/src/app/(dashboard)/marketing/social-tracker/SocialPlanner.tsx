@@ -4,7 +4,23 @@ import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { BarChart3, CalendarDays, FileText, LayoutGrid, List, Plus, RefreshCw, Search, Settings2 } from "lucide-react";
-import { DnaButton, DnaDrawer, DnaInput, DnaKpiGrid, DnaPageContainer, DnaPageHeader, DnaPagination, DnaTabNav, DnaTextarea } from "@/components/dna";
+import {
+  DnaButton,
+  DnaDrawer,
+  DnaInput,
+  DnaKpiGrid,
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaPagination,
+  DnaTabNav,
+  DnaTextarea,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import { extractApiError } from "@/lib/api";
 import { MarketingBrand, MarketingMember, SocialPost, SocialStatus, useCanonicalSocialPosts, useCreateCanonicalSocialPost, useMarketingBrands, useMarketingMembers, useSocialStatusMutation } from "@/hooks/useCanonicalMarketing";
 
@@ -44,7 +60,7 @@ export function SocialPlanner() {
 function Badge({status}:{status:SocialStatus}){return <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusStyle(status)}`}>{SOCIAL_LABEL[status]}</span>}
 function Select({label,value,onChange,options}:{label:string;value:string;onChange:(v:string)=>void;options:string[]}){return <select aria-label={label} value={value} onChange={e=>onChange(e.target.value)} className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium outline-none focus:border-blue-500"><option value="all">{label}</option>{options.map(x=><option key={x} value={x}>{SOCIAL_LABEL[x as SocialStatus]??x}</option>)}</select>}
 function State({title,text,action}:{title:string;text:string;action:React.ReactNode}){return <div className="grid place-items-center gap-3 p-14 text-center"><FileText className="h-9 w-9 text-slate-300"/><div><p className="font-bold text-slate-900">{title}</p><p className="text-sm text-slate-500">{text}</p></div>{action}</div>}
-function SocialTable({rows,onOpen}:{rows:SocialPost[];onOpen:(p:SocialPost)=>void}){return <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500"><tr>{["Konten","Brand","Platform","PIC","Status","Jadwal"].map(h=><th key={h} className="px-4 py-3">{h}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{rows.map(p=><tr key={p.id} tabIndex={0} onClick={()=>onOpen(p)} onKeyDown={e=>e.key==="Enter"&&onOpen(p)} className="cursor-pointer hover:bg-blue-50/40 focus:bg-blue-50 focus:outline-none"><td className="px-4 py-3"><p className="font-bold text-slate-900">{p.title}</p><p className="text-xs text-slate-400">{p.pillar||p.contentType}</p></td><td className="px-4 py-3">{p.brand?.name??"—"}</td><td className="px-4 py-3 capitalize">{p.platform}</td><td className="px-4 py-3">{p.assignee?.name??"—"}</td><td className="px-4 py-3"><Badge status={p.status}/></td><td className="px-4 py-3">{prettyDate(p.scheduledDate)}</td></tr>)}</tbody></table></div>}
+function SocialTable({rows,onOpen}:{rows:SocialPost[];onOpen:(p:SocialPost)=>void}){return <div className="overflow-x-auto"><DnaTable><DnaTableHead><DnaTableRow>{["Konten","Brand","Platform","PIC","Status","Jadwal"].map(h=><DnaTh key={h} className="px-4 py-3">{h}</DnaTh>)}</DnaTableRow></DnaTableHead><DnaTableBody>{rows.map(p=><DnaTableRow key={p.id} tabIndex={0} onClick={()=>onOpen(p)} onKeyDown={e=>e.key==="Enter"&&onOpen(p)} className="cursor-pointer hover:bg-blue-50/40 focus:bg-blue-50 focus:outline-none"><DnaTd className="px-4 py-3"><p className="font-bold text-slate-900">{p.title}</p><p className="text-xs text-slate-400">{p.pillar||p.contentType}</p></DnaTd><DnaTd className="px-4 py-3">{p.brand?.name??"—"}</DnaTd><DnaTd className="px-4 py-3 capitalize">{p.platform}</DnaTd><DnaTd className="px-4 py-3">{p.assignee?.name??"—"}</DnaTd><DnaTd className="px-4 py-3"><Badge status={p.status}/></DnaTd><DnaTd className="px-4 py-3">{prettyDate(p.scheduledDate)}</DnaTd></DnaTableRow>)}</DnaTableBody></DnaTable></div>}
 function Board({rows,onOpen}:{rows:SocialPost[];onOpen:(p:SocialPost)=>void}){const groups=ALL_STATUS.filter(s=>rows.some(p=>p.status===s));return <div className="flex gap-3 overflow-x-auto p-4">{groups.map(status=><section key={status} className="w-72 shrink-0 rounded-xl bg-slate-50 p-3"><div className="mb-3 flex items-center justify-between"><Badge status={status}/><span className="text-xs font-bold text-slate-400">{rows.filter(p=>p.status===status).length}</span></div><div className="space-y-2">{rows.filter(p=>p.status===status).map(p=><button key={p.id} onClick={()=>onOpen(p)} className="min-h-20 w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm hover:border-blue-300"><p className="font-bold text-slate-900">{p.title}</p><p className="mt-2 text-xs capitalize text-slate-400">{p.platform} · {p.assignee?.name??"Belum ada PIC"}</p></button>)}</div></section>)}</div>}
 function Calendar({rows,onOpen}:{rows:SocialPost[];onOpen:(p:SocialPost)=>void}){const groups=Object.entries(rows.reduce<Record<string,SocialPost[]>>((a,p)=>{const d=(p.scheduledDate||p.createdAt).slice(0,10);(a[d]??=[]).push(p);return a},{})).sort(([a],[b])=>a.localeCompare(b));return <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">{groups.map(([date,items])=><section key={date} className="rounded-xl border border-slate-200 p-4"><h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">{prettyDate(date)}</h3>{items.map(p=><button key={p.id} onClick={()=>onOpen(p)} className="mb-2 block min-h-11 w-full rounded-lg bg-slate-50 px-3 text-left text-sm font-semibold hover:bg-blue-50">{p.title}</button>)}</section>)}</div>}
 function CheckMark({done}:{done:boolean}){return <span aria-label={done?"Selesai":"Belum selesai"} className={`grid h-5 w-5 place-items-center rounded-full border text-xs ${done?"border-emerald-500 bg-emerald-500 text-white":"border-slate-300"}`}>{done?"✓":""}</span>}

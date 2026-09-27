@@ -416,7 +416,7 @@ export default function QCWorkbenchPage() {
             <div className="flex items-center gap-2">
               <Hash className="h-4 w-4 text-slate-400" />
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Step Log</span>
-              <span className="text-xs font-bold font-mono text-slate-900">{stepLogId}</span>
+              <span className="text-xs font-bold tabular-nums text-slate-900">{stepLogId}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-blue-500" />
@@ -655,13 +655,13 @@ export default function QCWorkbenchPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">Step Log</span>
-                  <span className="text-[10px] font-bold text-emerald-400 font-mono">
+                  <span className="text-[10px] font-bold text-emerald-400 tabular-nums">
                     {stepLogId || "—"}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">Endpoint</span>
-                  <span className="text-[9px] font-bold text-blue-300 font-mono">POST /qc/audits</span>
+                  <span className="text-[9px] font-bold text-blue-300 tabular-nums">POST /qc/audits</span>
                 </div>
                 <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/10">
                   <p className="text-[9px] font-bold text-white/40 uppercase leading-relaxed italic">

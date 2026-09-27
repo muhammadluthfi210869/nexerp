@@ -1,4 +1,10 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  ServiceUnavailableException,
+  BadGatewayException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { Pool } from 'pg';
 
@@ -140,7 +146,9 @@ export class DreamlabRrSyncService implements OnModuleInit {
   async syncDreamlabRoundRobin() {
     if (!this.pool) this.initPool();
     if (!this.pool) {
-      throw new Error('Koneksi database website DreamLab belum tersedia');
+      throw new ServiceUnavailableException(
+        'Koneksi database website DreamLab belum tersedia',
+      );
     }
 
     const client = await this.pool.connect();
@@ -152,7 +160,7 @@ export class DreamlabRrSyncService implements OnModuleInit {
       // 1. Ambil summary per busdev
       const summary = await this.getDreamlabRoundRobinSummary();
       if (!summary.success) {
-        throw new Error(
+        throw new BadGatewayException(
           summary.error || 'Gagal membaca summary dari database website',
         );
       }

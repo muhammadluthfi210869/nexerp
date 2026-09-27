@@ -1731,6 +1731,165 @@ Tidak ada precedence chain lokal. Gunakan satu peta otoritas berbasis subjek di 
 
 ---
 
+## 15. Sample / R&D / Creative / Legalitas Rules (P08)
+
+> Canonical owner established by DEC-2026-09-20-051 (design/artwork approval) and
+> DEC-2026-09-20-053 (permit record + expiry monitoring). Rules 107–114 encode the
+> owner's business decisions of 2026-09-20. Rules 107 and 111 replace behaviour that
+> the running implementation got wrong: `RndService.acceptSample` auto-approved the
+> sample fee, and `CreativeService.unlockTask` cleared the revision lock without
+> recounting the allowance.
+
+### BUS-RULE-107 — Sample Fee: Finance Verification Gate
+**Deskripsi**: Formulasi tidak boleh dimulai sebelum Finance memverifikasi bahwa biaya sample benar-benar sudah diterima. Tidak ada auto-approval.
+**Konteks**: Entity `SalesSample` (live: `SampleRequest`), transisi `WAITING_FINANCE → IN_PROGRESS`, field `paymentApprovedAt` / `paymentApprovedById`.
+**Logika**:
+```
+IF sample.payment_verified_at IS NULL THEN reject START_FORMULATION
+IF sample.payment_verified_by IS NULL THEN reject START_FORMULATION
+IF actor.role NOT IN ('FinanceStaff','FinanceAdmin') THEN reject VERIFY_SAMPLE_PAYMENT
+ON VERIFY: set payment_verified_at = now(), payment_verified_by = actor.id
+NEVER auto-set payment_verified_at implicitly on any other action
+```
+**Pesan Error**: `Pembayaran sample belum diverifikasi Finance.` / `SAMPLE_FEE_NOT_VERIFIED`
+**Sumber Spec**: `03_WORKFLOW_STATE_MACHINE.yaml` sales_pipeline SalesSample; `state-transition.service.ts` gate `G1_SAMPLE`; DEC-2026-09-20-051
+**Siapa Terlibat**: Finance, R&D
+**Test Case**: Sample pada status WAITING_FINANCE → mulai formulasi ditolak `SAMPLE_FEE_NOT_VERIFIED`; setelah Finance memverifikasi → formulasi dimulai dan `paymentApprovedById` terisi.
+
+### BUS-RULE-108 — Formulation Composition and Deterministic Conversion
+**Deskripsi**: Total komposisi wajib tepat 100%; konversi persen→gram dan HPP wajib deterministik dan dapat direproduksi.
+**Konteks**: Entity `Formulation` (live: `Formula`), `FormulaPhase`, `FormulaItem`.
+**Logika**:
+```
+IF abs(sum(item.percentage) - 100) > 0.001 THEN reject SAVE   # COMPOSITION_TOTAL_INVALID
+gram(item) = round(percentage / 100 * targetYieldGram, 3)
+hpp       = sum(percentage * costSnapshot) / 100
+SAME input MUST produce SAME gram and SAME hpp on every run
+```
+Satu implementasi dipakai bersama oleh jalur create dan jalur update — `gramFor()`,
+`costPerGramFor()`, `compositionTotal()` di `formulas.service.ts` — supaya kedua jalur
+tidak bisa menyimpang satu sama lain.
+**Pesan Error**: `Total komposisi harus 100%.` / `COMPOSITION_TOTAL_INVALID`
+**Sumber Spec**: REQUIREMENT Poin 11; `raw/r&d.md`; `formulas.service.ts` (`gramFor`, `costPerGramFor`, `compositionTotal`)
+**Siapa Terlibat**: RnD Chemist, RnD Manager
+**Test Case**: Komposisi 99.5% dan 100.001% ditolak; komposisi 100% menghasilkan gram dan HPP identik pada dua eksekusi berturut-turut.
+
+### BUS-RULE-109 — Approved and Locked Revision Immutability
+**Deskripsi**: Formula yang sudah disetujui atau terkunci menolak setiap perubahan. Perubahan wajib lewat revisi baru, bukan penulisan ulang.
+**Konteks**: Entity `Formulation.status` (live `FormulaStatus`), `FormulaRevision`.
+**Logika**:
+```
+IMMUTABLE = ('SAMPLE_LOCKED','PRODUCTION_LOCKED','SUPERSEDED')   # status terkunci + riwayat
+IF formulation.status IN IMMUTABLE
+   THEN reject UPDATE | DELETE of phases, items, targetYieldGram   # FORMULA_LOCKED
+ALLOWED only: createRevision (baris baru, version++)
+```
+`SAMPLE_LOCKED` di-set `approveFormula()`, `PRODUCTION_LOCKED` di-set `lockProduction()`
+setelah gate BPOM. `SUPERSEDED` ikut masuk himpunan karena revisi yang sudah digantikan
+adalah riwayat beku — mengubahnya berarti menulis ulang sejarah.
+
+Revisi dari induk yang terkunci **diizinkan**, justru karena revisi tidak menulis ulang
+induknya (lihat BUS-RULE-114); itu satu-satunya jalur resmi untuk mengubah formula yang
+sudah terkunci. Karena itu tidak ada klausa "tolak createRevision tanpa unlock".
+**Pesan Error**: `Formula terkunci tidak dapat diubah.` / `FORMULA_LOCKED`
+**Sumber Spec**: `03_WORKFLOW_STATE_MACHINE.yaml` rnd_pipeline Formulation; `02_DATA_OWNERSHIP.yaml` (delegation `Formulation.update`, condition `status in {DRAFT, SUBMITTED}`); `formulas.service.ts` (`assertMutable`)
+**Siapa Terlibat**: RnD Chemist, RnD Manager, Head Ops
+**Test Case**: Mutasi item pada formula `SAMPLE_LOCKED` dan `PRODUCTION_LOCKED` ditolak `FORMULA_LOCKED`; baris item dan nomor versi induk tidak berubah.
+
+### BUS-RULE-110 — Artwork Approval Binds to an Exact Version
+**Deskripsi**: Setiap keputusan approval desain wajib menunjuk versi artwork yang disetujui. Fakta ini disimpan, tidak disimpulkan dari urutan waktu.
+**Konteks**: Entity `DesignFeedback.versionId` → `DesignVersion`, `DesignTask.kanbanState`.
+**Logika**:
+```
+IF feedback.approvalStatus IN ('APPROVED','REJECTED') AND feedback.versionId IS NULL
+   THEN reject SAVE
+IF feedback.versionId != designTask.latestVersion.id THEN reject APPROVE
+```
+**Pesan Error**: `Keputusan desain harus menunjuk versi artwork.` / `DESIGN_VERSION_REQUIRED`
+**Sumber Spec**: `01_DOMAIN_MODEL.md` DesignFeedback; DEC-2026-09-20-051
+**Siapa Terlibat**: Desain, APJ, BusDev
+**Test Case**: Approval tanpa `versionId` ditolak; approval yang menunjuk versi lama saat versi baru sudah ada ditolak.
+
+### BUS-RULE-111 — Design Revision Bound, Lock, and Supervisor Reopen
+**Deskripsi**: Desain yang sudah disetujui klien TIDAK terkunci permanen. Revisi masih boleh sampai batas 3 kali; desain terkunci hanya setelah batas itu. Setelah terkunci, supervisor boleh membuka dan jatah revisi dihitung ulang dari nol.
+**Konteks**: Entity `DesignTask.revisionCount`, `DesignTask.isLocked`, `DesignTask.isFinal`.
+**Logika**:
+```
+REVISION_BOUND = 3
+ON client.request_revision:
+   IF designTask.isLocked == true THEN reject BOUND_REACHED
+   IF designTask.revisionCount >= REVISION_BOUND THEN reject BOUND_REACHED
+   revisionCount += 1
+   IF revisionCount >= REVISION_BOUND THEN isLocked = true
+ON supervisor.reopen:
+   IF actor.role NOT IN ('Director','SuperAdmin') THEN reject UNAUTHORIZED
+   IF designTask.isLocked != true THEN reject NOT_LOCKED
+   IF reopen_reason IS NULL THEN reject REASON_REQUIRED
+   revisionCount = 0          # jatah dihitung ulang
+   isLocked = false
+   record the reopen in DesignFeedback history
+```
+**Pesan Error**: `Batas revisi desain sudah tercapai.` / `DESIGN_REVISION_BOUND_REACHED`
+**Sumber Spec**: `creative.service.ts:29,127-152,384-437`; DEC-2026-09-20-052/055/056
+**Siapa Terlibat**: BusDev (klien), Desain, Direktur
+**Test Case**: Revisi ke-4 ditolak `DESIGN_REVISION_BOUND_REACHED`; reopen oleh non-Director ditolak; reopen oleh Director mengembalikan `revisionCount` ke 0 dan revisi berikutnya diterima.
+
+### BUS-RULE-112 — Permit Record and Single Expiry Policy
+**Deskripsi**: Izin (BPOM / HKI-Merek / Halal) dicatat dan dipantau kadaluarsanya. Tidak ada alur pengajuan izin di dalam P08. Satu kebijakan kadaluarsa berlaku untuk ketiga jenis izin.
+**Konteks**: Entity `BpomRecord`, `HkiRecord`, `HalalRecord`, field `expiryDate`.
+**Logika**:
+```
+daysLeft = ceil((expiryDate - today) / 1 day)
+IF expiryDate IS NULL THEN status = NO_EXPIRY        # jangan dianggap hari ini
+IF daysLeft <= 0  THEN status = EXPIRED
+IF daysLeft <= 30 THEN status = CRITICAL
+IF daysLeft <= 90 THEN status = WARNING
+ELSE                   status = SAFE
+Threshold set is identical for BPOM, HKI and Halal.
+```
+**Pesan Error**: `Izin sudah kadaluarsa.` / `PERMIT_EXPIRED`
+**Sumber Spec**: `legality.service.ts:26-27,594-672,1113-1215`; DEC-2026-09-20-053
+**Siapa Terlibat**: Legalitas, APJ
+**Test Case**: Izin tanpa `expiryDate` berstatus `NO_EXPIRY` (bukan EXPIRED); izin dengan sisa 20 hari berstatus `CRITICAL` pada ketiga jenis izin.
+
+### BUS-RULE-113 — Audit and Outbox Atomicity for Governed Writes
+**Deskripsi**: Setiap penulisan terpantau P08, catatan auditnya, dan event outbox wajib commit bersama tepat sekali, atau gagal bersama.
+**Konteks**: `platform/audit/audit.service.ts`, `platform/outbox/outbox.service.ts`.
+**Logika**:
+```
+WITHIN one prisma.$transaction:
+   businessWrite
+   AND auditLog.create
+   AND outboxEvent.create
+IF audit deferred outside the transaction THEN reject AUDIT_NOT_ATOMIC
+IF outbox opens its own transaction THEN reject OUTBOX_NOT_ATOMIC
+Same idempotency key twice MUST produce exactly one business effect.
+```
+**Pesan Error**: `Penulisan tidak atomik dengan audit/outbox.` / `AUDIT_NOT_ATOMIC`
+**Sumber Spec**: `_SSOT_AUTH.md`; DEC-029/DEC-031; `p07-negative-audit-outbox.unit-spec.ts`
+**Siapa Terlibat**: semua modul P08
+**Test Case**: Kegagalan antara penulisan bisnis dan audit menggulung keduanya; idempotency key yang sama dua kali hanya menghasilkan satu efek.
+
+### BUS-RULE-114 — Adjustment Lineage Never Rewrites the Parent
+**Deskripsi**: Penyesuaian atau rework membuat garis keturunan sendiri dan tidak pernah menulis ulang revisi yang sudah disetujui atau terkunci.
+**Konteks**: Konsep kanonik `FormulationAdjustment` + `FormulaRevision`; kendaraan live-nya adalah `Formula.version` + `createRevision()` (tidak ada tabel adjustment terpisah di skema live — DEC-2026-09-20-062).
+**Logika**:
+```
+ON adjustment.create (live: createRevision):
+   copy parent.targetYieldGram, phases, items, qcparameter into a NEW row
+   new.version = max(version of sampleRequest) + 1
+   parent.version, parent.targetYieldGram, parent rows MUST remain unchanged
+   parent.status := SUPERSEDED          # 03: old_formulation.marked_superseded
+Rework of a LOCKED parent is ALLOWED and is the only sanctioned change path.
+Adjustment MUST NOT mutate any parent phase or item row.
+```
+**Pesan Error**: `Penyesuaian tidak boleh mengubah revisi induk.` / `ADJUSTMENT_PARENT_IMMUTABLE`
+**Sumber Spec**: `03_WORKFLOW_STATE_MACHINE.yaml` rnd_pipeline Formulation + FormulationAdjustment, `rnd_formulation_revisions`; `formulas.service.ts` (`createRevision`)
+**Siapa Terlibat**: RnD Chemist, RnD Manager
+**Test Case**: Membuat penyesuaian pada formula terkunci tidak mengubah nomor revisi induk, tidak mengubah satu baris item induk, dan meninggalkan baris induk tetap ada.
+
+---
+
 ## Lampiran A — Coverage Matrix
 
 ### A.1 REQUIREMENT.md Coverage (34 Poin)
@@ -1842,7 +2001,8 @@ Tidak ada precedence chain lokal. Gunakan satu peta otoritas berbasis subjek di 
 - **5 Orphan inputs/outputs covered**: 5/5 (100%)
 - **Broken lineage fixed**: 1/1 (100%)
 - **DEC-001 to DEC-034 translated**: 23/34 (67% — sisanya proses/migration/NFR yang tidak butuh rule bisnis)
-- **Total rules defined**: 106 (BUS-RULE-001 to BUS-RULE-106)
+- **Total rules defined**: 114 (BUS-RULE-001 to BUS-RULE-114)
+- **Owner decisions 2026-09-20 (long form `DEC-2026-09-20-051..059`)** translated: 8/8 — see §15 and `process/_PROCESS_DECISIONS_LOG.md`. These are additive and do not amend any DEC-001..034 entry.
 
 ---
 
@@ -1876,6 +2036,91 @@ Worker reclaim lease (30s) — duplicate key ditolak unique constraint
 Lihat `08_INTEGRATION_EVENT_CONTRACT.yaml`, `09_NON_FUNCTIONAL_CONTRACT.md §8`,
 dan `backend/src/platform/outbox/outbox.service.ts`.
 
+## BUS-RULE-115 — Rekrutmen: Pipeline Tahapan, Evaluasi CV & Reminder Kelolosan
+**Deskripsi**: Setiap pelamar/kandidat dicatat dalam pipeline bertingkat (Screening CV -> Interview HR -> User Interview -> Offering -> DONE / REJECT). Berkas CV dan hasil evaluasi dapat diunggah. Setiap perubahan status lolos ke tahap berikutnya secara otomatis memicu notifikasi/reminder sistem. Data historis kandidat lolos dan tidak lolos disimpan permanen tanpa penghapusan fisik.
+**Konteks**: Entity `Candidate`, screen `/master/hr-recruitment`.
+**Logika**:
+```
+stages = ['SCREENING', 'HR_INTERVIEW', 'USER_INTERVIEW', 'OFFERING', 'DONE', 'REJECTED']
+on stage_advance(candidate, nextStage):
+  IF nextStage == 'REJECTED':
+    candidate.status = 'REJECTED'
+    log_history(candidate.id, 'REJECTED')
+  ELSE:
+    candidate.stage = nextStage
+    send_notification(candidate.email, 'Selamat, Anda lolos ke tahap ' + nextStage)
+    log_history(candidate.id, nextStage)
+```
+**Pesan Error**: `Tahap rekrutmen tidak valid.` / `INVALID_RECRUITMENT_STAGE`
+**Sumber Spec**: REQUIREMENT.md §16.1 (Owner Requirement 2026-09-22)
+**Siapa Terlibat**: HR Recruitment, Department User
+
 ---
 
-**Dokumen ini FINAL untuk dirujuk. Update WAJIB lewat DEC baru di `_PROCESS_DECISIONS_LOG.md`. | Versi: 1.1 | Tanggal: 2026-09-18**
+## BUS-RULE-116 — Karyawan: Onboarding 3 Hari & Training Log (Jam, Goal, Sertifikat)
+**Deskripsi**: Karyawan baru menjalani masa onboarding standar 3 hari dengan tracking kesiapan kerja. Setiap pelatihan yang diikuti wajib mencatat jenis training, jumlah jam durasi, sasaran/goal pelatihan (teks bebas), tanggal pelaksanaan, dan lampiran berkas sertifikat kelulusan.
+**Konteks**: Entity `Employee`, `EmployeeTraining`.
+**Logika**:
+```
+IF employee.joinedAt <= today AND today <= employee.joinedAt + 3 days:
+  employee.onboardingStatus = 'IN_PROGRESS'
+ELSE:
+  employee.onboardingStatus = 'COMPLETED'
+
+on add_training(employeeId, trainingType, hours, goal, date, certUrl):
+  IF hours <= 0 THEN error
+  create EmployeeTraining(employeeId, trainingType, hours, goal, date, certUrl)
+  update employee.totalTrainingHours = sum(hours)
+```
+**Pesan Error**: `Durasi jam training harus lebih besar dari 0.` / `TRAINING_HOURS_INVALID`
+**Sumber Spec**: REQUIREMENT.md §16.2 (Owner Requirement 2026-09-22)
+**Siapa Terlibat**: HR Training & Development, Employee
+
+---
+
+## BUS-RULE-117 — Payroll Komprehensif: Upah Tetap, Transport 2 Kolom, Kasbon, BPJS, PPh 21 & Slip Gaji
+**Deskripsi**: Komponen gaji bulanan tersusun atas:
+1. **Upah Tetap**: Gaji Pokok + Tunjangan Jabatan.
+2. **Tunjangan Transport**: 2 kolom terpisah:
+   - Transport Flat (tetap per bulan).
+   - Transport Tentatif (dihitung proporsional: `transportTentatifPerHari * kehadiranAktual`).
+3. **Overtime (Lembur)**: Terintegrasi dari presensi & Form Lembur disetujui (`SPL`).
+4. **Kasbon Karyawan (*Employee Loan*)**: Pemotongan cicilan per bulan langsung dari gaji + tracking & reminder sisa hutang (`sisaPinjaman = sisaPinjaman - cicilanBulanIni`).
+5. **BPJS**: Kolom BPJS Kesehatan dan Ketenagakerjaan wajib ada di slip gaji walaupun nominalnya nol/kosong.
+6. **PPh 21**: Penghasilan bruto di atas batas UMR/PTKP dipotong pajak PPh 21; di bawah batas UMR tidak dipotong (Rp 0).
+7. **Deskripsi/Catatan**: Opsional, boleh dikosongkan.
+8. **Slip Gaji (*Salary Slip*)**: Rincian nama, NIP, jabatan, pendapatan, potongan, dan net salary siap cetak/unduh.
+9. **Reminder Pelaporan**: Notifikasi pengingat cut-off dan pelaporan gaji bulanan.
+**Konteks**: Entity `Payroll`, `PayrollItem`, `EmployeeLoan`.
+**Logika**:
+```
+grossSalary = baseSalary + positionAllowance + transportFlat + (transportTentativeDaily * actualDays) + overtimePay
+loanDeduction = min(loan.installment, loan.remainingBalance)
+loan.remainingBalance = loan.remainingBalance - loanDeduction
+taxable = (grossSalary > UMR_THRESHOLD) ? (grossSalary - UMR_THRESHOLD) : 0
+pph21 = taxable * PPH21_RATE
+totalDeduction = bpjsHealth + bpjsEmployment + loanDeduction + pph21 + lateDeductions
+netSalary = grossSalary - totalDeduction
+```
+**Pesan Error**: `Pemotongan kasbon melebihi sisa pinjaman.` / `LOAN_DEDUCTION_EXCEEDED`
+**Sumber Spec**: REQUIREMENT.md §16.3 (Owner Requirement 2026-09-22)
+**Siapa Terlibat**: HR Payroll, Finance, Employee
+
+---
+
+## BUS-RULE-118 — KPI: Tren Bulanan & Leaderboard Karyawan Terbaik
+**Deskripsi**: Hasil penilaian performa KPI diagregasikan per periode bulan kalender untuk membentuk grafik tren historis per departemen dan per karyawan. Sistem menyediakan papan peringkat (*Leaderboard Top Performers*) secara otomatis berdasarkan skor akhir terbobot.
+**Konteks**: Entity `KpiScore`, `KpiPointLog`, dashboard HR & KPI.
+**Logika**:
+```
+monthlyScores = aggregate KpiScore by (employeeId, period)
+rankings = sort employees by kpiScore.finalScore descending
+trend = array of { period, avgScore, employeeScore } for last 6 months
+```
+**Pesan Error**: (Indicator & reporting only)
+**Sumber Spec**: REQUIREMENT.md §16.4 (Owner Requirement 2026-09-22)
+**Siapa Terlibat**: HR Manager, Executive, Division Heads
+
+---
+
+**Dokumen ini FINAL untuk dirujuk. Update WAJIB lewat DEC baru di `_PROCESS_DECISIONS_LOG.md`. | Versi: 1.2 | Tanggal: 2026-09-22**

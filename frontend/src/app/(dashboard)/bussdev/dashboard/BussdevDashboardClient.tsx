@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
@@ -41,10 +41,15 @@ export default function BussdevDashboardClient() {
   const { data: dashboard } = useQuery({
     queryKey: ["dashboardAnalytics", selectedMonth],
     queryFn: async () => {
-      const params: Record<string, string> = {};
-      if (range) { params.dateFrom = range.dateFrom; params.dateTo = range.dateTo; }
-      const res = await api.get("/bussdev/dashboard", params as any);
-      return res.data;
+      try {
+        const res = await api.get("/dashboards/busdev");
+        return res.data;
+      } catch {
+        const params: Record<string, string> = {};
+        if (range) { params.dateFrom = range.dateFrom; params.dateTo = range.dateTo; }
+        const res = await api.get("/bussdev/dashboard", params as any);
+        return res.data;
+      }
     },
     staleTime: 30000,
     refetchInterval: 60000,

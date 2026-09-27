@@ -22,6 +22,7 @@ describe('HrService — Unit', () => {
       'payroll',
       'payrollItem',
       'financialPeriod',
+      'employeeLoan',
     ];
     const hrOverrides: Record<string, any> = {};
     for (const col of hrCollections) {
@@ -193,7 +194,15 @@ describe('HrService — Unit', () => {
         where: { id: 'EMP-1' },
         include: {
           roles: true,
-          user: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+              fullName: true,
+              status: true,
+              roles: true,
+            },
+          },
           manager: { select: { id: true, name: true } },
           subordinates: { select: { id: true, name: true, roles: true } },
         },
@@ -365,12 +374,22 @@ describe('HrService — Unit', () => {
         { key: 'BPJS_HEALTH_RATE', value: '0.01' },
         { key: 'BPJS_EMPLOYMENT_RATE', value: '0.02' },
       ]);
+      prisma.attendance.findMany.mockResolvedValue([]);
+      prisma.ticket.findMany.mockResolvedValue([]);
+      prisma.employeeLoan.findFirst.mockResolvedValue(null);
       prisma.kpiPointLog.findMany.mockResolvedValue([]);
       prisma.employeeRoleMapping.findMany.mockResolvedValue([]);
       prisma.kpiScore.upsert.mockResolvedValue({});
       prisma.payroll.create.mockResolvedValue({
         id: 'PAY-1',
         status: 'DRAFT',
+      });
+      // generateDraftPayroll re-reads the created row through getPayrollById.
+      prisma.payroll.findUnique.mockResolvedValue({
+        id: 'PAY-1',
+        status: 'DRAFT',
+        totalDisbursement: null,
+        items: [],
       });
       prisma.payrollItem.create.mockResolvedValue({});
 

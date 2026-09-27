@@ -16,12 +16,12 @@ import {
 } from "lucide-react";
 import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard } from "@/components/dna";
 import {
-  DnaTable as Table,
-  DnaTableBody as TableBody,
-  DnaTd as TableCell,
-  DnaTh as TableHead,
-  DnaTableHead as TableHeader,
-  DnaTableRow as TableRow,
+  DnaTable,
+  DnaTableBody,
+  DnaTd,
+  DnaTh,
+  DnaTableHead,
+  DnaTableRow,
   DnaDialog as Dialog,
   DnaDialogContent as DialogContent,
   DnaDialogHeader as DialogHeader,
@@ -82,7 +82,7 @@ export default function SalesOrderPage() {
            {pendingVerification.map((order: any) => (
              <div key={order.id} className="p-6 bg-white border border-slate-200 shadow-sm border-l-4 border-amber-500 rounded-2xl group hover:scale-[1.02] transition-all">
                 <div className="flex justify-between items-start mb-4">
-                   <DnaBadge status="warning">AWAITING DP</DnaBadge>
+                   <DnaBadge variant="warning">AWAITING DP</DnaBadge>
                    <span className="text-[10px] font-black text-slate-300">#{order.id}</span>
                 </div>
                 <h4 className="font-black text-slate-900 uppercase italic text-sm line-clamp-1">{order.lead?.clientName}</h4>
@@ -128,20 +128,20 @@ export default function SalesOrderPage() {
           </div>
         }
       >
-        <Table className="table-dense">
-          <TableHeader className="bg-slate-50/50">
-            <TableRow className="border-slate-100">
-              <TableHead className="py-4 pl-6 font-black text-slate-400 uppercase tracking-tight text-[10px]">Order Protocol</TableHead>
-              <TableHead className="py-4 font-black text-slate-400 uppercase tracking-tight text-[10px]">Commercial Value</TableHead>
-              <TableHead className="py-4 font-black text-slate-400 uppercase tracking-tight text-[10px] text-center">Payment Intel</TableHead>
-              <TableHead className="py-4 font-black text-slate-400 uppercase tracking-tight text-[10px] text-center">Lifecycle</TableHead>
-              <TableHead className="pr-6 text-right py-4 font-black text-slate-400 uppercase tracking-tight text-[10px]">Audit</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <DnaTable className="table-dense">
+          <DnaTableHead className="bg-slate-50/50">
+            <DnaTableRow className="border-slate-100">
+              <DnaTh className="py-4 pl-6 font-black text-slate-400 uppercase tracking-tight text-[10px]">Order Protocol</DnaTh>
+              <DnaTh className="py-4 font-black text-slate-400 uppercase tracking-tight text-[10px]">Commercial Value</DnaTh>
+              <DnaTh className="py-4 font-black text-slate-400 uppercase tracking-tight text-[10px] text-center">Payment Intel</DnaTh>
+              <DnaTh className="py-4 font-black text-slate-400 uppercase tracking-tight text-[10px] text-center">Lifecycle</DnaTh>
+              <DnaTh className="pr-6 text-right py-4 font-black text-slate-400 uppercase tracking-tight text-[10px]">Audit</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {filteredOrders?.map((order: any) => (
-              <TableRow key={order.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
-                <TableCell className="py-4 pl-6">
+              <DnaTableRow key={order.id} className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50">
+                <DnaTd className="py-4 pl-6">
                   <div className="flex items-center gap-5">
                     <div className="h-14 w-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black italic shadow-sm group-hover:bg-amber-500 transition-all duration-500">
                       <FileText className="h-6 w-6" />
@@ -153,24 +153,24 @@ export default function SalesOrderPage() {
                       </p>
                     </div>
                   </div>
-                </TableCell>
+                </DnaTd>
 
-                <TableCell>
+                <DnaTd>
                   <div className="flex flex-col">
-                    <span className="font-black text-slate-900 text-sm tracking-tighter font-mono tabular-nums">{formatCurrency(Number(order.totalAmount))}</span>
+                    <span className="font-black text-slate-900 text-sm tracking-tighter tabular-nums tabular-nums">{formatCurrency(Number(order.totalAmount))}</span>
                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight mt-0.5">MOQ: {order.quantity.toLocaleString()} Pcs</span>
                   </div>
-                </TableCell>
+                </DnaTd>
 
-                <TableCell className="text-center">
+                <DnaTd className="text-center">
                   {order.isPaymentVerified ? (
                     <div className="flex flex-col items-center gap-1">
-                       <DnaBadge status="success">VERIFIED</DnaBadge>
+                       <DnaBadge variant="success">VERIFIED</DnaBadge>
                        <span className="text-[8px] font-medium text-slate-400 uppercase tracking-tight">On {new Date(order.paymentVerifiedAt).toLocaleDateString()}</span>
                     </div>
                   ) : order.paymentProofUrl ? (
                     <div className="flex flex-col items-center gap-2">
-                       <DnaBadge status="warning" className="animate-pulse">PENDING VALIDATION</DnaBadge>
+                       <DnaBadge variant="warning" className="animate-pulse">PENDING VALIDATION</DnaBadge>
                        <DnaButton 
                         variant="ghost"
                         className="h-6 text-[8px] text-blue-600 hover:bg-blue-50"
@@ -184,17 +184,17 @@ export default function SalesOrderPage() {
                        </DnaButton>
                     </div>
                   ) : (
-                    <DnaBadge status="default">AWAITING PROOF</DnaBadge>
+                    <DnaBadge variant="default">AWAITING PROOF</DnaBadge>
                   )}
-                </TableCell>
+                </DnaTd>
 
-                <TableCell className="text-center">
-                   <DnaBadge status={order.status === 'DP_PAID' ? 'info' : order.status === 'PENDING_DP' ? 'warning' : 'default'}>
+                <DnaTd className="text-center">
+                   <DnaBadge variant={order.status === 'DP_PAID' ? 'info' : order.status === 'PENDING_DP' ? 'warning' : 'default'}>
                       {order.status.replace('_', ' ')}
                    </DnaBadge>
-                </TableCell>
+                </DnaTd>
 
-                <TableCell className="text-right pr-6">
+                <DnaTd className="text-right pr-6">
                     <div className="flex justify-end gap-1">
                       <FinalDocumentPdfButton
                         documentType="QUOTATION"
@@ -212,11 +212,11 @@ export default function SalesOrderPage() {
                         <ChevronRight className="h-4 w-4" />
                       </DnaButton>
                     </div>
-                </TableCell>
-              </TableRow>
+                </DnaTd>
+              </DnaTableRow>
             ))}
-          </TableBody>
-        </Table>
+          </DnaTableBody>
+        </DnaTable>
       </DnaDataTableCard>
 
       {/* Payment Proof Modal */}
@@ -236,11 +236,11 @@ export default function SalesOrderPage() {
                <div className="grid grid-cols-2 gap-8">
                   <div className="space-y-1">
                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Total Transaction</p>
-                     <p className="text-2xl font-black text-slate-900 tracking-tighter italic font-mono tabular-nums">{formatCurrency(Number(selectedOrder?.totalAmount || 0))}</p>
+                     <p className="text-2xl font-black text-slate-900 tracking-tighter italic tabular-nums tabular-nums">{formatCurrency(Number(selectedOrder?.totalAmount || 0))}</p>
                   </div>
                   <div className="space-y-1">
                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Expected DP (30%)</p>
-                     <p className="text-2xl font-black text-emerald-600 tracking-tighter italic font-mono tabular-nums">{formatCurrency(Number(selectedOrder?.totalAmount || 0) * 0.3)}</p>
+                     <p className="text-2xl font-black text-emerald-600 tracking-tighter italic tabular-nums tabular-nums">{formatCurrency(Number(selectedOrder?.totalAmount || 0) * 0.3)}</p>
                   </div>
                </div>
 

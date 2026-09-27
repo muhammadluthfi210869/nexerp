@@ -17,6 +17,37 @@ function cloneRegistry() {
   return JSON.parse(fs.readFileSync(REGISTRY_FILE, 'utf8'));
 }
 
+// Reachability-contradiction fixtures need an object that the registry itself
+// reports as unreachable, and the expected failure text names that object. Both
+// used to be hardcoded to 'activity-log.service.ts' — a job and an event that
+// became reachable when the WA self-QR process was wired in. The fixtures then
+// silently degraded: `if (deadJob)` found nothing, mutated nothing, and the case
+// failed for the wrong reason. Resolve the targets from the registry once, and
+// refuse to run if the premise is gone.
+const NEG_BASE = cloneRegistry();
+const NEG_DEAD_PROVIDER =
+  NEG_BASE.backend_controllers.find(c => !c.reachable) ||
+  NEG_BASE.backend_services.find(s => !s.reachable) ||
+  NEG_BASE.backend_modules.find(m => !m.reachable);
+const NEG_DEAD_EVENT = NEG_BASE.published_subscribed_events.find(e => !e.reachable);
+
+if (!NEG_DEAD_PROVIDER) {
+  console.error('FATAL: Negative 21 has no unreachable controller/service/module to flip — the fixture no longer proves anything.');
+  process.exit(1);
+}
+if (!NEG_DEAD_EVENT) {
+  console.error('FATAL: Negative 22 has no unreachable event to flip — the fixture no longer proves anything.');
+  process.exit(1);
+}
+
+function pickDeadProvider(reg) {
+  return (
+    reg.backend_controllers.find(c => !c.reachable) ||
+    reg.backend_services.find(s => !s.reachable) ||
+    reg.backend_modules.find(m => !m.reachable)
+  );
+}
+
 const tests = [
   {
     name: 'Negative 1: Fake canonical API with constant count (exact-set mismatch)',
@@ -215,26 +246,23 @@ const tests = [
     expectedIdentityInFailure: 'FakeExportedSymbol',
   },
   {
-    name: 'Negative 21: Mark an unreachable job reachable (reachability contradiction)',
+    name: 'Negative 21: Mark an unreachable backend object reachable (reachability contradiction)',
     mutate: (reg) => {
-      const deadJob = reg.jobs_schedulers.find(j => !j.reachable);
-      if (deadJob) {
-        deadJob.reachable = true;
-      }
+      // No job is unreachable any more (all three schedulers are reachable), so
+      // this fixture flips whichever provider-class object the registry still
+      // reports as unreachable.
+      pickDeadProvider(reg).reachable = true;
     },
     expectedFailingGate: 'caller_import_registration_scan',
-    expectedIdentityInFailure: 'activity-log.service.ts',
+    expectedIdentityInFailure: NEG_DEAD_PROVIDER.file,
   },
   {
     name: 'Negative 22: Mark an unreachable subscriber/publisher reachable (reachability contradiction)',
     mutate: (reg) => {
-      const deadEvent = reg.published_subscribed_events.find(e => !e.reachable);
-      if (deadEvent) {
-        deadEvent.reachable = true;
-      }
+      reg.published_subscribed_events.find(e => !e.reachable).reachable = true;
     },
     expectedFailingGate: 'event_workflow_diff',
-    expectedIdentityInFailure: 'activity-log.service.ts',
+    expectedIdentityInFailure: NEG_DEAD_EVENT.file,
   },
   {
     name: 'Negative 23: Remove real barrel from registry without changing summary (manipulated summary / missing record)',
@@ -273,16 +301,12 @@ const tests = [
     expectedFailingGate: 'caller_import_registration_scan',
     expectedIdentityInFailure: 'Controller reachability mismatch',
   },
-  {
-    name: 'Negative 27: Mutate dead controller to reachable (reachability mismatch)',
-    mutate: (reg) => {
-      const c = reg.backend_controllers.find(item => !item.reachable);
-      c.reachable = true;
-      c.lifecycle_classification = 'APPROVED_EXTENSION';
-    },
-    expectedFailingGate: 'caller_import_registration_scan',
-    expectedIdentityInFailure: 'Controller reachability mismatch',
-  },
+  // Negative 27 (dead controller -> reachable) was removed: it required an
+  // unreachable controller to exist in the registry, and after the multi-root
+  // reachability fix (self-qr.main.ts bootstraps SelfQrAppModule) all 114
+  // controllers are reachable. The claim-reachable/truth-dead direction stays
+  // covered by Negative 21 (whichever provider is genuinely unreachable) and
+  // Negative 29 (service flavour).
   {
     name: 'Negative 28: Mutate reachable service to dead (reachability mismatch)',
     mutate: (reg) => {
@@ -297,6 +321,7 @@ const tests = [
     name: 'Negative 29: Mutate dead service to reachable (reachability mismatch)',
     mutate: (reg) => {
       const s = reg.backend_services.find(item => !item.reachable && !item.file.includes('activity-log'));
+      if (!s) throw new Error('premise missing: no unreachable service to flip');
       s.reachable = true;
       s.lifecycle_classification = 'APPROVED_EXTENSION';
     },
@@ -313,16 +338,10 @@ const tests = [
     expectedFailingGate: 'caller_import_registration_scan',
     expectedIdentityInFailure: 'Module reachability mismatch',
   },
-  {
-    name: 'Negative 31: Mutate dead module to reachable (reachability mismatch)',
-    mutate: (reg) => {
-      const m = reg.backend_modules.find(item => !item.reachable);
-      m.reachable = true;
-      m.lifecycle_classification = 'APPROVED_EXTENSION';
-    },
-    expectedFailingGate: 'caller_import_registration_scan',
-    expectedIdentityInFailure: 'Module reachability mismatch',
-  },
+  // Negative 31 (dead module -> reachable) was removed for the same reason as
+  // Negative 27: all 77 modules are reachable from one of the two Nest roots, so
+  // there is no dead module to flip. Module reachability is still covered in the
+  // opposite direction by Negative 30.
   {
     name: 'Negative 32: Mutate controller symbol to FakeController (exact identity violation)',
     mutate: (reg) => {
@@ -417,7 +436,17 @@ let passCount = 0;
 for (let i = 0; i < tests.length; i++) {
   const t = tests[i];
   const reg = cloneRegistry();
-  t.mutate(reg);
+  // A fixture whose premise no longer holds must be a loud failure, never a
+  // silent no-op (that is how Negative 21/22/27/31 rotted) and never an abort
+  // that hides the cases behind it.
+  try {
+    t.mutate(reg);
+  } catch (e) {
+    console.error(`❌ FAIL | ${t.name}`);
+    console.error(`         ↳ Mutation could not be applied: ${e.message}`);
+    allPassed = false;
+    continue;
+  }
 
   const audit = runAudit(reg);
 

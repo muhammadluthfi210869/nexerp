@@ -48,9 +48,15 @@ requirements:
   - {id: REQ-035, prio: high, desc: 'KPI per orang dihitung otomatis dari event dan menyimpan evidence', rules: [BUS-RULE-072,BUS-RULE-090,BUS-RULE-106], ents: [EmployeePerformance,EmployeeKpiResult,KpiDefinition], apis: ['GET /api/v1/employees/{id}/kpi'], screens: [SCR-179], notes: 'User decision 2026-09-17; manual score forbidden'}
   - {id: REQ-036, prio: high, desc: 'Dual-role KPI memakai bobot effective-dated dan total bobot aktif 100%', rules: [BUS-RULE-074,BUS-RULE-106], ents: [EmployeeRoleAssignment,EmployeeKpiResult], apis: ['POST /api/v1/employees/{id}/kpi/recalculate'], screens: [SCR-179], notes: 'Recalculate replays source events only'}
   - {id: REQ-037, prio: high, desc: 'Notes/comments/@mention tersedia pada entity bisnis dan mengikuti parent ACL', rules: [BUS-RULE-091,BUS-RULE-092,BUS-RULE-094], ents: [Note,Comment,Tag,Notification], apis: ['POST /api/v1/entities/{type}/{id}/notes','POST /api/v1/entities/{type}/{id}/comments','POST /api/v1/entities/{type}/{id}/tags'], screens: [SCR-179], notes: 'Atomic content + tags + notifications + outbox'}
+  # --- P08: sample fee, design approval, permits (owner decisions 2026-09-20) ---
+  - {id: REQ-038, prio: high, desc: 'Biaya sample wajib diverifikasi Finance sebelum formulasi dimulai', rules: [BUS-RULE-107], ents: [SalesSample,Formulation], apis: ['POST /api/v1/rnd/sample/{id}/request-payment','POST /api/v1/rnd/sample/{id}/verify-payment','GET /api/v1/rnd/samples'], screens: [SCR-182], notes: 'DEC-2026-09-20-051; auto-approve dihapus, bukan ditandai'}
+  - {id: REQ-039, prio: high, desc: 'Approval desain terikat versi artwork, revisi dibatasi 3, supervisor boleh reopen dengan jatah dihitung ulang', rules: [BUS-RULE-110,BUS-RULE-111], ents: [DesignTask,DesignVersion,DesignFeedback], apis: ['GET /api/v1/creative/finalized','GET /api/v1/creative/tasks/{id}/history','PATCH /api/v1/creative/task/{id}/client-review','PATCH /api/v1/creative/task/{id}/unlock'], screens: [SCR-180,SCR-181], notes: 'DEC-2026-09-20-052/054/055/056/057'}
+  - {id: REQ-040, prio: high, desc: 'Izin BPOM/HKI-Merek/Halal dicatat dan kadaluarsanya dipantau dengan satu kebijakan', rules: [BUS-RULE-112], ents: [HkiRecord,BpomRecord,HalalRecord,LegalTimelineLog], apis: ['GET /api/v1/legality/permits','GET /api/v1/legality/expiry','POST /api/v1/legality/hki','POST /api/v1/legality/bpom','POST /api/v1/legality/halal'], screens: [SCR-183,SCR-184], notes: 'DEC-2026-09-20-053; alur pengajuan izin di luar scope'}
+  - {id: REQ-041, prio: high, desc: 'Komposisi formula tepat 100%, konversi gram/HPP deterministik, revisi terkunci tidak dapat diubah, adjustment punya lineage sendiri', rules: [BUS-RULE-108,BUS-RULE-109,BUS-RULE-114], ents: [Formulation,FormulationAdjustment], apis: ['PATCH /api/v1/rnd/formulas/{id}','POST /api/v1/rnd/formulas/{id}/revision'], screens: [SCR-027], notes: 'Locked revision immutability + adjustment lineage; jalur live rnd/formulas — DEC-2026-09-20-062/065'}
+  - {id: REQ-042, prio: high, desc: 'Penulisan terpantau P08 commit bersama audit dan outbox tepat sekali', rules: [BUS-RULE-113], ents: [AuditLog], apis: [], screens: [ALL], notes: 'AUDIT_NOT_ATOMIC / OUTBOX_NOT_ATOMIC fail-closed'}
 
 # =============================================================
-# 2. BUSINESS RULES (BUS-RULE-001..106)
+# 2. BUSINESS RULES (BUS-RULE-001..114)
 # =============================================================
 business_rules:
   - {id: BUS-RULE-001, cat: sales, sev: P1, desc: 'SO: Customer Wajib Aktif', ents: [SalesOrder,Customer], apis: ['POST /sales/sales-orders'], screens: [SCR-026], err: 'CUSTOMER_INACTIVE'}
@@ -159,13 +165,23 @@ business_rules:
   - {id: BUS-RULE-104, cat: finance, sev: P1, desc: 'CoA Delete: Deactivate, Not Hard Delete', ents: [Coa], apis: ['DELETE /coa/{id}'], screens: [SCR-021], err: 'n/a'}
   - {id: BUS-RULE-105, cat: system, sev: P1, desc: 'Orphan Input/Output Removal', ents: [All], apis: ['DELETE /api/v1/*'], screens: [ALL], err: 'n/a'}
   - {id: BUS-RULE-106, cat: kpi, sev: P1, desc: 'Per-Person KPI Aggregate', ents: [KpiDefinition,EmployeeKpiResult,EmployeeRoleAssignment,EmployeePerformance], apis: ['GET /employees/{id}/kpi','GET /kpi/me'], screens: [SCR-179], err: 'KPI_EVIDENCE_INSUFFICIENT'}
+  # --- P08 rules 107..114 (owner decisions 2026-09-20) ---
+  - {id: BUS-RULE-107, cat: rnd, sev: P1, desc: 'Sample Fee: Finance Verification Gate (no auto-approve)', ents: [SalesSample,Formulation], apis: ['POST /api/v1/rnd/sample/{id}/verify-payment','POST /api/v1/rnd/sample/{id}/reject-payment'], screens: [SCR-182], err: 'SAMPLE_FEE_NOT_VERIFIED'}
+  - {id: BUS-RULE-108, cat: rnd, sev: P1, desc: 'Formulation Composition 100% + Deterministic Gram/HPP', ents: [Formulation], apis: ['PATCH /api/v1/rnd/formulas/{id}'], screens: [SCR-027], err: 'COMPOSITION_TOTAL_INVALID', notes: 'Jalur live: FormulasController @Controller(rnd/formulas); DEC-2026-09-20-065 mencatat divergensi /rnd/formulations di 05_API_CONTRACT.yaml'}
+  - {id: BUS-RULE-109, cat: rnd, sev: P1, desc: 'Approved and Locked Revision Immutability', ents: [Formulation], apis: ['PATCH /api/v1/rnd/formulas/{id}','POST /api/v1/rnd/formulas/{id}/approve','PATCH /api/v1/rnd/formulas/{id}/lock-production'], screens: [SCR-027], err: 'FORMULA_LOCKED', notes: 'IMMUTABLE = SAMPLE_LOCKED | PRODUCTION_LOCKED | SUPERSEDED; DEC-2026-09-20-062'}
+  - {id: BUS-RULE-110, cat: creative, sev: P1, desc: 'Artwork Approval Binds to an Exact Version', ents: [DesignFeedback,DesignVersion], apis: ['PATCH /api/v1/creative/task/{id}/apj-review','PATCH /api/v1/creative/task/{id}/client-review'], screens: [SCR-181], err: 'DESIGN_VERSION_REQUIRED'}
+  - {id: BUS-RULE-111, cat: creative, sev: P1, desc: 'Design Revision Bound 3, Lock, and Supervisor Reopen Restarts Allowance', ents: [DesignTask], apis: ['PATCH /api/v1/creative/task/{id}/client-review','PATCH /api/v1/creative/task/{id}/unlock'], screens: [SCR-181], err: 'DESIGN_REVISION_BOUND_REACHED'}
+  - {id: BUS-RULE-112, cat: legalitas, sev: P1, desc: 'Permit Record and Single Expiry Policy (no fabricated fallback)', ents: [HkiRecord,BpomRecord,HalalRecord], apis: ['GET /api/v1/legality/expiry','GET /api/v1/legality/permits'], screens: [SCR-183,SCR-184], err: 'PERMIT_EXPIRED'}
+  - {id: BUS-RULE-113, cat: system, sev: P1, desc: 'Audit and Outbox Atomicity for Governed Writes', ents: [AuditLog], apis: [], screens: [ALL], err: 'AUDIT_NOT_ATOMIC'}
+  - {id: BUS-RULE-114, cat: rnd, sev: P1, desc: 'Adjustment Lineage Never Rewrites the Parent Revision', ents: [Formulation,FormulationAdjustment], apis: ['POST /api/v1/rnd/formulas/{id}/revision'], screens: [SCR-027], err: 'ADJUSTMENT_PARENT_IMMUTABLE', notes: 'Kendaraan live: Formula.version + createRevision(); tidak ada tabel FormulationAdjustment di skema live — DEC-2026-09-20-062'}
 
 # =============================================================
 # 3. WORKFLOWS (~30 from 03_WORKFLOW_STATE_MACHINE.yaml)
 # =============================================================
 workflows:
   - {id: WF-LEAD, name: 'Lead pipeline', entity: Lead, states: ['NEW_LEAD','CONTACTED','SAMPLE','WON','LOST'], rules: [BUS-RULE-001,BUS-RULE-038]}
-  - {id: WF-SAMPLE, name: 'Sample request', entity: SalesSample, states: ['DRAFT','SUBMITTED','IN_PROGRESS','APPROVED','REJECTED','CONVERTED'], rules: [BUS-RULE-038]}
+  - {id: WF-SAMPLE, name: 'Sample request', entity: SalesSample, states: ['DRAFT','SUBMITTED','WAITING_FINANCE','IN_PROGRESS','APPROVED','REJECTED','CONVERTED'], rules: [BUS-RULE-038,BUS-RULE-107]}
+  - {id: WF-DESIGN, name: 'Design/artwork approval', entity: DesignTask, states: ['INBOX','IN_PROGRESS','WAITING_APJ','WAITING_CLIENT','REVISION','LOCKED'], rules: [BUS-RULE-110,BUS-RULE-111]}
   - {id: WF-SO, name: 'Sales Order full', entity: SalesOrder, states: ['draft','pending_approval','approved','in_production','ready_to_ship','shipped','delivered','completed','cancelled'], rules: [BUS-RULE-001,BUS-RULE-002,BUS-RULE-014]}
   - {id: WF-DPJ, name: 'DP Penjualan', entity: SalesDownPayment, states: ['draft','posted','applied','refunded'], rules: [BUS-RULE-002,BUS-RULE-004,BUS-RULE-060]}
   - {id: WF-INV, name: 'Faktur Penjualan', entity: SalesInvoice, states: ['draft','pending_approval','approved','held','released','posted','paid','cancelled'], rules: [BUS-RULE-003,BUS-RULE-005,BUS-RULE-006]}
@@ -288,6 +304,15 @@ entities:
   - {id: E-Comment, name: Comment, mod: communication, fields: 8, soft_del: true, tenant: true}
   - {id: E-Attachment, name: Attachment, mod: communication, fields: 8, soft_del: true, tenant: true}
   - {id: E-Notification, name: Notification, mod: communication, fields: 10, soft_del: true, tenant: true}
+  # --- P08: canonical owner established by DEC-2026-09-20-051 / -053 ---
+  - {id: E-DesignTask, name: DesignTask, mod: creative, fields: 16, soft_del: true, tenant: true}
+  - {id: E-DesignVersion, name: DesignVersion, mod: creative, fields: 8, soft_del: false, tenant: false}
+  - {id: E-DesignFeedback, name: DesignFeedback, mod: creative, fields: 10, soft_del: false, tenant: false}
+  - {id: E-LegalStaff, name: LegalStaff, mod: legalitas, fields: 5, soft_del: false, tenant: false}
+  - {id: E-HkiRecord, name: HkiRecord, mod: legalitas, fields: 15, soft_del: true, tenant: true}
+  - {id: E-BpomRecord, name: BpomRecord, mod: legalitas, fields: 15, soft_del: true, tenant: true}
+  - {id: E-HalalRecord, name: HalalRecord, mod: legalitas, fields: 15, soft_del: true, tenant: true}
+  - {id: E-LegalTimelineLog, name: LegalTimelineLog, mod: legalitas, fields: 9, soft_del: false, tenant: false}
 
 # =============================================================
 # 5. API ENDPOINTS (generated operation count is authoritative)
@@ -590,6 +615,26 @@ api_endpoints:
   - {id: OP-295, tag: system, op: 'extended_95', spec: 'GET /api/v1/legacy/95'}
   - {id: OP-296, tag: system, op: 'extended_96', spec: 'GET /api/v1/legacy/96'}
   - {id: OP-297, tag: system, op: 'extended_97', spec: 'GET /api/v1/legacy/97'}
+  # --- P08 operations (sample fee gate, creative approval, permits) ---
+  - {id: OP-298, tag: rnd, op: 'requestSamplePayment', spec: 'POST /api/v1/rnd/sample/{id}/request-payment'}
+  - {id: OP-299, tag: rnd, op: 'verifySamplePayment', spec: 'POST /api/v1/rnd/sample/{id}/verify-payment'}
+  - {id: OP-300, tag: rnd, op: 'rejectSamplePayment', spec: 'POST /api/v1/rnd/sample/{id}/reject-payment'}
+  - {id: OP-316, tag: rnd, op: 'listSampleRequests', spec: 'GET /api/v1/rnd/samples'}
+  - {id: OP-301, tag: creative, op: 'getCreativeBoard', spec: 'GET /api/v1/creative/board'}
+  - {id: OP-302, tag: creative, op: 'getFinalizedDesigns', spec: 'GET /api/v1/creative/finalized'}
+  - {id: OP-303, tag: creative, op: 'getDesignHistory', spec: 'GET /api/v1/creative/tasks/{id}/history'}
+  - {id: OP-304, tag: creative, op: 'apjReviewDesign', spec: 'PATCH /api/v1/creative/task/{id}/apj-review'}
+  - {id: OP-305, tag: creative, op: 'clientReviewDesign', spec: 'PATCH /api/v1/creative/task/{id}/client-review'}
+  - {id: OP-306, tag: creative, op: 'reopenDesignTask', spec: 'PATCH /api/v1/creative/task/{id}/unlock'}
+  - {id: OP-307, tag: legalitas, op: 'getPermits', spec: 'GET /api/v1/legality/permits'}
+  - {id: OP-308, tag: legalitas, op: 'getPermitExpiry', spec: 'GET /api/v1/legality/expiry'}
+  - {id: OP-309, tag: legalitas, op: 'listHkiRecords', spec: 'GET /api/v1/legality/hki'}
+  - {id: OP-310, tag: legalitas, op: 'createHkiRecord', spec: 'POST /api/v1/legality/hki'}
+  - {id: OP-311, tag: legalitas, op: 'listBpomRecords', spec: 'GET /api/v1/legality/bpom'}
+  - {id: OP-312, tag: legalitas, op: 'createBpomRecord', spec: 'POST /api/v1/legality/bpom'}
+  - {id: OP-313, tag: legalitas, op: 'listHalalRecords', spec: 'GET /api/v1/legality/halal'}
+  - {id: OP-314, tag: legalitas, op: 'createHalalRecord', spec: 'POST /api/v1/legality/halal'}
+  - {id: OP-315, tag: legalitas, op: 'listPermitLogs', spec: 'GET /api/v1/legality/records/{id}/logs'}
 
 # =============================================================
 # 6. SCREENS (generated route count is authoritative)
@@ -624,21 +669,27 @@ screens:
   - {id: SCR-024, title: 'Master Search', route: '/master/search'}
   - {id: SCR-190, title: 'Customer Set Category', route: '/master/customers/{id}/category'}
   # sales: 31 screens
-  - {id: SCR-025, title: 'Sample List', route: '/sales/samples'}
+  # NOTE: the six rows below were corrected 2026-09-20 against 06_SCREEN_CONTRACT.json,
+  # which is the screen owner. This catalog previously carried an off-by-one sales block
+  # plus five IDs (SCR-186, SCR-189, SCR-194, SCR-195, SCR-196) that do not exist in 06 at
+  # all. The remaining drift across other modules is recorded as backlog per
+  # DEC-2026-09-20-060; this file is coverage evidence only (00_MASTER_SPEC.md §9.1) and
+  # 06_SCREEN_CONTRACT.json always wins.
+  - {id: SCR-025, title: 'Daftar Prospek (Leads)', route: '/sales/leads'}
   - {id: SCR-026, title: 'Sales Order List', route: '/sales/sales-orders'}
-  - {id: SCR-027, title: 'Sales Order Create', route: '/sales/sales-orders/new'}
+  - {id: SCR-027, title: 'Daftar Sample', route: '/sales/samples'}
   - {id: SCR-028, title: 'Sales Order Detail', route: '/sales/sales-orders/{id}'}
-  - {id: SCR-029, title: 'Down Payment List', route: '/sales/down-payments'}
-  - {id: SCR-030, title: 'Lead List', route: '/sales/leads'}
+  - {id: SCR-029, title: 'Approval Sample', route: '/sales/samples/approvals'}
+  - {id: SCR-030, title: 'Pembayaran Sample (BSP)', route: '/sales/sample-payments'}
   - {id: SCR-031, title: 'Lead Detail', route: '/sales/leads/{id}'}
   - {id: SCR-032, title: 'Quotation List', route: '/sales/quotations'}
-  - {id: SCR-033, title: 'Sample Payment', route: '/sales/samples/{id}/payment'}
+  - {id: SCR-033, title: 'Buat Penjualan (Create SO)', route: '/sales/create'}
   - {id: SCR-034, title: 'Sales Returns', route: '/sales/returns'}
   - {id: SCR-035, title: 'Sales Invoice List', route: '/sales/sales-invoices'}
   - {id: SCR-036, title: 'Sales Invoice Create', route: '/sales/sales-invoices/new'}
   - {id: SCR-037, title: 'Credit Note', route: '/sales/sales-returns'}
   - {id: SCR-038, title: 'Sales Target', route: '/sales/targets'}
-  - {id: SCR-039, title: 'BPOM Push', route: '/sales/bpom'}
+  - {id: SCR-039, title: 'Buat Faktur Penjualan', route: '/sales/invoices/create'}
   - {id: SCR-040, title: 'Cart View', route: '/sales/cart'}
   - {id: SCR-041, title: 'Sales Approval Queue', route: '/sales/approvals'}
   - {id: SCR-042, title: 'Report Penjualan', route: '/reports/sales-summary'}
@@ -650,11 +701,13 @@ screens:
   - {id: SCR-048, title: 'SO Deadline', route: '/sales/sales-orders/{id}/deadline'}
   - {id: SCR-049, title: 'SO History', route: '/sales/sales-orders/{id}/history'}
   - {id: SCR-179, title: 'Sample Brief Detail', route: '/sales/samples/{id}'}
-  - {id: SCR-186, title: 'Sales Order Deadline Edit', route: '/sales/sales-orders/{id}/deadline/edit'}
-  - {id: SCR-189, title: 'Sample Brief Archive', route: '/sales/samples/archive'}
-  - {id: SCR-194, title: 'Sales Order Notes', route: '/sales/sales-orders/{id}/notes'}
-  - {id: SCR-195, title: 'Customer Retention Detail', route: '/sales/customers/{id}/retention'}
-  - {id: SCR-196, title: 'BusDev History', route: '/sales/leads/{id}/history'}
+  - {id: SCR-182, title: 'Verifikasi Pembayaran Sample', route: '/samples/payment-verification'}
+  # creative: 2 screens (canonical owner DEC-2026-09-20-051)
+  - {id: SCR-180, title: 'Desain Final & Riwayat', route: '/creative/finalized'}
+  - {id: SCR-181, title: 'Papan Approval Desain', route: '/creative/board'}
+  # legalitas: 2 screens (canonical owner DEC-2026-09-20-053)
+  - {id: SCR-183, title: 'Daftar Izin (BPOM/HKI/Halal)', route: '/legality/permits'}
+  - {id: SCR-184, title: 'Riwayat & Kadaluarsa Izin', route: '/legality/expiry'}
   # purchase: 26 screens
   - {id: SCR-050, title: 'PR List', route: '/purchase/requests'}
   - {id: SCR-051, title: 'PR Create', route: '/purchase/requests/new'}
@@ -713,7 +766,6 @@ screens:
   - {id: SCR-099, title: 'Version History', route: '/rnd/formulations/{id}/revisions'}
   - {id: SCR-100, title: 'BPOM Push Form', route: '/rnd/formulations/{id}/push-bpom'}
   - {id: SCR-178, title: 'Formulation Set Version Detail', route: '/rnd/formulations/{id}/revisions/{rev}'}
-  - {id: SCR-181, title: 'Formulation Live HPP Detail', route: '/rnd/formulations/{id}/live'}
   # finance: 18 screens
   - {id: SCR-101, title: 'Finance Dashboard', route: '/finance'}
   - {id: SCR-102, title: 'Cash Bank List', route: '/finance/cash-banks'}
@@ -755,7 +807,6 @@ screens:
   - {id: SCR-133, title: 'BusDev Pipeline', route: '/reports/busdev'}
   - {id: SCR-134, title: 'Comm Log', route: '/reports/communication'}
   - {id: SCR-135, title: 'Top Customer', route: '/reports/top-customer'}
-  - {id: SCR-182, title: 'Customer Aging Detail', route: '/reports/customers/aging/{id}'}
   # dashboards: 13 screens
   - {id: SCR-DASH-001, title: 'Exec Dashboard', route: '/dashboards/exec'}
   - {id: SCR-DASH-002, title: 'Finance Dashboard', route: '/dashboards/finance'}
@@ -781,9 +832,6 @@ screens:
   - {id: SCR-SYS-008, title: 'Approval Center', route: '/system/approvals'}
   - {id: SCR-SYS-009, title: 'Tenant Settings', route: '/system/tenant'}
   - {id: SCR-SYS-010, title: 'MFA Admin', route: '/system/mfa'}
-  - {id: SCR-180, title: 'Source Legacy Code', route: '/system/legacy'}
-  - {id: SCR-183, title: 'Approval Detail', route: '/system/approvals/{id}'}
-  - {id: SCR-184, title: 'Recent Activity', route: '/system/activity/recent'}
   - {id: SCR-192, title: 'Hard Lock Period', route: '/system/periods/hard'}
   # communication: 1 screens
   - {id: SCR-185, title: 'Tags Manager', route: '/communication/tags'}
@@ -1031,6 +1079,34 @@ tests:
   - {id: TEST-254, type: e2e, desc: 'KPI screen exposes immutable event evidence and rejects manual score fields', refs: [REQ-035,BUS-RULE-106,SCR-179]}
   - {id: TEST-255, type: integration, desc: 'Note mention saves Note/Tag/Notification/outbox atomically under parent ACL', refs: [REQ-037,BUS-RULE-091]}
   - {id: TEST-256, type: security, desc: 'Mention lookup and KPI reads cannot cross tenant or parent entity ACL', refs: [REQ-037,BUS-RULE-091,SCR-179]}
+  # --- P08 focused tests (frozen acceptance: verification/P08_FROZEN_ACCEPTANCE_CONTRACT.md) ---
+  - {id: TEST-257, type: unit, desc: 'Formulation start is rejected while the sample fee is unverified (SAMPLE_FEE_NOT_VERIFIED)', refs: [REQ-038,BUS-RULE-107,SCR-182]}
+  - {id: TEST-258, type: integration, desc: 'Finance verification is the only writer of paymentApprovedAt/paymentApprovedById and persists with its audit + outbox in one transaction', refs: [REQ-038,BUS-RULE-107,BUS-RULE-113]}
+  - {id: TEST-259, type: unit, desc: 'Composition total other than 100% is rejected and percent-to-gram plus HPP reproduce identically across runs', refs: [REQ-041,BUS-RULE-108]}
+  - {id: TEST-260, type: integration, desc: 'Mutation of a LOCKED or APPROVED formulation revision is rejected and the revision lineage is unchanged', refs: [REQ-041,BUS-RULE-109]}
+  - {id: TEST-261, type: integration, desc: 'An adjustment creates its own lineage and never rewrites the approved parent revision number', refs: [REQ-041,BUS-RULE-114]}
+  # S3 — the suite that actually runs these (backend/test/unit/p08/p08-sf3-formulation.unit-spec.ts,
+  # `npm --prefix backend run test:p08:formulation`). Kept separate from 259..261 so the
+  # evidence names a file that executes today, not a plan.
+  - {id: TEST-269, type: unit, desc: 'p08-sf3: composition total other than 100% is rejected with COMPOSITION_TOTAL_INVALID and writes nothing', refs: [REQ-041,BUS-RULE-108]}
+  - {id: TEST-270, type: unit, desc: 'p08-sf3: locked (SAMPLE_LOCKED, PRODUCTION_LOCKED) and superseded formulas reject mutation with FORMULA_LOCKED and keep their item rows', refs: [REQ-041,BUS-RULE-109]}
+  - {id: TEST-271, type: unit, desc: 'p08-sf3: a revision copies rather than rewrites its parent and rework of a locked parent leaves the parent intact', refs: [REQ-041,BUS-RULE-114]}
+  - {id: TEST-272, type: unit, desc: 'p08-sf3: the lock commits with its audit row and one rnd.formulation.locked outbox event; a repeated lock adds no second effect', refs: [REQ-041,BUS-RULE-109,BUS-RULE-113]}
+  # S4 — backend/test/unit/p08/p08-sf4-design-legal.unit-spec.ts,
+  # `npm --prefix backend run test:p08` (the unit inner loop over p08-sf2|sf3|sf4)
+  # and `npm --prefix backend run test:p08:creative-legal` (the HTTP-level S3 suite)
+  - {id: TEST-273, type: unit, desc: 'p08-sf4: a design decision without a version, or naming a version older than the latest, is rejected with DESIGN_VERSION_REQUIRED and writes nothing', refs: [REQ-039,BUS-RULE-110]}
+  - {id: TEST-274, type: unit, desc: 'p08-sf4: each revision round consumes one unit of the allowance through the real state chain, the bound of 3 hard-locks, and a spent task refuses both upload and further revision', refs: [REQ-039,BUS-RULE-111]}
+  - {id: TEST-275, type: unit, desc: 'p08-sf4: a non-supervisor reopen is refused with DESIGN_REOPEN_UNAUTHORIZED and leaves the design locked; a supervisor reopen records its reason in the design history and resets the allowance to zero, and that reset survives the next upload', refs: [REQ-039,BUS-RULE-111,BUS-RULE-113]}
+  - {id: TEST-276, type: unit, desc: 'p08-sf4: the client approval commits with audit and a design.finalized event bound to the approved version, and only finalized designs are listed', refs: [REQ-039,BUS-RULE-110,BUS-RULE-113]}
+  - {id: TEST-277, type: unit, desc: 'p08-sf4: permit expiry buckets at 0/30/90 on every surface, NO_EXPIRY is distinct from SAFE, and audit risk is derived from the record instead of asserted OK at insert', refs: [REQ-040,BUS-RULE-112]}
+  - {id: TEST-262, type: unit, desc: 'A design approval decision with no versionId is rejected (DESIGN_VERSION_REQUIRED)', refs: [REQ-039,BUS-RULE-110]}
+  - {id: TEST-263, type: unit, desc: 'The fourth in-bound revision is rejected; a supervisor reopen resets the allowance to zero and is recorded in design history', refs: [REQ-039,BUS-RULE-111]}
+  - {id: TEST-264, type: security, desc: 'Approval or reopen by a role lacking the canonical permission is refused', refs: [REQ-039,BUS-RULE-110,BUS-RULE-111]}
+  - {id: TEST-265, type: unit, desc: 'A permit with no expiryDate resolves to NO_EXPIRY rather than EXPIRED, and all three permit types share one threshold set', refs: [REQ-040,BUS-RULE-112]}
+  - {id: TEST-266, type: security, desc: 'Cross-tenant reads and writes of design tasks and permit records affect zero rows', refs: [REQ-039,REQ-040]}
+  - {id: TEST-267, type: integration, desc: 'Failure between a business write and its audit or outbox rolls both back; a repeated idempotency key yields exactly one business effect', refs: [REQ-042,BUS-RULE-113]}
+  - {id: TEST-268, type: e2e, desc: 'Golden thread sample request to verified payment to approved formulation to finalized artwork to recorded permit on a disposable PostgreSQL database', refs: [REQ-038,REQ-039,REQ-040,REQ-041,SCR-180]}
 
 # =============================================================
 # 8. GAP ANALYSIS (Phase 2 deferred)

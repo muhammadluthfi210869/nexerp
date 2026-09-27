@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   FlaskConical,
   Search,
@@ -25,7 +28,14 @@ import {
   DnaInput,
   DnaModal,
   DnaBadge,
+  DnaCell,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface ScheduleMixingItem {
@@ -44,53 +54,7 @@ interface ScheduleMixingItem {
   notes?: string;
 }
 
-const INITIAL_SCHEDULES: ScheduleMixingItem[] = [
-  {
-    id: "SCH-001",
-    code: "SCH-MIX-2026-0001",
-    date: "2026-09-17",
-    batchRecord: "BR-2026-0001",
-    salesOrder: "SO-202609-000004",
-    customer: "Farah Derma Clinic",
-    product: "Day Cream SPF 30",
-    targetPcs: 3000,
-    upscalePercent: 10,
-    upscaleResult: 330,
-    unit: "kg",
-    status: "SCHEDULED",
-    notes: "Formula Day Cream SPF 30, homogenizer speed 3200 RPM, suhu 75C"
-  },
-  {
-    id: "SCH-002",
-    code: "SCH-MIX-2026-0002",
-    date: "2026-09-18",
-    batchRecord: "BR-2026-0002",
-    salesOrder: "SO-202609-000005",
-    customer: "K-Skin Men",
-    product: "Facial Foam Charcoal 100ml",
-    targetPcs: 5000,
-    upscalePercent: 8,
-    upscaleResult: 540,
-    unit: "kg",
-    status: "SCHEDULED",
-    notes: "Pemanasan fasa minyak dan dispersi active charcoal homogen"
-  },
-  {
-    id: "SCH-003",
-    code: "SCH-MIX-2026-0003",
-    date: "2026-09-14",
-    batchRecord: "BR-2026-0003",
-    salesOrder: "SO-202609-000008",
-    customer: "Anita Aesthetics",
-    product: "Moisturizer Gel Aloe 50gr",
-    targetPcs: 1500,
-    upscalePercent: 5,
-    upscaleResult: 78.75,
-    unit: "kg",
-    status: "COMPLETED",
-    notes: "Batch selesai dengan viskositas optimal sesuai spek R&D"
-  }
-];
+const INITIAL_SCHEDULES: ScheduleMixingItem[] = [];
 
 export default function ScheduleMixingPage() {
   return (
@@ -106,7 +70,40 @@ function ScheduleMixingContent() {
   const actionParam = searchParams.get("action");
   const { toast } = useDnaToast();
 
-  const [schedules, setSchedules] = useState<ScheduleMixingItem[]>(INITIAL_SCHEDULES);
+  const { data: serverSchedules } = useQuery({
+    queryKey: ["production-schedules-mixing"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/production/schedules?stage=MIXING");
+        const unwrapped = unwrapResponse(res);
+        if (Array.isArray(unwrapped)) {
+          return unwrapped.map((item: any, idx: number) => ({
+            id: item.id || `SCH-${idx}`,
+            code: item.scheduleNumber || `SCH-MIX-2026-${String(idx + 1).padStart(4, "0")}`,
+            date: item.startTime ? String(item.startTime).slice(0, 10) : new Date().toISOString().slice(0, 10),
+            batchRecord: item.workOrder?.woNumber || "BR-2026-0001",
+            salesOrder: item.workOrder?.lead?.clientName || "SO-202609-000004",
+            customer: item.workOrder?.lead?.clientName || "Farah Derma Clinic",
+            product: item.workOrder?.lead?.brandName || "Day Cream SPF 30",
+            targetPcs: Number(item.targetQty) || 3000,
+            upscalePercent: Number(item.upscalePercent) || 0,
+            upscaleResult: Number(item.upscaleResult) || Number(item.targetQty) || 3000,
+            unit: "kg",
+            status: item.status || "SCHEDULED",
+            notes: item.notes || "",
+          }));
+        }
+      } catch (err) {
+        console.warn("Failed to fetch mixing schedules", err);
+      }
+      return [];
+    },
+  });
+
+  const [localSchedules, setLocalSchedules] = useState<ScheduleMixingItem[]>([]);
+  const schedules = useMemo(() => {
+    return [...localSchedules, ...(serverSchedules || [])];
+  }, [localSchedules, serverSchedules]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -171,7 +168,7 @@ function ScheduleMixingContent() {
       notes: formData.notes
     };
 
-    setSchedules([newSch, ...schedules]);
+    setLocalSchedules([newSch, ...localSchedules]);
     setIsCreateOpen(false);
     toast({
       title: "Jadwal Mixing Dibuat",
@@ -186,15 +183,15 @@ function ScheduleMixingContent() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "SCHEDULED":
-        return <DnaBadge status="warning">Terjadwal</DnaBadge>;
+        return <DnaBadge variant="warning">Terjadwal</DnaBadge>;
       case "IN_PROGRESS":
-        return <DnaBadge status="info">Proses Mixing</DnaBadge>;
+        return <DnaBadge variant="info">Proses Mixing</DnaBadge>;
       case "COMPLETED":
-        return <DnaBadge status="success">Selesai</DnaBadge>;
+        return <DnaBadge variant="success">Selesai</DnaBadge>;
       case "CANCELLED":
-        return <DnaBadge status="danger">Batal</DnaBadge>;
+        return <DnaBadge variant="critical">Batal</DnaBadge>;
       default:
-        return <DnaBadge status="default">{status}</DnaBadge>;
+        return <DnaBadge variant="default">{status}</DnaBadge>;
     }
   };
 
@@ -204,18 +201,7 @@ function ScheduleMixingContent() {
       <DnaPageHeader
         title="Jadwal Pra-Produksi Mixing"
         description="Perencanaan dan penjadwalan proses peleburan, dispersi, dan homogenisasi formula bulk kosmetik"
-        actions={
-          <DnaButton
-            variant="primary"
-            icon={<Plus className="h-4 w-4" />}
-            onClick={() => {
-              setIsCreateOpen(true);
-              router.push("/schedule-mixing/create");
-            }}
-          >
-            + Buat Jadwal Mixing
-          </DnaButton>
-        }
+        backLink={{ href: "/production/material-requisition", label: "Kembali ke Permintaan Bahan (SPB)" }}
       />
 
       {/* KPI Cards */}
@@ -250,107 +236,110 @@ function ScheduleMixingContent() {
         />
       </DnaKpiGrid>
 
-      {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200">
-        <div className="flex items-center gap-3">
-          <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari kode jadwal, batch, pelanggan, produk..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="ALL">Semua Status</option>
-            <option value="SCHEDULED">Terjadwal</option>
-            <option value="IN_PROGRESS">Proses</option>
-            <option value="COMPLETED">Selesai</option>
-          </select>
-        </div>
-      </div>
-
-      {/* 1:1 Table (Exactly 10 columns matching legacy G-SERP) */}
-      <DnaDataTableCard title="Daftar Jadwal Pra-Produksi Mixing">
+      {/* 10-Column Standardized Table */}
+      <DnaDataTableCard
+        toolbarProps={{
+          searchQuery: searchTerm,
+          onSearchChange: setSearchTerm,
+          searchPlaceholder: "Cari kode jadwal / batch / produk / pelanggan...",
+          filterColumns: [
+            { key: "status", label: "Status Mixing", type: "select", options: ["SCHEDULED", "IN_PROGRESS", "COMPLETED"] },
+          ],
+          selectedColumn: "status",
+          filterValue: statusFilter,
+          onFilterValueChange: setStatusFilter,
+          actionButton: {
+            label: "Buat Jadwal Mixing",
+            onClick: () => {
+              setIsCreateOpen(true);
+              router.push("/schedule-mixing/create");
+            },
+          },
+        }}
+      >
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-              <tr>
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">Kode</th>
-                <th className="py-3 px-4">Tanggal</th>
-                <th className="py-3 px-4">Batch Record</th>
-                <th className="py-3 px-4">Pelanggan</th>
-                <th className="py-3 px-4">Produk</th>
-                <th className="py-3 px-4 text-right">Target (PCS)</th>
-                <th className="py-3 px-4 text-right">Hasil Upscale</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="p-3.5 w-10 text-slate-400 tabular-nums text-center">#</DnaTh>
+                <DnaTh className="p-3.5 w-36 min-w-[130px] whitespace-nowrap">KODE JADWAL</DnaTh>
+                <DnaTh className="p-3.5 w-28 min-w-[110px] whitespace-nowrap">TANGGAL</DnaTh>
+                <DnaTh className="p-3.5 w-32 min-w-[120px] whitespace-nowrap">BATCH RECORD</DnaTh>
+                <DnaTh className="p-3.5 min-w-[180px] whitespace-nowrap">PELANGGAN</DnaTh>
+                <DnaTh className="p-3.5 min-w-[200px]">PRODUK</DnaTh>
+                <DnaTh className="p-3.5 w-28 min-w-[100px] text-right whitespace-nowrap">TARGET</DnaTh>
+                <DnaTh className="p-3.5 w-32 min-w-[110px] text-right whitespace-nowrap">HASIL UPSCALE</DnaTh>
+                <DnaTh className="p-3.5 w-32 min-w-[110px] text-center whitespace-nowrap">STATUS</DnaTh>
+                <DnaTh className="p-3.5 text-center w-24 whitespace-nowrap">AKSI</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="py-8 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={10} className="py-12 text-center text-slate-400">
                     Tidak ada jadwal mixing ditemukan
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
-                    <td className="py-3 px-4 font-semibold text-blue-600">{item.code}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.date}</td>
-                    <td className="py-3 px-4 font-medium text-slate-800">{item.batchRecord}</td>
-                    <td className="py-3 px-4 text-slate-900 font-medium">{item.customer}</td>
-                    <td className="py-3 px-4 text-slate-800">{item.product}</td>
-                    <td className="py-3 px-4 text-right font-medium text-slate-700">
-                      {item.targetPcs.toLocaleString()} PCS
-                    </td>
-                    <td className="py-3 px-4 text-right font-bold text-blue-600">
-                      {item.upscaleResult.toLocaleString()} {item.unit}
-                    </td>
-                    <td className="py-3 px-4 text-center">{getStatusBadge(item.status)}</td>
-                    <td className="py-3 px-4 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <DnaButton
-                          variant="ghost"
-                          size="sm"
-                          icon={<Eye className="h-3.5 w-3.5 text-blue-600" />}
+                  <DnaTableRow key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="p-3.5 text-slate-400 tabular-nums text-[11px] tabular-nums text-center">{idx + 1}</DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap">
+                      <DnaCell.Code
+                        value={item.code}
+                        onClick={() => {
+                          setSelectedItem(item);
+                          setIsDetailOpen(true);
+                        }}
+                      />
+                    </DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap"><DnaCell.Date value={item.date} /></DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap"><DnaCell.Code value={item.batchRecord} /></DnaTd>
+                    <DnaTd className="p-3.5 whitespace-nowrap"><DnaCell.Text primary={item.customer} /></DnaTd>
+                    <DnaTd className="p-3.5 min-w-[200px]"><DnaCell.Text primary={item.product} /></DnaTd>
+                    <DnaTd className="p-3.5 text-right whitespace-nowrap">
+                      <DnaCell.Number value={item.targetPcs} suffix="PCS" />
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-right whitespace-nowrap">
+                      <DnaCell.Number value={item.upscaleResult} suffix={item.unit} />
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center whitespace-nowrap">
+                      <DnaCell.Badge status={item.status} />
+                    </DnaTd>
+                    <DnaTd className="p-3.5 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
                           onClick={() => {
                             setSelectedItem(item);
                             setIsDetailOpen(true);
                           }}
+                          className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors border-none bg-transparent cursor-pointer"
+                          title="Lihat Detail"
                         >
-                          Lihat
-                        </DnaButton>
-                        <DnaButton
-                          variant="ghost"
-                          size="sm"
-                          icon={<Printer className="h-3.5 w-3.5 text-slate-600" />}
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => {
                             toast({
                               title: "Mencetak SPK Mixing",
                               description: `Mengunduh PDF SPK Mixing ${item.code}`,
-                              variant: "info"
+                              variant: "info",
                             });
                           }}
+                          className="p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer"
+                          title="Cetak SPK"
                         >
-                          Print
-                        </DnaButton>
+                          <Printer className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 

@@ -111,27 +111,29 @@ export function DnaKpiCard({
         <div className="text-[22px] font-black text-slate-900 tracking-tight leading-none">
           {value ?? ""}
         </div>
-        {displayDelta ? (
-          <div className="flex items-center gap-1.5 mt-2 text-[11px] font-semibold">
-            <span
-              className={cn(
-                "flex items-center gap-0.5",
-                isDeltaPositive ? "text-emerald-600" : "text-rose-600"
-              )}
-            >
-              {isDeltaPositive ? (
-                <TrendingUp className="w-3 h-3" />
-              ) : (
-                <TrendingDown className="w-3 h-3" />
-              )}
-              <span>{displayDelta}</span>
-            </span>
-          </div>
-        ) : displaySubtext ? (
-          <div className="text-[10.5px] text-slate-400 mt-1.5 truncate font-medium">
-            {displaySubtext}
-          </div>
-        ) : null}
+        <div className="min-h-[18px] mt-1.5 flex items-center">
+          {displayDelta ? (
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+              <span
+                className={cn(
+                  "flex items-center gap-0.5",
+                  isDeltaPositive ? "text-emerald-600" : "text-rose-600"
+                )}
+              >
+                {isDeltaPositive ? (
+                  <TrendingUp className="w-3 h-3" />
+                ) : (
+                  <TrendingDown className="w-3 h-3" />
+                )}
+                <span>{displayDelta}</span>
+              </span>
+            </div>
+          ) : displaySubtext ? (
+            <div className="text-[10.5px] text-slate-400 truncate font-medium">
+              {displaySubtext}
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

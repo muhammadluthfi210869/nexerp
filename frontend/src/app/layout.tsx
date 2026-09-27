@@ -2,7 +2,7 @@ import { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/dna";
 
 const inter = Inter({
   variable: "--font-inter",

@@ -28,7 +28,13 @@ import {
   DnaBadge,
   DnaModal,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface ArAgingItem {
@@ -42,14 +48,6 @@ interface ArAgingItem {
   bucket: "Current" | "1-30" | "31-60" | "61-90" | ">90";
 }
 
-const FALLBACK_AR_ITEMS: ArAgingItem[] = [
-  { id: "1", customer: "PT Aura Kosmetika Cantik", invoiceNo: "AR-INV-2608-019", invoiceDate: "2026-08-20", dueDate: "2026-09-20", daysOverdue: 0, amount: 350000000, bucket: "Current" },
-  { id: "2", customer: "CV Glow Derma Skincare", invoiceNo: "AR-INV-2608-005", invoiceDate: "2026-07-30", dueDate: "2026-08-30", daysOverdue: 10, amount: 180000000, bucket: "1-30" },
-  { id: "3", customer: "PT Natural Herbal Nusantara", invoiceNo: "AR-INV-2607-042", invoiceDate: "2026-06-25", dueDate: "2026-07-25", daysOverdue: 46, amount: 220000000, bucket: "31-60" },
-  { id: "4", customer: "Klinik Estetika Dr. Vina", invoiceNo: "AR-INV-2606-012", invoiceDate: "2026-05-15", dueDate: "2026-06-15", daysOverdue: 86, amount: 150000000, bucket: "61-90" },
-  { id: "5", customer: "UD Cantik Berseri Makmur", invoiceNo: "AR-INV-2605-001", invoiceDate: "2026-04-10", dueDate: "2026-05-10", daysOverdue: 122, amount: 100000000, bucket: ">90" },
-];
-
 export default function ArAgingReportPage() {
   const toast = useDnaToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,19 +55,51 @@ export default function ArAgingReportPage() {
   const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
   const [selectedInvoice, setSelectedInvoice] = useState<ArAgingItem | null>(null);
 
-  const totalOutstanding = useMemo(() => FALLBACK_AR_ITEMS.reduce((acc, r) => acc + r.amount, 0), []);
-  const overdueAr = useMemo(() => FALLBACK_AR_ITEMS.filter((r) => r.daysOverdue > 0).reduce((acc, r) => acc + r.amount, 0), []);
-  const piutangLancar = useMemo(() => FALLBACK_AR_ITEMS.filter((r) => r.daysOverdue === 0).reduce((acc, r) => acc + r.amount, 0), []);
+  const { data: reportData, isLoading } = useQuery({
+    queryKey: ["reports-ar-aging", dateRange.end],
+    queryFn: async () => {
+      const res = await api.get("/reports/ar-aging", {
+        params: { asOfDate: dateRange.end },
+      });
+      return res.data;
+    },
+  });
+
+  const arItems: ArAgingItem[] = useMemo(() => {
+    const rawList = reportData?.data || [];
+    return rawList.map((it: any) => ({
+      id: it.id,
+      customer: it.customer || "Pelanggan",
+      invoiceNo: it.invoiceNo || it.id,
+      invoiceDate: it.invoiceDate ? it.invoiceDate.split("T")[0] : "",
+      dueDate: it.dueDate ? it.dueDate.split("T")[0] : "",
+      daysOverdue: it.daysOverdue || 0,
+      amount: it.outstandingAmount || it.totalAmount || 0,
+      bucket: it.bucket || "Current",
+    }));
+  }, [reportData]);
+
+  const summary = reportData?.summary || {
+    totalOutstanding: 0,
+    currentTotal: 0,
+    overdueTotal: 0,
+    overdue90Pct: 0,
+    isHealthy: true,
+  };
+
+  const totalOutstanding = summary.totalOutstanding;
+  const overdueAr = summary.overdueTotal;
+  const piutangLancar = summary.currentTotal;
 
   const filteredItems = useMemo(() => {
-    return FALLBACK_AR_ITEMS.filter((item) => {
+    return arItems.filter((item) => {
       const matchSearch =
         item.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.invoiceNo.toLowerCase().includes(searchQuery.toLowerCase());
       const matchBucket = bucketFilter === "ALL" || item.bucket === bucketFilter;
       return matchSearch && matchBucket;
     });
-  }, [searchQuery, bucketFilter]);
+  }, [arItems, searchQuery, bucketFilter]);
 
   const handleSendReminder = (customer: string, invoice: string) => {
     toast.success(`Surat Pengingat Tagihan ${invoice} telah dikirim ke WhatsApp / Email ${customer}`);
@@ -106,7 +136,7 @@ export default function ArAgingReportPage() {
           label="Total Outstanding AR"
           value={formatRupiah(totalOutstanding)}
           icon={<DollarSign className="w-5 h-5 text-blue-600" />}
-          delta={{ value: `${FALLBACK_AR_ITEMS.length} Faktur Aktif`, isPositive: true }}
+          delta={{ value: `${arItems.length} Faktur Aktif`, isPositive: true }}
           subtext="Total Piutang Belum Dilunasi Klien"
           variant="info"
         />
@@ -176,27 +206,27 @@ export default function ArAgingReportPage() {
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">Customer</th>
-                <th className="px-3.5 py-3">Invoice No</th>
-                <th className="px-3.5 py-3">Invoice Date</th>
-                <th className="px-3.5 py-3">Due Date</th>
-                <th className="px-3.5 py-3 text-center">Days Overdue</th>
-                <th className="px-3.5 py-3 text-right">Amount (Rp)</th>
-                <th className="px-3.5 py-3 text-center">Bucket</th>
-                <th className="px-3.5 py-3 text-center">#</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <DnaTh className="px-3.5 py-3">Customer</DnaTh>
+                <DnaTh className="px-3.5 py-3">Invoice No</DnaTh>
+                <DnaTh className="px-3.5 py-3">Invoice Date</DnaTh>
+                <DnaTh className="px-3.5 py-3">Due Date</DnaTh>
+                <DnaTh className="px-3.5 py-3 text-center">Days Overdue</DnaTh>
+                <DnaTh className="px-3.5 py-3 text-right">Amount (Rp)</DnaTh>
+                <DnaTh className="px-3.5 py-3 text-center">Bucket</DnaTh>
+                <DnaTh className="px-3.5 py-3 text-center">#</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredItems.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 font-bold text-slate-900">{item.customer}</td>
-                  <td className="px-3.5 py-2.5 font-mono text-blue-700 font-semibold">{item.invoiceNo}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.invoiceDate}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.dueDate}</td>
-                  <td className="px-3.5 py-2.5 text-center">
+                <DnaTableRow key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                  <DnaTd className="px-3.5 py-2.5 font-bold text-slate-900">{item.customer}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 tabular-nums text-blue-700 font-semibold">{item.invoiceNo}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.invoiceDate}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.dueDate}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-center">
                     {item.daysOverdue === 0 ? (
                       <span className="text-[10px] text-emerald-700 font-bold">0 Hari</span>
                     ) : (
@@ -204,9 +234,9 @@ export default function ArAgingReportPage() {
                         {item.daysOverdue} Hari
                       </span>
                     )}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-right font-extrabold text-slate-900">{formatRupiah(item.amount)}</td>
-                  <td className="px-3.5 py-2.5 text-center">
+                  </DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-right font-extrabold text-slate-900">{formatRupiah(item.amount)}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-center">
                     <DnaBadge
                       variant={
                         item.bucket === "Current"
@@ -220,8 +250,8 @@ export default function ArAgingReportPage() {
                     >
                       {item.bucket}
                     </DnaBadge>
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
+                  </DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-center">
                     <div className="flex items-center justify-center gap-1.5">
                       <DnaButton
                         variant="secondary"
@@ -239,11 +269,11 @@ export default function ArAgingReportPage() {
                         <Send className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -262,7 +292,7 @@ export default function ArAgingReportPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">No. Faktur / Tgl:</span>
-              <span className="font-mono">{selectedInvoice?.invoiceNo} ({selectedInvoice?.invoiceDate})</span>
+              <span className="tabular-nums">{selectedInvoice?.invoiceNo} ({selectedInvoice?.invoiceDate})</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Jatuh Tempo:</span>

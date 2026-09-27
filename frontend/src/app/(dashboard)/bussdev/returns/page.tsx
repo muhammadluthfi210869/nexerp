@@ -16,6 +16,12 @@ import {
   DnaModal,
   DnaConfirmDialog,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
 } from "@/components/dna";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -179,43 +185,43 @@ export default function BussdevReturnsPage() {
 
       <DnaDataTableCard
         title="Daftar Retur Penjualan"
-        badge={<DnaBadge variant="orange">{returns.length} Retur</DnaBadge>}
+        badge={<DnaBadge variant="warning">{returns.length} Retur</DnaBadge>}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">SO Ref</th>
-                <th className="px-3.5 py-3">Warehouse</th>
-                <th className="px-3.5 py-3">Tgl Retur</th>
-                <th className="px-3.5 py-3">Catatan</th>
-                <th className="px-3.5 py-3 text-center">Status</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable className="w-full text-left text-xs">
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <DnaTh className="px-3.5 py-3">SO Ref</DnaTh>
+                <DnaTh className="px-3.5 py-3">Warehouse</DnaTh>
+                <DnaTh className="px-3.5 py-3">Tgl Retur</DnaTh>
+                <DnaTh className="px-3.5 py-3">Catatan</DnaTh>
+                <DnaTh className="px-3.5 py-3 text-center">Status</DnaTh>
+                <DnaTh className="px-3.5 py-3 text-center">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody className="divide-y divide-slate-100">
               {isLoading ? (
-                <tr><td colSpan={6} className="text-center py-8 text-slate-400">Memuat...</td></tr>
+                <DnaTableRow><DnaTd colSpan={6} className="text-center py-8 text-slate-400">Memuat...</DnaTd></DnaTableRow>
               ) : returns.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-8 text-slate-400">Belum ada data retur</td></tr>
+                <DnaTableRow><DnaTd colSpan={6} className="text-center py-8 text-slate-400">Belum ada data retur</DnaTd></DnaTableRow>
               ) : returns.map((r: ReturnRecord) => (
-                <tr key={r.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 font-mono font-bold text-blue-700">{r.soId}</td>
-                  <td className="px-3.5 py-2.5 text-slate-700">{r.warehouseId}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{r.returnDate ?? "—"}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 max-w-xs truncate">{r.notes ?? "—"}</td>
-                  <td className="px-3.5 py-2.5 text-center">
+                <DnaTableRow key={r.id} className="hover:bg-slate-50/50 transition-colors">
+                  <DnaTd className="px-3.5 py-2.5 font-bold text-blue-700 tabular-nums">{r.soId}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-slate-700">{r.warehouseId}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap tabular-nums">{r.returnDate ?? "—"}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-slate-600 max-w-xs truncate">{r.notes ?? "—"}</DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-center">
                     {r.returnStatus === "APPROVED" ? (
                       <DnaBadge variant="success">Disetujui</DnaBadge>
                     ) : r.returnStatus === "REJECTED" ? (
-                      <DnaBadge variant="danger">Ditolak</DnaBadge>
+                      <DnaBadge variant="critical">Ditolak</DnaBadge>
                     ) : r.returnStatus === "RECEIVED" ? (
                       <DnaBadge variant="info">Diterima</DnaBadge>
                     ) : (
                       <DnaBadge variant="warning">Pending</DnaBadge>
                     )}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
+                  </DnaTd>
+                  <DnaTd className="px-3.5 py-2.5 text-center">
                     <div className="flex items-center justify-center gap-1.5">
                       <DnaButton variant="secondary" size="sm" onClick={() => setSelected(r)}>
                         <Eye className="w-3.5 h-3.5" />
@@ -223,15 +229,15 @@ export default function BussdevReturnsPage() {
                       <DnaButton variant="secondary" size="sm" onClick={() => openEdit(r)}>
                         <Pencil className="w-3.5 h-3.5" />
                       </DnaButton>
-                      <DnaButton variant="danger" size="sm" onClick={() => setDeletingId(r.id)}>
+                      <DnaButton variant="critical" size="sm" onClick={() => setDeletingId(r.id)}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </DnaButton>
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -298,24 +304,24 @@ export default function BussdevReturnsPage() {
           {selected?.items && selected.items.length > 0 && (
             <div>
               <h4 className="font-bold text-slate-700 mb-2">Item Retur</h4>
-              <table className="w-full text-[11px] border border-slate-200">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-2 py-1.5 text-left">Material</th>
-                    <th className="px-2 py-1.5 text-right">Qty Original</th>
-                    <th className="px-2 py-1.5 text-right">Qty Returned</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <DnaTable className="w-full text-[11px] border border-slate-200">
+                <DnaTableHead className="bg-slate-50">
+                  <DnaTableRow>
+                    <DnaTh className="px-2 py-1.5 text-left">Material</DnaTh>
+                    <DnaTh className="px-2 py-1.5 text-right">Qty Original</DnaTh>
+                    <DnaTh className="px-2 py-1.5 text-right">Qty Returned</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {selected.items.map((it, i) => (
-                    <tr key={i} className="border-t border-slate-100">
-                      <td className="px-2 py-1.5 font-mono">{it.materialId}</td>
-                      <td className="px-2 py-1.5 text-right font-mono">{it.qtyOriginal ?? "—"}</td>
-                      <td className="px-2 py-1.5 text-right font-mono">{it.qtyReturned ?? "—"}</td>
-                    </tr>
+                    <DnaTableRow key={i} className="border-t border-slate-100">
+                      <DnaTd className="px-2 py-1.5 tabular-nums">{it.materialId}</DnaTd>
+                      <DnaTd className="px-2 py-1.5 text-right tabular-nums">{it.qtyOriginal ?? "—"}</DnaTd>
+                      <DnaTd className="px-2 py-1.5 text-right tabular-nums">{it.qtyReturned ?? "—"}</DnaTd>
+                    </DnaTableRow>
                   ))}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </div>
           )}
         </div>

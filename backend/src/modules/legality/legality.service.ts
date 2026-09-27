@@ -1,4 +1,8 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import {
@@ -10,21 +14,105 @@ import {
   RegType,
 } from '@prisma/client';
 
-import { BussdevService } from '../bussdev/bussdev.service';
+import {
+  BusinessRuleViolationException,
+  ResourceNotFoundException,
+} from '../../common/exceptions/api-exception';
+
+/**
+ * BUS-RULE-115 — an artwork review is recorded against the artwork that exists.
+ *
+ * The pipeline names a lead, not a design version, so the artwork under review is
+ * resolved from that lead's design task: the client-approved master when the
+ * design is finalized, otherwise the version on the table. A review with no
+ * artwork behind it is refused rather than written against a fabricated URL.
+ */
+export const ARTWORK_NOT_ON_FILE = 'ARTWORK_NOT_ON_FILE';
+
+/** The governed artwork of a lead's design version under review. */
+export interface GovernedArtwork {
+  /** The master file the review is performed on. */
+  artworkUrl: string | null;
+  /** A rendition a browser can display (the version's mockup), when there is one. */
+  previewUrl: string | null;
+  /** The version that artwork belongs to. */
+  version: number | null;
+}
+
+/**
+ * BUS-RULE-112 — the single permit expiry policy.
+ *
+ * Before this, the module carried three separate computations with two different
+ * thresholds (90 days in the dashboard and the permit list, 30/60 days in the
+ * expiry feed) and three response vocabularies. A permit could therefore be
+ * "EXPIRING_SOON" on one screen and "SAFE" on another on the same day.
+ *
+ * Canonical buckets: EXPIRED (<=0), CRITICAL (<=30), WARNING (<=90), SAFE, and
+ * NO_EXPIRY for a record with no expiry date recorded. NO_EXPIRY is deliberately
+ * distinct from SAFE: an unknown expiry is not a safe one.
+ */
+export const PERMIT_CRITICAL_DAYS = 30;
+export const PERMIT_WARNING_DAYS = 90;
+
+export type PermitExpiryBucket =
+  | 'EXPIRED'
+  | 'CRITICAL'
+  | 'WARNING'
+  | 'SAFE'
+  | 'NO_EXPIRY';
+
+export function permitDaysLeft(
+  expiryDate: Date | string | null | undefined,
+  today: Date = new Date(),
+): number | null {
+  if (!expiryDate) return null;
+  const expiry = expiryDate instanceof Date ? expiryDate : new Date(expiryDate);
+  if (Number.isNaN(expiry.getTime())) return null;
+  return Math.floor((expiry.getTime() - today.getTime()) / 86400000);
+}
+
+export function permitExpiryBucket(
+  expiryDate: Date | string | null | undefined,
+  today: Date = new Date(),
+): PermitExpiryBucket {
+  const daysLeft = permitDaysLeft(expiryDate, today);
+  if (daysLeft === null) return 'NO_EXPIRY';
+  if (daysLeft <= 0) return 'EXPIRED';
+  if (daysLeft <= PERMIT_CRITICAL_DAYS) return 'CRITICAL';
+  if (daysLeft <= PERMIT_WARNING_DAYS) return 'WARNING';
+  return 'SAFE';
+}
+
+/**
+ * Audit risk derived from the record's real state rather than asserted at insert.
+ * A record with no expiry date on file is not "OK" — the audit it would rest on
+ * has not happened, so it is a delayed audit.
+ */
+export function permitAuditRisk(
+  expiryDate: Date | string | null | undefined,
+  today: Date = new Date(),
+): 'OK' | 'DELAY_AUDIT' | 'CRITICAL' {
+  switch (permitExpiryBucket(expiryDate, today)) {
+    case 'EXPIRED':
+    case 'CRITICAL':
+      return 'CRITICAL';
+    case 'WARNING':
+    case 'NO_EXPIRY':
+      return 'DELAY_AUDIT';
+    default:
+      return 'OK';
+  }
+}
 
 @Injectable()
 export class LegalityService {
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
-    @Inject(forwardRef(() => BussdevService))
-    private bussdevService: BussdevService,
   ) {}
 
   async getDashboardMetrics() {
     const today = new Date();
-    const expiryThreshold = new Date();
-    expiryThreshold.setDate(today.getDate() + 90);
 
     const hkiAll = await this.prisma.hkiRecord.findMany({
       include: { pic: true },
@@ -53,52 +141,46 @@ export class LegalityService {
         new Date(r.expiryDate) < today,
     );
     const expiredRecords = allRecords.filter(
-      (r) => r.expiryDate && new Date(r.expiryDate) < today,
+      (r) => permitExpiryBucket(r.expiryDate, today) === 'EXPIRED',
     );
+    // BUS-RULE-112: "critical" is the CRITICAL bucket, not "anything inside 90 days".
     const criticalHkis = hkiAll.filter(
-      (r) =>
-        r.expiryDate &&
-        new Date(r.expiryDate) <= expiryThreshold &&
-        new Date(r.expiryDate) >= today,
+      (r) => permitExpiryBucket(r.expiryDate, today) === 'CRITICAL',
     );
     const criticalBpoms = bpomAll.filter(
-      (r) =>
-        r.expiryDate &&
-        new Date(r.expiryDate) <= expiryThreshold &&
-        new Date(r.expiryDate) >= today,
+      (r) => permitExpiryBucket(r.expiryDate, today) === 'CRITICAL',
     );
     const criticalHalals = halalAll.filter(
-      (r) =>
-        r.expiryDate &&
-        new Date(r.expiryDate) <= expiryThreshold &&
-        new Date(r.expiryDate) >= today,
+      (r) => permitExpiryBucket(r.expiryDate, today) === 'CRITICAL',
     );
     const criticalTotal =
       criticalHkis.length + criticalBpoms.length + criticalHalals.length;
 
-    // Compute average processing time
-    const bpomDays = bpomAll
-      .filter((r) => r.status === LegalStatus.DONE)
-      .map((r) =>
-        Math.floor(
-          (new Date(r.expiryDate || today).getTime() -
-            new Date(r.applicationDate).getTime()) /
-            (1000 * 60 * 60 * 24),
-        ),
-      );
+    // Compute average processing time. Records with no expiry date on file are
+    // skipped rather than treated as expiring today — fabricating a date produced
+    // a processing time of "however long since application", which is not a fact.
+    const processingDays = (
+      rows: Array<{
+        expiryDate: Date | null;
+        applicationDate: Date;
+        status: LegalStatus;
+      }>,
+    ) =>
+      rows
+        .filter((r) => r.status === LegalStatus.DONE && r.expiryDate)
+        .map((r) =>
+          Math.floor(
+            (new Date(r.expiryDate as Date).getTime() -
+              new Date(r.applicationDate).getTime()) /
+              (1000 * 60 * 60 * 24),
+          ),
+        );
+    const bpomDays = processingDays(bpomAll);
     const avgBpomDays =
       bpomDays.length > 0
         ? Math.round(bpomDays.reduce((a, b) => a + b, 0) / bpomDays.length)
         : 45;
-    const hkiDays = hkiAll
-      .filter((r) => r.status === LegalStatus.DONE)
-      .map((r) =>
-        Math.floor(
-          (new Date(r.expiryDate || today).getTime() -
-            new Date(r.applicationDate).getTime()) /
-            (1000 * 60 * 60 * 24),
-        ),
-      );
+    const hkiDays = processingDays(hkiAll);
     const avgHkiDays =
       hkiDays.length > 0
         ? Math.round(hkiDays.reduce((a, b) => a + b, 0) / hkiDays.length)
@@ -290,15 +372,16 @@ export class LegalityService {
               ? new Date(tm.expiryDate).toISOString().split('T')[0]
               : 'N/A',
             left: `${daysLeft}D`,
+            // BUS-RULE-112: one policy, so the colour cannot disagree with the bucket.
             color:
-              daysLeft <= 0
+              permitExpiryBucket(tm.expiryDate, today) === 'EXPIRED'
                 ? 'bg-rose-500'
-                : daysLeft <= 30
+                : permitExpiryBucket(tm.expiryDate, today) === 'CRITICAL'
                   ? 'bg-rose-500'
-                  : daysLeft <= 60
+                  : permitExpiryBucket(tm.expiryDate, today) === 'WARNING'
                     ? 'bg-amber-500'
-                    : daysLeft <= 90
-                      ? 'bg-amber-400'
+                    : permitExpiryBucket(tm.expiryDate, today) === 'NO_EXPIRY'
+                      ? 'bg-slate-500'
                       : 'bg-emerald-500',
           };
         }),
@@ -322,9 +405,11 @@ export class LegalityService {
         data: {
           ...rest,
           pic: { connect: { id: picId } },
-          status: LegalStatus.IN_PROGRESS,
-          stage: 'DRAFT',
-          auditRisk: 'OK',
+          // BUS-RULE-112: the caller's status is respected, and auditRisk is derived
+          // from the record's real expiry rather than asserted as 'OK' at insert.
+          status: rest.status ?? LegalStatus.IN_PROGRESS,
+          stage: rest.stage ?? 'DRAFT',
+          auditRisk: permitAuditRisk(rest.expiryDate),
         },
       });
 
@@ -345,9 +430,13 @@ export class LegalityService {
 
   async advanceHkiStage(id: string) {
     const record = await this.prisma.hkiRecord.findUnique({ where: { id } });
-    if (!record) throw new Error('HKI Record not found');
+    if (!record) throw new ResourceNotFoundException('HKI Record', id);
     if (record.status === LegalStatus.DONE)
-      throw new Error('Record is already completed');
+      throw new BusinessRuleViolationException(
+        'legality-already-completed',
+        'Record HKI sudah selesai dan tidak bisa dilanjutkan.',
+        { entity: 'HkiRecord', id, status: record.status },
+      );
 
     const stageOrder = [
       'DRAFT',
@@ -358,7 +447,11 @@ export class LegalityService {
     ];
     const currentIdx = stageOrder.indexOf(record.stage);
     if (currentIdx === -1 || currentIdx >= stageOrder.length - 1) {
-      throw new Error('Cannot advance from current stage');
+      throw new BusinessRuleViolationException(
+        'legality-no-next-stage',
+        `Stage HKI tidak bisa dilanjutkan dari "${record.stage}": sudah di stage terakhir.`,
+        { entity: 'HkiRecord', id, stage: record.stage, stageOrder },
+      );
     }
 
     const nextStage = stageOrder[currentIdx + 1];
@@ -391,9 +484,9 @@ export class LegalityService {
         data: {
           ...rest,
           pic: { connect: { id: picId } },
-          status: LegalStatus.IN_PROGRESS,
-          stage: 'DRAFT',
-          auditRisk: 'OK',
+          status: rest.status ?? LegalStatus.IN_PROGRESS,
+          stage: rest.stage ?? 'DRAFT',
+          auditRisk: permitAuditRisk(rest.expiryDate),
         },
       });
 
@@ -414,9 +507,13 @@ export class LegalityService {
 
   async advanceBpomStage(id: string) {
     const record = await this.prisma.bpomRecord.findUnique({ where: { id } });
-    if (!record) throw new Error('BPOM Record not found');
+    if (!record) throw new ResourceNotFoundException('BPOM Record', id);
     if (record.status === LegalStatus.DONE)
-      throw new Error('Record is already completed');
+      throw new BusinessRuleViolationException(
+        'legality-already-completed',
+        'Record BPOM sudah selesai dan tidak bisa dilanjutkan.',
+        { entity: 'BpomRecord', id, status: record.status },
+      );
 
     const stageOrder = [
       'DRAFT',
@@ -427,7 +524,11 @@ export class LegalityService {
     ];
     const currentIdx = stageOrder.indexOf(record.stage);
     if (currentIdx === -1 || currentIdx >= stageOrder.length - 1) {
-      throw new Error('Cannot advance from current stage');
+      throw new BusinessRuleViolationException(
+        'legality-no-next-stage',
+        `Stage BPOM tidak bisa dilanjutkan dari "${record.stage}": sudah di stage terakhir.`,
+        { entity: 'BpomRecord', id, stage: record.stage, stageOrder },
+      );
     }
 
     const nextStage = stageOrder[currentIdx + 1];
@@ -460,9 +561,9 @@ export class LegalityService {
         data: {
           ...rest,
           pic: { connect: { id: picId } },
-          status: LegalStatus.IN_PROGRESS,
-          stage: 'DRAFT',
-          auditRisk: 'OK',
+          status: rest.status ?? LegalStatus.IN_PROGRESS,
+          stage: rest.stage ?? 'DRAFT',
+          auditRisk: permitAuditRisk(rest.expiryDate),
         },
       });
 
@@ -483,14 +584,22 @@ export class LegalityService {
 
   async advanceHalalStage(id: string) {
     const record = await this.prisma.halalRecord.findUnique({ where: { id } });
-    if (!record) throw new Error('Halal Record not found');
+    if (!record) throw new ResourceNotFoundException('Halal Record', id);
     if (record.status === LegalStatus.DONE)
-      throw new Error('Record is already completed');
+      throw new BusinessRuleViolationException(
+        'legality-already-completed',
+        'Record Halal sudah selesai dan tidak bisa dilanjutkan.',
+        { entity: 'HalalRecord', id, status: record.status },
+      );
 
     const stageOrder = ['DRAFT', 'SUBMITTED', 'AUDIT', 'PUBLISHED'];
     const currentIdx = stageOrder.indexOf(record.stage);
     if (currentIdx === -1 || currentIdx >= stageOrder.length - 1) {
-      throw new Error('Cannot advance from current stage');
+      throw new BusinessRuleViolationException(
+        'legality-no-next-stage',
+        `Stage Halal tidak bisa dilanjutkan dari "${record.stage}": sudah di stage terakhir.`,
+        { entity: 'HalalRecord', id, stage: record.stage, stageOrder },
+      );
     }
 
     const nextStage = stageOrder[currentIdx + 1];
@@ -613,12 +722,17 @@ export class LegalityService {
       issuer: string;
     }> = [];
 
+    // BUS-RULE-112: the shape of this response is unchanged, but the threshold now
+    // comes from the one shared policy instead of a second, local 90-day rule.
+    const listStatus = (expiryDate: Date | null) =>
+      permitExpiryBucket(expiryDate) === 'EXPIRED'
+        ? 'EXPIRED'
+        : permitExpiryBucket(expiryDate) === 'SAFE' ||
+            permitExpiryBucket(expiryDate) === 'NO_EXPIRY'
+          ? 'ACTIVE'
+          : 'EXPIRING_SOON';
+
     for (const bpom of bpomWithReg) {
-      const expired = bpom.expiryDate && new Date(bpom.expiryDate) < new Date();
-      const expiring =
-        bpom.expiryDate &&
-        new Date(bpom.expiryDate) > new Date() &&
-        new Date(bpom.expiryDate) <= new Date(Date.now() + 90 * 86400000);
       permits.push({
         id: bpom.bpomId,
         name: `Izin Edar BPOM — ${bpom.productName}`,
@@ -626,17 +740,12 @@ export class LegalityService {
         expiry: bpom.expiryDate
           ? new Date(bpom.expiryDate).toISOString().split('T')[0]
           : 'N/A',
-        status: expired ? 'EXPIRED' : expiring ? 'EXPIRING_SOON' : 'ACTIVE',
+        status: listStatus(bpom.expiryDate),
         issuer: 'BPOM RI',
       });
     }
 
     for (const hki of hkiWithReg) {
-      const expired = hki.expiryDate && new Date(hki.expiryDate) < new Date();
-      const expiring =
-        hki.expiryDate &&
-        new Date(hki.expiryDate) > new Date() &&
-        new Date(hki.expiryDate) <= new Date(Date.now() + 90 * 86400000);
       permits.push({
         id: hki.hkiId,
         name: `${hki.type} — ${hki.brandName}`,
@@ -644,18 +753,12 @@ export class LegalityService {
         expiry: hki.expiryDate
           ? new Date(hki.expiryDate).toISOString().split('T')[0]
           : 'N/A',
-        status: expired ? 'EXPIRED' : expiring ? 'EXPIRING_SOON' : 'ACTIVE',
+        status: listStatus(hki.expiryDate),
         issuer: 'DJKI',
       });
     }
 
     for (const halal of halalWithReg) {
-      const expired =
-        halal.expiryDate && new Date(halal.expiryDate) < new Date();
-      const expiring =
-        halal.expiryDate &&
-        new Date(halal.expiryDate) > new Date() &&
-        new Date(halal.expiryDate) <= new Date(Date.now() + 90 * 86400000);
       permits.push({
         id: halal.halalId,
         name: `Sertifikasi Halal — ${halal.productName}`,
@@ -663,12 +766,79 @@ export class LegalityService {
         expiry: halal.expiryDate
           ? new Date(halal.expiryDate).toISOString().split('T')[0]
           : 'N/A',
-        status: expired ? 'EXPIRED' : expiring ? 'EXPIRING_SOON' : 'ACTIVE',
+        status: listStatus(halal.expiryDate),
         issuer: 'MUI / BPJPH',
       });
     }
 
     return permits.sort((a, b) => a.status.localeCompare(b.status));
+  }
+
+  async updatePermitStatus(id: string, status: string, notes?: string) {
+    const bpom = await this.prisma.bpomRecord.findFirst({
+      where: { OR: [{ id }, { bpomId: id }] },
+    });
+    if (bpom) {
+      if (notes) {
+        await this.addLog({
+          recordId: bpom.id,
+          recordType: 'BPOM',
+          action: 'STATUS_UPDATE',
+          notes,
+          staffName: 'SYSTEM',
+        });
+      }
+      return this.prisma.bpomRecord.update({
+        where: { id: bpom.id },
+        data: {
+          status: status as any,
+        },
+      });
+    }
+
+    const hki = await this.prisma.hkiRecord.findFirst({
+      where: { OR: [{ id }, { hkiId: id }] },
+    });
+    if (hki) {
+      if (notes) {
+        await this.addLog({
+          recordId: hki.id,
+          recordType: 'HKI',
+          action: 'STATUS_UPDATE',
+          notes,
+          staffName: 'SYSTEM',
+        });
+      }
+      return this.prisma.hkiRecord.update({
+        where: { id: hki.id },
+        data: {
+          status: status as any,
+        },
+      });
+    }
+
+    const halal = await this.prisma.halalRecord.findFirst({
+      where: { OR: [{ id }, { halalId: id }] },
+    });
+    if (halal) {
+      if (notes) {
+        await this.addLog({
+          recordId: halal.id,
+          recordType: 'HALAL',
+          action: 'STATUS_UPDATE',
+          notes,
+          staffName: 'SYSTEM',
+        });
+      }
+      return this.prisma.halalRecord.update({
+        where: { id: halal.id },
+        data: {
+          status: status as any,
+        },
+      });
+    }
+
+    throw new NotFoundException(`Permit ${id} not found`);
   }
 
   // --- V4 REGULATORY ENGINE ---
@@ -689,7 +859,7 @@ export class LegalityService {
       },
     });
 
-    if (!formula) throw new Error('Formula not found');
+    if (!formula) throw new ResourceNotFoundException('Formula');
 
     const violations = [];
     let riskScore: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
@@ -899,7 +1069,7 @@ export class LegalityService {
     const current = await this.prisma.regulatoryPipeline.findUnique({
       where: { id },
     });
-    if (!current) throw new Error('Pipeline not found');
+    if (!current) throw new ResourceNotFoundException('Regulatory Pipeline', id);
 
     const { notes, ...updateData } = data;
     const history = (current.logHistory as any[]) || [];
@@ -964,6 +1134,60 @@ export class LegalityService {
 
   // --- COMPLIANCE INBOX & WORKSPACE (PHASE 3) ---
 
+  private badRequest(reasonCode: string, message: string) {
+    return new BadRequestException({
+      statusCode: 400,
+      error: 'Bad Request',
+      message,
+      reason_code: reasonCode,
+    });
+  }
+
+  /**
+   * BUS-RULE-115. The artwork each lead's design is on the table with.
+   *
+   * A finalized design is the governed one — its `finalArtworkUrl` is the version
+   * the client approved, and an upload after finalization clears `isFinal`, so the
+   * latest version of a finalized task IS the approved one. Otherwise the version
+   * on the table. Nothing is inferred from "whatever row was written last": a lead
+   * with no artwork resolves to `null` and the surface says so.
+   */
+  private async governedArtworkByLead(
+    leadIds: string[],
+  ): Promise<Map<string, GovernedArtwork>> {
+    const unique = [...new Set(leadIds)];
+    const byLead = new Map<string, { artwork: GovernedArtwork; finalized: boolean }>();
+    if (unique.length === 0) return new Map();
+
+    const tasks = await this.prisma.designTask.findMany({
+      where: { leadId: { in: unique } },
+      include: { versions: { orderBy: { versionNumber: 'desc' }, take: 1 } },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    for (const task of tasks) {
+      const current = byLead.get(task.leadId);
+      // The newest task on the table wins, unless a client-approved (finalized)
+      // design exists — that one is the governed artwork.
+      if (current && (current.finalized || !task.isFinal)) continue;
+
+      const version = task.versions[0];
+      byLead.set(task.leadId, {
+        artwork: {
+          artworkUrl:
+            (task.isFinal ? task.finalArtworkUrl : null) ??
+            version?.artworkUrl ??
+            null,
+          previewUrl: version?.mockupUrl ?? null,
+          version: version?.versionNumber ?? null,
+        },
+        finalized: task.isFinal,
+      });
+    }
+
+    return new Map([...byLead].map(([leadId, entry]) => [leadId, entry.artwork]));
+  }
+
   async getPendingTasks() {
     const pipelines = await this.prisma.regulatoryPipeline.findMany({
       where: { currentStage: { not: RegStage.PUBLISHED } },
@@ -974,6 +1198,10 @@ export class LegalityService {
         pnbpRequests: { orderBy: { createdAt: 'desc' }, take: 1 },
       },
     });
+
+    const artwork = await this.governedArtworkByLead(
+      pipelines.map((p) => p.leadId),
+    );
 
     const tasks = [];
 
@@ -994,6 +1222,7 @@ export class LegalityService {
       // Task 2: Artwork Review (If no approved review exists)
       const lastReview = p.artworkReviews[0];
       if (!lastReview || !lastReview.isApproved) {
+        const artworkOfLead = artwork.get(p.leadId);
         tasks.push({
           id: `artwork-${p.id}`,
           type: 'ARTWORK_REVIEW',
@@ -1001,6 +1230,12 @@ export class LegalityService {
           title: `Review Artwork: ${p.lead?.brandName || 'Unnamed'}`,
           pipelineId: p.id,
           createdAt: lastReview?.createdAt || p.createdAt,
+          // BUS-RULE-115: the governed artwork of the exact design version under
+          // review. `null` means there is none yet — the surface shows that
+          // instead of a fabricated preview.
+          artworkUrl: artworkOfLead?.artworkUrl ?? null,
+          artworkPreviewUrl: artworkOfLead?.previewUrl ?? null,
+          artworkVersion: artworkOfLead?.version ?? null,
         });
       }
 
@@ -1024,27 +1259,40 @@ export class LegalityService {
     pipelineId: string,
     data: { isApproved: boolean; notes: string; reviewer: string },
   ) {
+    const pipeline = await this.prisma.regulatoryPipeline.findUnique({
+      where: { id: pipelineId },
+      include: { pnbpRequests: { where: { isPaid: true } } },
+    });
+    if (!pipeline) throw new NotFoundException('Pipeline not found');
+
+    // BUS-RULE-115: the review records the artwork it was made ON. A review of
+    // artwork that does not exist is not a review, and the SCM gate downstream
+    // reads this row to release the packaging order.
+    const governed = (
+      await this.governedArtworkByLead([pipeline.leadId])
+    ).get(pipeline.leadId);
+    if (!governed?.artworkUrl) {
+      throw this.badRequest(
+        ARTWORK_NOT_ON_FILE,
+        'Belum ada artwork pada versi desain ini. Minta Creative mengunggah versi terlebih dahulu.',
+      );
+    }
+
     const review = await this.prisma.artworkReview.create({
       data: {
         pipelineId,
         isApproved: data.isApproved,
         notes: data.notes,
         designerPicId: (await this.prisma.user.findFirst())?.id || '', // Fallback
-        artworkUrl: 'https://placehold.co/600x400', // Placeholder for real storage link
+        artworkUrl: governed.artworkUrl,
       },
     });
 
     // If artwork is approved, check if we should advance stage
     if (data.isApproved) {
-      const p = await this.prisma.regulatoryPipeline.findUnique({
-        where: { id: pipelineId },
-        include: { pnbpRequests: { where: { isPaid: true } } },
-      });
-
       if (
-        p &&
-        p.currentStage === RegStage.SUBMITTED &&
-        (p as any).pnbpRequests.length > 0
+        pipeline.currentStage === RegStage.SUBMITTED &&
+        pipeline.pnbpRequests.length > 0
       ) {
         await this.updatePipeline(pipelineId, {
           currentStage: RegStage.EVALUATION,
@@ -1127,75 +1375,45 @@ export class LegalityService {
       certNumber: string;
       expiry: string;
       daysLeft: number;
-      status: 'EXPIRED' | 'CRITICAL' | 'WARNING' | 'SAFE';
+      status: PermitExpiryBucket;
     }> = [];
 
     for (const r of hkiAll) {
       if (!r.expiryDate) continue;
-      const daysLeft = Math.floor(
-        (r.expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-      );
       items.push({
         id: r.id,
         name: r.brandName,
         type: 'HKI',
         certNumber: r.hkiId,
         expiry: r.expiryDate.toISOString().split('T')[0],
-        daysLeft,
-        status:
-          daysLeft <= 0
-            ? 'EXPIRED'
-            : daysLeft <= 30
-              ? 'CRITICAL'
-              : daysLeft <= 60
-                ? 'WARNING'
-                : 'SAFE',
+        daysLeft: permitDaysLeft(r.expiryDate, today) as number,
+        status: permitExpiryBucket(r.expiryDate, today),
       });
     }
 
     for (const r of bpomAll) {
       if (!r.expiryDate) continue;
-      const daysLeft = Math.floor(
-        (r.expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-      );
       items.push({
         id: r.id,
         name: r.productName,
         type: 'BPOM',
         certNumber: r.bpomId,
         expiry: r.expiryDate.toISOString().split('T')[0],
-        daysLeft,
-        status:
-          daysLeft <= 0
-            ? 'EXPIRED'
-            : daysLeft <= 30
-              ? 'CRITICAL'
-              : daysLeft <= 60
-                ? 'WARNING'
-                : 'SAFE',
+        daysLeft: permitDaysLeft(r.expiryDate, today) as number,
+        status: permitExpiryBucket(r.expiryDate, today),
       });
     }
 
     for (const r of halalAll) {
       if (!r.expiryDate) continue;
-      const daysLeft = Math.floor(
-        (r.expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-      );
       items.push({
         id: r.id,
         name: r.productName,
         type: 'HALAL',
         certNumber: r.halalId,
         expiry: r.expiryDate.toISOString().split('T')[0],
-        daysLeft,
-        status:
-          daysLeft <= 0
-            ? 'EXPIRED'
-            : daysLeft <= 30
-              ? 'CRITICAL'
-              : daysLeft <= 60
-                ? 'WARNING'
-                : 'SAFE',
+        daysLeft: permitDaysLeft(r.expiryDate, today) as number,
+        status: permitExpiryBucket(r.expiryDate, today),
       });
     }
 

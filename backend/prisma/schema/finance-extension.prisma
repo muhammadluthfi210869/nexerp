@@ -40,6 +40,8 @@ model Bill {
   notes               String?
   pic                 String // Person in charge
   attachmentUrls      String[]          @default([])
+  grId                String?           @db.Uuid
+  organizationId      String?           @db.Uuid
   postedAt            DateTime? // When bill is Posted → triggers journal
   cancelledAt         DateTime?
   createdAt           DateTime          @default(now())
@@ -53,6 +55,7 @@ model Bill {
 
   @@index([vendorId, paymentStatus])
   @@index([dueDate, paymentStatus]) // For AP Aging queries
+  @@index([organizationId])
   @@map("bills")
 }
 
@@ -103,12 +106,14 @@ model DownPayment {
   appliedAmount   Decimal       @default(0) @db.Decimal(15, 2)
   appliedAt       DateTime?
   cancelledAt     DateTime?
+  organizationId  String?       @db.Uuid
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   vendor          Supplier      @relation("SupplierDownPayments", fields: [vendorId], references: [id])
   appliedToBill   Bill?         @relation("DownPaymentAppliedToBill", fields: [appliedToBillId], references: [id])
 
   @@index([vendorId, status])
+  @@index([organizationId])
   @@map("down_payments")
 }
 
@@ -124,6 +129,7 @@ model APPayment {
   attachmentUrls  String[]         @default([])
   status          PaymentStatus    @default(PAID)
   verifiedBy      String?          @db.Uuid
+  organizationId  String?          @db.Uuid
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   vendor          Supplier         @relation("SupplierAPPayments", fields: [vendorId], references: [id])
@@ -132,6 +138,7 @@ model APPayment {
   billAllocations BillAllocation[]
 
   @@index([vendorId, paymentDate])
+  @@index([organizationId])
   @@map("ap_payments")
 }
 

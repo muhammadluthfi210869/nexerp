@@ -8,10 +8,12 @@ import {
   TableCell, 
   TableHead, 
   TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+  TableRow,
+  KpiCard,
+  DnaBadge,
+} from "@/components/dna";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/dna";
+import { Button } from "@/components/dna";
 import { 
   CheckCircle2, 
   ClipboardCheck, 
@@ -20,11 +22,9 @@ import {
   Target,
   Calendar
 } from "lucide-react";
-import { KpiCard } from "@/components/dna/KpiCard";
-import { DnaBadge } from "@/components/dna/DnaBadge";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 // --- Types ---

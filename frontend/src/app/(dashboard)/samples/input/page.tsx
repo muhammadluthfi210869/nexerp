@@ -42,6 +42,12 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -453,23 +459,23 @@ export default function MarketingCommandCenter() {
             <Card className={`rounded-2xl overflow-hidden bg-white ${getCriticalCardClass(paidDataMissing)}`}>
               <div className="overflow-x-auto">
                 <TableWrapper>
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="p-4 text-left w-64">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow className="bg-slate-50 border-b border-slate-200">
+                      <DnaTh className="p-4 text-left w-64">
                         <span className="text-table-header text-slate-400">Performance Metric</span>
-                      </th>
+                      </DnaTh>
                       {Object.keys(adsMatrix).map((p) => (
-                        <th key={p} className="p-4 text-center min-w-[180px]">
+                        <DnaTh key={p} className="p-4 text-center min-w-[180px]">
                           <div className="flex flex-col items-center gap-0.5">
                             <span className="text-[11px] font-bold tracking-tight text-slate-900">{p.split('_')[0]}</span>
-                            <DnaBadge status="info">Paid Feed</DnaBadge>
+                            <DnaBadge variant="info">Paid Feed</DnaBadge>
                           </div>
-                        </th>
+                        </DnaTh>
                       ))}
-                    </tr>
-                  </thead>
-                  <tbody>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     <MatrixRow 
                       label="Ad Spend" 
                       icon={DollarSign} 
@@ -527,8 +533,8 @@ export default function MarketingCommandCenter() {
                         return null;
                       }}
                     />
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
                 </TableWrapper>
               </div>
             </Card>
@@ -538,46 +544,46 @@ export default function MarketingCommandCenter() {
              <Card className={`rounded-2xl overflow-hidden bg-white ${getCriticalCardClass(organicDataMissing)}`}>
                 <div className="overflow-x-auto">
                   <TableWrapper>
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="p-4 text-left w-72">
+                  <DnaTable>
+                    <DnaTableHead>
+                      <DnaTableRow className="bg-slate-50 border-b border-slate-200">
+                        <DnaTh className="p-4 text-left w-72">
                           <span className="text-[11px] font-bold uppercase text-slate-400 tracking-wider">Growth & Engagement</span>
-                        </th>
+                        </DnaTh>
                         {Object.keys(organicMatrix).map((p) => (
-                          <th key={p} className="p-4 text-center min-w-[200px]">
+                          <DnaTh key={p} className="p-4 text-center min-w-[200px]">
                             <span className="text-sm font-bold tracking-tight text-slate-900">{p.split('_')[0]}</span>
-                          </th>
+                          </DnaTh>
                         ))}
-                      </tr>
-                    </thead>
-                    <tbody>
+                      </DnaTableRow>
+                    </DnaTableHead>
+                    <DnaTableBody>
                       <MatrixRow label="Total Followers" icon={Users} platforms={Object.keys(organicMatrix)} field="totalFollowers" matrix={organicMatrix} setMatrix={setOrganicMatrix} onKeyDown={handleKeyDown} startIdx={1000} baseline={baselineData} />
                       <MatrixRow label="Follower Growth" icon={TrendingUp} platforms={Object.keys(organicMatrix)} field="followerGrowth" matrix={organicMatrix} setMatrix={setOrganicMatrix} onKeyDown={handleKeyDown} startIdx={1100} accent="text-emerald-600" />
                       <MatrixRow label="Unfollows" icon={Users} platforms={Object.keys(organicMatrix)} field="unfollows" matrix={organicMatrix} setMatrix={setOrganicMatrix} onKeyDown={handleKeyDown} startIdx={1200} accent="text-rose-600" />
                       
-                      <tr className="bg-slate-50/30">
-                        <td colSpan={4} className="p-5 px-10">
+                      <DnaTableRow className="bg-slate-50/30">
+                        <DnaTd colSpan={4} className="p-5 px-10">
                           <SectionLabel as="span">Content Vitality</SectionLabel>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                       
                       <MatrixRow label="Posts Created" icon={ChevronRight} platforms={Object.keys(organicMatrix)} field="postsCount" matrix={organicMatrix} setMatrix={setOrganicMatrix} onKeyDown={handleKeyDown} startIdx={1400} />
                       <MatrixRow label="Stories Created" icon={ChevronRight} platforms={Object.keys(organicMatrix)} field="storiesCount" matrix={organicMatrix} setMatrix={setOrganicMatrix} onKeyDown={handleKeyDown} startIdx={1500} />
                       <MatrixRow label="Total Reach" icon={Globe} platforms={Object.keys(organicMatrix)} field="totalReach" matrix={organicMatrix} setMatrix={setOrganicMatrix} onKeyDown={handleKeyDown} startIdx={1300} baseline={baselineData} />
                       
-                      <tr className="bg-slate-50/30">
-                        <td colSpan={4} className="p-5 px-10">
+                      <DnaTableRow className="bg-slate-50/30">
+                        <DnaTd colSpan={4} className="p-5 px-10">
                           <SectionLabel as="span">Engagement Sum</SectionLabel>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                       
                       <MatrixRow label="Likes" icon={Share2} platforms={Object.keys(organicMatrix)} field="likesCount" matrix={organicMatrix} setMatrix={setOrganicMatrix} onKeyDown={handleKeyDown} startIdx={1700} />
                       <MatrixRow label="Comments" icon={Share2} platforms={Object.keys(organicMatrix)} field="commentsCount" matrix={organicMatrix} setMatrix={setOrganicMatrix} onKeyDown={handleKeyDown} startIdx={1800} />
                       <MatrixRow label="Saves" icon={Share2} platforms={Object.keys(organicMatrix)} field="savesCount" matrix={organicMatrix} setMatrix={setOrganicMatrix} onKeyDown={handleKeyDown} startIdx={1900} />
                       <MatrixRow label="Shares" icon={Share2} platforms={Object.keys(organicMatrix)} field="sharesCount" matrix={organicMatrix} setMatrix={setOrganicMatrix} onKeyDown={handleKeyDown} startIdx={2000} />
-                    </tbody>
-                  </table>
+                    </DnaTableBody>
+                  </DnaTable>
                   </TableWrapper>
                 </div>
              </Card>
@@ -735,15 +741,15 @@ function QuotaRow({ label, value, onChange, disabled }: { label: string, value: 
 
 function MatrixRow({ label, icon: Icon, platforms, field, matrix, setMatrix, onKeyDown, startIdx, prefix, important, accent, baseline, showCalc }: any) {
   return (
-    <tr className="group hover:bg-slate-50 transition-colors even:bg-slate-50/20">
-      <td className="p-4 border-b border-slate-100">
+    <DnaTableRow className="group hover:bg-slate-50 transition-colors even:bg-slate-50/20">
+      <DnaTd className="p-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 bg-white border border-slate-200 rounded-lg flex items-center justify-center shadow-sm group-hover:border-blue-200 transition-all">
             <Icon className="w-3.5 h-3.5" />
           </div>
           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight group-hover:text-slate-900 transition-colors">{label}</span>
         </div>
-      </td>
+      </DnaTd>
       {platforms.map((p: string, i: number) => {
         const val = (matrix[p] as any)[field];
         const base = baseline?.find((b: any) => b.platform === p);
@@ -753,7 +759,7 @@ function MatrixRow({ label, icon: Icon, platforms, field, matrix, setMatrix, onK
         const isOutlier = baseVal !== null && baseVal > 0 && val > baseVal * 5;
 
         return (
-          <td key={p} className="p-4 border-b border-slate-100 text-center">
+          <DnaTd key={p} className="p-4 border-b border-slate-100 text-center">
              <div className="relative space-y-1.5">
                 {prefix && <span className="absolute left-4 top-[18px] -translate-y-1/2 text-[10px] font-bold text-slate-300">{prefix}</span>}
                 <Input 
@@ -797,10 +803,10 @@ function MatrixRow({ label, icon: Icon, platforms, field, matrix, setMatrix, onK
                   )}
                 </div>
              </div>
-          </td>
+          </DnaTd>
         );
       })}
-    </tr>
+    </DnaTableRow>
   );
 }
 

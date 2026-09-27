@@ -29,12 +29,19 @@ import {
   DnaButton,
   DnaBadge,
   DnaModal,
+  DnaDetailDrawer,
   formatRupiah,
   useDnaToast,
   DnaInput,
-  DnaSelect
+  DnaSelect,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
-import { DnaTable } from "@/components/dna";
 
 interface CashOutItem {
   id: string;
@@ -49,13 +56,6 @@ interface CashOutItem {
   category: string;
 }
 
-const FALLBACK_CASH_OUT: CashOutItem[] = [
-  { id: "1", code: "KK-2609-001", date: "2026-09-08", description: "Pembayaran Bahan Baku Ekstrak Centella Asiatica", to: "PT Bahan Kimia Nusantara", billNo: "BILL-2608-012", account: "BCA Operasional (521-009182)", amount: 120000000, status: "POSTED", category: "Bahan Baku" },
-  { id: "2", code: "KK-2609-002", date: "2026-09-07", description: "Pembayaran Botol Kaca Serum 30ml Amber", to: "CV Botol & Kemasan Lestari", billNo: "BILL-2608-088", account: "BCA Operasional (521-009182)", amount: 65000000, status: "POSTED", category: "Bahan Kemas" },
-  { id: "3", code: "KK-2609-003", date: "2026-09-05", description: "Pembayaran Biaya Listrik Industri PLN & Boiler Pabrik", to: "PT PLN (Persero)", billNo: "UTIL-2609-01", account: "BCA Operasional (521-009182)", amount: 45000000, status: "POSTED", category: "Utilitas Pabrik" },
-  { id: "4", code: "KK-2609-004", date: "2026-09-02", description: "Pencairan Reimburse Perjalanan Dinas QC Audit", to: "Ahmad Hendra (Staff QC)", billNo: "FR-2609-002", account: "Kas Tunai Petty Cash", amount: 3500000, status: "POSTED", category: "Fund Request Disbursed" },
-];
-
 export default function CashOutPage() {
   return (
     <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Kas Keluar...</div>}>
@@ -67,10 +67,58 @@ export default function CashOutPage() {
 function CashOutContent() {
   const searchParams = useSearchParams();
   const toast = useDnaToast();
+  const [statusTab, setStatusTab] = useState<string>("ALL");
   const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedDetail, setSelectedDetail] = useState<CashOutItem | null>(null);
+
+  // Live Cash Out / Journals query
+  const { data: journalsRaw = [], isLoading, refetch } = useQuery({
+    queryKey: ["finance-cash-out-journals"],
+    queryFn: async (): Promise<any[]> => {
+      const res = await api.get("/finance/journals");
+      return unwrapResponse<any[]>(res) || [];
+    },
+  });
+
+  const { data: accountsRaw = [] } = useQuery({
+    queryKey: ["finance-accounts-for-cash-out"],
+    queryFn: async (): Promise<any[]> => {
+      try {
+        const res = await api.get("/finance/accounts");
+        return unwrapResponse<any[]>(res) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const cashOutItems: CashOutItem[] = useMemo(() => {
+    return (journalsRaw || [])
+      .filter((j: any) =>
+        j.reference?.includes("KK") ||
+        j.reference?.includes("CASH-OUT") ||
+        j.reference?.includes("FUND-DISB") ||
+        j.lines?.some((l: any) => l.account?.type === "EXPENSE")
+      )
+      .map((j: any) => {
+        const debitLine = j.lines?.find((l: any) => Number(l.debit) > 0);
+        const creditLine = j.lines?.find((l: any) => Number(l.credit) > 0);
+        return {
+          id: j.id,
+          code: j.reference || `KK-${j.id?.slice(0, 8)}`,
+          date: j.date ? new Date(j.date).toISOString().split("T")[0] : "",
+          description: j.description || "Pengeluaran Kas",
+          to: j.sourceDocumentType || "Vendor/Staff",
+          billNo: j.reference || "-",
+          account: creditLine?.account?.name || "Kas/Bank BCA",
+          amount: Number(debitLine?.debit || creditLine?.credit || 0),
+          status: "POSTED" as const,
+          category: debitLine?.account?.name || "Beban Operasional",
+        };
+      });
+  }, [journalsRaw]);
 
   useEffect(() => {
     if (searchParams.get("action") === "create") {
@@ -91,37 +139,69 @@ function CashOutContent() {
   });
 
   const totalKasKeluar = useMemo(() => {
-    return FALLBACK_CASH_OUT.reduce((acc, r) => acc + r.amount, 0);
-  }, []);
+    return cashOutItems.reduce((acc, r) => acc + r.amount, 0);
+  }, [cashOutItems]);
 
   const filteredItems = useMemo(() => {
-    return FALLBACK_CASH_OUT.filter((item) => {
+    return cashOutItems.filter((item) => {
       const matchSearch =
         item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.to.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.billNo.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchSearch;
+      const matchTab = statusTab === "ALL" || item.status === statusTab;
+      return matchSearch && matchTab;
     });
-  }, [searchQuery]);
+  }, [cashOutItems, searchQuery, statusTab]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.description || !formData.amount) {
       toast.error("Mohon lengkapi seluruh kolom bertanda bintang (*)");
       return;
     }
-    toast.success("Bukti Kas Bank Keluar berhasil disimpan dan diposting ke Jurnal!");
-    setIsCreateModalOpen(false);
-    setFormData({
-      date: new Date().toISOString().split("T")[0],
-      description: "",
-      account: "BCA Operasional (521-009182)",
-      to: "",
-      billNo: "",
-      coaExpense: "5110 - Beban Pokok Bahan Baku",
-      amount: "",
-      entryNotes: ""
-    });
+
+    try {
+      const cashAcc = accountsRaw.find((a: any) => a.type === "ASSET" && (a.name.toLowerCase().includes("kas") || a.name.toLowerCase().includes("bank"))) || accountsRaw.find((a: any) => a.type === "ASSET");
+      const expAcc = accountsRaw.find((a: any) => a.type === "EXPENSE") || accountsRaw[0];
+
+      if (cashAcc?.id && expAcc?.id) {
+        await api.post("/finance/cash/disburse", {
+          date: new Date(formData.date).toISOString(),
+          cashAccountId: cashAcc.id,
+          category: "BEBAN_OPERASIONAL",
+          debitAccountId: expAcc.id,
+          amount: Number(formData.amount),
+          entityName: formData.to || "Vendor/Staff",
+          notes: formData.description,
+        });
+      } else {
+        await api.post("/finance/journals", {
+          date: formData.date,
+          reference: `KK-${Date.now().toString().slice(-6)}`,
+          description: `Kas Keluar: ${formData.to || "Pihak Terkait"} - ${formData.description}`,
+          lines: [
+            { accountId: expAcc?.id || "default-exp", debit: Number(formData.amount), credit: 0 },
+            { accountId: cashAcc?.id || "default-cash", debit: 0, credit: Number(formData.amount) },
+          ],
+        });
+      }
+
+      toast.success("Bukti Kas Bank Keluar berhasil disimpan dan diposting ke Jurnal!");
+      refetch();
+      setIsCreateModalOpen(false);
+      setFormData({
+        date: new Date().toISOString().split("T")[0],
+        description: "",
+        account: "BCA Operasional (521-009182)",
+        to: "",
+        billNo: "",
+        coaExpense: "5110 - Beban Pokok Bahan Baku",
+        amount: "",
+        entryNotes: ""
+      });
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Gagal menyimpan kas keluar");
+    }
   };
 
   return (
@@ -135,6 +215,13 @@ function CashOutContent() {
             <span>Poin 19: Single Card Ringkas & Filter Kalender Lengkap</span>
           </div>
         }
+        tabs={[
+          { id: "ALL", label: "Semua Mutasi" },
+          { id: "POSTED", label: "Posted (Jurnal)" },
+          { id: "DRAFT", label: "Draft" }
+        ]}
+        activeTab={statusTab}
+        onTabChange={setStatusTab}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
@@ -163,8 +250,6 @@ function CashOutContent() {
 
       {/* DATA TABLE CARD DENGAN DATE RANGE PICKER BEBAS */}
       <DnaDataTableCard
-        title="Daftar Mutasi Kas Bank Keluar"
-        badge={<DnaBadge variant="critical">{filteredItems.length} Transaksi</DnaBadge>}
         customToolbar={
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
@@ -201,69 +286,95 @@ function CashOutContent() {
         }
       >
         <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">#</th>
-                <th className="px-3.5 py-3">Kode</th>
-                <th className="px-3.5 py-3">Tanggal</th>
-                <th className="px-3.5 py-3">Deskripsi Pembayaran</th>
-                <th className="px-3.5 py-3">Kepada (Penerima)</th>
-                <th className="px-3.5 py-3">No. Tagihan</th>
-                <th className="px-3.5 py-3">Kas / Bank</th>
-                <th className="px-3.5 py-3 text-right">Jumlah (Rp)</th>
-                <th className="px-3.5 py-3 text-center">Status</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredItems.map((item, idx) => (
-                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 text-slate-400 font-mono">{idx + 1}</td>
-                  <td className="px-3.5 py-2.5 font-mono text-rose-700 font-bold">{item.code}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 whitespace-nowrap">{item.date}</td>
-                  <td className="px-3.5 py-2.5 font-semibold text-slate-900">{item.description}</td>
-                  <td className="px-3.5 py-2.5 text-slate-700 font-medium">{item.to}</td>
-                  <td className="px-3.5 py-2.5 font-mono text-slate-600 text-[11px]">{item.billNo}</td>
-                  <td className="px-3.5 py-2.5 text-slate-600 text-[11px]">{item.account}</td>
-                  <td className="px-3.5 py-2.5 text-right font-extrabold text-rose-700 text-xs">
-                    {formatRupiah(item.amount)}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <DnaBadge variant={item.status === "POSTED" ? "success" : "default"}>
+          <DnaTable className="min-w-[1150px]">
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="w-[130px]">No Bukti</DnaTh>
+                <DnaTh className="w-[110px]">Tanggal</DnaTh>
+                <DnaTh>Deskripsi Pengeluaran</DnaTh>
+                <DnaTh>Dibayar Kepada</DnaTh>
+                <DnaTh>Rekening Kas/Bank</DnaTh>
+                <DnaTh>Kategori Biaya</DnaTh>
+                <DnaTh className="w-[130px]">No Ref / Bill</DnaTh>
+                <DnaTh align="right" className="w-[140px]">Jumlah (Rp)</DnaTh>
+                <DnaTh align="center" className="w-[100px]">Status</DnaTh>
+                <DnaTh align="center" className="w-[80px]">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
+              {filteredItems.map((item) => (
+                <DnaTableRow
+                  key={item.id}
+                  onClick={() => setSelectedDetail(item)}
+                  className="cursor-pointer"
+                >
+                  <DnaTd>
+                    <DnaCell.Code value={item.code} />
+                  </DnaTd>
+                  <DnaTd>
+                    <DnaCell.Date value={item.date} />
+                  </DnaTd>
+                  <DnaTd isPrimary>
+                    <DnaCell.Text primary={item.description} />
+                  </DnaTd>
+                  <DnaTd>
+                    <DnaCell.Text primary={item.to} />
+                  </DnaTd>
+                  <DnaTd>
+                    <DnaCell.Text primary={item.account} />
+                  </DnaTd>
+                  <DnaTd isMuted>
+                    <DnaCell.Text primary={item.category} />
+                  </DnaTd>
+                  <DnaTd>
+                    {item.billNo && item.billNo !== "-" ? (
+                      <DnaCell.Code value={item.billNo} />
+                    ) : (
+                      <span className="text-slate-400 font-sans text-[11px]">-</span>
+                    )}
+                  </DnaTd>
+                  <DnaTd align="right">
+                    <DnaCell.Currency value={item.amount} className="font-semibold text-rose-700" />
+                  </DnaTd>
+                  <DnaTd align="center">
+                    <DnaBadge variant={item.status === "POSTED" ? "critical" : "default"}>
                       {item.status}
                     </DnaBadge>
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <button
+                  </DnaTd>
+                  <DnaTd align="center" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-center gap-1">
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setSelectedDetail(item)}
-                        className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
                         title="Lihat Detail"
+                        className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
                       >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
+                        <Eye className="w-3.5 h-3.5" />
+                      </DnaButton>
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
                         onClick={() => toast.success(`Mencetak Bukti Kas Keluar ${item.code}...`)}
-                        className="p-1 text-slate-400 hover:text-blue-600 rounded transition-colors"
-                        title="Print Bukti Kas Keluar"
+                        title="Print Bukti"
+                        className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
                       >
-                        <Printer className="w-4 h-4" />
-                      </button>
+                        <Printer className="w-3.5 h-3.5 text-blue-600" />
+                      </DnaButton>
                     </div>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-              <tr className="bg-rose-50/75 font-black border-t-2 border-rose-300">
-                <td colSpan={7} className="px-3.5 py-3 text-rose-950 font-black text-right text-xs">
+              <DnaTableRow className="bg-rose-50/75 font-semibold border-t-2 border-rose-300">
+                <DnaTd colSpan={7} className="px-3.5 py-3 text-rose-950 font-bold text-right text-xs">
                   TOTAL KAS KELUAR:
-                </td>
-                <td className="px-3.5 py-3 text-right text-rose-950 font-black text-sm">
+                </DnaTd>
+                <DnaTd className="px-3.5 py-3 text-right text-rose-950 font-bold tabular-nums text-sm">
                   {formatRupiah(totalKasKeluar)}
-                </td>
-                <td colSpan={2}></td>
-              </tr>
-            </tbody>
+                </DnaTd>
+                <DnaTd colSpan={2}></DnaTd>
+              </DnaTableRow>
+            </DnaTableBody>
           </DnaTable>
         </div>
       </DnaDataTableCard>
@@ -373,7 +484,7 @@ function CashOutContent() {
 
           <div className="p-3 bg-rose-50 rounded-lg border border-rose-200 flex justify-between items-center">
             <span className="text-rose-900 font-medium">Jurnal Otomatis yang Terbentuk:</span>
-            <span className="font-mono text-xs font-bold text-rose-800">
+            <span className="tabular-nums text-xs font-bold text-rose-800">
               Dr Beban/Biaya / Cr Kas/Bank ({formData.account.split(" ")[0]})
             </span>
           </div>
@@ -389,49 +500,121 @@ function CashOutContent() {
         </div>
       </DnaModal>
 
-      {/* DETAIL MODAL */}
-      <DnaModal
+      {/* DETAIL DRAWER (QUICK PEEK) */}
+      <DnaDetailDrawer
         isOpen={!!selectedDetail}
         onClose={() => setSelectedDetail(null)}
-        title={`Detail Kas Keluar: ${selectedDetail?.code}`}
-        size="md"
-      >
-        <div className="space-y-3.5 text-xs">
-          <div className="bg-slate-50 p-3 rounded-lg space-y-2 border border-slate-200">
-            <div className="flex justify-between">
-              <span className="text-slate-500">Tanggal Transaksi:</span>
-              <strong className="text-slate-800">{selectedDetail?.date}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Penerima Pembayaran:</span>
-              <strong className="text-slate-800">{selectedDetail?.to}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">No. Tagihan / Ref:</span>
-              <strong className="text-slate-800 font-mono">{selectedDetail?.billNo}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Akun Sumber Rekening:</span>
-              <strong className="text-slate-800">{selectedDetail?.account}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Kategori Biaya:</span>
-              <strong className="text-slate-800">{selectedDetail?.category}</strong>
-            </div>
-            <div className="flex justify-between border-t border-slate-200 pt-2">
-              <span className="text-slate-900 font-bold">Total Pengeluaran:</span>
-              <strong className="text-rose-700 font-black text-sm">
-                {selectedDetail ? formatRupiah(selectedDetail.amount) : "0"}
-              </strong>
-            </div>
-          </div>
-          <div className="flex justify-end pt-2">
-            <DnaButton variant="secondary" size="md" onClick={() => setSelectedDetail(null)}>
+        title={`Bukti Kas Keluar: ${selectedDetail?.code}`}
+        subtitle={selectedDetail?.description}
+        badge={
+          selectedDetail && (
+            <DnaBadge variant={selectedDetail.status === "POSTED" ? "critical" : "default"}>
+              {selectedDetail.status}
+            </DnaBadge>
+          )
+        }
+        tabs={[
+          {
+            id: "info",
+            label: "Rincian Pengeluaran",
+            content: (
+              <div className="space-y-4 p-4 text-xs">
+                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                  <div>
+                    <div className="text-[11px] text-slate-500">Nomor Bukti</div>
+                    <div className="tabular-nums font-bold text-rose-700 text-sm">{selectedDetail?.code}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Tanggal Pengeluaran</div>
+                    <div className="font-medium text-slate-800">{selectedDetail?.date}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Penerima Dana</div>
+                    <div className="font-semibold text-slate-900">{selectedDetail?.to}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">No. Tagihan / Ref</div>
+                    <div className="tabular-nums text-slate-800">{selectedDetail?.billNo}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Sumber Kas / Rekening</div>
+                    <div className="font-semibold text-slate-800">{selectedDetail?.account}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-slate-500">Kategori / Akun Beban</div>
+                    <div className="font-medium text-slate-700">{selectedDetail?.category}</div>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-rose-50 rounded-lg border border-rose-200 flex justify-between items-center">
+                  <div>
+                    <div className="text-[11px] text-rose-700 font-bold uppercase">Total Nominal Kas Keluar</div>
+                    <div className="text-xl font-black text-rose-900">
+                      {selectedDetail ? formatRupiah(selectedDetail.amount) : "0"}
+                    </div>
+                  </div>
+                  <DnaBadge variant="critical">DISBURSEMENT POSTED</DnaBadge>
+                </div>
+              </div>
+            )
+          },
+          {
+            id: "journal",
+            label: "Jurnal Pengeluaran",
+            content: (
+              <div className="p-4 space-y-3 text-xs">
+                <div className="text-slate-500 font-medium">Entri Jurnal Akuntansi Pengeluaran:</div>
+                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                  <DnaTable>
+                    <DnaTableHead>
+                      <DnaTableRow>
+                        <DnaTh className="p-2.5">Akun COA</DnaTh>
+                        <DnaTh className="p-2.5 text-right">Debit</DnaTh>
+                        <DnaTh className="p-2.5 text-right">Kredit</DnaTh>
+                      </DnaTableRow>
+                    </DnaTableHead>
+                    <DnaTableBody>
+                      <DnaTableRow>
+                        <DnaTd className="p-2.5 font-medium text-slate-800">
+                          Dr. {selectedDetail?.category}
+                        </DnaTd>
+                        <DnaTd className="p-2.5 text-right font-bold text-rose-700">
+                          {selectedDetail ? formatRupiah(selectedDetail.amount) : "0"}
+                        </DnaTd>
+                        <DnaTd className="p-2.5 text-right text-slate-400">-</DnaTd>
+                      </DnaTableRow>
+                      <DnaTableRow>
+                        <DnaTd className="p-2.5 font-medium text-slate-800 pl-6">
+                          Cr. {selectedDetail?.account}
+                        </DnaTd>
+                        <DnaTd className="p-2.5 text-right text-slate-400">-</DnaTd>
+                        <DnaTd className="p-2.5 text-right font-bold text-rose-700">
+                          {selectedDetail ? formatRupiah(selectedDetail.amount) : "0"}
+                        </DnaTd>
+                      </DnaTableRow>
+                    </DnaTableBody>
+                  </DnaTable>
+                </div>
+              </div>
+            )
+          }
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
+            <DnaButton
+              variant="secondary"
+              size="md"
+              onClick={() => toast.success(`Mencetak Bukti Kas Keluar ${selectedDetail?.code}...`)}
+            >
+              <Printer className="w-4 h-4 mr-1.5" />
+              Cetak Bukti
+            </DnaButton>
+            <DnaButton variant="primary" size="md" onClick={() => setSelectedDetail(null)}>
               Tutup
             </DnaButton>
           </div>
-        </div>
-      </DnaModal>
+        }
+      />
     </DnaPageContainer>
   );
 }

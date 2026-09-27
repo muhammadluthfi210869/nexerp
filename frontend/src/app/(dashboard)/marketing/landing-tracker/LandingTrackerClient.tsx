@@ -34,7 +34,22 @@ import {
   Link2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, Input, DnaInput, DnaBadge, DnaButton, StatCard, TableWrapper, SectionLabel } from "@/components/dna";
+import {
+  Card,
+  Input,
+  DnaInput,
+  DnaBadge,
+  DnaButton,
+  StatCard,
+  TableWrapper,
+  SectionLabel,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import {
   XAxis,
   YAxis,
@@ -358,39 +373,39 @@ export default function LandingTrackerClient() {
                   </div>
                 </div>
                 <TableWrapper>
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="p-3 text-left">
+                  <DnaTable>
+                    <DnaTableHead>
+                      <DnaTableRow className="bg-slate-50 border-b border-slate-200">
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">Time</span>
-                        </th>
-                        <th className="p-3 text-left">
+                        </DnaTh>
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">Page</span>
-                        </th>
-                        <th className="p-3 text-left">
+                        </DnaTh>
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">Referrer</span>
-                        </th>
-                        <th className="p-3 text-left">
+                        </DnaTh>
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">UTM Source</span>
-                        </th>
-                        <th className="p-3 text-left">
+                        </DnaTh>
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">Campaign</span>
-                        </th>
-                        <th className="p-3 text-left">
+                        </DnaTh>
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">Visitor</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                        </DnaTh>
+                      </DnaTableRow>
+                    </DnaTableHead>
+                    <DnaTableBody>
                       {filteredVisits.slice(0, 20).map((v: any, i: number) => (
-                        <tr key={v.id || i} className="group hover:bg-slate-50 transition-colors even:bg-slate-50/20">
-                          <td className="p-3 border-b border-slate-100">
+                        <DnaTableRow key={v.id || i} className="group hover:bg-slate-50 transition-colors even:bg-slate-50/20">
+                          <DnaTd className="p-3 border-b border-slate-100">
                             <div className="flex flex-col">
                               <span className="text-[11px] font-bold text-slate-700 tabular-nums">{formatTime(v.timestamp)}</span>
                               <span className="text-[9px] font-bold text-slate-400">{formatDate(v.timestamp)}</span>
                             </div>
-                          </td>
-                          <td className="p-3 border-b border-slate-100">
+                          </DnaTd>
+                          <DnaTd className="p-3 border-b border-slate-100">
                             <div className="flex items-center gap-2">
                               <Globe className="w-3 h-3 text-slate-300" />
                               <div>
@@ -398,13 +413,13 @@ export default function LandingTrackerClient() {
                                 <p className="text-[9px] font-bold text-slate-400 truncate max-w-[200px]">{v.pageUrl}</p>
                               </div>
                             </div>
-                          </td>
-                          <td className="p-3 border-b border-slate-100">
-                            <DnaBadge status="default">
+                          </DnaTd>
+                          <DnaTd className="p-3 border-b border-slate-100">
+                            <DnaBadge variant="default">
                               {v.referrer === "direct" || !v.referrer ? "Direct" : v.referrer}
                             </DnaBadge>
-                          </td>
-                          <td className="p-3 border-b border-slate-100">
+                          </DnaTd>
+                          <DnaTd className="p-3 border-b border-slate-100">
                             {v.utmSource ? (
                               <DnaBadge status={(v.utmSource === "google" ? "info" : v.utmSource === "facebook" || v.utmSource === "instagram" ? "purple" : v.utmSource === "tiktok" ? "warning" : v.utmSource === "youtube" ? "critical" : "default") as any}>
                                 {v.utmSource}
@@ -412,17 +427,17 @@ export default function LandingTrackerClient() {
                             ) : (
                               <span className="text-[9px] font-bold text-slate-400">-</span>
                             )}
-                          </td>
-                          <td className="p-3 border-b border-slate-100">
+                          </DnaTd>
+                          <DnaTd className="p-3 border-b border-slate-100">
                             <span className="text-[10px] font-bold text-slate-500">{v.utmCampaign || "-"}</span>
-                          </td>
-                          <td className="p-3 border-b border-slate-100">
+                          </DnaTd>
+                          <DnaTd className="p-3 border-b border-slate-100">
                             <span className="text-[10px] font-bold text-slate-400 tabular-nums">{v.visitorId || "-"}</span>
-                          </td>
-                        </tr>
+                          </DnaTd>
+                        </DnaTableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </DnaTableBody>
+                  </DnaTable>
                 </TableWrapper>
 
                 {filteredVisits.length === 0 && (
@@ -484,39 +499,39 @@ export default function LandingTrackerClient() {
                   </p>
                 </div>
                 <TableWrapper>
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="p-3 text-left">
+                  <DnaTable>
+                    <DnaTableHead>
+                      <DnaTableRow className="bg-slate-50 border-b border-slate-200">
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">#</span>
-                        </th>
-                        <th className="p-3 text-left">
+                        </DnaTh>
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">Page</span>
-                        </th>
-                        <th className="p-3 text-right">
+                        </DnaTh>
+                        <DnaTh className="p-3 text-right">
                           <span className="text-table-header text-slate-400">Views</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                        </DnaTh>
+                      </DnaTableRow>
+                    </DnaTableHead>
+                    <DnaTableBody>
                       {pageStats.length === 0 && (
-                        <tr>
-                          <td colSpan={3} className="p-12 text-center">
+                        <DnaTableRow>
+                          <DnaTd colSpan={3} className="p-12 text-center">
                             <p className="text-sm font-bold text-slate-400">Belum ada data kunjungan</p>
-                          </td>
-                        </tr>
+                          </DnaTd>
+                        </DnaTableRow>
                       )}
                       {pageStats.map((p: any, i: number) => (
-                        <tr key={i} className="group hover:bg-slate-50 transition-colors even:bg-slate-50/20">
-                          <td className="p-3 border-b border-slate-100">
+                        <DnaTableRow key={i} className="group hover:bg-slate-50 transition-colors even:bg-slate-50/20">
+                          <DnaTd className="p-3 border-b border-slate-100">
                             <span className={cn(
                               "text-[11px] font-black",
                               i === 0 ? "text-amber-500" : i === 1 ? "text-slate-400" : i === 2 ? "text-amber-700" : "text-slate-300"
                             )}>
                               {i + 1}
                             </span>
-                          </td>
-                          <td className="p-3 border-b border-slate-100">
+                          </DnaTd>
+                          <DnaTd className="p-3 border-b border-slate-100">
                             <div className="flex items-center gap-2">
                               <Globe className="w-3 h-3 text-slate-300" />
                               <div>
@@ -524,14 +539,14 @@ export default function LandingTrackerClient() {
                                 <p className="text-[9px] font-bold text-slate-400">{p.url}</p>
                               </div>
                             </div>
-                          </td>
-                          <td className="p-3 border-b border-slate-100 text-right">
+                          </DnaTd>
+                          <DnaTd className="p-3 border-b border-slate-100 text-right">
                             <span                           className="text-[12px] font-black text-blue-600 tabular-nums">{p.views?.toLocaleString() || 0}</span>
-                          </td>
-                        </tr>
+                          </DnaTd>
+                        </DnaTableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </DnaTableBody>
+                  </DnaTable>
                 </TableWrapper>
               </Card>
             </motion.div>
@@ -640,101 +655,101 @@ export default function LandingTrackerClient() {
                   </p>
                 </div>
                 <TableWrapper>
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="p-3 text-left">
+                  <DnaTable>
+                    <DnaTableHead>
+                      <DnaTableRow className="bg-slate-50 border-b border-slate-200">
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">Waktu</span>
-                        </th>
-                        <th className="p-3 text-left">
+                        </DnaTh>
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">Nama</span>
-                        </th>
-                        <th className="p-3 text-left">
+                        </DnaTh>
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">No. HP</span>
-                        </th>
-                        <th className="p-3 text-left">
+                        </DnaTh>
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">Perusahaan</span>
-                        </th>
-                        <th className="p-3 text-left">
+                        </DnaTh>
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">Produk</span>
-                        </th>
-                        <th className="p-3 text-left">
+                        </DnaTh>
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">Halaman</span>
-                        </th>
-                        <th className="p-3 text-left">
+                        </DnaTh>
+                        <DnaTh className="p-3 text-left">
                           <span className="text-table-header text-slate-400">Status</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                        </DnaTh>
+                      </DnaTableRow>
+                    </DnaTableHead>
+                    <DnaTableBody>
                       {conversions.length === 0 && !conversionsLoading && (
-                        <tr>
-                          <td colSpan={7} className="p-12 text-center">
+                        <DnaTableRow>
+                          <DnaTd colSpan={7} className="p-12 text-center">
                             <User className="w-8 h-8 text-slate-200 mx-auto mb-3" />
                             <p className="text-sm font-bold text-slate-400">Belum ada conversion data</p>
                             <p className="text-[10px] font-bold text-slate-300 mt-1">
                               Data akan muncul ketika ada form submission dari landing page
                             </p>
-                          </td>
-                        </tr>
+                          </DnaTd>
+                        </DnaTableRow>
                       )}
                       {conversionsLoading && (
-                        <tr>
-                          <td colSpan={7} className="p-12 text-center">
+                        <DnaTableRow>
+                          <DnaTd colSpan={7} className="p-12 text-center">
                             <Loader2 className="w-6 h-6 text-slate-300 mx-auto animate-spin mb-2" />
                             <p className="text-sm font-bold text-slate-400">Memuat data...</p>
-                          </td>
-                        </tr>
+                          </DnaTd>
+                        </DnaTableRow>
                       )}
                       {conversions.map((c: any, i: number) => (
-                        <tr key={c.id || i} className="group hover:bg-slate-50 transition-colors even:bg-slate-50/20">
-                          <td className="p-3 border-b border-slate-100">
+                        <DnaTableRow key={c.id || i} className="group hover:bg-slate-50 transition-colors even:bg-slate-50/20">
+                          <DnaTd className="p-3 border-b border-slate-100">
                             <div className="flex flex-col">
                               <span className="text-[11px] font-bold text-slate-700 tabular-nums">{formatTime(c.timestamp)}</span>
                               <span className="text-[9px] font-bold text-slate-400">{formatDate(c.timestamp)}</span>
                             </div>
-                          </td>
-                          <td className="p-3 border-b border-slate-100">
+                          </DnaTd>
+                          <DnaTd className="p-3 border-b border-slate-100">
                             <div className="flex items-center gap-2">
                               <User className="w-3 h-3 text-slate-300" />
                               <span className="text-[11px] font-bold text-slate-700">{c.nama || "-"}</span>
                             </div>
-                          </td>
-                          <td className="p-3 border-b border-slate-100">
+                          </DnaTd>
+                          <DnaTd className="p-3 border-b border-slate-100">
                             <div className="flex items-center gap-2">
                               <Phone className="w-3 h-3 text-slate-300" />
                               <span className="text-[11px] font-bold text-slate-700 tabular-nums">{c.hp || "-"}</span>
                             </div>
-                          </td>
-                          <td className="p-3 border-b border-slate-100">
+                          </DnaTd>
+                          <DnaTd className="p-3 border-b border-slate-100">
                             <div className="flex items-center gap-2">
                               <Building2 className="w-3 h-3 text-slate-300" />
                               <span className="text-[11px] font-bold text-slate-700">{c.perusahaan || "-"}</span>
                             </div>
-                          </td>
-                          <td className="p-3 border-b border-slate-100">
+                          </DnaTd>
+                          <DnaTd className="p-3 border-b border-slate-100">
                             <div className="flex items-center gap-2">
                               <Package className="w-3 h-3 text-slate-300" />
                               <span className="text-[11px] font-bold text-slate-700">{c.produk || "-"}</span>
                             </div>
-                          </td>
-                          <td className="p-3 border-b border-slate-100">
+                          </DnaTd>
+                          <DnaTd className="p-3 border-b border-slate-100">
                             <span className="text-[10px] font-bold text-slate-500 truncate max-w-[150px] inline-block">
                               {c.pageTitle || c.pageUrl || "-"}
                             </span>
-                          </td>
-                          <td className="p-3 border-b border-slate-100">
+                          </DnaTd>
+                          <DnaTd className="p-3 border-b border-slate-100">
                             <div className="flex items-center gap-1.5">
                               {getConversionStatusIcon(c.status || "NEW")}
                               <DnaBadge status={getConversionStatusBadge(c.status || "NEW") as any}>
                                 {c.status || "NEW"}
                               </DnaBadge>
                             </div>
-                          </td>
-                        </tr>
+                          </DnaTd>
+                        </DnaTableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </DnaTableBody>
+                  </DnaTable>
                 </TableWrapper>
               </Card>
             </motion.div>

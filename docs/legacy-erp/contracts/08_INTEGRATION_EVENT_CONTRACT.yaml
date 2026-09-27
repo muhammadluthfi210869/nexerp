@@ -590,6 +590,216 @@ rnd_events:
     delivery_guarantee: at_least_once
 
 # ===========================================
+# SAMPLE FEE EVENTS (Finance verification gate)
+# ===========================================
+# Owner decision 2026-09-20 (DEC-2026-09-20-051, BUS-RULE-107). These events are the
+# durability boundary for the gate: `sample.payment_verified` is what downstream
+# formulation start consumes, so a lost event must not silently desynchronize the
+# sample from the formulation (BUS-RULE-113).
+
+sample_events:
+
+  sample.payment_requested:
+    description: R&D handed the sample fee to Finance for verification.
+    emit_by: rnd-service
+    consume_by:
+      - finance-service
+      - notification-service
+    payload:
+      sample_id: { type: string, format: uuid }
+      lead_id: { type: string, format: uuid }
+      sample_fee_amount: { type: number }
+      requested_by: { type: string, format: uuid }
+      requested_at: { type: string, format: date-time }
+    side_effects:
+      - notification.send_to(FinanceStaff, "Sample fee awaiting verification")
+    delivery_guarantee: at_least_once
+
+  sample.payment_verified:
+    description: |
+      Finance confirmed the sample fee was actually received. This is the ONLY event
+      that releases formulation start — there is no auto-approval path.
+    emit_by: finance-service
+    consume_by:
+      - rnd-service
+      - sales-service
+      - notification-service
+    payload:
+      sample_id: { type: string, format: uuid }
+      verified_by: { type: string, format: uuid }
+      verified_at: { type: string, format: date-time }
+      payment_proof_url: { type: string, nullable: true }
+    side_effects:
+      - formulation.start_unblocked(sample_id)
+      - notification.send_to(RnDChemist, BusDevStaff)
+    delivery_guarantee: at_least_once
+
+  sample.payment_rejected:
+    description: Finance recorded that the sample fee was not received.
+    emit_by: finance-service
+    consume_by:
+      - sales-service
+      - notification-service
+    payload:
+      sample_id: { type: string, format: uuid }
+      rejected_by: { type: string, format: uuid }
+      reason: { type: string }
+      rejected_at: { type: string, format: date-time }
+    delivery_guarantee: at_least_once
+
+# ===========================================
+# DESIGN / ARTWORK EVENTS
+# ===========================================
+# Canonical owner established by DEC-2026-09-20-051.
+
+design_events:
+
+  design.task_started:
+    description: Designer began work on a design task.
+    emit_by: creative-service
+    consume_by:
+      - notification-service
+    payload:
+      design_task_id: { type: string, format: uuid }
+      lead_id: { type: string, format: uuid }
+      started_by: { type: string, format: uuid }
+      started_at: { type: string, format: date-time }
+    delivery_guarantee: at_least_once
+
+  design.submitted_to_apj:
+    description: Artwork version submitted for APJ review.
+    emit_by: creative-service
+    consume_by:
+      - legality-service
+      - notification-service
+    payload:
+      design_task_id: { type: string, format: uuid }
+      version_id: { type: string, format: uuid }
+      version_number: { type: integer }
+      submitted_at: { type: string, format: date-time }
+    side_effects:
+      - notification.send_to(ApotekerPenanggungJawab, "Artwork awaiting APJ review")
+    delivery_guarantee: at_least_once
+
+  design.apj_approved:
+    description: APJ approved the submitted artwork version.
+    emit_by: creative-service
+    consume_by:
+      - sales-service
+      - notification-service
+    payload:
+      design_task_id: { type: string, format: uuid }
+      version_id: { type: string, format: uuid }
+      approved_by: { type: string, format: uuid }
+      approved_at: { type: string, format: date-time }
+    delivery_guarantee: at_least_once
+
+  design.finalized:
+    description: |
+      Client approved the artwork. `isFinal` becomes true and the design appears on
+      the finalized-designs page. This does NOT hard-lock the design — revisions
+      remain allowed until the bound of 3 (BUS-RULE-111).
+    emit_by: creative-service
+    consume_by:
+      - production-service
+      - legality-service
+      - notification-service
+    payload:
+      design_task_id: { type: string, format: uuid }
+      version_id: { type: string, format: uuid }
+      revision_count: { type: integer }
+      is_locked: { type: boolean }
+      finalized_at: { type: string, format: date-time }
+    side_effects:
+      - artwork_status.release_for(production) # satisfies BUS-RULE-034 interlock
+    delivery_guarantee: at_least_once
+
+  design.revision_requested:
+    description: Another revision was requested in-bound. Consumes one unit of allowance.
+    emit_by: creative-service
+    consume_by:
+      - notification-service
+    payload:
+      design_task_id: { type: string, format: uuid }
+      version_id: { type: string, format: uuid }
+      revision_count: { type: integer }
+      is_locked: { type: boolean }
+      reason: { type: string }
+      requested_at: { type: string, format: date-time }
+    delivery_guarantee: at_least_once
+
+  design.revision_started:
+    description: Designer resumed work on a requested revision.
+    emit_by: creative-service
+    consume_by:
+      - notification-service
+    payload:
+      design_task_id: { type: string, format: uuid }
+      revision_count: { type: integer }
+      started_at: { type: string, format: date-time }
+    delivery_guarantee: at_least_once
+
+  design.reopened:
+    description: |
+      Supervisor reopened an at-bound locked design and restarted the revision
+      allowance (revisionCount reset to 0). Recorded so the override is auditable.
+    emit_by: creative-service
+    consume_by:
+      - notification-service
+      - audit-service
+    payload:
+      design_task_id: { type: string, format: uuid }
+      reopened_by: { type: string, format: uuid }
+      reason: { type: string }
+      revision_count_before: { type: integer }
+      reopened_at: { type: string, format: date-time }
+    delivery_guarantee: at_least_once
+
+# ===========================================
+# LEGALITAS / PERMIT EVENTS
+# ===========================================
+# Permits are RECORDED and EXPIRY-MONITORED only (DEC-2026-09-20-053).
+# No submission, filing or approval event exists here by design.
+
+legalitas_events:
+
+  permit.recorded:
+    description: A BPOM, HKI-Merek or Halal permit record was created or updated.
+    emit_by: legality-service
+    consume_by:
+      - notification-service
+      - audit-service
+    payload:
+      permit_id: { type: string, format: uuid }
+      permit_type: { type: string, enum: [HKI, BPOM, HALAL] }
+      certificate_number: { type: string }
+      application_date: { type: string, format: date }
+      expiry_date: { type: string, format: date, nullable: true }
+      recorded_by: { type: string, format: uuid }
+      recorded_at: { type: string, format: date-time }
+    delivery_guarantee: at_least_once
+
+  permit.expiry_warning:
+    description: |
+      A permit crossed a BUS-RULE-112 threshold. One event shape for all three types —
+      the threshold set is identical, so consumers never branch on permit type.
+    emit_by: legality-service
+    consume_by:
+      - notification-service
+      - dashboard-service
+    payload:
+      permit_id: { type: string, format: uuid }
+      permit_type: { type: string, enum: [HKI, BPOM, HALAL] }
+      certificate_number: { type: string }
+      expiry_date: { type: string, format: date }
+      days_left: { type: integer }
+      bucket: { type: string, enum: [EXPIRED, CRITICAL, WARNING] }
+      detected_at: { type: string, format: date-time }
+    side_effects:
+      - notification.send_to(LegalitasAdmin, ApotekerPenanggungJawab)
+    delivery_guarantee: at_least_once
+
+# ===========================================
 # FINANCE EVENTS (auto-journal + critical alerts)
 # ===========================================
 finance_events:

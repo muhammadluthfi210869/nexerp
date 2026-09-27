@@ -20,12 +20,12 @@ import {
 } from "lucide-react";
 import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaTabNav } from "@/components/dna";
 import {
-  DnaTable as Table,
-  DnaTableBody as TableBody,
-  DnaTd as TableCell,
-  DnaTh as TableHead,
-  DnaTableHead as TableHeader,
-  DnaTableRow as TableRow,
+  DnaTable,
+  DnaTableBody,
+  DnaTd,
+  DnaTh,
+  DnaTableHead,
+  DnaTableRow,
 } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
@@ -155,51 +155,51 @@ export default function BayarConsolidatedPage() {
                   </div>
                 }
               >
-                <Table className="table-dense">
-                  <TableHeader className="bg-slate-50/70">
-                    <TableRow className="hover:bg-transparent border-slate-100">
-                      <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Invoice</TableHead>
-                      <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Supplier</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Amount</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Paid</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Remaining</TableHead>
-                      <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
-                      <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <DnaTable className="table-dense">
+                  <DnaTableHead className="bg-slate-50/70">
+                    <DnaTableRow className="hover:bg-transparent border-slate-100">
+                      <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Invoice</DnaTh>
+                      <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Supplier</DnaTh>
+                      <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Amount</DnaTh>
+                      <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Paid</DnaTh>
+                      <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Remaining</DnaTh>
+                      <DnaTh className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</DnaTh>
+                      <DnaTh className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {filteredBills.map((bill: any) => (
-                      <TableRow key={bill.id} className="group hover:bg-slate-50/30 transition-all border-b border-slate-50">
-                        <TableCell className="pl-6 py-4">
+                      <DnaTableRow key={bill.id} className="group hover:bg-slate-50/30 transition-all border-b border-slate-50">
+                        <DnaTd className="pl-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center">
                               <Receipt className="h-4 w-4" />
                             </div>
                             <span className="font-black text-slate-900 text-xs uppercase italic">{bill.billNumber}</span>
                           </div>
-                        </TableCell>
-                        <TableCell className="py-4">
+                        </DnaTd>
+                        <DnaTd className="py-4">
                           <div className="flex items-center gap-2">
                             <Building2 className="h-3.5 w-3.5 text-slate-400" />
                             <span className="font-black text-slate-700 text-xs uppercase">{bill.vendorName}</span>
                           </div>
-                        </TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {bill.totalAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {bill.paidAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {bill.remaining.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-center py-4">
-                          <DnaBadge status={statusMap[bill.status]?.badge || "default"}>{statusMap[bill.status]?.label || bill.status}</DnaBadge>
-                        </TableCell>
-                        <TableCell className="pr-6 text-right py-4">
+                        </DnaTd>
+                        <DnaTd className="text-right tabular-nums py-4 font-semibold text-slate-900 text-xs">Rp {bill.totalAmount.toLocaleString("id-ID")}</DnaTd>
+                        <DnaTd className="text-right tabular-nums py-4 font-semibold text-emerald-600 text-xs">Rp {bill.paidAmount.toLocaleString("id-ID")}</DnaTd>
+                        <DnaTd className="text-right tabular-nums py-4 font-semibold text-slate-900 text-xs">Rp {bill.remaining.toLocaleString("id-ID")}</DnaTd>
+                        <DnaTd className="text-center py-4">
+                          <DnaBadge variant={statusMap[bill.status]?.badge || "default"}>{statusMap[bill.status]?.label || bill.status}</DnaBadge>
+                        </DnaTd>
+                        <DnaTd className="pr-6 text-right py-4">
                           <DnaButton variant="primary" size="sm" icon={<Wallet className="h-3.5 w-3.5" />} onClick={() => window.location.href = "/finance/bayar-pembelian"}>Bayar</DnaButton>
-                        </TableCell>
-                      </TableRow>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
                     {filteredBills.length === 0 && (
-                      <TableRow><TableCell colSpan={7} className="text-center py-10 text-slate-400 italic text-xs">Tidak ada faktur ditemukan.</TableCell></TableRow>
+                      <DnaTableRow><DnaTd colSpan={7} className="text-center py-10 text-slate-400 italic text-xs">Tidak ada faktur ditemukan.</DnaTd></DnaTableRow>
                     )}
-                  </TableBody>
-                </Table>
+                  </DnaTableBody>
+                </DnaTable>
               </DnaDataTableCard>
             </>
           )}
@@ -229,22 +229,22 @@ export default function BayarConsolidatedPage() {
                   </div>
                 }
               >
-                <Table className="table-dense">
-                  <TableHeader className="bg-slate-50/70">
-                    <TableRow className="hover:bg-transparent border-slate-100">
-                      <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Invoice</TableHead>
-                      <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Customer</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Amount</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Paid</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Remaining</TableHead>
-                      <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
-                      <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <DnaTable className="table-dense">
+                  <DnaTableHead className="bg-slate-50/70">
+                    <DnaTableRow className="hover:bg-transparent border-slate-100">
+                      <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Invoice</DnaTh>
+                      <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Customer</DnaTh>
+                      <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Amount</DnaTh>
+                      <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Paid</DnaTh>
+                      <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Remaining</DnaTh>
+                      <DnaTh className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</DnaTh>
+                      <DnaTh className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {filteredInvoices.map((inv: any) => (
-                      <TableRow key={inv.id} className="group hover:bg-emerald-50/30 transition-all border-b border-slate-50">
-                        <TableCell className="pl-6 py-4">
+                      <DnaTableRow key={inv.id} className="group hover:bg-emerald-50/30 transition-all border-b border-slate-50">
+                        <DnaTd className="pl-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
                               <FileCheck2 className="h-4 w-4" />
@@ -254,30 +254,30 @@ export default function BayarConsolidatedPage() {
                               <p className="text-[9px] font-medium text-slate-400">Due: {inv.dueDate}</p>
                             </div>
                           </div>
-                        </TableCell>
-                        <TableCell className="py-4">
+                        </DnaTd>
+                        <DnaTd className="py-4">
                           <span className="font-black text-slate-900 text-xs uppercase">{inv.customerName}</span>
-                        </TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {inv.totalAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {inv.paidAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">Rp {inv.remainingAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-center py-4">
-                          <DnaBadge status={inv.status === "PAID" ? "success" : inv.status === "OVERDUE" ? "critical" : "warning"}>
+                        </DnaTd>
+                        <DnaTd className="text-right tabular-nums py-4 font-semibold text-slate-900 text-xs">Rp {inv.totalAmount.toLocaleString("id-ID")}</DnaTd>
+                        <DnaTd className="text-right tabular-nums py-4 font-semibold text-emerald-600 text-xs">Rp {inv.paidAmount.toLocaleString("id-ID")}</DnaTd>
+                        <DnaTd className="text-right tabular-nums py-4 font-semibold text-rose-600 text-xs">Rp {inv.remainingAmount.toLocaleString("id-ID")}</DnaTd>
+                        <DnaTd className="text-center py-4">
+                          <DnaBadge variant={inv.status === "PAID" ? "success" : inv.status === "OVERDUE" ? "critical" : "warning"}>
                             {inv.status === "PAID" ? "Lunas" : inv.status === "OVERDUE" ? "Overdue" : "Belum Lunas"}
                           </DnaBadge>
-                        </TableCell>
-                        <TableCell className="pr-6 text-right py-4">
+                        </DnaTd>
+                        <DnaTd className="pr-6 text-right py-4">
                           <DnaButton variant="primary" size="sm" className="bg-emerald-600 hover:bg-emerald-700" icon={<CircleDollarSign className="h-3.5 w-3.5" />} onClick={() => window.location.href = "/finance/bayar-penjualan"}>
                             Terima
                           </DnaButton>
-                        </TableCell>
-                      </TableRow>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
                     {filteredInvoices.length === 0 && (
-                      <TableRow><TableCell colSpan={7} className="text-center py-10 text-slate-400 italic text-xs">Tidak ada faktur ditemukan.</TableCell></TableRow>
+                      <DnaTableRow><DnaTd colSpan={7} className="text-center py-10 text-slate-400 italic text-xs">Tidak ada faktur ditemukan.</DnaTd></DnaTableRow>
                     )}
-                  </TableBody>
-                </Table>
+                  </DnaTableBody>
+                </DnaTable>
               </DnaDataTableCard>
             </>
           )}
@@ -307,52 +307,52 @@ export default function BayarConsolidatedPage() {
                   </div>
                 }
               >
-                <Table className="table-dense">
-                  <TableHeader className="bg-slate-50/70">
-                    <TableRow className="hover:bg-transparent border-slate-100">
-                      <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Kode Sample</TableHead>
-                      <TableHead className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Customer</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Total</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sudah Bayar</TableHead>
-                      <TableHead className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sisa</TableHead>
-                      <TableHead className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</TableHead>
-                      <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <DnaTable className="table-dense">
+                  <DnaTableHead className="bg-slate-50/70">
+                    <DnaTableRow className="hover:bg-transparent border-slate-100">
+                      <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Kode Sample</DnaTh>
+                      <DnaTh className="text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Customer</DnaTh>
+                      <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Total</DnaTh>
+                      <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sudah Bayar</DnaTh>
+                      <DnaTh className="text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Sisa</DnaTh>
+                      <DnaTh className="text-center font-black text-slate-400 uppercase tracking-tight text-[9px]">Status</DnaTh>
+                      <DnaTh className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Aksi</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {filteredSamples.map((sample: any) => (
-                      <TableRow key={sample.id} className="group hover:bg-emerald-50/30 transition-all border-b border-slate-50">
-                        <TableCell className="pl-6 py-4">
+                      <DnaTableRow key={sample.id} className="group hover:bg-emerald-50/30 transition-all border-b border-slate-50">
+                        <DnaTd className="pl-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
                               <FileCheck2 className="h-4 w-4" />
                             </div>
                             <span className="font-black text-slate-900 text-xs uppercase italic">{sample.code}</span>
                           </div>
-                        </TableCell>
-                        <TableCell className="py-4">
+                        </DnaTd>
+                        <DnaTd className="py-4">
                           <span className="font-black text-slate-900 text-xs uppercase">{sample.customerName}</span>
-                        </TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-slate-900 text-xs">Rp {sample.totalAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-emerald-600 text-xs">Rp {sample.paidAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-right font-mono tabular-nums py-4 font-black text-rose-600 text-xs">Rp {sample.remainingAmount.toLocaleString("id-ID")}</TableCell>
-                        <TableCell className="text-center py-4">
-                          <DnaBadge status={sample.paymentStatus === "PAID" ? "success" : sample.paymentStatus === "PARTIAL" ? "warning" : "critical"}>
+                        </DnaTd>
+                        <DnaTd className="text-right tabular-nums py-4 font-semibold text-slate-900 text-xs">Rp {sample.totalAmount.toLocaleString("id-ID")}</DnaTd>
+                        <DnaTd className="text-right tabular-nums py-4 font-semibold text-emerald-600 text-xs">Rp {sample.paidAmount.toLocaleString("id-ID")}</DnaTd>
+                        <DnaTd className="text-right tabular-nums py-4 font-semibold text-rose-600 text-xs">Rp {sample.remainingAmount.toLocaleString("id-ID")}</DnaTd>
+                        <DnaTd className="text-center py-4">
+                          <DnaBadge variant={sample.paymentStatus === "PAID" ? "success" : sample.paymentStatus === "PARTIAL" ? "warning" : "critical"}>
                             {sample.paymentStatus === "PAID" ? "Lunas" : sample.paymentStatus === "PARTIAL" ? "Partial" : "Belum Bayar"}
                           </DnaBadge>
-                        </TableCell>
-                        <TableCell className="pr-6 text-right py-4">
+                        </DnaTd>
+                        <DnaTd className="pr-6 text-right py-4">
                           {sample.remainingAmount > 0 && (
                             <DnaButton variant="primary" size="sm" className="bg-emerald-600 hover:bg-emerald-700" icon={<CircleDollarSign className="h-3.5 w-3.5" />} onClick={() => window.location.href = "/finance/bayar-sample"}>Bayar</DnaButton>
                           )}
-                        </TableCell>
-                      </TableRow>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
                     {filteredSamples.length === 0 && (
-                      <TableRow><TableCell colSpan={7} className="text-center py-10 text-slate-400 italic text-xs">Tidak ada sample payment ditemukan.</TableCell></TableRow>
+                      <DnaTableRow><DnaTd colSpan={7} className="text-center py-10 text-slate-400 italic text-xs">Tidak ada sample payment ditemukan.</DnaTd></DnaTableRow>
                     )}
-                  </TableBody>
-                </Table>
+                  </DnaTableBody>
+                </DnaTable>
               </DnaDataTableCard>
             </>
           )}

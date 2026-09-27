@@ -6,6 +6,7 @@ import { PrismaService } from '../../prisma/prisma/prisma.service';
 export class ValuationService {
   constructor(private prisma: PrismaService) {}
 
+  @OnEvent('scm.inbound.approved')
   @OnEvent('scm.inbound_approved')
   async handleInboundApproved(payload: {
     inboundId: string;

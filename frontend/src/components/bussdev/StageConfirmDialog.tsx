@@ -8,9 +8,9 @@ import {
   DialogContent,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/dna";
+import { Button } from "@/components/dna";
+import { Textarea } from "@/components/dna";
 import { toast } from "sonner";
 import { ArrowRight, Send, Loader2, Upload, FileText, X } from "lucide-react";
 import { STAGES } from "./pipeline-constants";
@@ -55,12 +55,12 @@ export function StageConfirmDialog({
         formData.append("loggedBy", "USER");
         formData.append(fileFields[0].fieldName, selectedFile);
 
-        const res = await api.patch("/bussdev/lead/" + lead.id + "/advance", formData, {
+        const res = await api.patch(`/bussdev/lead/${lead.id}/advance`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         return res.data;
       } else {
-        const res = await api.patch("/bussdev/lead/" + lead.id + "/advance", {
+        const res = await api.patch(`/bussdev/lead/${lead.id}/advance`, {
           action: "STAGE_UPDATED",
           newStatus: targetStage,
           notes,

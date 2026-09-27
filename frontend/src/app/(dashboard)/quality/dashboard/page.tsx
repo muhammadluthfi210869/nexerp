@@ -13,13 +13,11 @@ import {
   Package,
   Clock,
   Search,
-  Filter,
   Loader2
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/dna";
+import { Badge } from "@/components/dna";
 import { StatCard, SectionLabel, TableWrapper, DnaBadge, DnaInput } from "@/components/dna";
 
 interface QCAudit {
@@ -65,16 +63,29 @@ export default function QCAnalyticsDashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery<QCStats>({
     queryKey: ["qc-stats-simple"],
     queryFn: async () => {
-      const res = await api.get("/production/qc/stats");
-      const data = res.data || {};
-      return {
-        totalInspections: data.totalInspections || 0,
-        passRate: data.passRate || 0,
-        totalReject: data.totalReject || 0,
-        activeQuarantine: data.activeQuarantine || 0,
-        lastMonthInspections: data.lastMonthInspections,
-        lastMonthReject: data.lastMonthReject,
-      };
+      try {
+        const dashRes = await api.get("/dashboards/qc");
+        const kpis = dashRes.data?.kpis || {};
+        return {
+          totalInspections: kpis.totalInspections?.value || 0,
+          passRate: kpis.passRate?.value || 0,
+          totalReject: kpis.totalReject?.value || 0,
+          activeQuarantine: kpis.activeQuarantine?.value || 0,
+          lastMonthInspections: undefined,
+          lastMonthReject: undefined,
+        };
+      } catch {
+        const res = await api.get("/production/qc/stats");
+        const data = res.data || {};
+        return {
+          totalInspections: data.totalInspections || 0,
+          passRate: data.passRate || 0,
+          totalReject: data.totalReject || 0,
+          activeQuarantine: data.activeQuarantine || 0,
+          lastMonthInspections: data.lastMonthInspections,
+          lastMonthReject: data.lastMonthReject,
+        };
+      }
     },
   });
 

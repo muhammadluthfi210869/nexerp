@@ -25,6 +25,8 @@ export { DnaPageHeader } from "./layout/DnaPageHeader";
 export type { DnaPageHeaderProps, DnaPageTabItem } from "./layout/DnaPageHeader";
 export { DnaKpiGrid, DnaKpiCard } from "./layout/DnaKpiGrid";
 export type { DnaKpiGridProps, DnaKpiCardItem } from "./layout/DnaKpiGrid";
+export { DnaStandardPageShell } from "./layout/DnaStandardPageShell";
+export type { DnaStandardPageShellProps } from "./layout/DnaStandardPageShell";
 
 // Table & Toolbar
 export { DnaDataTableCard } from "./table/DnaDataTableCard";
@@ -55,6 +57,8 @@ export { formatRupiah } from "@/lib/utils";
 export { DnaPageContainer } from "./DnaPageContainer";
 export { DnaModal } from "./DnaModal";
 export { DnaDrawer } from "./DnaDrawer";
+export { DnaDetailDrawer } from "./DnaDetailDrawer";
+export type { DnaDetailDrawerProps } from "./DnaDetailDrawer";
 export { DnaTabNav } from "./DnaTabNav";
 export type { DnaTabNavProps } from "./DnaTabNav";
 export { DnaToolbar } from "./DnaToolbar";
@@ -142,6 +146,12 @@ export type { ApprovalColumn, ApprovalPageShellProps } from "./approval/Approval
 export { ApprovalDetailModal } from "./approval/ApprovalDetailModal";
 export type { ApprovalDetailData } from "./approval/ApprovalDetailModal";
 export { DnaBulkActionBar } from "./DnaBulkActionBar";
+
+// ── ERROR FEEDBACK STATE ──
+// DnaErrorState was implemented but never re-exported here, so the P08 screens
+// that import it from "@/components/dna" could not resolve it.
+export { DnaErrorState } from "./DnaFeedbackStates";
+export type { DnaErrorStateProps } from "./DnaFeedbackStates";
 
 // ── RADIX / SHADCN PRIMITIVES RE-EXPORTS PER ADR-007 ──
 export * from "./DnaFieldCompat";

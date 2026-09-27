@@ -5,10 +5,10 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/dna";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/dna";
+import { Button } from "@/components/dna";
+import { Badge } from "@/components/dna";
+import { Textarea } from "@/components/dna";
 import {
   FileText,
   History,

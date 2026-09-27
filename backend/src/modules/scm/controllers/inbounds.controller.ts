@@ -10,23 +10,29 @@ import {
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';
-import { UserRole } from '@prisma/client';
+import { UserRole, InboundStatus } from '@prisma/client';
 import { InboundsService } from '../services/inbounds.service';
 import { CreateInboundDto, UpdateInboundStatusDto } from '../dto/inbound.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('scm/inbounds')
+@Controller(['purchase/goods-receipts', 'scm/inbounds'])
 export class InboundsController {
   constructor(private readonly inboundsService: InboundsService) {}
 
   @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE, UserRole.PURCHASING)
   create(@Body() dto: CreateInboundDto) {
     return this.inboundsService.create(dto);
   }
 
+  @Post(':id/post')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.WAREHOUSE, UserRole.PURCHASING)
+  postReceipt(@Param('id') id: string) {
+    return this.inboundsService.updateStatus(id, { status: InboundStatus.APPROVED });
+  }
+
   @Patch(':id/status')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING) // SCM approves received items
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.WAREHOUSE)
   updateStatus(@Param('id') id: string, @Body() dto: UpdateInboundStatusDto) {
     return this.inboundsService.updateStatus(id, dto);
   }

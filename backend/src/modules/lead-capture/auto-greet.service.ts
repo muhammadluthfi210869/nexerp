@@ -8,6 +8,14 @@ export class AutoGreetService {
   constructor(private prisma: PrismaService) {}
 
   async sendAutoGreeting(leadId: string, busdevName: string): Promise<void> {
+    // Nonaktif secara default (permintaan Direktur & Head Marketing agar tidak ada sambutan otomatis/AI)
+    if (process.env.AUTO_GREET_ENABLED !== 'true') {
+      this.logger.log(
+        `[AUTO-GREET] Auto-greeting dinonaktifkan (lead ${leadId})`,
+      );
+      return;
+    }
+
     const lead = await this.prisma.leadCapture.findUnique({
       where: { id: leadId },
     });

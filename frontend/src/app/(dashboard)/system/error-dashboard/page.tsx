@@ -1,9 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Card } from "@/components/ui/card";
+import {
+  Card,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  KpiCard,
+} from "@/components/dna";
 import {
   ShieldAlert,
   AlertTriangle,
@@ -21,7 +30,6 @@ import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
 import { DnaBadge, DnaButton, TableWrapper } from "@/components/dna";
-import { KpiCard } from "@/components/dna/KpiCard";
 
 const LEVEL_CONFIG: Record<string, { icon: any; color: string; bg: string; label: string }> = {
   fatal: { icon: ShieldAlert, color: "text-red-600", bg: "bg-red-50", label: "Fatal" },
@@ -36,6 +44,12 @@ export default function ErrorDashboardPage() {
   const { data: summary, isLoading, isError } = useQuery({
     queryKey: ["error-summary", hours],
     queryFn: async () => {
+      try {
+        const dashRes = await api.get("/dashboards/system-errors");
+        if (dashRes.data) return dashRes.data;
+      } catch {
+        // Fallback to specialized summary endpoint
+      }
       const res = await api.get(`/system/errors/summary?hours=${hours}`);
       return res.data;
     },
@@ -83,19 +97,19 @@ export default function ErrorDashboardPage() {
       <div className="grid grid-cols-4 gap-6">
         <KpiCard
           label="Total Errors"
-          value={String(summary.totalErrors)}
-          targetPct={summary.totalErrors === 0 ? 100 : Math.max(0, 100 - summary.totalErrors * 2)}
+          value={String(summary?.totalErrors ?? 0)}
+          targetPct={(summary?.totalErrors ?? 0) === 0 ? 100 : Math.max(0, 100 - (summary?.totalErrors ?? 0) * 2)}
           icon={<AlertTriangle />}
         />
         <KpiCard
           label="Critical"
-          value={String(summary.criticalErrors)}
-          targetPct={summary.criticalErrors === 0 ? 100 : 0}
+          value={String(summary?.criticalErrors ?? 0)}
+          targetPct={(summary?.criticalErrors ?? 0) === 0 ? 100 : 0}
           icon={<Zap />}
         />
         <KpiCard
           label="Unique Routes"
-          value={String(summary.byRoute?.length || 0)}
+          value={String(summary?.byRoute?.length || 0)}
           targetPct={50}
           icon={<Globe />}
         />
@@ -204,56 +218,56 @@ export default function ErrorDashboardPage() {
             <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Recent Errors</span>
           </div>
         </div>
-        <table className="w-full">
-          <thead className="bg-slate-50/70">
-            <tr className="border-slate-100">
-              <th className="py-3 pl-8 text-table-header text-slate-400">Level</th>
-              <th className="text-table-header text-slate-400">Message</th>
-              <th className="text-table-header text-slate-400">Route</th>
-              <th className="text-table-header text-slate-400">Count</th>
-              <th className="pr-8 text-table-header text-slate-400">Last Seen</th>
-            </tr>
-          </thead>
-          <tbody>
+        <DnaTable>
+          <DnaTableHead>
+            <DnaTableRow className="border-slate-100">
+              <DnaTh className="py-3 pl-8 text-table-header text-slate-400">Level</DnaTh>
+              <DnaTh className="text-table-header text-slate-400">Message</DnaTh>
+              <DnaTh className="text-table-header text-slate-400">Route</DnaTh>
+              <DnaTh className="text-table-header text-slate-400">Count</DnaTh>
+              <DnaTh className="pr-8 text-table-header text-slate-400">Last Seen</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {(summary?.recentErrors || []).slice(0, 20).map((err: any) => {
               const config = LEVEL_CONFIG[err.level] || LEVEL_CONFIG.error;
               return (
-                <tr key={err.id} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50">
-                  <td className="py-2.5 pl-8">
+                <DnaTableRow key={err.id} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50">
+                  <DnaTd className="py-2.5 pl-8">
                     <DnaBadge className={cn(config.bg, config.color)}>
                       {config.label}
                     </DnaBadge>
-                  </td>
-                  <td>
+                  </DnaTd>
+                  <DnaTd>
                     <p className="text-xs font-medium text-slate-700 truncate max-w-[300px]">{err.message}</p>
                     {err.componentName && (
                       <p className="text-[9px] text-slate-300 font-medium">{err.componentName}</p>
                     )}
-                  </td>
-                  <td>
+                  </DnaTd>
+                  <DnaTd>
                     <code className="text-[10px] text-slate-400 font-medium">{err.route}</code>
-                  </td>
-                  <td>
+                  </DnaTd>
+                  <DnaTd>
                     <span className="text-xs font-bold text-slate-600">{err.count}x</span>
-                  </td>
-                  <td className="pr-8">
+                  </DnaTd>
+                  <DnaTd className="pr-8">
                     <span className="text-[10px] font-medium text-slate-400">
                       {new Date(err.lastSeenAt).toLocaleString()}
                     </span>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               );
             })}
             {(!summary?.recentErrors || summary.recentErrors.length === 0) && (
-              <tr>
-                <td colSpan={5} className="text-center py-12 text-xs text-slate-300 font-medium">
+              <DnaTableRow>
+                <DnaTd colSpan={5} className="text-center py-12 text-xs text-slate-300 font-medium">
                   <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-emerald-300" />
                   No errors detected — system is healthy
-                </td>
-              </tr>
+                </DnaTd>
+              </DnaTableRow>
             )}
-          </tbody>
-        </table>
+          </DnaTableBody>
+        </DnaTable>
       </TableWrapper>
     </DashboardShell>
   );

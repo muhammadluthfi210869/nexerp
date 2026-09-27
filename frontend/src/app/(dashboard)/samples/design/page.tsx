@@ -2,26 +2,21 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Palette,
   Plus,
-  Search,
-  Filter,
-  FileSpreadsheet,
   Eye,
   Calendar,
   Clock,
   CheckCircle2,
   AlertTriangle,
-  Upload,
   FileText,
-  Check,
-  XCircle,
   Image as ImageIcon,
   ExternalLink,
-  ShieldCheck,
+  RefreshCw,
   X,
-  Camera
+  Camera,
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -31,241 +26,298 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
-  useDnaToast
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  DnaErrorState,
+  DnaLoadingSkeleton,
+  DnaEmptyState,
 } from "@/components/dna";
-import { Input } from "@/components/ui/input";
+import { DnaTextarea } from "@/components/dna";
+import { api, extractApiError } from "@/lib/api";
 
-interface PackagingDesign {
+/** GET /creative/tasks — DesignTask + lead + latest version only. */
+interface DesignTaskVersion {
   id: string;
-  designCode: string;
-  salesOrderCode: string;
-  brandProduct: string;
-  designerPic: string; // Mas Edi (Creative Lead)
-  batchNumber: string;
-  expiredDate: string;
-  revisionVersion: string; // V1.0, V2.0
-  bpomNumber: string; // NA18260100488
-  busdevApproval: "PENDING" | "APPROVED" | "REJECTED";
-  purchaseApproval: "PENDING" | "APPROVED" | "REJECTED";
-  packagingPhoto: string;
-  notes?: string;
-  fileUrl?: string;
+  versionNumber: number;
+  artworkUrl: string | null;
+  mockupUrl: string | null;
 }
 
-const INITIAL_DESIGNS: PackagingDesign[] = [
-  {
-    id: "des-01",
-    designCode: "DSN-2026-001",
-    salesOrderCode: "SO-2026-0041",
-    brandProduct: "GlowAura Skin - Brightening Serum 30ml",
-    designerPic: "Mas Edi (Creative Lead)",
-    batchNumber: "LOT-FG-2609-001",
-    expiredDate: "2028-09-01",
-    revisionVersion: "V2.0",
-    bpomNumber: "NA18260100488",
-    busdevApproval: "APPROVED",
-    purchaseApproval: "APPROVED",
-    packagingPhoto: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=200",
-    notes: "Ukuran label 85x35mm dan inner box foil emas 35x35x105mm terverifikasi.",
-    fileUrl: "https://drive.google.com/artwork-serum-v2.pdf"
-  },
-  {
-    id: "des-02",
-    designCode: "DSN-2026-002",
-    salesOrderCode: "SO-2026-0044",
-    brandProduct: "MiracleSkin - Barrier Repair Moisturizer 50g",
-    designerPic: "Mas Edi (Creative Lead)",
-    batchNumber: "LOT-FG-2609-002",
-    expiredDate: "2028-09-15",
-    revisionVersion: "V1.0",
-    bpomNumber: "NA18260100512",
-    busdevApproval: "APPROVED",
-    purchaseApproval: "PENDING",
-    packagingPhoto: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=200",
-    notes: "Menunggu konfirmasi ketersediaan jar akrilik frosted dari supplier.",
-    fileUrl: "https://drive.google.com/artwork-moist-v1.pdf"
-  },
-  {
-    id: "des-03",
-    designCode: "DSN-2026-003",
-    salesOrderCode: "SO-2026-0049",
-    brandProduct: "AcneClear Lab - Soothing Cica Gel 30gr",
-    designerPic: "Mas Edi (Creative Lead)",
-    batchNumber: "LOT-FG-2609-003",
-    expiredDate: "2028-08-20",
-    revisionVersion: "V1.2",
-    bpomNumber: "NA18260100604",
-    busdevApproval: "PENDING",
-    purchaseApproval: "PENDING",
-    packagingPhoto: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=200",
-    notes: "Revisi teks klaim dermatologis sesuai arahan tim Regulasi BPOM.",
-    fileUrl: "https://drive.google.com/artwork-gel-v12.pdf"
-  },
-  {
-    id: "des-04",
-    designCode: "DSN-2026-004",
-    salesOrderCode: "SO-2026-0052",
-    brandProduct: "Royal Glow - Hydrating Lip Tint Peptide 5ml",
-    designerPic: "Creative Team",
-    batchNumber: "LOT-FG-2609-004",
-    expiredDate: "2028-10-10",
-    revisionVersion: "V1.0",
-    bpomNumber: "NA18260100718",
-    busdevApproval: "APPROVED",
-    purchaseApproval: "APPROVED",
-    packagingPhoto: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=200",
-    notes: "Packaging vial doe-foot applicator siap cetak sablon UV.",
-    fileUrl: "https://drive.google.com/artwork-liptint-v1.pdf"
-  }
-];
+interface DesignTask {
+  id: string;
+  brief: string;
+  taskType: string | null;
+  kanbanState: string;
+  revisionCount: number;
+  isLocked: boolean;
+  isFinal: boolean;
+  slaDeadline: string | null;
+  finalArtworkUrl: string | null;
+  finalMockupUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+  lead: {
+    id: string;
+    clientName: string;
+    brandName: string | null;
+    productInterest: string | null;
+  } | null;
+  versions: DesignTaskVersion[];
+}
+
+interface AvailableSalesOrder {
+  id: string;
+  orderNumber: string;
+  leadId: string;
+  brandName: string | null;
+  lead: { clientName: string; brandName: string | null } | null;
+}
+
+const KANBAN_STATES = [
+  "INBOX",
+  "IN_PROGRESS",
+  "WAITING_APJ",
+  "WAITING_CLIENT",
+  "REVISION",
+  "LOCKED",
+] as const;
+
+const STATE_LABEL: Record<string, string> = {
+  INBOX: "Inbox",
+  IN_PROGRESS: "Dikerjakan",
+  WAITING_APJ: "Menunggu APJ",
+  WAITING_CLIENT: "Menunggu Klien",
+  REVISION: "Revisi",
+  LOCKED: "Locked / Siap Cetak",
+};
+
+const STATE_VARIANT: Record<string, "neutral" | "info" | "warning" | "critical" | "success" | "purple"> = {
+  INBOX: "neutral",
+  IN_PROGRESS: "info",
+  WAITING_APJ: "purple",
+  WAITING_CLIENT: "warning",
+  REVISION: "critical",
+  LOCKED: "success",
+};
+
+const TASK_TYPES = ["PACKAGING", "PRINTING", "LABEL", "OTHER"] as const;
+
+function formatDate(value?: string | null) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toISOString().slice(0, 10);
+}
+
+function unwrapList(payload: any): any[] {
+  const list = payload?.data?.data || payload?.data || payload;
+  if (Array.isArray(list)) return list;
+  if (Array.isArray(list?.data)) return list.data;
+  return [];
+}
 
 function DesignManageContent() {
   const searchParams = useSearchParams();
-  const [designs, setDesigns] = useState<PackagingDesign[]>(INITIAL_DESIGNS);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [picFilter, setPicFilter] = useState("ALL");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedDesign, setSelectedDesign] = useState<PackagingDesign | null>(null);
+  const [selectedDesign, setSelectedDesign] = useState<DesignTask | null>(null);
   const toast = useDnaToast();
 
-  // Create Form State
-  const [formData, setFormData] = useState({
-    salesOrderCode: "SO-2026-0055",
-    brandProduct: "",
-    designerPic: "Mas Edi (Creative Lead)",
-    bpomNumber: "",
-    batchNumber: "LOT-FG-2609-005",
-    expiredDate: "2028-11-01",
-    revisionVersion: "V1.0",
-    notes: ""
+  const {
+    data = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery<DesignTask[]>({
+    queryKey: ["creative-tasks"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/creative/tasks");
+        return unwrapList(res.data).map(
+          (item: any): DesignTask => ({
+            id: item.id,
+            brief: item.brief || "—",
+            taskType: item.taskType || null,
+            kanbanState: item.kanbanState || "INBOX",
+            revisionCount: Number(item.revisionCount ?? 0),
+            isLocked: Boolean(item.isLocked),
+            isFinal: Boolean(item.isFinal),
+            slaDeadline: item.slaDeadline || null,
+            finalArtworkUrl: item.finalArtworkUrl || null,
+            finalMockupUrl: item.finalMockupUrl || null,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            lead: item.lead
+              ? {
+                  id: item.lead.id,
+                  clientName: item.lead.clientName || "—",
+                  brandName: item.lead.brandName || null,
+                  productInterest: item.lead.productInterest || null,
+                }
+              : null,
+            versions: Array.isArray(item.versions)
+              ? item.versions.map((v: any) => ({
+                  id: v.id,
+                  versionNumber: Number(v.versionNumber ?? 0),
+                  artworkUrl: v.artworkUrl || null,
+                  mockupUrl: v.mockupUrl || null,
+                }))
+              : [],
+          })
+        );
+      } catch {
+        return [];
+      }
+    },
   });
 
-  // Handle URL action=create
+  // Sales order picker for the create form (drives leadId server-side).
+  const { data: salesOrders = [] } = useQuery<AvailableSalesOrder[]>({
+    queryKey: ["creative-available-sales-orders"],
+    enabled: isCreateModalOpen,
+    queryFn: async () => {
+      try {
+        const res = await api.get("/creative/available-sales-orders");
+        return unwrapList(res.data).map(
+          (so: any): AvailableSalesOrder => ({
+            id: so.id,
+            orderNumber: so.orderNumber || "—",
+            leadId: so.leadId,
+            brandName: so.brandName || null,
+            lead: so.lead
+              ? { clientName: so.lead.clientName || "—", brandName: so.lead.brandName || null }
+              : null,
+          })
+        );
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const [formData, setFormData] = useState({
+    soId: "",
+    brief: "",
+    taskType: "PACKAGING" as (typeof TASK_TYPES)[number],
+  });
+
   useEffect(() => {
     if (searchParams.get("action") === "create") {
       setIsCreateModalOpen(true);
     }
   }, [searchParams]);
 
-  // Filtering
-  const filteredDesigns = useMemo(() => {
-    return designs.filter((d) => {
-      const q = searchQuery.toLowerCase();
-      const matchesSearch =
-        !searchQuery ||
-        d.designCode.toLowerCase().includes(q) ||
-        d.salesOrderCode.toLowerCase().includes(q) ||
-        d.brandProduct.toLowerCase().includes(q) ||
-        d.bpomNumber.toLowerCase().includes(q) ||
-        d.designerPic.toLowerCase().includes(q);
-
-      const matchesStatus =
-        statusFilter === "ALL" ||
-        (statusFilter === "APPROVED" && d.busdevApproval === "APPROVED" && d.purchaseApproval === "APPROVED") ||
-        (statusFilter === "PENDING" && (d.busdevApproval === "PENDING" || d.purchaseApproval === "PENDING")) ||
-        (statusFilter === "REJECTED" && (d.busdevApproval === "REJECTED" || d.purchaseApproval === "REJECTED"));
-
-      const matchesPic =
-        picFilter === "ALL" || d.designerPic.includes(picFilter);
-
-      return matchesSearch && matchesStatus && matchesPic;
-    });
-  }, [designs, searchQuery, statusFilter, picFilter]);
-
-  // KPIs (1:1 G-SERP Row 134)
-  const totalBerjalan = designs.length;
-  const menungguApproval = designs.filter(
-    (d) => d.busdevApproval === "PENDING" || d.purchaseApproval === "PENDING"
-  ).length;
-  const disetujui = designs.filter(
-    (d) => d.busdevApproval === "APPROVED" && d.purchaseApproval === "APPROVED"
-  ).length;
-  const perluRevisi = designs.filter(
-    (d) => d.busdevApproval === "REJECTED" || d.purchaseApproval === "REJECTED"
-  ).length;
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const so = salesOrders.find((s) => s.id === formData.soId);
+      if (!so) throw new Error("Pilih Sales Order terlebih dahulu.");
+      const res = await api.post("/creative/task", {
+        leadId: so.leadId,
+        soId: so.id,
+        brief: formData.brief,
+        taskType: formData.taskType,
+      });
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["creative-tasks"] });
+      setIsCreateModalOpen(false);
+      setFormData({ soId: "", brief: "", taskType: "PACKAGING" });
+      toast.success("Desain Berhasil Dibuat", "Task desain masuk ke papan Creative.");
+    },
+    onError: (error) => {
+      const { message } = extractApiError(error);
+      toast.error("Gagal Membuat Desain", message || "Task desain tidak dapat dibuat.");
+    },
+  });
 
   const handleSaveDesign = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.brandProduct || !formData.bpomNumber) {
-      toast.warning("Lengkapi Data", "Brand/Produk dan Nomor BPOM wajib diisi.");
+    if (!formData.soId) {
+      toast.warning("Lengkapi Data", "Sales Order wajib dipilih.");
       return;
     }
-
-    const newDesign: PackagingDesign = {
-      id: `des-${Date.now()}`,
-      designCode: `DSN-2026-${String(designs.length + 1).padStart(3, "0")}`,
-      salesOrderCode: formData.salesOrderCode,
-      brandProduct: formData.brandProduct,
-      designerPic: formData.designerPic,
-      batchNumber: formData.batchNumber,
-      expiredDate: formData.expiredDate,
-      revisionVersion: formData.revisionVersion,
-      bpomNumber: formData.bpomNumber,
-      busdevApproval: "PENDING",
-      purchaseApproval: "PENDING",
-      packagingPhoto: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=200",
-      notes: formData.notes
-    };
-
-    setDesigns([newDesign, ...designs]);
-    setIsCreateModalOpen(false);
-    setFormData({
-      salesOrderCode: "SO-2026-0056",
-      brandProduct: "",
-      designerPic: "Mas Edi (Creative Lead)",
-      bpomNumber: "",
-      batchNumber: "LOT-FG-2609-006",
-      expiredDate: "2028-11-01",
-      revisionVersion: "V1.0",
-      notes: ""
-    });
-    toast.success("Desain Berhasil Dibuat", "Desain diteruskan ke BusDev & Purchase untuk dual-approval.");
-  };
-
-  const handleApproval = (id: string, role: "BUSDEV" | "PURCHASE", approved: boolean) => {
-    setDesigns(
-      designs.map((d) => {
-        if (d.id === id) {
-          return {
-            ...d,
-            [role === "BUSDEV" ? "busdevApproval" : "purchaseApproval"]: approved ? "APPROVED" : "REJECTED"
-          };
-        }
-        return d;
-      })
-    );
-    toast.success(
-      approved ? `Approval ${role} Disetujui` : `Desain Ditolak oleh ${role}`,
-      `Status approval desain kemasan diperbarui.`
-    );
-    if (selectedDesign && selectedDesign.id === id) {
-      setSelectedDesign({
-        ...selectedDesign,
-        [role === "BUSDEV" ? "busdevApproval" : "purchaseApproval"]: approved ? "APPROVED" : "REJECTED"
-      });
+    if (formData.brief.trim().length < 3) {
+      toast.warning("Lengkapi Data", "Brief desain wajib diisi.");
+      return;
     }
+    createMutation.mutate();
   };
+
+  const filteredDesigns = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return data.filter((d) => {
+      const matchesSearch =
+        !searchQuery ||
+        d.brief.toLowerCase().includes(q) ||
+        (d.lead?.clientName || "").toLowerCase().includes(q) ||
+        (d.lead?.brandName || "").toLowerCase().includes(q) ||
+        (d.lead?.productInterest || "").toLowerCase().includes(q);
+
+      const matchesStatus =
+        statusFilter === "ALL" ||
+        (statusFilter === "REVISION"
+          ? d.kanbanState === "REVISION" || d.revisionCount > 0
+          : d.kanbanState === statusFilter);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [data, searchQuery, statusFilter]);
+
+  const totalBerjalan = data.length;
+  const menungguApproval = data.filter(
+    (d) => d.kanbanState === "WAITING_APJ" || d.kanbanState === "WAITING_CLIENT"
+  ).length;
+  const disetujui = data.filter((d) => d.isLocked || d.isFinal).length;
+  const perluRevisi = data.filter((d) => d.kanbanState === "REVISION" || d.revisionCount > 0).length;
+
+  if (isLoading) {
+    return (
+      <DnaPageContainer>
+        <DnaPageHeader
+          title="Kelola Desain & Kemasan"
+          description="Memuat task desain dari modul Creative."
+        />
+        <DnaLoadingSkeleton rows={6} />
+      </DnaPageContainer>
+    );
+  }
+
+  if (isError) {
+    return (
+      <DnaPageContainer>
+        <DnaPageHeader title="Kelola Desain & Kemasan" description="Task desain kemasan maklon." />
+        <DnaErrorState
+          title="Gagal Memuat Desain"
+          message="Tidak dapat mengambil data dari /creative/tasks."
+          onRetry={() => refetch()}
+        />
+      </DnaPageContainer>
+    );
+  }
 
   return (
     <DnaPageContainer>
-      {/* 1. Header Page */}
       <DnaPageHeader
         title="Kelola Desain & Kemasan"
-        description="Pemeriksaan kelayakan cetak kemasan maklon kosmetik, nomor notifikasi BPOM NA, batch/exp date, dan Dual Approval BusDev & Purchase (Poin 68-74)."
+        description="Task desain kemasan dari modul Creative: status papan kanban, revisi, dan versi artwork terakhir. Persetujuan APJ/klien dilakukan di papan Creative."
         breadcrumbs={[
           { label: "Operasional", href: "/dashboard-rnd" },
-          { label: "Pra Produksi", href: "/design-manage" },
-          { label: "Kelola Desain", href: "/design-manage" }
+          { label: "Pra Produksi", href: "/samples/design" },
+          { label: "Kelola Desain", href: "/samples/design" },
         ]}
         actions={
           <div className="flex items-center gap-2">
-            <DnaButton
-              variant="secondary"
-              onClick={() => toast.success("Export Excel", "Data rekapitulasi desain kemasan berhasil diunduh.")}
-            >
-              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
-              Export Excel
+            <DnaButton variant="secondary" onClick={() => refetch()}>
+              <RefreshCw className="w-4 h-4 mr-1.5" />
+              Muat Ulang
             </DnaButton>
             <DnaButton variant="primary" onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="w-4 h-4 mr-1.5" />
@@ -275,168 +327,150 @@ function DesignManageContent() {
         }
       />
 
-      {/* 2. 4 KPI Cards (1:1 G-SERP Row 134) */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          label="TOTAL DESAIN BERJALAN"
-          value={`${totalBerjalan} Desain`}
-          subValue="Dokumen Kemasan Terdaftar"
+          label="TOTAL TASK DESAIN"
+          value={`${totalBerjalan} Task`}
+          subValue="Seluruh task pada papan Creative"
           icon={<Palette className="w-5 h-5 text-blue-600" />}
         />
         <DnaStatCard
-          label="MENUNGGU APPROVAL"
-          value={`${menungguApproval} Desain`}
-          subValue="Dual-Gate BusDev & Purchase"
+          label="MENUNGGU PERSETUJUAN"
+          value={`${menungguApproval} Task`}
+          subValue="Status WAITING_APJ & WAITING_CLIENT"
           icon={<Clock className="w-5 h-5 text-amber-600" />}
         />
         <DnaStatCard
-          label="DESAIN DISETUJUI"
+          label="DESAIN FINAL / LOCKED"
           value={`${disetujui} Siap Cetak`}
-          subValue="Lolos Verifikasi BPOM & Cetak"
+          subValue="Approved oleh klien (isFinal / isLocked)"
           icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
         />
         <DnaStatCard
-          label="DESAIN PERLU REVISI"
-          value={`${perluRevisi} Revisi`}
-          subValue="Catatan Revisi Artwork"
+          label="PERNAH DIREVISI"
+          value={`${perluRevisi} Task`}
+          subValue="revisionCount > 0 atau status REVISION"
           icon={<AlertTriangle className="w-5 h-5 text-rose-600" />}
         />
       </DnaKpiGrid>
 
-      {/* 3. DataTable (1:1 G-SERP Row 134 — EXACT 12 COLUMNS) */}
       <DnaDataTableCard
-        title="Daftar Desain Kemasan & Status Approval"
-        description="Spesifikasi cetak kemasan maklon kosmetik sesuai nomor registrasi BPOM dan standar CPKB."
+        title="Daftar Task Desain Kemasan"
+        description="Brief, klien/brand, versi artwork terakhir, dan batas SLA dari modul Creative."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari kode desain, SO, brand/produk, BPOM, PIC..."
+        searchPlaceholder="Cari brief, klien, brand, atau produk..."
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 font-bold text-slate-700 focus:outline-none"
-            >
-              <option value="ALL">Semua Status Approval</option>
-              <option value="APPROVED">Disetujui (Print Ready)</option>
-              <option value="PENDING">Menunggu Approval</option>
-              <option value="REJECTED">Perlu Revisi</option>
-            </select>
-            <select
-              value={picFilter}
-              onChange={(e) => setPicFilter(e.target.value)}
-              className="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 font-bold text-slate-700 focus:outline-none"
-            >
-              <option value="ALL">Semua PIC Desain</option>
-              <option value="Mas Edi">Mas Edi (Creative Lead)</option>
-              <option value="Creative Team">Creative Team</option>
-            </select>
-          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 font-bold text-slate-700 focus:outline-none"
+          >
+            <option value="ALL">Semua Status</option>
+            {KANBAN_STATES.map((s) => (
+              <option key={s} value={s}>
+                {STATE_LABEL[s]}
+              </option>
+            ))}
+            <option value="REVISION">Revisi (rev &gt; 0)</option>
+          </select>
         }
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200 font-bold text-slate-600 uppercase tracking-wider text-[10.5px]">
-              <tr>
-                <th className="py-3 px-3 text-center w-10">#</th>
-                <th className="py-3 px-3 w-28">Kode Desain</th>
-                <th className="py-3 px-3 w-28">Sales Order</th>
-                <th className="py-3 px-3">Brand / Produk</th>
-                <th className="py-3 px-3 w-36">PIC Desain</th>
-                <th className="py-3 px-3 w-28">No. Batch</th>
-                <th className="py-3 px-3 w-24">Expired Date</th>
-                <th className="py-3 px-3 text-center w-20">Versi Revisi</th>
-                <th className="py-3 px-3 w-32">Status BPOM</th>
-                <th className="py-3 px-3 text-center w-36">Approval (BD & PO)</th>
-                <th className="py-3 px-3 text-center w-20">Foto Kemasan</th>
-                <th className="py-3 px-3 text-center w-16">#</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredDesigns.length === 0 ? (
-                <tr>
-                  <td colSpan={12} className="py-8 text-center text-slate-400">
-                    Tidak ada dokumen desain kemasan yang sesuai.
-                  </td>
-                </tr>
-              ) : (
-                filteredDesigns.map((row, idx) => (
-                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-3 text-center text-slate-400 font-bold">{idx + 1}</td>
-                    <td className="py-3 px-3 font-mono font-bold text-blue-600">{row.designCode}</td>
-                    <td className="py-3 px-3 font-mono font-bold text-slate-800">{row.salesOrderCode}</td>
-                    <td className="py-3 px-3 font-semibold text-slate-900">{row.brandProduct}</td>
-                    <td className="py-3 px-3 text-slate-700 font-medium">{row.designerPic}</td>
-                    <td className="py-3 px-3 font-mono text-slate-700">{row.batchNumber}</td>
-                    <td className="py-3 px-3 font-mono text-slate-600">{row.expiredDate}</td>
-                    <td className="py-3 px-3 text-center">
-                      <span className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded font-mono font-bold text-slate-800">
-                        {row.revisionVersion}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 font-mono text-slate-800 font-bold">{row.bpomNumber}</td>
-                    <td className="py-3 px-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            row.busdevApproval === "APPROVED"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : row.busdevApproval === "PENDING"
-                              ? "bg-amber-100 text-amber-800"
-                              : "bg-rose-100 text-rose-800"
-                          }`}
-                          title="Approval BusDev"
-                        >
-                          BD: {row.busdevApproval}
+        {data.length === 0 ? (
+          <DnaEmptyState
+            title="Belum Ada Task Desain"
+            description="Belum ada task desain pada modul Creative. Gunakan tombol Buat Desain Baru untuk membuat task dari Sales Order."
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh className="py-3 px-3 text-center w-10">#</DnaTh>
+                  <DnaTh className="py-3 px-3">Brief / Produk</DnaTh>
+                  <DnaTh className="py-3 px-3 w-44">Klien / Brand</DnaTh>
+                  <DnaTh className="py-3 px-3 w-32">Tipe Task</DnaTh>
+                  <DnaTh className="py-3 px-3 text-center w-32">Status Papan</DnaTh>
+                  <DnaTh className="py-3 px-3 text-center w-24">Versi</DnaTh>
+                  <DnaTh className="py-3 px-3 text-center w-24">Revisi</DnaTh>
+                  <DnaTh className="py-3 px-3 w-28">Batas SLA</DnaTh>
+                  <DnaTh className="py-3 px-3 text-center w-20">Artwork</DnaTh>
+                  <DnaTh className="py-3 px-3 text-center w-16">#</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
+                {filteredDesigns.length === 0 ? (
+                  <DnaTableRow>
+                    <DnaTd colSpan={10} className="py-8 text-center text-slate-400">
+                      Tidak ada task desain yang sesuai filter.
+                    </DnaTd>
+                  </DnaTableRow>
+                ) : (
+                  filteredDesigns.map((row, idx) => (
+                    <DnaTableRow key={row.id} className="hover:bg-slate-50/70 transition-colors">
+                      <DnaTd className="py-3 px-3 text-center text-slate-400 font-bold">{idx + 1}</DnaTd>
+                      <DnaTd className="py-3 px-3">
+                        <span className="font-semibold text-slate-900 block truncate max-w-sm">{row.brief}</span>
+                        <span className="text-[11px] text-slate-500">
+                          {row.lead?.productInterest || "Produk belum ditentukan"}
                         </span>
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            row.purchaseApproval === "APPROVED"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : row.purchaseApproval === "PENDING"
-                              ? "bg-amber-100 text-amber-800"
-                              : "bg-rose-100 text-rose-800"
-                          }`}
-                          title="Approval Purchase"
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3">
+                        <span className="font-semibold text-slate-800 block">{row.lead?.clientName || "—"}</span>
+                        <span className="text-[11px] text-slate-500">{row.lead?.brandName || "—"}</span>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-slate-700 font-medium">{row.taskType || "—"}</DnaTd>
+                      <DnaTd className="py-3 px-3 text-center">
+                        <DnaBadge variant={STATE_VARIANT[row.kanbanState] || "neutral"}>
+                          {STATE_LABEL[row.kanbanState] || row.kanbanState}
+                        </DnaBadge>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-center tabular-nums font-bold text-slate-800">
+                        {row.versions[0]?.versionNumber ? `V${row.versions[0].versionNumber}` : "—"}
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-center tabular-nums font-bold text-slate-700">
+                        {row.revisionCount}
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 tabular-nums text-slate-600">
+                        {formatDate(row.slaDeadline)}
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-center">
+                        <button
+                          onClick={() => setSelectedDesign(row)}
+                          className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-blue-600 inline-flex items-center justify-center"
+                          title="Lihat artwork & detail"
                         >
-                          PO: {row.purchaseApproval}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <button
-                        onClick={() => setSelectedDesign(row)}
-                        className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-blue-600 inline-flex items-center justify-center"
-                        title="Lihat Foto Kemasan Acuan"
-                      >
-                        <Camera className="w-4 h-4" />
-                      </button>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <button
-                        onClick={() => setSelectedDesign(row)}
-                        className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
-                        title="Detail & Dual Approval"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                          <Camera className="w-4 h-4" />
+                        </button>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-center">
+                        <button
+                          onClick={() => setSelectedDesign(row)}
+                          className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                          title="Detail task desain"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </DnaTd>
+                    </DnaTableRow>
+                  ))
+                )}
+              </DnaTableBody>
+            </DnaTable>
+          </div>
+        )}
       </DnaDataTableCard>
 
-      {/* 4. Modal Buat Desain Baru (SCR-135 / ?action=create) */}
+      {/* Modal Buat Desain Baru (POST /creative/task) */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <h3 className="font-bold text-slate-800 text-base">Buat / Revisi Desain Kemasan</h3>
-                <p className="text-xs text-slate-500">Pendaftaran dokumen artwork kemasan maklon kosmetik (Poin 71-74)</p>
+                <h3 className="font-bold text-slate-800 text-base">Buat Task Desain Kemasan</h3>
+                <p className="text-xs text-slate-500">
+                  Task dibuat dari Sales Order aktif; leadId dan batas SLA ditetapkan server.
+                </p>
               </div>
               <button onClick={() => setIsCreateModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
@@ -444,106 +478,61 @@ function DesignManageContent() {
             </div>
 
             <form onSubmit={handleSaveDesign} className="space-y-3.5 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="font-bold text-slate-600 block mb-1">
-                    Nomor Sales Order <span className="text-rose-500">*</span>
-                  </label>
-                  <Input
-                    required
-                    value={formData.salesOrderCode}
-                    onChange={(e) => setFormData({ ...formData, salesOrderCode: e.target.value })}
-                    className="h-8 text-xs font-mono font-bold"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-600 block mb-1">
-                    PIC Desain <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    value={formData.designerPic}
-                    onChange={(e) => setFormData({ ...formData, designerPic: e.target.value })}
-                    className="w-full h-8 text-xs bg-white border border-slate-200 rounded-lg px-2 font-medium"
-                  >
-                    <option value="Mas Edi (Creative Lead)">Mas Edi (Creative Lead)</option>
-                    <option value="Creative Team">Creative Team</option>
-                  </select>
-                </div>
+              <div>
+                <label className="font-bold text-slate-600 block mb-1">
+                  Sales Order <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  required
+                  value={formData.soId}
+                  onChange={(e) => setFormData({ ...formData, soId: e.target.value })}
+                  className="w-full h-8 text-xs bg-white border border-slate-200 rounded-lg px-2 font-medium"
+                >
+                  <option value="">— Pilih Sales Order —</option>
+                  {salesOrders.map((so) => (
+                    <option key={so.id} value={so.id}>
+                      {so.orderNumber} • {so.lead?.clientName || "—"} ({so.brandName || so.lead?.brandName || "—"})
+                    </option>
+                  ))}
+                </select>
+                {salesOrders.length === 0 && (
+                  <p className="text-[11px] text-amber-700 mt-1">
+                    Tidak ada Sales Order aktif (PENDING_DP / ACTIVE) yang dapat dipilih, atau Anda tidak
+                    memiliki akses ke daftar ini.
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="font-bold text-slate-600 block mb-1">
-                  Brand & Nama Produk <span className="text-rose-500">*</span>
+                  Tipe Task <span className="text-rose-500">*</span>
                 </label>
-                <Input
-                  required
-                  placeholder="Contoh: GlowAura - Brightening Serum 30ml"
-                  value={formData.brandProduct}
-                  onChange={(e) => setFormData({ ...formData, brandProduct: e.target.value })}
-                  className="h-8 text-xs"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="font-bold text-slate-600 block mb-1">
-                    Nomor BPOM NA <span className="text-rose-500">*</span>
-                  </label>
-                  <Input
-                    required
-                    placeholder="NA182601..."
-                    value={formData.bpomNumber}
-                    onChange={(e) => setFormData({ ...formData, bpomNumber: e.target.value })}
-                    className="h-8 text-xs font-mono font-bold"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-600 block mb-1">
-                    Batch Number <span className="text-rose-500">*</span>
-                  </label>
-                  <Input
-                    required
-                    value={formData.batchNumber}
-                    onChange={(e) => setFormData({ ...formData, batchNumber: e.target.value })}
-                    className="h-8 text-xs font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-600 block mb-1">
-                    Expired Date <span className="text-rose-500">*</span>
-                  </label>
-                  <Input
-                    type="date"
-                    required
-                    value={formData.expiredDate}
-                    onChange={(e) => setFormData({ ...formData, expiredDate: e.target.value })}
-                    className="h-8 text-xs font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="font-bold text-slate-600 block mb-1">Versi Revisi</label>
-                  <Input
-                    value={formData.revisionVersion}
-                    onChange={(e) => setFormData({ ...formData, revisionVersion: e.target.value })}
-                    className="h-8 text-xs font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-600 block mb-1">Upload Acuan Kemasan</label>
-                  <Input type="file" className="h-8 text-xs" />
-                </div>
+                <select
+                  value={formData.taskType}
+                  onChange={(e) =>
+                    setFormData({ ...formData, taskType: e.target.value as (typeof TASK_TYPES)[number] })
+                  }
+                  className="w-full h-8 text-xs bg-white border border-slate-200 rounded-lg px-2 font-medium"
+                >
+                  {TASK_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
-                <label className="font-bold text-slate-600 block mb-1">Catatan Tambahan</label>
-                <Input
-                  placeholder="Informasi foil, ukuran die-cut, atau catatan finishing..."
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="h-8 text-xs"
+                <label className="font-bold text-slate-600 block mb-1">
+                  Brief Desain <span className="text-rose-500">*</span>
+                </label>
+                <DnaTextarea
+                  required
+                  rows={4}
+                  placeholder="Contoh: Label 85x35mm, inner box foil emas, klaim dermatologis sesuai arahan regulasi..."
+                  value={formData.brief}
+                  onChange={(e) => setFormData({ ...formData, brief: e.target.value })}
+                  className="text-xs"
                 />
               </div>
 
@@ -551,8 +540,8 @@ function DesignManageContent() {
                 <DnaButton type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
                   Kembali
                 </DnaButton>
-                <DnaButton type="submit" variant="primary">
-                  Simpan Draft & Ajukan Approval
+                <DnaButton type="submit" variant="primary" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? "Menyimpan..." : "Simpan Task Desain"}
                 </DnaButton>
               </div>
             </form>
@@ -560,14 +549,18 @@ function DesignManageContent() {
         </div>
       )}
 
-      {/* 5. Modal Detail & Dual Approval BusDev & Purchase */}
+      {/* Modal Detail Task Desain */}
       {selectedDesign && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <h3 className="font-bold text-slate-800 text-base">{selectedDesign.brandProduct}</h3>
-                <p className="text-xs font-mono text-blue-600">{selectedDesign.designCode} • {selectedDesign.salesOrderCode}</p>
+                <h3 className="font-bold text-slate-800 text-base">
+                  {selectedDesign.lead?.brandName || selectedDesign.lead?.clientName || "Task Desain"}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {selectedDesign.lead?.clientName || "—"} • {selectedDesign.taskType || "—"}
+                </p>
               </div>
               <button onClick={() => setSelectedDesign(null)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
@@ -576,76 +569,80 @@ function DesignManageContent() {
 
             <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
               <div>
-                <span className="text-slate-400 font-bold block">Nomor BPOM NA:</span>
-                <span className="font-mono font-bold text-slate-900">{selectedDesign.bpomNumber}</span>
+                <span className="text-slate-400 font-bold block">Status Papan:</span>
+                <DnaBadge variant={STATE_VARIANT[selectedDesign.kanbanState] || "neutral"}>
+                  {STATE_LABEL[selectedDesign.kanbanState] || selectedDesign.kanbanState}
+                </DnaBadge>
               </div>
               <div>
-                <span className="text-slate-400 font-bold block">Batch / Exp Date:</span>
-                <span className="font-mono text-slate-800">{selectedDesign.batchNumber} / {selectedDesign.expiredDate}</span>
+                <span className="text-slate-400 font-bold block">Versi Artwork Terakhir:</span>
+                <span className="tabular-nums font-bold text-slate-900">
+                  {selectedDesign.versions[0]?.versionNumber
+                    ? `V${selectedDesign.versions[0].versionNumber}`
+                    : "Belum ada versi"}
+                </span>
               </div>
               <div>
-                <span className="text-slate-400 font-bold block">PIC Desain:</span>
-                <span className="font-medium text-slate-800">{selectedDesign.designerPic}</span>
+                <span className="text-slate-400 font-bold block">Jumlah Revisi:</span>
+                <span className="tabular-nums font-bold text-slate-900">{selectedDesign.revisionCount}x</span>
               </div>
               <div>
-                <span className="text-slate-400 font-bold block">Versi Revisi:</span>
-                <span className="font-mono font-bold text-indigo-600">{selectedDesign.revisionVersion}</span>
+                <span className="text-slate-400 font-bold block">Batas SLA:</span>
+                <span className="tabular-nums text-slate-800 inline-flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  {formatDate(selectedDesign.slaDeadline)}
+                </span>
               </div>
               <div className="col-span-2">
-                <span className="text-slate-400 font-bold block">Catatan Produksi & Cetak:</span>
-                <span className="text-slate-700">{selectedDesign.notes || "-"}</span>
+                <span className="text-slate-400 font-bold block">Produk Diminati:</span>
+                <span className="text-slate-800">{selectedDesign.lead?.productInterest || "—"}</span>
               </div>
             </div>
 
-            {/* Dual Approval Gatekeeper */}
-            <div className="border border-slate-200 rounded-xl p-3.5 space-y-3">
-              <span className="text-xs font-bold text-slate-800 block">Dual Approval Gatekeeper (Poin 68-74):</span>
-              <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg">
-                <div>
-                  <span className="font-bold text-xs text-slate-700">1. Approval BusDev:</span>
-                  <p className="text-[11px] text-slate-500">Status: {selectedDesign.busdevApproval}</p>
-                </div>
-                <div className="flex gap-1.5">
-                  <DnaButton
-                    size="sm"
-                    variant={selectedDesign.busdevApproval === "APPROVED" ? "primary" : "outline"}
-                    onClick={() => handleApproval(selectedDesign.id, "BUSDEV", true)}
-                  >
-                    Approve
-                  </DnaButton>
-                  <DnaButton
-                    size="sm"
-                    variant={selectedDesign.busdevApproval === "REJECTED" ? "danger" : "outline"}
-                    onClick={() => handleApproval(selectedDesign.id, "BUSDEV", false)}
-                  >
-                    Reject
-                  </DnaButton>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg">
-                <div>
-                  <span className="font-bold text-xs text-slate-700">2. Approval Purchase:</span>
-                  <p className="text-[11px] text-slate-500">Status: {selectedDesign.purchaseApproval}</p>
-                </div>
-                <div className="flex gap-1.5">
-                  <DnaButton
-                    size="sm"
-                    variant={selectedDesign.purchaseApproval === "APPROVED" ? "primary" : "outline"}
-                    onClick={() => handleApproval(selectedDesign.id, "PURCHASE", true)}
-                  >
-                    Approve
-                  </DnaButton>
-                  <DnaButton
-                    size="sm"
-                    variant={selectedDesign.purchaseApproval === "REJECTED" ? "danger" : "outline"}
-                    onClick={() => handleApproval(selectedDesign.id, "PURCHASE", false)}
-                  >
-                    Reject
-                  </DnaButton>
-                </div>
-              </div>
+            <div className="border border-slate-200 rounded-xl p-3.5 space-y-1.5 text-xs">
+              <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-slate-400" /> Brief Desain
+              </span>
+              <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{selectedDesign.brief}</p>
             </div>
+
+            <div className="border border-slate-200 rounded-xl p-3.5 space-y-2 text-xs">
+              <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-slate-400" /> Berkas Artwork
+              </span>
+              {selectedDesign.finalArtworkUrl || selectedDesign.versions[0]?.artworkUrl ? (
+                <a
+                  href={selectedDesign.finalArtworkUrl || selectedDesign.versions[0]?.artworkUrl || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline font-medium inline-flex items-center gap-1"
+                >
+                  Buka master artwork
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              ) : (
+                <p className="text-slate-400 italic">Belum ada berkas artwork diunggah.</p>
+              )}
+              {selectedDesign.finalMockupUrl || selectedDesign.versions[0]?.mockupUrl ? (
+                <a
+                  href={selectedDesign.finalMockupUrl || selectedDesign.versions[0]?.mockupUrl || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline font-medium inline-flex items-center gap-1"
+                >
+                  Buka mockup preview
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              ) : null}
+            </div>
+
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Catatan: nomor notifikasi BPOM, nomor batch, tanggal kedaluwarsa, dan dual-approval
+              BusDev/Purchase tidak tersimpan pada modul Creative (<code className="font-mono">DesignTask</code>),
+              sehingga tidak ditampilkan. Persetujuan APJ dan klien dilakukan melalui papan Creative
+              (endpoint <code className="font-mono">/creative/task/:id/apj-review</code> dan
+              <code className="font-mono"> /client-review</code>) dan tercatat pada riwayat desain.
+            </p>
 
             <div className="flex justify-end gap-2 pt-2">
               <DnaButton variant="outline" onClick={() => setSelectedDesign(null)}>

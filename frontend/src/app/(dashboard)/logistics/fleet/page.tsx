@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Truck, 
@@ -14,13 +13,12 @@ import {
   Globe,
   Radar
 } from "lucide-react";
-import { DashboardCard } from "@/components/dna/DashboardCard";
 import { cn } from "@/lib/utils";
-import { DnaBadge, DnaButton } from "@/components/dna";
+import { DashboardCard, DnaBadge, DnaButton } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 export default function FleetControlCenter() {
-  const { data: fleet, isLoading } = useQuery({
+  const { data: fleet } = useQuery({
     queryKey: ["fleet-status"],
     queryFn: async () => {
       return [

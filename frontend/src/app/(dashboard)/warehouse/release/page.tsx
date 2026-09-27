@@ -2,30 +2,23 @@
 
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, extractApiError } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Truck,
   Plus,
-  Search,
-  Filter,
   Eye,
   CheckCircle2,
   Clock,
-  XCircle,
   FileSpreadsheet,
   AlertTriangle,
   Send,
-  Trash2,
   FileText,
   Boxes,
   MapPin,
-  ShieldCheck,
-  Package,
-  Calendar,
-  Building2,
   Lock,
-  Printer
+  Printer,
+  Package
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -36,12 +29,18 @@ import {
   DnaButton,
   DnaBadge,
   DnaModal,
-  DnaTabNav,
+  DnaDetailDrawer,
   DnaInput,
   DnaSelect,
   DnaTextarea,
   DnaTable,
-  useDnaToast
+  useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
 
 interface DeliveryItem {
@@ -66,7 +65,7 @@ interface DeliveryOrder {
   vehicleOrTrackingNo: string; // Plat nomor / No Resi
   totalBoxes: number;
   totalUnits: number;
-  financialGateStatus: "PAID" | "APPROVED_CREDIT" | "BLOCKED_UNPAID"; // Poin 2 & 134
+  financialGateStatus: "PAID" | "APPROVED_CREDIT" | "BLOCKED_UNPAID";
   deliveryStatus: "READY" | "IN_TRANSIT" | "DELIVERED" | "RETURNED";
   dispatchedBy: string;
   recipientName?: string;
@@ -75,146 +74,77 @@ interface DeliveryOrder {
   items: DeliveryItem[];
 }
 
-const INITIAL_DELIVERIES: DeliveryOrder[] = [
-  {
-    id: "del-1",
-    deliveryNumber: "SJ-202609-0012",
-    shipDate: "2026-09-09",
-    soNumber: "SO-202609-000002",
-    clientName: "PT Glow Beauty Sejahtera",
-    brandName: "Glow & Radiant Serum 20ml",
-    destinationAddress: "Ruko Grand Niaga Blok B-12, Kebon Jeruk, Jakarta Barat",
-    courierName: "Dakota Cargo (Truck Box)",
-    vehicleOrTrackingNo: "B-9812-UXD / RESI-DKT-991204",
-    totalBoxes: 24,
-    totalUnits: 5000,
-    financialGateStatus: "PAID",
-    deliveryStatus: "IN_TRANSIT",
-    dispatchedBy: "Bambang Sudiro (Logistics)",
-    notes: "Pengiriman batch 1 serum peptide lengkap sertifikat CoA & BPOM NA.",
-    items: [
-      {
-        id: "di-1",
-        itemCode: "PRD00108",
-        itemName: "Glow & Radiant Serum 20ml",
-        qtyShipped: 5000,
-        unit: "Pcs",
-        boxCount: 24,
-        batchNumber: "LOT-GLOW-2609-01"
-      }
-    ]
-  },
-  {
-    id: "del-2",
-    deliveryNumber: "SJ-202609-0011",
-    shipDate: "2026-09-08",
-    soNumber: "SO-202608-000045",
-    clientName: "CV Natura Herbal Nusantara",
-    brandName: "Acne Clear Facial Wash 100ml",
-    destinationAddress: "Jl. Diponegoro No. 88, Surabaya, Jawa Timur",
-    courierName: "J&T Cargo",
-    vehicleOrTrackingNo: "RESI-JTC-88120491",
-    totalBoxes: 15,
-    totalUnits: 3000,
-    financialGateStatus: "APPROVED_CREDIT",
-    deliveryStatus: "DELIVERED",
-    dispatchedBy: "Bambang Sudiro (Logistics)",
-    recipientName: "Bpk. Hendra (Gudang Surabaya)",
-    deliveredDate: "2026-09-09 14:20",
-    notes: "Terkirim utuh 15 karton dan diterima dalam kondisi baik tanpa reject.",
-    items: [
-      {
-        id: "di-2",
-        itemCode: "PRD00095",
-        itemName: "Acne Clear Facial Wash 100ml",
-        qtyShipped: 3000,
-        unit: "Pcs",
-        boxCount: 15,
-        batchNumber: "LOT-ACN-2608-04"
-      }
-    ]
-  },
-  {
-    id: "del-3",
-    deliveryNumber: "SJ-202609-0013",
-    shipDate: "2026-09-09",
-    soNumber: "SO-202609-000004",
-    clientName: "PT Cantika Skincare Utama",
-    brandName: "Moisturizer Gel Barrier 50g",
-    destinationAddress: "Kawasan Industri MM2100 Blok C-4, Cikarang, Bekasi",
-    courierName: "Driver Internal (Armada Blind Van Luthfi)",
-    vehicleOrTrackingNo: "B-9140-KLA",
-    totalBoxes: 10,
-    totalUnits: 2000,
-    financialGateStatus: "PAID",
-    deliveryStatus: "READY",
-    dispatchedBy: "Rahmat Hidayat (Logistics)",
-    notes: "Barang sudah dipacking kayu dan siap loading armada sore ini.",
-    items: [
-      {
-        id: "di-3",
-        itemCode: "PRD00120",
-        itemName: "Moisturizer Gel Barrier 50g",
-        qtyShipped: 2000,
-        unit: "Pcs",
-        boxCount: 10,
-        batchNumber: "LOT-MST-2609-02"
-      }
-    ]
-  },
-  {
-    id: "del-4",
-    deliveryNumber: "SJ-202609-0010",
-    shipDate: "2026-09-07",
-    soNumber: "SO-202608-000039",
-    clientName: "PT Derma Estetika Farma",
-    brandName: "Sunscreen Serum Gel SPF 50",
-    destinationAddress: "Jl. Malioboro No. 45, Yogyakarta",
-    courierName: "Panca Ekspedisi",
-    vehicleOrTrackingNo: "AB-8821-YX",
-    totalBoxes: 8,
-    totalUnits: 1500,
-    financialGateStatus: "BLOCKED_UNPAID",
-    deliveryStatus: "READY",
-    dispatchedBy: "Rahmat Hidayat (Logistics)",
-    notes: "Pengiriman DITAHAN (Financial Gate): Menunggu bukti transfer pelunasan 50% dari finance.",
-    items: [
-      {
-        id: "di-4",
-        itemCode: "PRD00077",
-        itemName: "Sunscreen Serum Gel SPF 50",
-        qtyShipped: 1500,
-        unit: "Pcs",
-        boxCount: 8,
-        batchNumber: "LOT-SUN-2608-01"
-      }
-    ]
-  }
-];
-
-const MOCK_READY_ORDERS = [
-  {
-    soNumber: "SO-202609-000008",
-    clientName: "PT Royal Beauty Care",
-    brandName: "Brightening Body Lotion 200ml",
-    destinationAddress: "Jl. Gatot Subroto No. 12, Bandung",
-    financialStatus: "PAID",
-    items: [
-      { itemCode: "PRD00130", itemName: "Brightening Body Lotion 200ml", qty: 4000, unit: "Pcs", boxCount: 20 }
-    ]
-  }
-];
-
 export default function GoodsReleasePage() {
   const toast = useDnaToast();
   const queryClient = useQueryClient();
-  const [dataList, setDataList] = useState<DeliveryOrder[]>(INITIAL_DELIVERIES);
+
+  const { data: rawShipments = [] } = useQuery({
+    queryKey: ["fulfillment-shipments"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/fulfillment/shipments");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: readyOrders = [] } = useQuery({
+    queryKey: ["commercial-ready-orders"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/commercial/sales-orders");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const liveDeliveries: DeliveryOrder[] = useMemo(() => {
+    if (!Array.isArray(rawShipments)) return [];
+    return rawShipments.map((s: any) => {
+      const items: DeliveryItem[] = (s.items || []).map((it: any, idx: number) => ({
+        id: it.id || `di-${idx}`,
+        itemCode: it.itemCode || it.productCode || "PRD",
+        itemName: it.itemName || it.productName || "Barang Jadi",
+        qtyShipped: Number(it.quantity || it.qty || 0),
+        unit: it.unit || "Pcs",
+        boxCount: Number(it.boxCount || 1),
+        batchNumber: it.batchNumber || "-",
+      }));
+
+      return {
+        id: s.id,
+        deliveryNumber: s.shipmentNumber || s.deliveryNumber || `SJ-${s.id.slice(0, 8).toUpperCase()}`,
+        shipDate: s.shippedAt ? new Date(s.shippedAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+        soNumber: s.soNumber || s.salesOrder?.soNumber || "SO-DIRECT",
+        clientName: s.clientName || s.salesOrder?.clientName || "Pelanggan Mitra",
+        brandName: s.brandName || s.salesOrder?.brandName || "Brand",
+        destinationAddress: s.destinationAddress || "Alamat Pengiriman",
+        courierName: s.courierName || s.carrier || "Ekspedisi Logistik",
+        vehicleOrTrackingNo: s.trackingNumber || s.vehicleNo || "-",
+        totalBoxes: items.reduce((sum, it) => sum + it.boxCount, 0),
+        totalUnits: items.reduce((sum, it) => sum + it.qtyShipped, 0),
+        financialGateStatus: (s.financialStatus || "PAID") as any,
+        deliveryStatus: (s.status || "READY") as any,
+        dispatchedBy: s.dispatchedBy || "Petugas Gudang",
+        deliveredDate: s.deliveredAt ? String(s.deliveredAt).split("T")[0] : undefined,
+        notes: s.notes || "Pengiriman barang jadi",
+        items,
+      };
+    });
+  }, [rawShipments]);
+
+  const [localCreated, setLocalCreated] = useState<DeliveryOrder[]>([]);
+
+  const dataList = useMemo(() => [...localCreated, ...liveDeliveries], [localCreated, liveDeliveries]);
 
   // Filters
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryOrder | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Form State
@@ -229,159 +159,117 @@ export default function GoodsReleasePage() {
   const kpis = useMemo(() => {
     const list = dataList;
     const totalDeliveries = list.length;
-    const readyCount = list.filter(d => d.deliveryStatus === "READY").length;
-    const inTransitCount = list.filter(d => d.deliveryStatus === "IN_TRANSIT").length;
-    const deliveredCount = list.filter(d => d.deliveryStatus === "DELIVERED").length;
+    const readyCount = list.filter((d) => d.deliveryStatus === "READY").length;
+    const inTransitCount = list.filter((d) => d.deliveryStatus === "IN_TRANSIT").length;
+    const deliveredCount = list.filter((d) => d.deliveryStatus === "DELIVERED").length;
 
     return {
       totalDeliveries,
       readyCount,
       inTransitCount,
-      deliveredCount
+      deliveredCount,
     };
   }, [dataList]);
 
   // Filtered List
   const filteredList = useMemo(() => {
-    return dataList.filter(item => {
+    return dataList.filter((item) => {
       const matchSearch =
         item.deliveryNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.soNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.brandName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.vehicleOrTrackingNo.toLowerCase().includes(searchQuery.toLowerCase());
+        item.courierName.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchTab =
         activeTab === "ALL" ? true :
-        activeTab === "READY" ? item.deliveryStatus === "READY" :
-        activeTab === "IN_TRANSIT" ? item.deliveryStatus === "IN_TRANSIT" :
-        activeTab === "DELIVERED" ? item.deliveryStatus === "DELIVERED" : true;
+        item.deliveryStatus === activeTab;
 
       return matchSearch && matchTab;
     });
   }, [dataList, searchQuery, activeTab]);
 
-  const handleSelectSo = (soNo: string) => {
-    setSelectedSoNumber(soNo);
-    const so = MOCK_READY_ORDERS.find(s => s.soNumber === soNo);
-    if (so) {
-      setDestinationAddress(so.destinationAddress);
-    } else {
-      setDestinationAddress("");
-    }
-  };
+  // PATCH /fulfillment/shipments/:id/status { status: "DELIVERED" }. The service stamps
+  // `deliveredAt` and, on DELIVERED, advances the linked sales order to SOStatus.COMPLETED.
+  //
+  // ponytail: the name of the person who received the goods is NOT sent — `model Shipment` has no
+  // recipient column and UpdateShipmentStatusDto carries only `status`. The old `prompt()` for a
+  // recipient name discarded whatever was typed. Add a column + DTO field when proof-of-delivery
+  // needs a named receiver.
+  const deliverMut = useMutation({
+    mutationFn: async (orderId: string) => unwrapResponse(await api.patch(`/fulfillment/shipments/${orderId}/status`, { status: "DELIVERED" })),
+    onSuccess: (_data, orderId) => {
+      toast.success("Status pengiriman berhasil diubah menjadi Selesai Diterima (DELIVERED)");
+      if (selectedDelivery?.id === orderId) setSelectedDelivery(null);
+      queryClient.invalidateQueries({ queryKey: ["fulfillment-shipments"] });
+    },
+    onError: (e) => toast.error(extractApiError(e).message),
+  });
+
+  const handleConfirmDelivered = (orderId: string) => deliverMut.mutate(orderId);
 
   const handleCreateDelivery = () => {
-    if (!selectedSoNumber) {
-      toast.error("Pilih Sales Order referensi");
-      return;
-    }
-    const so = MOCK_READY_ORDERS.find(s => s.soNumber === selectedSoNumber);
-    if (!so) return;
-
-    if (!vehicleOrTrackingNo.trim()) {
-      toast.error("Nomor Resi Ekspedisi / Plat Kendaraan wajib diisi");
-      return;
-    }
-
-    const newNo = `SJ-202609-00${String(dataList.length + 14).padStart(2, "0")}`;
-
-    const newDelivery: DeliveryOrder = {
-      id: `del-${Date.now()}`,
-      deliveryNumber: newNo,
-      shipDate,
-      soNumber: so.soNumber,
-      clientName: so.clientName,
-      brandName: so.brandName,
-      destinationAddress: destinationAddress || so.destinationAddress,
-      courierName,
-      vehicleOrTrackingNo,
-      totalBoxes: so.items.reduce((sum, i) => sum + i.boxCount, 0),
-      totalUnits: so.items.reduce((sum, i) => sum + i.qty, 0),
-      financialGateStatus: so.financialStatus as any,
-      deliveryStatus: "IN_TRANSIT",
-      dispatchedBy: "Logistics Officer (Anda)",
-      notes: formNotes || "Pengiriman produk jadi maklon resmi.",
-      items: so.items.map((i, idx) => ({
-        id: `di-${Date.now()}-${idx}`,
-        itemCode: i.itemCode,
-        itemName: i.itemName,
-        qtyShipped: i.qty,
-        unit: i.unit,
-        boxCount: i.boxCount,
-        batchNumber: `LOT-${Date.now().toString().slice(-4)}`
-      }))
-    };
-
-    setDataList([newDelivery, ...dataList]);
+    // POST /fulfillment/shipments exists, but CreateShipmentDto requires `soId` (@IsUUID) and
+    // `logisticsId` (@IsUUID). This modal holds an SO *number* and a free-text courier name, so
+    // neither UUID is available and the request would 400. Nothing is sent.
+    toast.warning(
+      "Surat jalan belum diterbitkan",
+      "Form belum dapat mengirim data: backend memerlukan UUID Sales Order dan UUID master logistik, sedangkan modal ini berisi nomor SO dan nama ekspedisi bebas.",
+    );
     setIsCreateOpen(false);
-    setSelectedSoNumber("");
-    setVehicleOrTrackingNo("");
-    setDestinationAddress("");
-    setFormNotes("");
-    toast.success(`Surat Jalan ${newNo} berhasil diterbitkan dan siap loading armada.`);
-  };
-
-  const handleConfirmDelivered = (id: string) => {
-    setDataList(dataList.map(item => {
-      if (item.id === id) {
-        return {
-          ...item,
-          deliveryStatus: "DELIVERED",
-          recipientName: "Klien / PIC Penerima",
-          deliveredDate: new Date().toLocaleString("id-ID")
-        };
-      }
-      return item;
-    }));
-    if (selectedDelivery && selectedDelivery.id === id) {
-      setSelectedDelivery({
-        ...selectedDelivery,
-        deliveryStatus: "DELIVERED",
-        deliveredDate: new Date().toLocaleString("id-ID")
-      });
-    }
-    toast.success("Status pengiriman berhasil diperbarui: Telah Diterima Klien.");
   };
 
   const getStatusBadge = (status: DeliveryOrder["deliveryStatus"]) => {
     switch (status) {
       case "READY":
-        return <DnaBadge variant="warning">Siap Loading</DnaBadge>;
+        return <DnaBadge variant="warning">Siap Kirim</DnaBadge>;
       case "IN_TRANSIT":
         return <DnaBadge variant="info">Dalam Perjalanan</DnaBadge>;
       case "DELIVERED":
-        return <DnaBadge variant="success">Telah Diterima</DnaBadge>;
+        return <DnaBadge variant="success">Terkirim (POD)</DnaBadge>;
       case "RETURNED":
         return <DnaBadge variant="critical">Retur Pengiriman</DnaBadge>;
     }
   };
 
-  const getFinancialGateBadge = (status: DeliveryOrder["financialGateStatus"]) => {
+  const getFinancialBadge = (status: DeliveryOrder["financialGateStatus"]) => {
     switch (status) {
       case "PAID":
-        return <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[10px] font-bold">LUNAS (Gate Pass)</span>;
+        return <DnaBadge variant="success">Lunas (Pass)</DnaBadge>;
       case "APPROVED_CREDIT":
-        return <span className="text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 text-[10px] font-bold">TOP Disetujui</span>;
+        return <DnaBadge variant="info">Kredit ACC</DnaBadge>;
       case "BLOCKED_UNPAID":
-        return <span className="text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 text-[10px] font-bold animate-pulse flex items-center gap-1"><Lock className="w-3 h-3 inline" /> Ditahan (Belum Lunas)</span>;
+        return <DnaBadge variant="critical">Terkunci (Belum Lunas)</DnaBadge>;
     }
   };
 
   return (
     <DnaPageContainer>
-      {/* Header */}
+      {/* Header with Top-Right Unified Tabs (Rule 2) */}
       <DnaPageHeader
-        title="Pengiriman Barang (Release & Delivery Out)"
-        description="Penerbitan Surat Jalan resmi, verifikasi Financial Gate pelunasan Sales Order, dan monitoring kurir/ekspedisi."
-        badge={<DnaBadge variant="neutral">SCR-086 / WH-DELIVERY</DnaBadge>}
+        title="Pengiriman Barang (Surat Jalan Release)"
+        description="Surat Jalan pengeluaran barang jadi dengan proteksi Financial Gate otomatis sebelum armada diberangkatkan."
+        badge={
+          <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 font-semibold">
+            <Truck className="w-3.5 h-3.5" />
+            <span>Financial Gate Protected</span>
+          </div>
+        }
+        tabs={[
+          { id: "ALL", label: "Semua Pengiriman", count: dataList.length },
+          { id: "READY", label: "Siap Kirim / Loading", count: dataList.filter((d) => d.deliveryStatus === "READY").length },
+          { id: "IN_TRANSIT", label: "Dalam Perjalanan", count: dataList.filter((d) => d.deliveryStatus === "IN_TRANSIT").length },
+          { id: "DELIVERED", label: "Selesai Diterima", count: dataList.filter((d) => d.deliveryStatus === "DELIVERED").length },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         actions={
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <DnaButton
               variant="outline"
               size="sm"
               icon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
-              onClick={() => toast.success("Data Pengiriman Barang diexport ke Excel")}
+              onClick={() => toast.success("Data Pengiriman diexport ke Excel")}
             >
               Export Excel
             </DnaButton>
@@ -391,7 +279,7 @@ export default function GoodsReleasePage() {
               icon={<Plus className="w-4 h-4" />}
               onClick={() => setIsCreateOpen(true)}
             >
-              + Buat Surat Jalan Pengiriman
+              + Buat Surat Jalan
             </DnaButton>
           </div>
         }
@@ -404,6 +292,7 @@ export default function GoodsReleasePage() {
           value={`${kpis.totalDeliveries} Pengiriman`}
           icon={<FileText className="w-5 h-5 text-indigo-600" />}
           delta={{ value: "+4 minggu ini", isPositive: true }}
+          variant="info"
         />
         <DnaStatCard
           label="Siap Loading / Dispatch"
@@ -412,248 +301,264 @@ export default function GoodsReleasePage() {
           variant={kpis.readyCount > 0 ? "warning" : "default"}
         />
         <DnaStatCard
-          label="Dalam Perjalanan (In Transit)"
+          label="Dalam Perjalanan"
           value={`${kpis.inTransitCount} Armada`}
           icon={<Truck className="w-5 h-5 text-blue-600" />}
+          variant="purple"
         />
         <DnaStatCard
-          label="Terkirim Sukses (Delivered)"
+          label="Terkirim Sukses (POD)"
           value={`${kpis.deliveredCount} Order`}
           icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+          variant="success"
         />
       </DnaKpiGrid>
 
-      {/* Navigation Tabs */}
-      <div className="mb-4">
-        <DnaTabNav
-          tabs={[
-            { id: "ALL", label: "Semua Pengiriman", count: dataList.length },
-            { id: "READY", label: "Siap Kirim / Loading", count: dataList.filter(d => d.deliveryStatus === "READY").length },
-            { id: "IN_TRANSIT", label: "Dalam Perjalanan", count: dataList.filter(d => d.deliveryStatus === "IN_TRANSIT").length },
-            { id: "DELIVERED", label: "Selesai Diterima", count: dataList.filter(d => d.deliveryStatus === "DELIVERED").length }
-          ]}
-          activeTab={activeTab}
-          onChange={setActiveTab}
-        />
-      </div>
-
-      {/* Main Table Card */}
+      {/* Main Table Card (Rule 1: No title prop, Rule 4: Clean responsive columns) */}
       <DnaDataTableCard
-        title="Daftar Surat Jalan Pengiriman Produk Jadi"
-        description="Surat Jalan pengeluaran barang terkunci otomatis jika status finansial belum lolos verifikasi (Poin 2 & 134)."
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari No Surat Jalan, SO, Klien, Brand, No Resi..."
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari No Surat Jalan, SO, Klien, Brand, No Resi...",
+        }}
       >
         <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left text-sm text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700 uppercase tracking-wider">
-              <tr>
-                <th className="py-3 px-4">No. Surat Jalan</th>
-                <th className="py-3 px-4">Tgl Kirim</th>
-                <th className="py-3 px-4">Klien & Brand Produk</th>
-                <th className="py-3 px-4">No. SO Referensi</th>
-                <th className="py-3 px-4">Ekspedisi & Resi / Plat</th>
-                <th className="py-3 px-4 text-center">Total Box</th>
-                <th className="py-3 px-4 text-right">Total Unit</th>
-                <th className="py-3 px-4">Financial Gate</th>
-                <th className="py-3 px-4">Status Kirim</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-normal">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="px-4 py-3 h-[40px] w-[140px]">No. Surat Jalan</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[110px]">Tgl Kirim</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Klien & Brand</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[130px]">No. SO</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Ekspedisi / Driver</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[110px]">Total Unit</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[100px]">Box Karton</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-center w-[130px]">Status</DnaTh>
+                <DnaTh className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredList.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-12 text-center text-slate-400">
                     <Truck className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada surat jalan pengiriman yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
-                filteredList.map((row) => {
-                  const isBlocked = row.financialGateStatus === "BLOCKED_UNPAID";
+                filteredList.map((row) => (
+                  <DnaTableRow
+                    key={row.id}
+                    onClick={() => setSelectedDelivery(row)}
+                    className="hover:bg-slate-50/60 transition-colors cursor-pointer group h-[48px]"
+                  >
+                    {/* Kolom 1: No. Surat Jalan */}
+                    <DnaTd className="px-4 py-2">
+                      <DnaCell.Code value={row.deliveryNumber} />
+                    </DnaTd>
 
-                  return (
-                    <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 font-mono font-bold text-indigo-600 text-xs">
-                        {row.deliveryNumber}
-                      </td>
-                      <td className="py-3 px-4 text-xs whitespace-nowrap">
-                        {row.shipDate}
-                      </td>
-                      <td className="py-3 px-4 text-xs">
-                        <div className="font-semibold text-slate-900">{row.clientName}</div>
-                        <div className="text-[11px] text-slate-500">{row.brandName}</div>
-                      </td>
-                      <td className="py-3 px-4 text-xs font-mono font-medium text-slate-900">
-                        {row.soNumber}
-                      </td>
-                      <td className="py-3 px-4 text-xs text-slate-800">
-                        <div className="font-medium">{row.courierName}</div>
-                        <div className="text-[11px] text-slate-500 font-mono">{row.vehicleOrTrackingNo}</div>
-                      </td>
-                      <td className="py-3 px-4 text-center text-xs font-semibold text-slate-800">
-                        {row.totalBoxes} Box
-                      </td>
-                      <td className="py-3 px-4 text-right text-xs font-mono font-bold text-indigo-700">
-                        {row.totalUnits.toLocaleString("id-ID")}
-                      </td>
-                      {/* Financial Gate Status */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        {getFinancialGateBadge(row.financialGateStatus)}
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
+                    {/* Kolom 2: Tgl Kirim */}
+                    <DnaTd className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                      {row.shipDate}
+                    </DnaTd>
+
+                    {/* Kolom 3: Klien & Brand (1 Natural Pair) */}
+                    <DnaTd className="px-3 py-2">
+                      <DnaCell.DoubleText
+                        primary={row.clientName}
+                        secondary={row.brandName}
+                      />
+                    </DnaTd>
+
+                    {/* Kolom 4: No. SO */}
+                    <DnaTd className="px-3 py-2">
+                      <DnaCell.Code value={row.soNumber} />
+                    </DnaTd>
+
+                    {/* Kolom 5: Ekspedisi / Driver */}
+                    <DnaTd className="px-3 py-2 text-slate-800 truncate max-w-[180px]">
+                      {row.courierName} ({row.vehicleOrTrackingNo})
+                    </DnaTd>
+
+                    {/* Kolom 6: Total Unit */}
+                    <DnaTd className="px-3 py-2 text-right">
+                      <DnaCell.Number
+                        value={row.totalUnits}
+                        unit="Unit"
+                      />
+                    </DnaTd>
+
+                    {/* Kolom 7: Box Karton */}
+                    <DnaTd className="px-3 py-2 text-right">
+                      <DnaCell.Number
+                        value={row.totalBoxes}
+                        unit="Box"
+                      />
+                    </DnaTd>
+
+                    {/* Kolom 8: Status */}
+                    <DnaTd className="px-3 py-2 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
                         {getStatusBadge(row.deliveryStatus)}
-                      </td>
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <DnaButton
-                            variant="ghost"
-                            size="sm"
-                            icon={<Eye className="w-3.5 h-3.5" />}
-                            onClick={() => {
-                              setSelectedDelivery(row);
-                              setIsDetailOpen(true);
-                            }}
-                          >
-                            Detail
-                          </DnaButton>
-                          {row.deliveryStatus === "IN_TRANSIT" && (
-                            <DnaButton
-                              variant="secondary"
-                              size="sm"
-                              icon={<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
-                              onClick={() => handleConfirmDelivered(row.id)}
-                            >
-                              Diterima
-                            </DnaButton>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                        {row.financialGateStatus === "BLOCKED_UNPAID" && (
+                          <span className="text-[10px] text-rose-600 font-semibold flex items-center gap-0.5">
+                            <Lock className="w-2.5 h-2.5" /> Unpaid
+                          </span>
+                        )}
+                      </div>
+                    </DnaTd>
+
+                    {/* Kolom 9: Aksi */}
+                    <DnaTd className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedDelivery(row)}
+                        className="text-slate-400 hover:text-blue-600"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </DnaButton>
+                    </DnaTd>
+                  </DnaTableRow>
+                ))
               )}
-            </tbody>
+            </DnaTableBody>
           </DnaTable>
         </div>
       </DnaDataTableCard>
 
-      {/* Modal Detail Surat Jalan */}
-      {selectedDelivery && (
-        <DnaModal
-          isOpen={isDetailOpen}
-          onClose={() => setIsDetailOpen(false)}
-          title={`Surat Jalan Pengiriman: ${selectedDelivery.deliveryNumber}`}
-          description={`Pengiriman untuk ${selectedDelivery.clientName} (${selectedDelivery.brandName})`}
-          size="xl"
-          footer={
-            <div className="flex items-center justify-between w-full">
-              <div className="text-xs text-slate-500">
-                Disiapkan oleh: <span className="font-semibold text-slate-700">{selectedDelivery.dispatchedBy}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <DnaButton
-                  variant="outline"
-                  size="sm"
-                  icon={<Printer className="w-4 h-4" />}
-                  onClick={() => toast.success("Mencetak Surat Jalan Resmi 3 Rangkap (Customer, Ekspedisi, Arsip)...")}
-                >
-                  Cetak Surat Jalan
-                </DnaButton>
-                {selectedDelivery.deliveryStatus === "IN_TRANSIT" && (
-                  <DnaButton
-                    variant="primary"
-                    size="sm"
-                    icon={<CheckCircle2 className="w-4 h-4" />}
-                    onClick={() => {
-                      handleConfirmDelivered(selectedDelivery.id);
-                      setIsDetailOpen(false);
-                    }}
-                  >
-                    Konfirmasi Diterima Klien
-                  </DnaButton>
-                )}
-                <DnaButton variant="primary" size="sm" onClick={() => setIsDetailOpen(false)}>
-                  Tutup
-                </DnaButton>
-              </div>
-            </div>
-          }
-        >
-          <div className="space-y-4 text-xs">
-            {/* Header Cards */}
-            <div className="grid grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
-              <div>
-                <span className="text-slate-500 block">No. Sales Order</span>
-                <span className="font-bold text-slate-900 font-mono text-sm">{selectedDelivery.soNumber}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Ekspedisi / Resi</span>
-                <span className="font-medium text-slate-800">{selectedDelivery.courierName}</span>
-                <span className="text-slate-500 block text-[11px] font-mono">{selectedDelivery.vehicleOrTrackingNo}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Status Financial Gate</span>
-                <div className="mt-0.5">{getFinancialGateBadge(selectedDelivery.financialGateStatus)}</div>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Status Pengiriman</span>
-                <div className="mt-0.5">{getStatusBadge(selectedDelivery.deliveryStatus)}</div>
-              </div>
-            </div>
-
-            <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-              <span className="text-slate-500 font-bold block mb-0.5">Alamat Tujuan Pengiriman:</span>
-              <span className="text-slate-800">{selectedDelivery.destinationAddress}</span>
-            </div>
-
-            {selectedDelivery.recipientName && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-900">
-                <span className="font-bold block">Bukti Penerimaan:</span>
-                Diterima oleh <span className="font-bold">{selectedDelivery.recipientName}</span> pada {selectedDelivery.deliveredDate}.
-              </div>
+      {/* Quick Peek Drawer (Rule 5) */}
+      <DnaDetailDrawer
+        isOpen={!!selectedDelivery}
+        onClose={() => setSelectedDelivery(null)}
+        title={selectedDelivery?.deliveryNumber || "Detail Pengiriman"}
+        subtitle={`SO: ${selectedDelivery?.soNumber} • ${selectedDelivery?.clientName}`}
+        badge={selectedDelivery && getStatusBadge(selectedDelivery.deliveryStatus)}
+        footerActions={
+          <div className="flex items-center gap-2">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              onClick={() => toast.success(`Mencetak Surat Jalan ${selectedDelivery?.deliveryNumber}...`)}
+            >
+              <Printer className="w-4 h-4 mr-1.5" />
+              Cetak Surat Jalan
+            </DnaButton>
+            {selectedDelivery && selectedDelivery.deliveryStatus === "IN_TRANSIT" && (
+              <DnaButton
+                variant="primary"
+                size="sm"
+                onClick={() => handleConfirmDelivered(selectedDelivery.id)}
+              >
+                Konfirmasi Sampai (POD)
+              </DnaButton>
             )}
+          </div>
+        }
+      >
+        {selectedDelivery && (
+          <div className="space-y-6 text-xs">
+            {/* Financial Gate Banner */}
+            <div className={`p-4 rounded-xl border flex items-center justify-between ${
+              selectedDelivery.financialGateStatus === "PAID"
+                ? "bg-emerald-50 border-emerald-200"
+                : selectedDelivery.financialGateStatus === "APPROVED_CREDIT"
+                ? "bg-blue-50 border-blue-200"
+                : "bg-red-50 border-red-200"
+            }`}>
+              <div className="space-y-1">
+                <div className="font-semibold text-xs flex items-center gap-1.5">
+                  {selectedDelivery.financialGateStatus === "BLOCKED_UNPAID" ? (
+                    <Lock className="w-4 h-4 text-red-600" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  )}
+                  <span>Status Financial Gate Operasional</span>
+                </div>
+                <div className="text-[11px] text-slate-600">
+                  {selectedDelivery.financialGateStatus === "BLOCKED_UNPAID"
+                    ? "Surat jalan terkunci otomatis karena sisa tagihan faktur belum lunas."
+                    : "Lolos verifikasi finansial. Barang diizinkan untuk dikeluarkan dari pabrik."}
+                </div>
+              </div>
+              <div>{getFinancialBadge(selectedDelivery.financialGateStatus)}</div>
+            </div>
 
-            {/* Items Table */}
-            <div>
-              <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">Daftar Produk yang Dikirim</h4>
-              <div className="border border-slate-200 rounded-lg overflow-hidden">
-                <DnaTable className="w-full text-left text-xs text-slate-600">
-                  <thead className="bg-slate-100 border-b border-slate-200 font-semibold text-slate-700">
-                    <tr>
-                      <th className="py-2.5 px-3">Kode</th>
-                      <th className="py-2.5 px-3">Nama Produk Jadi</th>
-                      <th className="py-2.5 px-3 text-center">Jumlah Box</th>
-                      <th className="py-2.5 px-3 text-right">Kuantitas Unit</th>
-                      <th className="py-2.5 px-3">No. Batch / Lot</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono">
+            {/* Destination & Logistics Details */}
+            <div className="space-y-3 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+              <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                Informasi Ekspedisi & Penerima
+              </h4>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-slate-400 block">Ekspedisi / Armada:</span>
+                  <span className="font-semibold text-slate-800">{selectedDelivery.courierName}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block">No. Plat / Resi:</span>
+                  <span className="tabular-nums font-semibold text-slate-800">{selectedDelivery.vehicleOrTrackingNo}</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-slate-400 block">Alamat Tujuan Pengiriman:</span>
+                  <span className="font-medium text-slate-800">{selectedDelivery.destinationAddress}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Item Breakdown */}
+            <div className="space-y-2">
+              <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                Daftar Produk yang Dikirim
+              </h4>
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <DnaTable className="w-full text-left text-xs">
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3">Nama Produk</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Qty Kirim</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Box</DnaTh>
+                      <DnaTh className="py-2.5 px-3">No. Batch</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedDelivery.items.map((it) => (
-                      <tr key={it.id} className="hover:bg-slate-50">
-                        <td className="py-2.5 px-3 text-indigo-600 font-medium">{it.itemCode}</td>
-                        <td className="py-2.5 px-3 font-sans font-semibold text-slate-800">{it.itemName}</td>
-                        <td className="py-2.5 px-3 text-center text-slate-700">{it.boxCount} Box</td>
-                        <td className="py-2.5 px-3 text-right font-bold text-indigo-700">{it.qtyShipped.toLocaleString("id-ID")} {it.unit}</td>
-                        <td className="py-2.5 px-3 text-slate-700">{it.batchNumber}</td>
-                      </tr>
+                      <DnaTableRow key={it.id}>
+                        <DnaTd className="py-2.5 px-3 font-sans">
+                          <div className="font-semibold text-slate-800">{it.itemName}</div>
+                          <div className="text-[10px] text-slate-400 tabular-nums">{it.itemCode}</div>
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right font-bold text-slate-900">{it.qtyShipped} {it.unit}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right text-slate-700">{it.boxCount}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-slate-600">{it.batchNumber}</DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
+                  </DnaTableBody>
                 </DnaTable>
               </div>
             </div>
-          </div>
-        </DnaModal>
-      )}
 
-      {/* Modal Buat Surat Jalan Baru */}
+            {/* POD Info if delivered. The receiver's name is not stored server-side (no
+                recipient column on Shipment), so only the server's own deliveredAt is shown. */}
+            {selectedDelivery.deliveryStatus === "DELIVERED" && (
+              <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl">
+                <span className="font-semibold block text-emerald-800 mb-1">Bukti Penerimaan (Proof of Delivery):</span>
+                <p className="text-emerald-700 text-xs">
+                  Diterima pada tanggal{" "}
+                  <b className="font-semibold">{selectedDelivery.deliveredDate || "-"}</b>
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </DnaDetailDrawer>
+
+      {/* Modal Input Surat Jalan Baru */}
       <DnaModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
-        title="Form Penerbitan Surat Jalan Pengiriman (Delivery Order)"
-        description="Hanya Sales Order yang telah lolos verifikasi pelunasan finansial yang dapat diterbitkan Surat Jalan."
-        size="2xl"
+        title="Buat Surat Jalan Pengiriman Baru"
+        description="Penerbitan surat jalan pengeluaran barang jadi dari gudang ekspedisi."
+        size="xl"
         footer={
           <div className="flex items-center justify-end gap-2.5 w-full">
             <DnaButton variant="outline" size="sm" onClick={() => setIsCreateOpen(false)}>
@@ -673,16 +578,16 @@ export default function GoodsReleasePage() {
         <div className="space-y-4 text-xs">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-700 font-bold mb-1">Pilih Sales Order Siap Kirim (Lunas) *</label>
-<DnaSelect 
-                aria-label="Pilih Sales Order"
+              <label className="block text-slate-700 font-bold mb-1">Pilih Sales Order (SO) *</label>
+              <DnaSelect
+                aria-label="Pilih SO"
                 value={selectedSoNumber}
-                onChange={handleSelectSo}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                onChange={setSelectedSoNumber}
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white"
               >
                 <option value="">-- Pilih Sales Order --</option>
-                {MOCK_READY_ORDERS.map((so) => (
-                  <option key={so.soNumber} value={so.soNumber}>
+                {readyOrders.map((so: any) => (
+                  <option key={so.soNumber || so.id} value={so.soNumber || so.id}>
                     {so.soNumber} - {so.clientName} ({so.brandName})
                   </option>
                 ))}
@@ -694,53 +599,42 @@ export default function GoodsReleasePage() {
                 type="date"
                 value={shipDate}
                 onChange={(e) => setShipDate(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-700 font-bold mb-1">Ekspedisi / Kurir Pengangkut *</label>
+              <label className="block text-slate-700 font-bold mb-1">Nama Ekspedisi / Kurir *</label>
               <DnaInput
                 type="text"
-                placeholder="Contoh: Dakota Cargo / Driver Internal"
+                placeholder="Contoh: JNE Cargo / Armada Internal"
                 value={courierName}
                 onChange={(e) => setCourierName(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2"
               />
             </div>
             <div>
-              <label className="block text-slate-700 font-bold mb-1">No. Resi Ekspedisi / Plat Kendaraan *</label>
+              <label className="block text-slate-700 font-bold mb-1">No. Kendaraan / Resi Ekspedisi</label>
               <DnaInput
                 type="text"
-                placeholder="Contoh: RESI-DKT-98124 / B-9812-UXD"
+                placeholder="Contoh: B 9821 TBC / TRACK-88129"
                 value={vehicleOrTrackingNo}
                 onChange={(e) => setVehicleOrTrackingNo(e.target.value)}
-                className="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs border border-slate-300 rounded-lg p-2 tabular-nums"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-slate-700 font-bold mb-1">Alamat Tujuan Pengiriman Lengkap *</label>
-            <DnaInput
-              type="text"
-              placeholder="Alamat lengkap penerima / gudang customer"
-              value={destinationAddress}
-              onChange={(e) => setDestinationAddress(e.target.value)}
-              className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-slate-700 font-bold mb-1">Catatan Tambahan untuk Driver / Ekspedisi</label>
+            <label className="block text-slate-700 font-bold mb-1">Alamat Lengkap Tujuan</label>
             <DnaTextarea
               rows={2}
-              placeholder="Contoh: Muatan fragile, simpan di tempat kering dan tidak terkena sinar matahari langsung."
-              value={formNotes}
-              onChange={(e) => setFormNotes(e.target.value)}
-              className="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              placeholder="Masukkan alamat pengiriman gudang customer..."
+              value={destinationAddress}
+              onChange={(e) => setDestinationAddress(e.target.value)}
+              className="w-full text-xs border border-slate-300 rounded-lg p-2"
             />
           </div>
         </div>

@@ -1,15 +1,14 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { LegalityService } from './legality.service';
 import { LegalityController } from './legality.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { LegalityListener } from './legality.listener';
-
-import { BussdevModule } from '../bussdev/bussdev.module';
+import { AuditsModule } from './audits/audits.module';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => BussdevModule)],
+  imports: [PrismaModule, AuditsModule],
   providers: [LegalityService, LegalityListener],
   controllers: [LegalityController],
-  exports: [LegalityService],
+  exports: [LegalityService, AuditsModule],
 })
 export class LegalityModule {}

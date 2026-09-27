@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/dna";
 import { Zap, Droplets, Flame, BarChart3 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "@/components/dna";
 
 interface UtilityMetric {
   name: string;

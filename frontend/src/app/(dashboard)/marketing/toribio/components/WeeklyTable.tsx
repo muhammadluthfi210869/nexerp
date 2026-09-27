@@ -1,3 +1,11 @@
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 'use client';
 
 import React from 'react';
@@ -36,37 +44,37 @@ export function WeeklyTable({ rows, platform }: Props) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="bg-[#F9FAFB] border-b border-gray-100">
+      <DnaTable>
+        <DnaTableHead>
+          <DnaTableRow className="bg-[#F9FAFB] border-b border-gray-100">
             {columns.map(col => (
-              <th
+              <DnaTh
                 key={col.key}
                 className={`px-5 py-4 ${col.align === 'right' ? 'text-right' : 'text-left'} text-[10px] font-black uppercase tracking-[0.05em] text-gray-400`}
               >
                 {col.label}
-              </th>
+              </DnaTh>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </DnaTableRow>
+        </DnaTableHead>
+        <DnaTableBody>
           {filtered.map((row, i) => (
-            <tr key={`${row.week}-${row.platform}`} className="border-b border-gray-50 transition hover:bg-[#F8FAFC]">
+            <DnaTableRow key={`${row.week}-${row.platform}`} className="border-b border-gray-50 transition hover:bg-[#F8FAFC]">
               {columns.map(col => {
                 const val = row[col.key];
                 return (
-                  <td
+                  <DnaTd
                     key={col.key}
                     className={`px-5 py-3.5 ${col.align === 'right' ? 'text-right' : 'text-left'} text-[11px] font-medium tabular-nums ${col.key === 'week' ? 'font-semibold text-gray-900' : 'text-gray-600'}`}
                   >
                     {val !== null && val !== undefined ? val.toLocaleString() : '-'}
-                  </td>
+                  </DnaTd>
                 );
               })}
-            </tr>
+            </DnaTableRow>
           ))}
-        </tbody>
-      </table>
+        </DnaTableBody>
+      </DnaTable>
     </div>
   );
 }

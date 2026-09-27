@@ -1,8 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -14,15 +12,12 @@ import {
   Division,
 } from '@prisma/client';
 import { ACTIVITY_EVENT } from '../../activity-stream/events/activity.events';
-import { ScmService } from '../../scm/services/scm.service';
 
 @Injectable()
 export class PipelineService {
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
-    @Inject(forwardRef(() => ScmService))
-    private scmService: ScmService,
   ) {}
 
   async getLeads() {

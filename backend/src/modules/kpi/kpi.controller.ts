@@ -7,9 +7,11 @@ import {
   Controller,
   Get,
   Param,
+  Post,
   Query,
   Request,
   UseGuards,
+  Body,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -42,13 +44,61 @@ export class KpiController {
     return period;
   }
 
+  @Get('definitions')
+  definitions() {
+    return this.kpi.getDefinitions();
+  }
+
+  @Get('governance')
+  governance() {
+    return this.kpi.getGovernanceRegistry();
+  }
+
+  @Post('manual-score')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HR, UserRole.ADMIN, UserRole.HEAD_OPS, UserRole.DIRECTOR)
+  saveManualScore(@Body() body: any) {
+    return this.kpi.saveManualScore(body);
+  }
+
+  @Get('employees/:id/validate-weights')
+  validateRoleWeights(@Param('id') id: string) {
+    return this.kpi.validateRoleWeights(id);
+  }
+
+  @Get('me')
+  kpiMe(
+    @Query() query: { from?: string; to?: string },
+    @Request() req: ExpressRequest,
+  ) {
+    const user = req.user as any;
+    const userId = user?.id || user?.sub || user?.userId;
+    return this.kpi.computePerson(userId, this.parsePeriod(query));
+  }
+
+  @Get('monthly-trends')
+  monthlyTrends(@Query('userId') userId?: string) {
+    return this.kpi.getMonthlyTrends(userId);
+  }
+
+  @Get('trends')
+  trends(@Query('userId') userId?: string) {
+    return this.kpi.getMonthlyTrends(userId);
+  }
+
+  @Post('employees/:id/recalculate')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HR, UserRole.ADMIN, UserRole.HEAD_OPS, UserRole.DIRECTOR)
+  recalculate(@Param('id') id: string) {
+    return this.kpi.computePerson(id, this.kpi.periodThisMonth());
+  }
+
   @Get('person/me')
   me(
     @Query() query: { from?: string; to?: string },
     @Request() req: ExpressRequest,
   ) {
-    const user = req.user as unknown as AuthedUser;
-    return this.kpi.computePerson(user.sub, this.parsePeriod(query));
+    const user = req.user as any;
+    const userId = user?.id || user?.sub || user?.userId;
+    return this.kpi.computePerson(userId, this.parsePeriod(query));
   }
 
   @Get('person/:userId')

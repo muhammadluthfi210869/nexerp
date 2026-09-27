@@ -1,3 +1,11 @@
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import React, { useState } from 'react';
 import { 
   Play, 
@@ -256,26 +264,26 @@ export const TikTokSection: React.FC<TikTokSectionProps> = ({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                  <th className="py-3 px-3">Tanggal</th>
-                  <th className="py-3 px-3">Judul & Video Hook</th>
-                  <th className="py-3 px-3">Format / Angle</th>
-                  <th className="py-3 px-3">PIC</th>
-                  <th className="py-3 px-3">Status</th>
-                  <th className="py-3 px-3 text-right">Target Leads</th>
-                  <th className="py-3 px-3 text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <DnaTh className="py-3 px-3">Tanggal</DnaTh>
+                  <DnaTh className="py-3 px-3">Judul & Video Hook</DnaTh>
+                  <DnaTh className="py-3 px-3">Format / Angle</DnaTh>
+                  <DnaTh className="py-3 px-3">PIC</DnaTh>
+                  <DnaTh className="py-3 px-3">Status</DnaTh>
+                  <DnaTh className="py-3 px-3 text-right">Target Leads</DnaTh>
+                  <DnaTh className="py-3 px-3 text-center">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredPosts.length > 0 ? (
                   filteredPosts.map(post => (
-                    <tr key={post.id} className="hover:bg-slate-50/70 transition">
-                      <td className="py-3 px-3 font-semibold text-slate-700 whitespace-nowrap">
+                    <DnaTableRow key={post.id} className="hover:bg-slate-50/70 transition">
+                      <DnaTd className="py-3 px-3 font-semibold text-slate-700 whitespace-nowrap">
                         {post.date}
-                      </td>
-                      <td className="py-3 px-3 max-w-sm">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 max-w-sm">
                         <div className="font-bold text-slate-900">{post.title}</div>
                         {post.hook && (
                           <div className="text-[11px] text-pink-700/80 font-medium italic mt-0.5 truncate">
@@ -288,16 +296,16 @@ export const TikTokSection: React.FC<TikTokSectionProps> = ({
                             <span>Audio: {post.soundTrend}</span>
                           </div>
                         )}
-                      </td>
-                      <td className="py-3 px-3">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3">
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                           {post.targetAngle || post.format}
                         </span>
-                      </td>
-                      <td className="py-3 px-3 font-medium text-slate-700">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 font-medium text-slate-700">
                         {post.pic}
-                      </td>
-                      <td className="py-3 px-3">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           post.status === 'Published'
                             ? 'bg-emerald-100 text-emerald-800'
@@ -307,31 +315,31 @@ export const TikTokSection: React.FC<TikTokSectionProps> = ({
                         }`}>
                           {post.status}
                         </span>
-                      </td>
-                      <td className="py-3 px-3 text-right">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-right">
                         <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
                           {post.metrics?.leadsContributed ? `+${post.metrics.leadsContributed} Leads` : 'Target 15+'}
                         </span>
-                      </td>
-                      <td className="py-3 px-3 text-center">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-3 text-center">
                         <button
                           onClick={() => onViewPostDetail?.(post)}
                           className="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer"
                         >
                           Detail
                         </button>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 ) : (
-                  <tr>
-                    <td colSpan={7} className="py-8 text-center text-slate-400">
+                  <DnaTableRow>
+                    <DnaTd colSpan={7} className="py-8 text-center text-slate-400">
                       Belum ada video TikTok yang dijadwalkan. Klik tombol &ldquo;Tambah Konten TikTok&rdquo; untuk memulai.
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </div>
       )}

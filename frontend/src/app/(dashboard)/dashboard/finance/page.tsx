@@ -8,11 +8,12 @@ import {
   TableCell, 
   TableHead, 
   TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+  TableRow,
+  KpiCard,
+} from "@/components/dna";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/dna";
+import { Badge } from "@/components/dna";
+import { Button } from "@/components/dna";
 import { 
   FileText, 
   AlertCircle, 
@@ -23,13 +24,12 @@ import {
   DollarSign,
   Factory
 } from "lucide-react";
-import { KpiCard } from "@/components/dna/KpiCard";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/dna";
+import { Input } from "@/components/dna";
+import { Label } from "@/components/dna";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 // --- Types ---
@@ -59,6 +59,18 @@ export default function FinanceDashboard() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   // --- Fetchers ---
+  const { data: financeDash } = useQuery({
+    queryKey: ["dashboards-finance"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/dashboards/finance");
+        return res.data;
+      } catch {
+        return null;
+      }
+    },
+  });
+
   const { data: salesOrders, isLoading: soLoading } = useQuery<SalesOrder[]>({
     queryKey: ["sales-orders"],
     queryFn: async () => {
@@ -124,11 +136,12 @@ export default function FinanceDashboard() {
       }
     >
       {(() => {
-        const pendingDP = salesOrders?.filter(so => so.status === "PENDING_DP").length || 0;
-        const activeSO = salesOrders?.filter(so => so.status === "ACTIVE").length || 0;
+        const pendingDP = financeDash?.kpis?.pendingDP?.value ?? (salesOrders?.filter(so => so.status === "PENDING_DP").length || 0);
+        const activeSO = financeDash?.kpis?.activeSO?.value ?? (salesOrders?.filter(so => so.status === "ACTIVE").length || 0);
+        const totalCount = financeDash?.kpis?.totalSO?.value ?? (salesOrders?.length || 0);
         return (
           <div className="grid grid-cols-3 gap-8 mb-6">
-            <KpiCard label="Total SO" value={String(salesOrders?.length || 0)} targetPct={50} icon={<FileText />} />
+            <KpiCard label="Total SO" value={String(totalCount)} targetPct={50} icon={<FileText />} />
             <KpiCard
               label="Pending DP"
               value={String(pendingDP)}

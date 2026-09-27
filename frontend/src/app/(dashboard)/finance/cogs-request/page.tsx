@@ -21,7 +21,20 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, StatCard, DataCard, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
+import {
+  TableWrapper,
+  StatCard,
+  DataCard,
+  DnaBadge,
+  DnaButton,
+  DnaInput,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import { 
   Table, 
   TableBody, 
@@ -29,29 +42,18 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
+} from "@/components/dna";
 
 // Static Data from Plan
-const STATIC_HPP_REQUESTS = [
-  { kode: "HPP-001", tanggal: "01/04/2026", pelanggan: "PT Maju Jaya", produk: "Hair Mask", formula: "FML-001 Rev 2", moq: 1000, status: "Proses" },
-  { kode: "HPP-002", tanggal: "03/04/2026", pelanggan: "CV Sejahtera", produk: "Body Lotion", formula: "FML-002 Rev 1", moq: 500, status: "Selesai" },
-  { kode: "HPP-003", tanggal: "07/04/2026", pelanggan: "Beauty Hub Indonesia", produk: "Sunscreen SPF 50", formula: "FML-004 Rev 3", moq: 2000, status: "Proses" },
-  { kode: "HPP-004", tanggal: "10/04/2026", pelanggan: "PT Cosmo Indah", produk: "Facial Wash", formula: "FML-005 Rev 1", moq: 1500, status: "Selesai" },
-  { kode: "HPP-005", tanggal: "14/04/2026", pelanggan: "UD Sinar Jaya", produk: "Hand Cream 50g", formula: "FML-008 Rev 1", moq: 3000, status: "Draft" },
-];
-
-const MOCK_SAMPLES = {
-  "Sample-A": { name: "Anti-Aging Serum", netto: "30ml", revision: "Rev 3", formula: "FML-99-X" },
-  "Sample-B": { name: "Brightening Day Cream", netto: "50g", revision: "Rev 1", formula: "FML-102-Y" },
-  "Sample-C": { name: "Niacinamide Toner", netto: "100ml", revision: "Rev 2", formula: "FML-106-Z" },
-};
-
 export default function COGSRequestPrototype() {
   const [view, setView] = useState<"list" | "form">("list");
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const [moqList, setMoqList] = useState<number[]>([]);
   const [currentMoq, setCurrentMoq] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [clientName, setClientName] = useState("PT Maju Jaya");
+  const [valuationDate, setValuationDate] = useState(new Date().toISOString().split("T")[0]);
+  const [notes, setNotes] = useState("");
 
   const addMoq = () => {
     if (!currentMoq) return;
@@ -59,39 +61,65 @@ export default function COGSRequestPrototype() {
     setCurrentMoq("");
   };
 
-  const { data: hppRequests = [], isLoading: hppLoading } = useQuery<any[]>({
+  const { data: hppRequests = [], isLoading: hppLoading, refetch } = useQuery<any[]>({
     queryKey: ["cogs-hpp-requests"],
     queryFn: async () => {
       try {
         const resp = await api.get("/finance/cogs-requests");
-        return resp.data;
+        const body = resp.data;
+        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
       } catch {
-        return STATIC_HPP_REQUESTS;
+        return [];
       }
     },
   });
 
-  const { data: samples = {}, isLoading: samplesLoading } = useQuery({
+  const { data: samples = {}, isLoading: samplesLoading } = useQuery<Record<string, any>>({
     queryKey: ["rnd-samples-for-cogs"],
     queryFn: async () => {
       try {
         const resp = await api.get("/rnd/samples");
-        return resp.data;
+        return resp.data || {};
       } catch {
-        return MOCK_SAMPLES;
+        return {};
       }
     },
   });
 
+  const handleFinalize = async () => {
+    try {
+      const joNum = `JO-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
+      const payload = {
+        jobOrderNumber: joNum,
+        description: `HPP Request ${clientName} - ${selectedSample || "Formula Standard"} - ${notes || "Valuation"}`,
+        totalCost: moqList[0] ? moqList[0] * 12500 : 5000000,
+        totalRevenue: moqList[0] ? moqList[0] * 25000 : 10000000,
+      };
+      await api.post("/finance/cogs-requests", payload);
+      toast.success("Request HPP berhasil difinalisasi!");
+      refetch();
+      setView("list");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || "Gagal memfinalisasi HPP request");
+    }
+  };
+
   const filteredRequests = hppRequests.filter((req: any) => {
     const term = searchTerm.toLowerCase();
+    const pelanggan = String(req.pelanggan || req.customer || req.description || "").toLowerCase();
+    const produk = String(req.produk || req.product || req.jobOrderNumber || "").toLowerCase();
+    const kode = String(req.kode || req.code || req.jobOrderNumber || req.id || "").toLowerCase();
+    const formula = String(req.formula || req.formulaCode || "").toLowerCase();
     return (
-      req.pelanggan.toLowerCase().includes(term) ||
-      req.produk.toLowerCase().includes(term) ||
-      req.kode.toLowerCase().includes(term) ||
-      req.formula.toLowerCase().includes(term)
+      pelanggan.includes(term) ||
+      produk.includes(term) ||
+      kode.includes(term) ||
+      formula.includes(term)
     );
   });
+
+  const activeCount = hppRequests.filter((r) => !r.closedAt).length;
+  const closedCount = hppRequests.filter((r) => !!r.closedAt).length;
 
   return (
     <DashboardShell
@@ -122,24 +150,24 @@ export default function COGSRequestPrototype() {
         <div className="space-y-6 animate-fade-slide-in">
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard 
+            <StatCard
               label="ACTIVE REQUESTS"
-              value="24"
+              value={String(activeCount)}
               icon={<FileText className="text-blue-500" />}
             />
-            <StatCard 
-              label="AVG. VALUATION TIME"
-              value="1.2 Days"
+            <StatCard
+              label="CLOSED REQUESTS"
+              value={String(closedCount)}
               icon={<PieChart className="text-emerald-500" />}
             />
-            <StatCard 
-              label="COST ADJUSTMENTS"
-              value="15%"
+            <StatCard
+              label="TOTAL RECORDS"
+              value={String(hppRequests.length)}
               icon={<TrendingUp className="text-blue-500" />}
             />
-            <StatCard 
-              label="MARGIN ALERT"
-              value="3"
+            <StatCard
+              label="FILTERED"
+              value={String(filteredRequests.length)}
               icon={<ShieldAlert className="text-rose-500" />}
             />
           </div>
@@ -173,90 +201,100 @@ export default function COGSRequestPrototype() {
               </div>
             }
           >
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50/50">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="py-4 pl-6 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">REQUEST IDENTITY</TableHead>
-                  <TableHead className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">CLIENT</TableHead>
-                  <TableHead className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">PRODUCT</TableHead>
-                  <TableHead className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">FORMULA REF</TableHead>
-                  <TableHead className="text-right text-[8px] font-black text-slate-400 uppercase tracking-widest">MOQ TARGET</TableHead>
-                  <TableHead className="text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">STATUS</TableHead>
-                  <TableHead className="pr-6 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">ACTION</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <DnaTable>
+              <DnaTableHead className="bg-slate-50/50">
+                <DnaTableRow className="hover:bg-transparent border-slate-100">
+                  <DnaTh className="py-4 pl-6 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">REQUEST IDENTITY</DnaTh>
+                  <DnaTh className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">CLIENT / DESC</DnaTh>
+                  <DnaTh className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">PRODUCT</DnaTh>
+                  <DnaTh className="text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">FORMULA REF</DnaTh>
+                  <DnaTh className="text-right text-[8px] font-black text-slate-400 uppercase tracking-widest">COST / REVENUE</DnaTh>
+                  <DnaTh className="text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">STATUS</DnaTh>
+                  <DnaTh className="pr-6 text-center text-[8px] font-black text-slate-400 uppercase tracking-widest">ACTION</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {hppLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="px-4 py-12 text-center">
+                  <DnaTableRow>
+                    <DnaTd colSpan={7} className="px-4 py-12 text-center">
                       <Loader2 className="w-5 h-5 text-slate-400 animate-spin mx-auto" />
-                    </TableCell>
-                  </TableRow>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : filteredRequests.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="px-4 py-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                  <DnaTableRow>
+                    <DnaTd colSpan={7} className="px-4 py-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
                       Tidak ada data yang cocok dengan pencarian Anda
-                    </TableCell>
-                  </TableRow>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
-                  filteredRequests.map((req) => (
-                    <TableRow key={req.kode} className="group hover:bg-slate-50/50 transition-all cursor-default border-slate-50">
-                      <TableCell className="py-3 pl-6">
-                        <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all shrink-0">
-                            <Calculator className="h-4.5 w-4.5" />
+                  filteredRequests.map((req, idx) => {
+                    const reqKode = req.kode || req.jobOrderNumber || req.id || `JO-${idx + 1}`;
+                    const reqDate = req.tanggal || (req.recordedAt ? new Date(req.recordedAt).toISOString().split('T')[0] : "-");
+                    const reqPelanggan = req.pelanggan || req.customer || req.description || "Job Order Costing";
+                    const reqProduk = req.produk || req.product || req.jobOrderNumber || "-";
+                    const reqFormula = req.formula || req.formulaCode || "FML-STD";
+                    const reqCost = Number(req.totalCost || req.cost || 0);
+                    const reqStatus = req.status || (req.closedAt ? "Selesai" : "Draft");
+
+                    return (
+                      <DnaTableRow key={req.id || reqKode} className="group hover:bg-slate-50/50 transition-all cursor-default border-slate-50">
+                        <DnaTd className="py-3 pl-6">
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all shrink-0">
+                              <Calculator className="h-4.5 w-4.5" />
+                            </div>
+                            <div>
+                              <p className="font-black text-slate-900 tracking-tight text-sm uppercase italic leading-none">{reqKode}</p>
+                              <p className="text-[8px] font-medium text-slate-300 uppercase leading-none mt-1">{reqDate}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-black text-slate-900 tracking-tight text-sm uppercase italic leading-none">{req.kode}</p>
-                            <p className="text-[8px] font-medium text-slate-300 uppercase leading-none mt-1">{req.tanggal}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <p className="font-black text-slate-900 text-xs uppercase leading-none">{req.pelanggan}</p>
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <p className="text-[11px] font-medium text-slate-600 uppercase leading-none">{req.produk}</p>
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <DnaBadge status="info">
-                          {req.formula}
-                        </DnaBadge>
-                      </TableCell>
-                      <TableCell className="py-3 text-right font-mono tabular-nums text-xs font-black">
-                        {req.moq.toLocaleString()} pcs
-                      </TableCell>
-                      <TableCell className="py-3 text-center">
-                        <DnaBadge status={req.status === "Selesai" ? "success" : req.status === "Draft" ? "default" : "warning"}>
-                          {req.status}
-                        </DnaBadge>
-                      </TableCell>
-                      <TableCell className="py-3 pr-6 text-center">
-                        <DnaButton 
-                          variant="primary" 
-                          size="sm"
-                          icon={<Eye className="w-3.5 h-3.5" />}
-                          onClick={() => {
-                            setSelectedSample("Sample-A");
-                            setView("form");
-                          }}
-                        >
-                          DETAIL
-                        </DnaButton>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                        </DnaTd>
+                        <DnaTd className="py-3">
+                          <p className="font-black text-slate-900 text-xs uppercase leading-none">{reqPelanggan}</p>
+                        </DnaTd>
+                        <DnaTd className="py-3">
+                          <p className="text-[11px] font-medium text-slate-600 uppercase leading-none">{reqProduk}</p>
+                        </DnaTd>
+                        <DnaTd className="py-3">
+                          <DnaBadge variant="info">
+                            {reqFormula}
+                          </DnaBadge>
+                        </DnaTd>
+                        <DnaTd className="py-3 text-right tabular-nums text-xs font-black">
+                          Rp {reqCost.toLocaleString()}
+                        </DnaTd>
+                        <DnaTd className="py-3 text-center">
+                          <DnaBadge variant={reqStatus === "Selesai" ? "success" : reqStatus === "Draft" ? "default" : "warning"}>
+                            {reqStatus}
+                          </DnaBadge>
+                        </DnaTd>
+                        <DnaTd className="py-3 pr-6 text-center">
+                          <DnaButton
+                            variant="primary"
+                            size="sm"
+                            icon={<Eye className="w-3.5 h-3.5" />}
+                            onClick={() => {
+                              setSelectedSample(reqProduk);
+                              setView("form");
+                            }}
+                          >
+                            DETAIL
+                          </DnaButton>
+                        </DnaTd>
+                      </DnaTableRow>
+                    );
+                  })
                 )}
-              </TableBody>
-            </Table>
+              </DnaTableBody>
+            </DnaTable>
           </TableWrapper>
         </div>
       ) : (
         <div className="space-y-6 animate-fade-slide-in">
           {/* Form Header / Actions */}
           <div className="flex justify-between items-center bg-white border border-[var(--border-color)] p-4 rounded-2xl shadow-sm">
-            <DnaButton 
-              variant="outline" 
+            <DnaButton
+              variant="outline"
               onClick={() => setView("list")}
               icon={<ChevronLeft />}
               className="text-rose-600 hover:bg-rose-50"
@@ -269,13 +307,10 @@ export default function COGSRequestPrototype() {
                 <span className="text-[10px] font-black uppercase text-blue-600">Protocol 06-HPP</span>
               </div>
               <div className="h-6 w-[1px] bg-slate-100" />
-              <DnaButton 
-                variant="primary" 
+              <DnaButton
+                variant="primary"
                 icon={<Save />}
-                onClick={() => {
-                  toast.success("Request HPP berhasil difinalisasi!");
-                  setView("list");
-                }}
+                onClick={handleFinalize}
               >
                 FINALIZE REQUEST
               </DnaButton>
@@ -326,11 +361,9 @@ export default function COGSRequestPrototype() {
                     {samplesLoading ? (
                       <option disabled>Loading...</option>
                     ) : (
-                      <>
-                        <option value="Sample-A">SSI-001 | Anti-Aging Serum</option>
-                        <option value="Sample-B">SSI-005 | Brightening Day Cream</option>
-                        <option value="Sample-C">SSI-006 | Niacinamide Toner</option>
-                      </>
+                      Object.entries(samples as Record<string, any>).map(([key, s]: [string, any]) => (
+                        <option key={key} value={key}>{s.name || key}</option>
+                      ))
                     )}
                   </select>
                 </div>
@@ -340,19 +373,19 @@ export default function COGSRequestPrototype() {
                     <div className="space-y-0.5">
                       <p className="text-[7px] font-black text-slate-400 uppercase">Product Name</p>
                       <p className="font-black text-slate-900 text-[11px] uppercase italic">
-                        {samples[selectedSample as keyof typeof MOCK_SAMPLES]?.name}
+                        {(samples as Record<string, any>)[selectedSample]?.name || selectedSample}
                       </p>
                     </div>
                     <div className="space-y-0.5 text-left md:text-center">
                       <p className="text-[7px] font-black text-slate-400 uppercase">Netto / Size</p>
                       <p className="font-black text-slate-900 text-[11px] uppercase">
-                        {samples[selectedSample as keyof typeof MOCK_SAMPLES]?.netto}
+                        {(samples as Record<string, any>)[selectedSample]?.netto || "-"}
                       </p>
                     </div>
                     <div className="space-y-0.5 text-left md:text-right">
                       <p className="text-[7px] font-black text-slate-400 uppercase">Current Formula</p>
-                      <DnaBadge status="purple">
-                        {samples[selectedSample as keyof typeof MOCK_SAMPLES]?.formula} {samples[selectedSample as keyof typeof MOCK_SAMPLES]?.revision}
+                      <DnaBadge variant="purple">
+                        {`${(samples as Record<string, any>)[selectedSample]?.formula || "FML"} ${(samples as Record<string, any>)[selectedSample]?.revision || "Rev 1"}`}
                       </DnaBadge>
                     </div>
                   </div>
@@ -386,7 +419,7 @@ export default function COGSRequestPrototype() {
                 <div className="pt-4 border-t border-slate-100 space-y-4 mt-4">
                   <div className="flex items-center justify-between">
                     <label className="text-[8px] font-black uppercase tracking-wider text-slate-400">MOQ Points for Analysis</label>
-                    <DnaBadge status="info">Comparative Costing</DnaBadge>
+                    <DnaBadge variant="info">Comparative Costing</DnaBadge>
                   </div>
                   <div className="flex gap-4">
                     <div className="relative flex-1">

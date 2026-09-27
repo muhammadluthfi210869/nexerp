@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   DnaPageContainer,
   DnaPageHeader,
@@ -26,6 +28,7 @@ import {
 import { toast } from "sonner";
 
 export default function SystemSettingsPage() {
+  const queryClient = useQueryClient();
   const [docFormat, setDocFormat] = useState<"FULL" | "COMPACT">("FULL");
   const [resetPeriod, setResetPeriod] = useState("MONTHLY");
   const [prefixes, setPrefixes] = useState({
@@ -52,9 +55,56 @@ export default function SystemSettingsPage() {
     enforceStrongPassword: true,
   });
 
+  const { data: serverConfigs } = useQuery({
+    queryKey: ["system-configs"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/system/configs");
+        return res.data;
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (serverConfigs && Array.isArray(serverConfigs)) {
+      const configMap: Record<string, string> = {};
+      serverConfigs.forEach((c: any) => {
+        if (c.key && c.value) configMap[c.key] = c.value;
+      });
+
+      if (configMap.DOC_FORMAT) setDocFormat(configMap.DOC_FORMAT as any);
+      if (configMap.RESET_PERIOD) setResetPeriod(configMap.RESET_PERIOD);
+      if (configMap.CURRENCY) setFinanceConfig((prev) => ({ ...prev, currency: configMap.CURRENCY }));
+      if (configMap.PPN_RATE) setFinanceConfig((prev) => ({ ...prev, ppnRate: configMap.PPN_RATE }));
+    }
+  }, [serverConfigs]);
+
+  const saveMutation = useMutation({
+    mutationFn: async (payload: Record<string, string>) => {
+      return (await api.post("/system/configs", payload)).data;
+    },
+    onSuccess: () => {
+      toast.success("Pengaturan sistem berhasil disimpan dan disinkronkan ke seluruh modul.");
+      queryClient.invalidateQueries({ queryKey: ["system-configs"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal menyimpan pengaturan sistem!");
+    },
+  });
+
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Pengaturan sistem berhasil disimpan dan disinkronkan ke seluruh modul.");
+    saveMutation.mutate({
+      DOC_FORMAT: docFormat,
+      RESET_PERIOD: resetPeriod,
+      CURRENCY: financeConfig.currency,
+      PPN_RATE: financeConfig.ppnRate,
+      PAYMENT_TERMS_DAYS: financeConfig.paymentTermsDays,
+      SESSION_TIMEOUT_MINUTES: securityConfig.sessionTimeoutMinutes,
+      AUDIT_RETENTION_DAYS: securityConfig.auditRetentionDays,
+    });
   };
 
   const handleManualBackup = () => {
@@ -104,9 +154,9 @@ export default function SystemSettingsPage() {
                   </DnaBadge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Format Lengkap: <code className="font-mono text-primary font-semibold">DL-DIV-PRD-DDMMYYYY-XXXX</code> (Audit ISO/BPOM)
+                  Format Lengkap: <code className="tabular-nums text-primary font-semibold">DL-DIV-PRD-DDMMYYYY-XXXX</code> (Audit ISO/BPOM)
                   <br />
-                  Format Ringkas: <code className="font-mono text-muted-foreground">PRD-DDMMYYYY-XXXX</code> (Operasional cepat)
+                  Format Ringkas: <code className="tabular-nums text-muted-foreground">PRD-DDMMYYYY-XXXX</code> (Operasional cepat)
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -176,7 +226,7 @@ export default function SystemSettingsPage() {
                 <DnaInput
                   value={financeConfig.currency}
                   disabled
-                  className="bg-muted/50 cursor-not-allowed font-mono"
+                  className="bg-muted/50 cursor-not-allowed tabular-nums"
                 />
               </DnaFormSection>
 

@@ -20,6 +20,9 @@ export class CreateReturnItemDto {
 
   @IsOptional()
   qtyReturned?: number;
+
+  @IsOptional()
+  unitPrice?: number;
 }
 
 export class CreateReturnDto {

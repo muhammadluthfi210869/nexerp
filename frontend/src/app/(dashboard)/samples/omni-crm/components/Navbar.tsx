@@ -89,7 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200 uppercase">
                   Maklon Kosmetik
                 </span>
-                <span className="hidden xl:inline text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                <span className="hidden xl:inline text-[9px] tabular-nums font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200">
                   CPKB Grade A • BPOM
                 </span>
               </div>
@@ -126,7 +126,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <GitBranch className="w-3.5 h-3.5" />
               <span className="hidden md:inline">Pipelines</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 font-mono rounded-full font-bold ${
+                className={`text-[10px] px-1.5 py-0.2 tabular-nums rounded-full font-bold ${
                   activeTab === 'kanban'
                     ? 'bg-blue-700 text-white'
                     : 'bg-orange-100 text-orange-700 border border-orange-200'
@@ -165,7 +165,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Users className="w-3.5 h-3.5" />
               <span className="hidden md:inline">BusDev</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                className={`text-[10px] px-1.5 py-0.2 rounded-full tabular-nums font-bold ${
                   activeTab === 'busdev'
                     ? 'bg-blue-700 text-white'
                     : 'bg-blue-100 text-blue-700 border border-blue-200'
@@ -239,7 +239,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </span>
                     )}
                   </div>
-                  <span className="text-[10px] text-slate-500 font-mono block leading-tight">
+                  <span className="text-[10px] text-slate-500 tabular-nums block leading-tight">
                     {currentUser.phone}
                   </span>
                 </div>
@@ -337,7 +337,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                               <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5 truncate">
                                 <span className="truncate">{busdev.name}</span>
                               </div>
-                              <div className="text-[10px] text-emerald-700 font-mono font-medium">
+                              <div className="text-[10px] text-emerald-700 tabular-nums font-medium">
                                 📱 {busdev.formattedPhone || busdev.phone}
                               </div>
                               <div className="text-[9px] text-slate-400 truncate">
@@ -347,7 +347,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           </div>
 
                           <div className="text-right shrink-0 pl-2">
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 tabular-nums">
                               {busdevLeadsCount} Leads
                             </span>
                             {isSelected && (

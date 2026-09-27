@@ -683,12 +683,12 @@ export function DnaDataTable<T extends Record<string, any>>({
                               <button
                                 type="button"
                                 onClick={() => col.codeOnClick!(row)}
-                                className="hover:underline text-left cursor-pointer font-mono font-bold text-blue-600 dark:text-blue-400 border-none bg-transparent p-0"
+                                className="hover:underline text-left cursor-pointer font-sans font-semibold tabular-nums text-blue-600 dark:text-blue-400 border-none bg-transparent p-0"
                               >
                                 {String(rawVal || "-")}
                               </button>
                             ) : (
-                              <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                              <span className="font-sans font-semibold tabular-nums text-blue-600 dark:text-blue-400">
                                 {String(rawVal || "-")}
                               </span>
                             )}

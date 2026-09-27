@@ -25,8 +25,8 @@ import {
 } from "@/components/dna";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Dialog } from "@/components/ui/dialog";
-import { DialogContent } from "@/components/ui/dialog";
+import { Dialog } from "@/components/dna";
+import { DialogContent } from "@/components/dna";
 
 interface ReleaseRequest {
   id: string;

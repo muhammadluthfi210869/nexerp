@@ -105,13 +105,13 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
         {/* Date & Performance Footer */}
         <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-          <div className="flex items-center gap-1 font-mono text-[10px]">
+          <div className="flex items-center gap-1 tabular-nums text-[10px]">
             <Clock className="w-3 h-3 text-slate-400" />
             <span>{formatDateIndonesian(post.scheduledDate)}</span>
           </div>
 
           {post.performance?.reach ? (
-            <div className="flex items-center gap-1 text-emerald-700 font-mono font-bold text-[11px] tabular-nums">
+            <div className="flex items-center gap-1 text-emerald-700 tabular-nums font-bold text-[11px] tabular-nums">
               <Eye className="w-3 h-3" />
               <span>{formatNumber(post.performance.reach)}</span>
             </div>
@@ -160,7 +160,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
           </div>
         </div>
 
-        <div className="text-[11px] text-slate-500 font-mono font-medium">
+        <div className="text-[11px] text-slate-500 tabular-nums font-medium">
           Total: {posts.length} konten
         </div>
       </div>
@@ -183,7 +183,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                     <span className="text-[12px] font-bold text-slate-900">
                       {col.label}
                     </span>
-                    <span className="text-[10px] bg-slate-200/80 text-slate-700 font-mono px-1.5 py-0.5 rounded-full font-bold">
+                    <span className="text-[10px] bg-slate-200/80 text-slate-700 tabular-nums px-1.5 py-0.5 rounded-full font-bold">
                       {colPosts.length}
                     </span>
                   </div>
@@ -241,12 +241,12 @@ export const BoardView: React.FC<BoardViewProps> = ({
                         <span>🗓️</span>
                         <span>{group.monthName}</span>
                       </span>
-                      <span className="text-[10px] bg-slate-200/80 text-slate-700 font-mono px-1.5 py-0.5 rounded-full font-bold">
+                      <span className="text-[10px] bg-slate-200/80 text-slate-700 tabular-nums px-1.5 py-0.5 rounded-full font-bold">
                         {group.count}
                       </span>
                     </div>
                     {group.totalReach > 0 && (
-                      <div className="text-[10px] text-emerald-700 font-mono font-bold mt-0.5">
+                      <div className="text-[10px] text-emerald-700 tabular-nums font-bold mt-0.5">
                         {formatNumber(group.totalReach)} reach total
                       </div>
                     )}

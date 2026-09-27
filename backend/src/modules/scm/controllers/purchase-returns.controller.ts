@@ -16,15 +16,15 @@ import {
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';
-import { UserRole } from '@prisma/client';
+import { UserRole, PurchaseReturnStatus } from '@prisma/client';
 
-@Controller('scm/purchase-returns')
+@Controller(['purchase/returns', 'scm/purchase-returns'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PurchaseReturnsController {
   constructor(private readonly service: PurchaseReturnsService) {}
 
   @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.WAREHOUSE, UserRole.FINANCE)
   async create(
     @Body() dto: CreatePurchaseReturnDto,
     @Request() req: { user: { id: string } },
@@ -52,6 +52,12 @@ export class PurchaseReturnsController {
   )
   async findOne(@Param('id') id: string) {
     return this.service.findOne(id);
+  }
+
+  @Post(':id/approve')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.FINANCE)
+  async approve(@Param('id') id: string) {
+    return this.service.updateStatus(id, { status: PurchaseReturnStatus.COMPLETED });
   }
 
   @Patch(':id/status')

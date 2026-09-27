@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "incremental": false,
+    "isolatedModules": true,
+    "sourceMap": false
+  },
+  "include": [
+    "src/modules/wa-self-qr/**/*.ts",
+    "src/types/**/*.d.ts",
+    "src/prisma/**/*.ts"
+  ]
+}

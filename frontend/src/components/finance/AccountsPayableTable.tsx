@@ -1,10 +1,10 @@
 "use client";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/dna";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/dna";
 import { formatCurrency } from "@/lib/utils";
 import { StatusBadge } from "./StatusBadge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/dna";
 import { TrendingDown, CreditCard } from "lucide-react";
 
 interface Bill {

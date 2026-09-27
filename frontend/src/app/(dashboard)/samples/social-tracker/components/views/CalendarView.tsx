@@ -127,11 +127,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             </h3>
 
             <div className="flex items-center gap-2">
-              <span className="font-mono bg-slate-200/70 text-slate-700 px-2 py-0.5 rounded-full text-[11px] font-bold">
+              <span className="tabular-nums bg-slate-200/70 text-slate-700 px-2 py-0.5 rounded-full text-[11px] font-bold">
                 {currentMonthPosts.length} konten
               </span>
               {totalMonthReach > 0 && (
-                <span className="hidden md:inline-flex items-center gap-1 font-mono text-emerald-700 text-[11px] font-bold">
+                <span className="hidden md:inline-flex items-center gap-1 tabular-nums text-emerald-700 text-[11px] font-bold">
                   <TrendingUp className="w-3 h-3" />
                   {formatNumber(totalMonthReach)} Reach
                 </span>
@@ -184,7 +184,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 }`}
               >
                 <span>{mItem.label}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${isSelected ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full tabular-nums font-bold ${isSelected ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-600'}`}>
                   {countInMonth}
                 </span>
               </button>
@@ -266,7 +266,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       <div className="flex items-center justify-between text-[9px] mt-0.5 opacity-80">
                         <span>{post.scheduledDate.split('T')[1] || '18:00'}</span>
                         {post.performance?.reach ? (
-                          <span className="font-mono">{formatNumber(post.performance.reach)} reach</span>
+                          <span className="tabular-nums">{formatNumber(post.performance.reach)} reach</span>
                         ) : (
                           <span>{status.name.split(' ')[0]}</span>
                         )}

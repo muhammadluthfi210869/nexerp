@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Patch,
   Delete,
@@ -363,9 +364,51 @@ export class FinanceController {
     return this.financeService.getTaxes();
   }
 
+  @Post('taxes')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  async createTax(@Body() dto: { name: string; rate: number; description?: string }) {
+    return this.financeService.createTax(dto);
+  }
+
+  @Patch('taxes/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  async updateTax(@Param('id') id: string, @Body() dto: any) {
+    return this.financeService.updateTax(id, dto);
+  }
+
+  @Delete('taxes/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  async deleteTax(@Param('id') id: string) {
+    return this.financeService.deleteTax(id);
+  }
+
   @Get('currencies')
   async getCurrencies() {
     return this.financeService.getCurrencies();
+  }
+
+  @Post('currencies')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  async createCurrency(@Body() dto: { code: string; symbol?: string; exchangeRate?: number; isMain?: boolean }) {
+    return this.financeService.createCurrency(dto);
+  }
+
+  @Patch('currencies/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  async updateCurrency(@Param('id') id: string, @Body() dto: any) {
+    return this.financeService.updateCurrency(id, dto);
+  }
+
+  @Delete('currencies/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  async deleteCurrency(@Param('id') id: string) {
+    return this.financeService.deleteCurrency(id);
+  }
+
+  @Put('currencies/:id/exchange-rate')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  async updateExchangeRate(@Param('id') id: string, @Body('exchangeRate') exchangeRate: number) {
+    return this.financeService.updateExchangeRate(id, exchangeRate);
   }
 
   // --- COA CRUD ---
@@ -400,6 +443,37 @@ export class FinanceController {
   @ApiOperation({ summary: 'Soft-delete a COA account (set isActive=false)' })
   async softDeleteAccount(@Param('id') id: string) {
     return this.financeService.softDeleteAccount(id);
+  }
+
+  // --- AUTO JOURNAL CONFIGS ---
+
+  @Get('auto-journal-configs')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Get all auto-journal configuration rules' })
+  async getAutoJournalConfigs() {
+    return this.financeService.getAutoJournalConfigs();
+  }
+
+  @Post('auto-journal-configs')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Create or update auto-journal configuration rule' })
+  async upsertAutoJournalConfig(
+    @Body()
+    dto: {
+      transactionType: string;
+      coaDebetId: string;
+      coaCreditId: string;
+      description?: string;
+    },
+  ) {
+    return this.financeService.upsertAutoJournalConfig(dto);
+  }
+
+  @Delete('auto-journal-configs/:transactionType')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Delete auto-journal configuration rule' })
+  async deleteAutoJournalConfig(@Param('transactionType') transactionType: string) {
+    return this.financeService.deleteAutoJournalConfig(transactionType);
   }
 
   // --- PAYMENT VERIFY ALIAS ---

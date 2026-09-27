@@ -1,269 +1,124 @@
 "use client";
 
+/**
+ * Wired to GET /scm/goods-requirements (+ PATCH /scm/goods-requirements/:id/status).
+ * The previous revision rendered an in-file `INITIAL_GOODS_REQUEST_DATA` array of
+ * invented requisitions, so an operator could "approve" a record that existed only
+ * in the bundle. There is no static array and no fallback here.
+ *
+ * Honest limits of the live endpoint: `findAll` returns the GoodsRequirement row
+ * only — no `items`, no `creator`, no warehouse relation — so this screen shows
+ * the fields the API actually carries and leaves the item breakdown empty rather
+ * than inventing one.
+ */
+
 import React from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   ApprovalPageShell,
   type ApprovalColumn,
   type ApprovalDetailData,
-  DnaCell,
   DnaBadge,
+  DnaCell,
+  DnaErrorState,
 } from "@/components/dna";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
+
+const EMPTY = "—";
 
 interface GoodsRequestApprovalItem {
   id: string;
   code: string;
-  originWarehouse: string;
-  destWarehouse: string;
-  requesterName: string;
-  creatorRole: string;
-  batchWoRef: string;
-  itemsCount: number;
+  salesOrderId: string;
+  // Aliases read by ApprovalPageShell's search.
+  title: string;
+  partnerName: string;
   date: string;
-  dueDate: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   notes: string;
-  lineItems: Array<{
-    id: string;
-    itemCode: string;
-    itemName: string;
-    qty: number;
-    approvedQty?: number;
-    unit: string;
-    notes?: string;
-  }>;
 }
 
-const INITIAL_GOODS_REQUEST_DATA: GoodsRequestApprovalItem[] = [
-  {
-    id: "grq-1",
-    code: "GRQ-2026-0521",
-    originWarehouse: "Gudang Bahan Baku (GBB-01)",
-    destWarehouse: "Lini Produksi Formulasi A (Reaktor 1)",
-    requesterName: "Agus Santoso",
-    creatorRole: "Mixing Operator Lead",
-    batchWoRef: "WO-2608-01",
-    itemsCount: 3,
-    date: "25/08/2026",
-    dueDate: "26/08/2026",
-    status: "PENDING",
-    notes: "Pengeluaran bahan aktif untuk batch Sunscreen SPF 50. Penimbangan bahan steril di Cleanroom Kelas D.",
-    lineItems: [
-      {
-        id: "grqi-1",
-        itemCode: "RAW-NIA-01",
-        itemName: "Niacinamide PC Grade USP 99.8%",
-        qty: 125,
-        approvedQty: 125,
-        unit: "Kg",
-        notes: "Lot Batch: Chem-2607-09. Status lolos uji QC rilis.",
-      },
-      {
-        id: "grqi-2",
-        itemCode: "RAW-HA-02",
-        itemName: "Sodium Hyaluronate 1% Solution",
-        qty: 50,
-        approvedQty: 50,
-        unit: "Kg",
-        notes: "Lot Batch: HA-2606-11.",
-      },
-      {
-        id: "grqi-3",
-        itemCode: "RAW-GLY-01",
-        itemName: "Glycerin USP 99.7% Food Grade",
-        qty: 75,
-        approvedQty: 75,
-        unit: "Kg",
-        notes: "Lot Batch: GLY-2608-01.",
-      },
-    ],
-  },
-  {
-    id: "grq-2",
-    code: "GRQ-2026-0519",
-    originWarehouse: "Gudang Kemasan (GK-02)",
-    destWarehouse: "Lini Filling & Packaging Line B",
-    requesterName: "Siti Muniroh",
-    creatorRole: "Packaging Line Leader",
-    batchWoRef: "WO-2608-02",
-    itemsCount: 2,
-    date: "25/08/2026",
-    dueDate: "27/08/2026",
-    status: "PENDING",
-    notes: "Pengeluaran botol dropper dan inner box untuk pengisian serum Acne Gel.",
-    lineItems: [
-      {
-        id: "grqi-4",
-        itemCode: "PKG-BTL-030",
-        itemName: "Botol Pipet Serum 30ml Matte White",
-        qty: 5000,
-        approvedQty: 5000,
-        unit: "Pcs",
-        notes: "Telah melewati proses UV-C sanitasi.",
-      },
-      {
-        id: "grqi-5",
-        itemCode: "PKG-BOX-030",
-        itemName: "Inner Box Outer Emboss 30ml",
-        qty: 5000,
-        approvedQty: 5000,
-        unit: "Pcs",
-        notes: "Karton pallet A-04.",
-      },
-    ],
-  },
-  {
-    id: "grq-3",
-    code: "GRQ-2026-0514",
-    originWarehouse: "Gudang Bahan Baku (GBB-01)",
-    destWarehouse: "Laboratorium R&D Formulasi",
-    requesterName: "Aisyah Putri, S.Si",
-    creatorRole: "R&D Specialist",
-    batchWoRef: "SMP-2026-0312",
-    itemsCount: 2,
-    date: "24/08/2026",
-    dueDate: "25/08/2026",
-    status: "APPROVED",
-    notes: "Pengambilan bahan baku uji coba laboratorium trial batch 2.",
-    lineItems: [
-      {
-        id: "grqi-6",
-        itemCode: "RAW-CARB-940",
-        itemName: "Carbomer 940 Polymer Grade",
-        qty: 2,
-        approvedQty: 2,
-        unit: "Kg",
-      },
-      {
-        id: "grqi-7",
-        itemCode: "RAW-TEA-01",
-        itemName: "Triethanolamine 99% Pure",
-        qty: 1,
-        approvedQty: 1,
-        unit: "Kg",
-      },
-    ],
-  },
-  {
-    id: "grq-4",
-    code: "GRQ-2026-0508",
-    originWarehouse: "Gudang Bahan Baku (GBB-01)",
-    destWarehouse: "Lini Produksi Formulasi B",
-    requesterName: "Hendra Gunawan",
-    creatorRole: "Production Supervisor",
-    batchWoRef: "WO-2608-04",
-    itemsCount: 1,
-    date: "22/08/2026",
-    dueDate: "24/08/2026",
-    status: "APPROVED",
-    notes: "Disetujui kepala gudang dan formulator produksi.",
-    lineItems: [
-      {
-        id: "grqi-8",
-        itemCode: "RAW-EXT-CEN",
-        itemName: "Centella Asiatica Hydro Extract 10:1",
-        qty: 15,
-        approvedQty: 15,
-        unit: "Kg",
-      },
-    ],
-  },
-  {
-    id: "grq-5",
-    code: "GRQ-2026-0502",
-    originWarehouse: "Gudang Karantina QC",
-    destWarehouse: "Lini Produksi Formulasi A",
-    requesterName: "Hendra Gunawan",
-    creatorRole: "Production Supervisor",
-    batchWoRef: "WO-2608-03",
-    itemsCount: 1,
-    date: "19/08/2026",
-    dueDate: "21/08/2026",
-    status: "REJECTED",
-    notes: "Ditolak: Material masih berstatus Karantina QC Uji Mikrobiologi (belum rilis sertifikat CoA rilis).",
-    lineItems: [
-      {
-        id: "grqi-9",
-        itemCode: "RAW-FRG-GT01",
-        itemName: "Fragrance Green Tea Blossom",
-        qty: 20,
-        approvedQty: 0,
-        unit: "Kg",
-        notes: "Uji inkubasi 5 hari belum selesai.",
-      },
-    ],
-  },
-  {
-    id: "grq-6",
-    code: "GRQ-2026-0498",
-    originWarehouse: "Gudang Barang Jadi (GBJ)",
-    destWarehouse: "Showroom & Marketing Display",
-    requesterName: "Fitri Handayani",
-    creatorRole: "Busdev Representative",
-    batchWoRef: "MKT-EXPO-2026",
-    itemsCount: 2,
-    date: "17/08/2026",
-    dueDate: "20/08/2026",
-    status: "APPROVED",
-    notes: "Pengeluaran produk jadi dummy untuk display pameran Cosmobeaute Jakarta.",
-    lineItems: [
-      {
-        id: "grqi-10",
-        itemCode: "FG-GLOW-SUN50",
-        itemName: "Sunscreen Glow Gel SPF 50 (Tester)",
-        qty: 50,
-        approvedQty: 50,
-        unit: "Pcs",
-      },
-      {
-        id: "grqi-11",
-        itemCode: "FG-CICA-ACNE",
-        itemName: "Soothing Acne Gel (Tester)",
-        qty: 50,
-        approvedQty: 50,
-        unit: "Pcs",
-      },
-    ],
-  },
-];
+/** GoodsRequirement.status is a free String column; the app writes APPROVED / COMPLETED. */
+function approvalStatusOf(status?: string): "PENDING" | "APPROVED" | "REJECTED" {
+  const key = (status || "").toUpperCase();
+  if (key === "APPROVED" || key === "COMPLETED" || key === "RELEASED") return "APPROVED";
+  if (key === "REJECTED" || key === "CANCELLED") return "REJECTED";
+  return "PENDING";
+}
+
+function formatDate(value?: string | null): string {
+  if (!value) return EMPTY;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return EMPTY;
+  return d.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function toItem(raw: any): GoodsRequestApprovalItem {
+  return {
+    id: raw?.id,
+    code: raw?.code ?? EMPTY,
+    salesOrderId: raw?.salesOrderId ?? EMPTY,
+    title: raw?.notes ?? EMPTY,
+    partnerName: raw?.salesOrderId ?? EMPTY,
+    date: formatDate(raw?.date ?? raw?.createdAt),
+    status: approvalStatusOf(raw?.status),
+    notes: raw?.notes ?? EMPTY,
+  };
+}
 
 export default function GoodsRequestApprovalPage() {
+  const qc = useQueryClient();
+  const queryKey = ["goods-requirements-approval"];
+
+  const { data, isLoading, isError, error, refetch } = useQuery<any[]>({
+    queryKey,
+    queryFn: async () => {
+      const resp = await api.get("/scm/goods-requirements");
+      const body = unwrapResponse<any>(resp);
+      return Array.isArray(body) ? body : (body?.data ?? []);
+    },
+  });
+
+  const setStatus = useMutation({
+    mutationFn: (p: { id: string; status: string }) =>
+      api
+        .patch(`/scm/goods-requirements/${p.id}/status`, { status: p.status })
+        .then((r) => unwrapResponse(r)),
+    onSuccess: (_res, p) => {
+      toast.success(
+        p.status === "APPROVED"
+          ? "Permintaan barang disetujui."
+          : "Permintaan barang ditolak.",
+      );
+      qc.invalidateQueries({ queryKey });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Gagal memperbarui status permintaan barang."),
+  });
+
+  const items = React.useMemo<GoodsRequestApprovalItem[]>(
+    () => (Array.isArray(data) ? data.map(toItem) : []),
+    [data],
+  );
+
   const columns: ApprovalColumn<GoodsRequestApprovalItem>[] = [
     {
       header: "No. Bon Permintaan",
       accessor: "code",
       sortable: true,
-      render: (item) => <DnaCell.code>{item.code}</DnaCell.code>,
+      render: (item) => <DnaCell.Code value={item.code} />,
     },
     {
-      header: "Gudang Asal & Tujuan",
-      accessor: "originWarehouse",
+      header: "Ref Sales Order",
+      accessor: "salesOrderId",
+      render: (item) => <DnaCell.Code value={item.salesOrderId} subtitle="ID Sales Order" />,
+    },
+    {
+      header: "Tanggal",
+      accessor: "date",
       sortable: true,
-      render: (item) => (
-        <div>
-          <p className="font-semibold text-slate-800">{item.originWarehouse}</p>
-          <p className="text-[11px] text-blue-600 font-medium">➔ {item.destWarehouse}</p>
-        </div>
-      ),
-    },
-    {
-      header: "Ref SPK / Batch",
-      accessor: "batchWoRef",
-      render: (item) => (
-        <div>
-          <span className="font-mono text-xs font-bold text-slate-700">{item.batchWoRef}</span>
-          <p className="text-[11px] text-slate-500">{item.itemsCount} Item Material</p>
-        </div>
-      ),
-    },
-    {
-      header: "Pemohon & Tanggal",
-      accessor: "requesterName",
-      render: (item) => (
-        <div>
-          <p className="font-medium text-slate-700">{item.requesterName}</p>
-          <p className="text-[11px] text-slate-400">{item.creatorRole} • {item.date}</p>
-        </div>
-      ),
+      render: (item) => <DnaCell.Date value={item.date} />,
     },
     {
       header: "Keterangan",
@@ -278,12 +133,12 @@ export default function GoodsRequestApprovalPage() {
       align: "center",
       render: (item) => (
         <DnaBadge
-          status={
+          variant={
             item.status === "APPROVED"
-              ? "SUCCESS"
+              ? "success"
               : item.status === "REJECTED"
-              ? "DANGER"
-              : "WARNING"
+              ? "critical"
+              : "warning"
           }
         >
           {item.status === "APPROVED"
@@ -299,52 +154,71 @@ export default function GoodsRequestApprovalPage() {
   const buildDetailData = (item: GoodsRequestApprovalItem): ApprovalDetailData => ({
     id: item.id,
     code: item.code,
-    title: `Bon Pengeluaran Material: ${item.batchWoRef}`,
-    category: "MUTASI BARANG DAN MATERIAL INTERNAL",
+    title: `Permintaan Barang untuk Sales Order ${item.salesOrderId}`,
+    category: "PERMINTAAN BARANG INTERNAL",
     status: item.status,
     date: item.date,
-    dueDate: item.dueDate,
-    creatorName: item.requesterName,
-    creatorRole: item.creatorRole,
-    partnerName: item.destWarehouse,
-    partnerLabel: "Lokasi / Lini Tujuan",
-    warehouseName: item.originWarehouse,
-    notes: `Ref Batch/SPK: ${item.batchWoRef} | Keterangan: ${item.notes}`,
-    lineItems: item.lineItems.map((li) => ({
-      ...li,
-      unitPrice: 0,
-      total: 0,
-    })),
+    creatorName: EMPTY,
+    partnerName: item.salesOrderId,
+    partnerLabel: "Sales Order Terkait",
+    notes: item.notes,
     timeline: [
       {
         id: "tl-1",
-        action: "Bon Permintaan Material Dibuat",
-        actor: item.requesterName,
-        role: item.creatorRole,
-        timestamp: `${item.date} 07:30 WIB`,
+        action: "Bon permintaan barang tercatat di sistem",
+        actor: EMPTY,
+        role: "SCM",
+        timestamp: item.date,
         status: "completed",
-        notes: `Permintaan bahan untuk batch ${item.batchWoRef}.`,
       },
       {
         id: "tl-2",
-        action: "Verifikasi Stok & Rilis QC Gudang",
-        actor: "Kepala Gudang Bahan",
-        role: "Warehouse Dept",
-        timestamp: `${item.date} 09:15 WIB`,
-        status: "completed",
-        notes: "Ketersediaan lot dan status rilis karantina divalidasi.",
-      },
-      {
-        id: "tl-3",
-        action: "Otorisasi Pengeluaran Barang (Plant Manager)",
-        actor: "Plant Manager Produksi",
+        action: "Otorisasi permintaan barang",
+        actor: "Menunggu keputusan approver",
         role: "Management",
-        timestamp: item.status === "APPROVED" ? `${item.date} 11:00 WIB` : "Menunggu Eksekusi",
-        status: item.status === "APPROVED" ? "completed" : item.status === "REJECTED" ? "failed" : "pending",
-        notes: item.status === "REJECTED" ? item.notes : undefined,
+        timestamp: item.status === "PENDING" ? "Menunggu eksekusi" : item.date,
+        status:
+          item.status === "APPROVED"
+            ? "completed"
+            : item.status === "REJECTED"
+            ? "failed"
+            : "pending",
       },
     ],
   });
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-slate-400">Memuat daftar permintaan barang...</div>;
+  }
+
+  if (isError) {
+    const errStatus = (error as { response?: { status?: number } })?.response?.status;
+    const denied = errStatus === 401 || errStatus === 403;
+    return (
+      <div className="p-8">
+        <DnaErrorState
+          title={denied ? "Akses ditolak" : "Gagal memuat data"}
+          message={
+            denied
+              ? "Akun ini tidak berwenang membaca daftar permintaan barang."
+              : "Daftar permintaan barang tidak dapat diambil dari server."
+          }
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-slate-400">Belum ada permintaan barang pada sistem.</p>
+        <p className="text-xs text-slate-400 mt-2">
+          Rincian item per bon belum tersedia dari endpoint daftar (scm/goods-requirements).
+        </p>
+      </div>
+    );
+  }
 
   return (
     <ApprovalPageShell
@@ -356,10 +230,12 @@ export default function GoodsRequestApprovalPage() {
         { label: "Persetujuan", href: "/approvals/purchase" },
         { label: "Permintaan Barang" },
       ]}
-      items={INITIAL_GOODS_REQUEST_DATA}
+      items={items}
       columns={columns}
       getDetailData={buildDetailData}
-      searchPlaceholder="Cari nomor bon, ref SPK, gudang, nama pemohon..."
+      onApprove={(id) => setStatus.mutateAsync({ id, status: "APPROVED" })}
+      onReject={(id) => setStatus.mutateAsync({ id, status: "REJECTED" })}
+      searchPlaceholder="Cari nomor bon, ref sales order, keterangan..."
     />
   );
 }

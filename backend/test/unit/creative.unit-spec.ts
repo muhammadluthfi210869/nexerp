@@ -3,6 +3,8 @@ import { CreativeService } from '../../src/modules/creative/creative.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BussdevService } from '../../src/modules/bussdev/bussdev.service';
+import { AuditService } from '../../src/platform/audit/audit.service';
+import { OutboxService } from '../../src/platform/outbox/outbox.service';
 import { TestModule } from '../utilities/test-module';
 
 jest.mock('bcrypt', () => ({
@@ -33,6 +35,19 @@ describe('CreativeService — Unit', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: EventEmitter2, useValue: TestModule.mockEventEmitter() },
         { provide: BussdevService, useValue: {} },
+        // BUS-RULE-113: design decisions now commit with an audit row and an outbox
+        // event. Stubbed here because this suite proves the state machine, not the
+        // durability layer — P08-SF4 proves that against the real database.
+        {
+          provide: AuditService,
+          useValue: {
+            withAudit: jest.fn(async (tx: any, _audit: any, fn: any) => fn(tx)),
+          },
+        },
+        {
+          provide: OutboxService,
+          useValue: { enqueue: jest.fn(async () => undefined) },
+        },
       ],
     }).compile();
 
@@ -112,15 +127,15 @@ describe('CreativeService — Unit', () => {
       prisma.designTask.findUnique = jest
         .fn()
         .mockResolvedValue(
-          mockTask({ kanbanState: 'WAITING_APJ', versions: [] }),
+          mockTask({
+            kanbanState: 'WAITING_APJ',
+            versions: [{ id: 'V1', versionNumber: 1 }],
+          }),
         );
       prisma.designTask.update = jest
         .fn()
         .mockResolvedValue({ id: taskId, kanbanState: 'WAITING_CLIENT' });
-      prisma.designVersion.findFirst = jest
-        .fn()
-        .mockResolvedValue({ id: 'V1', versionNumber: 1 });
-      prisma.designVersion.update = jest.fn();
+      prisma.designFeedback.create = jest.fn();
       prisma.user.findUnique = jest.fn().mockResolvedValue({
         id: 'apj-1',
         approvalPin: '123',
@@ -133,13 +148,14 @@ describe('CreativeService — Unit', () => {
         notes: 'OK',
         authorId: 'apj-1',
         pin: '123',
+        versionId: 'V1',
       });
       expect(result).toBeDefined();
     });
   });
 
   describe('clientReview', () => {
-    it('sends to revision', async () => {
+    it('sends to revision, spends one unit of the allowance, and binds the decision to the version', async () => {
       prisma.$transaction = jest.fn((fn: any) => fn(prisma));
       prisma.designTask.findUnique = jest.fn().mockResolvedValue(
         mockTask({
@@ -151,13 +167,43 @@ describe('CreativeService — Unit', () => {
       prisma.designTask.update = jest
         .fn()
         .mockResolvedValue({ id: taskId, kanbanState: 'REVISION' });
+      prisma.designFeedback.create = jest.fn();
 
-      const result = await service.clientReview(
-        taskId,
-        'REVISION' as any,
-        'Fix',
-      );
+      const result = await service.clientReview(taskId, 'REVISION' as any, {
+        versionId: 'V1',
+        authorId: 'bd-1',
+        reason: 'Fix',
+      });
       expect(result.kanbanState).toBe('REVISION');
+
+      // BUS-RULE-111: the request consumes the allowance (1 -> 2 of 3).
+      expect(prisma.designTask.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ revisionCount: 2, isLocked: false }),
+        }),
+      );
+      // BUS-RULE-110: the decision names the version it decided on.
+      expect(prisma.designFeedback.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ versionId: 'V1' }),
+        }),
+      );
+    });
+
+    it('refuses a decision that names no version', async () => {
+      prisma.$transaction = jest.fn((fn: any) => fn(prisma));
+      prisma.designTask.findUnique = jest.fn().mockResolvedValue(
+        mockTask({
+          kanbanState: 'WAITING_CLIENT',
+          versions: [{ id: 'V1', versionNumber: 1 }],
+        }),
+      );
+
+      await expect(
+        service.clientReview(taskId, 'APPROVED' as any, { authorId: 'bd-1' }),
+      ).rejects.toMatchObject({
+        response: { reason_code: 'DESIGN_VERSION_REQUIRED' },
+      });
     });
   });
 

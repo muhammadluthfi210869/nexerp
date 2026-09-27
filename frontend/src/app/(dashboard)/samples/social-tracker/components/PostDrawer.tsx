@@ -319,7 +319,7 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
                   type="datetime-local"
                   value={post.scheduledDate}
                   onChange={(e) => onUpdatePost({ ...post, scheduledDate: e.target.value, updatedAt: new Date().toISOString() })}
-                  className="bg-zinc-100 dark:bg-zinc-800 rounded px-2 py-1 text-xs font-mono outline-none text-[#37352f] dark:text-zinc-200"
+                  className="bg-zinc-100 dark:bg-zinc-800 rounded px-2 py-1 text-xs tabular-nums outline-none text-[#37352f] dark:text-zinc-200"
                 />
               </div>
 
@@ -375,37 +375,37 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 text-center">
                   <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg shadow-2xs">
                     <span className="text-[10px] text-zinc-400 block">Reach</span>
-                    <span className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                    <span className="text-xs font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
                       {formatNumber(post.performance?.reach || 0)}
                     </span>
                   </div>
                   <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg shadow-2xs">
                     <span className="text-[10px] text-zinc-400 block">Likes</span>
-                    <span className="text-xs font-bold font-mono text-zinc-700 dark:text-zinc-200">
+                    <span className="text-xs font-bold tabular-nums text-zinc-700 dark:text-zinc-200">
                       {formatNumber(post.performance?.likes || 0)}
                     </span>
                   </div>
                   <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg shadow-2xs">
                     <span className="text-[10px] text-zinc-400 block">Comments</span>
-                    <span className="text-xs font-bold font-mono text-zinc-700 dark:text-zinc-200">
+                    <span className="text-xs font-bold tabular-nums text-zinc-700 dark:text-zinc-200">
                       {formatNumber(post.performance?.comments || 0)}
                     </span>
                   </div>
                   <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg shadow-2xs">
                     <span className="text-[10px] text-zinc-400 block">Saves</span>
-                    <span className="text-xs font-bold font-mono text-zinc-700 dark:text-zinc-200">
+                    <span className="text-xs font-bold tabular-nums text-zinc-700 dark:text-zinc-200">
                       {formatNumber(post.performance?.saves || 0)}
                     </span>
                   </div>
                   <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg shadow-2xs">
                     <span className="text-[10px] text-zinc-400 block">Shares</span>
-                    <span className="text-xs font-bold font-mono text-zinc-700 dark:text-zinc-200">
+                    <span className="text-xs font-bold tabular-nums text-zinc-700 dark:text-zinc-200">
                       {formatNumber(post.performance?.shares || 0)}
                     </span>
                   </div>
                   <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg shadow-2xs">
                     <span className="text-[10px] text-zinc-400 block">Eng. Rate</span>
-                    <span className="text-xs font-bold font-mono text-amber-600 dark:text-amber-400">
+                    <span className="text-xs font-bold tabular-nums text-amber-600 dark:text-amber-400">
                       {post.performance?.engagementRate || 0}%
                     </span>
                   </div>
@@ -419,7 +419,7 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
                       min="0"
                       value={post.performance?.reach ?? 0}
                       onChange={(e) => handleMetricChange('reach', parseInt(e.target.value, 10))}
-                      className="w-full text-xs font-mono px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
+                      className="w-full text-xs tabular-nums px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
                     />
                   </div>
                   <div>
@@ -429,7 +429,7 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
                       min="0"
                       value={post.performance?.likes ?? 0}
                       onChange={(e) => handleMetricChange('likes', parseInt(e.target.value, 10))}
-                      className="w-full text-xs font-mono px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
+                      className="w-full text-xs tabular-nums px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
                     />
                   </div>
                   <div>
@@ -439,7 +439,7 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
                       min="0"
                       value={post.performance?.comments ?? 0}
                       onChange={(e) => handleMetricChange('comments', parseInt(e.target.value, 10))}
-                      className="w-full text-xs font-mono px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
+                      className="w-full text-xs tabular-nums px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
                     />
                   </div>
                   <div>
@@ -449,7 +449,7 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
                       min="0"
                       value={post.performance?.saves ?? 0}
                       onChange={(e) => handleMetricChange('saves', parseInt(e.target.value, 10))}
-                      className="w-full text-xs font-mono px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
+                      className="w-full text-xs tabular-nums px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
                     />
                   </div>
                   <div>
@@ -459,7 +459,7 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
                       min="0"
                       value={post.performance?.shares ?? 0}
                       onChange={(e) => handleMetricChange('shares', parseInt(e.target.value, 10))}
-                      className="w-full text-xs font-mono px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
+                      className="w-full text-xs tabular-nums px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
                     />
                   </div>
                   <div>
@@ -469,7 +469,7 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
                       min="0"
                       value={post.performance?.videoViews ?? 0}
                       onChange={(e) => handleMetricChange('videoViews', parseInt(e.target.value, 10))}
-                      className="w-full text-xs font-mono px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
+                      className="w-full text-xs tabular-nums px-2 py-1 border rounded bg-zinc-50 dark:bg-zinc-800 dark:text-white"
                     />
                   </div>
                 </div>
@@ -529,7 +529,7 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
                         <span className="font-medium text-[#37352f] dark:text-zinc-200">
                           {hook}
                         </span>
-                        <span className="text-[10px] text-purple-600 dark:text-purple-400 font-mono">
+                        <span className="text-[10px] text-purple-600 dark:text-purple-400 tabular-nums">
                           Variasi #{idx + 1}
                         </span>
                       </div>
@@ -588,7 +588,7 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
                     {post.hashtags.map((tag, idx) => (
                       <span
                         key={idx}
-                        className="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 rounded text-xs font-mono"
+                        className="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 rounded text-xs tabular-nums"
                       >
                         {tag}
                       </span>
@@ -600,7 +600,7 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
                 <div>
                   <h4 className="text-xs font-bold text-[#37352f] dark:text-white uppercase tracking-wider mb-2 flex items-center justify-between">
                     <span>☑️ Checklist Produksi & Approval</span>
-                    <span className="text-[10px] text-zinc-400 font-mono font-normal">
+                    <span className="text-[10px] text-zinc-400 tabular-nums font-normal">
                       {post.checklist.filter((c) => c.done).length} / {post.checklist.length} Selesai
                     </span>
                   </h4>
@@ -703,7 +703,7 @@ export const PostDrawer: React.FC<PostDrawerProps> = ({
                       {post.caption}
                     </p>
 
-                    <div className="text-[11px] text-blue-600 dark:text-blue-400 font-mono">
+                    <div className="text-[11px] text-blue-600 dark:text-blue-400 tabular-nums">
                       {post.hashtags.join(' ')}
                     </div>
 

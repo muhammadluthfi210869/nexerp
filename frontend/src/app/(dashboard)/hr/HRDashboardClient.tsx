@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { 
-  Wallet, 
+import { useEffect, useState } from "react";
+import {
+  Wallet,
   UserPlus,
   ShieldAlert,
   Activity,
@@ -15,10 +15,8 @@ import {
   Truck,
   CreditCard,
   Users,
-  GitPullRequest,
-  Check
+  GitPullRequest
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
 const DIVISION_MAP: Record<string, { number: number; name: string; icon: any; divisions: string[] }> = {
@@ -50,13 +48,7 @@ interface Employee {
 }
 
 const PersonnelTable = ({ title, icon: Icon, number, data }: { title: string; icon: any; number: number; data: Employee[] }) => {
-  const getDummyPersonnel = (namePrefix: string): Employee[] => [
-    { id: `1001-${namePrefix[0]}`, name: `BUDI ${namePrefix}`, position: "SUPERVISOR", joinedAt: "2022-01-10", kpi: 88, disiplin: 98, output: "EXCEED", attitude: 4.8, contractEnd: "2028-12-31", type: "TETAP", rev: 1, pkwtStart: "2023-01-01", pkwtEnd: "2028-12-31" },
-    { id: `1002-${namePrefix[0]}`, name: `SITI ${namePrefix}`, position: "STAFF", joinedAt: "2023-05-15", kpi: 72, disiplin: 92, output: "NORMAL", attitude: 4.2, contractEnd: "2026-06-30", type: "PKWT-1", rev: 0, pkwtStart: "2024-01-01", pkwtEnd: "2026-06-30" },
-    { id: `1003-${namePrefix[0]}`, name: `TONI ${namePrefix}`, position: "OPERATOR", joinedAt: "2024-02-20", kpi: 65, disiplin: 85, output: "LOW", attitude: 3.5, contractEnd: "2026-08-20", type: "PROBATION", rev: 0, pkwtStart: "2026-02-20", pkwtEnd: "2026-08-20" }
-  ];
-
-  const listData = data.length > 0 ? data : getDummyPersonnel(title.split(" ").slice(1).join(" "));
+  const listData = data;
 
   return (
     <div style={{ marginBottom: "3rem" }}>
@@ -87,14 +79,16 @@ const PersonnelTable = ({ title, icon: Icon, number, data }: { title: string; ic
             </tr>
           </thead>
           <tbody>
-            {listData.map((e, t) => {
-              const start = e.pkwtStart || e.joinedAt;
+            {listData.length === 0 ? (
+              <tr>
+                <td colSpan={11} style={{ padding: "2rem", textAlign: "center", fontSize: "11px", color: "#94A3B8", fontWeight: 700 }}>
+                  Tidak ada personel terdaftar di divisi {title}.
+                </td>
+              </tr>
+            ) : (
+              listData.map((e, t) => {
               const end = e.pkwtEnd || e.contractEnd || "2027-12-31";
-              
-              const totalDays = new Date(end).getTime() - new Date(start).getTime();
-              const elapsedDays = new Date().getTime() - new Date(start).getTime();
-              const pct = totalDays > 0 ? Math.min(100, Math.max(0, (elapsedDays / totalDays) * 100)) : 100;
-              
+
               const leftDays = Math.ceil((new Date(end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
               const daysLeftBarWidth = Math.min(100, Math.max(5, (Math.max(0, leftDays) / 365) * 100));
               const isCritical = leftDays < 60;
@@ -142,12 +136,12 @@ const PersonnelTable = ({ title, icon: Icon, number, data }: { title: string; ic
                     </div>
                   </td>
                   <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
-                    <span style={{ 
-                       background: isCritical ? "#BE123C" : isLowKpi ? "#B45309" : "#059669", 
-                       color: "white", 
-                       padding: "3px 8px", 
-                       borderRadius: "8px", 
-                       fontSize: "7px", 
+                    <span style={{
+                       background: isCritical ? "#BE123C" : isLowKpi ? "#B45309" : "#059669",
+                       color: "white",
+                       padding: "3px 8px",
+                       borderRadius: "8px",
+                       fontSize: "7px",
                        fontWeight: 950,
                        whiteSpace: "nowrap"
                     }}>
@@ -156,7 +150,7 @@ const PersonnelTable = ({ title, icon: Icon, number, data }: { title: string; ic
                   </td>
                 </tr>
               );
-            })}
+            }))}
           </tbody>
         </table>
       </div>
@@ -167,6 +161,7 @@ const PersonnelTable = ({ title, icon: Icon, number, data }: { title: string; ic
 export default function HRDashboardClient() {
   const [executive, setExecutive] = useState<any>(null);
   const [departmentData, setDepartmentData] = useState<Record<string, Employee[]>>({});
+  const [candidates, setCandidates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -174,12 +169,16 @@ export default function HRDashboardClient() {
     async function fetchData() {
       try {
         setLoading(true);
-        const [execRes, deptRes] = await Promise.all([
-          api.get("/hr/executive-summary"),
+        const [execRes, deptRes, candRes] = await Promise.all([
+          api.get("/dashboards/hr")
+            .then(res => res)
+            .catch(() => api.get("/hr/executive-summary")),
           api.get("/hr/department-scores"),
+          api.get("/hr/candidates").catch(() => ({ data: [] })),
         ]);
 
         setExecutive(execRes.data);
+        setCandidates(Array.isArray(candRes.data) ? candRes.data : []);
 
         // Map department scores response to our 8 sections
         const divisions = deptRes.data || [];
@@ -226,12 +225,19 @@ export default function HRDashboardClient() {
     );
   }
 
-  // Static pipeline fallback matching prototype exactly
-  const recruitmentPipeline = [
-    { id: "801", name: "ADITYA PUTRA", source: "LINKEDIN", pos: "SENIOR FORMULATOR", dept: "R&D", pic: "DINA", stage: "OFFERING", apply: "20/03", intv: "25/03", join: "15/04", status: "SENT" },
-    { id: "802", name: "SASA AMALIA", source: "REFERRAL", pos: "SCM OFFICER", dept: "SCM", pic: "ANDI", stage: "HIRED", apply: "22/03", intv: "28/03", join: "01/04", status: "DONE" },
-    { id: "805", name: "RAYHAN ALI", source: "GLINTS", pos: "PRODUCTION TECH", dept: "PROD", pic: "DINA", stage: "SCREEN", apply: "01/04", intv: "-", join: "-", status: "PEND" }
-  ];
+  const recruitmentPipeline = (candidates || []).map((c: any) => ({
+    id: c.id,
+    name: c.name || "Kandidat",
+    source: c.source || "DIRECT",
+    pos: c.appliedRole || c.position || "Staff",
+    dept: c.department || "Operasional",
+    pic: c.interviewer || "HR Team",
+    stage: c.stage || "APPLIED",
+    apply: c.createdAt ? new Date(c.createdAt).toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit" }) : "-",
+    intv: c.interviewDate ? new Date(c.interviewDate).toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit" }) : "-",
+    join: c.expectedJoinDate ? new Date(c.expectedJoinDate).toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit" }) : "-",
+    status: c.status || "IN_PROCESS",
+  }));
 
   return (
     <div className="view-section active" style={{ paddingBottom: "10rem", background: "#F8FAFC", minHeight: "100vh" }}>
@@ -320,37 +326,45 @@ export default function HRDashboardClient() {
               </tr>
             </thead>
             <tbody>
-              {recruitmentPipeline.map((e, t) => (
-                <tr key={t} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                  <td style={{ padding: "1rem 1.5rem" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{e.name}</div>
-                    <div style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8" }}>{e.source} | {e.apply}</div>
-                  </td>
-                  <td style={{ padding: "1rem 1rem" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{e.pos}</div>
-                    <div style={{ fontSize: "8px", fontWeight: 800, color: "#64748B" }}>{e.dept}</div>
-                  </td>
-                  <td style={{ padding: "1rem 1rem", textAlign: "center" }}>
-                    <div style={{ fontSize: "10px", fontWeight: 950, color: "#6366F1" }}>{e.pic}</div>
-                  </td>
-                  <td style={{ padding: "1rem 1rem", textAlign: "center" }}>
-                    <div style={{ fontSize: "10px", fontWeight: 950, color: "#1E293B" }}>{e.stage}</div>
-                    <div style={{ fontSize: "8px", color: "#94A3B8" }}>INT: {e.intv}</div>
-                  </td>
-                  <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>
-                    <span style={{ 
-                      background: e.stage === "HIRED" ? "#10B981" : e.stage === "REJECT" ? "#EF4444" : "#F59E0B", 
-                      color: "white", 
-                      padding: "4px 10px", 
-                      borderRadius: "12px", 
-                      fontSize: "8px", 
-                      fontWeight: 950 
-                    }}>
-                      {e.status}
-                    </span>
+              {recruitmentPipeline.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ padding: "2rem", textAlign: "center", fontSize: "11px", color: "#94A3B8", fontWeight: 700 }}>
+                    Tidak ada kandidat aktif dalam pipeline rekrutmen.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                recruitmentPipeline.map((e, t) => (
+                  <tr key={t} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                    <td style={{ padding: "1rem 1.5rem" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{e.name}</div>
+                      <div style={{ fontSize: "8px", fontWeight: 800, color: "#94A3B8" }}>{e.source} | {e.apply}</div>
+                    </td>
+                    <td style={{ padding: "1rem 1rem" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 950, color: "#1E293B" }}>{e.pos}</div>
+                      <div style={{ fontSize: "8px", fontWeight: 800, color: "#64748B" }}>{e.dept}</div>
+                    </td>
+                    <td style={{ padding: "1rem 1rem", textAlign: "center" }}>
+                      <div style={{ fontSize: "10px", fontWeight: 950, color: "#6366F1" }}>{e.pic}</div>
+                    </td>
+                    <td style={{ padding: "1rem 1rem", textAlign: "center" }}>
+                      <div style={{ fontSize: "10px", fontWeight: 950, color: "#1E293B" }}>{e.stage}</div>
+                      <div style={{ fontSize: "8px", color: "#94A3B8" }}>INT: {e.intv}</div>
+                    </td>
+                    <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>
+                      <span style={{
+                        background: e.stage === "HIRED" ? "#10B981" : e.stage === "REJECT" ? "#EF4444" : "#F59E0B",
+                        color: "white",
+                        padding: "4px 10px",
+                        borderRadius: "12px",
+                        fontSize: "8px",
+                        fontWeight: 950
+                      }}>
+                        {e.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

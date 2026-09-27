@@ -1,14 +1,32 @@
 "use client";
 
+/**
+ * Wired to GET /scm/purchase-orders + POST /scm/purchase-orders/:id/{approve,reject}.
+ * The previous revision rendered an in-file `INITIAL_PURCHASE_DATA` array of invented
+ * purchase orders, so an operator could "approve" a PO that existed only in the
+ * bundle. There is no static array and no fallback here.
+ *
+ * Note: the approve endpoint enforces BUS-RULE-022 (a digital signature must already
+ * be attached to the PO). This screen does not upload one, so an unsigned PO surfaces
+ * the backend's refusal as an error toast instead of silently bypassing the rule via
+ * PATCH /:id/status.
+ */
+
 import React from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   ApprovalPageShell,
   type ApprovalColumn,
   type ApprovalDetailData,
-  DnaCell,
   DnaBadge,
-  formatRupiah,
+  DnaCell,
+  DnaErrorState,
 } from "@/components/dna";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
+
+const EMPTY = "—";
 
 interface PurchaseApprovalItem {
   id: string;
@@ -20,6 +38,9 @@ interface PurchaseApprovalItem {
   paymentTerm: string;
   requesterName: string;
   creatorRole: string;
+  // Aliases read by ApprovalPageShell's search and stat aggregation.
+  title: string;
+  partnerName: string;
   date: string;
   dueDate: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
@@ -31,216 +52,137 @@ interface PurchaseApprovalItem {
     qty: number;
     unit: string;
     unitPrice: number;
-    discount?: number;
     tax?: number;
     total: number;
     notes?: string;
   }>;
 }
 
-const INITIAL_PURCHASE_DATA: PurchaseApprovalItem[] = [
-  {
-    id: "po-app-1",
-    code: "PO-2026-0881",
-    supplier: "PT Chemindo Makmur Abadi",
-    warehouse: "Gudang Bahan Baku (GBB-01)",
-    itemsCount: 3,
-    totalAmount: 145200000,
-    paymentTerm: "TOP 30 Hari",
-    requesterName: "Siti Rahma, S.Farm",
-    creatorRole: "Procurement Specialist",
-    date: "24/08/2026",
-    dueDate: "30/08/2026",
-    status: "PENDING",
-    notes: "Pengadaan urgent bahan aktif Niacinamide PC Grade dan Hyaluronic Acid untuk batch produksi WO-2608-01.",
-    lineItems: [
-      {
-        id: "poi-1",
-        itemCode: "RAW-NIA-01",
-        itemName: "Niacinamide PC Grade USP 99.8%",
-        qty: 250,
-        unit: "Kg",
-        unitPrice: 350000,
-        discount: 2500000,
-        tax: 9350000,
-        total: 94350000,
-        notes: "Sertifikat CoA dan Halal terlampir.",
-      },
-      {
-        id: "poi-2",
-        itemCode: "RAW-HA-02",
-        itemName: "Sodium Hyaluronate 1% Solution",
-        qty: 100,
-        unit: "Kg",
-        unitPrice: 420000,
-        discount: 0,
-        tax: 4620000,
-        total: 46620000,
-        notes: "Simpan pada suhu ruang sejuk (15-25°C).",
-      },
-      {
-        id: "poi-3",
-        itemCode: "RAW-GLY-01",
-        itemName: "Glycerin USP 99.7% Food Grade",
-        qty: 150,
-        unit: "Kg",
-        unitPrice: 28000,
-        discount: 0,
-        tax: 462000,
-        total: 4230000,
-        notes: "Kemasan drum 250kg tersegel.",
-      },
-    ],
-  },
-  {
-    id: "po-app-2",
-    code: "PO-2026-0882",
-    supplier: "CV Botol Packaging Sejahtera",
-    warehouse: "Gudang Kemasan (GK-02)",
-    itemsCount: 2,
-    totalAmount: 48500000,
-    paymentTerm: "Cash Before Delivery (CBD)",
-    requesterName: "Ahmad Fauzi",
-    creatorRole: "Procurement Officer",
-    date: "25/08/2026",
-    dueDate: "02/09/2026",
-    status: "PENDING",
-    notes: "Pengadaan botol serum pipet matte white 30ml untuk brand GlowSkin Series batch 3.",
-    lineItems: [
-      {
-        id: "poi-4",
-        itemCode: "PKG-BTL-030",
-        itemName: "Botol Pipet Serum 30ml Matte White + Gold Collar",
-        qty: 10000,
-        unit: "Pcs",
-        unitPrice: 3800,
-        discount: 500000,
-        tax: 4125000,
-        total: 41625000,
-        notes: "Uji drop test dan leak proof lolos QC pack.",
-      },
-      {
-        id: "poi-5",
-        itemCode: "PKG-BOX-030",
-        itemName: "Inner Box Outer Emboss Hologram 30ml",
-        qty: 10000,
-        unit: "Pcs",
-        unitPrice: 650,
-        discount: 0,
-        tax: 715000,
-        total: 6875000,
-        notes: "Finishing doff + hotprint silver.",
-      },
-    ],
-  },
-  {
-    id: "po-app-3",
-    code: "PO-2026-0879",
-    supplier: "PT Aroma Essensial Indonesia",
-    warehouse: "Gudang Bahan Baku (GBB-01)",
-    itemsCount: 1,
-    totalAmount: 32000000,
-    paymentTerm: "TOP 14 Hari",
-    requesterName: "Rian Hidayat",
-    creatorRole: "SCM Specialist",
-    date: "22/08/2026",
-    dueDate: "28/08/2026",
-    status: "APPROVED",
-    notes: "Pewangi Fragrance Hypoallergenic Green Tea untuk body lotion batch Agustus.",
-    lineItems: [
-      {
-        id: "poi-6",
-        itemCode: "RAW-FRG-GT01",
-        itemName: "Fragrance Green Tea Blossom Hypoallergenic IFRA-Compliant",
-        qty: 40,
-        unit: "Kg",
-        unitPrice: 800000,
-        discount: 0,
-        tax: 0,
-        total: 32000000,
-      },
-    ],
-  },
-  {
-    id: "po-app-4",
-    code: "PO-2026-0875",
-    supplier: "PT Sentra Kimia Nusantara",
-    warehouse: "Gudang Bahan Baku (GBB-01)",
-    itemsCount: 2,
-    totalAmount: 18700000,
-    paymentTerm: "TOP 30 Hari",
-    requesterName: "Siti Rahma, S.Farm",
-    creatorRole: "Procurement Specialist",
-    date: "20/08/2026",
-    dueDate: "26/08/2026",
-    status: "REJECTED",
-    notes: "Harga per kilogram melebihi plafon budget HPP formulasi approved.",
-    lineItems: [
-      {
-        id: "poi-7",
-        itemCode: "RAW-EXT-CEN",
-        itemName: "Centella Asiatica Hydro Extract 10:1",
-        qty: 25,
-        unit: "Kg",
-        unitPrice: 748000,
-        discount: 0,
-        tax: 0,
-        total: 18700000,
-        notes: "Ditolak: harga vendor naik 30% dari kontrak tahunan.",
-      },
-    ],
-  },
-];
+/** POStatus → the shell/modal vocabulary. */
+function approvalStatusOf(status?: string): "PENDING" | "APPROVED" | "REJECTED" {
+  const key = (status || "").toUpperCase();
+  if (key === "REJECTED" || key === "CANCELLED" || key === "RETURNED") return "REJECTED";
+  if (key === "DRAFT" || key === "PENDING" || key === "PENDING_APPROVAL") return "PENDING";
+  if (key === "APPROVED") return "APPROVED";
+  // ORDERED / PARTIAL / SHIPPED / RECEIVED / CLOSED — already past approval.
+  return key ? "APPROVED" : "PENDING";
+}
+
+function formatDate(value?: string | null): string {
+  if (!value) return EMPTY;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return EMPTY;
+  return d.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function toItem(raw: any): PurchaseApprovalItem {
+  const items: any[] = Array.isArray(raw?.items) ? raw.items : [];
+  const lineItems = items.map((li: any, idx: number) => {
+    const qty = Number(li?.quantity) || 0;
+    const unitPrice = Number(li?.unitPrice) || 0;
+    return {
+      id: li?.id ?? `li-${idx}`,
+      itemCode: li?.material?.code ?? EMPTY,
+      itemName: li?.material?.name ?? "Material belum tertaut",
+      qty,
+      unit: li?.material?.unit ?? EMPTY,
+      unitPrice,
+      total: Number(li?.totalPrice) || qty * unitPrice,
+    };
+  });
+  return {
+    id: raw?.id,
+    code: raw?.poNumber ?? EMPTY,
+    supplier: raw?.supplier?.name ?? "Supplier belum tertaut",
+    warehouse: raw?.purchaseRequest?.warehouse?.name ?? EMPTY,
+    itemsCount: items.length,
+    totalAmount: Number(raw?.totalValue) || 0,
+    paymentTerm: raw?.supplier?.termOfPayment
+      ? `${raw.supplier.termOfPayment} hari`
+      : EMPTY,
+    requesterName: raw?.scm?.fullName ?? EMPTY,
+    creatorRole: "SCM Processor",
+    title: raw?.notes ?? EMPTY,
+    partnerName: raw?.supplier?.name ?? EMPTY,
+    date: formatDate(raw?.createdAt),
+    dueDate: formatDate(raw?.dueDate ?? raw?.estArrival),
+    status: approvalStatusOf(raw?.status),
+    notes: raw?.notes ?? EMPTY,
+    lineItems,
+  };
+}
 
 export default function PurchaseApprovalPage() {
+  const qc = useQueryClient();
+  const queryKey = ["purchase-orders-approval"];
+
+  const { data, isLoading, isError, error, refetch } = useQuery<any[]>({
+    queryKey,
+    queryFn: async () => {
+      const resp = await api.get("/scm/purchase-orders");
+      const body = unwrapResponse<any>(resp);
+      return Array.isArray(body) ? body : (body?.data ?? []);
+    },
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.post(`/scm/purchase-orders/${id}/approve`).then((r) => unwrapResponse(r)),
+    onSuccess: () => {
+      toast.success("Purchase order disetujui.");
+      qc.invalidateQueries({ queryKey });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Gagal menyetujui purchase order."),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: (p: { id: string; reason: string }) =>
+      api
+        .post(`/scm/purchase-orders/${p.id}/reject`, { reason: p.reason })
+        .then((r) => unwrapResponse(r)),
+    onSuccess: () => {
+      toast.success("Purchase order ditolak.");
+      qc.invalidateQueries({ queryKey });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Gagal menolak purchase order."),
+  });
+
+  const items = React.useMemo<PurchaseApprovalItem[]>(
+    () => (Array.isArray(data) ? data.map(toItem) : []),
+    [data],
+  );
+
   const columns: ApprovalColumn<PurchaseApprovalItem>[] = [
     {
       header: "Nomor PO",
       accessor: "code",
       sortable: true,
-      render: (item) => <DnaCell.code>{item.code}</DnaCell.code>,
+      render: (item) => <DnaCell.Code value={item.code} />,
     },
     {
       header: "Supplier & Gudang Tujuan",
       accessor: "supplier",
       sortable: true,
-      render: (item) => (
-        <div>
-          <p className="font-semibold text-slate-800">{item.supplier}</p>
-          <p className="text-[11px] text-slate-500">{item.warehouse}</p>
-        </div>
-      ),
+      render: (item) => <DnaCell.Text primary={item.supplier} secondary={item.warehouse} />,
     },
     {
       header: "Pemohon",
       accessor: "requesterName",
       render: (item) => (
-        <div>
-          <p className="font-medium text-slate-700">{item.requesterName}</p>
-          <p className="text-[11px] text-slate-400">{item.creatorRole}</p>
-        </div>
+        <DnaCell.Text primary={item.requesterName} secondary={item.creatorRole} />
       ),
     },
     {
       header: "Termin & Tgl",
       accessor: "date",
-      render: (item) => (
-        <div>
-          <p className="text-slate-700 text-xs font-semibold">{item.paymentTerm}</p>
-          <p className="text-[11px] text-slate-500">Tgl: {item.date}</p>
-        </div>
-      ),
+      render: (item) => <DnaCell.Text primary={item.paymentTerm} secondary={`Tgl: ${item.date}`} />,
     },
     {
       header: "Total Nominal",
       accessor: "totalAmount",
       align: "right",
       sortable: true,
-      render: (item) => (
-        <span className="font-mono font-bold text-slate-900">
-          {formatRupiah(item.totalAmount)}
-        </span>
-      ),
+      render: (item) => <DnaCell.Currency value={item.totalAmount} />,
     },
     {
       header: "Status",
@@ -285,33 +227,55 @@ export default function PurchaseApprovalPage() {
     timeline: [
       {
         id: "tl-1",
-        action: "PO Diterbitkan oleh Procurement",
+        action: "PO tercatat di sistem oleh Procurement",
         actor: item.requesterName,
         role: item.creatorRole,
-        timestamp: `${item.date} 09:30 WIB`,
+        timestamp: item.date,
         status: "completed",
-        notes: "Purchase order diverifikasi sesuai PR dan ketersediaan supplier.",
       },
       {
         id: "tl-2",
-        action: "Verifikasi Plafon Anggaran Finance",
-        actor: "Finance Review Bot / AP Staff",
-        role: "Finance Dept",
-        timestamp: `${item.date} 11:15 WIB`,
-        status: "completed",
-        notes: "Budget belanja bahan baku tersedia dalam pagu Q3.",
-      },
-      {
-        id: "tl-3",
-        action: "Persetujuan Direktur / General Manager",
-        actor: "Executive Approver",
+        action: "Otorisasi purchase order",
+        actor: "Menunggu keputusan approver",
         role: "Management",
-        timestamp: item.status === "APPROVED" ? `${item.date} 14:00 WIB` : "Menunggu Eksekusi",
-        status: item.status === "APPROVED" ? "completed" : item.status === "REJECTED" ? "failed" : "pending",
-        notes: item.status === "REJECTED" ? "Ditolak karena tidak sesuai plafon harga." : undefined,
+        timestamp: item.status === "PENDING" ? "Menunggu eksekusi" : item.date,
+        status:
+          item.status === "APPROVED"
+            ? "completed"
+            : item.status === "REJECTED"
+            ? "failed"
+            : "pending",
       },
     ],
   });
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-slate-400">Memuat daftar purchase order...</div>;
+  }
+
+  if (isError) {
+    const errStatus = (error as { response?: { status?: number } })?.response?.status;
+    const denied = errStatus === 401 || errStatus === 403;
+    return (
+      <div className="p-8">
+        <DnaErrorState
+          title={denied ? "Akses ditolak" : "Gagal memuat data"}
+          message={
+            denied
+              ? "Akun ini tidak berwenang membaca daftar purchase order."
+              : "Daftar purchase order tidak dapat diambil dari server."
+          }
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="p-8 text-center text-slate-400">Belum ada purchase order pada sistem.</div>
+    );
+  }
 
   return (
     <ApprovalPageShell
@@ -323,9 +287,11 @@ export default function PurchaseApprovalPage() {
         { label: "Persetujuan", href: "/approvals/purchase" },
         { label: "Pembelian" },
       ]}
-      items={INITIAL_PURCHASE_DATA}
+      items={items}
       columns={columns}
       getDetailData={buildDetailData}
+      onApprove={(id) => approveMutation.mutateAsync(id)}
+      onReject={(id, reason) => rejectMutation.mutateAsync({ id, reason })}
       searchPlaceholder="Cari nomor PO, nama vendor supplier, pemohon..."
     />
   );

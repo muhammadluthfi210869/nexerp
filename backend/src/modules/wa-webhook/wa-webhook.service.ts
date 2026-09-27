@@ -1,15 +1,43 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { createHmac } from 'crypto';
 import { LeadCaptureService } from '../lead-capture/lead-capture.service';
 import { AutoGreetService } from '../lead-capture/auto-greet.service';
 
 @Injectable()
 export class WaWebhookService {
   private readonly logger = new Logger(WaWebhookService.name);
+  private readonly processedMessageIds = new Map<string, number>();
 
   constructor(
     private readonly leadCapture: LeadCaptureService,
     private readonly autoGreet: AutoGreetService,
   ) {}
+
+  verifySignature(rawBody: string | object, signatureHeader?: string): boolean {
+    const appSecret = process.env.WA_APP_SECRET || 'nex_wa_app_secret_test';
+    if (!signatureHeader) {
+      return false;
+    }
+    const signature = signatureHeader.startsWith('sha256=')
+      ? signatureHeader.slice(7)
+      : signatureHeader;
+    const bodyStr = typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody);
+    const expected = createHmac('sha256', appSecret).update(bodyStr).digest('hex');
+    return signature === expected;
+  }
+
+  isDuplicate(msgId: string): boolean {
+    const now = Date.now();
+    const expiry = 24 * 60 * 60 * 1000;
+    for (const [id, ts] of this.processedMessageIds.entries()) {
+      if (now - ts > expiry) this.processedMessageIds.delete(id);
+    }
+    if (this.processedMessageIds.has(msgId)) {
+      return true;
+    }
+    this.processedMessageIds.set(msgId, now);
+    return false;
+  }
 
   /**
    * Verify webhook — dipanggil Meta saat setup webhook
@@ -32,9 +60,16 @@ export class WaWebhookService {
   /**
    * Handle incoming message dari WA Cloud API
    */
-  async handleIncoming(body: any) {
+  async handleIncoming(body: any, signatureHeader?: string) {
     try {
       this.logger.log('📩 WA Webhook received');
+
+      if (process.env.WA_APP_SECRET) {
+        if (!signatureHeader || !this.verifySignature(body, signatureHeader)) {
+          this.logger.warn('⚠️ Webhook signature verification failed');
+          throw new UnauthorizedException('INVALID_SIGNATURE: Webhook signature verification failed');
+        }
+      }
 
       // Kalau bukan message entry, skip
       if (!body?.entry?.[0]?.changes?.[0]?.value) {
@@ -55,6 +90,11 @@ export class WaWebhookService {
           const text = msg.text.body; // Isi pesan
           const msgId = msg.id; // WhatsApp message id (anti-duplikat webhook)
           const profileName = contacts?.[0]?.profile?.name || 'Unknown';
+
+          if (msgId && this.isDuplicate(msgId)) {
+            this.logger.log(`⚠️ Duplicate WA message skipped: ${msgId}`);
+            return { success: true, duplicate: true, status: 'duplicate_ignored' };
+          }
 
           this.logger.log(`📨 WA from ${phone}: "${text.slice(0, 50)}"`);
 
@@ -160,8 +200,11 @@ export class WaWebhookService {
         }
       }
 
-      return { status: 'ok' };
+      return { success: true, status: 'ok' };
     } catch (err: any) {
+      if (err instanceof UnauthorizedException) {
+        throw err;
+      }
       this.logger.error('❌ Webhook error:', err?.message || err);
       return { status: 'error', message: err?.message || 'unknown' };
     }

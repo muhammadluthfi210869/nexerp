@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { api, extractApiError } from "@/lib/api";
 import {
   DnaPageContainer,
   DnaPageHeader,
@@ -10,241 +12,199 @@ import {
   DnaTextarea,
   DnaButton,
   DnaBadge,
+  DnaErrorState,
+  DnaLoadingSkeleton,
 } from "@/components/dna";
-import {
-  Building2,
-  MapPin,
-  Landmark,
-  Save,
-  Award,
-} from "lucide-react";
+import { Building2, MapPin, Save, Phone, Mail } from "lucide-react";
 import { toast } from "sonner";
 
+interface OrganizationConfig {
+  companyName: string;
+  legalName: string;
+  taxId: string;
+  address: string;
+  phone: string;
+  email: string;
+}
+
+const EMPTY: OrganizationConfig = {
+  companyName: "",
+  legalName: "",
+  taxId: "",
+  address: "",
+  phone: "",
+  email: "",
+};
+
 export default function CompanyProfilePage() {
-  const [company, setCompany] = useState({
-    legalName: "PT Diva Arya Mandiri",
-    brandName: "Aureon Beauty & Cosmetic Lab",
-    tagline: "Integrated Cosmetics & Personal Care Manufacturing Solution",
-    nib: "0220108921829",
-    npwp: "01.234.567.8-012.000",
-    kbli: "20422 - Industri Kosmetika Untuk Manusia",
-    email: "info@divaaryamandiri.co.id",
-    phone: "+62 21 8934 5678",
-    website: "https://www.aureonlab.co.id",
-    cpkbNumber: "CPKB-GOL-A-2023-0881",
-    halalCertNumber: "ID00410000289100522",
-    bpomPermit: "BPOM-PBF-KOS-2022-491",
-    headOffice: "Gedung Aureon Tower Lt. 8, Jl. TB Simatupang No. 12, Cilandak, Jakarta Selatan 12430",
-    factoryAddress: "Kawasan Industri Jababeka Tahap III, Blok C-18 No. 4, Cikarang Utara, Bekasi, Jawa Barat 17530",
-    warehouseAddress: "Pergudangan Sentra Prima Blok B-04, Jl. Diponegoro KM 38, Tambun Selatan, Bekasi 17510",
-    bcaAccount: "8010-928-111 (KCP Cikarang)",
-    mandiriAccount: "167-00-981273-1 (KC Jababeka)",
-    invoiceSigner: "Muhammad Luthfi, S.E., Ak.",
-    invoiceSignerRole: "Direktur Keuangan & Operasional",
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState<OrganizationConfig>(EMPTY);
+
+  const { data, isLoading, isError, refetch } = useQuery<OrganizationConfig>({
+    queryKey: ["system-organization-config"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/system/config/organization");
+        const payload = res.data?.data || res.data || {};
+        return {
+          companyName: payload.companyName || "",
+          legalName: payload.legalName || "",
+          taxId: payload.taxId || "",
+          address: payload.address || "",
+          phone: payload.phone || "",
+          email: payload.email || "",
+        };
+      } catch {
+        return EMPTY;
+      }
+    },
   });
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (data) setForm(data);
+  }, [data]);
+
+  const saveMutation = useMutation({
+    mutationFn: async (payload: OrganizationConfig) => {
+      const res = await api.patch("/system/config/organization", payload);
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["system-organization-config"] });
+      toast.success("Konfigurasi organisasi berhasil disimpan.");
+    },
+    onError: (error) => {
+      const { message } = extractApiError(error);
+      toast.error(message || "Gagal menyimpan konfigurasi organisasi.");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Profil perusahaan & data legalitas berhasil diperbarui.");
+    saveMutation.mutate(form);
   };
+
+  if (isLoading) {
+    return (
+      <DnaPageContainer>
+        <DnaPageHeader
+          title="Profil Perusahaan"
+          description="Identitas badan hukum dan kontak resmi organisasi."
+          badge={<DnaBadge variant="neutral">SCR-050 / SYS-CMP</DnaBadge>}
+        />
+        <DnaLoadingSkeleton rows={6} />
+      </DnaPageContainer>
+    );
+  }
+
+  if (isError) {
+    return (
+      <DnaPageContainer>
+        <DnaPageHeader
+          title="Profil Perusahaan"
+          description="Identitas badan hukum dan kontak resmi organisasi."
+          badge={<DnaBadge variant="neutral">SCR-050 / SYS-CMP</DnaBadge>}
+        />
+        <DnaErrorState
+          title="Gagal Memuat Profil Perusahaan"
+          message="Tidak dapat mengambil data dari /system/config/organization."
+          onRetry={() => refetch()}
+        />
+      </DnaPageContainer>
+    );
+  }
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
         title="Profil Perusahaan"
-        subtitle="Identitas badan hukum, sertifikasi CPKB/Halal, lokasi pabrik, dan rekening resmi invoice"
-        badge={<DnaBadge variant="green">Identitas Korporat</DnaBadge>}
+        description="Identitas badan hukum dan kontak resmi organisasi (tersimpan di system config)."
+        badge={<DnaBadge variant="neutral">SCR-050 / SYS-CMP</DnaBadge>}
         actions={
-          <DnaButton variant="primary" size="sm" onClick={handleSave}>
+          <DnaButton
+            variant="primary"
+            size="sm"
+            onClick={handleSubmit}
+            disabled={saveMutation.isPending}
+          >
             <Save className="w-4 h-4 mr-1.5" />
-            Simpan Profil Perusahaan
+            {saveMutation.isPending ? "Menyimpan..." : "Simpan Profil Perusahaan"}
           </DnaButton>
         }
       />
 
-      <form onSubmit={handleSave} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <DnaCard title="Identitas Legal & Badan Hukum" icon={Building2}>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <DnaFormSection title="Nama Legal Perusahaan (PT)">
                 <DnaInput
-                  value={company.legalName}
-                  onChange={(e) => setCompany({ ...company, legalName: e.target.value })}
-                  required
+                  value={form.legalName}
+                  onChange={(e) => setForm({ ...form, legalName: e.target.value })}
+                  placeholder="Belum diisi"
                 />
               </DnaFormSection>
               <DnaFormSection title="Nama Komersial / Brand">
                 <DnaInput
-                  value={company.brandName}
-                  onChange={(e) => setCompany({ ...company, brandName: e.target.value })}
-                  required
+                  value={form.companyName}
+                  onChange={(e) => setForm({ ...form, companyName: e.target.value })}
+                  placeholder="Belum diisi"
                 />
               </DnaFormSection>
-              <DnaFormSection title="Nomor Pokok Wajib Pajak (NPWP 16 Digit)">
+              <DnaFormSection title="Nomor Pokok Wajib Pajak (NPWP)">
                 <DnaInput
-                  value={company.npwp}
-                  onChange={(e) => setCompany({ ...company, npwp: e.target.value })}
-                  required
-                  className="font-mono"
-                />
-              </DnaFormSection>
-              <DnaFormSection title="Nomor Induk Berusaha (NIB)">
-                <DnaInput
-                  value={company.nib}
-                  onChange={(e) => setCompany({ ...company, nib: e.target.value })}
-                  required
-                  className="font-mono"
-                />
-              </DnaFormSection>
-              <DnaFormSection title="Klasifikasi Baku Lapangan Usaha (KBLI)">
-                <DnaInput
-                  value={company.kbli}
-                  onChange={(e) => setCompany({ ...company, kbli: e.target.value })}
-                  required
-                />
-              </DnaFormSection>
-              <DnaFormSection title="Slogan / Tagline Perusahaan">
-                <DnaInput
-                  value={company.tagline}
-                  onChange={(e) => setCompany({ ...company, tagline: e.target.value })}
+                  value={form.taxId}
+                  onChange={(e) => setForm({ ...form, taxId: e.target.value })}
+                  placeholder="Belum diisi"
+                  className="tabular-nums"
                 />
               </DnaFormSection>
             </div>
+          </div>
+        </DnaCard>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-border/30">
+        <DnaCard title="Kontak & Alamat Resmi" icon={MapPin}>
+          <div className="space-y-4">
+            <DnaFormSection title="Alamat Resmi Terdaftar">
+              <DnaTextarea
+                rows={3}
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                placeholder="Belum diisi"
+              />
+            </DnaFormSection>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <DnaFormSection title="Nomor Telepon Kantor">
+                <DnaInput
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="Belum diisi"
+                  icon={<Phone className="w-4 h-4" />}
+                />
+              </DnaFormSection>
               <DnaFormSection title="Email Korespondensi Resmi">
                 <DnaInput
                   type="email"
-                  value={company.email}
-                  onChange={(e) => setCompany({ ...company, email: e.target.value })}
-                />
-              </DnaFormSection>
-              <DnaFormSection title="Nomor Telepon Kantor">
-                <DnaInput
-                  value={company.phone}
-                  onChange={(e) => setCompany({ ...company, phone: e.target.value })}
-                />
-              </DnaFormSection>
-              <DnaFormSection title="Situs Web Resmi">
-                <DnaInput
-                  value={company.website}
-                  onChange={(e) => setCompany({ ...company, website: e.target.value })}
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="Belum diisi"
+                  icon={<Mail className="w-4 h-4" />}
                 />
               </DnaFormSection>
             </div>
           </div>
         </DnaCard>
 
-        <DnaCard title="Legalitas & Sertifikasi Regulasi" icon={Award}>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-3 rounded-lg border border-border/40 bg-muted/10 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase">Sertifikat CPKB BPOM</span>
-                  <DnaBadge variant="green">Golongan A</DnaBadge>
-                </div>
-                <DnaInput
-                  value={company.cpkbNumber}
-                  onChange={(e) => setCompany({ ...company, cpkbNumber: e.target.value })}
-                  className="font-mono text-xs"
-                />
-                <p className="text-[11px] text-muted-foreground">Standar Cara Pembuatan Kosmetika yang Baik (BPOM RI).</p>
-              </div>
-
-              <div className="p-3 rounded-lg border border-border/40 bg-muted/10 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase">Sertifikat Halal BPJPH</span>
-                  <DnaBadge variant="green">Grade A / Sangat Baik</DnaBadge>
-                </div>
-                <DnaInput
-                  value={company.halalCertNumber}
-                  onChange={(e) => setCompany({ ...company, halalCertNumber: e.target.value })}
-                  className="font-mono text-xs"
-                />
-                <p className="text-[11px] text-muted-foreground">Sertifikasi Halal LPPOM-MUI & BPJPH Kemenag RI.</p>
-              </div>
-
-              <div className="p-3 rounded-lg border border-border/40 bg-muted/10 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase">Izin PBF / Fasilitas Produksi</span>
-                  <DnaBadge variant="blue">Aktif Permanen</DnaBadge>
-                </div>
-                <DnaInput
-                  value={company.bpomPermit}
-                  onChange={(e) => setCompany({ ...company, bpomPermit: e.target.value })}
-                  className="font-mono text-xs"
-                />
-                <p className="text-[11px] text-muted-foreground">Izin Operasional Sarana Produksi dari Badan POM.</p>
-              </div>
-            </div>
-          </div>
-        </DnaCard>
-
-        <DnaCard title="Alamat Fasilitas Operasional" icon={MapPin}>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <DnaFormSection title="Kantor Pusat (Head Office)">
-                <DnaTextarea
-                  rows={3}
-                  value={company.headOffice}
-                  onChange={(e) => setCompany({ ...company, headOffice: e.target.value })}
-                />
-              </DnaFormSection>
-
-              <DnaFormSection title="Pabrik Manufaktur (Plant)">
-                <DnaTextarea
-                  rows={3}
-                  value={company.factoryAddress}
-                  onChange={(e) => setCompany({ ...company, factoryAddress: e.target.value })}
-                />
-              </DnaFormSection>
-
-              <DnaFormSection title="Gudang Distribusi (Warehouse)">
-                <DnaTextarea
-                  rows={3}
-                  value={company.warehouseAddress}
-                  onChange={(e) => setCompany({ ...company, warehouseAddress: e.target.value })}
-                />
-              </DnaFormSection>
-            </div>
-          </div>
-        </DnaCard>
-
-        <DnaCard title="Kop Surat, Rekening Bank Resmi & Penandatangan" icon={Landmark}>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <DnaFormSection title="Rekening Bank BCA (Tertera di Invoice)">
-                <DnaInput
-                  value={company.bcaAccount}
-                  onChange={(e) => setCompany({ ...company, bcaAccount: e.target.value })}
-                  placeholder="a/n PT Diva Arya Mandiri"
-                />
-              </DnaFormSection>
-
-              <DnaFormSection title="Rekening Bank Mandiri (Tertera di Invoice)">
-                <DnaInput
-                  value={company.mandiriAccount}
-                  onChange={(e) => setCompany({ ...company, mandiriAccount: e.target.value })}
-                  placeholder="a/n PT Diva Arya Mandiri"
-                />
-              </DnaFormSection>
-
-              <DnaFormSection title="Nama Penanggung Jawab Tanda Tangan Dokumen">
-                <DnaInput
-                  value={company.invoiceSigner}
-                  onChange={(e) => setCompany({ ...company, invoiceSigner: e.target.value })}
-                />
-              </DnaFormSection>
-
-              <DnaFormSection title="Jabatan Penanggung Jawab">
-                <DnaInput
-                  value={company.invoiceSignerRole}
-                  onChange={(e) => setCompany({ ...company, invoiceSignerRole: e.target.value })}
-                />
-              </DnaFormSection>
-            </div>
-          </div>
-        </DnaCard>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-[12px] text-amber-900">
+          <strong className="block mb-1">Catatan cakupan data</strong>
+          Halaman ini hanya menampilkan field yang benar-benar tersimpan di backend
+          (<code className="font-mono">/system/config/organization</code>): nama legal,
+          nama komersial, NPWP, alamat, telepon, dan email. Field lain (NIB, KBLI, tagline,
+          situs web, nomor CPKB/Halal/PBF, alamat pabrik &amp; gudang terpisah, rekening bank,
+          penandatangan invoice) belum memiliki penyimpanan di backend sehingga tidak lagi
+          ditampilkan agar tidak menyesatkan.
+        </div>
       </form>
     </DnaPageContainer>
   );

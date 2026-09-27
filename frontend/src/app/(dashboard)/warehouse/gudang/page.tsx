@@ -88,212 +88,6 @@ interface GoodsCategory {
   unbilledGoodsAccount: string;
 }
 
-const MOCK_WAREHOUSES: WarehouseNode[] = [
-  {
-    id: "wh-01",
-    code: "WH-01",
-    name: "Gudang Bahan Baku (Raw Material)",
-    type: "RAW_MATERIAL",
-    typeLabel: "Bahan Baku & Ekstrak Botani",
-    address: "Kawasan Industri Kosmetik Blok A No. 12",
-    city: "Tangerang",
-    province: "Banten",
-    phone: "021-5550101",
-    picName: "Hendro Wibowo (Kepala Gudang)",
-    totalBins: 16,
-    capacityUtilityPercent: 78,
-    temperatureZone: "COOL_ROOM",
-    status: "ACTIVE"
-  },
-  {
-    id: "wh-02",
-    code: "WH-02",
-    name: "Gudang Bahan Kemas (Packaging)",
-    type: "PACKAGING",
-    typeLabel: "Botol, Tube, Box & Label",
-    address: "Kawasan Industri Kosmetik Blok A No. 14",
-    city: "Tangerang",
-    province: "Banten",
-    phone: "021-5550102",
-    picName: "Siti Rahma",
-    totalBins: 24,
-    capacityUtilityPercent: 62,
-    temperatureZone: "AMBIENT",
-    status: "ACTIVE"
-  },
-  {
-    id: "wh-03",
-    code: "WH-03",
-    name: "Gudang Produk Jadi (Finished Goods)",
-    type: "FINISHED_GOODS",
-    typeLabel: "Produk Siap Kirim (Maklon)",
-    address: "Kawasan Industri Kosmetik Blok B No. 05",
-    city: "Tangerang",
-    province: "Banten",
-    phone: "021-5550103",
-    picName: "Rian Hendra",
-    totalBins: 20,
-    capacityUtilityPercent: 84,
-    temperatureZone: "AIR_CONDITIONED",
-    status: "ACTIVE"
-  },
-  {
-    id: "wh-04",
-    code: "WH-04",
-    name: "Gudang Staging & WIP Produksi",
-    type: "STAGING_WIP",
-    typeLabel: "Antrean Mixing & Filling",
-    address: "Gedung Produksi Lantai 1",
-    city: "Tangerang",
-    province: "Banten",
-    phone: "021-5550104",
-    picName: "Ahmad Maulana",
-    totalBins: 10,
-    capacityUtilityPercent: 45,
-    temperatureZone: "AIR_CONDITIONED",
-    status: "ACTIVE"
-  },
-  {
-    id: "wh-05",
-    code: "WH-05",
-    name: "Gudang Karantina & Transit Reject",
-    type: "QUARANTINE_REJECT",
-    typeLabel: "Area Karantina QC & Reject",
-    address: "Area Isolasi QC Lab Gedung C",
-    city: "Tangerang",
-    province: "Banten",
-    phone: "021-5550105",
-    picName: "Dr. Maya Sp.KK",
-    totalBins: 8,
-    capacityUtilityPercent: 30,
-    temperatureZone: "AIR_CONDITIONED",
-    status: "ACTIVE"
-  }
-];
-
-const MOCK_BINS: BinLocation[] = [
-  {
-    id: "bin-01",
-    binCode: "WH01-A1-01",
-    warehouseCode: "WH-01",
-    warehouseName: "Gudang Bahan Baku",
-    aisle: "Lorong A",
-    rackLevel: "Tingkat 1",
-    zoneType: "COOL_ROOM",
-    capacityMax: 1000,
-    currentWeightOrQty: 850,
-    occupancyPercent: 85,
-    activeSku: "RAW-NIA-001 (Niacinamide 99%)",
-    status: "OCCUPIED"
-  },
-  {
-    id: "bin-02",
-    binCode: "WH01-A1-02",
-    warehouseCode: "WH-01",
-    warehouseName: "Gudang Bahan Baku",
-    aisle: "Lorong A",
-    rackLevel: "Tingkat 2",
-    zoneType: "COOL_ROOM",
-    capacityMax: 500,
-    currentWeightOrQty: 120,
-    occupancyPercent: 24,
-    activeSku: "RAW-HA-002 (Hyaluronic Acid)",
-    status: "OCCUPIED"
-  },
-  {
-    id: "bin-03",
-    binCode: "WH01-B1-01",
-    warehouseCode: "WH-01",
-    warehouseName: "Gudang Bahan Baku",
-    aisle: "Lorong B",
-    rackLevel: "Tingkat 1",
-    zoneType: "COOL_ROOM",
-    capacityMax: 1000,
-    currentWeightOrQty: 480,
-    occupancyPercent: 48,
-    activeSku: "RAW-CET-003 (Cetearyl Alcohol)",
-    status: "OCCUPIED"
-  },
-  {
-    id: "bin-04",
-    binCode: "WH01-B1-02",
-    warehouseCode: "WH-01",
-    warehouseName: "Gudang Bahan Baku",
-    aisle: "Lorong B",
-    rackLevel: "Tingkat 2",
-    zoneType: "COOL_ROOM",
-    capacityMax: 1000,
-    currentWeightOrQty: 0,
-    occupancyPercent: 0,
-    activeSku: "-",
-    status: "AVAILABLE"
-  },
-  {
-    id: "bin-05",
-    binCode: "WH02-C1-01",
-    warehouseCode: "WH-02",
-    warehouseName: "Gudang Bahan Kemas",
-    aisle: "Lorong C",
-    rackLevel: "Pallet Level 1",
-    zoneType: "AMBIENT",
-    capacityMax: 10000,
-    currentWeightOrQty: 9500,
-    occupancyPercent: 95,
-    activeSku: "KMS-BTL-030 (Botol Dropper 30ml)",
-    status: "OCCUPIED"
-  },
-  {
-    id: "bin-06",
-    binCode: "WH02-C1-02",
-    warehouseCode: "WH-02",
-    warehouseName: "Gudang Bahan Kemas",
-    aisle: "Lorong C",
-    rackLevel: "Pallet Level 2",
-    zoneType: "AMBIENT",
-    capacityMax: 20000,
-    currentWeightOrQty: 15400,
-    occupancyPercent: 77,
-    activeSku: "KMS-BOX-001 (Inner Box Hologram)",
-    status: "OCCUPIED"
-  }
-];
-
-const MOCK_CATEGORIES: GoodsCategory[] = [
-  {
-    id: "cat-01",
-    code: "CAT-RAW",
-    name: "Bahan Baku Kosmetik",
-    description: "Zat aktif, surfaktan, emollient, pengental, pewarna & ekstrak alami",
-    inventoryAccount: "110401 - Persediaan Bahan Baku",
-    cogsAccount: "510101 - Harga Pokok Bahan Baku",
-    salesAccount: "410101 - Pendapatan Jasa Maklon",
-    salesReturnAccount: "410201 - Retur Penjualan Maklon",
-    unbilledGoodsAccount: "210201 - Barang Belum Difaktur"
-  },
-  {
-    id: "cat-02",
-    code: "CAT-PACK",
-    name: "Bahan Kemas & Wadah",
-    description: "Botol dropper, pot cream, tube, inner box, master carton & label stiker",
-    inventoryAccount: "110402 - Persediaan Bahan Kemas",
-    cogsAccount: "510102 - Harga Pokok Bahan Kemas",
-    salesAccount: "410101 - Pendapatan Jasa Maklon",
-    salesReturnAccount: "410201 - Retur Penjualan Maklon",
-    unbilledGoodsAccount: "210201 - Barang Belum Difaktur"
-  },
-  {
-    id: "cat-03",
-    code: "CAT-FG",
-    name: "Produk Jadi (Finished Goods)",
-    description: "Skincare, bodycare & decorative cosmetics yang telah selesai packing siap kirim",
-    inventoryAccount: "110404 - Persediaan Barang Jadi",
-    cogsAccount: "510104 - HPP Produk Jadi",
-    salesAccount: "410101 - Pendapatan Penjualan Maklon",
-    salesReturnAccount: "410201 - Retur Penjualan Maklon",
-    unbilledGoodsAccount: "210201 - Barang Belum Difaktur"
-  }
-];
-
 export default function GudangPage() {
   const toast = useDnaToast();
   const queryClient = useQueryClient();
@@ -342,27 +136,94 @@ export default function GudangPage() {
   });
 
   // Queries
-  const { data: rawWarehouses } = useQuery({
+  const { data: rawWarehouses = [] } = useQuery({
     queryKey: ["master-warehouses"],
     queryFn: async () => {
       try {
         const res = await api.get("/master/warehouses");
-        return unwrapResponse(res.data) as WarehouseNode[];
-      } catch (e) {
-        return null;
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
       }
     }
   });
 
   const warehouses: WarehouseNode[] = useMemo(() => {
-    if (rawWarehouses && Array.isArray(rawWarehouses) && rawWarehouses.length > 0) {
-      return rawWarehouses;
-    }
-    return MOCK_WAREHOUSES;
+    if (!rawWarehouses || !Array.isArray(rawWarehouses)) return [];
+    return rawWarehouses.map((w: any) => ({
+      id: w.id,
+      code: w.code || `WH-${w.id.slice(0, 4).toUpperCase()}`,
+      name: w.name,
+      type: (w.type || "RAW_MATERIAL") as any,
+      typeLabel: w.description || w.type || "Gudang Penyimpanan",
+      address: w.address || "-",
+      city: w.city || "-",
+      province: w.province || "-",
+      phone: w.phone || "-",
+      picName: w.picName || "PIC Gudang",
+      totalBins: w.totalBins || 0,
+      capacityUtilityPercent: w.capacityUtilityPercent || 0,
+      temperatureZone: (w.temperatureZone || "AMBIENT") as any,
+      status: (w.status || "ACTIVE") as any,
+    }));
   }, [rawWarehouses]);
 
-  const bins: BinLocation[] = MOCK_BINS;
-  const categories: GoodsCategory[] = MOCK_CATEGORIES;
+  const { data: rawBins = [] } = useQuery({
+    queryKey: ["warehouse-locations"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/locations");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const bins: BinLocation[] = useMemo(() => {
+    if (!rawBins || !Array.isArray(rawBins)) return [];
+    return rawBins.map((b: any) => ({
+      id: b.id,
+      binCode: b.code || b.name || "BIN-01",
+      warehouseCode: b.warehouseCode || b.warehouse?.code || "WH-01",
+      warehouseName: b.warehouseName || b.warehouse?.name || "Gudang Utama",
+      aisle: b.aisle || b.zone || "Lorong A",
+      rackLevel: b.rackLevel || b.level || "Tingkat 1",
+      zoneType: (b.zoneType || "AMBIENT") as any,
+      capacityMax: Number(b.capacityMax || 1000),
+      currentWeightOrQty: Number(b.currentStock || b.currentWeightOrQty || 0),
+      occupancyPercent: Number(b.occupancyPercent || 0),
+      activeSku: b.activeSku || "-",
+      status: (b.status || "AVAILABLE") as any,
+    }));
+  }, [rawBins]);
+
+  const { data: rawCategories = [] } = useQuery({
+    queryKey: ["master-categories"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/master/categories");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const categories: GoodsCategory[] = useMemo(() => {
+    if (!rawCategories || !Array.isArray(rawCategories)) return [];
+    return rawCategories.map((c: any) => ({
+      id: c.id,
+      code: c.code || `CAT-${c.id.slice(0, 4).toUpperCase()}`,
+      name: c.name,
+      description: c.description || "-",
+      inventoryAccount: c.inventoryAccount || "110401 - Persediaan Bahan Baku",
+      cogsAccount: c.cogsAccount || "510101 - HPP Bahan Baku",
+      salesAccount: c.salesAccount || "410101 - Penjualan",
+      salesReturnAccount: c.salesReturnAccount || "410201 - Retur Penjualan",
+      unbilledGoodsAccount: c.unbilledGoodsAccount || "210201 - Barang Belum Difaktur",
+    }));
+  }, [rawCategories]);
 
   // Filtered Bins
   const filteredBins = useMemo(() => {
@@ -381,13 +242,27 @@ export default function GudangPage() {
   }, [bins, selectedWarehouseFilter, searchQuery]);
 
   // Handlers
-  const handleSaveWarehouse = () => {
+  const handleSaveWarehouse = async () => {
     if (!warehouseForm.name || !warehouseForm.address) {
       toast.warning("Form Belum Lengkap", "Nama gudang dan alamat lengkap wajib diisi.");
       return;
     }
-    toast.success("Gudang Fasilitas Disimpan", `Gudang ${warehouseForm.name} berhasil didaftarkan ke sistem.`);
-    setIsWarehouseModalOpen(false);
+    try {
+      await api.post("/master/warehouses", {
+        name: warehouseForm.name,
+        address: warehouseForm.address,
+        city: warehouseForm.city,
+        province: warehouseForm.province,
+        phone: warehouseForm.phone,
+        picName: warehouseForm.picName,
+        description: `Gudang tipe ${warehouseForm.type}`,
+      });
+      toast.success("Gudang Fasilitas Disimpan", `Gudang ${warehouseForm.name} berhasil didaftarkan ke sistem.`);
+      queryClient.invalidateQueries({ queryKey: ["master-warehouses"] });
+      setIsWarehouseModalOpen(false);
+    } catch (err: any) {
+      toast.error("Gagal Menyimpan Gudang", err?.response?.data?.message || err.message);
+    }
   };
 
   const handleSaveBin = () => {
@@ -395,7 +270,11 @@ export default function GudangPage() {
       toast.warning("Form Belum Lengkap", "Kode lokasi Bin wajib diisi.");
       return;
     }
-    toast.success("Lokasi Bin Disimpan", `Lokasi rak ${binForm.binCode} berhasil didaftarkan.`);
+    // WarehouseController exposes GET /warehouse/locations only — no POST. The bin is not created.
+    toast.warning(
+      "Lokasi Bin belum tersimpan",
+      `Backend belum menyediakan rute tambah lokasi bin (POST /warehouse/locations). Rak ${binForm.binCode} tidak didaftarkan.`,
+    );
     setIsBinModalOpen(false);
   };
 
@@ -404,7 +283,12 @@ export default function GudangPage() {
       toast.warning("Form Belum Lengkap", "Kode dan Nama Kategori wajib diisi.");
       return;
     }
-    toast.success("Kategori Barang Disimpan", `Kategori ${categoryForm.name} dengan mapping CoA Akuntansi berhasil didaftarkan.`);
+    // No route accepts the CoA-mapping fields this form collects, so nothing is registered —
+    // including the account mapping the old toast claimed.
+    toast.warning(
+      "Kategori belum tersimpan",
+      `Backend belum menyediakan rute mapping CoA kategori barang. Kategori ${categoryForm.name} tidak didaftarkan.`,
+    );
     setIsCategoryModalOpen(false);
   };
 
@@ -487,7 +371,7 @@ export default function GudangPage() {
               <div key={wh.id} className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4 hover:border-blue-400 transition-all">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-mono font-bold text-xs border border-blue-100">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center tabular-nums font-bold text-xs border border-blue-100">
                       {wh.code}
                     </div>
                     <div>
@@ -500,7 +384,7 @@ export default function GudangPage() {
 
                 {/* Progress bar occupancy */}
                 <div className="space-y-1 text-xs">
-                  <div className="flex justify-between font-mono text-[11px]">
+                  <div className="flex justify-between tabular-nums text-[11px]">
                     <span className="text-slate-500">Utilisasi Kapasitas:</span>
                     <span className="font-bold text-slate-800">{wh.capacityUtilityPercent}%</span>
                   </div>
@@ -519,7 +403,7 @@ export default function GudangPage() {
                     {Array.from({ length: 8 }).map((_, idx) => (
                       <div
                         key={idx}
-                        className={`h-8 rounded-lg flex items-center justify-center text-[10px] font-mono font-semibold border ${
+                        className={`h-8 rounded-lg flex items-center justify-center text-[10px] tabular-nums font-semibold border ${
                           idx < 5 ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-slate-50 text-slate-400 border-slate-200"
                         }`}
                         title={`Slot Rak #${idx + 1}`}
@@ -569,7 +453,7 @@ export default function GudangPage() {
                   <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                        <span className="tabular-nums text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                           {row.code}
                         </span>
                         <p className="font-semibold text-slate-900 text-xs">{row.name}</p>
@@ -604,7 +488,7 @@ export default function GudangPage() {
                       <p className="text-[11px] text-slate-500 mt-1">{row.totalBins} Rak / Bin Terdaftar</p>
                     </td>
                     <td className="py-3 px-4 text-xs w-28">
-                      <div className="flex justify-between font-mono text-[11px]">
+                      <div className="flex justify-between tabular-nums text-[11px]">
                         <span>{row.capacityUtilityPercent}%</span>
                         <span className="text-slate-400">Terisi</span>
                       </div>
@@ -676,7 +560,7 @@ export default function GudangPage() {
                   {filteredBins.map((row) => (
                     <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="py-3 px-4">
-                        <p className="font-mono text-xs font-bold text-slate-900">{row.binCode}</p>
+                        <p className="tabular-nums text-xs font-bold text-slate-900">{row.binCode}</p>
                         <p className="text-[11px] text-slate-500 mt-0.5">{row.warehouseName}</p>
                       </td>
                       <td className="py-3 px-4 text-xs">
@@ -686,7 +570,7 @@ export default function GudangPage() {
                       <td className="py-3 px-4 text-xs font-medium text-slate-800 truncate max-w-[200px]" title={row.activeSku}>
                         {row.activeSku}
                       </td>
-                      <td className="py-3 px-4 text-xs font-mono">
+                      <td className="py-3 px-4 text-xs tabular-nums">
                         <p className="text-slate-900 font-semibold">{row.currentWeightOrQty} / {row.capacityMax}</p>
                         <div className="w-24 bg-slate-100 rounded-full h-1.5 overflow-hidden mt-1">
                           <div
@@ -734,7 +618,7 @@ export default function GudangPage() {
                 {categories.map((row) => (
                   <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3 px-4">
-                      <span className="font-mono text-[10px] font-bold bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 text-slate-800">
+                      <span className="tabular-nums text-[10px] font-bold bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 text-slate-800">
                         {row.code}
                       </span>
                       <p className="font-semibold text-slate-900 text-xs mt-1">{row.name}</p>
@@ -743,17 +627,17 @@ export default function GudangPage() {
                       {row.description}
                     </td>
                     <td className="py-3 px-4">
-                      <span className="font-mono text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                      <span className="tabular-nums text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
                         {row.inventoryAccount}
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="font-mono text-xs font-medium text-slate-700">
+                      <span className="tabular-nums text-xs font-medium text-slate-700">
                         {row.cogsAccount}
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="font-mono text-xs font-medium text-slate-700">
+                      <span className="tabular-nums text-xs font-medium text-slate-700">
                         {row.salesAccount}
                       </span>
                     </td>
@@ -799,7 +683,7 @@ export default function GudangPage() {
               <DnaInput
                 type="text"
                 placeholder="Contoh: WH-06"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
+                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 tabular-nums text-slate-800"
                 value={warehouseForm.code}
                 onChange={(e) => setWarehouseForm(prev => ({ ...prev, code: e.target.value }))}
               />
@@ -924,7 +808,7 @@ export default function GudangPage() {
               <DnaInput
                 type="text"
                 placeholder="Contoh: WH01-A1-05"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
+                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 tabular-nums text-slate-800"
                 value={binForm.binCode}
                 onChange={(e) => setBinForm(prev => ({ ...prev, binCode: e.target.value }))}
               />
@@ -970,7 +854,7 @@ export default function GudangPage() {
               <label className="font-bold text-slate-700 uppercase">Kapasitas Maksimal (Kg / Pcs)</label>
               <DnaInput
                 type="number"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
+                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 tabular-nums text-slate-800"
                 value={binForm.capacityMax}
                 onChange={(e) => setBinForm(prev => ({ ...prev, capacityMax: Number(e.target.value) }))}
               />
@@ -1004,7 +888,7 @@ export default function GudangPage() {
               <DnaInput
                 type="text"
                 placeholder="Contoh: CAT-REAG"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-slate-800"
+                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 tabular-nums text-slate-800"
                 value={categoryForm.code}
                 onChange={(e) => setCategoryForm(prev => ({ ...prev, code: e.target.value }))}
               />
@@ -1041,7 +925,7 @@ export default function GudangPage() {
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600">Akun Persediaan (Inventory Asset) *</label>
     <DnaSelect 
-                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-mono"
+                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 tabular-nums"
                   value={categoryForm.inventoryAccount}
                   onChange={(value) => setCategoryForm(prev => ({ ...prev, inventoryAccount: value }))}
                 >
@@ -1055,7 +939,7 @@ export default function GudangPage() {
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600">Akun HPP (COGS Account) *</label>
     <DnaSelect 
-                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-mono"
+                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 tabular-nums"
                   value={categoryForm.cogsAccount}
                   onChange={(value) => setCategoryForm(prev => ({ ...prev, cogsAccount: value }))}
                 >
@@ -1068,7 +952,7 @@ export default function GudangPage() {
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600">Akun Penjualan (Revenue Account) *</label>
     <DnaSelect 
-                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-mono"
+                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 tabular-nums"
                   value={categoryForm.salesAccount}
                   onChange={(value) => setCategoryForm(prev => ({ ...prev, salesAccount: value }))}
                 >
@@ -1080,7 +964,7 @@ export default function GudangPage() {
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600">Akun Retur Penjualan *</label>
     <DnaSelect 
-                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-mono"
+                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 tabular-nums"
                   value={categoryForm.salesReturnAccount}
                   onChange={(value) => setCategoryForm(prev => ({ ...prev, salesReturnAccount: value }))}
                 >

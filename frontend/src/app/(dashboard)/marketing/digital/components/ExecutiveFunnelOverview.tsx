@@ -16,7 +16,15 @@ import {
   Zap
 } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { DashboardCard } from "@/components/dna";;
+import {
+  DashboardCard,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";;
 import type { MarketingOverview } from '@/types/marketing-overview';
 import { formatInteger, formatPercent } from '../lib/format';
 
@@ -230,22 +238,22 @@ function OptionAFunnelMatrix({ platforms }: { platforms: PlatformChannel[] }) {
 
       {/* Matrix Table */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1100px] border-collapse text-left">
-          <thead className="bg-[var(--gray-50)] text-[10px] font-extrabold uppercase tracking-wider text-[var(--gray-500)] border-b border-[var(--gray-100)]">
-            <tr>
-              <th scope="col" className="px-6 py-3.5 w-48">Platform Channel</th>
-              <th scope="col" className="px-4 py-3.5 text-right">1. Impression & Views</th>
-              <th scope="col" className="px-2 py-3.5 text-center bg-blue-50/50 text-blue-700">Impr ➔ Click</th>
-              <th scope="col" className="px-4 py-3.5 text-right">2. Clicks & Visits</th>
-              <th scope="col" className="px-2 py-3.5 text-center bg-purple-50/50 text-purple-700">Click ➔ Lead</th>
-              <th scope="col" className="px-4 py-3.5 text-right">3. Leads Qualified</th>
-              <th scope="col" className="px-2 py-3.5 text-center bg-amber-50/50 text-amber-700">Lead ➔ Sample</th>
-              <th scope="col" className="px-4 py-3.5 text-right">4. Sample Pitched</th>
-              <th scope="col" className="px-2 py-3.5 text-center bg-emerald-50/50 text-emerald-700">Sample ➔ Deal</th>
-              <th scope="col" className="px-6 py-3.5 text-right">5. Deal Production</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--gray-100)] text-xs">
+        <DnaTable>
+          <DnaTableHead>
+            <DnaTableRow>
+              <DnaTh scope="col" className="px-6 py-3.5 w-48">Platform Channel</DnaTh>
+              <DnaTh scope="col" className="px-4 py-3.5 text-right">1. Impression & Views</DnaTh>
+              <DnaTh scope="col" className="px-2 py-3.5 text-center bg-blue-50/50 text-blue-700">Impr ➔ Click</DnaTh>
+              <DnaTh scope="col" className="px-4 py-3.5 text-right">2. Clicks & Visits</DnaTh>
+              <DnaTh scope="col" className="px-2 py-3.5 text-center bg-purple-50/50 text-purple-700">Click ➔ Lead</DnaTh>
+              <DnaTh scope="col" className="px-4 py-3.5 text-right">3. Leads Qualified</DnaTh>
+              <DnaTh scope="col" className="px-2 py-3.5 text-center bg-amber-50/50 text-amber-700">Lead ➔ Sample</DnaTh>
+              <DnaTh scope="col" className="px-4 py-3.5 text-right">4. Sample Pitched</DnaTh>
+              <DnaTh scope="col" className="px-2 py-3.5 text-center bg-emerald-50/50 text-emerald-700">Sample ➔ Deal</DnaTh>
+              <DnaTh scope="col" className="px-6 py-3.5 text-right">5. Deal Production</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {platforms.map((p) => {
               const Icon = p.icon;
               const conv1 = rate(p.clicks, p.views);
@@ -254,8 +262,8 @@ function OptionAFunnelMatrix({ platforms }: { platforms: PlatformChannel[] }) {
               const conv4 = rate(p.deal, p.sample);
 
               return (
-                <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                  <th scope="row" className="px-6 py-4 font-bold text-[var(--gray-900)]">
+                <DnaTableRow key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                  <DnaTh scope="row" className="px-6 py-4 font-bold text-[var(--gray-900)]">
                     <div className="flex items-center gap-2.5">
                       <div className={`p-1.5 rounded-lg border ${p.badgeColor}`}>
                         <Icon className="h-4 w-4" />
@@ -279,9 +287,9 @@ function OptionAFunnelMatrix({ platforms }: { platforms: PlatformChannel[] }) {
                         </span>
                       </div>
                     </div>
-                  </th>
+                  </DnaTh>
 
-                  <td className="px-4 py-4 text-right align-middle">
+                  <DnaTd className="px-4 py-4 text-right align-middle">
                     <p className="font-extrabold text-sm text-[var(--gray-900)] tabular-nums">
                       {formatInteger(p.views)}
                     </p>
@@ -290,18 +298,18 @@ function OptionAFunnelMatrix({ platforms }: { platforms: PlatformChannel[] }) {
                         CPM: {p.cpm}
                       </p>
                     )}
-                  </td>
+                  </DnaTd>
 
-                  <td className="px-2 py-4 text-center align-middle bg-blue-50/20">
+                  <DnaTd className="px-2 py-4 text-center align-middle bg-blue-50/20">
                     <span className="inline-flex flex-col items-center rounded-md bg-blue-50 px-2 py-1 text-[10px] font-black text-blue-700 border border-blue-100 tabular-nums">
                       <span>{formatPercent(conv1)}</span>
                       <span className="text-[9px] font-medium text-blue-500">
                         Drop {formatPercent(1 - conv1)}
                       </span>
                     </span>
-                  </td>
+                  </DnaTd>
 
-                  <td className="px-4 py-4 text-right align-middle">
+                  <DnaTd className="px-4 py-4 text-right align-middle">
                     <p className="font-extrabold text-sm text-[var(--gray-900)] tabular-nums">
                       {formatInteger(p.clicks)}
                     </p>
@@ -310,18 +318,18 @@ function OptionAFunnelMatrix({ platforms }: { platforms: PlatformChannel[] }) {
                         CPC: {p.cpc}
                       </p>
                     )}
-                  </td>
+                  </DnaTd>
 
-                  <td className="px-2 py-4 text-center align-middle bg-purple-50/20">
+                  <DnaTd className="px-2 py-4 text-center align-middle bg-purple-50/20">
                     <span className="inline-flex flex-col items-center rounded-md bg-purple-50 px-2 py-1 text-[10px] font-black text-purple-700 border border-purple-100 tabular-nums">
                       <span>{formatPercent(conv2)}</span>
                       <span className="text-[9px] font-medium text-purple-500">
                         Drop {formatPercent(1 - conv2)}
                       </span>
                     </span>
-                  </td>
+                  </DnaTd>
 
-                  <td className="px-4 py-4 text-right align-middle">
+                  <DnaTd className="px-4 py-4 text-right align-middle">
                     <p className="font-extrabold text-sm text-[var(--gray-900)] tabular-nums">
                       {formatInteger(p.leads)}
                     </p>
@@ -330,9 +338,9 @@ function OptionAFunnelMatrix({ platforms }: { platforms: PlatformChannel[] }) {
                         CPL: {p.cpl}
                       </p>
                     )}
-                  </td>
+                  </DnaTd>
 
-                  <td className="px-2 py-4 text-center align-middle bg-amber-50/20">
+                  <DnaTd className="px-2 py-4 text-center align-middle bg-amber-50/20">
                     <span className={`inline-flex flex-col items-center rounded-md px-2 py-1 text-[10px] font-black border tabular-nums ${
                       conv3 < 0.3 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-100'
                     }`}>
@@ -341,9 +349,9 @@ function OptionAFunnelMatrix({ platforms }: { platforms: PlatformChannel[] }) {
                         Drop {formatPercent(1 - conv3)}
                       </span>
                     </span>
-                  </td>
+                  </DnaTd>
 
-                  <td className="px-4 py-4 text-right align-middle">
+                  <DnaTd className="px-4 py-4 text-right align-middle">
                     <p className="font-extrabold text-sm text-[var(--gray-900)] tabular-nums">
                       {formatInteger(p.sample)}
                     </p>
@@ -352,9 +360,9 @@ function OptionAFunnelMatrix({ platforms }: { platforms: PlatformChannel[] }) {
                         CPS: {p.cps}
                       </p>
                     )}
-                  </td>
+                  </DnaTd>
 
-                  <td className="px-2 py-4 text-center align-middle bg-emerald-50/20">
+                  <DnaTd className="px-2 py-4 text-center align-middle bg-emerald-50/20">
                     <span className={`inline-flex flex-col items-center rounded-md px-2 py-1 text-[10px] font-black border tabular-nums ${
                       conv4 > 0.15 ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-emerald-50 text-emerald-700 border-emerald-100'
                     }`}>
@@ -363,9 +371,9 @@ function OptionAFunnelMatrix({ platforms }: { platforms: PlatformChannel[] }) {
                         Drop {formatPercent(1 - conv4)}
                       </span>
                     </span>
-                  </td>
+                  </DnaTd>
 
-                  <td className="px-6 py-4 text-right align-middle bg-emerald-50/10">
+                  <DnaTd className="px-6 py-4 text-right align-middle bg-emerald-50/10">
                     <p className="font-black text-base text-[var(--status-success)] tabular-nums">
                       {formatInteger(p.deal)} Deals
                     </p>
@@ -374,47 +382,47 @@ function OptionAFunnelMatrix({ platforms }: { platforms: PlatformChannel[] }) {
                         CAC: {p.cac}
                       </p>
                     )}
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               );
             })}
-          </tbody>
+          </DnaTableBody>
 
           <tfoot className="bg-[var(--gray-900)] text-white font-extrabold">
-            <tr>
-              <td className="px-6 py-4 text-sm font-black tracking-wider">
+            <DnaTableRow>
+              <DnaTd className="px-6 py-4 text-sm font-black tracking-wider">
                 📊 BLENDED TOTAL (ALL PLATFORMS)
-              </td>
-              <td className="px-4 py-4 text-right tabular-nums text-sm">
+              </DnaTd>
+              <DnaTd className="px-4 py-4 text-right tabular-nums text-sm">
                 {formatInteger(totalViews)}
-              </td>
-              <td className="px-2 py-4 text-center text-xs bg-slate-800 text-blue-300">
+              </DnaTd>
+              <DnaTd className="px-2 py-4 text-center text-xs bg-slate-800 text-blue-300">
                 {formatPercent(blendedConv1)}
-              </td>
-              <td className="px-4 py-4 text-right tabular-nums text-sm">
+              </DnaTd>
+              <DnaTd className="px-4 py-4 text-right tabular-nums text-sm">
                 {formatInteger(totalClicks)}
-              </td>
-              <td className="px-2 py-4 text-center text-xs bg-slate-800 text-purple-300">
+              </DnaTd>
+              <DnaTd className="px-2 py-4 text-center text-xs bg-slate-800 text-purple-300">
                 {formatPercent(blendedConv2)}
-              </td>
-              <td className="px-4 py-4 text-right tabular-nums text-sm">
+              </DnaTd>
+              <DnaTd className="px-4 py-4 text-right tabular-nums text-sm">
                 {formatInteger(totalLeads)}
-              </td>
-              <td className="px-2 py-4 text-center text-xs bg-slate-800 text-amber-300">
+              </DnaTd>
+              <DnaTd className="px-2 py-4 text-center text-xs bg-slate-800 text-amber-300">
                 {formatPercent(blendedConv3)}
-              </td>
-              <td className="px-4 py-4 text-right tabular-nums text-sm">
+              </DnaTd>
+              <DnaTd className="px-4 py-4 text-right tabular-nums text-sm">
                 {formatInteger(totalSample)}
-              </td>
-              <td className="px-2 py-4 text-center text-xs bg-slate-800 text-emerald-300">
+              </DnaTd>
+              <DnaTd className="px-2 py-4 text-center text-xs bg-slate-800 text-emerald-300">
                 {formatPercent(blendedConv4)}
-              </td>
-              <td className="px-6 py-4 text-right tabular-nums text-base text-[var(--status-success)] font-black">
+              </DnaTd>
+              <DnaTd className="px-6 py-4 text-right tabular-nums text-base text-[var(--status-success)] font-black">
                 {formatInteger(totalDeal)} Deals
-              </td>
-            </tr>
+              </DnaTd>
+            </DnaTableRow>
           </tfoot>
-        </table>
+        </DnaTable>
       </div>
     </DashboardCard>
   );

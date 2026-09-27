@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Settings2,
   History,
@@ -18,31 +21,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { DnaPageContainer, DnaPageHeader, DnaCard, DnaButton, DnaBadge, DnaSelect } from "@/components/dna";
-
-// Static Data from Plan
-const STATIC_COA = [
-  { "kode": "11111", "nama": "Kas Utama" },
-  { "kode": "11112", "nama": "Kas Kecil" },
-  { "kode": "11212", "nama": "BCA (2640351589)" },
-  { "kode": "11411", "nama": "Piutang Dagang" },
-  { "kode": "11412", "nama": "Uang Muka Pembelian" },
-  { "kode": "11611", "nama": "Persediaan Bahan Baku" },
-  { "kode": "11612", "nama": "Persediaan Bahan Pembantu" },
-  { "kode": "11613", "nama": "Persediaan Barang Setengah Jadi" },
-  { "kode": "11614", "nama": "Persediaan Barang Jadi" },
-  { "kode": "11615", "nama": "Persediaan Kemasan" },
-  { "kode": "11616", "nama": "Persediaan Lainnya" },
-  { "kode": "21111", "nama": "Hutang Dagang" },
-  { "kode": "21113", "nama": "Uang Muka Penjualan" },
-  { "kode": "31111", "nama": "Modal Saham" },
-  { "kode": "41111", "nama": "Penjualan" },
-  { "kode": "41211", "nama": "Retur/Potongan Penjualan" },
-  { "kode": "51111", "nama": "HPP" },
-  { "kode": "61111", "nama": "Beban Gaji" },
-  { "kode": "71111", "nama": "Pendapatan Lain-lain" },
-  { "kode": "72111", "nama": "Beban Bunga" }
-];
+import { DnaPageContainer, DnaPageHeader, DnaCard, DnaButton, DnaBadge, DnaSelect, useDnaToast } from "@/components/dna";
 
 const MAPPING_GROUPS = [
   {
@@ -84,11 +63,80 @@ const MAPPING_GROUPS = [
 ];
 
 export default function AutoJournalConfigPrototype() {
+  const toast = useDnaToast();
+  const qc = useQueryClient();
+
   const [mappings, setMappings] = useState<Record<string, string>>({
     coa_1: "21111",
     coa_2: "71114",
     coa_7: "11411",
     coa_8: "41211"
+  });
+
+  // 1. Fetch live COA accounts
+  const { data: accounts = [] } = useQuery<any[]>({
+    queryKey: ["finance-accounts"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/accounts");
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  // 2. Fetch saved configs from backend
+  const { data: serverConfigs = [] } = useQuery<any[]>({
+    queryKey: ["finance-auto-journal-configs"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/auto-journal-configs");
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  // Sync server configs into mappings state
+  useEffect(() => {
+    if (serverConfigs.length > 0) {
+      const newMappings = { ...mappings };
+      serverConfigs.forEach((cfg: any) => {
+        if (cfg.transactionType && cfg.coaDebetId) {
+          newMappings[cfg.transactionType] = cfg.coaDebetId;
+        }
+      });
+      setMappings(newMappings);
+    }
+  }, [serverConfigs]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const entries = Object.entries(mappings).filter(([_, val]) => !!val);
+      const promises = entries.map(([key, val]) => {
+        // Resolve account ID if available
+        const matched = accounts.find((a: any) => a.code === val || a.id === val);
+        const accountId = matched?.id || val;
+        return api.post("/finance/auto-journal-configs", {
+          transactionType: key,
+          coaDebetId: accountId,
+          coaCreditId: accountId,
+          description: `Auto journal rule for ${key}`
+        });
+      });
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      toast.success("Konfigurasi jurnal otomatis berhasil disimpan ke database!");
+      qc.invalidateQueries({ queryKey: ["finance-auto-journal-configs"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal menyimpan konfigurasi");
+    }
   });
 
   const handleUpdateMapping = (id: string, val: string) => {
@@ -97,8 +145,8 @@ export default function AutoJournalConfigPrototype() {
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       transition: { duration: 0.5, staggerChildren: 0.1, ease: [0.22, 1, 0.36, 1] as const }
     }
@@ -116,6 +164,7 @@ export default function AutoJournalConfigPrototype() {
               variant="outline"
               className="h-14 px-6 border border-slate-200 rounded-2xl"
               icon={<History className="h-4 w-4 text-amber-500" />}
+              onClick={() => toast.info("Audit log jurnal otomatis: Seluruh aturan posting tersinkron")}
             >
               Audit Log
             </DnaButton>
@@ -123,8 +172,10 @@ export default function AutoJournalConfigPrototype() {
               variant="primary"
               className="h-14 px-8 bg-blue-600 hover:bg-blue-700 rounded-2xl hover:scale-105"
               icon={<Save className="h-5 w-5 text-blue-400" />}
+              onClick={() => saveMutation.mutate()}
+              disabled={saveMutation.isPending}
             >
-              Save Configuration
+              {saveMutation.isPending ? "Saving..." : "Save Configuration"}
             </DnaButton>
           </div>
         }
@@ -134,7 +185,7 @@ export default function AutoJournalConfigPrototype() {
          {/* Main Config Area */}
          <div className="lg:col-span-8 space-y-10">
             {MAPPING_GROUPS.map((group, gIdx) => (
-              <motion.div 
+              <motion.div
                 key={gIdx}
                 variants={containerVariants}
                 initial="hidden"
@@ -158,19 +209,26 @@ export default function AutoJournalConfigPrototype() {
                             <div className="md:col-span-8 flex gap-4">
                                <div className="relative flex-1">
                                   <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-<DnaSelect 
+                                  <DnaSelect
                                     value={mappings[item.id] || ""}
                                     onChange={(value) => handleUpdateMapping(item.id, value)}
                                     className="w-full h-11 pl-12 pr-10 bg-slate-50 border border-slate-200 rounded-xl font-black uppercase text-[10px] appearance-none focus:ring-2 focus:ring-blue-500 transition-all italic outline-none cursor-pointer"
                                   >
                                      <option value="">— SELECT COA —</option>
-                                     {STATIC_COA.map(coa => (
-                                       <option key={coa.kode} value={coa.kode}>{coa.kode} — {coa.nama}</option>
-                                     ))}
+                                     {accounts.length > 0 ? (
+                                       accounts.map((coa: any) => (
+                                         <option key={coa.id || coa.code} value={coa.code}>
+                                           {coa.code} — {coa.name}
+                                         </option>
+                                       ))
+                                     ) : (
+                                       <option value={item.default || ""}>{item.default ? `${item.default} — Akun Bawaan` : "Belum ada akun di database"}</option>
+                                     )}
                                   </DnaSelect>
-                                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 pointer-events-none" />
-                                </div>
-                                <DnaButton variant="ghost" className="h-11 w-11 p-0 rounded-xl bg-slate-50 text-slate-300 hover:bg-blue-600 hover:text-white transition-all shrink-0" icon={<Plus className="h-5 w-5" />} />
+                               </div>
+                               <div className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 group-hover/item:border-blue-500 group-hover/item:text-blue-600 transition-all">
+                                  <Settings2 className="h-4 w-4" />
+                               </div>
                             </div>
                          </div>
                        ))}
@@ -180,78 +238,42 @@ export default function AutoJournalConfigPrototype() {
             ))}
          </div>
 
-         {/* Sidebar Stats & Info */}
+         {/* Sidebar Controls */}
          <div className="lg:col-span-4 space-y-10">
-            <div className="sticky top-10 space-y-10">
-               <DnaCard className="rounded-2xl border border-slate-200 shadow-sm p-10 bg-white overflow-hidden relative">
-                  <div className="relative z-10 space-y-10">
-                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Configuration Ledger</p>
-                        <h2 className="text-3xl font-black italic tracking-tighter uppercase mt-2 text-slate-900">Policy <br/> <span className="text-blue-600">Stability</span></h2>
-                     </div>
-
-                     <div className="space-y-6 pt-10 border-t border-gray-200">
-                        <div className="flex items-center justify-between">
-                           <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Active Mappings</p>
-                           <p className="text-2xl font-black text-gray-900 tabular-nums">{Object.keys(mappings).length} <span className="text-xs text-slate-400">/ 12</span></p>
-                        </div>
-                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                           <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${(Object.keys(mappings).length / 12) * 100}%` }}
-                              className="h-full bg-blue-500"
-                           />
-                        </div>
-                     </div>
-
-                     <div className="p-6 bg-blue-50 rounded-2xl border border-blue-200 flex gap-4 items-start">
-                        <ShieldCheck className="h-6 w-6 text-blue-600 shrink-0" />
-                        <p className="text-[9px] font-medium text-slate-500 leading-relaxed uppercase">
-                           "Automated entries are immutable once posted. Ensure mapping accuracy before finalizing the financial cycle."
-                        </p>
-                     </div>
+            {/* System Status */}
+            <DnaCard className="rounded-2xl border border-slate-200 shadow-sm p-8 bg-white space-y-6">
+               <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Engine Health</span>
+                  <DnaBadge variant="success" className="px-3 py-1 font-black italic uppercase text-[9px]">LIVE SYNC</DnaBadge>
+               </div>
+               <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                     <ShieldCheck className="h-6 w-6" />
                   </div>
-                  <Settings2 className="h-48 w-48 text-slate-100/40 absolute -right-12 -bottom-12 rotate-12" />
-               </DnaCard>
+                  <div>
+                     <p className="text-sm font-black text-slate-900 uppercase italic">Balanced Journal Gate</p>
+                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Double-entry strictly enforced</p>
+                  </div>
+               </div>
+               <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                  <span>Akun COA Aktif</span>
+                  <span className="text-slate-900 font-extrabold">{accounts.length} Akun</span>
+               </div>
+            </DnaCard>
 
-               <DnaCard className="rounded-2xl border border-slate-200 shadow-sm p-8 bg-white space-y-6">
-                  <div className="flex items-center gap-3">
-                     <Lock className="h-5 w-5 text-blue-600" />
-                     <h3 className="text-sm font-black uppercase tracking-tighter text-slate-900">Access Governance</h3>
-                  </div>
-                  <div className="space-y-4">
-                     {[
-                       { user: "Accounting Head", status: "Verified", date: "Just now" },
-                       { user: "Audit System", status: "Active", date: "Syncing..." },
-                     ].map((user, i) => (
-                       <div key={i} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                          <div className="flex flex-col">
-                             <span className="text-[10px] font-black uppercase text-slate-900">{user.user}</span>
-                             <span className="text-[8px] font-medium text-slate-400 uppercase">{user.date}</span>
-                          </div>
-                          <DnaBadge status="success">{user.status}</DnaBadge>
-                       </div>
-                     ))}
-                  </div>
-               </DnaCard>
+            {/* Quick Helper */}
+            <div className="p-8 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white space-y-6 shadow-xl shadow-blue-500/10">
+               <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md">
+                  <GitMerge className="h-5 w-5" />
+               </div>
+               <div className="space-y-2">
+                  <h3 className="text-lg font-black uppercase italic tracking-tight">Atomic Mapping Engine</h3>
+                  <p className="text-xs text-blue-100 leading-relaxed font-medium">
+                     Setiap transaksi operasional faktur dan kas otomatis membentuk pasangan Debit-Kredit pada bagan akun COA yang Anda petakan di sini.
+                  </p>
+               </div>
             </div>
          </div>
-      </div>
-
-      {/* Action Footer */}
-      <div className="flex justify-between items-center px-6 mt-6">
-         <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-               <Activity className="h-4 w-4 text-emerald-500" />
-               <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Protocol 11-COA: Active</span>
-            </div>
-            <div className="h-4 w-[1px] bg-slate-200" />
-            <div className="flex items-center gap-2">
-               <GitMerge className="h-4 w-4 text-blue-600" />
-               <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Sub-ledger Integration Enabled</span>
-            </div>
-         </div>
-         <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.3em]">Institutional Grade Financial OS © 2026</p>
       </div>
     </DnaPageContainer>
   );

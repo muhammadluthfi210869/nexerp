@@ -1,3 +1,11 @@
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import React from 'react';
 import { 
   TrendingUp, 
@@ -175,57 +183,57 @@ export const NurturingFunnelSection: React.FC<NurturingFunnelSectionProps> = ({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                <th className="py-3 px-4">Channel / Touchpoint</th>
-                <th className="py-3 px-4 text-right text-slate-700">1. Leads Traffic</th>
-                <th className="py-3 px-4 text-right text-indigo-700">2. Prospecting Leads</th>
-                <th className="py-3 px-4 text-right text-emerald-700">3. Goals Sample</th>
-                <th className="py-3 px-4 text-right text-amber-700">Kontrak Closing</th>
-                <th className="py-3 px-4 text-center">Leads &rarr; Sample %</th>
-                <th className="py-3 px-4 text-right">Cost / Nilai Deal</th>
-                <th className="py-3 px-4">Karakteristik &amp; Nurturing Note</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                <DnaTh className="py-3 px-4">Channel / Touchpoint</DnaTh>
+                <DnaTh className="py-3 px-4 text-right text-slate-700">1. Leads Traffic</DnaTh>
+                <DnaTh className="py-3 px-4 text-right text-indigo-700">2. Prospecting Leads</DnaTh>
+                <DnaTh className="py-3 px-4 text-right text-emerald-700">3. Goals Sample</DnaTh>
+                <DnaTh className="py-3 px-4 text-right text-amber-700">Kontrak Closing</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Leads &rarr; Sample %</DnaTh>
+                <DnaTh className="py-3 px-4 text-right">Cost / Nilai Deal</DnaTh>
+                <DnaTh className="py-3 px-4">Karakteristik &amp; Nurturing Note</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {funnels.map((item, idx) => {
                 const leadToSampleConv = item.prospects > 0 ? ((item.nurturingSamples / item.prospects) * 100).toFixed(1) : '0';
                 return (
-                  <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-4 font-semibold text-slate-900">
+                  <DnaTableRow key={idx} className="hover:bg-slate-50/70 transition-colors">
+                    <DnaTd className="py-3.5 px-4 font-semibold text-slate-900">
                       <div className="flex items-center gap-2">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getChannelBadge(item.channel)}`}>
                           {item.channel}
                         </span>
                       </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-right font-medium text-slate-700">
+                    </DnaTd>
+                    <DnaTd className="py-3.5 px-4 text-right font-medium text-slate-700">
                       {formatNumber(item.traffic)}
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3.5 px-4 text-right">
                       <div className="inline-flex items-center gap-1 font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
                         {formatNumber(item.prospects)}
                       </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3.5 px-4 text-right">
                       <div className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
                         <FlaskConical className="w-3 h-3" />
                         {formatNumber(item.nurturingSamples)}
                       </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3.5 px-4 text-right">
                       <div className="inline-flex items-center gap-1 font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
                         <CheckCircle className="w-3 h-3 text-amber-600" />
                         {formatNumber(item.goals)}
                       </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
+                    </DnaTd>
+                    <DnaTd className="py-3.5 px-4 text-center">
                       <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                         {leadToSampleConv}%
                       </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-right font-semibold text-slate-800">
+                    </DnaTd>
+                    <DnaTd className="py-3.5 px-4 text-right font-semibold text-slate-800">
                       {item.cpl ? (
                         <div>
                           <div className="text-slate-900 font-bold">{formatRupiah(item.cpl)} <span className="text-[10px] text-slate-400 font-normal">/ lead</span></div>
@@ -238,31 +246,31 @@ export const NurturingFunnelSection: React.FC<NurturingFunnelSectionProps> = ({
                       ) : (
                         <span className="text-slate-400 font-normal">Organik</span>
                       )}
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-600 max-w-xs truncate text-[11px]">
+                    </DnaTd>
+                    <DnaTd className="py-3.5 px-4 text-slate-600 max-w-xs truncate text-[11px]">
                       {item.notes}
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 );
               })}
-            </tbody>
+            </DnaTableBody>
             <tfoot>
-              <tr className="bg-slate-100/90 font-bold text-slate-900 border-t-2 border-slate-300">
-                <td className="py-3.5 px-4">TOTAL SEMUA CHANNEL</td>
-                <td className="py-3.5 px-4 text-right font-black">{formatNumber(totalTraffic)}</td>
-                <td className="py-3.5 px-4 text-right font-black text-indigo-700">{formatNumber(totalLeads)} Leads</td>
-                <td className="py-3.5 px-4 text-right font-black text-emerald-700">{formatNumber(totalSamples)} Samples</td>
-                <td className="py-3.5 px-4 text-right font-black text-amber-800">{formatNumber(totalGoals)} Closing</td>
-                <td className="py-3.5 px-4 text-center font-black text-emerald-800">{prospectToGoalsRate}%</td>
-                <td className="py-3.5 px-4 text-right font-black text-slate-900">
+              <DnaTableRow className="bg-slate-100/90 font-bold text-slate-900 border-t-2 border-slate-300">
+                <DnaTd className="py-3.5 px-4">TOTAL SEMUA CHANNEL</DnaTd>
+                <DnaTd className="py-3.5 px-4 text-right font-black">{formatNumber(totalTraffic)}</DnaTd>
+                <DnaTd className="py-3.5 px-4 text-right font-black text-indigo-700">{formatNumber(totalLeads)} Leads</DnaTd>
+                <DnaTd className="py-3.5 px-4 text-right font-black text-emerald-700">{formatNumber(totalSamples)} Samples</DnaTd>
+                <DnaTd className="py-3.5 px-4 text-right font-black text-amber-800">{formatNumber(totalGoals)} Closing</DnaTd>
+                <DnaTd className="py-3.5 px-4 text-center font-black text-emerald-800">{prospectToGoalsRate}%</DnaTd>
+                <DnaTd className="py-3.5 px-4 text-right font-black text-slate-900">
                   {totalDealValue > 0 ? formatRupiah(totalDealValue) : 'Closed Value'}
-                </td>
-                <td className="py-3.5 px-4 text-slate-500 font-medium text-[11px]">
+                </DnaTd>
+                <DnaTd className="py-3.5 px-4 text-slate-500 font-medium text-[11px]">
                   Kontribusi 100% pipeline terintegrasi
-                </td>
-              </tr>
+                </DnaTd>
+              </DnaTableRow>
             </tfoot>
-          </table>
+          </DnaTable>
         </div>
       </div>
     </div>

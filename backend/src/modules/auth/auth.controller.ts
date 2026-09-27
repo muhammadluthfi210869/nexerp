@@ -17,7 +17,7 @@ import { User } from '@prisma/client';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Throttle({ default: { limit: 5, ttl: 15 * 60 * 1000 } })
+  @Throttle({ default: { limit: process.env.NODE_ENV === 'production' ? 5 : 200, ttl: 60 * 1000 } })
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     const user = await this.authService.validateUser(
@@ -33,6 +33,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Request() req: { user: User }) {
-    return req.user;
+    const { passwordHash, managerPin, approvalPin, ...safeUser } = req.user as any;
+    return safeUser;
   }
 }

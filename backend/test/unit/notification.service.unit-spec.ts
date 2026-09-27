@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationService } from '../../src/modules/notification/notification.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('NotificationService â€” Unit', () => {
   let service: NotificationService;
@@ -23,6 +24,7 @@ describe('NotificationService â€” Unit', () => {
       providers: [
         NotificationService,
         { provide: PrismaService, useValue: prisma },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

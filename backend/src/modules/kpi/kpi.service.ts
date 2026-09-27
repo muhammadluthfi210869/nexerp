@@ -3,10 +3,11 @@
 // Per-divisi: mean of per-person scores for users in the division.
 // See docs/ssot/PHASE_4_PLAN.md §5 (KPI System).
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { Division, LogActivityType, Prisma } from '@prisma/client';
+import { KPI_GOVERNANCE_REGISTRY, KpiMetricGovernanceDefinition } from './kpi-governance.registry';
 
 export interface Period {
   from?: Date;
@@ -61,6 +62,83 @@ export class KpiService {
     private prisma: PrismaService,
     private activityLog: ActivityLogService,
   ) {}
+
+  // KPI Definitions
+  getDefinitions() {
+    return [
+      {
+        code: 'TASK_COMPLETION',
+        name: 'Task Completion Rate',
+        category: 'OPERATIONAL',
+        description: 'Passive ratio of completed tasks/transitions to created activities',
+        target: 1.0,
+        uom: 'RATIO',
+      },
+      {
+        code: 'ACTIVITY_VOLUME',
+        name: 'Total Activity Mutations',
+        category: 'PRODUCTIVITY',
+        description: 'Total mutations (CREATE, UPDATE, STATE_TRANSITION) performed',
+        target: 100,
+        uom: 'COUNT',
+      },
+      {
+        code: 'PUNCTUALITY_ATTENDANCE',
+        name: 'Attendance & Roster Compliance',
+        category: 'DISCIPLINE',
+        description: 'Clock-in compliance within geofence and roster boundaries',
+        target: 1.0,
+        uom: 'RATIO',
+      },
+    ];
+  }
+
+  // Monthly trends for last 6 months (BUS-RULE-118)
+  async getMonthlyTrends(userId?: string): Promise<Array<{ month: string; score: number; total: number; completionRate: number }>> {
+    const trends: Array<{ month: string; score: number; total: number; completionRate: number }> = [];
+    const now = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+      const year = now.getFullYear();
+      const monthIndex = now.getMonth() - i;
+      const startDate = new Date(year, monthIndex, 1);
+      const endDate = new Date(year, monthIndex + 1, 0, 23, 59, 59, 999);
+      const monthStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
+
+      const where: Prisma.ActivityLogWhereInput = {
+        createdAt: { gte: startDate, lte: endDate },
+        ...(userId ? { userId } : {}),
+      };
+
+      const grouped = await this.prisma.activityLog.groupBy({
+        by: ['type'],
+        where,
+        _count: { _all: true },
+      });
+
+      let total = 0;
+      let stateDone = 0;
+      let creates = 0;
+
+      for (const row of grouped) {
+        const count = row._count._all;
+        total += count;
+        if (row.type === LogActivityType.STATE_TRANSITION) stateDone += count;
+        if (row.type === LogActivityType.CREATE) creates += count;
+      }
+
+      // Null safety: if creates === 0, rate is 0 (or null-safe 0)
+      const completionRate = creates === 0 ? (total > 0 ? 1 : 0) : Number((stateDone / creates).toFixed(2));
+      trends.push({
+        month: monthStr,
+        score: completionRate,
+        total,
+        completionRate,
+      });
+    }
+
+    return trends;
+  }
 
   // Period helpers — exported as methods on the service so controller can
   // delegate and clients don't have to import from us. KISS.
@@ -322,11 +400,46 @@ export class KpiService {
     return scores.sort((a, b) => b.score - a.score).slice(0, limit);
   }
 
-  // Convenience: pull current user from JWT, used by controller.
-  async computeSelf(period: Period = {}): Promise<PersonKpi> {
-    // Self is resolved by controller via req.user.sub; this is a placeholder.
-    throw new Error(
-      'computeSelf requires userId — use computePerson(req.user.sub)',
-    );
+  // BUS-RULE-072 / P18: SSOT KPI Metric Catalog and Governance Registry
+  getGovernanceRegistry(): { data: KpiMetricGovernanceDefinition[] } {
+    return { data: KPI_GOVERNANCE_REGISTRY };
+  }
+
+  // BUS-RULE-072 / P18: Strictly reject manual scoring from HR/users
+  async saveManualScore(body: any): Promise<never> {
+    throw new BadRequestException({
+      statusCode: 400,
+      code: 'PERFORMANCE_MANUAL_BLOCKED',
+      message:
+        'Input manual skor performa dilarang per BUS-RULE-072. Skor wajib dihitung otomatis dari event operasional.',
+    });
+  }
+
+  // BUS-RULE-074 / P18: Dual-Role weighting validation summing to exactly 100%
+  async validateRoleWeights(employeeId: string): Promise<{ isValid: boolean; totalWeight: number }> {
+    const roles = await this.prisma.employeeRoleMapping.findMany({
+      where: { employeeId },
+    });
+
+    if (roles.length === 0) {
+      return { isValid: true, totalWeight: 0 };
+    }
+
+    const totalWeight = roles.reduce((sum, r) => sum + Number(r.weight), 0);
+    // Tolerance for decimal precision (1.00 or 100)
+    const isSum100 = Math.abs(totalWeight - 1.0) < 0.001 || Math.abs(totalWeight - 100) < 0.1;
+
+    if (!isSum100) {
+      throw new BadRequestException({
+        statusCode: 400,
+        code: 'KPI_ROLE_WEIGHT_INVALID',
+        message:
+          'Total bobot peran aktif harus 100% per BUS-RULE-074.',
+        details: { totalWeight, rolesCount: roles.length },
+      });
+    }
+
+    return { isValid: true, totalWeight };
   }
 }
+

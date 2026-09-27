@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-20T03:29:09.041Z",
+  "generated_at": "2026-09-27T15:20:04.622Z",
   "phase": "P02",
   "passed_tests": 14,
   "total_tests": 14,
@@ -12,9 +12,9 @@
         "canonical_models_reconciliation_coverage_percent": 100,
         "canonical_api_reconciliation_coverage_percent": 100,
         "canonical_screens_reconciliation_coverage_percent": 100,
-        "implemented_models_percent": 95.65,
-        "implemented_api_percent": 3.45,
-        "implemented_screens_percent": 3.91,
+        "implemented_models_percent": 96,
+        "implemented_api_percent": 36.61,
+        "implemented_screens_percent": 7.61,
         "missing_blocker_count": 0,
         "unexplained_objects": 0,
         "no_summary_manipulation": true
@@ -22,40 +22,40 @@
     },
     "schema_diff": {
       "status": "PASS",
-      "canonical_models": 92,
-      "reconciled_canonical_models": 92,
-      "implementation_models": 204,
-      "classified_implementation_models": 204,
+      "canonical_models": 100,
+      "reconciled_canonical_models": 100,
+      "implementation_models": 211,
+      "classified_implementation_models": 211,
       "typed_mappings_verified": true,
       "invalid_targets": []
     },
     "openapi_diff": {
       "status": "PASS",
-      "canonical_operations_count": 377,
-      "reconciled_canonical_operations": 377,
-      "implementation_operations_count": 940,
-      "classified_implementation_operations": 940,
+      "canonical_operations_count": 407,
+      "reconciled_canonical_operations": 407,
+      "implementation_operations_count": 996,
+      "classified_implementation_operations": 996,
       "invalid_operations": []
     },
     "route_diff": {
       "status": "PASS",
-      "canonical_screens_count": 179,
-      "reconciled_canonical_screens": 179,
-      "implementation_screens_count": 272,
-      "classified_implementation_screens": 272,
+      "canonical_screens_count": 184,
+      "reconciled_canonical_screens": 184,
+      "implementation_screens_count": 278,
+      "classified_implementation_screens": 278,
       "invalid_screens": []
     },
     "rbac_diff": {
       "status": "PASS",
       "canonical_roles": 44,
-      "canonical_permissions": 144,
+      "canonical_permissions": 149,
       "implementation_auth_type": "Enum UserRole + dynamic employee role mapping + RBAC guards"
     },
     "event_workflow_diff": {
       "status": "PASS",
-      "canonical_integration_events": 76,
+      "canonical_integration_events": 88,
       "canonical_workflow_state_machines": 37,
-      "implementation_events_count": 217,
+      "implementation_events_count": 240,
       "events_diff": {
         "missing": [],
         "extraneous": [],
@@ -66,11 +66,11 @@
     },
     "caller_import_registration_scan": {
       "status": "PASS",
-      "backend_controllers_registered": 99,
-      "backend_services_registered": 129,
-      "backend_modules_registered": 72,
-      "reachable_count": 275,
-      "dead_count": 25,
+      "backend_controllers_registered": 114,
+      "backend_services_registered": 154,
+      "backend_modules_registered": 77,
+      "reachable_count": 344,
+      "dead_count": 1,
       "errors": []
     },
     "orphan_scan": {
@@ -82,7 +82,7 @@
     },
     "unused_export_dependency_scan": {
       "status": "PASS",
-      "backend_production_dependencies": 38,
+      "backend_production_dependencies": 40,
       "frontend_production_dependencies": 26,
       "dep_errors": []
     },
@@ -100,26 +100,26 @@
     },
     "dna_screen_import_inventory": {
       "status": "PASS",
-      "total_screens_inventoried": 272,
-      "screens_importing_dna": 213,
-      "screens_importing_ui_kit": 37,
+      "total_screens_inventoried": 278,
+      "screens_importing_dna": 223,
+      "screens_importing_ui_kit": 7,
       "manifest_coverage_percent": 100
     },
     "dna_hardcoded_visual_inventory": {
       "status": "PASS",
-      "total_screens_scanned": 272,
-      "screens_with_hex_colors": 42,
+      "total_screens_scanned": 278,
+      "screens_with_hex_colors": 49,
       "screens_with_inline_styles": 29,
-      "screens_with_raw_buttons": 78,
+      "screens_with_raw_buttons": 62,
       "inventory_complete": true
     },
     "dna_migration_disposition": {
       "status": "PASS",
-      "total_screens_dispositioned": 272,
+      "total_screens_dispositioned": 278,
       "disposition_breakdown": {
-        "PARTIALLY_MIGRATED": 102,
-        "ALREADY_DNA": 111,
-        "SCHEDULED_P19_MIGRATION": 57,
+        "PARTIALLY_MIGRATED": 87,
+        "ALREADY_DNA": 136,
+        "SCHEDULED_P19_MIGRATION": 53,
         "REDIRECT_ONLY": 2
       },
       "coverage_percent": 100

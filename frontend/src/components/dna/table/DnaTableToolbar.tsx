@@ -16,6 +16,7 @@ export interface DnaFilterColumnConfig {
 export interface DnaTableToolbarProps {
   // Search
   searchQuery?: string;
+  searchValue?: string;
   onSearchChange?: (val: string) => void;
   searchPlaceholder?: string;
 
@@ -43,15 +44,24 @@ export interface DnaTableToolbarProps {
     icon?: React.ReactNode;
   };
 
-  // Additional custom actions
+  // Additional custom actions & custom search/filter
+  searchProps?: {
+    value?: string;
+    onChange?: (val: string) => void;
+    placeholder?: string;
+  };
+  filterElement?: React.ReactNode;
   extraActions?: React.ReactNode;
   className?: string;
 }
 
 export function DnaTableToolbar({
   searchQuery = "",
+  searchValue,
   onSearchChange,
   searchPlaceholder = "Cari data...",
+  searchProps,
+  filterElement,
 
   filterColumns,
   selectedColumn,
@@ -122,24 +132,28 @@ export function DnaTableToolbar({
     }
   };
 
+  const effectiveOnSearchChange = onSearchChange || searchProps?.onChange;
+  const effectiveSearchQuery = searchValue !== undefined ? searchValue : (searchProps?.value !== undefined ? searchProps.value : searchQuery);
+  const effectivePlaceholder = searchProps?.placeholder || searchPlaceholder;
+
   return (
     <div className={cn("p-4 border-b border-slate-100 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3", className)}>
       <div className="flex flex-1 flex-wrap items-center gap-2.5">
         {/* 1. SEARCH BAR - Compact & Breathable */}
-        {onSearchChange && (
+        {effectiveOnSearchChange && (
           <div className="relative w-56 sm:w-64 shrink-0">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
-              placeholder={searchPlaceholder}
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder={effectivePlaceholder}
+              value={effectiveSearchQuery}
+              onChange={(e) => effectiveOnSearchChange(e.target.value)}
               className="w-full pl-9 pr-7 h-9 bg-slate-50 border border-slate-200 rounded-xl text-[12px] text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
             />
-            {searchQuery && (
+            {effectiveSearchQuery && (
               <button
                 type="button"
-                onClick={() => onSearchChange("")}
+                onClick={() => effectiveOnSearchChange("")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 rounded-full border-none bg-transparent cursor-pointer"
               >
                 <X className="w-3 h-3" />
@@ -489,6 +503,7 @@ export function DnaTableToolbar({
             )}
           </div>
         )}
+        {filterElement}
       </div>
 
       {/* Right Side: Primary Action & Extra Actions */}

@@ -37,6 +37,13 @@ export class QCChecklistsController {
     return this.checklistsService.findCompleted();
   }
 
+  @Get('categories')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB, UserRole.PRODUCTION_OP)
+  @ApiOperation({ summary: 'List checklist categories' })
+  getCategories() {
+    return this.checklistsService.getCategories();
+  }
+
   @Get(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.QC_LAB)
   @ApiOperation({ summary: 'Get single checklist detail' })

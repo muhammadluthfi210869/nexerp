@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   DnaPageContainer,
   DnaPageHeader,
@@ -9,115 +11,73 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
-  DnaInput,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
-import { PackageCheck, AlertTriangle, Gift, Search, Calendar, FileSpreadsheet, Eye, Printer } from "lucide-react";
+import { PackageCheck, AlertTriangle, Gift, Calendar, FileSpreadsheet, Eye, Printer } from "lucide-react";
 
 interface GoodsReceiptReportItem {
   id: string;
   date: string;
   grnNumber: string;
   poNumber: string;
-  supplier: string;
+  status: string;
   materialName: string;
   qtyReceived: number;
   qtyGood: number;
   qtyReject: number;
   qtyFree: number;
-  warehouse: string;
-  officer: string;
   unit: string;
 }
-
-const REPORT_DATA: GoodsReceiptReportItem[] = [
-  {
-    id: "grn-1",
-    date: "2026-09-13",
-    grnNumber: "GRN-2026-0001",
-    poNumber: "PO-2026-0001",
-    supplier: "PT. Chemico Indonesia",
-    materialName: "Niacinamide USP Grade 99%",
-    qtyReceived: 200,
-    qtyGood: 195,
-    qtyReject: 5,
-    qtyFree: 0,
-    warehouse: "Gudang Bahan Baku (GBB)",
-    officer: "Budi Santoso",
-    unit: "KG"
-  },
-  {
-    id: "grn-2",
-    date: "2026-09-13",
-    grnNumber: "GRN-2026-0001",
-    poNumber: "PO-2026-0001",
-    supplier: "PT. Chemico Indonesia",
-    materialName: "Glycerin USP Pharma 99.7%",
-    qtyReceived: 480,
-    qtyGood: 480,
-    qtyReject: 0,
-    qtyFree: 20,
-    warehouse: "Gudang Bahan Baku (GBB)",
-    officer: "Budi Santoso",
-    unit: "KG"
-  },
-  {
-    id: "grn-3",
-    date: "2026-09-15",
-    grnNumber: "GRN-2026-0002",
-    poNumber: "PO-2026-0004",
-    supplier: "PT. Indesso Aroma",
-    materialName: "Montanov 68 Emulsifier",
-    qtyReceived: 52,
-    qtyGood: 50,
-    qtyReject: 2,
-    qtyFree: 0,
-    warehouse: "Gudang Bahan Baku (GBB)",
-    officer: "Ahmad Fauzi",
-    unit: "KG"
-  },
-  {
-    id: "grn-4",
-    date: "2026-09-15",
-    grnNumber: "GRN-2026-0002",
-    poNumber: "PO-2026-0004",
-    supplier: "PT. Indesso Aroma",
-    materialName: "Carbomer 940 Polymer",
-    qtyReceived: 100,
-    qtyGood: 100,
-    qtyReject: 0,
-    qtyFree: 5,
-    warehouse: "Gudang Bahan Baku (GBB)",
-    officer: "Ahmad Fauzi",
-    unit: "KG"
-  },
-  {
-    id: "grn-5",
-    date: "2026-09-16",
-    grnNumber: "GRN-2026-0003",
-    poNumber: "PO-2026-0002",
-    supplier: "PT. Multi Kemas Plastindo",
-    materialName: "Botol Serum 30ml Pipet Emas",
-    qtyReceived: 5000,
-    qtyGood: 4950,
-    qtyReject: 50,
-    qtyFree: 100,
-    warehouse: "Gudang Kemasan Primer (GKP)",
-    officer: "Wahyu Hidayat",
-    unit: "PCS"
-  }
-];
 
 export default function GoodsReceiptReportPage() {
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [selectedItem, setSelectedItem] = useState<GoodsReceiptReportItem | null>(null);
 
-  const filteredData = REPORT_DATA.filter((item) => {
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["reports-goods-receipts"],
+    queryFn: async () => {
+      const res = await api.get("/purchase/goods-receipts");
+      return res.data;
+    },
+  });
+
+  const rows: GoodsReceiptReportItem[] = useMemo(() => {
+    const raw = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
+    const out: GoodsReceiptReportItem[] = [];
+    for (const inbound of raw) {
+      const date = inbound.receivedAt ? String(inbound.receivedAt).split("T")[0] : "-";
+      for (const item of inbound.items || []) {
+        out.push({
+          id: item.id,
+          date,
+          grnNumber: inbound.inboundNumber || "-",
+          poNumber: inbound.po?.poNumber || "-",
+          status: inbound.status || "PENDING",
+          materialName: item.material?.name || "-",
+          qtyReceived: Number(item.qtyActual ?? 0),
+          qtyGood: Number(item.qtyGood ?? 0),
+          qtyReject: Number(item.qtyReject ?? 0),
+          qtyFree: Number(item.qtyFree ?? 0),
+          unit: item.material?.unit || "",
+        });
+      }
+    }
+    return out;
+  }, [data]);
+
+  const filteredData = rows.filter((item) => {
+    const q = search.toLowerCase();
     const matchSearch =
-      item.grnNumber.toLowerCase().includes(search.toLowerCase()) ||
-      item.poNumber.toLowerCase().includes(search.toLowerCase()) ||
-      item.supplier.toLowerCase().includes(search.toLowerCase()) ||
-      item.materialName.toLowerCase().includes(search.toLowerCase());
+      item.grnNumber.toLowerCase().includes(q) ||
+      item.poNumber.toLowerCase().includes(q) ||
+      item.materialName.toLowerCase().includes(q);
     const matchDate = !dateFilter || item.date === dateFilter;
     return matchSearch && matchDate;
   });
@@ -146,146 +106,190 @@ export default function GoodsReceiptReportPage() {
         }
       />
 
-      {/* KPI 3-Pilar */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          title="Total Fisik Diterima"
+          label="Total Fisik Diterima"
           value={totalDiterima.toLocaleString("id-ID")}
-          icon={PackageCheck}
-          variant="default"
+          icon={<PackageCheck className="w-5 h-5 text-indigo-600" />}
+          variant="info"
           subtext="Total kuantitas item masuk"
         />
         <DnaStatCard
-          title="Kondisi Bagus (Acc Pay)"
+          label="Kondisi Bagus (Acc Pay)"
           value={totalBagus.toLocaleString("id-ID")}
-          icon={PackageCheck}
+          icon={<PackageCheck className="w-5 h-5 text-emerald-600" />}
           variant="success"
           subtext="Layak masuk stok & dibayar"
         />
         <DnaStatCard
-          title="Kondisi Reject (No Pay)"
+          label="Kondisi Reject (No Pay)"
           value={totalReject.toLocaleString("id-ID")}
-          icon={AlertTriangle}
-          variant="danger"
+          icon={<AlertTriangle className="w-5 h-5 text-rose-600" />}
+          variant={totalReject > 0 ? "warning" : "default"}
           subtext="Rusak / cacat / retur supplier"
         />
         <DnaStatCard
-          title="Barang Gratis / Free"
+          label="Barang Gratis / Free"
           value={totalFree.toLocaleString("id-ID")}
-          icon={Gift}
+          icon={<Gift className="w-5 h-5 text-amber-600" />}
           variant="warning"
           subtext="Sample gratis & toleransi bonus"
         />
       </DnaKpiGrid>
 
-      {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200">
-        <div className="flex items-center gap-3">
-          <div className="relative w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <DnaInput
-              placeholder="Cari No. GRN, PO, Supplier, Bahan..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-slate-400" />
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="text-xs border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-1 focus:ring-sky-500"
-            />
-            {dateFilter && (
-              <button
-                onClick={() => setDateFilter("")}
-                className="text-xs text-rose-600 hover:underline"
-              >
-                Reset
-              </button>
-            )}
-          </div>
-        </div>
-        <div className="text-xs text-slate-500 font-medium">
-          Menampilkan <span className="font-bold text-slate-800">{filteredData.length}</span> baris riwayat penerimaan
-        </div>
-      </div>
-
-      {/* Tabel 1:1 G-SERP Clean Anti-Bloat (Tepat 11 Kolom) */}
-      <DnaDataTableCard title="Log Rekapitulasi Penerimaan Fisik Barang">
+      <DnaDataTableCard
+        toolbarProps={{
+          searchQuery: search,
+          onSearchChange: setSearch,
+          searchPlaceholder: "Cari No. GRN, PO, Bahan...",
+          extraActions: (
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-slate-400" />
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="text-[12px] border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              {dateFilter && (
+                <button
+                  onClick={() => setDateFilter("")}
+                  className="text-[11px] text-rose-600 hover:underline font-medium"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          ),
+        }}
+      >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-semibold uppercase text-[11px] tracking-wider">
-                <th className="py-3 px-3">Tanggal</th>
-                <th className="py-3 px-3">No. GRN</th>
-                <th className="py-3 px-3">No. PO</th>
-                <th className="py-3 px-3">Supplier</th>
-                <th className="py-3 px-3">Nama Barang</th>
-                <th className="py-3 px-3 text-right">Qty Diterima</th>
-                <th className="py-3 px-3 text-right">Bagus</th>
-                <th className="py-3 px-3 text-right">Reject</th>
-                <th className="py-3 px-3 text-right">Free</th>
-                <th className="py-3 px-3">Gudang</th>
-                <th className="py-3 px-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
-              {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={11} className="py-8 text-center text-slate-400">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="px-4 py-3 h-[40px] w-[110px]">Tanggal</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[150px]">No. GRN</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[130px]">No. PO</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Nama Barang</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[110px]">Qty Diterima</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[90px]">Bagus</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[90px]">Reject</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[90px]">Free</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-center w-[120px]">Status</DnaTh>
+                <DnaTh className="px-4 py-3 h-[40px] text-center w-[70px]">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
+              {isLoading ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={10} className="py-12 text-center text-slate-400">
+                    Memuat data penerimaan barang...
+                  </DnaTd>
+                </DnaTableRow>
+              ) : isError ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={10} className="py-12 text-center">
+                    <p className="text-rose-600 mb-3">Gagal memuat laporan penerimaan barang dari server.</p>
+                    <DnaButton variant="secondary" size="sm" onClick={() => refetch()}>
+                      Coba Lagi
+                    </DnaButton>
+                  </DnaTd>
+                </DnaTableRow>
+              ) : filteredData.length === 0 ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={10} className="py-12 text-center text-slate-400">
+                    <PackageCheck className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada data penerimaan barang yang sesuai kriteria filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredData.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-2.5 px-3 font-mono text-slate-600 whitespace-nowrap">{row.date}</td>
-                    <td className="py-2.5 px-3 font-semibold text-sky-700 whitespace-nowrap">{row.grnNumber}</td>
-                    <td className="py-2.5 px-3 text-slate-800 whitespace-nowrap">{row.poNumber}</td>
-                    <td className="py-2.5 px-3 font-medium text-slate-800 whitespace-nowrap">{row.supplier}</td>
-                    <td className="py-2.5 px-3 text-slate-800">{row.materialName}</td>
-                    <td className="py-2.5 px-3 text-right font-semibold text-slate-800 whitespace-nowrap">
-                      {row.qtyReceived.toLocaleString("id-ID")} {row.unit}
-                    </td>
-                    <td className="py-2.5 px-3 text-right font-medium text-emerald-700 whitespace-nowrap">
-                      {row.qtyGood.toLocaleString("id-ID")}
-                    </td>
-                    <td className="py-2.5 px-3 text-right font-medium whitespace-nowrap">
+                  <DnaTableRow
+                    key={row.id}
+                    className="hover:bg-slate-50/60 transition-colors group h-[48px]"
+                  >
+                    <DnaTd className="px-4 py-2 text-slate-600 whitespace-nowrap">
+                      {row.date}
+                    </DnaTd>
+
+                    <DnaTd className="px-3 py-2">
+                      <DnaCell.Code value={row.grnNumber} />
+                    </DnaTd>
+
+                    <DnaTd className="px-3 py-2">
+                      <DnaCell.Code value={row.poNumber} />
+                    </DnaTd>
+
+                    <DnaTd className="px-3 py-2 text-slate-900 truncate max-w-[220px]">
+                      {row.materialName}
+                    </DnaTd>
+
+                    <DnaTd className="px-3 py-2 text-right">
+                      <DnaCell.Number
+                        value={row.qtyReceived}
+                        unit={row.unit}
+                      />
+                    </DnaTd>
+
+                    <DnaTd className="px-3 py-2 text-right">
+                      <DnaCell.Number
+                        value={row.qtyGood}
+                        colorClass="text-emerald-700 font-semibold"
+                      />
+                    </DnaTd>
+
+                    <DnaTd className="px-3 py-2 text-right">
                       {row.qtyReject > 0 ? (
-                        <span className="text-rose-600 font-bold">{row.qtyReject.toLocaleString("id-ID")}</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                          {row.qtyReject.toLocaleString("id-ID")}
+                        </span>
                       ) : (
-                        <span className="text-slate-400">0</span>
+                        <span className="text-slate-400 font-normal">0</span>
                       )}
-                    </td>
-                    <td className="py-2.5 px-3 text-right font-medium whitespace-nowrap">
+                    </DnaTd>
+
+                    <DnaTd className="px-3 py-2 text-right">
                       {row.qtyFree > 0 ? (
-                        <span className="text-amber-600 font-semibold">{row.qtyFree.toLocaleString("id-ID")}</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                          +{row.qtyFree.toLocaleString("id-ID")}
+                        </span>
                       ) : (
-                        <span className="text-slate-400">0</span>
+                        <span className="text-slate-400 font-normal">0</span>
                       )}
-                    </td>
-                    <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{row.warehouse}</td>
-                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                      <button
-                        onClick={() => setSelectedItem(row)}
-                        className="p-1.5 rounded-md hover:bg-slate-100 text-slate-600 hover:text-sky-700 transition"
-                        title="Lihat Detail Audit"
+                    </DnaTd>
+
+                    <DnaTd className="px-3 py-2 text-center">
+                      <DnaBadge
+                        variant={
+                          row.status === "APPROVED"
+                            ? "success"
+                            : row.status === "REJECTED"
+                            ? "critical"
+                            : "warning"
+                        }
                       >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
+                        {row.status}
+                      </DnaBadge>
+                    </DnaTd>
+
+                    <DnaTd className="px-4 py-2 text-center">
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedItem(row)}
+                        className="text-slate-400 hover:text-blue-600"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </DnaButton>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
-      {/* Modal Detail Audit */}
       {selectedItem && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
@@ -311,12 +315,14 @@ export default function GoodsReceiptReportPage() {
                   <span className="font-semibold text-slate-800">{selectedItem.date}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Supplier:</span>
-                  <span className="font-semibold text-slate-800">{selectedItem.supplier}</span>
+                  <span className="text-slate-500 block">Status Dokumen:</span>
+                  <span className="font-semibold text-slate-800">{selectedItem.status}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Petugas Penerima:</span>
-                  <span className="font-semibold text-slate-800">{selectedItem.officer}</span>
+                  <span className="text-slate-500 block">Total Fisik:</span>
+                  <span className="font-semibold text-slate-800">
+                    {selectedItem.qtyReceived.toLocaleString("id-ID")} {selectedItem.unit}
+                  </span>
                 </div>
               </div>
 

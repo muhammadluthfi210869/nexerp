@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Package,
   Search,
@@ -25,6 +28,12 @@ import {
   DnaModal,
   DnaBadge,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface SchedulePackagingItem {
@@ -43,53 +52,7 @@ interface SchedulePackagingItem {
   notes?: string;
 }
 
-const INITIAL_SCHEDULES: SchedulePackagingItem[] = [
-  {
-    id: "SCH-PKG-001",
-    code: "SCH-PKG-2026-0001",
-    date: "2026-09-21",
-    batchRecord: "BR-2026-0001",
-    salesOrder: "SO-202609-000004",
-    customer: "Farah Derma Clinic",
-    product: "Day Cream SPF 30",
-    targetPcs: 3000,
-    secondaryPackaging: "Dus Inner Box Day Cream",
-    packagingQty: 3050,
-    creator: "Super Admin",
-    status: "SCHEDULED",
-    notes: "Inner box + segel stiker hologram BPOM & shrink wrapping 6-pack"
-  },
-  {
-    id: "SCH-PKG-002",
-    code: "SCH-PKG-2026-0002",
-    date: "2026-09-22",
-    batchRecord: "BR-2026-0002",
-    salesOrder: "SO-202609-000005",
-    customer: "K-Skin Men",
-    product: "Facial Foam Charcoal 100ml",
-    targetPcs: 5000,
-    secondaryPackaging: "Dus Master Box Corrugated 24-in-1",
-    packagingQty: 210,
-    creator: "Super Admin",
-    status: "SCHEDULED",
-    notes: "Kemas master box isi 24 pcs dan penempelan label alamat karton"
-  },
-  {
-    id: "SCH-PKG-003",
-    code: "SCH-PKG-2026-0003",
-    date: "2026-09-16",
-    batchRecord: "BR-2026-0003",
-    salesOrder: "SO-202609-000008",
-    customer: "Anita Aesthetics",
-    product: "Moisturizer Gel Aloe 50gr",
-    targetPcs: 1500,
-    secondaryPackaging: "Dus Satuan Aloe Vera + Leaflet",
-    packagingQty: 1515,
-    creator: "Operator Packaging",
-    status: "COMPLETED",
-    notes: "100% selesai dan diserahterimakan ke Gudang Barang Jadi"
-  }
-];
+const INITIAL_SCHEDULES: SchedulePackagingItem[] = [];
 
 export default function SchedulePackagingPage() {
   return (
@@ -105,7 +68,40 @@ function SchedulePackagingContent() {
   const actionParam = searchParams.get("action");
   const { toast } = useDnaToast();
 
-  const [schedules, setSchedules] = useState<SchedulePackagingItem[]>(INITIAL_SCHEDULES);
+  const { data: serverSchedules } = useQuery({
+    queryKey: ["production-schedules-packaging"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/production/schedules?stage=PACKING");
+        const unwrapped = unwrapResponse(res);
+        if (Array.isArray(unwrapped)) {
+          return unwrapped.map((item: any, idx: number) => ({
+            id: item.id || `SCH-${idx}`,
+            code: item.scheduleNumber || `SCH-PKG-2026-${String(idx + 1).padStart(4, "0")}`,
+            date: item.startTime ? String(item.startTime).slice(0, 10) : new Date().toISOString().slice(0, 10),
+            batchRecord: item.workOrder?.woNumber || "BR-2026-0001",
+            salesOrder: item.workOrder?.lead?.clientName || "SO-202609-000004",
+            customer: item.workOrder?.lead?.clientName || "Farah Derma Clinic",
+            product: item.workOrder?.lead?.brandName || "Day Cream SPF 30",
+            targetPcs: Number(item.targetQty) || 3000,
+            secondaryPackaging: item.notes || "Dus Inner Box Day Cream",
+            packagingQty: Number(item.targetQty) || 3050,
+            creator: "Operator Packaging",
+            status: item.status || "SCHEDULED",
+            notes: item.notes || "",
+          }));
+        }
+      } catch (err) {
+        console.warn("Failed to fetch packaging schedules", err);
+      }
+      return [];
+    },
+  });
+
+  const [localSchedules, setLocalSchedules] = useState<SchedulePackagingItem[]>([]);
+  const schedules = useMemo(() => {
+    return [...localSchedules, ...(serverSchedules || [])];
+  }, [localSchedules, serverSchedules]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -165,7 +161,7 @@ function SchedulePackagingContent() {
       notes: formData.notes
     };
 
-    setSchedules([newSch, ...schedules]);
+    setLocalSchedules([newSch, ...localSchedules]);
     setIsCreateOpen(false);
     toast({
       title: "Jadwal Packaging Dibuat",
@@ -180,13 +176,13 @@ function SchedulePackagingContent() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "SCHEDULED":
-        return <DnaBadge status="warning">Terjadwal</DnaBadge>;
+        return <DnaBadge variant="warning">Terjadwal</DnaBadge>;
       case "IN_PROGRESS":
-        return <DnaBadge status="info">Proses Packaging</DnaBadge>;
+        return <DnaBadge variant="info">Proses Packaging</DnaBadge>;
       case "COMPLETED":
-        return <DnaBadge status="success">Selesai</DnaBadge>;
+        return <DnaBadge variant="success">Selesai</DnaBadge>;
       default:
-        return <DnaBadge status="default">{status}</DnaBadge>;
+        return <DnaBadge variant="default">{status}</DnaBadge>;
     }
   };
 
@@ -271,41 +267,41 @@ function SchedulePackagingContent() {
       {/* 1:1 Table (Exactly 9 columns matching legacy G-SERP) */}
       <DnaDataTableCard title="Daftar Jadwal Pra-Produksi Packaging">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-              <tr>
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">Kode</th>
-                <th className="py-3 px-4">Tanggal</th>
-                <th className="py-3 px-4">Batch Record</th>
-                <th className="py-3 px-4">Pelanggan</th>
-                <th className="py-3 px-4">Produk</th>
-                <th className="py-3 px-4 text-right">Target (PCS)</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-12 text-center">#</DnaTh>
+                <DnaTh className="py-3 px-4">Kode</DnaTh>
+                <DnaTh className="py-3 px-4">Tanggal</DnaTh>
+                <DnaTh className="py-3 px-4">Batch Record</DnaTh>
+                <DnaTh className="py-3 px-4">Pelanggan</DnaTh>
+                <DnaTh className="py-3 px-4">Produk</DnaTh>
+                <DnaTh className="py-3 px-4 text-right">Target (PCS)</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Status</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-8 text-center text-slate-400">
                     Tidak ada jadwal packaging ditemukan
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
-                    <td className="py-3 px-4 font-semibold text-blue-600">{item.code}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.date}</td>
-                    <td className="py-3 px-4 font-medium text-slate-800">{item.batchRecord}</td>
-                    <td className="py-3 px-4 text-slate-900 font-medium">{item.customer}</td>
-                    <td className="py-3 px-4 text-slate-800">{item.product}</td>
-                    <td className="py-3 px-4 text-right font-bold text-slate-900">
+                  <DnaTableRow key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</DnaTd>
+                    <DnaTd className="py-3 px-4 font-semibold text-blue-600">{item.code}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-600">{item.date}</DnaTd>
+                    <DnaTd className="py-3 px-4 font-medium text-slate-800">{item.batchRecord}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-900 font-medium">{item.customer}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-800">{item.product}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-right font-bold text-slate-900">
                       {item.targetPcs.toLocaleString()} PCS
-                    </td>
-                    <td className="py-3 px-4 text-center">{getStatusBadge(item.status)}</td>
-                    <td className="py-3 px-4 text-center">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-center">{getStatusBadge(item.status)}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <DnaButton
                           variant="ghost"
@@ -333,12 +329,12 @@ function SchedulePackagingContent() {
                           Print
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -392,28 +388,28 @@ function SchedulePackagingContent() {
                 Rincian Kebutuhan Kemasan Sekunder
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                    <tr>
-                      <th className="py-2.5 px-3 w-10 text-center">#</th>
-                      <th className="py-2.5 px-3">Nama Kemasan</th>
-                      <th className="py-2.5 px-3 text-center">Satuan</th>
-                      <th className="py-2.5 px-3 text-right">Qty Dibutuhkan</th>
-                      <th className="py-2.5 px-3">Catatan</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    <tr>
-                      <td className="py-2.5 px-3 text-center text-slate-400">1</td>
-                      <td className="py-2.5 px-3 font-medium text-slate-800">{selectedItem.secondaryPackaging}</td>
-                      <td className="py-2.5 px-3 text-center text-slate-600">pcs</td>
-                      <td className="py-2.5 px-3 text-right font-bold text-blue-600">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3 w-10 text-center">#</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Nama Kemasan</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-center">Satuan</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Qty Dibutuhkan</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Catatan</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
+                    <DnaTableRow>
+                      <DnaTd className="py-2.5 px-3 text-center text-slate-400">1</DnaTd>
+                      <DnaTd className="py-2.5 px-3 font-medium text-slate-800">{selectedItem.secondaryPackaging}</DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-center text-slate-600">pcs</DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-right font-bold text-blue-600">
                         {selectedItem.packagingQty.toLocaleString()}
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-500">Termasuk safety allowance 1.5%</td>
-                    </tr>
-                  </tbody>
-                </table>
+                      </DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-slate-500">Termasuk safety allowance 1.5%</DnaTd>
+                    </DnaTableRow>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
 

@@ -2,6 +2,20 @@ import { PdfEngineService } from '../../../src/modules/document-automation/servi
 
 jest.setTimeout(30000);
 
+// A browser binary is absent in CI and on the test host alike, and every case below except
+// R1 stays on the deterministic engine (setup-fast-pdf.cjs). R1 is the one that walks into
+// the real renderer, so it pins the failure the production server actually produced.
+jest.mock('html-pdf-node', () => ({
+  __esModule: true,
+  default: {
+    generatePdf: jest.fn().mockRejectedValue(
+      new Error(
+        'spawn /app/node_modules/puppeteer/.local-chromium/linux-901912/chrome-linux/chrome ENOENT',
+      ),
+    ),
+  },
+}));
+
 describe('PdfEngineService — Unit Tests', () => {
   let service: PdfEngineService;
 
@@ -180,6 +194,24 @@ describe('PdfEngineService — Unit Tests', () => {
       };
       const result = await service.generatePdf('INVOICE_DP', data, 'INV-001');
       expect(isPdfBuffer(result)).toBe(true);
+    });
+  });
+
+  // Every assertion above only checks "%PDF" and a length over 100 bytes — which the
+  // one-page placeholder satisfies too. They passed for months against a server where the
+  // renderer was dead. This block is the one that can tell the two apart.
+  describe('a failed render must reach the caller', () => {
+    it('R1: rejects instead of returning a placeholder when the browser is missing', async () => {
+      const savedFastPdf = process.env.FAST_PDF;
+      delete process.env.FAST_PDF;
+      try {
+        await expect(
+          service.generatePdf('QUOTATION', baseData, 'QUO-RED-001'),
+        ).rejects.toThrow();
+      } finally {
+        if (savedFastPdf === undefined) delete process.env.FAST_PDF;
+        else process.env.FAST_PDF = savedFastPdf;
+      }
     });
   });
 });

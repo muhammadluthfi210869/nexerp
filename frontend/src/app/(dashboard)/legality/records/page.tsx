@@ -1,65 +1,69 @@
 "use client";
-export const dynamic = "force-dynamic";
 
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import Link from "next/link";
-import { 
-  FileBadge, 
-  FlaskConical, 
+import {
+  FileBadge,
+  FlaskConical,
   History,
   Calendar,
   ShieldAlert,
   Plus,
   ArrowRightCircle,
-  Loader2,
   MessageSquare,
   Activity,
-  Moon
+  Moon,
+  Eye,
+  FileSpreadsheet,
+  CheckCircle2,
+  Clock,
+  ChevronRight,
+  ArrowRight,
+  Building2,
+  Bookmark,
 } from "lucide-react";
-import { toast } from "sonner";
-import { useState } from "react";
-import { DashboardShell } from "@/components/layout/DashboardShell";
-import { 
+import {
+  DnaPageHeader,
+  DnaKpiGrid,
   DnaDataTableCard,
-  DnaStatCard,
-  DnaCard,
-  DnaSelect,
-  DnaInput,
-  DnaTextarea,
-  DnaCell,
-  DnaTabNav,
-  DnaModal,
-  DnaBadge, 
+  DnaTable,
+  DnaBadge,
   DnaButton,
+  DnaDetailDrawer,
+  useDnaToast,
 } from "@/components/dna";
 
-export default function LegalityRecords() {
+export default function LegalityRecordsPage() {
   const queryClient = useQueryClient();
+  const { success, error: toastError } = useDnaToast();
   const [activeTab, setActiveTab] = useState("hki");
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
 
-  const { data: hkiData, isLoading: loadingHki } = useQuery({
+  const { data: hkiData = [], isLoading: loadingHki } = useQuery({
     queryKey: ["hki-records"],
     queryFn: async () => {
       const resp = await api.get("/legality/hki");
-      return resp.data;
+      return resp.data || [];
     },
   });
 
-  const { data: bpomData, isLoading: loadingBpom } = useQuery({
+  const { data: bpomData = [], isLoading: loadingBpom } = useQuery({
     queryKey: ["bpom-records"],
     queryFn: async () => {
       const resp = await api.get("/legality/bpom");
-      return resp.data;
+      return resp.data || [];
     },
   });
 
-  const { data: halalData, isLoading: loadingHalal } = useQuery({
+  const { data: halalData = [], isLoading: loadingHalal } = useQuery({
     queryKey: ["halal-records"],
     queryFn: async () => {
       const resp = await api.get("/legality/halal");
-      return resp.data;
+      return resp.data || [];
     },
   });
 
@@ -68,11 +72,12 @@ export default function LegalityRecords() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["hki-records"] });
       queryClient.invalidateQueries({ queryKey: ["legality-dashboard"] });
-      toast.success("HKI Stage Advanced Successfully");
+      success("Tahap pendaftaran HKI berhasil dilanjutkan ke stage berikutnya.");
+      setIsDetailDrawerOpen(false);
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to advance HKI stage");
-    }
+      toastError(err.response?.data?.message || "Gagal melanjutkan tahap HKI");
+    },
   });
 
   const advanceBpomMutation = useMutation({
@@ -80,11 +85,12 @@ export default function LegalityRecords() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bpom-records"] });
       queryClient.invalidateQueries({ queryKey: ["legality-dashboard"] });
-      toast.success("BPOM Stage Advanced Successfully");
+      success("Tahap notifikasi BPOM berhasil dilanjutkan ke stage berikutnya.");
+      setIsDetailDrawerOpen(false);
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to advance BPOM stage");
-    }
+      toastError(err.response?.data?.message || "Gagal melanjutkan tahap BPOM");
+    },
   });
 
   const advanceHalalMutation = useMutation({
@@ -92,298 +98,358 @@ export default function LegalityRecords() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["halal-records"] });
       queryClient.invalidateQueries({ queryKey: ["legality-dashboard"] });
-      toast.success("Halal Stage Advanced Successfully");
+      success("Tahap sertifikasi Halal berhasil dilanjutkan ke stage berikutnya.");
+      setIsDetailDrawerOpen(false);
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to advance Halal stage");
-    }
+      toastError(err.response?.data?.message || "Gagal melanjutkan tahap Halal");
+    },
   });
 
+  const currentDataset =
+    activeTab === "hki" ? hkiData : activeTab === "bpom" ? bpomData : halalData;
+  const isCurrentLoading =
+    activeTab === "hki" ? loadingHki : activeTab === "bpom" ? loadingBpom : loadingHalal;
+
+  const filteredDataset = useMemo(() => {
+    if (!searchTerm.trim()) return currentDataset;
+    const q = searchTerm.toLowerCase();
+    return currentDataset.filter((r: any) => {
+      const idStr = (r.hkiId || r.bpomId || r.halalId || r.id || "").toLowerCase();
+      const nameStr = (r.brandName || r.productName || r.manufacturer || "").toLowerCase();
+      const clientStr = (r.clientName || "").toLowerCase();
+      const typeStr = (r.type || r.category || "").toLowerCase();
+      return (
+        idStr.includes(q) ||
+        nameStr.includes(q) ||
+        clientStr.includes(q) ||
+        typeStr.includes(q)
+      );
+    });
+  }, [currentDataset, searchTerm]);
+
+  const handleAdvance = (record: any) => {
+    if (activeTab === "hki") advanceHkiMutation.mutate(record.id);
+    else if (activeTab === "bpom") advanceBpomMutation.mutate(record.id);
+    else advanceHalalMutation.mutate(record.id);
+  };
+
+  const isAdvancing =
+    advanceHkiMutation.isPending ||
+    advanceBpomMutation.isPending ||
+    advanceHalalMutation.isPending;
+
   return (
-    <DashboardShell
-      title="REGISTRATION"
-      titleAccent="AUDITORY LOG"
-      subtitle="Compliance Repository"
-      actions={
-        <Link href="/legality/input">
-            <DnaButton variant="secondary" size="lg" icon={<Plus />}>
-                ADD NEW RECORD
+    <div className="space-y-6 pb-20 text-slate-900 bg-[#F8FAFC] min-h-screen">
+      {/* ── 01. PAGE HEADER DENGAN TABS TERPADU (Golden Rule 2) ── */}
+      <DnaPageHeader
+        backLink={{ href: "/legality/dashboard", label: "Kembali ke Dashboard Legal" }}
+        title="ARSIP & SIKLUS AUDIT REGULASI"
+        badge={<DnaBadge variant="info">AUDIT REPOSITORY</DnaBadge>}
+        subtitle="Repositori terpadu penelusuran status berkas HKI, notifikasi BPOM, dan sertifikasi Halal per produk"
+        tabs={[
+          {
+            key: "hki",
+            label: "HKI Merek & Branding",
+            count: hkiData.length,
+            icon: <FileBadge className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "bpom",
+            label: "Notifikasi BPOM Kosmetik",
+            count: bpomData.length,
+            icon: <FlaskConical className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "halal",
+            label: "Sertifikasi Halal (BPJPH)",
+            count: halalData.length,
+            icon: <Moon className="w-3.5 h-3.5" />,
+          },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        actions={
+          <Link href="/legality/input">
+            <DnaButton variant="primary" icon={<Plus className="w-3.5 h-3.5" />}>
+              Tambah Berkas Regulasi
             </DnaButton>
-        </Link>
-      }
-    >
-        <DnaTabNav
-          tabs={[
-            { id: "hki", label: "HKI BRANDING", count: hkiData?.length || 0, icon: FileBadge },
-            { id: "bpom", label: "BPOM PRODUCT", count: bpomData?.length || 0, icon: FlaskConical },
-            { id: "halal", label: "HALAL CERT", count: halalData?.length || 0, icon: Moon },
-          ]}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          className="mb-6"
-        />
+          </Link>
+        }
+      />
 
-        {activeTab === "hki" && (
-          <ComplianceGrid
-            data={hkiData}
-            type="HKI"
-            isLoading={loadingHki}
-            onAdvance={(id: string) => advanceHkiMutation.mutate(id)}
-            isAdvancing={advanceHkiMutation.isPending}
-            onViewTimeline={(r: any) => setSelectedRecord({ ...r, recordType: 'HKI' })}
-          />
-        )}
+      {/* ── 02. MODULAR 4 KPI METRIC CARDS ── */}
+      <DnaKpiGrid
+        cards={[
+          {
+            key: "TOTAL_HKI",
+            title: "TOTAL MEREK HKI TERDAFTAR",
+            value: hkiData.length.toLocaleString("id-ID"),
+            deltaText: "Perlindungan hak cipta & merek",
+            isDeltaPositive: true,
+            icon: <FileBadge className="w-4 h-4" />,
+            iconBg: "bg-purple-50",
+            iconColor: "text-purple-600",
+            isSelected: activeTab === "hki",
+            onClick: () => setActiveTab("hki"),
+          },
+          {
+            key: "TOTAL_BPOM",
+            title: "PRODUK NOTIFIKASI BPOM",
+            value: bpomData.length.toLocaleString("id-ID"),
+            deltaText: "Nomor NA aktif & dalam proses",
+            isDeltaPositive: true,
+            icon: <FlaskConical className="w-4 h-4" />,
+            iconBg: "bg-blue-50",
+            iconColor: "text-blue-600",
+            isSelected: activeTab === "bpom",
+            onClick: () => setActiveTab("bpom"),
+          },
+          {
+            key: "TOTAL_HALAL",
+            title: "SERTIFIKASI HALAL PRODUK",
+            value: halalData.length.toLocaleString("id-ID"),
+            deltaText: "Sertifikasi BPJPH & ketertelusuran",
+            isDeltaPositive: true,
+            icon: <Moon className="w-4 h-4" />,
+            iconBg: "bg-emerald-50",
+            iconColor: "text-emerald-600",
+            isSelected: activeTab === "halal",
+            onClick: () => setActiveTab("halal"),
+          },
+          {
+            key: "COMPLIANCE_RATE",
+            title: "TOTAL KESELURUHAN ARSIP",
+            value: (hkiData.length + bpomData.length + halalData.length).toLocaleString("id-ID"),
+            deltaText: "Berkas dalam audit log terpadu",
+            isDeltaPositive: true,
+            icon: <CheckCircle2 className="w-4 h-4" />,
+            iconBg: "bg-amber-50",
+            iconColor: "text-amber-600",
+            isSelected: false,
+          },
+        ]}
+      />
 
-        {activeTab === "bpom" && (
-          <ComplianceGrid
-            data={bpomData}
-            type="BPOM"
-            isLoading={loadingBpom}
-            onAdvance={(id: string) => advanceBpomMutation.mutate(id)}
-            isAdvancing={advanceBpomMutation.isPending}
-            onViewTimeline={(r: any) => setSelectedRecord({ ...r, recordType: 'BPOM' })}
-          />
-        )}
-
-        {activeTab === "halal" && (
-          <ComplianceGrid
-            data={halalData}
-            type="HALAL"
-            isLoading={loadingHalal}
-            onAdvance={(id: string) => advanceHalalMutation.mutate(id)}
-            isAdvancing={advanceHalalMutation.isPending}
-            onViewTimeline={(r: any) => setSelectedRecord({ ...r, recordType: 'HALAL' })}
-          />
-        )}
-      {selectedRecord && (
-        <TimelineDialog 
-          record={selectedRecord} 
-          onClose={() => setSelectedRecord(null)} 
-        />
-      )}
-    </DashboardShell>
-  );
-}
-
-function ComplianceGrid({ data, type, isLoading, onAdvance, isAdvancing, onViewTimeline }: any) {
-  if (isLoading) return <div className="p-20 text-center font-black italic text-slate-300 animate-pulse uppercase tracking-[0.2em]">Synchronizing Repository...</div>;
-
-  return (
-    <DnaDataTableCard>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+      {/* ── 03. MODULAR DATA TABLE CARD (Golden Rule 1 & 4) ── */}
+      <DnaDataTableCard
+        toolbarProps={{
+          searchQuery: searchTerm,
+          onSearchChange: setSearchTerm,
+          searchPlaceholder: `Cari nomor ID, nama produk/merek, atau klien pemilik...`,
+          actionButton: {
+            label: "Daftar Baru",
+            onClick: () => {
+              window.location.href = "/legality/input";
+            },
+          },
+        }}
+      >
+        <DnaTable className="table-fixed w-full">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50 text-left">
-              <th className="py-4 px-6 text-table-header text-slate-400 uppercase tracking-widest">Application Info</th>
-              <th className="py-4 px-6 text-table-header text-slate-400 uppercase tracking-widest">Pipeline State</th>
-              <th className="py-4 px-6 text-table-header text-slate-400 uppercase tracking-widest">Ownership</th>
-              <th className="py-4 px-6 text-right text-table-header text-slate-400 uppercase tracking-widest">Action</th>
+            <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider select-none">
+              <th className="p-3 w-10 text-slate-400">#</th>
+              <th className="p-3 w-[26%]">IDENTITAS BERKAS & MEREK</th>
+              <th className="p-3 w-[20%]">KLIEN & KATEGORI</th>
+              <th className="p-3 w-[22%]">TAHAPAN PIPELINE & DURASI</th>
+              <th className="p-3 w-[18%] text-center">STATUS AUDIT</th>
+              <th className="p-3 text-center w-[14%] whitespace-nowrap">AKSI</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {data?.map((record: any) => (
-              <tr key={record.id} className="hover:bg-slate-50/30 transition-colors group">
-                <td className="py-3 px-6">
-                  <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-indigo-50 border border-indigo-100 flex flex-col items-center justify-center text-indigo-600 shrink-0">
-                          <Calendar className="w-4 h-4 mb-0.5" />
-                          <span className="text-[8px] font-black leading-none">{new Date(record.applicationDate).getFullYear()}</span>
-                      </div>
-                      <div>
-                          <p className="text-[9px] font-black uppercase text-indigo-500 mb-0.5">{record.hkiId || record.bpomId || record.halalId}</p>
-                          <h4 className="text-sm font-black uppercase text-slate-800 tracking-tight">{record.brandName || record.productName || record.manufacturer}</h4>
-                          <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{record.type || record.category}</p>
-                      </div>
-                  </div>
-                </td>
-                <td className="py-3 px-6">
-                  <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                          <DnaBadge status={
-                              record.status === 'DONE' ? 'success' : 
-                              record.status === 'IN_PROGRESS' ? 'info' : 
-                              'critical'
-                          }>
-                              {record.status}
-                          </DnaBadge>
-                          <ArrowRightCircle className="w-4 h-4 text-slate-300" />
-                          <p className="text-[10px] font-black uppercase text-slate-600 tracking-wider">{record.stage.replace('_', ' ')}</p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                          <div>
-                              <p className="text-[8px] font-black uppercase text-slate-400 leading-none">Days Elapsed</p>
-                              <p className="text-xs font-black text-slate-700 mt-1">{record.daysElapsed}d</p>
-                          </div>
-                          {record.daysLeft !== null && (
-                               <div>
-                                  <p className="text-[8px] font-black uppercase text-slate-400 leading-none">Expiry left</p>
-                                  <p className={`text-xs font-black mt-1 ${record.daysLeft <= 90 ? 'text-amber-600' : 'text-slate-700'}`}>{record.daysLeft}d</p>
-                              </div>
-                          )}
-                      </div>
-                  </div>
-                </td>
-                <td className="py-3 px-6">
-                  <div className="space-y-1.5">
-                      <div>
-                          <p className="text-[8px] font-black uppercase text-slate-400 leading-none">Owner Client</p>
-                          <p className="text-[10px] font-black text-slate-700 uppercase mt-1">{record.clientName}</p>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                          <div className="h-4 w-4 rounded-full bg-slate-700 flex items-center justify-center text-[7px] text-white font-bold">
-                              {record.pic?.name.substring(0,2).toUpperCase()}
-                          </div>
-                          <p className="text-[8px] font-black text-slate-400 uppercase">PIC: {record.pic?.name}</p>
-                      </div>
-                  </div>
-                </td>
-                <td className="py-3 px-6 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                      <DnaButton 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => onViewTimeline(record)}
-                          icon={<History className="w-4 h-4" />}
-                      />
-                      {record.status !== 'DONE' ? (
-                          <DnaButton 
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => onAdvance(record.id)}
-                              disabled={isAdvancing}
-                              icon={isAdvancing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRightCircle className="w-3.5 h-3.5" />}
-                          >
-                              ADVANCE
-                          </DnaButton>
-                      ) : (
-                          <DnaBadge status="success" className="gap-1 shadow-none">
-                              <ShieldAlert className="w-3.5 h-3.5" />
-                              SECURED
-                          </DnaBadge>
-                      )}
+            {isCurrentLoading ? (
+              <tr>
+                <td colSpan={6} className="p-8 text-center text-xs text-slate-400">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <span>Sinkronisasi arsip legalitas...</span>
                   </div>
                 </td>
               </tr>
-            ))}
-            {data?.length === 0 && (
-                <tr>
-                    <td colSpan={4} className="py-16 text-center">
-                      <div className="flex flex-col items-center justify-center">
-                          <ShieldAlert className="w-12 h-12 text-slate-200 mb-3" />
-                          <p className="text-sm font-black italic text-slate-400 uppercase tracking-wider">Repository Empty</p>
-                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight mt-1">No {type} records found in auditory log.</p>
+            ) : filteredDataset.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="p-8 text-center text-xs text-slate-400">
+                  Tidak ada rekam berkas yang sesuai kriteria pencarian.
+                </td>
+              </tr>
+            ) : (
+              filteredDataset.map((record: any, idx: number) => {
+                const regId = record.hkiId || record.bpomId || record.halalId || record.id;
+                const regTitle = record.brandName || record.productName || record.manufacturer;
+                return (
+                  <tr
+                    key={record.id || idx}
+                    className="hover:bg-slate-50/80 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setSelectedRecord({
+                        ...record,
+                        recordType: activeTab.toUpperCase(),
+                        regId,
+                        regTitle,
+                      });
+                      setIsDetailDrawerOpen(true);
+                    }}
+                  >
+                    <td className="p-3 text-slate-400 tabular-nums text-[11px] tabular-nums">
+                      {idx + 1}
+                    </td>
+                    <td className="p-3">
+                      <div className="font-bold text-slate-900 truncate uppercase">{regTitle}</div>
+                      <div className="tabular-nums text-[11px] text-blue-600 font-semibold">{regId}</div>
+                    </td>
+                    <td className="p-3">
+                      <div className="font-semibold text-slate-800 truncate">{record.clientName || "PT Nex Industri"}</div>
+                      <div className="text-[11px] text-slate-500 truncate">{record.type || record.category || "Kosmetika"}</div>
+                    </td>
+                    <td className="p-3">
+                      <div className="font-medium text-slate-900 text-xs truncate">
+                        {record.stage ? record.stage.replace("_", " ") : "Pemeriksaan Substantif"}
+                      </div>
+                      <div className="text-[10px] text-slate-400 tabular-nums">
+                        {record.daysElapsed ? `${record.daysElapsed} hari berjalan` : "Baru diajukan"}
                       </div>
                     </td>
-                </tr>
+                    <td className="p-3 text-center">
+                      <DnaBadge
+                        variant={
+                          record.status === "DONE"
+                            ? "success"
+                            : record.status === "IN_PROGRESS"
+                            ? "info"
+                            : "critical"
+                        }
+                      >
+                        {record.status || "IN PROGRESS"}
+                      </DnaBadge>
+                    </td>
+                    <td className="p-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-1">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
+                          onClick={() => {
+                            setSelectedRecord({
+                              ...record,
+                              recordType: activeTab.toUpperCase(),
+                              regId,
+                              regTitle,
+                            });
+                            setIsDetailDrawerOpen(true);
+                          }}
+                          title="Inspeksi Arsip"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </DnaButton>
+                        {record.status !== "DONE" && (
+                          <DnaButton
+                            variant="secondary"
+                            size="sm"
+                            className="h-7 px-2 text-[10.5px]"
+                            disabled={isAdvancing}
+                            onClick={() => handleAdvance(record)}
+                            title="Lanjutkan Tahap"
+                          >
+                            Advance
+                          </DnaButton>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
-        </table>
-      </div>
-    </DnaDataTableCard>
-  );
-}
+        </DnaTable>
+      </DnaDataTableCard>
 
-function TimelineDialog({ record, onClose }: { record: any, onClose: () => void }) {
-  const queryClient = useQueryClient();
-  const [note, setNote] = useState("");
+      {/* ── 04. DETAIL DRAWER QUICK PEEK (Golden Rule 5) ── */}
+      <DnaDetailDrawer
+        isOpen={isDetailDrawerOpen}
+        onClose={() => setIsDetailDrawerOpen(false)}
+        title={selectedRecord?.regTitle || "Detail Arsip Legalitas"}
+        subtitle={`Nomor Registrasi: ${selectedRecord?.regId || "-"} • Kategori: ${selectedRecord?.recordType || "-"}`}
+        badge={
+          selectedRecord?.status === "DONE" ? (
+            <DnaBadge variant="success">TERBIT RESMI</DnaBadge>
+          ) : (
+            <DnaBadge variant="info">TAHAP EVALUASI</DnaBadge>
+          )
+        }
+        tabs={[
+          {
+            id: "specs",
+            label: "Rincian Berkas & Legalitas",
+            content: selectedRecord ? (
+              <div className="space-y-4 text-xs">
+                <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Nama Berkas / Merek</span>
+                    <span className="font-bold text-slate-900 text-sm uppercase">{selectedRecord.regTitle}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Nomor Registrasi / SK</span>
+                    <span className="tabular-nums font-bold text-blue-600 text-sm">{selectedRecord.regId}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Klien Pemilik Hak</span>
+                    <span className="font-semibold text-slate-800">{selectedRecord.clientName || "PT Nex Industri"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Kategori Dokumen</span>
+                    <span className="tabular-nums text-slate-700">{selectedRecord.type || selectedRecord.category || "Kosmetika"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">PIC Penanggung Jawab</span>
+                    <span className="font-medium text-slate-800">{selectedRecord.pic?.name || "Tim Regulasi"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Durasi Proses</span>
+                    <span className="tabular-nums font-semibold text-slate-800">{selectedRecord.daysElapsed || 0} Hari</span>
+                  </div>
+                </div>
 
-  const { data: logs, isLoading } = useQuery({
-    queryKey: ["record-logs", record.id],
-    queryFn: async () => {
-      const resp = await api.get(`/legality/${record.id}/logs`);
-      return resp.data;
-    }
-  });
-
-  const logMutation = useMutation({
-    mutationFn: async (payload: any) => api.post("/legality/log", payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["record-logs", record.id] });
-      queryClient.invalidateQueries({ queryKey: ["hki-records"] });
-      queryClient.invalidateQueries({ queryKey: ["bpom-records"] });
-      setNote("");
-      toast.success("Progress Log Synchronized");
-    }
-  });
-
-  const handleAddLog = () => {
-    if (!note) return;
-    logMutation.mutate({
-      recordId: record.id,
-      recordType: record.recordType,
-      action: 'NOTE_ADDED',
-      newStage: record.stage,
-      notes: note,
-      staffName: 'Legal Officer' // Mocked user
-    });
-  };
-
-  return (
-    <DnaModal
-      isOpen={true}
-      onClose={onClose}
-      title={record.brandName || record.productName}
-      subtitle="Trace the complete lifecycle of this compliance record."
-      size="2xl"
-      badge={<Activity className="w-3 h-3 text-blue-500" />}
-    >
-      <div className="space-y-6 flex flex-col h-[500px]">
-          <div className="flex-1 overflow-y-auto pr-2 space-y-6 custom-scrollbar">
-            {isLoading ? (
-               <div className="h-full flex items-center justify-center text-[10px] font-bold text-slate-300 animate-pulse uppercase tracking-widest">Analyzing Timeline...</div>
-            ) : (
-                logs?.map((log: any, idx: number) => (
-                    <div key={log.id} className="relative flex gap-4">
-                        {idx !== logs.length - 1 && (
-                            <div className="absolute left-[9px] top-5 bottom-[-28px] w-[2px] bg-slate-100" />
-                        )}
-
-                        <div className={`h-5 w-5 rounded-full shrink-0 flex items-center justify-center border-2 border-white shadow-sm ${
-                            log.action === 'CREATED' ? 'bg-blue-500' :
-                            log.action === 'STAGE_UPDATED' ? 'bg-amber-500' :
-                            'bg-slate-700'
-                        }`}>
-                            {log.action === 'CREATED' ? <Plus className="w-3 h-3 text-white stroke-[3px]" /> :
-                             log.action === 'STAGE_UPDATED' ? <ArrowRightCircle className="w-3 h-3 text-white" /> :
-                             <MessageSquare className="w-3 h-3 text-white" />}
-                        </div>
-
-                        <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[8px] font-bold uppercase tracking-tighter text-slate-400">{new Date(log.createdAt).toLocaleString()}</span>
-                                <DnaBadge status="default" className="py-0 px-1.5 text-[7px] rounded-md shadow-none">{log.action}</DnaBadge>
-                            </div>
-                            <p className="text-xs font-bold uppercase text-slate-800 tracking-tight">
-                                {log.action === 'STAGE_UPDATED' ? `${log.previousStage} → ${log.newStage}` : log.action}
-                            </p>
-                            {log.notes && <p className="text-xs text-slate-500 italic leading-relaxed bg-slate-50 p-2 rounded-xl border border-slate-100">{log.notes}</p>}
-                            <p className="text-[8px] font-bold text-slate-400 uppercase">By {log.staffName}</p>
-                        </div>
-                    </div>
-                ))
-            )}
-          </div>
-
-          <div className="pt-4 border-t border-slate-100 space-y-4">
-            <DnaTextarea
-              label="Add Auditory Note"
-              placeholder="Capture essential compliance updates..."
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={3}
-            />
+                <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-slate-900 block">Siklus Tahapan Kepatuhan</span>
+                    <span className="text-slate-500 text-[11px]">
+                      Tahap saat ini: {selectedRecord.stage?.replace("_", " ") || "Pemeriksaan Substantif"}
+                    </span>
+                  </div>
+                  <DnaBadge variant="info">Aktif</DnaBadge>
+                </div>
+              </div>
+            ) : null,
+          },
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
             <DnaButton
-              onClick={handleAddLog}
-              disabled={!note || logMutation.isPending}
-              variant="secondary"
-              size="md"
-              className="w-full"
-              icon={logMutation.isPending ? <Loader2 className="animate-spin" /> : <ArrowRightCircle />}
+              variant="outline"
+              size="sm"
+              icon={<FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />}
+              onClick={() => success("Salinan dossier berkas diekspor.")}
             >
-              APPEND TO TIMELINE
+              Export Dossier
             </DnaButton>
+            <div className="flex items-center gap-2">
+              {selectedRecord && selectedRecord.status !== "DONE" && (
+                <DnaButton
+                  variant="secondary"
+                  size="sm"
+                  disabled={isAdvancing}
+                  onClick={() => handleAdvance(selectedRecord)}
+                >
+                  Lanjutkan Tahap
+                </DnaButton>
+              )}
+              <DnaButton variant="primary" size="sm" onClick={() => setIsDetailDrawerOpen(false)}>
+                Selesai
+              </DnaButton>
+            </div>
           </div>
-      </div>
-    </DnaModal>
+        }
+      />
+    </div>
   );
 }

@@ -150,7 +150,7 @@ export const EngineConsole: React.FC<EngineConsoleProps> = ({
                 Eksekusi RPC Command
               </h3>
             </div>
-            <span className="text-[10px] text-slate-500 font-mono">POST /api/rpc</span>
+            <span className="text-[10px] text-slate-500 tabular-nums">POST /api/rpc</span>
           </div>
 
           <form onSubmit={handleExecute} className="space-y-3">
@@ -161,7 +161,7 @@ export const EngineConsole: React.FC<EngineConsoleProps> = ({
               <select
                 value={selectedTool}
                 onChange={(e) => handleToolChange(e.target.value as AvailableTool)}
-                className="h-9 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 text-[12px] text-slate-800 font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-white"
+                className="h-9 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 text-[12px] text-slate-800 tabular-nums font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-white"
               >
                 <option value="intake_guestbook">intake_guestbook (Simulasi Lead Baru)</option>
                 <option value="sync_whatsapp_message">sync_whatsapp_message (Kirim/Terima WA)</option>
@@ -179,7 +179,7 @@ export const EngineConsole: React.FC<EngineConsoleProps> = ({
                 rows={7}
                 value={payloadInput}
                 onChange={(e) => setPayloadInput(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-[12px] text-slate-800 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-white resize-none"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-[12px] text-slate-800 tabular-nums focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-white resize-none"
               />
               {jsonError && (
                 <p className="text-xs text-rose-600 font-bold mt-1">{jsonError}</p>
@@ -205,7 +205,7 @@ export const EngineConsole: React.FC<EngineConsoleProps> = ({
                 Live State & Audit Logs
               </h3>
             </div>
-            <span className="text-[10px] text-slate-500 font-mono">
+            <span className="text-[10px] text-slate-500 tabular-nums">
               {recentLogs.length} Records
             </span>
           </div>
@@ -222,10 +222,10 @@ export const EngineConsole: React.FC<EngineConsoleProps> = ({
                   className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1.5"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-blue-700 text-[11px]">
+                    <span className="tabular-nums font-bold text-blue-700 text-[11px]">
                       {log.action}
                     </span>
-                    <span className="text-[9px] text-slate-400 font-mono">
+                    <span className="text-[9px] text-slate-400 tabular-nums">
                       {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                     </span>
                   </div>
@@ -233,7 +233,7 @@ export const EngineConsole: React.FC<EngineConsoleProps> = ({
                   <p className="text-slate-800 text-[11px]">{log.details}</p>
 
                   {log.metadata && (
-                    <pre className="text-[10px] bg-white p-2 rounded-lg border border-slate-200 font-mono overflow-x-auto text-slate-600">
+                    <pre className="text-[10px] bg-white p-2 rounded-lg border border-slate-200 tabular-nums overflow-x-auto text-slate-600">
                       {JSON.stringify(log.metadata, null, 2)}
                     </pre>
                   )}

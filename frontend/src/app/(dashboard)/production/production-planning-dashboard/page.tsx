@@ -2,17 +2,18 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  KpiCard,
+} from "@/components/dna";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/dna";
+import { Badge } from "@/components/dna";
+import { Button } from "@/components/dna";
 import { 
   Factory, 
   ClipboardList, 
@@ -23,12 +24,11 @@ import {
   Clock,
   CheckCircle2
 } from "lucide-react";
-import { KpiCard } from "@/components/dna/KpiCard";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/dna";
+import { Input } from "@/components/dna";
+import { Label } from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 // --- Types ---
@@ -65,6 +65,18 @@ export default function PPICDashboard() {
   const [isFRPModalOpen, setIsFRPModalOpen] = useState(false);
 
   // --- Fetchers ---
+  const { data: productionDash } = useQuery({
+    queryKey: ["dashboards-production"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/dashboards/production");
+        return res.data;
+      } catch {
+        return null;
+      }
+    },
+  });
+
   const { data: salesOrders } = useQuery<SalesOrder[]>({
     queryKey: ["active-so"],
     queryFn: async () => {
@@ -101,11 +113,12 @@ export default function PPICDashboard() {
       subtitle="Factory Response Planning (FRP) & Supply Chain Interlock"
     >
       {(() => {
-        const pendingPlans = productionPlans?.filter(p => p.status === "PLANNING").length || 0;
-        const readyPlans = productionPlans?.filter(p => p.status === "READY").length || 0;
+        const pendingPlans = productionDash?.kpis?.pendingPlans?.value ?? (productionPlans?.filter(p => p.status === "PLANNING").length || 0);
+        const readyPlans = productionDash?.kpis?.readyPlans?.value ?? (productionPlans?.filter(p => p.status === "READY").length || 0);
+        const activeSOCount = productionDash?.kpis?.activeSO?.value ?? (salesOrders?.length || 0);
         return (
           <div className="grid grid-cols-3 gap-8 mb-6">
-            <KpiCard label="Active SO" value={String(salesOrders?.length || 0)} targetPct={50} icon={<FileText />} />
+            <KpiCard label="Active SO" value={String(activeSOCount)} targetPct={50} icon={<FileText />} />
             <KpiCard
               label="Pending Plans"
               value={String(pendingPlans)}
@@ -168,27 +181,33 @@ export default function PPICDashboard() {
           </CardHeader>
           <CardContent>
             <div className="rounded-sm border border-gray-200 overflow-hidden">
-               <Table>
-                 <TableHeader className="bg-gray-50">
-                   <TableRow className="border-gray-200 hover:bg-transparent">
-                      <TableHead className="text-zinc-500 font-sans text-[10px] uppercase">Batch No</TableHead>
-                      <TableHead className="text-zinc-500 font-sans text-[10px] uppercase">Client Entity</TableHead>
-                      <TableHead className="text-zinc-500 font-sans text-[10px] uppercase">FKP Status</TableHead>
-                      <TableHead className="text-zinc-500 font-sans text-[10px] uppercase">Operational Stage</TableHead>
-                   </TableRow>
-                 </TableHeader>
-                 <TableBody>
-                    {productionPlans?.map(plan => (
-                      <TableRow key={plan.id} className="border-gray-200 hover:bg-gray-50">
-                         <TableCell className="font-sans text-xs text-gray-900 uppercase">{plan.batch_no}</TableCell>
-                        <TableCell className="text-sm font-bold text-gray-700 uppercase">{plan.so?.lead?.client_name}</TableCell>
-                        <TableCell>
+               <DnaTable>
+                 <DnaTableHead className="bg-gray-50">
+                   <DnaTableRow className="border-gray-200 hover:bg-transparent">
+                      <DnaTh className="text-zinc-500 font-sans text-[10px] uppercase">Batch No</DnaTh>
+                      <DnaTh className="text-zinc-500 font-sans text-[10px] uppercase">Client Entity</DnaTh>
+                      <DnaTh className="text-zinc-500 font-sans text-[10px] uppercase">FKP Status</DnaTh>
+                      <DnaTh className="text-zinc-500 font-sans text-[10px] uppercase">Operational Stage</DnaTh>
+                   </DnaTableRow>
+                 </DnaTableHead>
+                 <DnaTableBody>
+                    {plansLoading ? (
+                      <DnaTableRow>
+                        <DnaTd colSpan={4} className="text-center py-20 text-zinc-500 font-sans text-xs uppercase tracking-wider">
+                          Memuat data FRP...
+                        </DnaTd>
+                      </DnaTableRow>
+                    ) : productionPlans?.map(plan => (
+                      <DnaTableRow key={plan.id} className="border-gray-200 hover:bg-gray-50">
+                         <DnaTd className="font-sans text-xs text-gray-900 uppercase">{plan.batch_no}</DnaTd>
+                        <DnaTd className="text-sm font-bold text-gray-700 uppercase">{plan.so?.lead?.client_name}</DnaTd>
+                        <DnaTd>
                            <div className="flex items-center gap-2">
                               <Box className="h-3 w-3 text-zinc-600" />
                               <span className="text-[10px] font-sans text-zinc-500">{plan.requisitions?.length || 0} ITEMS SCALE-OUT</span>
                            </div>
-                        </TableCell>
-                        <TableCell>
+                        </DnaTd>
+                        <DnaTd>
                            <Badge 
                             variant="outline" 
                             className={`rounded-none border px-2 py-0.5 text-[9px] font-black uppercase ${
@@ -199,18 +218,18 @@ export default function PPICDashboard() {
                            >
                              {plan.status}
                            </Badge>
-                        </TableCell>
-                      </TableRow>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
                     {(!productionPlans || productionPlans.length === 0) && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-20 text-zinc-800 font-sans text-[10px] uppercase tracking-[0.4em]">
+                      <DnaTableRow>
+                        <DnaTd colSpan={4} className="text-center py-20 text-zinc-800 font-sans text-[10px] uppercase tracking-[0.4em]">
                            No Factory Production Plans Initiated
-                        </TableCell>
-                      </TableRow>
+                        </DnaTd>
+                      </DnaTableRow>
                     )}
-                 </TableBody>
-               </Table>
+                 </DnaTableBody>
+               </DnaTable>
             </div>
           </CardContent>
         </Card>

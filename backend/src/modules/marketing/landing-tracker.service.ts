@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
+import { BusinessRuleViolationException } from '../../common/exceptions/api-exception';
 import { Prisma } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -95,7 +96,10 @@ export class LandingTrackerService {
     const activeSales = sales.filter((s) => s.active);
 
     if (activeSales.length === 0) {
-      throw new Error('Tidak ada sales aktif');
+      throw new BusinessRuleViolationException(
+        'landing-no-active-sales',
+        'Tidak ada sales aktif untuk menerima lead baru.',
+      );
     }
 
     const counter = await this.getRotationCounter();

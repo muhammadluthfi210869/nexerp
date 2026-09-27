@@ -1,3 +1,11 @@
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Calendar as CalendarIcon, 
@@ -373,44 +381,44 @@ export const ContentPlannerView: React.FC<ContentPlannerViewProps> = ({
           </div>
 
           <div className="overflow-x-auto mt-2">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="py-3 px-3">Date</th>
-                  <th className="py-3 px-2">Kanal</th>
-                  <th className="py-3 px-2">Content & Hook</th>
-                  <th className="py-3 px-2">Format</th>
-                  <th className="py-3 px-2">Status Post</th>
-                  <th className="py-3 px-2">Progress</th>
-                  <th className="py-3 px-2">Assign (PIC)</th>
-                  <th className="py-3 px-2 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <DnaTh className="py-3 px-3">Date</DnaTh>
+                  <DnaTh className="py-3 px-2">Kanal</DnaTh>
+                  <DnaTh className="py-3 px-2">Content & Hook</DnaTh>
+                  <DnaTh className="py-3 px-2">Format</DnaTh>
+                  <DnaTh className="py-3 px-2">Status Post</DnaTh>
+                  <DnaTh className="py-3 px-2">Progress</DnaTh>
+                  <DnaTh className="py-3 px-2">Assign (PIC)</DnaTh>
+                  <DnaTh className="py-3 px-2 text-right">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredPosts.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-8 text-center text-slate-400">
+                  <DnaTableRow>
+                    <DnaTd colSpan={8} className="py-8 text-center text-slate-400">
                       Tidak ada konten ditemukan untuk brand {brand.name}.
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   filteredPosts.map(post => (
-                    <tr
+                    <DnaTableRow
                       key={post.id}
                       className="hover:bg-slate-50/80 transition group cursor-pointer"
                       onClick={() => onViewPostDetail(post)}
                     >
-                      <td className="py-3 px-3 font-bold text-slate-800 whitespace-nowrap">
+                      <DnaTd className="py-3 px-3 font-bold text-slate-800 whitespace-nowrap">
                         {formatDateIndo(post.date)}
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2 whitespace-nowrap">
+                      <DnaTd className="py-3 px-2 whitespace-nowrap">
                         <span className={`px-2 py-0.5 rounded font-bold text-[10px] ${getPlatformBadge(post.platform).bg}`}>
                           {getPlatformBadge(post.platform).label}
                         </span>
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2">
+                      <DnaTd className="py-3 px-2">
                         <div className="font-bold text-slate-900 group-hover:text-blue-600 transition">
                           {post.title}
                         </div>
@@ -419,15 +427,15 @@ export const ContentPlannerView: React.FC<ContentPlannerViewProps> = ({
                             "{post.hook}"
                           </div>
                         )}
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2 whitespace-nowrap">
+                      <DnaTd className="py-3 px-2 whitespace-nowrap">
                         <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold text-[10px]">
                           {post.format}
                         </span>
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                      <DnaTd className="py-3 px-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                         <select
                           value={post.status}
                           onChange={(e) => onUpdatePostStatus(post.id, e.target.value as PostStatus)}
@@ -441,9 +449,9 @@ export const ContentPlannerView: React.FC<ContentPlannerViewProps> = ({
                           <option value="Published">Published</option>
                           <option value="Late">Late</option>
                         </select>
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                      <DnaTd className="py-3 px-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-2">
                           <div className="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                             <div 
@@ -457,18 +465,18 @@ export const ContentPlannerView: React.FC<ContentPlannerViewProps> = ({
                             {post.progress}%
                           </span>
                         </div>
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2 whitespace-nowrap">
+                      <DnaTd className="py-3 px-2 whitespace-nowrap">
                         <span className="inline-flex items-center gap-1.5 font-medium text-slate-800">
                           <span className="w-5 h-5 rounded-full bg-slate-100 text-[10px] font-bold flex items-center justify-center">
                             {post.pic[0]}
                           </span>
                           {post.pic}
                         </span>
-                      </td>
+                      </DnaTd>
 
-                      <td className="py-3 px-2 text-right whitespace-nowrap">
+                      <DnaTd className="py-3 px-2 text-right whitespace-nowrap">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -478,12 +486,12 @@ export const ContentPlannerView: React.FC<ContentPlannerViewProps> = ({
                         >
                           Lihat Brief
                         </button>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </div>
       )}

@@ -55,11 +55,95 @@ async function main() {
     console.log(`✅ Material: ${m.name} (${m.id})`);
   }
 
-  // 3. Set supervisor PIN on existing user
-  const user = await prisma.user.findFirst({ where: { roles: { hasSome: ['SUPER_ADMIN', 'PRODUCTION'] } } });
-  if (user) {
-    await prisma.user.update({ where: { id: user.id }, data: { managerPin: '123456' } });
-    console.log(`✅ PIN set: ${user.fullName} (${user.id})`);
+  // 3. Set supervisor PIN on production users
+  const supervisorId = 'f0ca0930-6c7d-4061-9578-c8fe6bdb0a6e';
+  await prisma.user.updateMany({
+    where: {
+      OR: [
+        { id: supervisorId },
+        { roles: { hasSome: ['SUPER_ADMIN', 'PRODUCTION'] } },
+      ],
+    },
+    data: { managerPin: '123456' },
+  });
+  console.log(`✅ PIN set to 123456 for production supervisors`);
+
+  // 4. E2E Lead & Sample for Production
+  const leadId = 'df0fefaf-2398-470f-b86c-31b018f30e86';
+  const staff = await prisma.bussdevStaff.findFirst();
+  if (staff) {
+    await prisma.salesLead.upsert({
+      where: { id: leadId },
+      update: { status: 'WON_DEAL', picId: staff.id },
+      create: {
+        id: leadId,
+        clientName: 'E2E Production Client',
+        contactInfo: '081234567890',
+        source: 'DIRECT',
+        productInterest: 'E2E Cosmetic Serum',
+        status: 'WON_DEAL',
+        picId: staff.id,
+      },
+    });
+    console.log(`✅ SalesLead: ${leadId}`);
+
+    const sampleId = 'ef1fefaf-2398-470f-b86c-31b018f30e87';
+    await prisma.sampleRequest.upsert({
+      where: { id: sampleId },
+      update: { stage: 'APPROVED' },
+      create: {
+        id: sampleId,
+        sampleCode: 'SMP-E2E-PROD',
+        leadId,
+        productName: 'E2E Cosmetic Serum',
+        targetFunction: 'Moisturizing',
+        textureReq: 'Serum',
+        colorReq: 'Clear',
+        aromaReq: 'Unscented',
+        stage: 'APPROVED',
+      },
+    });
+
+    const bomId = 'ff2fefaf-2398-470f-b86c-31b018f30e88';
+    await prisma.billOfMaterial.upsert({
+      where: { id: bomId },
+      update: {},
+      create: {
+        id: bomId,
+        sampleId,
+        materialId: MATERIAL_UUIDS.raw,
+        quantityPerUnit: 0.5,
+      },
+    });
+    console.log(`✅ Sample & BOM configured for lead ${leadId}`);
+
+    // BPOM Regulatory Pipeline for Production Gate check
+    const regPipelineId = 'a1bfefaf-2398-470f-b86c-31b018f30e89';
+    const adminUser = await prisma.user.findFirst({
+      where: { roles: { has: 'SUPER_ADMIN' } },
+    });
+    if (adminUser) {
+      await prisma.regulatoryPipeline.upsert({
+        where: { id: regPipelineId },
+        update: {
+          type: 'BPOM',
+          currentStage: 'PUBLISHED',
+          registrationNo: 'NA18260199999',
+          leadId,
+          sampleRequestId: sampleId,
+        },
+        create: {
+          id: regPipelineId,
+          leadId,
+          sampleRequestId: sampleId,
+          type: 'BPOM',
+          currentStage: 'PUBLISHED',
+          registrationNo: 'NA18260199999',
+          legalPicId: adminUser.id,
+        },
+      });
+      console.log(`✅ RegulatoryPipeline BPOM configured for lead ${leadId}`);
+    }
   }
 
   console.log('\n✅ Seed complete!');

@@ -4,6 +4,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { validateEnv } from './common/config/env.validation';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { TenantMiddleware } from './platform/tenant/tenant.middleware';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -34,9 +35,11 @@ import { ProductionModule } from './modules/production/production.module';
 import { LogisticsModule } from './modules/logistics/logistics.module';
 import { CreativeModule } from './modules/creative/creative.module';
 import { HrModule } from './modules/hr/hr.module';
+import { KpiModule } from './modules/kpi/kpi.module';
 import { ExecutiveModule } from './modules/executive/executive.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { ActivityStreamModule } from './modules/activity-stream/activity-stream.module';
 import { SharedModule } from './shared/shared.module';
 import { NotificationModule } from './modules/notification/notification.module';
@@ -45,8 +48,12 @@ import { SystemModule } from './modules/system/system.module';
 import { DocumentAutomationModule } from './modules/document-automation/document-automation.module';
 import { TodoModule } from './modules/todo/todo.module';
 
+import { CommunicationModule } from './modules/communication/communication.module';
+import { FilesModule } from './modules/files/files.module';
 import { MasterModule } from './modules/master/master.module';
 import { MyDashboardModule } from './modules/my-dashboard/my-dashboard.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { DashboardsModule } from './modules/dashboards/dashboards.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
@@ -101,18 +108,24 @@ import { join } from 'path';
     LogisticsModule,
     CreativeModule,
     HrModule,
+    KpiModule,
     ExecutiveModule,
     MasterModule,
     MyDashboardModule,
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
+    ActivityLogModule,
     ActivityStreamModule,
     SharedModule,
     NotificationModule,
     EventsModule,
     SystemModule,
     DocumentAutomationModule,
+    CommunicationModule,
+    FilesModule,
     TodoModule,
+    ReportsModule,
+    DashboardsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -133,5 +146,9 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     // Apply correlation ID to all routes
     consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+    // Fase 1 — publish the request's tenant into AsyncLocalStorage so services
+    // reached from this request can read it without threading Request through.
+    // Runs after correlation-id so both are available together.
+    consumer.apply(TenantMiddleware).forRoutes('*');
   }
 }

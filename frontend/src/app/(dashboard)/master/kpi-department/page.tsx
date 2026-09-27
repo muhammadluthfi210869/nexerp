@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
+
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import {
@@ -13,14 +22,23 @@ import {
   Award,
   Filter,
   BarChart3,
-  Target
+  Target,
+  Loader2
 } from "lucide-react";
-import { MOCK_DEPARTMENT_KPIS } from "@/components/kpi-management/mock-data";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import { KPIStatusBadge, KPITrendIndicator, KpiNavTabs } from "@/components/kpi-management/KpiManagementComponents";
 import { type DepartmentKPI } from "@/types/kpi-management";
 
 export default function DepartmentKpiPage() {
-  const [departments, setDepartments] = useState<DepartmentKPI[]>(MOCK_DEPARTMENT_KPIS);
+  const { data: departments = [], isLoading } = useQuery<DepartmentKPI[]>({
+    queryKey: ["department-kpis"],
+    queryFn: async () => {
+      const res = await api.get("/hr/kpi/departments");
+      return res.data || [];
+    },
+  });
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -251,54 +269,54 @@ export default function DepartmentKpiPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
-                <th className="px-4 py-3">Nama Departemen</th>
-                <th className="px-4 py-3">Department Head</th>
-                <th className="px-4 py-3">Skor Terbobot</th>
-                <th className="px-4 py-3">Target</th>
-                <th className="px-4 py-3">Status KPI</th>
-                <th className="px-4 py-3">Trend</th>
-                <th className="px-4 py-3">Komponen Terendah (Drag)</th>
-                <th className="px-4 py-3 text-right">Audit Detail</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-[13px]">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                <DnaTh className="px-4 py-3">Nama Departemen</DnaTh>
+                <DnaTh className="px-4 py-3">Department Head</DnaTh>
+                <DnaTh className="px-4 py-3">Skor Terbobot</DnaTh>
+                <DnaTh className="px-4 py-3">Target</DnaTh>
+                <DnaTh className="px-4 py-3">Status KPI</DnaTh>
+                <DnaTh className="px-4 py-3">Trend</DnaTh>
+                <DnaTh className="px-4 py-3">Komponen Terendah (Drag)</DnaTh>
+                <DnaTh className="px-4 py-3 text-right">Audit Detail</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredDepartments.map((dept) => (
-                <tr key={dept.id} className="hover:bg-slate-50/60 transition-colors group">
-                  <td className="px-4 py-3 font-bold text-slate-900">
+                <DnaTableRow key={dept.id} className="hover:bg-slate-50/60 transition-colors group">
+                  <DnaTd className="px-4 py-3 font-bold text-slate-900">
                     <Link href={`/kpi-management/department/${dept.id}`} className="hover:text-blue-600 transition-colors">
                       {dept.departmentName}
                     </Link>
-                  </td>
+                  </DnaTd>
 
-                  <td className="px-4 py-3 font-medium text-slate-700">{dept.headOfDepartment}</td>
+                  <DnaTd className="px-4 py-3 font-medium text-slate-700">{dept.headOfDepartment}</DnaTd>
 
-                  <td className="px-4 py-3">
-                    <span className="text-[16px] font-black text-slate-900 font-mono">
+                  <DnaTd className="px-4 py-3">
+                    <span className="text-[16px] font-black text-slate-900 tabular-nums">
                       {dept.finalWeightedScore}%
                     </span>
-                  </td>
+                  </DnaTd>
 
-                  <td className="px-4 py-3 font-mono text-slate-500 text-[12px]">{dept.targetScore}%</td>
+                  <DnaTd className="px-4 py-3 tabular-nums text-slate-500 text-[12px]">{dept.targetScore}%</DnaTd>
 
-                  <td className="px-4 py-3">
+                  <DnaTd className="px-4 py-3">
                     <KPIStatusBadge status={dept.status} />
-                  </td>
+                  </DnaTd>
 
-                  <td className="px-4 py-3">
+                  <DnaTd className="px-4 py-3">
                     <KPITrendIndicator trend={dept.trend} />
-                  </td>
+                  </DnaTd>
 
-                  <td className="px-4 py-3">
+                  <DnaTd className="px-4 py-3">
                     <div className="text-[12px]">
                       <span className="font-bold text-rose-700 block">{dept.lowestKpiName}</span>
-                      <span className="text-[10px] text-slate-500 font-mono">Skor: {dept.lowestKpiScore}%</span>
+                      <span className="text-[10px] text-slate-500 tabular-nums">Skor: {dept.lowestKpiScore}%</span>
                     </div>
-                  </td>
+                  </DnaTd>
 
-                  <td className="px-4 py-3 text-right">
+                  <DnaTd className="px-4 py-3 text-right">
                     <Link
                       href={`/kpi-management/department/${dept.id}`}
                       className="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold text-[11px] inline-flex items-center gap-1 transition-all cursor-pointer text-decoration-none shadow-2xs"
@@ -306,11 +324,11 @@ export default function DepartmentKpiPage() {
                       <span>Rincian KPI</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </Link>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </div>
 

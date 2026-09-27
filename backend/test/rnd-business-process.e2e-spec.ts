@@ -4,7 +4,16 @@ import { FormulasService } from '../src/modules/rnd/formulas/formulas.service';
 import { PrismaService } from '../src/prisma/prisma/prisma.service';
 import { LegalityService } from '../src/modules/legality/legality.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { SampleStage, FormulaStatus, RevisionStatus } from '@prisma/client';
+import { AuditService } from '../src/platform/audit/audit.service';
+import { OutboxService } from '../src/platform/outbox/outbox.service';
+import { IdGeneratorService } from '../src/modules/system/id-generator.service';
+import { StateTransitionService } from '../src/modules/system/state-transition.service';
+import {
+  SampleStage,
+  FormulaStatus,
+  RevisionStatus,
+  PrismaClient,
+} from '@prisma/client';
 
 /**
  * RND Business Process E2E — Full Golden Path
@@ -25,6 +34,22 @@ describe('RND Business Process — Golden Path', () => {
         FormulasService,
         PrismaService,
         LegalityService,
+        IdGeneratorService,
+        StateTransitionService,
+        // RndService now also takes AuditService + OutboxService so governed writes
+        // commit with their audit row and outbox event (BUS-RULE-113).
+        {
+          provide: AuditService,
+          useFactory: (prisma: PrismaService) =>
+            new AuditService(prisma as unknown as PrismaClient),
+          inject: [PrismaService],
+        },
+        {
+          provide: OutboxService,
+          useFactory: (prisma: PrismaService) =>
+            new OutboxService(prisma as unknown as PrismaClient),
+          inject: [PrismaService],
+        },
         EventEmitter2,
       ],
     }).compile();
@@ -670,9 +695,24 @@ describe('RND Business Process — Golden Path', () => {
   }
 
   async function markAsPaid(sampleId: string, leadId: string) {
+    // BUS-RULE-107 / DEC-2026-09-20-051: Finance verification now needs a named
+    // verifier as well as a timestamp — `paymentApprovedById` is a FK to User, so
+    // a bare timestamp no longer satisfies the gate.
+    const financeUser = await prisma.user.upsert({
+      where: { email: 'finance.p08@test.local' },
+      update: {},
+      create: {
+        email: 'finance.p08@test.local',
+        fullName: 'Finance Verifier (P08)',
+        roles: ['FINANCE'],
+      },
+    });
     await prisma.sampleRequest.update({
       where: { id: sampleId },
-      data: { paymentApprovedAt: new Date() },
+      data: {
+        paymentApprovedAt: new Date(),
+        paymentApprovedById: financeUser.id,
+      },
     });
   }
 });

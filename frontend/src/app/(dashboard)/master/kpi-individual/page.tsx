@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
+
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import {
@@ -16,15 +25,24 @@ import {
   Building2,
   FolderOpen,
   LayoutGrid,
-  List
+  List,
+  Loader2
 } from "lucide-react";
-import { MOCK_INDIVIDUAL_KPIS } from "@/components/kpi-management/mock-data";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import { KPIStatusBadge, KPITrendIndicator, KpiNavTabs } from "@/components/kpi-management/KpiManagementComponents";
 import { type IndividualKPI } from "@/types/kpi-management";
 import { cn } from "@/lib/utils";
 
 export default function IndividualKpiPage() {
-  const [employees, setEmployees] = useState<IndividualKPI[]>(MOCK_INDIVIDUAL_KPIS);
+  const { data: employees = [], isLoading } = useQuery<IndividualKPI[]>({
+    queryKey: ["individual-kpis"],
+    queryFn: async () => {
+      const res = await api.get("/hr/kpi/employees");
+      return res.data || [];
+    },
+  });
+
   const [searchQuery, setSearchQuery] = useState("");
   const [deptFilter, setDeptFilter] = useState("ALL");
   const [seniorityFilter, setSeniorityFilter] = useState("ALL");
@@ -170,15 +188,15 @@ export default function IndividualKpiPage() {
           <div className="space-y-1.5 text-[11px]">
             <div className="flex items-center justify-between font-semibold p-1.5 bg-slate-50 rounded-lg">
               <span className="text-slate-900">Staff / Operational</span>
-              <span className="text-blue-700 font-bold font-mono">70% Role Outcome</span>
+              <span className="text-blue-700 font-bold tabular-nums">70% Role Outcome</span>
             </div>
             <div className="flex items-center justify-between font-semibold p-1.5 bg-slate-50 rounded-lg">
               <span className="text-slate-900">Senior Coordinator</span>
-              <span className="text-blue-700 font-bold font-mono">50% Role • 20% Project</span>
+              <span className="text-blue-700 font-bold tabular-nums">50% Role • 20% Project</span>
             </div>
             <div className="flex items-center justify-between font-semibold p-1.5 bg-slate-50 rounded-lg">
               <span className="text-slate-900">Head of Dept (HOD)</span>
-              <span className="text-blue-700 font-bold font-mono">60% Dept Shared</span>
+              <span className="text-blue-700 font-bold tabular-nums">60% Dept Shared</span>
             </div>
           </div>
 
@@ -318,11 +336,11 @@ export default function IndividualKpiPage() {
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
                     <div className="flex items-baseline justify-between">
                       <span className="text-[11px] font-bold text-slate-500 uppercase">Final Skor KPI</span>
-                      <span className="text-[11px] font-bold text-slate-500 font-mono">Target: {emp.targetScore}%</span>
+                      <span className="text-[11px] font-bold text-slate-500 tabular-nums">Target: {emp.targetScore}%</span>
                     </div>
 
                     <div className="flex items-baseline gap-2 mt-0.5">
-                      <h3 className="text-[30px] font-black text-slate-900 font-mono leading-none">{emp.finalKpiScore}%</h3>
+                      <h3 className="text-[30px] font-black text-slate-900 tabular-nums leading-none">{emp.finalKpiScore}%</h3>
                       <KPITrendIndicator trend={emp.trend} />
                     </div>
 
@@ -342,15 +360,15 @@ export default function IndividualKpiPage() {
                   <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
                     <div className="p-2 bg-blue-50/60 rounded-lg border border-blue-100">
                       <span className="text-slate-500 block font-semibold">Dept Shared</span>
-                      <span className="font-mono font-bold text-blue-900 text-[12px]">{emp.departmentSharedScore}</span>
+                      <span className="tabular-nums font-bold text-blue-900 text-[12px]">{emp.departmentSharedScore}</span>
                     </div>
                     <div className="p-2 bg-emerald-50/60 rounded-lg border border-emerald-100">
                       <span className="text-slate-500 block font-semibold">Role Outcome</span>
-                      <span className="font-mono font-bold text-emerald-900 text-[12px]">{emp.roleSpecificScore}</span>
+                      <span className="tabular-nums font-bold text-emerald-900 text-[12px]">{emp.roleSpecificScore}</span>
                     </div>
                     <div className="p-2 bg-purple-50/60 rounded-lg border border-purple-100">
                       <span className="text-slate-500 block font-semibold">Strategic Proj</span>
-                      <span className="font-mono font-bold text-purple-900 text-[12px]">{emp.strategicProjectScore}</span>
+                      <span className="tabular-nums font-bold text-purple-900 text-[12px]">{emp.strategicProjectScore}</span>
                     </div>
                   </div>
 
@@ -382,65 +400,65 @@ export default function IndividualKpiPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
-                  <th className="px-4 py-3">Nama Karyawan</th>
-                  <th className="px-4 py-3">Divisi & Role</th>
-                  <th className="px-4 py-3">Senioritas</th>
-                  <th className="px-4 py-3">Manager / Atasan</th>
-                  <th className="px-4 py-3">Final Skor KPI</th>
-                  <th className="px-4 py-3">Target</th>
-                  <th className="px-4 py-3">Status KPI</th>
-                  <th className="px-4 py-3">Trend</th>
-                  <th className="px-4 py-3">Lowest KPI</th>
-                  <th className="px-4 py-3 text-right">Audit Detail</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-[13px]">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                  <DnaTh className="px-4 py-3">Nama Karyawan</DnaTh>
+                  <DnaTh className="px-4 py-3">Divisi & Role</DnaTh>
+                  <DnaTh className="px-4 py-3">Senioritas</DnaTh>
+                  <DnaTh className="px-4 py-3">Manager / Atasan</DnaTh>
+                  <DnaTh className="px-4 py-3">Final Skor KPI</DnaTh>
+                  <DnaTh className="px-4 py-3">Target</DnaTh>
+                  <DnaTh className="px-4 py-3">Status KPI</DnaTh>
+                  <DnaTh className="px-4 py-3">Trend</DnaTh>
+                  <DnaTh className="px-4 py-3">Lowest KPI</DnaTh>
+                  <DnaTh className="px-4 py-3 text-right">Audit Detail</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredEmployees.map((emp) => (
-                  <tr key={emp.id} className="hover:bg-slate-50/60 transition-colors group">
-                    <td className="px-4 py-3 font-bold text-slate-900">
+                  <DnaTableRow key={emp.id} className="hover:bg-slate-50/60 transition-colors group">
+                    <DnaTd className="px-4 py-3 font-bold text-slate-900">
                       <Link href={`/kpi-management/individual/${emp.id}`} className="hover:text-blue-600 transition-colors">
                         {emp.employeeName}
                       </Link>
-                      <span className="block text-[10px] text-slate-400 font-mono">{emp.employeeId}</span>
-                    </td>
+                      <span className="block text-[10px] text-slate-400 tabular-nums">{emp.employeeId}</span>
+                    </DnaTd>
 
-                    <td className="px-4 py-3">
+                    <DnaTd className="px-4 py-3">
                       <span className="font-semibold text-slate-900 block">{emp.role}</span>
                       <span className="text-[11px] text-slate-500">{emp.department}</span>
-                    </td>
+                    </DnaTd>
 
-                    <td className="px-4 py-3">
+                    <DnaTd className="px-4 py-3">
                       <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-bold">
                         {emp.seniority}
                       </span>
-                    </td>
+                    </DnaTd>
 
-                    <td className="px-4 py-3 font-medium text-slate-700">{emp.manager}</td>
+                    <DnaTd className="px-4 py-3 font-medium text-slate-700">{emp.manager}</DnaTd>
 
-                    <td className="px-4 py-3">
-                      <span className="text-[16px] font-black text-slate-900 font-mono">
+                    <DnaTd className="px-4 py-3">
+                      <span className="text-[16px] font-black text-slate-900 tabular-nums">
                         {emp.finalKpiScore}%
                       </span>
-                    </td>
+                    </DnaTd>
 
-                    <td className="px-4 py-3 font-mono text-slate-500 text-[12px]">{emp.targetScore}%</td>
+                    <DnaTd className="px-4 py-3 tabular-nums text-slate-500 text-[12px]">{emp.targetScore}%</DnaTd>
 
-                    <td className="px-4 py-3">
+                    <DnaTd className="px-4 py-3">
                       <KPIStatusBadge status={emp.status} />
-                    </td>
+                    </DnaTd>
 
-                    <td className="px-4 py-3">
+                    <DnaTd className="px-4 py-3">
                       <KPITrendIndicator trend={emp.trend} />
-                    </td>
+                    </DnaTd>
 
-                    <td className="px-4 py-3 text-[12px] font-medium text-rose-700">
+                    <DnaTd className="px-4 py-3 text-[12px] font-medium text-rose-700">
                       {emp.lowestKpiName}
-                    </td>
+                    </DnaTd>
 
-                    <td className="px-4 py-3 text-right">
+                    <DnaTd className="px-4 py-3 text-right">
                       <Link
                         href={`/kpi-management/individual/${emp.id}`}
                         className="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold text-[11px] inline-flex items-center gap-1 transition-all cursor-pointer text-decoration-none shadow-2xs"
@@ -448,11 +466,11 @@ export default function IndividualKpiPage() {
                         <span>Bukti Audit</span>
                         <ArrowUpRight className="w-3.5 h-3.5" />
                       </Link>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </div>
       )}

@@ -225,7 +225,7 @@ export const SalesbotFlowModal: React.FC<SalesbotFlowModalProps> = ({
                           Kata Kunci Pesan WhatsApp:
                         </label>
                         {cond.isFallback ? (
-                          <div className="bg-white border border-slate-200 rounded-xl p-2 text-slate-500 font-mono text-[11px]">
+                          <div className="bg-white border border-slate-200 rounded-xl p-2 text-slate-500 tabular-nums text-[11px]">
                             * (Tangkap semua teks lainnya)
                           </div>
                         ) : (

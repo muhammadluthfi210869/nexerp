@@ -1,19 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import Link from "next/link";
-import { BookOpen, Layers, GitMerge, Search, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { BookOpen, Layers, GitMerge, Search, Plus } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DnaInput, DnaButton, DnaBadge, DnaDataTableCard, DnaStatCard, DnaTabNav } from "@/components/dna";
 import {
-  DnaTable as Table,
-  DnaTableBody as TableBody,
-  DnaTd as TableCell,
-  DnaTh as TableHead,
-  DnaTableHead as TableHeader,
-  DnaTableRow as TableRow,
+  DnaTable,
+  DnaTableBody,
+  DnaTd,
+  DnaTh,
+  DnaTableHead,
+  DnaTableRow,
 } from "@/components/dna";
 import { QueryLoading, QueryError } from "@/components/query-states";
 import { cn } from "@/lib/utils";
@@ -25,19 +25,6 @@ const ACCOUNT_TYPES: Record<string, string> = {
   REVENUE: "success",
   EXPENSE: "warning",
 };
-
-const STATIC_COA = [
-  { kode: "11111", nama: "Kas Utama" },
-  { kode: "11112", nama: "Kas Kecil" },
-  { kode: "11212", nama: "BCA (2640351589)" },
-  { kode: "11411", nama: "Piutang Dagang" },
-  { kode: "11611", nama: "Persediaan Bahan Baku" },
-  { kode: "21111", nama: "Hutang Dagang" },
-  { kode: "31111", nama: "Modal Saham" },
-  { kode: "41111", nama: "Penjualan" },
-  { kode: "51111", nama: "HPP" },
-  { kode: "61111", nama: "Beban Gaji" },
-];
 
 const MAPPING_ITEMS = [
   { id: "coa_1", label: "Hutang Dagang", default: "21111" },
@@ -77,7 +64,7 @@ export default function JurnalPage() {
     staleTime: 30000,
   });
 
-  const [mappings, setMappings] = useState<Record<string, string>>({
+  const [mappings] = useState<Record<string, string>>({
     coa_1: "21111",
     coa_7: "11411",
     coa_8: "41211",
@@ -110,7 +97,7 @@ export default function JurnalPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <DnaStatCard icon={<BookOpen className="text-blue-600" />} label="Total Jurnal" value={totalJurnal} subValue={stats?.totalTransactions ? `${stats.totalTransactions} transaksi` : undefined} />
+            <DnaStatCard icon={<BookOpen className="text-blue-600" />} label="Total Jurnal" value={totalJurnal} subValue={stats?.transactions?.length ? `${stats.transactions.length} transaksi` : undefined} />
             <DnaStatCard icon={<Layers className="text-emerald-600" />} label="Total Akun (COA)" value={totalAkun} />
             <DnaStatCard icon={<GitMerge className="text-purple-600" />} label="Active Auto Mappings" value={`${activeMappings} / ${MAPPING_ITEMS.length}`} />
           </div>
@@ -147,34 +134,34 @@ export default function JurnalPage() {
                   </div>
                 }
               >
-                <Table className="table-dense">
-                  <TableHeader className="bg-slate-50/70">
-                    <TableRow className="hover:bg-transparent border-slate-100">
-                      <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Referensi</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Tanggal</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Deskripsi</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-right">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <DnaTable className="table-dense">
+                  <DnaTableHead className="bg-slate-50/70">
+                    <DnaTableRow className="hover:bg-transparent border-slate-100">
+                      <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Referensi</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Tanggal</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Deskripsi</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-right">Total</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {filteredJournals.slice(0, 50).map((j: any) => {
                       const total = j.lines?.reduce((s: number, l: any) => s + Number(l.debit || 0), 0) || 0;
                       return (
-                        <TableRow key={j.id} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50">
-                          <TableCell className="py-3 pl-6 font-black text-slate-900 text-xs uppercase italic">{j.reference || j.id}</TableCell>
-                          <TableCell className="py-3 text-[10px] font-medium text-slate-500">{new Date(j.date).toISOString().split("T")[0]}</TableCell>
-                          <TableCell className="py-3 text-xs text-slate-700">{j.description || "-"}</TableCell>
-                          <TableCell className="py-3 text-right font-mono tabular-nums font-black text-xs text-slate-900">Rp {total.toLocaleString()}</TableCell>
-                        </TableRow>
+                        <DnaTableRow key={j.id} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50">
+                          <DnaTd className="py-3 pl-6 font-black text-slate-900 text-xs uppercase italic">{j.reference || j.id}</DnaTd>
+                          <DnaTd className="py-3 text-[10px] font-medium text-slate-500">{new Date(j.date).toISOString().split("T")[0]}</DnaTd>
+                          <DnaTd className="py-3 text-xs text-slate-700">{j.description || "-"}</DnaTd>
+                          <DnaTd className="py-3 text-right tabular-nums font-semibold text-xs text-slate-900">Rp {total.toLocaleString()}</DnaTd>
+                        </DnaTableRow>
                       );
                     })}
                     {filteredJournals.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="py-16 text-center text-[10px] text-slate-400">Belum ada jurnal.</TableCell>
-                      </TableRow>
+                      <DnaTableRow>
+                        <DnaTd colSpan={4} className="py-16 text-center text-[10px] text-slate-400">Belum ada jurnal.</DnaTd>
+                      </DnaTableRow>
                     )}
-                  </TableBody>
-                </Table>
+                  </DnaTableBody>
+                </DnaTable>
               </DnaDataTableCard>
             </div>
 
@@ -199,40 +186,40 @@ export default function JurnalPage() {
                   </div>
                 }
               >
-                <Table className="table-dense">
-                  <TableHeader className="bg-slate-50/70">
-                    <TableRow className="hover:bg-transparent border-slate-100">
-                      <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Kode</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Nama Akun</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">Tipe</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <DnaTable className="table-dense">
+                  <DnaTableHead className="bg-slate-50/70">
+                    <DnaTableRow className="hover:bg-transparent border-slate-100">
+                      <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Kode</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Nama Akun</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">Tipe</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">Status</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {filteredAccounts.map((a: any) => (
-                      <TableRow key={a.id} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50">
-                        <TableCell className="py-3 pl-6">
+                      <DnaTableRow key={a.id} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50">
+                        <DnaTd className="py-3 pl-6">
                           <div className="flex items-center gap-2">
                             <div className="h-7 w-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-[8px] font-black">{a.code.substring(0, 3)}</div>
-                            <span className="font-black text-slate-900 text-xs uppercase">{a.code}</span>
+                            <span className="font-semibold tabular-nums text-slate-900 text-xs">{a.code}</span>
                           </div>
-                        </TableCell>
-                        <TableCell className="py-3 font-medium text-xs uppercase text-slate-700">{a.name}</TableCell>
-                        <TableCell className="py-3 text-center">
-                          <DnaBadge status={(ACCOUNT_TYPES[a.type] || "default") as any}>{a.type}</DnaBadge>
-                        </TableCell>
-                        <TableCell className="py-3 text-center">
-                          <DnaBadge status={a.isActive ? "success" : "default"}>{a.isActive ? "ACTIVE" : "INACTIVE"}</DnaBadge>
-                        </TableCell>
-                      </TableRow>
+                        </DnaTd>
+                        <DnaTd className="py-3 font-medium text-xs uppercase text-slate-700">{a.name}</DnaTd>
+                        <DnaTd className="py-3 text-center">
+                          <DnaBadge variant={(ACCOUNT_TYPES[a.type] || "default") as any}>{a.type}</DnaBadge>
+                        </DnaTd>
+                        <DnaTd className="py-3 text-center">
+                          <DnaBadge variant={a.isActive ? "success" : "default"}>{a.isActive ? "ACTIVE" : "INACTIVE"}</DnaBadge>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
                     {filteredAccounts.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="py-16 text-center text-[10px] text-slate-400">Belum ada akun.</TableCell>
-                      </TableRow>
+                      <DnaTableRow>
+                        <DnaTd colSpan={4} className="py-16 text-center text-[10px] text-slate-400">Belum ada akun.</DnaTd>
+                      </DnaTableRow>
                     )}
-                  </TableBody>
-                </Table>
+                  </DnaTableBody>
+                </DnaTable>
               </DnaDataTableCard>
             </div>
 
@@ -252,34 +239,38 @@ export default function JurnalPage() {
                   </div>
                 }
               >
-                <Table className="table-dense">
-                  <TableHeader className="bg-slate-50/70">
-                    <TableRow className="hover:bg-transparent border-slate-100">
-                      <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Rule</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">COA Mapping</TableHead>
-                      <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <DnaTable className="table-dense">
+                  <DnaTableHead className="bg-slate-50/70">
+                    <DnaTableRow className="hover:bg-transparent border-slate-100">
+                      <DnaTh className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">Rule</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px]">COA Mapping</DnaTh>
+                      <DnaTh className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">Status</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {MAPPING_ITEMS.map((item) => {
                       const val = mappings[item.id];
-                      const coa = STATIC_COA.find(c => c.kode === val);
+                      // COA labels come from the live chart of accounts
+                      // (`GET /finance/accounts` → { code, name }); the old
+                      // STATIC_COA literal is gone so an unmapped/unfetched
+                      // account can never be labelled with invented names.
+                      const coa = accounts?.find((c: any) => c.code === val);
                       return (
-                        <TableRow key={item.id} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50">
-                          <TableCell className="py-3 pl-6 font-black text-slate-900 text-xs uppercase italic">{item.label}</TableCell>
-                          <TableCell className="py-3">
-                            <span className={cn("font-mono text-xs font-bold", val ? "text-blue-600" : "text-slate-400")}>
-                              {coa ? `${coa.kode} — ${coa.nama}` : "— Not Set —"}
+                        <DnaTableRow key={item.id} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50">
+                          <DnaTd className="py-3 pl-6 font-black text-slate-900 text-xs uppercase italic">{item.label}</DnaTd>
+                          <DnaTd className="py-3">
+                            <span className={cn("text-xs font-semibold tabular-nums", val ? "text-blue-600" : "text-slate-400")}>
+                              {coa ? `${coa.code} — ${coa.name}` : (val ? `${val} — Nama akun tidak ditemukan` : "— Not Set —")}
                             </span>
-                          </TableCell>
-                          <TableCell className="py-3 text-center">
-                            <DnaBadge status={val ? "success" : "default"}>{val ? "ACTIVE" : "INACTIVE"}</DnaBadge>
-                          </TableCell>
-                        </TableRow>
+                          </DnaTd>
+                          <DnaTd className="py-3 text-center">
+                            <DnaBadge variant={val ? "success" : "default"}>{val ? "ACTIVE" : "INACTIVE"}</DnaBadge>
+                          </DnaTd>
+                        </DnaTableRow>
                       );
                     })}
-                  </TableBody>
-                </Table>
+                  </DnaTableBody>
+                </DnaTable>
               </DnaDataTableCard>
             </div>
           </div>

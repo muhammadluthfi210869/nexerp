@@ -49,9 +49,10 @@ function formatRupiah(value: number): string {
 }
 
 export function DashboardCards({ variant, data }: DashboardCardsProps) {
-  if (!data && variant === 'dashboard') {
-    return null;
-  }
+  // No data (yet) => render nothing. Every branch below falls back to
+  // hardcoded sample figures for missing fields, so rendering before the API
+  // answers would show invented numbers to the user.
+  if (!data) return null;
 
   // 🔴 1. MAIN BD DASHBOARD
   if (variant === 'dashboard') {

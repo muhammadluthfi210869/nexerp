@@ -8,18 +8,18 @@ import {
   DialogContent, 
   DialogTitle, 
   DialogDescription
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
+} from "@/components/dna";
+import { Button } from "@/components/dna";
+import { Textarea } from "@/components/dna";
+import { Input } from "@/components/dna";
 import { 
   Select, 
   SelectContent, 
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/dna";
+import { Badge } from "@/components/dna";
 import { toast } from "sonner";
 import { ActivityType, WorkflowStatus, ProductCategory, LostReason } from "@/types/enums";
 import { 
@@ -37,7 +37,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/dna";
 import { ActivityStreamTimeline } from "./ActivityStreamTimeline";
 import { PipelineHUD } from "./PipelineHUD";
 import StatusActions from "./StatusActions";

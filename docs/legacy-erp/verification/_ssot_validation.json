@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-20T03:29:04.445Z",
+  "generated_at": "2026-09-27T17:23:56.637Z",
   "gates": {
     "yaml_parse": {
       "status": "PASS",
@@ -33,12 +33,12 @@
     },
     "screen_api_refs": {
       "status": "PASS",
-      "checked": 209,
+      "checked": 221,
       "dangling": []
     },
     "screen_rbac_refs": {
       "status": "PASS",
-      "checked": 372,
+      "checked": 384,
       "dangling": []
     },
     "business_rule_ids": {
@@ -58,7 +58,7 @@
     },
     "workflow_rule_refs": {
       "status": "PASS",
-      "checked": 1769,
+      "checked": 1922,
       "dangling": []
     },
     "event_ids": {
@@ -67,7 +67,7 @@
     },
     "data_ownership_coverage": {
       "status": "PASS",
-      "schema_models_checked": 92,
+      "schema_models_checked": 100,
       "missing_models": [],
       "entries_without_writer": []
     },
@@ -82,12 +82,12 @@
     },
     "traceability_refs": {
       "status": "PASS",
-      "checked_requirements": 37,
+      "checked_requirements": 42,
       "dangling": []
     },
     "business_rule_test_refs": {
       "status": "PASS",
-      "checked_rules": 106,
+      "checked_rules": 114,
       "rules_without_tests": []
     },
     "blocking_decisions_zero": {
@@ -100,18 +100,18 @@
     }
   },
   "counts": {
-    "prisma_models": 92,
-    "api_operations": 377,
+    "prisma_models": 100,
+    "api_operations": 407,
     "roles": 44,
-    "permissions": 144,
-    "screens": 179,
-    "screen_api_refs": 209,
-    "screen_permission_refs": 372,
-    "business_rules": 106,
-    "workflows": 37,
-    "integration_events": 76,
-    "requirements": 37,
-    "trace_tests": 239
+    "permissions": 149,
+    "screens": 184,
+    "screen_api_refs": 221,
+    "screen_permission_refs": 384,
+    "business_rules": 114,
+    "workflows": 38,
+    "integration_events": 88,
+    "requirements": 42,
+    "trace_tests": 260
   },
   "unresolved": {
     "open_decisions": []

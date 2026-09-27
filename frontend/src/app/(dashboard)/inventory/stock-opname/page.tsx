@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   ClipboardCheck,
   Search,
@@ -22,6 +25,12 @@ import {
   DnaKpiGrid,
   DnaStatCard,
   DnaDataTableCard,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
   DnaButton,
   DnaInput,
   DnaModal,
@@ -39,6 +48,7 @@ interface OpnameRecord {
   status: "COMPLETED" | "DRAFT" | "PENDING_APPROVAL";
   notes: string;
   items: {
+    materialId?: string;
     name: string;
     unit: string;
     systemQty: number;
@@ -47,46 +57,6 @@ interface OpnameRecord {
     notes?: string;
   }[];
 }
-
-const INITIAL_OPNAMES: OpnameRecord[] = [
-  {
-    id: "OPN-001",
-    code: "OPN-2026-0001",
-    date: "2026-08-31",
-    warehouse: "Gudang Bahan Baku",
-    creator: "Super Admin",
-    status: "COMPLETED",
-    notes: "Stock Opname Bulanan Agustus Gudang Bahan Baku",
-    items: [
-      { name: "Hairdensyl Complex", unit: "gr", systemQty: 500, actualQty: 498, difference: -2, notes: "Selisih timbang kalibrasi" },
-      { name: "IPM", unit: "gr", systemQty: 250, actualQty: 250, difference: 0, notes: "Akurat" },
-    ]
-  },
-  {
-    id: "OPN-002",
-    code: "OPN-2026-0002",
-    date: "2026-09-10",
-    warehouse: "Gudang Kemasan",
-    creator: "Super Admin",
-    status: "COMPLETED",
-    notes: "Audit Fisik Kemasan & Dus Sekunder Pra-Produksi",
-    items: [
-      { name: "Niacinamide", unit: "gr", systemQty: 10000, actualQty: 9980, difference: -20, notes: "Dus rusak tepi" },
-    ]
-  },
-  {
-    id: "OPN-003",
-    code: "OPN-2026-0003",
-    date: "2026-09-15",
-    warehouse: "Gudang Barang Jadi",
-    creator: "Staff Gudang",
-    status: "DRAFT",
-    notes: "Opname Berkala Produk Jadi Siap Distribusi",
-    items: [
-      { name: "Secret Water", unit: "gr", systemQty: 1500, actualQty: 1500, difference: 0, notes: "Hitung fisik sesuai" },
-    ]
-  }
-];
 
 export default function StockOpnamePage() {
   return (
@@ -101,31 +71,102 @@ function StockOpnameContent() {
   const searchParams = useSearchParams();
   const actionParam = searchParams.get("action");
   const { toast } = useDnaToast();
+  const queryClient = useQueryClient();
 
-  const [opnames, setOpnames] = useState<OpnameRecord[]>(INITIAL_OPNAMES);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOpn, setSelectedOpn] = useState<OpnameRecord | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
+  // Queries
+  const { data: rawOpnames = [] } = useQuery({
+    queryKey: ["inventory-opnames"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/opname");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: warehouses = [] } = useQuery({
+    queryKey: ["inventory-warehouses"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/warehouses");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: catalogMaterials = [] } = useQuery({
+    queryKey: ["inventory-catalog-materials"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/catalog");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const opnames: OpnameRecord[] = useMemo(() => {
+    return rawOpnames.map((o: any) => ({
+      id: o.id,
+      code: o.opnameNumber || `OPN-${o.id.slice(0, 8).toUpperCase()}`,
+      date: o.createdAt ? new Date(o.createdAt).toISOString().split("T")[0] : "-",
+      warehouse: o.warehouse?.name || "Gudang Utama",
+      creator: o.pic?.name || o.picId || "Staff Gudang",
+      status: (o.status || "COMPLETED") as any,
+      notes: o.notes || "-",
+      items: (o.items || []).map((it: any) => ({
+        materialId: it.materialId,
+        name: it.material?.name || "Material",
+        unit: it.material?.unit || "Unit",
+        systemQty: Number(it.systemQty || 0),
+        actualQty: Number(it.actualQty || 0),
+        difference: Number(it.difference || 0),
+        notes: it.notes || "",
+      })),
+    }));
+  }, [rawOpnames]);
+
   // Form State
-  const [formData, setFormData] = useState({
-    code: `OPN-2026-${String(opnames.length + 1).padStart(4, "0")}`,
+  const [formData, setFormData] = useState<{
+    warehouseId: string;
+    warehouse: string;
+    date: string;
+    notes: string;
+    items: {
+      materialId?: string;
+      name: string;
+      unit: string;
+      systemQty: number;
+      actualQty: number;
+      difference: number;
+      notes?: string;
+    }[];
+  }>({
+    warehouseId: "",
+    warehouse: "",
     date: new Date().toISOString().split("T")[0],
-    warehouse: "Gudang Bahan Baku",
     notes: "",
-    items: [
-      { name: "Hairdensyl Complex", unit: "gr", systemQty: 500, actualQty: 500, difference: 0, notes: "" }
-    ]
+    items: [],
   });
 
   const [newItem, setNewItem] = useState({
-    name: "Niacinamide",
-    unit: "gr",
-    systemQty: 250,
-    actualQty: 250,
+    materialId: "",
+    name: "",
+    unit: "Unit",
+    systemQty: 0,
+    actualQty: 0,
     difference: 0,
-    notes: ""
+    notes: "",
   });
 
   useEffect(() => {
@@ -135,7 +176,7 @@ function StockOpnameContent() {
   }, [actionParam]);
 
   const filteredData = useMemo(() => {
-    return opnames.filter(item => {
+    return opnames.filter((item) => {
       return (
         item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.warehouse.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -145,63 +186,98 @@ function StockOpnameContent() {
     });
   }, [opnames, searchTerm]);
 
-  const totalCompleted = opnames.filter(o => o.status === "COMPLETED").length;
-  const totalDraft = opnames.filter(o => o.status === "DRAFT").length;
+  const totalCompleted = opnames.filter((o) => o.status === "COMPLETED").length;
+  const totalDraft = opnames.filter((o) => o.status === "DRAFT").length;
+
+  const accuracy = useMemo(() => {
+    if (opnames.length === 0) return "100%";
+    let totalSys = 0;
+    let totalAct = 0;
+    opnames.forEach((o) => {
+      o.items.forEach((i) => {
+        totalSys += i.systemQty;
+        totalAct += i.actualQty;
+      });
+    });
+    if (totalSys === 0) return "100%";
+    const acc = (1 - Math.abs(totalSys - totalAct) / totalSys) * 100;
+    return `${Math.max(0, acc).toFixed(1)}%`;
+  }, [opnames]);
 
   const handleAddItem = () => {
+    if (!newItem.name) {
+      toast({ title: "Pilih Material", description: "Pilih material terlebih dahulu", variant: "warning" });
+      return;
+    }
     const diff = newItem.actualQty - newItem.systemQty;
     setFormData({
       ...formData,
-      items: [...formData.items, { ...newItem, difference: diff }]
+      items: [...formData.items, { ...newItem, difference: diff }],
     });
-    setNewItem({ name: "IPM", unit: "gr", systemQty: 300, actualQty: 300, difference: 0, notes: "" });
+    setNewItem({ materialId: "", name: "", unit: "Unit", systemQty: 0, actualQty: 0, difference: 0, notes: "" });
   };
 
   const handleRemoveItem = (index: number) => {
     setFormData({
       ...formData,
-      items: formData.items.filter((_, i) => i !== index)
+      items: formData.items.filter((_, i) => i !== index),
     });
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.items.length === 0) {
-      toast({ title: "Item Kosong", description: "Tambahkan barang yang di-opname", variant: "warning" });
+    const targetWhId = formData.warehouseId || warehouses[0]?.id;
+    if (!targetWhId) {
+      toast({ title: "Gudang Kosong", description: "Pilih gudang terlebih dahulu", variant: "warning" });
       return;
     }
 
-    const newOpn: OpnameRecord = {
-      id: `OPN-${Date.now()}`,
-      code: formData.code,
-      date: formData.date,
-      warehouse: formData.warehouse,
-      creator: "Super Admin",
-      status: "COMPLETED",
-      notes: formData.notes || "Stock opname fisik gudang",
-      items: formData.items
-    };
+    try {
+      await api.post("/warehouse/opname", {
+        warehouseId: targetWhId,
+        picId: "SYSTEM",
+        notes: formData.notes || "Stock opname fisik gudang",
+        items: formData.items.map((it) => ({
+          materialId: it.materialId || (catalogMaterials[0]?.id as string) || "MAT-01",
+          systemQty: it.systemQty,
+          actualQty: it.actualQty,
+        })),
+      });
 
-    setOpnames([newOpn, ...opnames]);
-    setIsCreateOpen(false);
-    toast({
-      title: "Stock Opname Disimpan",
-      description: `Audit fisik ${newOpn.code} berhasil diverifikasi.`,
-      variant: "success"
-    });
-    if (actionParam === "create") {
-      router.push("/stock-opname");
+      queryClient.invalidateQueries({ queryKey: ["inventory-opnames"] });
+      setIsCreateOpen(false);
+      setFormData({
+        warehouseId: "",
+        warehouse: "",
+        date: new Date().toISOString().split("T")[0],
+        notes: "",
+        items: [],
+      });
+      toast({
+        title: "Stock Opname Disimpan",
+        description: `Audit fisik berhasil disimpan ke server.`,
+        variant: "success",
+      });
+      if (actionParam === "create") {
+        router.push("/stock-opname");
+      }
+    } catch (err: any) {
+      toast({
+        title: "Gagal Menyimpan",
+        description: err?.response?.data?.message || "Terjadi kesalahan saat menyimpan opname",
+        variant: "error",
+      });
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "COMPLETED":
-        return <DnaBadge status="success">Selesai (Approved)</DnaBadge>;
+        return <DnaBadge variant="success">Selesai (Approved)</DnaBadge>;
       case "DRAFT":
-        return <DnaBadge status="warning">Draft Opname</DnaBadge>;
+        return <DnaBadge variant="warning">Draft Opname</DnaBadge>;
       default:
-        return <DnaBadge status="default">{status}</DnaBadge>;
+        return <DnaBadge variant="default">{status}</DnaBadge>;
     }
   };
 
@@ -250,7 +326,7 @@ function StockOpnameContent() {
         />
         <DnaStatCard
           title="Tingkat Akurasi Stok"
-          value="99.4%"
+          value={accuracy}
           icon={ShieldCheck}
           variant="info"
           subtext="Variance toleransi < 1%"
@@ -274,35 +350,35 @@ function StockOpnameContent() {
       {/* 1:1 Table (Exactly 7 columns matching legacy G-SERP) */}
       <DnaDataTableCard title="Daftar Riwayat Stok Opname">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-              <tr>
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">Kode</th>
-                <th className="py-3 px-4">Tanggal</th>
-                <th className="py-3 px-4">Gudang</th>
-                <th className="py-3 px-4">Pembuat</th>
-                <th className="py-3 px-4">Catatan</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="w-12 text-center">#</DnaTh>
+                <DnaTh>Kode</DnaTh>
+                <DnaTh>Tanggal</DnaTh>
+                <DnaTh>Gudang</DnaTh>
+                <DnaTh>Pembuat</DnaTh>
+                <DnaTh>Catatan</DnaTh>
+                <DnaTh className="text-center">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={7} className="py-8 text-center text-slate-400">
                     Tidak ada transaksi stok opname ditemukan
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
-                    <td className="py-3 px-4 font-semibold text-blue-600">{item.code}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.date}</td>
-                    <td className="py-3 px-4 font-medium text-slate-800">{item.warehouse}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.creator}</td>
-                    <td className="py-3 px-4 text-slate-700 max-w-xs truncate">{item.notes}</td>
-                    <td className="py-3 px-4 text-center">
+                  <DnaTableRow key={item.id}>
+                    <DnaTd className="text-center font-medium text-slate-400 tabular-nums">{idx + 1}</DnaTd>
+                    <DnaTd className="font-semibold text-blue-600">{item.code}</DnaTd>
+                    <DnaTd className="text-slate-600 tabular-nums">{item.date}</DnaTd>
+                    <DnaTd className="font-medium text-slate-800">{item.warehouse}</DnaTd>
+                    <DnaTd className="text-slate-600">{item.creator}</DnaTd>
+                    <DnaTd className="text-slate-700 max-w-xs truncate">{item.notes}</DnaTd>
+                    <DnaTd className="text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <DnaButton
                           variant="ghost"
@@ -330,12 +406,12 @@ function StockOpnameContent() {
                           Print
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -381,34 +457,34 @@ function StockOpnameContent() {
                 Hasil Penghitungan Fisik
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                    <tr>
-                      <th className="py-2.5 px-3 w-10 text-center">#</th>
-                      <th className="py-2.5 px-3">Nama Barang</th>
-                      <th className="py-2.5 px-3 text-center">Satuan</th>
-                      <th className="py-2.5 px-3 text-right">Stok Sistem</th>
-                      <th className="py-2.5 px-3 text-right">Stok Fisik</th>
-                      <th className="py-2.5 px-3 text-right">Selisih</th>
-                      <th className="py-2.5 px-3">Catatan</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="w-10 text-center">#</DnaTh>
+                      <DnaTh>Nama Barang</DnaTh>
+                      <DnaTh className="text-center">Satuan</DnaTh>
+                      <DnaTh className="text-right">Stok Sistem</DnaTh>
+                      <DnaTh className="text-right">Stok Fisik</DnaTh>
+                      <DnaTh className="text-right">Selisih</DnaTh>
+                      <DnaTh>Catatan</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedOpn.items.map((it, idx) => (
-                      <tr key={idx}>
-                        <td className="py-2.5 px-3 text-center text-slate-400">{idx + 1}</td>
-                        <td className="py-2.5 px-3 font-medium text-slate-800">{it.name}</td>
-                        <td className="py-2.5 px-3 text-center text-slate-600">{it.unit}</td>
-                        <td className="py-2.5 px-3 text-right text-slate-500">{it.systemQty.toLocaleString()}</td>
-                        <td className="py-2.5 px-3 text-right font-semibold text-slate-900">{it.actualQty.toLocaleString()}</td>
-                        <td className={`py-2.5 px-3 text-right font-bold ${it.difference === 0 ? "text-slate-400" : it.difference < 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                      <DnaTableRow key={idx}>
+                        <DnaTd className="text-center text-slate-400 tabular-nums">{idx + 1}</DnaTd>
+                        <DnaTd className="font-medium text-slate-800">{it.name}</DnaTd>
+                        <DnaTd className="text-center text-slate-600">{it.unit}</DnaTd>
+                        <DnaTd className="text-right text-slate-500 tabular-nums">{it.systemQty.toLocaleString()}</DnaTd>
+                        <DnaTd className="text-right font-semibold text-slate-900 tabular-nums">{it.actualQty.toLocaleString()}</DnaTd>
+                        <DnaTd className={`text-right font-bold tabular-nums ${it.difference === 0 ? "text-slate-400" : it.difference < 0 ? "text-rose-600" : "text-emerald-600"}`}>
                           {it.difference > 0 ? `+${it.difference}` : it.difference}
-                        </td>
-                        <td className="py-2.5 px-3 text-slate-500">{it.notes || "-"}</td>
-                      </tr>
+                        </DnaTd>
+                        <DnaTd className="text-slate-500">{it.notes || "-"}</DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
 
@@ -440,14 +516,26 @@ function StockOpnameContent() {
                 Gudang Diperiksa *
               </label>
               <select
-                value={formData.warehouse}
-                onChange={(e) => setFormData({ ...formData, warehouse: e.target.value })}
+                value={formData.warehouseId}
+                onChange={(e) => {
+                  const selWh = warehouses.find((w: any) => w.id === e.target.value);
+                  setFormData({
+                    ...formData,
+                    warehouseId: e.target.value,
+                    warehouse: selWh?.name || e.target.value,
+                  });
+                }}
                 className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-white font-medium"
               >
-                <option value="Gudang Bahan Baku">Gudang Bahan Baku</option>
-                <option value="Gudang Kemasan">Gudang Kemasan</option>
-                <option value="Gudang Barang Jadi">Gudang Barang Jadi</option>
-                <option value="Gudang Surabaya">Gudang Surabaya</option>
+                {warehouses.length === 0 ? (
+                  <option value="">Tidak ada gudang</option>
+                ) : (
+                  warehouses.map((w: any) => (
+                    <option key={w.id} value={w.id}>
+                      {w.code} - {w.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
             <div>
@@ -473,14 +561,27 @@ function StockOpnameContent() {
               <div className="col-span-4">
                 <label className="block text-[11px] font-semibold text-slate-600 mb-1">Barang *</label>
                 <select
-                  value={newItem.name}
-                  onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                  value={newItem.materialId}
+                  onChange={(e) => {
+                    const selMat = catalogMaterials.find((m: any) => m.id === e.target.value);
+                    const stock = Number(selMat?.currentStock ?? selMat?.stockQty ?? 0);
+                    setNewItem({
+                      ...newItem,
+                      materialId: e.target.value,
+                      name: selMat?.name || e.target.value,
+                      unit: selMat?.unit || "Unit",
+                      systemQty: stock,
+                      actualQty: stock,
+                    });
+                  }}
                   className="w-full text-xs border border-slate-200 rounded-lg p-2 bg-white"
                 >
-                  <option value="Hairdensyl Complex">Hairdensyl Complex (gr)</option>
-                  <option value="Niacinamide">Niacinamide (gr)</option>
-                  <option value="IPM">IPM (gr)</option>
-                  <option value="Secret Water">Secret Water (gr)</option>
+                  <option value="">Pilih Material...</option>
+                  {catalogMaterials.map((m: any) => (
+                    <option key={m.id} value={m.id}>
+                      {m.code ? `[${m.code}] ` : ""}{m.name} ({m.unit || "Unit"})
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="col-span-2">
@@ -518,32 +619,32 @@ function StockOpnameContent() {
 
           {/* Tabel Hasil Opname */}
           <div className="border border-slate-200 rounded-xl overflow-hidden">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                <tr>
-                  <th className="py-2.5 px-3 w-10 text-center">#</th>
-                  <th className="py-2.5 px-3">Barang</th>
-                  <th className="py-2.5 px-3 text-center">Satuan</th>
-                  <th className="py-2.5 px-3 text-right">Stok Sistem</th>
-                  <th className="py-2.5 px-3 text-right">Stok Fisik</th>
-                  <th className="py-2.5 px-3 text-right">Selisih</th>
-                  <th className="py-2.5 px-3">Catatan</th>
-                  <th className="py-2.5 px-3 text-center w-12">Hapus</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh className="w-10 text-center">#</DnaTh>
+                  <DnaTh>Barang</DnaTh>
+                  <DnaTh className="text-center">Satuan</DnaTh>
+                  <DnaTh className="text-right">Stok Sistem</DnaTh>
+                  <DnaTh className="text-right">Stok Fisik</DnaTh>
+                  <DnaTh className="text-right">Selisih</DnaTh>
+                  <DnaTh>Catatan</DnaTh>
+                  <DnaTh className="text-center w-12">Hapus</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {formData.items.map((it, idx) => (
-                  <tr key={idx}>
-                    <td className="py-2 px-3 text-center text-slate-400">{idx + 1}</td>
-                    <td className="py-2 px-3 font-medium text-slate-800">{it.name}</td>
-                    <td className="py-2 px-3 text-center text-slate-600">{it.unit}</td>
-                    <td className="py-2 px-3 text-right text-slate-500">{it.systemQty.toLocaleString()}</td>
-                    <td className="py-2 px-3 text-right font-bold text-slate-800">{it.actualQty.toLocaleString()}</td>
-                    <td className={`py-2 px-3 text-right font-bold ${it.difference === 0 ? "text-slate-400" : it.difference < 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                  <DnaTableRow key={idx}>
+                    <DnaTd className="text-center text-slate-400 tabular-nums">{idx + 1}</DnaTd>
+                    <DnaTd className="font-medium text-slate-800">{it.name}</DnaTd>
+                    <DnaTd className="text-center text-slate-600">{it.unit}</DnaTd>
+                    <DnaTd className="text-right text-slate-500 tabular-nums">{it.systemQty.toLocaleString()}</DnaTd>
+                    <DnaTd className="text-right font-bold text-slate-800 tabular-nums">{it.actualQty.toLocaleString()}</DnaTd>
+                    <DnaTd className={`text-right font-bold tabular-nums ${it.difference === 0 ? "text-slate-400" : it.difference < 0 ? "text-rose-600" : "text-emerald-600"}`}>
                       {it.difference > 0 ? `+${it.difference}` : it.difference}
-                    </td>
-                    <td className="py-2 px-3 text-slate-500">{it.notes || "-"}</td>
-                    <td className="py-2 px-3 text-center">
+                    </DnaTd>
+                    <DnaTd className="text-slate-500">{it.notes || "-"}</DnaTd>
+                    <DnaTd className="text-center">
                       <button
                         type="button"
                         onClick={() => handleRemoveItem(idx)}
@@ -551,11 +652,11 @@ function StockOpnameContent() {
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
 
           <div>

@@ -157,20 +157,26 @@ model Supplier {
 }
 
 model PurchaseRequest {
-  id          String                @id @default(uuid()) @db.Uuid
-  requestDate DateTime              @default(now())
-  warehouseId String                @db.Uuid
-  priority    PRPriority            @default(MEDIUM)
-  status      PRStatus              @default(DRAFT)
-  notes       String?
-  supplierId  String?               @db.Uuid
-  createdById String?               @db.Uuid
-  createdAt   DateTime              @default(now())
-  items       PurchaseRequestItem[]
-  creator     User?                 @relation("PurchaseRequestCreator", fields: [createdById], references: [id])
-  supplier    Supplier?             @relation(fields: [supplierId], references: [id])
-  warehouse   Warehouse             @relation(fields: [warehouseId], references: [id])
+  id             String                @id @default(uuid()) @db.Uuid
+  requestNumber  String?               @unique
+  requestDate    DateTime              @default(now())
+  warehouseId    String                @db.Uuid
+  priority       PRPriority            @default(MEDIUM)
+  status         PRStatus              @default(DRAFT)
+  notes          String?
+  budgetCode     String?
+  urgency        String?               @default("NORMAL")
+  organizationId String?               @db.Uuid
+  supplierId     String?               @db.Uuid
+  createdById    String?               @db.Uuid
+  createdAt      DateTime              @default(now())
+  items          PurchaseRequestItem[]
+  purchaseOrders PurchaseOrder[]
+  creator        User?                 @relation("PurchaseRequestCreator", fields: [createdById], references: [id])
+  supplier       Supplier?             @relation(fields: [supplierId], references: [id])
+  warehouse      Warehouse             @relation(fields: [warehouseId], references: [id])
 
+  @@index([organizationId])
   @@map("purchase_requests")
 }
 
@@ -189,37 +195,44 @@ model PurchaseRequestItem {
 }
 
 model PurchaseOrder {
-  id               String              @id @default(uuid()) @db.Uuid
-  poNumber         String              @unique
-  supplierId       String?             @db.Uuid
-  scmId            String?             @db.Uuid
-  status           POStatus            @default(ORDERED)
-  totalValue       Decimal             @default(0) @db.Decimal(15, 2)
-  currencyId       String?             @db.Uuid
-  estArrival       DateTime?           @db.Date
-  dueDate          DateTime?           @db.Date
-  taxPercent       Decimal?            @db.Decimal(5, 2)
-  notes            String?
-  deletedAt        DateTime?
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime?           @updatedAt
-  leadId           String?             @db.Uuid
-  version          Int                 @default(1)
-  discountManual   Float               @default(0)
-  discountRounding Float               @default(0)
-  shippingCost     Float               @default(0)
-  items            PurchaseOrderItem[]
-  currency         Currency?           @relation(fields: [currencyId], references: [id])
-  lead             SalesLead?          @relation(fields: [leadId], references: [id])
-  scm              User?               @relation("SCMProcessor", fields: [scmId], references: [id])
-  supplier         Supplier?           @relation(fields: [supplierId], references: [id])
-  inbounds         WarehouseInbound[]
-  invoices         Invoice[]
-  journalEntries   JournalEntry[]
+  id                  String              @id @default(uuid()) @db.Uuid
+  poNumber            String              @unique
+  supplierId          String?             @db.Uuid
+  scmId               String?             @db.Uuid
+  prId                String?             @db.Uuid
+  status              POStatus            @default(ORDERED)
+  totalValue          Decimal             @default(0) @db.Decimal(15, 2)
+  currencyId          String?             @db.Uuid
+  estArrival          DateTime?           @db.Date
+  dueDate             DateTime?           @db.Date
+  taxPercent          Decimal?            @db.Decimal(5, 2)
+  notes               String?
+  deletedAt           DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime?           @updatedAt
+  leadId              String?             @db.Uuid
+  version             Int                 @default(1)
+  discountManual      Float               @default(0)
+  discountRounding    Float               @default(0)
+  shippingCost        Float               @default(0)
+  signatureUrl        String?
+  priceOverrideReason String?
+  organizationId      String?             @db.Uuid
+  items               PurchaseOrderItem[]
+  currency            Currency?           @relation(fields: [currencyId], references: [id])
+  lead                SalesLead?          @relation(fields: [leadId], references: [id])
+  scm                 User?               @relation("SCMProcessor", fields: [scmId], references: [id])
+  purchaseRequest     PurchaseRequest?    @relation(fields: [prId], references: [id])
+  supplier            Supplier?           @relation(fields: [supplierId], references: [id])
+  inbounds            WarehouseInbound[]
+  invoices            Invoice[]
+  journalEntries      JournalEntry[]
 
   @@index([supplierId, status])
   @@index([createdAt(sort: Desc)])
   @@index([leadId])
+  @@index([prId])
+  @@index([organizationId])
   @@map("purchase_orders")
 }
 
@@ -265,18 +278,21 @@ model WarehouseInbound {
 }
 
 model PurchaseReturn {
-  id           String               @id @default(uuid()) @db.Uuid
-  returnNumber String               @unique
-  date         DateTime             @default(now())
-  supplierId   String               @db.Uuid
-  warehouseId  String               @db.Uuid
-  inboundId    String?              @db.Uuid // Reference to GR
-  status       PurchaseReturnStatus @default(DRAFT)
-  notes        String?
-  totalValue   Decimal              @default(0) @db.Decimal(15, 2)
-  createdById  String?              @db.Uuid
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
+  id              String               @id @default(uuid()) @db.Uuid
+  returnNumber    String               @unique
+  date            DateTime             @default(now())
+  supplierId      String               @db.Uuid
+  warehouseId     String               @db.Uuid
+  inboundId       String?              @db.Uuid // Reference to GR
+  status          PurchaseReturnStatus @default(DRAFT)
+  notes           String?
+  totalValue      Decimal              @default(0) @db.Decimal(15, 2)
+  debitNoteNumber String?
+  debitNoteAmount Decimal              @default(0) @db.Decimal(15, 2)
+  organizationId  String?              @db.Uuid
+  createdById     String?              @db.Uuid
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
   inbound        WarehouseInbound?    @relation(fields: [inboundId], references: [id])
   supplier       Supplier             @relation(fields: [supplierId], references: [id])
@@ -285,6 +301,7 @@ model PurchaseReturn {
   items          PurchaseReturnItem[]
   journalEntries JournalEntry[]
 
+  @@index([organizationId])
   @@map("purchase_returns")
 }
 
@@ -307,6 +324,9 @@ model InboundItem {
   inboundId    String           @db.Uuid
   materialId   String           @db.Uuid
   qtyActual    Decimal          @db.Decimal(15, 3)
+  qtyGood      Decimal          @default(0) @db.Decimal(15, 3)
+  qtyReject    Decimal          @default(0) @db.Decimal(15, 3)
+  qtyFree      Decimal          @default(0) @db.Decimal(15, 3)
   isQuarantine Boolean          @default(true)
   qcStatus     QCStatus         @default(QUARANTINE)
   inbound      WarehouseInbound @relation(fields: [inboundId], references: [id])

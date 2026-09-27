@@ -2,28 +2,22 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { MEMBER_ALIASES } from "@/lib/marketing-members";
 
 // Production-light's client-side resolver. Routes the entry page to the
 // member workspace that matches the logged-in user's email/fullName/role.
 // Falls back to `/aurel` if nothing matches (safest default; first member
-// in the marketingAliases map).
+// in the roster).
 
 const managerRoleSet = new Set(["SUPER_ADMIN", "HEAD_OPS", "MARKETING"]);
-
-const marketingAliases: Record<string, string[]> = {
-  aurel: ["aurel"],
-  revi: ["revita", "revi", "fadhilah", "nisa"],
-  zarka: ["zarkasi", "zarka"],
-  gusti: ["gusti"],
-  luthfi: ["luthfi"],
-  rahmat: ["rahmat"],
-};
 
 function resolveManagementTaskPath(user: any) {
   const email = String(user?.email ?? "").toLowerCase().trim();
   const fullName = String(user?.fullName ?? "").toLowerCase().trim();
 
-  for (const [slug, aliases] of Object.entries(marketingAliases)) {
+  // Alias roster comes from @/lib/marketing-members — single source of truth.
+  for (const [canonical, aliases] of Object.entries(MEMBER_ALIASES)) {
+    const slug = canonical.toLowerCase();
     if (aliases.includes(fullName) || aliases.some((alias) => email.startsWith(`${alias}@`))) {
       return `/marketing/management-task/${slug}`;
     }

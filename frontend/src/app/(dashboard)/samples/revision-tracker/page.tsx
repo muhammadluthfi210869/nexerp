@@ -1,33 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   GitCommit,
   RefreshCw,
   AlertTriangle,
-  Search,
   Play,
   CheckCircle2,
+  Eye,
+  FileSpreadsheet,
+  Clock,
+  User,
+  FlaskConical
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import {
-  StatCard,
-  TableWrapper,
-  DnaInput,
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaStatCard,
+  DnaDataTableCard,
   DnaButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
+  DnaBadge,
+  DnaDetailDrawer,
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
-import { DashboardShell } from "@/components/layout/DashboardShell";
 import { api } from "@/lib/api";
 
 type RevisionStatus = "NOT_STARTED" | "IN_PROGRESS" | "DONE" | "CANCELLED";
@@ -59,24 +62,21 @@ interface RevisionSample {
   formulas: Formula[];
 }
 
-const STATUS_STYLE: Record<RevisionStatus, { label: string; bg: string; text: string; dot: string }> = {
-  NOT_STARTED: { label: "Not Started", bg: "bg-slate-100", text: "text-slate-600", dot: "bg-slate-400" },
-  IN_PROGRESS: { label: "In Progress", bg: "bg-amber-50", text: "text-amber-600", dot: "bg-amber-500" },
-  DONE: { label: "Done", bg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-500" },
-  CANCELLED: { label: "Cancelled", bg: "bg-rose-50", text: "text-rose-600", dot: "bg-rose-500" },
-};
-
 export default function RevisionTrackerPage() {
   const queryClient = useQueryClient();
+  const toast = useDnaToast();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("new");
+  const [selectedSample, setSelectedSample] = useState<RevisionSample | null>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
 
-  const { data: activeRevisions = [] } = useQuery<RevisionSample[]>({
+  const { data: activeRevisions = [], isLoading: isLoadingActive } = useQuery<RevisionSample[]>({
     queryKey: ["rnd-revisions"],
     queryFn: async () => (await api.get("/rnd/revisions")).data,
   });
 
-  const { data: revisionHistory = [] } = useQuery<RevisionSample[]>({
+  const { data: revisionHistory = [], isLoading: isLoadingHistory } = useQuery<RevisionSample[]>({
     queryKey: ["rnd-revision-history"],
     queryFn: async () => (await api.get("/rnd/revisions/history")).data,
   });
@@ -85,10 +85,11 @@ export default function RevisionTrackerPage() {
     mutationFn: (id: string) => api.post(`/rnd/revision/${id}/start`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rnd-revisions"] });
-      toast.success("Revision started");
+      toast.success("Revisi Dimulai", "Status revisi formulasi berhasil diubah ke dalam proses.");
+      setIsDetailDrawerOpen(false);
     },
     onError: () => {
-      toast.error("Failed to start revision");
+      toast.error("Gagal", "Tidak dapat memulai iterasi revisi.");
     },
   });
 
@@ -96,207 +97,297 @@ export default function RevisionTrackerPage() {
     mutationFn: (id: string) => api.post(`/rnd/revision/${id}/complete`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rnd-revisions"] });
-      toast.success("Revision completed");
+      queryClient.invalidateQueries({ queryKey: ["rnd-revision-history"] });
+      toast.success("Revisi Selesai", "Iterasi sampel formulasi berhasil ditandai selesai.");
+      setIsDetailDrawerOpen(false);
     },
     onError: () => {
-      toast.error("Failed to complete revision");
+      toast.error("Gagal", "Tidak dapat menyelesaikan iterasi revisi.");
     },
   });
 
-  const allRevisions = [...activeRevisions, ...revisionHistory];
+  const allRevisions = useMemo(() => [...activeRevisions, ...revisionHistory], [activeRevisions, revisionHistory]);
   const totalRevisions = allRevisions.length;
   const stuckRevisions = allRevisions.filter(
-    (r) => r.formulas.length > 3 && r.revisionStatus === "IN_PROGRESS",
+    (r) => (r.formulas?.length || 0) > 3 && r.revisionStatus === "IN_PROGRESS",
   ).length;
-  const avgRevisionCount =
-    allRevisions.length > 0
-      ? (allRevisions.reduce((sum, r) => sum + r.formulas.length, 0) / allRevisions.length).toFixed(1)
-      : "0";
 
-  const filteredActive = activeRevisions.filter(
-    (r) =>
-      r.sampleCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.lead?.clientName?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const avgRevisionCount = useMemo(() => {
+    if (allRevisions.length === 0) return "0";
+    const sum = allRevisions.reduce((acc, r) => acc + (r.formulas?.length || 0), 0);
+    return (sum / allRevisions.length).toFixed(1);
+  }, [allRevisions]);
 
-  const filteredHistory = revisionHistory.filter(
-    (r) =>
-      r.sampleCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.lead?.clientName?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const displayedList = useMemo(() => {
+    let base = activeTab === "history" ? revisionHistory : activeRevisions;
+    if (activeTab === "stuck") {
+      base = allRevisions.filter((r) => (r.formulas?.length || 0) > 3);
+    }
 
-  function renderTable(samples: RevisionSample[], readOnly: boolean) {
-    return (
-      <Table>
-        <TableHeader className="bg-slate-50/50">
-          <TableRow className="hover:bg-transparent border-slate-100">
-            <TableHead className="py-4 px-4 text-table-header text-slate-400">Sample Code</TableHead>
-            <TableHead className="py-4 px-4 text-table-header text-slate-400">Product</TableHead>
-            <TableHead className="py-4 px-4 text-table-header text-slate-400">Client</TableHead>
-            <TableHead className="py-4 px-4 text-table-header text-slate-400">PIC</TableHead>
-            <TableHead className="py-4 px-4 text-table-header text-slate-400">Revisions</TableHead>
-            <TableHead className="py-4 px-4 text-table-header text-slate-400">Status</TableHead>
-            <TableHead className="py-4 px-4 text-table-header text-slate-400">Date</TableHead>
-            <TableHead className="py-4 px-4 pr-6 text-table-header text-slate-400 text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {samples.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={8} className="py-12 text-center text-sm text-slate-400">
-                No revisions found
-              </TableCell>
-            </TableRow>
-          )}
-          {samples.map((entry) => {
-            const style = STATUS_STYLE[entry.revisionStatus];
-            return (
-              <TableRow
-                key={entry.id}
-                className="group hover:bg-slate-50/30 transition-all duration-300 border-b border-slate-50"
-              >
-                <TableCell className="py-3 px-4">
-                  <span className="font-mono text-[11px] font-black text-slate-800">
-                    {entry.sampleCode}
-                  </span>
-                </TableCell>
-                <TableCell className="py-3 px-4">
-                  <span className="font-black text-slate-900 tracking-tight text-xs">
-                    {entry.productName}
-                  </span>
-                </TableCell>
-                <TableCell className="py-3 px-4">
-                  <span className="text-[11px] font-medium text-slate-600">
-                    {entry?.lead?.clientName ?? 'Unknown'}
-                  </span>
-                </TableCell>
-                <TableCell className="py-3 px-4">
-                  <span className="text-[11px] font-medium text-slate-500">
-                    {entry?.pic?.name ?? 'Unknown'}
-                  </span>
-                </TableCell>
-                <TableCell className="py-3 px-4 text-center">
-                  <span className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-slate-100 text-slate-800 font-black text-[11px]">
-                    {entry.formulas.length}
-                  </span>
-                </TableCell>
-                <TableCell className="py-3 px-4">
-                  <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-black uppercase text-[9px] ${style.bg} ${style.text}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
-                    {style.label}
-                  </span>
-                </TableCell>
-                <TableCell className="py-3 px-4">
-                  <span className="text-[11px] font-medium text-slate-500">
-                    {entry.latestRevisionDate || entry.completedAt || "\u2014"}
-                  </span>
-                </TableCell>
-                <TableCell className="py-3 px-4 pr-6 text-right">
-                  {!readOnly && (
-                    <div className="flex gap-2 justify-end">
-                      {entry.revisionStatus === "NOT_STARTED" && (
-                        <DnaButton
-                          variant="outline"
-                          size="sm"
-                          icon={<Play />}
-                          onClick={() => startMutation.mutate(entry.id)}
-                          disabled={startMutation.isPending}
-                        >
-                          Start
-                        </DnaButton>
-                      )}
-                      {entry.revisionStatus === "IN_PROGRESS" && (
-                        <DnaButton
-                          variant="primary"
-                          size="sm"
-                          icon={<CheckCircle2 />}
-                          onClick={() => completeMutation.mutate(entry.id)}
-                          disabled={completeMutation.isPending}
-                        >
-                          Complete
-                        </DnaButton>
-                      )}
-                    </div>
-                  )}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+    if (!searchTerm.trim()) return base;
+    const q = searchTerm.toLowerCase();
+    return base.filter(
+      (r) =>
+        r.sampleCode.toLowerCase().includes(q) ||
+        r.productName.toLowerCase().includes(q) ||
+        r.lead?.clientName?.toLowerCase().includes(q)
     );
-  }
+  }, [activeTab, activeRevisions, revisionHistory, allRevisions, searchTerm]);
+
+  const getStatusBadge = (status: RevisionStatus) => {
+    switch (status) {
+      case "NOT_STARTED":
+        return <DnaBadge variant="neutral">BELUM DIMULAI</DnaBadge>;
+      case "IN_PROGRESS":
+        return <DnaBadge variant="warning">DALAM PROSES</DnaBadge>;
+      case "DONE":
+        return <DnaBadge variant="success">SELESAI</DnaBadge>;
+      case "CANCELLED":
+        return <DnaBadge variant="danger">DIBATALKAN</DnaBadge>;
+      default:
+        return <DnaBadge variant="neutral">{status}</DnaBadge>;
+    }
+  };
+
+  const isLoading = isLoadingActive || isLoadingHistory;
 
   return (
-    <DashboardShell
-      title="Revision"
-      titleAccent="Board"
-      subtitle="Track sample revision history and identify stuck iterations"
-    >
-      <div className="animate-fade-slide-in space-y-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard
-            label="Total Revisions"
-            value={totalRevisions}
-            icon={<GitCommit className="text-blue-500" />}
-          />
-          <StatCard
-            label="Stuck (>3 revisions)"
-            value={stuckRevisions}
-            icon={<AlertTriangle className="text-rose-500" />}
-          />
-          <StatCard
-            label="Avg Revision Count"
-            value={avgRevisionCount}
-            icon={<RefreshCw className="text-amber-500" />}
-          />
-        </div>
+    <DnaPageContainer>
+      {/* 1. Header Page with Unified Top-Right Tabs */}
+      <DnaPageHeader
+        title="Pelacak Iterasi Revisi Formulasi"
+        description="Monitoring siklus revisi sampel R&D, identifikasi bottle-neck (>3 revisi), dan otorisasi tahap pengembangan."
+        badge={<DnaBadge variant="neutral">REV-TRACK</DnaBadge>}
+        breadcrumbs={[
+          { label: "R&D & Pra-Produksi", href: "/samples/rnd-dashboard" },
+          { label: "Kelola Formulasi", href: "/samples/formula" },
+          { label: "Pelacak Revisi", href: "/samples/revision-tracker" }
+        ]}
+        tabs={[
+          { id: "new", label: `Aktif (${activeRevisions.length})` },
+          { id: "history", label: `Riwayat (${revisionHistory.length})` },
+          { id: "stuck", label: `Kritis >3x (${stuckRevisions})` }
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        actions={
+          <DnaButton
+            variant="secondary"
+            onClick={() => toast.success("Export Berhasil", "Data riwayat revisi berhasil diekspor.")}
+          >
+            <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+            Export Excel
+          </DnaButton>
+        }
+      />
 
-        <TableWrapper
-          filters={
-            <div className="flex justify-between items-center bg-white">
-              <div className="relative w-72">
-                <DnaInput
-                  placeholder="Search sample, product or client..."
-                  icon={<Search className="h-4 w-4" />}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="text-xs font-black"
-                />
+      {/* 2. KPI Cards */}
+      <DnaKpiGrid cols={3}>
+        <DnaStatCard
+          label="TOTAL SIKLUS REVISI"
+          value={`${totalRevisions} Tiket`}
+          subValue="Akumulasi Seluruh Sampel"
+          icon={<GitCommit className="w-5 h-5 text-blue-600" />}
+        />
+        <DnaStatCard
+          label="TERKENDALA (>3 REVISI)"
+          value={`${stuckRevisions} Sampel`}
+          subValue="Perlu Intervensi Formulator Senior"
+          icon={<AlertTriangle className="w-5 h-5 text-rose-600" />}
+        />
+        <DnaStatCard
+          label="RATA-RATA ITERASI PER SAMPEL"
+          value={`${avgRevisionCount}x Revisi`}
+          subValue="Benchmark Standar Lab: 2.0x"
+          icon={<RefreshCw className="w-5 h-5 text-amber-600" />}
+        />
+      </DnaKpiGrid>
+
+      {/* 3. DataTable Card (Zero redundant title, zero horizontal scroll, max 6 cols) */}
+      <DnaDataTableCard
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Cari kode sampel, nama produk, atau klien..."
+      >
+        <div className="w-full">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-[16%]">Kode & Tanggal</DnaTh>
+                <DnaTh className="py-3 px-4 w-[28%]">Produk & Klien</DnaTh>
+                <DnaTh className="py-3 px-4 w-[18%]">Formulator PIC</DnaTh>
+                <DnaTh className="py-3 px-4 w-[14%]">Iterasi Formula</DnaTh>
+                <DnaTh className="py-3 px-4 w-[14%]">Status</DnaTh>
+                <DnaTh className="py-3 px-4 w-[10%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
+              {isLoading ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
+                    Memuat data revisi sampel...
+                  </DnaTd>
+                </DnaTableRow>
+              ) : displayedList.length === 0 ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
+                    <FlaskConical className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                    Tidak ada catatan revisi pada kategori ini.
+                  </DnaTd>
+                </DnaTableRow>
+              ) : (
+                displayedList.map((entry) => {
+                  const formulaCount = entry.formulas?.length || 0;
+                  const isCritical = formulaCount > 3;
+                  return (
+                    <DnaTableRow key={entry.id} className="hover:bg-slate-50/70 transition-colors">
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="tabular-nums text-xs font-bold text-slate-900 truncate">{entry.sampleCode}</p>
+                        <p className="text-[11px] text-slate-500 tabular-nums mt-0.5 truncate">
+                          {entry.latestRevisionDate || entry.completedAt || "—"}
+                        </p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="font-semibold text-slate-900 text-xs truncate">{entry.productName}</p>
+                        <p className="text-[11px] text-slate-500 truncate">{entry.lead?.clientName || "—"}</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <p className="font-medium text-slate-800 text-xs truncate">{entry.pic?.name || "—"}</p>
+                        <p className="text-[11px] text-slate-400 truncate">R&D Formulator</p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 truncate">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold tabular-nums ${
+                          isCritical ? "bg-rose-100 text-rose-800" : "bg-slate-100 text-slate-800"
+                        }`}>
+                          {formulaCount}x Revisi
+                        </span>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          {isCritical ? "⚠️ Bottleneck" : "Normal"}
+                        </p>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4">
+                        {getStatusBadge(entry.revisionStatus)}
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSample(entry);
+                            setIsDetailDrawerOpen(true);
+                          }}
+                          title="Lihat Detail Revisi"
+                        >
+                          <Eye className="w-4 h-4 text-slate-600" />
+                        </DnaButton>
+                      </DnaTd>
+                    </DnaTableRow>
+                  );
+                })
+              )}
+            </DnaTableBody>
+          </DnaTable>
+        </div>
+      </DnaDataTableCard>
+
+      {/* 4. Quick Peek Drawer (Rule 5) */}
+      <DnaDetailDrawer
+        isOpen={isDetailDrawerOpen}
+        onClose={() => setIsDetailDrawerOpen(false)}
+        title={selectedSample?.sampleCode || "Detail Revisi"}
+        subtitle={selectedSample ? `${selectedSample.productName} • ${selectedSample.lead?.clientName}` : undefined}
+        badge={selectedSample ? getStatusBadge(selectedSample.revisionStatus) : undefined}
+        tabs={[
+          {
+            id: "summary",
+            label: "Ringkasan",
+            content: selectedSample ? (
+              <div className="space-y-4 text-xs">
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="tabular-nums font-bold text-slate-900">{selectedSample.sampleCode}</span>
+                    <span className="tabular-nums text-slate-500">{selectedSample.latestRevisionDate || selectedSample.completedAt || "—"}</span>
+                  </div>
+                  <p className="font-bold text-slate-900 text-sm">{selectedSample.productName}</p>
+                  <p className="text-slate-600">{selectedSample.lead?.clientName} ({selectedSample.lead?.brandName || "—"})</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="text-slate-500 block mb-1">Formulator PIC</span>
+                    <p className="font-semibold text-slate-900">{selectedSample.pic?.name || "—"}</p>
+                    <span className="text-[10px] text-slate-400">R&D Lab</span>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="text-slate-500 block mb-1">Total Iterasi Formula</span>
+                    <p className="tabular-nums font-bold text-indigo-700 text-sm">{selectedSample.formulas?.length || 0} Versi</p>
+                    <span className="text-[10px] text-slate-400">Tercatat di sistem</span>
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : null
+          },
+          {
+            id: "branches",
+            label: "Daftar Iterasi Formula",
+            content: selectedSample ? (
+              <div className="space-y-3 text-xs">
+                <p className="font-bold text-slate-700 uppercase">Riwayat Branching Formula:</p>
+                <div className="border border-slate-200 rounded-xl overflow-hidden">
+                  <DnaTable>
+                    <DnaTableHead>
+                      <DnaTableRow>
+                        <DnaTh className="p-2.5">Versi</DnaTh>
+                        <DnaTh className="p-2.5">Kode Formula</DnaTh>
+                      </DnaTableRow>
+                    </DnaTableHead>
+                    <DnaTableBody>
+                      {(selectedSample.formulas || []).map((f, idx) => (
+                        <DnaTableRow key={f.id || idx}>
+                          <DnaTd className="p-2.5 font-bold tabular-nums text-slate-700">v{f.version || idx + 1}</DnaTd>
+                          <DnaTd className="p-2.5 tabular-nums text-indigo-600 font-semibold">{f.formulaCode}</DnaTd>
+                        </DnaTableRow>
+                      ))}
+                      {(selectedSample.formulas || []).length === 0 && (
+                        <DnaTableRow>
+                          <DnaTd colSpan={2} className="p-4 text-center text-slate-400">Belum ada cabang formula.</DnaTd>
+                        </DnaTableRow>
+                      )}
+                    </DnaTableBody>
+                  </DnaTable>
+                </div>
+              </div>
+            ) : null
           }
-        >
-          <Tabs defaultValue="new" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="bg-white border-b border-slate-200 mb-4">
-              <TabsTrigger value="new" className="flex items-center gap-2">
-                NEW
-                <span className="ml-1.5 rounded-full bg-blue-500 px-2 py-0.5 text-[9px] font-black text-white">
-                  {activeRevisions.length}
-                </span>
-              </TabsTrigger>
-              <TabsTrigger value="history" className="flex items-center gap-2">
-                HISTORY
-                <span className="ml-1.5 rounded-full bg-slate-300 px-2 py-0.5 text-[9px] font-black text-white">
-                  {revisionHistory.length}
-                </span>
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="new">
-              <div className="overflow-x-auto">
-                {renderTable(filteredActive, false)}
-              </div>
-            </TabsContent>
-            <TabsContent value="history">
-              <div className="overflow-x-auto">
-                {renderTable(filteredHistory, true)}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </TableWrapper>
-      </div>
-    </DashboardShell>
+        ]}
+        footerActions={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <DnaButton variant="secondary" onClick={() => setIsDetailDrawerOpen(false)}>
+              Tutup
+            </DnaButton>
+            {selectedSample?.revisionStatus === "NOT_STARTED" && (
+              <DnaButton
+                variant="primary"
+                onClick={() => startMutation.mutate(selectedSample.id)}
+                disabled={startMutation.isPending}
+              >
+                <Play className="w-4 h-4 mr-1.5" />
+                Mulai Revisi
+              </DnaButton>
+            )}
+            {selectedSample?.revisionStatus === "IN_PROGRESS" && (
+              <DnaButton
+                variant="primary"
+                onClick={() => completeMutation.mutate(selectedSample.id)}
+                disabled={completeMutation.isPending}
+              >
+                <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                Selesaikan Revisi
+              </DnaButton>
+            )}
+          </div>
+        }
+      />
+    </DnaPageContainer>
   );
 }

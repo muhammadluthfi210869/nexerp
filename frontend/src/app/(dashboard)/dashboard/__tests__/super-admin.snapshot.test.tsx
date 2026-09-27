@@ -4,6 +4,13 @@ import { describe, it, expect, vi } from "vitest";
 import { render } from "@testing-library/react";
 import React from "react";
 
+// The page queries live endpoints; this snapshot must not touch the network.
+vi.mock("@tanstack/react-query", () => ({
+  useQuery: () => ({ data: undefined, isLoading: false, error: null, refetch: vi.fn() }),
+  useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+}));
+
 vi.mock("./../commercial/page", () => ({
   default: () => <div data-testid="mock-commercial" />,
 }));

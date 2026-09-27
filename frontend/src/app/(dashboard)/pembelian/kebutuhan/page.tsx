@@ -4,31 +4,28 @@
  * Kebutuhan Barang (Material Requirements Planning / MRP)
  * Screen ID: SCR-035 & SCR-036
  *
- * Sesuai Spesifikasi:
- * - Visual DNA Design System (DnaPageHeader, DnaKpiGrid, DnaDataTableCard, DnaModal, DnaCell, useDnaToast)
+ * Sesuai Spesifikasi Visual DNA Golden Reference:
+ * - DnaPageContainer, DnaPageHeader, DnaKpiGrid, DnaDataTableCard, DnaDetailDrawer
  * - Kalkulasi MRP Otomatis: Kebutuhan Bersih (Net Need) = Gross - Real Stok Gudang - PO On-Order
- * - Pemisahan Bahan Baku (Formula BOM) dan Bahan Kemas (Primer/Sekunder) per SO Maklon
- * - Aksi instan penerbitan Draft PO / PR untuk item dengan status defisit
+ * - 6 kolom ramping tanpa scroll horizontal, 2 baris per sel
  */
 
 import React, { useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Layers,
-  Search,
   Plus,
   AlertTriangle,
   CheckCircle2,
-  Clock,
-  Package,
   ShoppingCart,
   DollarSign,
   Eye,
-  FileSpreadsheet,
-  ArrowRight,
-  Filter,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
+  DnaPageContainer,
   DnaPageHeader,
   DnaKpiGrid,
   DnaDataTableCard,
@@ -36,8 +33,18 @@ import {
   DnaInput,
   DnaSelect,
   DnaModal,
-  DnaCell,
+  DnaDetailDrawer,
+  DnaBadge,
   useDnaToast,
+  DnaLoadingSkeleton,
+  DnaErrorState,
+  DnaEmptyState,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { formatCurrency } from "@/lib/utils";
 
@@ -60,108 +67,70 @@ export interface MrpItemRecord {
   status: "DEFICIT" | "PARTIAL_COVERED" | "SAFE_STOCK";
 }
 
-const INITIAL_MRP_DATA: MrpItemRecord[] = [
-  {
-    id: "mrp-1",
-    materialCode: "RAW-ACT-001",
-    materialName: "Niacinamide PC Grade (DSM)",
-    category: "Bahan Baku",
-    salesOrderRef: "SO-2026-001",
-    clientName: "PT Cantika Jelita",
-    brandProduct: "C-Jelita Serum 10%",
-    grossRequirement: 50,
-    realStockQty: 10,
-    onOrderQty: 0,
-    netNeedQty: 40,
-    unit: "kg",
-    primarySupplier: "PT Chemindo Natural Indonesia",
-    estimatedUnitPrice: 350000,
-    estimatedTotalCost: 14000000,
-    status: "DEFICIT",
-  },
-  {
-    id: "mrp-2",
-    materialCode: "KEM-BOT-012",
-    materialName: "Botol Dropper 30ml Frosted Amber",
-    category: "Kemas Primer",
-    salesOrderRef: "SO-2026-001",
-    clientName: "PT Cantika Jelita",
-    brandProduct: "C-Jelita Serum 10%",
-    grossRequirement: 10000,
-    realStockQty: 2000,
-    onOrderQty: 8000,
-    netNeedQty: 0,
-    unit: "pcs",
-    primarySupplier: "CV Packaging Primatama",
-    estimatedUnitPrice: 4500,
-    estimatedTotalCost: 0,
-    status: "SAFE_STOCK",
-  },
-  {
-    id: "mrp-3",
-    materialCode: "RAW-EXT-004",
-    materialName: "Centella Asiatica Extract 10:1",
-    category: "Bahan Baku",
-    salesOrderRef: "SO-2026-003",
-    clientName: "CV Aura Natural",
-    brandProduct: "AuraGlow Moisturizer Gel",
-    grossRequirement: 35,
-    realStockQty: 5,
-    onOrderQty: 10,
-    netNeedQty: 20,
-    unit: "kg",
-    primarySupplier: "PT Chemindo Natural Indonesia",
-    estimatedUnitPrice: 450000,
-    estimatedTotalCost: 9000000,
-    status: "DEFICIT",
-  },
-  {
-    id: "mrp-4",
-    materialCode: "KEM-JAR-005",
-    materialName: "Pot Cream Acrylic 50g Double Wall",
-    category: "Kemas Primer",
-    salesOrderRef: "SO-2026-003",
-    clientName: "CV Aura Natural",
-    brandProduct: "AuraGlow Moisturizer Gel",
-    grossRequirement: 5000,
-    realStockQty: 5200,
-    onOrderQty: 0,
-    netNeedQty: 0,
-    unit: "pcs",
-    primarySupplier: "CV Packaging Primatama",
-    estimatedUnitPrice: 6200,
-    estimatedTotalCost: 0,
-    status: "SAFE_STOCK",
-  },
-  {
-    id: "mrp-5",
-    materialCode: "KEM-BOX-008",
-    materialName: "Inner Box Hologram Ivory 350gsm",
-    category: "Kemas Sekunder",
-    salesOrderRef: "SO-2026-004",
-    clientName: "PT Derma Estetika",
-    brandProduct: "DermaGleam Sunscreen",
-    grossRequirement: 15000,
-    realStockQty: 0,
-    onOrderQty: 5000,
-    netNeedQty: 10000,
-    unit: "pcs",
-    primarySupplier: "PT Multi Bintang Printing",
-    estimatedUnitPrice: 2300,
-    estimatedTotalCost: 23000000,
-    status: "DEFICIT",
-  },
-];
+export default function KebutuhanBarangMRPPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Kebutuhan Barang (MRP)...</div>}>
+      <KebutuhanBarangMRPContent />
+    </Suspense>
+  );
+}
 
 function KebutuhanBarangMRPContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const toast = useDnaToast();
-  const [mrpList, setMrpList] = useState<MrpItemRecord[]>(INITIAL_MRP_DATA);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<MrpItemRecord | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(searchParams.get("action") === "create");
+  const [manualNeeds, setManualNeeds] = useState<MrpItemRecord[]>([]);
+
+  // Live query from backend /scm/materials
+  const {
+    data: materials = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["mrp-materials"],
+    queryFn: async () => {
+      const res = await api.get("/scm/materials");
+      return unwrapResponse(res) || [];
+    },
+  });
+
+  const mrpList: MrpItemRecord[] = useMemo(() => {
+    const fromApi: MrpItemRecord[] = (materials as any[]).map((mat) => {
+      const stock = Number(mat.stockQty ?? 0);
+      const minReq = Number(mat.minLevel ?? 50);
+      const gross = Math.max(minReq, 50);
+      const net = Math.max(0, gross - stock);
+      const category =
+        mat.type === "PACKAGING" || mat.type === "BOX" ? "Kemas Primer" : "Bahan Baku";
+      const price = Number(mat.unitPrice ?? 10000);
+
+      return {
+        id: mat.id,
+        materialCode: mat.code || `MAT-${mat.id.slice(0, 6)}`,
+        materialName: mat.name,
+        category,
+        salesOrderRef: "SO-AUTO-ALLOC",
+        clientName: "Internal Buffer / Maklon",
+        brandProduct: "Kebutuhan Minimum",
+        grossRequirement: gross,
+        realStockQty: stock,
+        onOrderQty: 0,
+        netNeedQty: net,
+        unit: mat.unit || "kg",
+        primarySupplier: "Supplier Rekanan",
+        estimatedUnitPrice: price,
+        estimatedTotalCost: net * price,
+        status: net > 0 ? "DEFICIT" : "SAFE_STOCK",
+      };
+    });
+
+    return [...manualNeeds, ...fromApi];
+  }, [materials, manualNeeds]);
 
   // Form State for Manual Need Entry
   const [formData, setFormData] = useState({
@@ -193,8 +162,14 @@ function KebutuhanBarangMRPContent() {
       estimatedTotalCost: netNeed * formData.estimatedUnitPrice,
       status: netNeed > 0 ? "DEFICIT" : "SAFE_STOCK",
     };
-    setMrpList([newItem, ...mrpList]);
-    toast.success("Kebutuhan Dicatat", `Kebutuhan ${newItem.materialName} berhasil ditambahkan ke rencana MRP.`);
+    setManualNeeds([newItem, ...manualNeeds]);
+    // Local planning worksheet only. POST /scm/goods-requirements needs `salesOrderId` and
+    // `items[].materialId` as UUIDs; this form holds a material code/name, so it cannot fill
+    // either and the row would be rejected. Nothing is sent until those pickers exist.
+    toast.warning(
+      "Kebutuhan dicatat lokal",
+      `Kebutuhan ${newItem.materialName} masuk ke rencana MRP di layar ini saja — belum tersimpan ke server.`,
+    );
     setIsCreateOpen(false);
   };
 
@@ -227,180 +202,181 @@ function KebutuhanBarangMRPContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20 text-slate-900 font-sans">
-      <div className="p-6 lg:p-8 space-y-6">
-        {/* Header */}
-        <DnaPageHeader
-          title="Kebutuhan Barang (Material Requirements Planning / MRP)"
-          description="Kalkulasi Otomatis Defisit Bahan Baku Formula & Kemasan Berdasarkan Sales Order Aktif Pabrik (Gross vs Real Stok Gudang vs PO On-Order)"
-          tabs={[
-            { key: "all", label: "Semua Kebutuhan MRP", count: mrpList.length },
-            { key: "deficit", label: "Defisit (Perlu PO)", count: deficitItems.length },
-            { key: "safe", label: "Stok Aman (Siap Produksi)", count: safeItemsCount },
-          ]}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          actions={
-            <div className="flex items-center gap-2">
-              <DnaButton
-                variant="secondary"
-                icon={<Plus className="w-4 h-4" />}
-                onClick={() => setIsCreateOpen(true)}
-              >
-                + Input Kebutuhan Barang
-              </DnaButton>
-              <DnaButton
-                variant="primary"
-                icon={<ShoppingCart className="w-4 h-4" />}
-                onClick={() => {
-                  toast.success("Batch PO Ready", "Semua item defisit siap diterbitkan PO massal.");
-                  router.push("/scm/pembelian/create");
-                }}
-              >
-                + Terbitkan PO dari Defisit MRP
-              </DnaButton>
-            </div>
-          }
-        />
-
-        {/* 4 KPI Grid */}
-        <DnaKpiGrid
-          items={[
-            {
-              label: "Total Bahan Terjadwal",
-              value: `${mrpList.length} Bahan/Kemas`,
-              subtitle: "Diperlukan untuk seluruh SO aktif",
-              trend: "Terpetakan BOM",
-              icon: Layers,
-              variant: "blue",
-            },
-            {
-              label: "Bahan Defisit (Perlu PO)",
-              value: `${deficitItems.length} Item Kurang`,
-              subtitle: "Stok gudang di bawah kebutuhan SO",
-              trend: "Prioritas SCM",
-              icon: AlertTriangle,
-              variant: "rose",
-            },
-            {
-              label: "Estimasi Anggaran PO Defisit",
-              value: formatCurrency(totalDeficitCost),
-              subtitle: "Biaya pengadaan untuk menutup defisit",
-              trend: "Kalkulasi Otomatis",
-              icon: DollarSign,
-              variant: "amber",
-            },
-            {
-              label: "Bahan Siap Produksi (Aman)",
-              value: `${safeItemsCount} Item Tersedia`,
-              subtitle: "Real stok & on-order mencukupi",
-              trend: "Siap Mixing/Pack",
-              icon: CheckCircle2,
-              variant: "emerald",
-            },
-          ]}
-        />
-
-        {/* Search Toolbar */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-          <div className="w-80">
-            <DnaInput
-              placeholder="Cari kode bahan, SO ref, nama supplier..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              icon={<Search className="w-4 h-4 text-slate-400" />}
-            />
+    <DnaPageContainer>
+      {/* Header with Unified Tabs */}
+      <DnaPageHeader
+        title="Kebutuhan Barang (Material Requirements Planning / MRP)"
+        description="Kalkulasi Otomatis Defisit Bahan Baku Formula & Kemasan Berdasarkan Sales Order Aktif Pabrik (Gross vs Real Stok Gudang vs PO On-Order)"
+        tabs={[
+          { key: "all", label: "Semua Kebutuhan", count: mrpList.length },
+          { key: "deficit", label: "Defisit (Perlu PO)", count: deficitItems.length },
+          { key: "safe", label: "Stok Aman (Siap Produksi)", count: safeItemsCount },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        actions={
+          <div className="flex items-center gap-2">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => setIsCreateOpen(true)}
+            >
+              + Input Kebutuhan
+            </DnaButton>
+            <DnaButton
+              variant="primary"
+              size="sm"
+              icon={<ShoppingCart className="w-4 h-4" />}
+              onClick={() => {
+                toast.success("Batch PO Ready", "Semua item defisit siap diterbitkan PO massal.");
+                router.push("/scm/pembelian/create");
+              }}
+            >
+              + Terbitkan PO Massal
+            </DnaButton>
           </div>
-          <div className="text-xs font-bold text-slate-500">
-            Menampilkan <span className="text-slate-900 font-bold">{filteredList.length}</span> dari {mrpList.length} Item MRP
-          </div>
+        }
+      />
+
+      {/* 4 KPI Grid */}
+      <DnaKpiGrid
+        items={[
+          {
+            label: "Total Bahan Terjadwal",
+            value: `${mrpList.length} Bahan/Kemas`,
+            subtitle: "Diperlukan untuk seluruh SO aktif",
+            trend: "Terpetakan BOM",
+            icon: Layers,
+            variant: "blue",
+          },
+          {
+            label: "Bahan Defisit (Perlu PO)",
+            value: `${deficitItems.length} Item Kurang`,
+            subtitle: "Stok gudang di bawah kebutuhan SO",
+            trend: "Prioritas SCM",
+            icon: AlertTriangle,
+            variant: "rose",
+          },
+          {
+            label: "Estimasi Anggaran PO Defisit",
+            value: formatCurrency(totalDeficitCost),
+            subtitle: "Biaya pengadaan untuk menutup defisit",
+            trend: "Kalkulasi Otomatis",
+            icon: DollarSign,
+            variant: "amber",
+          },
+          {
+            label: "Bahan Siap Produksi (Aman)",
+            value: `${safeItemsCount} Item Tersedia`,
+            subtitle: "Real stok & on-order mencukupi",
+            trend: "Siap Mixing/Pack",
+            icon: CheckCircle2,
+            variant: "emerald",
+          },
+        ]}
+      />
+
+      {/* Main MRP Table Card */}
+      {isError && (
+        <div className="mb-4">
+          <DnaErrorState
+            title="Gagal Memuat Kebutuhan MRP"
+            message="Terjadi kesalahan saat memuat data material dari server."
+            onRetry={() => refetch()}
+          />
         </div>
+      )}
 
-        {/* MRP Data Table */}
+      {isLoading ? (
+        <DnaLoadingSkeleton rows={5} />
+      ) : (
         <DnaDataTableCard
-          title="Tabel Analisis Kebutuhan Bersih Material (MRP Engine)"
-          count={filteredList.length}
-          description="Rumus: Kebutuhan Bersih (Net Need) = Kebutuhan Gross SO - Real Stok Gudang - PO Sedang Berjalan."
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Cari kode bahan, nama bahan, SO ref, supplier..."
         >
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-[11px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-bold uppercase tracking-wider select-none whitespace-nowrap text-[10px]">
-                  <th className="py-3 px-3 w-8 text-center">#</th>
-                  <th className="py-3 px-3">KODE BAHAN</th>
-                  <th className="py-3 px-3">NAMA BAHAN / KEMASAN</th>
-                  <th className="py-3 px-3">KATEGORI</th>
-                  <th className="py-3 px-3">SO REFERENSI</th>
-                  <th className="py-3 px-2 text-right">GROSS NEED</th>
-                  <th className="py-3 px-2 text-right text-emerald-700 bg-emerald-50/50">REAL STOK</th>
-                  <th className="py-3 px-2 text-right text-blue-700 bg-blue-50/50">ON-ORDER</th>
-                  <th className="py-3 px-3 text-right font-black text-rose-600 bg-rose-50/60">NET DEFISIT</th>
-                  <th className="py-3 px-3">SUPPLIER UTAMA</th>
-                  <th className="py-3 px-3 text-right">EST. BIAYA PO</th>
-                  <th className="py-3 px-3 text-center">STATUS</th>
-                  <th className="py-3 px-3 text-right">AKSI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+          <div className="w-full">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow>
+                  <DnaTh className="py-3 px-4 w-[24%]">MATERIAL & KATEGORI</DnaTh>
+                  <DnaTh className="py-3 px-4 w-[18%]">SO REF & KLIEN</DnaTh>
+                  <DnaTh className="py-3 px-4 text-center w-[16%]">GROSS VS REAL STOK</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[16%]">NET DEFISIT (PO)</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[16%]">SUPPLIER & EST. BIAYA</DnaTh>
+                  <DnaTh className="py-3 px-4 text-right w-[10%]">AKSI</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredList.length === 0 ? (
-                  <tr>
-                    <td colSpan={13} className="text-center py-12 text-slate-400">
-                      Tidak ada data kebutuhan barang pada filter ini.
-                    </td>
-                  </tr>
+                  <DnaTableRow>
+                    <DnaTd colSpan={6} className="py-8 text-center">
+                      <DnaEmptyState
+                        title="Belum Ada Analisis MRP"
+                        description="Tidak ada data kebutuhan barang pada filter ini."
+                      />
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
-                  filteredList.map((item, idx) => (
-                    <tr
+                  filteredList.map((item) => (
+                    <DnaTableRow
                       key={item.id}
                       onClick={() => setSelectedItem(item)}
-                      className="hover:bg-slate-50/90 transition-colors cursor-pointer"
+                      className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                     >
-                      <td className="py-2.5 px-3 text-center font-bold text-slate-400">{idx + 1}</td>
-                      <td className="py-2.5 px-3 font-mono font-bold text-blue-600 whitespace-nowrap">
-                        {item.materialCode}
-                      </td>
-                      <td className="py-2.5 px-3 font-semibold text-slate-900 whitespace-nowrap">
-                        {item.materialName}
-                      </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium">
-                          {item.category}
+                      <DnaTd className="py-3 px-4">
+                        <span className="font-semibold text-slate-900 block truncate">
+                          {item.materialName}
                         </span>
-                      </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <span className="font-mono text-xs font-bold text-slate-800">{item.salesOrderRef}</span>
-                        <p className="text-[9px] text-slate-400">{item.clientName}</p>
-                      </td>
-                      <td className="py-2.5 px-2 text-right font-bold text-slate-700 whitespace-nowrap">
-                        {item.grossRequirement} {item.unit}
-                      </td>
-                      <td className="py-2.5 px-2 text-right font-bold text-emerald-700 bg-emerald-50/30 whitespace-nowrap">
-                        {item.realStockQty} {item.unit}
-                      </td>
-                      <td className="py-2.5 px-2 text-right font-bold text-blue-700 bg-blue-50/30 whitespace-nowrap">
-                        {item.onOrderQty} {item.unit}
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-black text-rose-600 bg-rose-50/40 whitespace-nowrap font-mono text-xs">
-                        {item.netNeedQty > 0 ? `${item.netNeedQty} ${item.unit}` : "0 (Aman)"}
-                      </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap text-slate-700">
-                        {item.primarySupplier}
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-bold text-slate-900 whitespace-nowrap">
-                        {item.netNeedQty > 0 ? formatCurrency(item.estimatedTotalCost) : "—"}
-                      </td>
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                            item.status === "SAFE_STOCK"
-                              ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                              : "bg-rose-100 text-rose-800 border-rose-300"
-                          }`}
-                        >
-                          {item.status === "SAFE_STOCK" ? "STOK AMAN" : "DEFISIT PO"}
+                        <span className="text-[11px] tabular-nums text-slate-500 block truncate">
+                          <span>{item.materialCode}</span> • {item.category}
                         </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4">
+                        <span className="tabular-nums font-bold text-slate-800 block truncate">
+                          {item.salesOrderRef}
+                        </span>
+                        <span className="text-[11px] text-slate-500 block truncate">
+                          {item.clientName}
+                        </span>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-center">
+                        <span className="tabular-nums font-bold text-slate-700 block text-xs">
+                          {item.grossRequirement} {item.unit} (Gross)
+                        </span>
+                        <span className="text-[11px] font-medium text-emerald-700 block">
+                          Stok: {item.realStockQty} {item.unit}
+                        </span>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
+                        {item.netNeedQty > 0 ? (
+                          <>
+                            <span className="tabular-nums font-black text-rose-600 block text-xs">
+                              {item.netNeedQty} {item.unit}
+                            </span>
+                            <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200 inline-block">
+                              Defisit PO
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="tabular-nums font-semibold text-emerald-700 block text-xs">
+                              0 {item.unit}
+                            </span>
+                            <span className="text-[10px] text-emerald-600 font-medium">Stok Aman</span>
+                          </>
+                        )}
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
+                        <span className="font-semibold text-slate-800 block truncate text-xs">
+                          {item.primarySupplier}
+                        </span>
+                        <span className="tabular-nums font-bold text-blue-600 block text-xs">
+                          {item.netNeedQty > 0 ? formatCurrency(item.estimatedTotalCost) : "—"}
+                        </span>
+                      </DnaTd>
+                      <DnaTd className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                           {item.netNeedQty > 0 && (
                             <DnaButton
@@ -409,121 +385,132 @@ function KebutuhanBarangMRPContent() {
                               onClick={() => handleGeneratePo(item)}
                               className="text-[10px] h-7 px-2 bg-blue-600"
                             >
-                              + Buat PO
+                              PO
                             </DnaButton>
                           )}
-                          <button
-                            type="button"
+                          <DnaButton
+                            size="sm"
+                            variant="ghost"
+                            icon={<Eye className="w-3.5 h-3.5" />}
                             onClick={() => setSelectedItem(item)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                            title="Lihat Detail Formula MRP"
                           >
-                            <Eye className="w-3.5 h-3.5" />
-                          </button>
+                            Detail
+                          </DnaButton>
                         </div>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
-      </div>
+      )}
 
-      {/* Modal Detail Item MRP */}
-      <DnaModal
+      {/* DnaDetailDrawer for MRP Detail */}
+      <DnaDetailDrawer
         isOpen={!!selectedItem}
         onClose={() => setSelectedItem(null)}
-        title="Detail Analisis Kebutuhan MRP"
-        size="lg"
+        title={selectedItem?.materialName || "Detail Analisis Kebutuhan MRP"}
+        subtitle={selectedItem ? `${selectedItem.materialCode} • ${selectedItem.category}` : undefined}
+        badge={
+          selectedItem ? (
+            <DnaBadge variant={selectedItem.status === "SAFE_STOCK" ? "success" : "critical"}>
+              {selectedItem.status === "SAFE_STOCK" ? "Stok Aman" : "Perlu PO"}
+            </DnaBadge>
+          ) : undefined
+        }
+        footer={
+          <div className="flex items-center justify-between w-full">
+            <DnaButton variant="outline" size="sm" onClick={() => setSelectedItem(null)}>
+              Tutup
+            </DnaButton>
+            {selectedItem && selectedItem.netNeedQty > 0 && (
+              <DnaButton
+                variant="primary"
+                size="sm"
+                icon={<ShoppingCart className="w-4 h-4" />}
+                onClick={() => handleGeneratePo(selectedItem)}
+              >
+                Buat Purchase Order
+              </DnaButton>
+            )}
+          </div>
+        }
       >
         {selectedItem && (
-          <div className="space-y-5 text-sm">
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+          <div className="space-y-5 text-xs">
+            {/* Quick Metrics */}
+            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-                  {selectedItem.materialCode}
-                </span>
-                <h3 className="text-base font-bold text-slate-900">{selectedItem.materialName}</h3>
-                <p className="text-xs text-slate-500">
-                  Untuk SO: <span className="font-semibold text-slate-700">{selectedItem.salesOrderRef}</span> • Produk:{" "}
-                  <span className="font-semibold text-slate-700">{selectedItem.brandProduct}</span>
-                </p>
+                <span className="text-slate-500 block text-[11px]">SO Terkait & Produk</span>
+                <span className="font-bold text-slate-900 tabular-nums text-sm block">{selectedItem.salesOrderRef}</span>
+                <span className="text-slate-500 text-[11px] mt-0.5">{selectedItem.brandProduct} ({selectedItem.clientName})</span>
               </div>
-              <span
-                className={`text-xs font-bold px-3 py-1 rounded-full border ${
-                  selectedItem.status === "SAFE_STOCK"
-                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                    : "bg-rose-100 text-rose-800 border-rose-300"
-                }`}
-              >
-                {selectedItem.status === "SAFE_STOCK" ? "Kebutuhan Terpenuhi" : "Perlu Pengadaan"}
-              </span>
+              <div className="text-right">
+                <span className="text-slate-500 block text-[11px]">Total Biaya Pengadaan</span>
+                <span className="font-bold text-blue-600 tabular-nums text-sm block">
+                  {selectedItem.netNeedQty > 0 ? formatCurrency(selectedItem.estimatedTotalCost) : "Rp 0 (Cukup)"}
+                </span>
+                <span className="text-slate-500 text-[11px] mt-0.5">Supplier: {selectedItem.primarySupplier}</span>
+              </div>
             </div>
 
             {/* Matrix Perhitungan MRP */}
             <div className="grid grid-cols-4 gap-3 text-xs">
               <div className="bg-white p-3 rounded-xl border border-slate-200">
-                <span className="text-slate-400 block mb-0.5">Kebutuhan Gross SO</span>
-                <span className="font-bold text-slate-900 text-sm">
+                <span className="text-slate-400 block mb-0.5 text-[11px]">Gross Need</span>
+                <span className="font-bold text-slate-900 text-sm tabular-nums">
                   {selectedItem.grossRequirement} {selectedItem.unit}
                 </span>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-200">
-                <span className="text-slate-400 block mb-0.5">Real Stok Gudang</span>
-                <span className="font-bold text-emerald-700 text-sm">
+                <span className="text-slate-400 block mb-0.5 text-[11px]">Real Stok</span>
+                <span className="font-bold text-emerald-700 text-sm tabular-nums">
                   {selectedItem.realStockQty} {selectedItem.unit}
                 </span>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-200">
-                <span className="text-slate-400 block mb-0.5">PO Sedang Dikirim</span>
-                <span className="font-bold text-blue-700 text-sm">
+                <span className="text-slate-400 block mb-0.5 text-[11px]">On-Order</span>
+                <span className="font-bold text-blue-700 text-sm tabular-nums">
                   {selectedItem.onOrderQty} {selectedItem.unit}
                 </span>
               </div>
-              <div className="bg-rose-50/70 p-3 rounded-xl border border-rose-200">
-                <span className="text-rose-600 block mb-0.5 font-bold">Kekurangan (Defisit PO)</span>
-                <span className="font-black text-rose-700 text-sm">
+              <div className="bg-rose-50/80 p-3 rounded-xl border border-rose-200">
+                <span className="text-rose-600 block mb-0.5 text-[11px] font-bold">Defisit (Perlu PO)</span>
+                <span className="font-black text-rose-700 text-sm tabular-nums">
                   {selectedItem.netNeedQty} {selectedItem.unit}
                 </span>
               </div>
             </div>
 
-            {/* Rekomendasi Pengadaan Supplier */}
+            {/* Rekomendasi Mitra */}
             <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
-              <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px] block">
-                Rekomendasi Mitra Supplier & Estimasi Biaya
+              <span className="font-bold text-slate-700 uppercase tracking-wider text-[10px] block">
+                Rekomendasi Pengadaan Supplier & Estimasi Harga
               </span>
-              <div className="flex justify-between items-center py-1 border-b border-slate-100">
-                <span className="text-slate-600">Supplier Utama:</span>
+              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                <span className="text-slate-600">Mitra Supplier Utama:</span>
                 <span className="font-bold text-slate-900">{selectedItem.primarySupplier}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-slate-100">
+              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
                 <span className="text-slate-600">Estimasi Harga Satuan:</span>
-                <span className="font-mono text-slate-800">{formatCurrency(selectedItem.estimatedUnitPrice)} / {selectedItem.unit}</span>
+                <span className="tabular-nums font-semibold text-slate-800">
+                  {formatCurrency(selectedItem.estimatedUnitPrice)} / {selectedItem.unit}
+                </span>
               </div>
-              <div className="flex justify-between items-center py-1">
+              <div className="flex justify-between items-center py-1.5">
                 <span className="text-slate-600 font-semibold">Total Biaya Pengadaan Defisit:</span>
-                <span className="font-mono font-black text-blue-600 text-sm">{formatCurrency(selectedItem.estimatedTotalCost)}</span>
+                <span className="tabular-nums font-bold text-blue-600 text-sm">
+                  {formatCurrency(selectedItem.estimatedTotalCost)}
+                </span>
               </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <DnaButton variant="secondary" onClick={() => setSelectedItem(null)}>
-                Tutup
-              </DnaButton>
-              {selectedItem.netNeedQty > 0 && (
-                <DnaButton variant="primary" onClick={() => handleGeneratePo(selectedItem)}>
-                  Lanjut Buat Purchase Order
-                </DnaButton>
-              )}
             </div>
           </div>
         )}
-      </DnaModal>
+      </DnaDetailDrawer>
 
-      {/* Modal Input Kebutuhan Barang Baru */}
+      {/* Modal Input Kebutuhan Baru */}
       <DnaModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
@@ -554,121 +541,111 @@ function KebutuhanBarangMRPContent() {
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Kategori Material</label>
+              <label className="block font-semibold text-slate-700 mb-1">Kategori Material *</label>
               <DnaSelect
+                options={[
+                  { value: "Bahan Baku", label: "Bahan Baku (Raw Material)" },
+                  { value: "Kemas Primer", label: "Kemas Primer (Botol/Pot)" },
+                  { value: "Kemas Sekunder", label: "Kemas Sekunder (Box/Dus)" },
+                ]}
                 value={formData.category}
                 onChange={(val) => setFormData({ ...formData, category: val as any })}
-                options={[
-                  { value: "Bahan Baku", label: "Bahan Baku (Formula)" },
-                  { value: "Kemas Primer", label: "Kemas Primer (Botol/Pot)" },
-                  { value: "Kemas Sekunder", label: "Kemas Sekunder (Box/Label)" },
-                ]}
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Referensi Sales Order</label>
+              <label className="block font-semibold text-slate-700 mb-1">No. SO Referensi *</label>
               <DnaInput
-                placeholder="SO-2026-005"
+                placeholder="Contoh: SO-2026-0041"
                 value={formData.salesOrderRef}
                 onChange={(e) => setFormData({ ...formData, salesOrderRef: e.target.value })}
+                required
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Nama Klien Maklon</label>
+              <label className="block font-semibold text-slate-700 mb-1">Nama Brand / Produk *</label>
               <DnaInput
-                placeholder="PT Cantika Jelita"
-                value={formData.clientName}
-                onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                placeholder="Contoh: Glow Serum 30ml"
+                value={formData.brandProduct}
+                onChange={(e) => setFormData({ ...formData, brandProduct: e.target.value })}
+                required
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Kebutuhan Gross (SO)</label>
+              <label className="block font-semibold text-slate-700 mb-1">Gross Need *</label>
               <DnaInput
                 type="number"
-                min="0"
                 value={formData.grossRequirement}
                 onChange={(e) => setFormData({ ...formData, grossRequirement: Number(e.target.value) })}
+                required
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Real Stok Gudang</label>
+              <label className="block font-semibold text-slate-700 mb-1">Real Stok *</label>
               <DnaInput
                 type="number"
-                min="0"
                 value={formData.realStockQty}
                 onChange={(e) => setFormData({ ...formData, realStockQty: Number(e.target.value) })}
+                required
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">PO Berjalan (On-Order)</label>
+              <label className="block font-semibold text-slate-700 mb-1">PO On-Order</label>
               <DnaInput
                 type="number"
-                min="0"
                 value={formData.onOrderQty}
                 onChange={(e) => setFormData({ ...formData, onOrderQty: Number(e.target.value) })}
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Satuan (Unit)</label>
-              <DnaInput
-                placeholder="kg / pcs / roll"
+              <label className="block font-semibold text-slate-700 mb-1">Satuan Unit</label>
+              <DnaSelect
+                options={[
+                  { value: "kg", label: "kg" },
+                  { value: "gram", label: "gram" },
+                  { value: "pcs", label: "pcs" },
+                  { value: "pack", label: "pack" },
+                ]}
                 value={formData.unit}
-                onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                onChange={(val) => setFormData({ ...formData, unit: val })}
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Supplier Rekomendasi</label>
+              <label className="block font-semibold text-slate-700 mb-1">Mitra Supplier Utama *</label>
               <DnaInput
-                placeholder="PT Chemindo Natural"
+                placeholder="Contoh: PT Chemindo Sukses Makmur"
                 value={formData.primarySupplier}
                 onChange={(e) => setFormData({ ...formData, primarySupplier: e.target.value })}
+                required
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Estimasi Harga Satuan (Rp)</label>
+              <label className="block font-semibold text-slate-700 mb-1">Est. Harga Satuan (Rp) *</label>
               <DnaInput
                 type="number"
-                min="0"
+                placeholder="Rp"
                 value={formData.estimatedUnitPrice}
                 onChange={(e) => setFormData({ ...formData, estimatedUnitPrice: Number(e.target.value) })}
+                required
               />
             </div>
           </div>
 
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs">
-            <div>
-              <span className="font-semibold text-blue-900 block">Kalkulasi Otomatis Defisit (Net Need):</span>
-              <span className="text-blue-700">Gross - Real Stok - PO On-Order</span>
-            </div>
-            <div className="text-right font-mono font-bold text-base text-blue-800">
-              {Math.max(0, formData.grossRequirement - formData.realStockQty - formData.onOrderQty)} {formData.unit}
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
-            <DnaButton variant="secondary" type="button" onClick={() => setIsCreateOpen(false)}>
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <DnaButton type="button" variant="secondary" onClick={() => setIsCreateOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" type="submit">
+            <DnaButton type="submit" variant="primary">
               Simpan Kebutuhan MRP
             </DnaButton>
           </div>
         </form>
       </DnaModal>
-    </div>
-  );
-}
-
-export default function KebutuhanBarangMRPPage() {
-  return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400">Memuat Kebutuhan Barang (MRP)...</div>}>
-      <KebutuhanBarangMRPContent />
-    </Suspense>
+    </DnaPageContainer>
   );
 }

@@ -1,6 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { ProductionService } from '../src/modules/production/production.service';
+import { ProductionBatchRecordService } from '../src/modules/production/production-batch-record.service';
+import { ProductionPlanningService } from '../src/modules/production/production-planning.service';
+import { ProductionActualsService } from '../src/modules/production/production-actuals.service';
+import { ProductionExecutionService } from '../src/modules/production/production-execution.service';
+import { ProductionAuditService } from '../src/modules/production/production-audit.service';
+import { ProductionMachineService } from '../src/modules/production/production-machine.service';
+import { ProductionQrContextService } from '../src/modules/production/production-qr-context.service';
+import { ProductionWorkOrderService } from '../src/modules/production/production-work-order.service';
 import { WarehouseService } from '../src/modules/warehouse/warehouse.service';
 import { FinanceService } from '../src/modules/finance/finance.service';
 import { ArPaymentType } from '../src/modules/finance/dto/verify-ar-payment.dto';
@@ -27,6 +35,14 @@ describe('V4 System Validation: Unified Communication Protocol', () => {
       imports: [EventEmitterModule.forRoot(), PrismaModule, SystemModule],
       providers: [
         ProductionService,
+        ProductionBatchRecordService, // Fase 3C — batch-record cluster
+        ProductionPlanningService, // Fase 3C — planning cluster
+        ProductionActualsService, // Fase 3C — actuals cluster
+        ProductionExecutionService, // Fase 3C — execution cluster
+        ProductionAuditService, // Fase 3C — QC audit cluster
+        ProductionMachineService, // Fase 3C — machine registry
+        ProductionQrContextService, // Fase 3C — QR scan context
+        ProductionWorkOrderService, // Fase 3C — work orders & requisitions
         WarehouseService,
         FinanceService,
         StockLedgerService,

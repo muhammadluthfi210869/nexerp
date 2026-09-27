@@ -1,13 +1,47 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BussdevController } from '../../src/modules/bussdev/bussdev.controller';
 import { BussdevService } from '../../src/modules/bussdev/bussdev.service';
+import { LeadService } from '../../src/modules/bussdev/services/lead.service';
+import { PipelineService } from '../../src/modules/bussdev/services/pipeline.service';
 import { JwtAuthGuard } from '../../src/modules/auth/jwt-auth.guard';
 import { RolesGuard } from '../../src/modules/auth/roles.guard';
 import { UserRole, WorkflowStatus } from '@prisma/client';
+import { randomUUID } from 'crypto';
+
+const ACTOR_ORG = randomUUID();
+const ACTOR_CORRELATION = randomUUID();
 
 describe('BussdevController — Unit', () => {
   let controller: BussdevController;
   let service: jest.Mocked<BussdevService>;
+
+  // P07: the trusted actor is derived from the verified request only.
+  const actorReq = {
+    user: {
+      id: 'user-1',
+      organizationId: ACTOR_ORG,
+      roles: [UserRole.COMMERCIAL],
+    },
+    correlationId: ACTOR_CORRELATION,
+    headers: {},
+  };
+  const expectedActor = {
+    userId: 'user-1',
+    organizationId: ACTOR_ORG,
+    roles: [UserRole.COMMERCIAL],
+    correlationId: ACTOR_CORRELATION,
+    idempotencyKey: undefined,
+  };
+
+  const mockLeadService = {
+    createLead: jest.fn(),
+    advanceLeadStageGoverned: jest.fn(),
+    advanceLeadStage: jest.fn(),
+    getLeadByIdScoped: jest.fn(),
+    listLeadsScoped: jest.fn(),
+    updateLeadScoped: jest.fn(),
+    getLeadDashboardScoped: jest.fn(),
+  } as any;
 
   const mockService = {
     createLead: jest.fn(),
@@ -33,10 +67,19 @@ describe('BussdevController — Unit', () => {
     triggerRetentionCheck: jest.fn(),
   } as any;
 
+  const mockPipelineService = {
+    getPipelineV2Audit: jest.fn(),
+    getPipelineV2Leads: jest.fn(),
+  } as any;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BussdevController],
-      providers: [{ provide: BussdevService, useValue: mockService }],
+      providers: [
+        { provide: BussdevService, useValue: mockService },
+        { provide: LeadService, useValue: mockLeadService },
+        { provide: PipelineService, useValue: mockPipelineService },
+      ],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
@@ -70,11 +113,12 @@ describe('BussdevController — Unit', () => {
         productInterest: 'Skincare',
         estimatedValue: 100000000,
       };
-      mockService.createLead.mockResolvedValue({ id: 'LEAD-1', ...dto });
+      mockLeadService.createLead.mockResolvedValue({ id: 'LEAD-1', ...dto });
 
-      const result = await controller.createLead(dto);
+      const result = await controller.createLead(actorReq, dto);
       expect(result).toMatchObject({ id: 'LEAD-1', clientName: 'Test Client' });
-      expect(mockService.createLead).toHaveBeenCalledWith(dto);
+      // The actor is passed separately: the tenant is never merged into the DTO.
+      expect(mockLeadService.createLead).toHaveBeenCalledWith(dto, expectedActor);
     });
 
     it('has correct role decorator', () => {
@@ -87,54 +131,25 @@ describe('BussdevController — Unit', () => {
   });
 
   describe('PATCH /bussdev/lead/:id/advance', () => {
-    it('advances a lead stage with files', async () => {
+    it('routes the advance through the governed command with the trusted actor', async () => {
       const dto = {
         action: 'STAGE_UPDATED' as const,
         newStatus: WorkflowStatus.CONTACTED,
         notes: 'Test',
         loggedBy: 'User',
       };
-      const files = {
-        paymentProof: [
-          {
-            path: '/uploads/proof.jpg',
-            fieldname: 'paymentProof',
-            originalname: 'proof.jpg',
-            encoding: '7bit',
-            mimetype: 'image/jpeg',
-            size: 1000,
-            stream: null as any,
-            destination: '',
-            filename: 'proof.jpg',
-            buffer: Buffer.alloc(0),
-          } as Express.Multer.File,
-        ],
-        spkFile: [
-          {
-            path: '/uploads/spk.pdf',
-            fieldname: 'spkFile',
-            originalname: 'spk.pdf',
-            encoding: '7bit',
-            mimetype: 'application/pdf',
-            size: 2000,
-            stream: null as any,
-            destination: '',
-            filename: 'spk.pdf',
-            buffer: Buffer.alloc(0),
-          } as Express.Multer.File,
-        ],
-      };
-      mockService.advanceLeadStage.mockResolvedValue({
+      mockLeadService.advanceLeadStageGoverned.mockResolvedValue({
         id: 'LEAD-1',
         status: WorkflowStatus.CONTACTED,
       });
 
-      const result = await controller.advanceLead('LEAD-1', dto, files as any);
+      const result = await controller.advanceLead('LEAD-1', dto, actorReq);
       expect(result.status).toBe(WorkflowStatus.CONTACTED);
-      expect(mockService.advanceLeadStage).toHaveBeenCalledWith(
+      expect(mockLeadService.advanceLeadStageGoverned).toHaveBeenCalledWith(
         'LEAD-1',
         dto,
-        files,
+        expectedActor,
+        undefined,
       );
     });
 
@@ -148,11 +163,19 @@ describe('BussdevController — Unit', () => {
   });
 
   describe('GET /bussdev/dashboard', () => {
-    it('returns dashboard analytics', async () => {
-      mockService.getPageAnalytics.mockResolvedValue({ overview: {} });
-      const result = await controller.getDashboard();
+    it('returns the tenant-scoped dashboard', async () => {
+      mockLeadService.getLeadDashboardScoped.mockResolvedValue({ overview: {} });
+      const result = await controller.getDashboard(actorReq, {});
       expect(result).toEqual({ overview: {} });
-      expect(mockService.getPageAnalytics).toHaveBeenCalledWith('dashboard');
+      expect(mockLeadService.getLeadDashboardScoped).toHaveBeenCalledWith({
+        organizationId: ACTOR_ORG,
+        dateFrom: undefined,
+        dateTo: undefined,
+        ownerId: undefined,
+        source: undefined,
+        stage: undefined,
+        sla: undefined,
+      });
     });
   });
 
@@ -199,28 +222,29 @@ describe('BussdevController — Unit', () => {
   describe('GET /bussdev/leads', () => {
     it('returns all leads', async () => {
       const mockLeads = [{ id: 'L1', clientName: 'Client A' }];
-      mockService.getLeads.mockResolvedValue(mockLeads);
-      const result = await controller.getLeads(
-        { user: { id: 'U1' } },
-        undefined,
-      );
+      mockLeadService.listLeadsScoped.mockResolvedValue(mockLeads);
+      const result = await controller.getLeads(actorReq, undefined);
       expect(result).toHaveLength(1);
+      expect(mockLeadService.listLeadsScoped).toHaveBeenCalledWith(expectedActor, {
+        bdId: undefined,
+      });
     });
   });
 
   describe('GET /bussdev/leads/stuck', () => {
     it('returns stuck leads', async () => {
       mockService.getStuckLeads.mockResolvedValue([]);
-      const result = await controller.getStuckLeads();
+      const result = await controller.getStuckLeads(actorReq);
       expect(result).toEqual([]);
+      expect(mockService.getStuckLeads).toHaveBeenCalledWith(ACTOR_ORG);
     });
   });
 
   describe('GET /bussdev/leads/group/:group', () => {
     it('returns leads by group', async () => {
       mockService.getLeadsByGroup.mockResolvedValue([]);
-      const result = await controller.getLeadsByGroup('guest');
-      expect(mockService.getLeadsByGroup).toHaveBeenCalledWith('guest');
+      const result = await controller.getLeadsByGroup(actorReq, 'guest');
+      expect(mockService.getLeadsByGroup).toHaveBeenCalledWith('guest', ACTOR_ORG);
     });
   });
 

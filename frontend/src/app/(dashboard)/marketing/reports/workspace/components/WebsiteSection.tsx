@@ -1,3 +1,11 @@
+import {
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import React, { useState } from 'react';
 import { 
   Globe, 
@@ -236,56 +244,56 @@ export const WebsiteSection: React.FC<WebsiteSectionProps> = ({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                  <th className="py-3 px-3">Query Name (Kata Kunci)</th>
-                  <th className="py-3 px-3 text-right">Impressions</th>
-                  <th className="py-3 px-3 text-right">Clicks</th>
-                  <th className="py-3 px-3 text-center">CTR</th>
-                  <th className="py-3 px-3 text-center">Ranking</th>
-                  <th className="py-3 px-3 text-right text-blue-700">Leads Traffic</th>
-                  <th className="py-3 px-3 text-right text-emerald-700">Sample Inquiries</th>
-                  <th className="py-3 px-3">Landing Page</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <DnaTh className="py-3 px-3">Query Name (Kata Kunci)</DnaTh>
+                  <DnaTh className="py-3 px-3 text-right">Impressions</DnaTh>
+                  <DnaTh className="py-3 px-3 text-right">Clicks</DnaTh>
+                  <DnaTh className="py-3 px-3 text-center">CTR</DnaTh>
+                  <DnaTh className="py-3 px-3 text-center">Ranking</DnaTh>
+                  <DnaTh className="py-3 px-3 text-right text-blue-700">Leads Traffic</DnaTh>
+                  <DnaTh className="py-3 px-3 text-right text-emerald-700">Sample Inquiries</DnaTh>
+                  <DnaTh className="py-3 px-3">Landing Page</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {filteredQueries.map(q => (
-                  <tr key={q.id} className="hover:bg-slate-50/70 transition">
-                    <td className="py-3 px-3 font-bold text-slate-900">
+                  <DnaTableRow key={q.id} className="hover:bg-slate-50/70 transition">
+                    <DnaTd className="py-3 px-3 font-bold text-slate-900">
                       {q.queryName}
-                    </td>
-                    <td className="py-3 px-3 text-right font-medium text-slate-700">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-right font-medium text-slate-700">
                       {formatNumber(q.impressions)}
-                    </td>
-                    <td className="py-3 px-3 text-right font-medium text-slate-700">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-right font-medium text-slate-700">
                       {formatNumber(q.clicks)}
-                    </td>
-                    <td className="py-3 px-3 text-center font-semibold text-slate-800">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-center font-semibold text-slate-800">
                       {q.ctr}%
-                    </td>
-                    <td className="py-3 px-3 text-center">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-center">
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800">
                         #{q.avgPosition}
                       </span>
-                    </td>
-                    <td className="py-3 px-3 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-right">
                       <span className="font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
                         +{q.leadsTraffic} Leads
                       </span>
-                    </td>
-                    <td className="py-3 px-3 text-right">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-right">
                       <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
                         +{q.sampleRequests} Samples
                       </span>
-                    </td>
-                    <td className="py-3 px-3 text-slate-500 font-mono text-[10px]">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-3 text-slate-500 tabular-nums text-[10px]">
                       {q.landingPage}
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </div>
       ) : (

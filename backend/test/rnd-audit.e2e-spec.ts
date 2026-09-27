@@ -4,12 +4,17 @@ import { FormulasService } from '../src/modules/rnd/formulas/formulas.service';
 import { PrismaService } from '../src/prisma/prisma/prisma.service';
 import { LegalityService } from '../src/modules/legality/legality.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AuditService } from '../src/platform/audit/audit.service';
+import { OutboxService } from '../src/platform/outbox/outbox.service';
+import { IdGeneratorService } from '../src/modules/system/id-generator.service';
+import { StateTransitionService } from '../src/modules/system/state-transition.service';
 import {
   SampleStage,
   FormulaStatus,
   RevisionStatus,
   Division,
   StreamEventType,
+  PrismaClient,
 } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
@@ -27,6 +32,26 @@ describe('R&D Module Audit (Ultimate Testing Plan Implementation)', () => {
         PrismaService,
         LegalityService,
         EventEmitter2,
+        // Real services, not stubs: this suite was previously unable to build at
+        // all because IdGeneratorService and StateTransitionService were missing.
+        IdGeneratorService,
+        StateTransitionService,
+        // RndService now also takes AuditService + OutboxService so governed writes
+        // commit with their audit row and outbox event (BUS-RULE-113). Both take a
+        // PrismaClient; PrismaService extends it, but listing both as providers
+        // makes Nest build a bare PrismaClient with no driver adapter.
+        {
+          provide: AuditService,
+          useFactory: (prisma: PrismaService) =>
+            new AuditService(prisma as unknown as PrismaClient),
+          inject: [PrismaService],
+        },
+        {
+          provide: OutboxService,
+          useFactory: (prisma: PrismaService) =>
+            new OutboxService(prisma as unknown as PrismaClient),
+          inject: [PrismaService],
+        },
       ],
     }).compile();
 
@@ -76,6 +101,27 @@ describe('R&D Module Audit (Ultimate Testing Plan Implementation)', () => {
   }
 
   async function markAsPaid(sampleId: string, leadId: string) {
+    // BUS-RULE-107 / DEC-2026-09-20-051: formulation cannot start until Finance
+    // verifies the sample fee, and the verifier must be a real user because
+    // paymentApprovedById is a FK to User. This helper stands in for that
+    // verification; the "Unpaid Audit" case below deliberately does NOT call it.
+    const financeUser = await prisma.user.upsert({
+      where: { email: 'finance.p08@test.local' },
+      update: {},
+      create: {
+        email: 'finance.p08@test.local',
+        fullName: 'Finance Verifier (P08)',
+        roles: ['FINANCE'],
+      },
+    });
+    await prisma.sampleRequest.update({
+      where: { id: sampleId },
+      data: {
+        paymentApprovedAt: new Date(),
+        paymentApprovedById: financeUser.id,
+      },
+    });
+
     const soId = `SO-${Math.random().toString(36).substring(7)}`;
     const so = await prisma.salesOrder.create({
       data: {

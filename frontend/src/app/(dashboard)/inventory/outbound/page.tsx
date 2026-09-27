@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Truck,
   PackageCheck,
@@ -29,6 +32,12 @@ import {
   DnaCell,
   DnaBadge,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface DeliveryOutItem {
@@ -52,74 +61,6 @@ interface DeliveryOutItem {
   notes?: string;
 }
 
-const INITIAL_DELIVERIES: DeliveryOutItem[] = [
-  {
-    id: "DO-001",
-    code: "DO-2026-0001",
-    date: "2026-09-03",
-    soNumber: "SO-202609-000004",
-    soDate: "2026-08-28",
-    customer: "Farah Derma Clinic",
-    creator: "Staff Gudang",
-    courier: "JNE Cargo",
-    trackingNo: "JNE-TRK-2026-0081",
-    status: "DELIVERED",
-    notes: "Pengiriman batch 1 produk skincare botol 100ml",
-    items: [
-      { name: "Day Cream SPF 30 (Farah Derma)", unit: "pcs", qtySales: 3000, qtyAvailable: 3000, qtyShip: 3000 },
-      { name: "Kardus Master Box Day Cream", unit: "box", qtySales: 150, qtyAvailable: 150, qtyShip: 150 }
-    ]
-  },
-  {
-    id: "DO-002",
-    code: "DO-2026-0002",
-    date: "2026-09-07",
-    soNumber: "SO-202609-000005",
-    soDate: "2026-09-01",
-    customer: "K-Skin Men",
-    creator: "Logistics Officer",
-    courier: "SiCepat Cargo",
-    trackingNo: "SICEPAT-0092819",
-    status: "SHIPPED",
-    notes: "Pengiriman via ekspedisi darat Jakarta - Surabaya",
-    items: [
-      { name: "Facial Foam Charcoal 100ml", unit: "pcs", qtySales: 5000, qtyAvailable: 5000, qtyShip: 5000 }
-    ]
-  },
-  {
-    id: "DO-003",
-    code: "DO-2026-0003",
-    date: "2026-09-11",
-    soNumber: "SO-202609-000008",
-    soDate: "2026-09-05",
-    customer: "Anita Aesthetics",
-    creator: "Staff Packaging",
-    courier: "Lalamove Van",
-    trackingNo: "LALAMOVE-VN-1102",
-    status: "PACKING",
-    notes: "Menunggu final seal shrink wrap dan audit QC packing",
-    items: [
-      { name: "Moisturizer Gel Aloe 50gr", unit: "pcs", qtySales: 1500, qtyAvailable: 1500, qtyShip: 1500 }
-    ]
-  },
-  {
-    id: "DO-004",
-    code: "DO-2026-0004",
-    date: "2026-09-14",
-    soNumber: "SO-202609-000004",
-    soDate: "2026-09-08",
-    customer: "Farah Derma Clinic",
-    creator: "Staff Gudang",
-    courier: "AnterAja",
-    trackingNo: "ANTERAJA-8827101",
-    status: "DELIVERED",
-    notes: "Pengiriman sampel batch kedua uji klinis lanjutan",
-    items: [
-      { name: "Serum Niacinamide 10% 20ml", unit: "pcs", qtySales: 100, qtyAvailable: 100, qtyShip: 100 }
-    ]
-  }
-];
-
 export default function LogisticsOutboundPage() {
   return (
     <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Pengiriman Barang...</div>}>
@@ -133,9 +74,9 @@ function LogisticsOutboundContent() {
   const searchParams = useSearchParams();
   const isPurchaseReturn = searchParams.get("type") === "purchase-return";
   const actionParam = searchParams.get("action");
-  const { toast } = useDnaToast();
+  const toast = useDnaToast();
+  const queryClient = useQueryClient();
 
-  const [deliveries, setDeliveries] = useState<DeliveryOutItem[]>(INITIAL_DELIVERIES);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -143,20 +84,101 @@ function LogisticsOutboundContent() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
+  // Queries
+  const { data: rawShipments = [], isLoading } = useQuery({
+    queryKey: ["fulfillment-shipments"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/fulfillment/shipments");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: rawSalesOrders = [] } = useQuery({
+    queryKey: ["commercial-sales-orders"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/commercial/sales-orders");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const deliveries: DeliveryOutItem[] = useMemo(() => {
+    if (!rawShipments || !Array.isArray(rawShipments)) return [];
+    return rawShipments.map((s: any) => ({
+      id: s.id,
+      code: `DO-${s.id.slice(0, 8).toUpperCase()}`,
+      date: s.shippedAt ? new Date(s.shippedAt).toISOString().split("T")[0] : "-",
+      soNumber: s.so?.orderNumber || s.soId || "-",
+      soDate: s.createdAt ? new Date(s.createdAt).toISOString().split("T")[0] : "-",
+      customer: s.so?.lead?.clientName || "Pelanggan",
+      creator: "Logistics Officer",
+      courier: s.notes?.includes("[Ekspedisi:")
+        ? s.notes.split("[Ekspedisi:")[1]?.split("]")[0]?.trim()
+        : "Logistik Internal",
+      trackingNo: s.trackingNo || "-",
+      status: (s.status as DeliveryOutItem["status"]) || "SHIPPED",
+      notes: s.notes || "-",
+      items: (s.items && s.items.length > 0)
+        ? s.items.map((it: any) => ({
+            name: it.material?.name || "Produk Maklon",
+            unit: "pcs",
+            qtySales: Number(it.qty || 0),
+            qtyAvailable: Number(it.qty || 0),
+            qtyShip: Number(it.qty || 0),
+          }))
+        : [
+            {
+              name: `Pengiriman SO ${s.so?.orderNumber || s.soId?.slice(0, 8) || ""}`,
+              unit: "batch",
+              qtySales: 1,
+              qtyAvailable: 1,
+              qtyShip: 1,
+            },
+          ],
+    }));
+  }, [rawShipments]);
+
   // Form State
-  const [formData, setFormData] = useState({
-    code: `DO-2026-${String(deliveries.length + 1).padStart(4, "0")}`,
+  const [formData, setFormData] = useState<{
+    code: string;
+    date: string;
+    soId: string;
+    soNumber: string;
+    customer: string;
+    courier: string;
+    trackingNo: string;
+    notes: string;
+    items: DeliveryOutItem["items"];
+  }>({
+    code: `DO-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`,
     date: new Date().toISOString().split("T")[0],
-    soNumber: "SO-202609-000005",
-    soDate: new Date().toISOString().split("T")[0],
-    customer: "Farah Derma Clinic",
+    soId: "",
+    soNumber: "",
+    customer: "",
     courier: "JNE Cargo",
     trackingNo: "",
     notes: "",
-    items: [
-      { name: "Facial Foam Charcoal 100ml", unit: "pcs", qtySales: 5000, qtyAvailable: 5000, qtyShip: 5000 }
-    ]
+    items: [],
   });
+
+  useEffect(() => {
+    if (rawSalesOrders.length > 0 && !formData.soId) {
+      const firstSo = rawSalesOrders[0];
+      setFormData((prev) => ({
+        ...prev,
+        soId: firstSo.id,
+        soNumber: firstSo.orderNumber || firstSo.id,
+        customer: firstSo.lead?.clientName || "Pelanggan",
+      }));
+    }
+  }, [rawSalesOrders, formData.soId]);
 
   useEffect(() => {
     if (actionParam === "create") {
@@ -165,7 +187,7 @@ function LogisticsOutboundContent() {
   }, [actionParam]);
 
   const filteredData = useMemo(() => {
-    return deliveries.filter(item => {
+    return deliveries.filter((item) => {
       const matchSearch =
         item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.soNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -176,48 +198,58 @@ function LogisticsOutboundContent() {
     });
   }, [deliveries, searchTerm, statusFilter]);
 
-  const totalDelivered = deliveries.filter(d => d.status === "DELIVERED").length;
-  const totalShipped = deliveries.filter(d => d.status === "SHIPPED").length;
-  const totalPacking = deliveries.filter(d => d.status === "PACKING").length;
+  const totalDelivered = useMemo(() => deliveries.filter((d) => d.status === "DELIVERED").length, [deliveries]);
+  const totalShipped = useMemo(() => deliveries.filter((d) => d.status === "SHIPPED").length, [deliveries]);
+  const totalPacking = useMemo(() => deliveries.filter((d) => d.status === "PACKING").length, [deliveries]);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newDo: DeliveryOutItem = {
-      id: `DO-${Date.now()}`,
-      code: formData.code,
-      date: formData.date,
-      soNumber: formData.soNumber,
-      soDate: formData.soDate,
-      customer: formData.customer,
-      creator: "Super Admin",
-      courier: formData.courier,
-      trackingNo: formData.trackingNo || `TRK-${Date.now()}`,
-      status: "SHIPPED",
-      notes: formData.notes,
-      items: formData.items
-    };
-    setDeliveries([newDo, ...deliveries]);
-    setIsCreateOpen(false);
-    toast({
-      title: "Pengiriman Dibuat",
-      description: `Surat Jalan ${newDo.code} berhasil disimpan ke logistik.`,
-      variant: "success"
-    });
-    if (actionParam === "create") {
-      router.push(isPurchaseReturn ? "/inventory/outbound?type=purchase-return" : "/delivery-out");
+    if (!formData.soId) {
+      toast.warning("Pilih Sales Order terlebih dahulu");
+      return;
+    }
+
+    try {
+      await api.post("/fulfillment/shipments", {
+        soId: formData.soId,
+        logisticsId: "00000000-0000-0000-0000-000000000001",
+        trackingNo: formData.trackingNo || undefined,
+        notes: `[Ekspedisi: ${formData.courier}] ${formData.notes || ""}`.trim() || undefined,
+      });
+
+      toast.success("Surat Jalan pengiriman berhasil dibuat.");
+      queryClient.invalidateQueries({ queryKey: ["fulfillment-shipments"] });
+      setIsCreateOpen(false);
+      if (actionParam === "create") {
+        router.push(isPurchaseReturn ? "/inventory/outbound?type=purchase-return" : "/delivery-out");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Gagal membuat surat jalan pengiriman");
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, status: "DELIVERED" | "SHIPPED") => {
+    try {
+      await api.patch(`/fulfillment/shipments/${id}/status`, { status });
+      toast.success(`Status pengiriman berhasil diubah menjadi ${status}.`);
+      queryClient.invalidateQueries({ queryKey: ["fulfillment-shipments"] });
+      setSelectedDo(null);
+      setIsDetailOpen(false);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Gagal memperbarui status pengiriman");
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "DELIVERED":
-        return <DnaBadge status="success">Diterima</DnaBadge>;
+        return <DnaBadge variant="success">Diterima</DnaBadge>;
       case "SHIPPED":
-        return <DnaBadge status="info">Dalam Perjalanan</DnaBadge>;
+        return <DnaBadge variant="info">Dalam Perjalanan</DnaBadge>;
       case "PACKING":
-        return <DnaBadge status="warning">Packing Gudang</DnaBadge>;
+        return <DnaBadge variant="warning">Packing Gudang</DnaBadge>;
       default:
-        return <DnaBadge status="default">{status}</DnaBadge>;
+        return <DnaBadge variant="default">{status}</DnaBadge>;
     }
   };
 
@@ -306,39 +338,39 @@ function LogisticsOutboundContent() {
       {/* 1:1 Table (Exactly 9 columns matching legacy G-SERP) */}
       <DnaDataTableCard title="Daftar Pengiriman Barang (Delivery Outbound)">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-              <tr>
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">Kode Pengiriman</th>
-                <th className="py-3 px-4">Tanggal</th>
-                <th className="py-3 px-4">No. Sales</th>
-                <th className="py-3 px-4">Tanggal Sales</th>
-                <th className="py-3 px-4">Customer</th>
-                <th className="py-3 px-4">Pembuat</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-12 text-center">#</DnaTh>
+                <DnaTh className="py-3 px-4">Kode Pengiriman</DnaTh>
+                <DnaTh className="py-3 px-4">Tanggal</DnaTh>
+                <DnaTh className="py-3 px-4">No. Sales</DnaTh>
+                <DnaTh className="py-3 px-4">Tanggal Sales</DnaTh>
+                <DnaTh className="py-3 px-4">Customer</DnaTh>
+                <DnaTh className="py-3 px-4">Pembuat</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Status</DnaTh>
+                <DnaTh className="py-3 px-4 text-center">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-8 text-center text-slate-400">
                     Tidak ada data pengiriman barang ditemukan
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
                 filteredData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
-                    <td className="py-3 px-4 font-semibold text-blue-600">{item.code}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.date}</td>
-                    <td className="py-3 px-4 font-medium text-slate-900">{item.soNumber}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.soDate}</td>
-                    <td className="py-3 px-4 text-slate-900 font-medium">{item.customer}</td>
-                    <td className="py-3 px-4 text-slate-600">{item.creator}</td>
-                    <td className="py-3 px-4 text-center">{getStatusBadge(item.status)}</td>
-                    <td className="py-3 px-4 text-center">
+                  <DnaTableRow key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                    <DnaTd className="py-3 px-4 text-center font-medium text-slate-400">{idx + 1}</DnaTd>
+                    <DnaTd className="py-3 px-4 font-semibold text-blue-600">{item.code}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-600">{item.date}</DnaTd>
+                    <DnaTd className="py-3 px-4 font-medium text-slate-900">{item.soNumber}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-600">{item.soDate}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-900 font-medium">{item.customer}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-slate-600">{item.creator}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-center">{getStatusBadge(item.status)}</DnaTd>
+                    <DnaTd className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <DnaButton
                           variant="ghost"
@@ -366,12 +398,12 @@ function LogisticsOutboundContent() {
                           Print
                         </DnaButton>
                       </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
@@ -425,28 +457,28 @@ function LogisticsOutboundContent() {
                 Rincian Barang Terkirim
               </h4>
               <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                    <tr>
-                      <th className="py-2.5 px-3 w-10 text-center">#</th>
-                      <th className="py-2.5 px-3">Nama Barang</th>
-                      <th className="py-2.5 px-3 text-center">Satuan</th>
-                      <th className="py-2.5 px-3 text-right">Qty Kirim</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
+                <DnaTable>
+                  <DnaTableHead>
+                    <DnaTableRow>
+                      <DnaTh className="py-2.5 px-3 w-10 text-center">#</DnaTh>
+                      <DnaTh className="py-2.5 px-3">Nama Barang</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-center">Satuan</DnaTh>
+                      <DnaTh className="py-2.5 px-3 text-right">Qty Kirim</DnaTh>
+                    </DnaTableRow>
+                  </DnaTableHead>
+                  <DnaTableBody>
                     {selectedDo.items.map((it, idx) => (
-                      <tr key={idx}>
-                        <td className="py-2.5 px-3 text-center text-slate-400">{idx + 1}</td>
-                        <td className="py-2.5 px-3 font-medium text-slate-800">{it.name}</td>
-                        <td className="py-2.5 px-3 text-center text-slate-600">{it.unit}</td>
-                        <td className="py-2.5 px-3 text-right font-bold text-slate-900">
+                      <DnaTableRow key={idx}>
+                        <DnaTd className="py-2.5 px-3 text-center text-slate-400">{idx + 1}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 font-medium text-slate-800">{it.name}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-center text-slate-600">{it.unit}</DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right font-bold text-slate-900">
                           {it.qtyShip.toLocaleString("id-ID")}
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </DnaTableBody>
+                </DnaTable>
               </div>
             </div>
 
@@ -460,6 +492,14 @@ function LogisticsOutboundContent() {
               <DnaButton variant="secondary" onClick={() => setIsDetailOpen(false)}>
                 Tutup
               </DnaButton>
+              {selectedDo.status !== "DELIVERED" && (
+                <DnaButton
+                  variant="primary"
+                  onClick={() => handleUpdateStatus(selectedDo.id, "DELIVERED")}
+                >
+                  Konfirmasi Diterima (Delivered)
+                </DnaButton>
+              )}
             </div>
           </div>
         )}
@@ -505,26 +545,41 @@ function LogisticsOutboundContent() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                No. Sales Order Ref *
+                Pilih Sales Order Ref *
               </label>
-              <input
-                type="text"
-                required
-                value={formData.soNumber}
-                onChange={(e) => setFormData({ ...formData, soNumber: e.target.value })}
-                className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-white"
-              />
+              <select
+                value={formData.soId}
+                onChange={(e) => {
+                  const targetSo = rawSalesOrders.find((so: any) => so.id === e.target.value);
+                  setFormData({
+                    ...formData,
+                    soId: e.target.value,
+                    soNumber: targetSo?.orderNumber || e.target.value,
+                    customer: targetSo?.lead?.clientName || "Pelanggan",
+                  });
+                }}
+                className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-white font-medium"
+              >
+                {rawSalesOrders.length === 0 ? (
+                  <option value="">Tidak ada Sales Order aktif</option>
+                ) : (
+                  rawSalesOrders.map((so: any) => (
+                    <option key={so.id} value={so.id}>
+                      {so.orderNumber || so.id.slice(0, 8)} - {so.lead?.clientName || "Klien"} ({so.status})
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Customer / Brand Klien *
+                Customer / Brand Klien
               </label>
               <input
                 type="text"
-                required
+                readOnly
                 value={formData.customer}
-                onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
-                className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-white"
+                className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-600 font-semibold"
               />
             </div>
             <div>
@@ -559,26 +614,26 @@ function LogisticsOutboundContent() {
               Daftar Barang yang Dikirim
             </h4>
             <div className="border border-slate-200 rounded-xl overflow-hidden">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                  <tr>
-                    <th className="py-2.5 px-3 w-10 text-center">#</th>
-                    <th className="py-2.5 px-3">Barang</th>
-                    <th className="py-2.5 px-3 text-center">Satuan</th>
-                    <th className="py-2.5 px-3 text-right">Qty Sales</th>
-                    <th className="py-2.5 px-3 text-right">Qty Tersedia</th>
-                    <th className="py-2.5 px-3 text-right">Qty Kirim *</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow>
+                    <DnaTh className="py-2.5 px-3 w-10 text-center">#</DnaTh>
+                    <DnaTh className="py-2.5 px-3">Barang</DnaTh>
+                    <DnaTh className="py-2.5 px-3 text-center">Satuan</DnaTh>
+                    <DnaTh className="py-2.5 px-3 text-right">Qty Sales</DnaTh>
+                    <DnaTh className="py-2.5 px-3 text-right">Qty Tersedia</DnaTh>
+                    <DnaTh className="py-2.5 px-3 text-right">Qty Kirim *</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {formData.items.map((it, idx) => (
-                    <tr key={idx}>
-                      <td className="py-2.5 px-3 text-center text-slate-400">{idx + 1}</td>
-                      <td className="py-2.5 px-3 font-medium text-slate-800">{it.name}</td>
-                      <td className="py-2.5 px-3 text-center text-slate-600">{it.unit}</td>
-                      <td className="py-2.5 px-3 text-right text-slate-600">{it.qtySales.toLocaleString()}</td>
-                      <td className="py-2.5 px-3 text-right text-emerald-600 font-semibold">{it.qtyAvailable.toLocaleString()}</td>
-                      <td className="py-2.5 px-3 text-right">
+                    <DnaTableRow key={idx}>
+                      <DnaTd className="py-2.5 px-3 text-center text-slate-400">{idx + 1}</DnaTd>
+                      <DnaTd className="py-2.5 px-3 font-medium text-slate-800">{it.name}</DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-center text-slate-600">{it.unit}</DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-right text-slate-600">{it.qtySales.toLocaleString()}</DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-right text-emerald-600 font-semibold">{it.qtyAvailable.toLocaleString()}</DnaTd>
+                      <DnaTd className="py-2.5 px-3 text-right">
                         <input
                           type="number"
                           min="1"
@@ -592,11 +647,11 @@ function LogisticsOutboundContent() {
                           }}
                           className="w-24 text-right p-1.5 border border-slate-200 rounded font-bold text-slate-900"
                         />
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   ))}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </div>
           </div>
 

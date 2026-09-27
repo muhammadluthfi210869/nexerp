@@ -14,6 +14,12 @@ import {
 } from "lucide-react";
 import {
   DnaButton,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 import { DnaEmptyState } from "@/components/dna";;
 import { DnaDaysLeftChip, DnaPriorityBadge } from "@/components/dna";;
@@ -209,7 +215,7 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              {member.role} · <span className="font-mono text-slate-400">{member.email}</span>
+              {member.role} · <span className="tabular-nums text-slate-400">{member.email}</span>
               {member.phone && <span className="text-slate-400"> · {member.phone}</span>}
             </p>
           </div>
@@ -475,29 +481,29 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
             />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    <th className="py-3 px-3">Task</th>
-                    <th className="py-3 px-2">Start Date</th>
-                    <th className="py-3 px-2">Due Date</th>
-                    <th className="py-3 px-2">Days Left</th>
-                    <th className="py-3 px-2">Status</th>
-                    <th className="py-3 px-2">Prioritas</th>
-                    <th className="py-3 px-2 text-right">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <DnaTh className="py-3 px-3">Task</DnaTh>
+                    <DnaTh className="py-3 px-2">Start Date</DnaTh>
+                    <DnaTh className="py-3 px-2">Due Date</DnaTh>
+                    <DnaTh className="py-3 px-2">Days Left</DnaTh>
+                    <DnaTh className="py-3 px-2">Status</DnaTh>
+                    <DnaTh className="py-3 px-2">Prioritas</DnaTh>
+                    <DnaTh className="py-3 px-2 text-right">Aksi</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {filteredDaily.map((task) => {
                     const isDone = task.status === "DONE";
                     const allowedStatuses = [task.status, ...(NEXT_STATUSES[task.status] ?? [])];
                     return (
-                      <tr
+                      <DnaTableRow
                         key={task.id}
                         onClick={() => setSelectedTaskId(task.id)}
                         className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
                       >
-                        <td className="py-3 px-3">
+                        <DnaTd className="py-3 px-3">
                           <div className="flex items-center gap-3">
                             <button
                               type="button"
@@ -528,21 +534,21 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
                               )}
                             </div>
                           </div>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 text-slate-500 whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 text-slate-500 whitespace-nowrap">
                           {formatDateIndo(task.startDate)}
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 text-slate-500 whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 text-slate-500 whitespace-nowrap">
                           {formatDateIndo(task.dueDate)}
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 whitespace-nowrap">
                           <DnaDaysLeftChip dueDate={task.dueDate} />
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <DnaTd className="py-3 px-2 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           <select
                             value={task.status}
                             onChange={(e) => handleInlineStatusChange(task, e.target.value as TaskStatus)}
@@ -550,13 +556,13 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
                           >
                             {allowedStatuses.map((status) => <option key={status} value={status}>{status === "IN_REVIEW" ? "In Review" : status.replace("_", " ")}</option>)}
                           </select>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 whitespace-nowrap">
                           <DnaPriorityBadge priority={task.priority} />
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 text-right whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 text-right whitespace-nowrap">
                           <button
                             type="button"
                             onClick={(e) => {
@@ -567,12 +573,12 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
                           >
                             Detail
                           </button>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     );
                   })}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </div>
           )}
         </div>
@@ -616,30 +622,30 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
             />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    <th className="py-3 px-3">Task</th>
-                    <th className="py-3 px-2">Project</th>
-                    <th className="py-3 px-2">Start Date</th>
-                    <th className="py-3 px-2">Due Date</th>
-                    <th className="py-3 px-2">Days Left</th>
-                    <th className="py-3 px-2">Status</th>
-                    <th className="py-3 px-2">Prioritas</th>
-                    <th className="py-3 px-2 text-right">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <DnaTh className="py-3 px-3">Task</DnaTh>
+                    <DnaTh className="py-3 px-2">Project</DnaTh>
+                    <DnaTh className="py-3 px-2">Start Date</DnaTh>
+                    <DnaTh className="py-3 px-2">Due Date</DnaTh>
+                    <DnaTh className="py-3 px-2">Days Left</DnaTh>
+                    <DnaTh className="py-3 px-2">Status</DnaTh>
+                    <DnaTh className="py-3 px-2">Prioritas</DnaTh>
+                    <DnaTh className="py-3 px-2 text-right">Aksi</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {filteredProjects.map((task) => {
                     const isDone = task.status === "DONE";
                     const allowedStatuses = [task.status, ...(NEXT_STATUSES[task.status] ?? [])];
                     return (
-                      <tr
+                      <DnaTableRow
                         key={task.id}
                         onClick={() => setSelectedTaskId(task.id)}
                         className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
                       >
-                        <td className="py-3 px-3">
+                        <DnaTd className="py-3 px-3">
                           <div className="flex items-center gap-3">
                             <button
                               type="button"
@@ -670,27 +676,27 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
                               )}
                             </div>
                           </div>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 whitespace-nowrap">
                           <span className="px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-semibold">
                             {task.project?.name || "General"}
                           </span>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 text-slate-500 whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 text-slate-500 whitespace-nowrap">
                           {formatDateIndo(task.startDate)}
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 text-slate-500 whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 text-slate-500 whitespace-nowrap">
                           {formatDateIndo(task.dueDate)}
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 whitespace-nowrap">
                           <DnaDaysLeftChip dueDate={task.dueDate} />
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <DnaTd className="py-3 px-2 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           <select
                             value={task.status}
                             onChange={(e) => handleInlineStatusChange(task, e.target.value as TaskStatus)}
@@ -698,13 +704,13 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
                           >
                             {allowedStatuses.map((status) => <option key={status} value={status}>{status === "IN_REVIEW" ? "In Review" : status.replace("_", " ")}</option>)}
                           </select>
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 whitespace-nowrap">
                           <DnaPriorityBadge priority={task.priority} />
-                        </td>
+                        </DnaTd>
 
-                        <td className="py-3 px-2 text-right whitespace-nowrap">
+                        <DnaTd className="py-3 px-2 text-right whitespace-nowrap">
                           <button
                             type="button"
                             onClick={(e) => {
@@ -715,12 +721,12 @@ export default function MemberProfileView({ member, tasks, viewer, onRefresh }: 
                           >
                             Detail
                           </button>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     );
                   })}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </div>
           )}
         </div>

@@ -460,7 +460,7 @@ export const SettingsPipelineModal: React.FC<SettingsPipelineModalProps> = ({
                         }`}
                       >
                         <div className="flex items-center gap-1.5 truncate">
-                          <span className="w-5 h-5 rounded-full bg-white/80 border border-slate-200 text-slate-700 text-[10px] flex items-center justify-center font-mono font-bold">
+                          <span className="w-5 h-5 rounded-full bg-white/80 border border-slate-200 text-slate-700 text-[10px] flex items-center justify-center tabular-nums font-bold">
                             {stage.order}
                           </span>
                           <span className="truncate font-extrabold">{stage.name}</span>
@@ -603,7 +603,7 @@ export const SettingsPipelineModal: React.FC<SettingsPipelineModalProps> = ({
                     value={newSourceUtm}
                     onChange={(e) => setNewSourceUtm(e.target.value)}
                     placeholder="Contoh: ig_story_maklon"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-500 font-mono text-[11px]"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-500 tabular-nums text-[11px]"
                   />
                 </div>
 
@@ -649,7 +649,7 @@ export const SettingsPipelineModal: React.FC<SettingsPipelineModalProps> = ({
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-3 text-xs text-slate-500 mt-1 font-mono">
+                          <div className="flex items-center gap-3 text-xs text-slate-500 mt-1 tabular-nums">
                             <span>UTM: {src.utmSource || src.name.toLowerCase().replace(/\s+/g, '_')}</span>
                             <span>&bull;</span>
                             <span>Auto-Tag: [{src.autoTag || src.name}]</span>

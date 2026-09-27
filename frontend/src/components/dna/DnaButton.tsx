@@ -2,7 +2,7 @@ import React from "react"
 import { cn } from "@/lib/utils"
 
 interface DnaButtonProps {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger"
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "link" | "default" | "destructive" | "critical"
   size?: "sm" | "md" | "lg" | "icon"
   icon?: React.ReactNode
   children?: React.ReactNode
@@ -16,13 +16,21 @@ interface DnaButtonProps {
 const variantClasses: Record<string, string> = {
   primary:
     "bg-blue-600 hover:bg-blue-700 text-white border-none shadow-sm hover:shadow-md",
+  default:
+    "bg-blue-600 hover:bg-blue-700 text-white border-none shadow-sm hover:shadow-md",
   secondary:
     "bg-slate-800 hover:bg-slate-900 text-white border-none shadow-sm hover:shadow-md",
   outline:
     "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm hover:shadow-md",
   ghost:
     "bg-slate-50 border border-transparent text-slate-500 hover:bg-blue-600 hover:text-white shadow-none",
+  link:
+    "bg-transparent text-blue-600 underline-offset-4 hover:underline p-0 border-none shadow-none h-auto",
   danger:
+    "bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-600 hover:text-white shadow-sm hover:shadow-md",
+  destructive:
+    "bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-600 hover:text-white shadow-sm hover:shadow-md",
+  critical:
     "bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-600 hover:text-white shadow-sm hover:shadow-md",
 }
 

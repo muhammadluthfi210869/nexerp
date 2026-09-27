@@ -22,7 +22,22 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { DnaInput, DnaBadge, DnaButton, DnaStatCard, DnaDataTableCard, DnaSelect, DnaTextarea, DnaCell } from "@/components/dna";
+import {
+  DnaInput,
+  DnaBadge,
+  DnaButton,
+  DnaStatCard,
+  DnaDataTableCard,
+  DnaSelect,
+  DnaTextarea,
+  DnaCell,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { toast } from "sonner";
 
@@ -169,39 +184,39 @@ export default function DownPaymentPrototype() {
                 </div>
               }
             >
-              <table className="w-full text-left border-collapse text-[12px]">
-                <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[9px]">
-                    <th className="py-3 px-4 pl-8">ID DP</th>
-                    <th className="py-3 px-4">PO / Pemasok</th>
-                    <th className="py-3 px-4">Sumber Dana</th>
-                    <th className="py-3 px-4 text-right">Jumlah / Terpakai</th>
-                    <th className="py-3 px-4 text-center">Status</th>
-                    <th className="py-3 px-4 text-right pr-8">Protokol</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <DnaTable>
+                <DnaTableHead>
+                  <DnaTableRow className="bg-slate-50/50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[9px]">
+                    <DnaTh className="py-3 px-4 pl-8">ID DP</DnaTh>
+                    <DnaTh className="py-3 px-4">PO / Pemasok</DnaTh>
+                    <DnaTh className="py-3 px-4">Sumber Dana</DnaTh>
+                    <DnaTh className="py-3 px-4 text-right">Jumlah / Terpakai</DnaTh>
+                    <DnaTh className="py-3 px-4 text-center">Status</DnaTh>
+                    <DnaTh className="py-3 px-4 text-right pr-8">Protokol</DnaTh>
+                  </DnaTableRow>
+                </DnaTableHead>
+                <DnaTableBody>
                   {invLoading && (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center">
+                    <DnaTableRow>
+                      <DnaTd colSpan={6} className="py-8 text-center">
                         <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600" />
                         <p className="text-[10px] font-bold uppercase mt-4 text-slate-400">Memuat uang muka...</p>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   )}
                   {!invLoading && invList.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center">
+                    <DnaTableRow>
+                      <DnaTd colSpan={6} className="py-8 text-center">
                         <p className="text-[10px] font-bold uppercase text-slate-300">Belum ada uang muka</p>
-                      </td>
-                    </tr>
+                      </DnaTd>
+                    </DnaTableRow>
                   )}
                   {!invLoading && invList.map((dp: any, idx: number) => {
                     const totalDp = Number(dp.amountDue);
                     const paidAmount = totalDp - Number(dp.outstandingAmount);
                     return (
-                      <tr key={dp.id} className="hover:bg-slate-50/80">
-                        <td className="py-2.5 px-3 pl-8">
+                      <DnaTableRow key={dp.id} className="hover:bg-slate-50/80">
+                        <DnaTd className="py-2.5 px-3 pl-8">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-lg bg-white text-slate-900 flex items-center justify-center font-bold text-[9px] border border-slate-200">
                               {idx + 1}
@@ -211,40 +226,40 @@ export default function DownPaymentPrototype() {
                               <span className="text-[9px] font-bold text-slate-400 uppercase">{formatDate(dp.issuedAt)}</span>
                             </div>
                           </div>
-                        </td>
-                        <td className="py-2.5 px-3">
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3">
                           <div className="flex flex-col">
                             <span className="font-bold text-slate-900 text-xs uppercase">{dp.po?.poNumber || "-"}</span>
                             <span className="text-[9px] font-bold text-blue-600 uppercase italic mt-0.5">{dp.supplier?.name || "-"}</span>
                           </div>
-                        </td>
-                        <td className="py-2.5 px-3">
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3">
                           <div className="flex items-center gap-1.5">
                             <CreditCard className="h-3 w-3 text-slate-400" />
                             <span className="text-[10px] font-bold text-slate-600 uppercase">Invoice</span>
                           </div>
-                        </td>
-                        <td className="py-2.5 px-3 text-right">
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-right">
                           <div className="flex flex-col">
                             <span className="font-bold text-slate-900 text-xs tabular-nums">Rp {totalDp.toLocaleString()}</span>
                             <span className="text-[9px] font-bold text-emerald-500 uppercase mt-0.5">Used: Rp {paidAmount.toLocaleString()}</span>
                           </div>
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <DnaBadge status={dp.status === "PAID" ? "success" : "warning"}>
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 text-center">
+                          <DnaBadge variant={dp.status === "PAID" ? "success" : "warning"}>
                             {statusLabel(dp.status)}
                           </DnaBadge>
-                        </td>
-                        <td className="py-2.5 px-3 pr-8 text-right">
+                        </DnaTd>
+                        <DnaTd className="py-2.5 px-3 pr-8 text-right">
                           <div className="flex justify-end gap-1.5">
                             <DnaButton variant="ghost" size="icon" icon={<Eye className="h-4 w-4" />} />
                           </div>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     );
                   })}
-                </tbody>
-              </table>
+                </DnaTableBody>
+              </DnaTable>
             </DnaDataTableCard>
 
             {/* Owner Insight Callout */}
@@ -315,28 +330,28 @@ export default function DownPaymentPrototype() {
                         </div>
 
                         <div className="rounded-2xl border border-slate-200 overflow-hidden bg-slate-50/50">
-                          <table className="w-full text-left border-collapse text-[12px]">
-                            <thead>
-                              <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[9px]">
-                                <th className="pl-6 py-2">Item</th>
-                                <th className="text-center py-2">Qty</th>
-                                <th className="text-right pr-6 py-2">Subtotal</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
+                          <DnaTable>
+                            <DnaTableHead>
+                              <DnaTableRow className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[9px]">
+                                <DnaTh className="pl-6 py-2">Item</DnaTh>
+                                <DnaTh className="text-center py-2">Qty</DnaTh>
+                                <DnaTh className="text-right pr-6 py-2">Subtotal</DnaTh>
+                              </DnaTableRow>
+                            </DnaTableHead>
+                            <DnaTableBody>
                               {(selectedPOData.items || []).length > 0 ? selectedPOData.items.map((item: any, i: number) => (
-                                <tr key={i}>
-                                  <td className="font-bold text-slate-900 text-xs pl-6 uppercase py-2">{item.material?.name || item.name || "-"}</td>
-                                  <td className="text-center font-bold text-slate-900 text-xs tabular-nums py-2">{item.qty || item.quantity || 0}</td>
-                                  <td className="text-right pr-6 font-bold text-slate-900 text-xs tabular-nums py-2">Rp {Number(item.totalPrice || item.price || 0).toLocaleString()}</td>
-                                </tr>
+                                <DnaTableRow key={i}>
+                                  <DnaTd className="font-bold text-slate-900 text-xs pl-6 uppercase py-2">{item.material?.name || item.name || "-"}</DnaTd>
+                                  <DnaTd className="text-center font-bold text-slate-900 text-xs tabular-nums py-2">{item.qty || item.quantity || 0}</DnaTd>
+                                  <DnaTd className="text-right pr-6 font-bold text-slate-900 text-xs tabular-nums py-2">Rp {Number(item.totalPrice || item.price || 0).toLocaleString()}</DnaTd>
+                                </DnaTableRow>
                               )) : (
-                                <tr>
-                                  <td colSpan={3} className="text-center py-6 text-[10px] font-bold text-slate-300 uppercase">No items data</td>
-                                </tr>
+                                <DnaTableRow>
+                                  <DnaTd colSpan={3} className="text-center py-6 text-[10px] font-bold text-slate-300 uppercase">No items data</DnaTd>
+                                </DnaTableRow>
                               )}
-                            </tbody>
-                          </table>
+                            </DnaTableBody>
+                          </DnaTable>
                         </div>
                       </motion.div>
                     )}

@@ -74,6 +74,15 @@ export class CustomersController {
     return this.customersService.findAll(search);
   }
 
+  // Must stay above `:id`. Below it, GET /master/customers/active — which CustomerSelect asks
+  // for on every open — matches `:id` instead and fails as "invalid input syntax for type uuid".
+  @Get('active')
+  @ApiOperation({ summary: 'List customers for dropdown/searchable select' })
+  @ApiQuery({ name: 'search', required: false })
+  findActive(@Query('search') search?: string) {
+    return this.customersService.findActive(search);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get customer detail' })
   findOne(@Param('id') id: string) {

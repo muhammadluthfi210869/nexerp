@@ -1,6 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import {
+  BusinessRuleViolationException,
+  StateTransitionInvalidException,
+} from '../../../common/exceptions/api-exception';
+import {
   CreateProductionPlanDto,
   UpdatePlanStatusDto,
 } from '../dto/production-plan.dto';
@@ -39,7 +43,12 @@ export class ProductionPlansService {
       if (!so) throw new NotFoundException('Sales order not found');
 
       const formula = so.sample.formulas[0];
-      if (!formula) throw new Error('No final formula locked for this order.');
+      if (!formula)
+        throw new BusinessRuleViolationException(
+          'production-plan-no-locked-formula',
+          'Belum ada formula final yang di-lock untuk sales order ini.',
+          { soId: dto.soId },
+        );
 
       // Create Planning
       const plan = await tx.productionPlan.create({
@@ -142,7 +151,12 @@ export class ProductionPlansService {
 
       if (!plan) throw new NotFoundException('Production plan not found');
       if (plan.status !== LifecycleStatus.PLANNING)
-        throw new Error('Materials only issuable at PLANNING stage.');
+        throw new StateTransitionInvalidException(
+          'ProductionPlan',
+          plan.status,
+          LifecycleStatus.PLANNING,
+          'Material hanya bisa dikeluarkan saat plan masih di stage PLANNING.',
+        );
 
       // 1. Critical Inventory Check (The Interlock)
       for (const req of plan.requisitions) {
@@ -156,8 +170,16 @@ export class ProductionPlansService {
             continue; 
           }
           */
-          throw new Error(
-            `Insufficient Stock: ${req.material.name} (Stock: ${currentStock}, Needs: ${requested}). Master Override required to bypass.`,
+          throw new BusinessRuleViolationException(
+            'production-insufficient-stock',
+            `Stok tidak cukup: ${req.material.name} (stok: ${currentStock}, butuh: ${requested}). Master Override diperlukan untuk melanjutkan.`,
+            {
+              materialId: req.materialId,
+              materialName: req.material.name,
+              currentStock,
+              requested,
+              planId: id,
+            },
           );
         }
       }

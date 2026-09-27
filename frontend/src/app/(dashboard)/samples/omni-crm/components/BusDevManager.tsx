@@ -86,10 +86,10 @@ export const BusDevManager: React.FC<BusDevManagerProps> = ({
                   <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
                     {nextEligible.name}
                   </h4>
-                  <p className="text-[11px] text-emerald-700 font-mono font-medium">
+                  <p className="text-[11px] text-emerald-700 tabular-nums font-medium">
                     📱 {nextEligible.formattedPhone || nextEligible.phone}
                   </p>
-                  <p className="text-[10px] text-slate-500 font-mono">
+                  <p className="text-[10px] text-slate-500 tabular-nums">
                     Last: {getRelativeTime(nextEligible.lastAssigned)}
                   </p>
                 </div>
@@ -172,7 +172,7 @@ export const BusDevManager: React.FC<BusDevManagerProps> = ({
                     <Phone className="w-3 h-3 text-emerald-600" />
                     <span>WhatsApp Khusus:</span>
                   </span>
-                  <span className="font-mono font-bold text-slate-900">
+                  <span className="tabular-nums font-bold text-slate-900">
                     {busdev.formattedPhone || busdev.phone}
                   </span>
                 </div>
@@ -189,7 +189,7 @@ export const BusDevManager: React.FC<BusDevManagerProps> = ({
               </div>
 
               {/* Stats Footer */}
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-mono">
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs tabular-nums">
                 <span className="text-slate-500">Leads Aktif:</span>
                 <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
                   {assignedCount} Leads

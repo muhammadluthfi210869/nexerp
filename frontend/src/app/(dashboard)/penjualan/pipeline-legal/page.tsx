@@ -20,14 +20,20 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { 
+import {
   DnaDataTableCard,
-  DnaBadge, 
+  DnaBadge,
   DnaButton,
   DnaInput,
   DnaModal,
   DnaSelect,
   DnaCell,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 export default function RegulatoryPipelinePage() {
@@ -66,12 +72,12 @@ export default function RegulatoryPipelinePage() {
 
   const getDnaStageBadge = (stage: string) => {
     switch (stage) {
-      case "DRAFT": return <DnaBadge status="default">DRAFT</DnaBadge>;
-      case "SUBMITTED": return <DnaBadge status="info">SUBMITTED</DnaBadge>;
-      case "EVALUATION": return <DnaBadge status="warning">EVALUATION</DnaBadge>;
-      case "REVISION": return <DnaBadge status="critical">REVISION</DnaBadge>;
-      case "PUBLISHED": return <DnaBadge status="success">PUBLISHED</DnaBadge>;
-      default: return <DnaBadge status="default">{stage}</DnaBadge>;
+      case "DRAFT": return <DnaBadge variant="default">DRAFT</DnaBadge>;
+      case "SUBMITTED": return <DnaBadge variant="info">SUBMITTED</DnaBadge>;
+      case "EVALUATION": return <DnaBadge variant="warning">EVALUATION</DnaBadge>;
+      case "REVISION": return <DnaBadge variant="critical">REVISION</DnaBadge>;
+      case "PUBLISHED": return <DnaBadge variant="success">PUBLISHED</DnaBadge>;
+      default: return <DnaBadge variant="default">{stage}</DnaBadge>;
     }
   };
 
@@ -113,41 +119,41 @@ export default function RegulatoryPipelinePage() {
           }
         >
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">PROJECT IDENTITY</th>
-                  <th className="px-4 py-4 text-center text-table-header text-slate-400 uppercase tracking-widest">LIFECYCLE STAGE</th>
-                  <th className="px-4 py-4 text-center text-table-header text-slate-400 uppercase tracking-widest">SMART-GATES</th>
-                  <th className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">PIC & CLIENT</th>
-                  <th className="px-4 py-4 text-right text-table-header text-slate-400 uppercase tracking-widest">OPERATION</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="bg-slate-50/50 border-b border-slate-100">
+                  <DnaTh className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">PROJECT IDENTITY</DnaTh>
+                  <DnaTh className="px-4 py-4 text-center text-table-header text-slate-400 uppercase tracking-widest">LIFECYCLE STAGE</DnaTh>
+                  <DnaTh className="px-4 py-4 text-center text-table-header text-slate-400 uppercase tracking-widest">SMART-GATES</DnaTh>
+                  <DnaTh className="px-4 py-4 text-left text-table-header text-slate-400 uppercase tracking-widest">PIC & CLIENT</DnaTh>
+                  <DnaTh className="px-4 py-4 text-right text-table-header text-slate-400 uppercase tracking-widest">OPERATION</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <DnaTableRow>
+                    <DnaTd colSpan={5} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       Syncing regulatory pipeline...
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : !pipelines || pipelines.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <DnaTableRow>
+                    <DnaTd colSpan={5} className="px-4 py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       Tidak ada proyek registrasi ditemukan
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ) : (
                   <AnimatePresence mode="popLayout">
                     {pipelines.map((pipe: any) => (
-                      <tr key={pipe.id} className="group hover:bg-slate-50/50 transition-all cursor-default">
-                        <td className="px-4 py-3">
+                      <DnaTableRow key={pipe.id} className="group hover:bg-slate-50/50 transition-all cursor-default">
+                        <DnaTd className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shrink-0">
                               <ShieldCheck className="w-4.5 h-4.5" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2 mb-1">
-                                <DnaBadge status="info">{pipe.type}</DnaBadge>
+                                <DnaBadge variant="info">{pipe.type}</DnaBadge>
                                 <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tight leading-none">{pipe.registrationNo || "PENDING"}</span>
                               </div>
                               <h4 className="text-[11px] font-black italic tracking-tight text-slate-900 uppercase group-hover:text-blue-600 transition-colors leading-none">
@@ -155,14 +161,14 @@ export default function RegulatoryPipelinePage() {
                               </h4>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 text-center">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-3 text-center">
                           {getDnaStageBadge(pipe.currentStage)}
                           <div className="mt-1 flex items-center justify-center gap-1 text-[8px] font-bold text-slate-300 uppercase leading-none">
                             <Clock className="w-3.5 h-3.5" /> {pipe.daysInStage} Days
                           </div>
-                        </td>
-                        <td className="px-4 py-3">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-3">
                           <div className="flex items-center justify-center gap-3">
                             <div className={cn(
                               "h-8 w-8 rounded-lg flex items-center justify-center border shrink-0 transition-colors",
@@ -183,8 +189,8 @@ export default function RegulatoryPipelinePage() {
                               <Zap className="w-4 h-4" />
                             </div>
                           </div>
-                        </td>
-                        <td className="px-4 py-3">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-3">
                           <div className="flex flex-col gap-1">
                             <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight leading-none">PIC: {pipe.legalPIC?.name || "Unassigned"}</span>
                             <div className="flex items-center gap-1.5 text-slate-400">
@@ -192,8 +198,8 @@ export default function RegulatoryPipelinePage() {
                               <span className="text-[9px] font-bold uppercase truncate max-w-[120px] leading-none">{pipe.lead?.clientName}</span>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 text-right">
+                        </DnaTd>
+                        <DnaTd className="px-4 py-3 text-right">
                           <div className="flex justify-end gap-1.5">
                             <DnaSelect
                               value=""
@@ -209,13 +215,13 @@ export default function RegulatoryPipelinePage() {
                               onClick={() => setSelectedPipeline(pipe)}
                             />
                           </div>
-                        </td>
-                      </tr>
+                        </DnaTd>
+                      </DnaTableRow>
                     ))}
                   </AnimatePresence>
                 )}
-              </tbody>
-            </table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </DnaDataTableCard>
       </div>
@@ -236,7 +242,7 @@ export default function RegulatoryPipelinePage() {
               </div>
               <div className="pb-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <DnaBadge status="info">{log.stage}</DnaBadge>
+                  <DnaBadge variant="info">{log.stage}</DnaBadge>
                   <span className="text-[8px] font-bold text-slate-300 uppercase leading-none">{new Date(log.date).toLocaleString()}</span>
                 </div>
                 <p className="text-xs font-bold text-slate-500 italic uppercase">{log.notes}</p>

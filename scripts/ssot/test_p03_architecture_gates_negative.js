@@ -67,7 +67,9 @@ try {
   {
     const fakeCi = path.join(tempSandbox, 'ci_no_migration.yml');
     const ciContent = fs.readFileSync(path.join(ROOT, '.github/workflows/ci.yml'), 'utf8')
-      .replace(/prisma migrate deploy/g, 'echo no migration');
+      // Strip both spellings: the direct CLI form and the backend npm script.
+      .replace(/prisma:migrate:deploy|prisma migrate deploy/g, 'echo no migration')
+      .replace(/prisma:validate|prisma validate/g, 'echo no validate');
     fs.writeFileSync(fakeCi, ciContent, 'utf8');
     const res = analyzers.checkCiRequiredChecks(ROOT, { ciFile: fakeCi });
     assert(!res.pass && res.error.includes('migration'),

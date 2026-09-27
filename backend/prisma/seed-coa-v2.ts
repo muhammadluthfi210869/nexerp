@@ -20,6 +20,7 @@ async function main() {
     // 1. ASET (1000)
     { code: '1100', name: 'Kas & Bank (Aset Lancar)', type: AccountType.ASSET, normalBalance: NormalBalance.DEBIT, reportGroup: 'CURRENT_ASSET' },
     { code: '1101', name: 'Kas Kecil (Petty Cash) Pabrik', type: AccountType.ASSET, normalBalance: NormalBalance.DEBIT, reportGroup: 'CURRENT_ASSET' },
+    { code: '1108', name: 'Uang Muka Pajak PPh 23', type: AccountType.ASSET, normalBalance: NormalBalance.DEBIT, reportGroup: 'CURRENT_ASSET' },
     { code: '1110', name: 'Bank BCA (Operasional)', type: AccountType.ASSET, normalBalance: NormalBalance.DEBIT, reportGroup: 'CURRENT_ASSET' },
     { code: '1111', name: 'Bank Mandiri (Penerimaan Klien)', type: AccountType.ASSET, normalBalance: NormalBalance.DEBIT, reportGroup: 'CURRENT_ASSET' },
     { code: '1200', name: 'Piutang (Tagihan ke Pihak Luar)', type: AccountType.ASSET, normalBalance: NormalBalance.DEBIT, reportGroup: 'CURRENT_ASSET' },
@@ -30,6 +31,7 @@ async function main() {
     { code: '1302', name: 'Persediaan Kemasan', type: AccountType.ASSET, normalBalance: NormalBalance.DEBIT, reportGroup: 'CURRENT_ASSET' },
     { code: '1303', name: 'Persediaan Barang Dalam Proses (WIP)', type: AccountType.ASSET, normalBalance: NormalBalance.DEBIT, reportGroup: 'CURRENT_ASSET' },
     { code: '1304', name: 'Persediaan Barang Jadi (FG)', type: AccountType.ASSET, normalBalance: NormalBalance.DEBIT, reportGroup: 'CURRENT_ASSET' },
+    { code: '1310', name: 'Akumulasi Penyusutan Aset Tetap', type: AccountType.ASSET, normalBalance: NormalBalance.CREDIT, reportGroup: 'FIXED_ASSET' },
     { code: '1400', name: 'Aset Pajak & Uang Muka', type: AccountType.ASSET, normalBalance: NormalBalance.DEBIT, reportGroup: 'CURRENT_ASSET' },
     { code: '1401', name: 'PPN Masukan (Input Tax)', type: AccountType.ASSET, normalBalance: NormalBalance.DEBIT, reportGroup: 'CURRENT_ASSET' },
     { code: '1402', name: 'Uang Muka Pembelian (Advance)', type: AccountType.ASSET, normalBalance: NormalBalance.DEBIT, reportGroup: 'CURRENT_ASSET' },
@@ -53,6 +55,7 @@ async function main() {
     { code: '3300', name: 'Laba Tahun Berjalan', type: AccountType.EQUITY, normalBalance: NormalBalance.CREDIT, reportGroup: 'EQUITY' },
 
     // 4. PENDAPATAN (4000)
+    { code: '4001', name: 'Pendapatan Usaha Penjualan Maklon', type: AccountType.REVENUE, normalBalance: NormalBalance.CREDIT, reportGroup: 'OPERATING_REVENUE' },
     { code: '4100', name: 'Pendapatan Operasional', type: AccountType.REVENUE, normalBalance: NormalBalance.CREDIT, reportGroup: 'OPERATING_REVENUE' },
     { code: '4101', name: 'Pendapatan Penjualan Maklon', type: AccountType.REVENUE, normalBalance: NormalBalance.CREDIT, reportGroup: 'OPERATING_REVENUE' },
     { code: '4102', name: 'Pendapatan Pembuatan Sampel', type: AccountType.REVENUE, normalBalance: NormalBalance.CREDIT, reportGroup: 'OPERATING_REVENUE' },
@@ -66,6 +69,7 @@ async function main() {
     { code: '5200', name: 'Biaya Overhead Pabrik (BOP)', type: AccountType.EXPENSE, normalBalance: NormalBalance.DEBIT, reportGroup: 'COGS' },
     { code: '5201', name: 'Penyusutan Mesin Produksi', type: AccountType.EXPENSE, normalBalance: NormalBalance.DEBIT, reportGroup: 'COGS' },
     { code: '5202', name: 'Listrik Pabrik & Air RO', type: AccountType.EXPENSE, normalBalance: NormalBalance.DEBIT, reportGroup: 'COGS' },
+    { code: '5210', name: 'Beban Penyusutan Aset Produksi', type: AccountType.EXPENSE, normalBalance: NormalBalance.DEBIT, reportGroup: 'COGS' },
 
     // 6. BEBAN OPERASIONAL (6000)
     { code: '6100', name: 'Beban Penjualan & Pemasaran', type: AccountType.EXPENSE, normalBalance: NormalBalance.DEBIT, reportGroup: 'OPEX' },

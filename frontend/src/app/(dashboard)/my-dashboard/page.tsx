@@ -1,11 +1,9 @@
 "use client";
 
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { KpiCard } from "@/components/dna/KpiCard";
-import { SectionLabel } from "@/components/dna/SectionLabel";
+import { KpiCard, SectionLabel } from "@/components/dna";
 import { Users, CheckCircle2, AlertTriangle, ClipboardCheck, Briefcase } from "lucide-react";
 
 export default function MyDashboardPage() {

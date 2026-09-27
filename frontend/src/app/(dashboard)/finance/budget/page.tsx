@@ -1,225 +1,217 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import React, { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   DnaPageContainer,
   DnaPageHeader,
   DnaStatCard,
   DnaKpiGrid,
   DnaDataTableCard,
-  DnaButton,
   DnaBadge,
-  DnaCell,
-  DnaCrudModal,
+  DnaEmptyState,
+  DnaErrorState,
+  DnaLoadingSkeleton,
   DnaInput,
-  DnaCurrencyInput,
   formatRupiah,
-  useDnaToast,
 } from "@/components/dna";
 import { DnaTable } from "@/components/dna";
-import { Plus, PieChart, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { PieChart, TrendingUp, AlertTriangle, Info } from "lucide-react";
 
-interface DepartmentBudget {
+interface ExpenseLine {
   id: string;
-  department: string;
-  year: number;
-  allocatedBudget: number;
-  actualSpent: number;
-  committedAmount: number;
-  variance: number;
-  utilizationRate: number;
+  code: string;
+  name: string;
+  debit: number;
+  credit: number;
+  actual: number;
 }
 
-const SAMPLE_BUDGETS: DepartmentBudget[] = [
-  { id: "b-1", department: "R&D Formulasi & Uji Lab", year: 2026, allocatedBudget: 350000000, actualSpent: 185000000, committedAmount: 45000000, variance: 120000000, utilizationRate: 65.7 },
-  { id: "b-2", department: "Operasional Pabrik & Maintenance", year: 2026, allocatedBudget: 750000000, actualSpent: 520000000, committedAmount: 80000000, variance: 150000000, utilizationRate: 80.0 },
-  { id: "b-3", department: "Digital Marketing & Ads Spend", year: 2026, allocatedBudget: 400000000, actualSpent: 310000000, committedAmount: 50000000, variance: 40000000, utilizationRate: 90.0 },
-  { id: "b-4", department: "Supply Chain & Logistik", year: 2026, allocatedBudget: 250000000, actualSpent: 120000000, committedAmount: 30000000, variance: 100000000, utilizationRate: 60.0 },
-  { id: "b-5", department: "HRD & Rekrutmen Pabrik", year: 2026, allocatedBudget: 180000000, actualSpent: 95000000, committedAmount: 15000000, variance: 70000000, utilizationRate: 61.1 },
-];
+const monthStartISO = (year: number, month: number) =>
+  new Date(Date.UTC(year, month - 1, 1)).toISOString().slice(0, 10);
+
+const monthEndISO = (year: number, month: number) =>
+  new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10);
 
 function BudgetManagementContent() {
-  const searchParams = useSearchParams();
-  const toast = useDnaToast();
-  const [budgets, setBudgets] = useState<DepartmentBudget[]>(SAMPLE_BUDGETS);
-  const [selectedYear, setSelectedYear] = useState(2026);
-  const [isModalOpen, setIsModalOpen] = useState(searchParams.get("action") === "create");
+  const now = new Date();
+  const [period, setPeriod] = useState({
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+  });
 
-  // Form State for New Budget Allocation
-  const [formDepartment, setFormDepartment] = useState("");
-  const [formYear, setFormYear] = useState(2026);
-  const [formAllocated, setFormAllocated] = useState(0);
+  const { year, month } = period;
+  const startDate = monthStartISO(year, month);
+  const endDate = monthEndISO(year, month);
 
-  const totalAllocated = budgets.reduce((acc, b) => acc + b.allocatedBudget, 0);
-  const totalSpent = budgets.reduce((acc, b) => acc + b.actualSpent, 0);
-  const totalVariance = totalAllocated - totalSpent;
-  const overallUtil = totalAllocated > 0 ? (totalSpent / totalAllocated) * 100 : 0;
+  // Realized expenses come from the live trial balance (journal lines in the
+  // selected period). The pagu/budget figure has no backend source yet, so it
+  // is reported as unavailable instead of invented.
+  const {
+    data: lines,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery<ExpenseLine[]>({
+    queryKey: ["finance-budget-trial-balance", year, month],
+    queryFn: async () => {
+      const res = await api.get("/finance/reports/trial-balance", {
+        params: { startDate, endDate },
+      });
+      const body = unwrapResponse<any>(res);
+      const rows: any[] = Array.isArray(body) ? body : (body?.data ?? []);
+      return rows
+        .filter((a) => a.type === "EXPENSE")
+        .map((a) => {
+          const debit = Number(a.totalDebit || 0);
+          const credit = Number(a.totalCredit || 0);
+          return {
+            id: a.id,
+            code: a.code,
+            name: a.name,
+            debit,
+            credit,
+            actual: debit - credit,
+          };
+        })
+        .filter((a) => a.debit !== 0 || a.credit !== 0);
+    },
+  });
 
-  const handleCreateBudget = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!formDepartment.trim() || formAllocated <= 0) {
-      toast.error("Validasi Gagal", "Departemen dan Pagu Anggaran wajib diisi dengan benar.");
-      return;
-    }
-    const newBudget: DepartmentBudget = {
-      id: `b-${Date.now()}`,
-      department: formDepartment,
-      year: formYear,
-      allocatedBudget: formAllocated,
-      actualSpent: 0,
-      committedAmount: 0,
-      variance: formAllocated,
-      utilizationRate: 0,
-    };
-    setBudgets([newBudget, ...budgets]);
-    toast.success("Anggaran Disimpan", `Pagu anggaran untuk ${newBudget.department} berhasil ditetapkan.`);
-    setIsModalOpen(false);
-    setFormDepartment("");
-    setFormAllocated(0);
-  };
+  const rows = useMemo(
+    () => [...(lines ?? [])].sort((a, b) => b.actual - a.actual),
+    [lines],
+  );
+  const totalActual = rows.reduce((acc, r) => acc + r.actual, 0);
+  const overTolerance = rows.filter((r) => r.actual < 0).length;
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
-        title="Anggaran Departemen & Budget vs Actual"
-        subtitle="Penetapan pagu anggaran tahunan per divisi dan pengendalian penyerapan biaya real-time"
+        title="Realisasi Beban per Akun (Budget vs Actual)"
+        subtitle="Realisasi biaya aktual per akun beban dari jurnal periode terpilih. Pagu anggaran per departemen belum tersedia di sistem."
         breadcrumbs={[{ label: "Finance", href: "/finance/dashboard" }, { label: "Budgeting" }]}
         actions={
-          <DnaButton variant="primary" onClick={() => setIsModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-1.5" /> + Alokasi Anggaran Baru
-          </DnaButton>
+          <div className="flex items-end gap-2">
+            <div className="w-24">
+              <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Bulan</label>
+              <DnaInput
+                type="number"
+                min={1}
+                max={12}
+                value={month}
+                onChange={(e) =>
+                  setPeriod((p) => ({ ...p, month: Math.min(12, Math.max(1, Number(e.target.value) || 1)) }))
+                }
+              />
+            </div>
+            <div className="w-28">
+              <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Tahun</label>
+              <DnaInput
+                type="number"
+                value={year}
+                onChange={(e) => setPeriod((p) => ({ ...p, year: Number(e.target.value) || p.year }))}
+              />
+            </div>
+          </div>
         }
       />
 
       <DnaKpiGrid cols={4}>
         <DnaStatCard
           label="Total Pagu Anggaran Tahunan"
-          value={formatRupiah(totalAllocated)}
-          variant="blue"
+          value="Belum tersedia"
+          variant="slate"
           icon={<PieChart className="h-4 w-4" />}
-          delta={{ value: `Tahun Anggaran ${selectedYear}`, isPositive: true }}
+          delta={{ value: "Belum ada sumber data pagu di backend", isPositive: false }}
         />
         <DnaStatCard
-          label="Realisasi Biaya Aktual (Spent)"
-          value={formatRupiah(totalSpent)}
+          label="Realisasi Biaya Aktual (Periode)"
+          value={isLoading ? "…" : formatRupiah(totalActual)}
           variant="amber"
           icon={<TrendingUp className="h-4 w-4" />}
-          delta={{ value: `${overallUtil.toFixed(1)}% Terserap`, isPositive: true }}
+          delta={{ value: `${startDate} s/d ${endDate}`, isPositive: true }}
         />
         <DnaStatCard
-          label="Sisa Pagu Anggaran (Variance)"
-          value={formatRupiah(totalVariance)}
-          variant="emerald"
-          icon={<CheckCircle2 className="h-4 w-4" />}
-          delta={{ value: "Saldo Aman Tersedia", isPositive: true }}
+          label="Akun Beban Bergerak"
+          value={`${rows.length} Akun`}
+          variant="blue"
+          icon={<PieChart className="h-4 w-4" />}
+          delta={{ value: "Dari jurnal periode terpilih", isPositive: true }}
         />
         <DnaStatCard
-          label="Status Kontrol Anggaran"
-          value={overallUtil < 85 ? "ON TRACK" : "ALERT TINGGI"}
-          variant={overallUtil < 85 ? "emerald" : "danger"}
+          label="Akun dengan Saldo Terbalik"
+          value={`${overTolerance} Akun`}
+          variant={overTolerance > 0 ? "danger" : "emerald"}
           icon={<AlertTriangle className="h-4 w-4" />}
-          delta={{ value: "Tidak Ada Over-Budget", isPositive: true }}
+          delta={{ value: overTolerance > 0 ? "Perlu koreksi jurnal" : "Tidak ada anomali", isPositive: overTolerance === 0 }}
         />
       </DnaKpiGrid>
 
-      <DnaDataTableCard title="Tabel Pengawasan Realisasi Anggaran per Departemen">
-        <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left text-[12px]">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
-              <tr>
-                <th className="px-4 py-3">Departemen / Divisi</th>
-                <th className="px-4 py-3 text-right">Pagu Anggaran</th>
-                <th className="px-4 py-3 text-right">Realisasi Aktual</th>
-                <th className="px-4 py-3 text-right">Komitmen PO</th>
-                <th className="px-4 py-3 text-right">Sisa Anggaran</th>
-                <th className="px-4 py-3">Penyerapan (%)</th>
-                <th className="px-4 py-3 text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {budgets.map((b) => (
-                <tr key={b.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3 font-semibold text-slate-900">{b.department}</td>
-                  <td className="px-4 py-3 text-right font-mono text-slate-900">{formatRupiah(b.allocatedBudget)}</td>
-                  <td className="px-4 py-3 text-right font-mono font-medium text-amber-700">{formatRupiah(b.actualSpent)}</td>
-                  <td className="px-4 py-3 text-right font-mono text-slate-500">{formatRupiah(b.committedAmount)}</td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-emerald-700">{formatRupiah(b.variance)}</td>
-                  <td className="px-4 py-3">
-                    <div className="w-36 space-y-1">
-                      <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-                        <span>{b.utilizationRate}%</span>
-                        <span>100%</span>
-                      </div>
-                      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${
-                            b.utilizationRate > 85 ? "bg-rose-500" : b.utilizationRate > 70 ? "bg-amber-500" : "bg-emerald-500"
-                          }`}
-                          style={{ width: `${Math.min(b.utilizationRate, 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <DnaBadge variant={b.utilizationRate > 85 ? "danger" : b.utilizationRate > 70 ? "amber" : "emerald"}>
-                      {b.utilizationRate > 85 ? "Mendekati Batas" : "Normal"}
-                    </DnaBadge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </DnaTable>
-        </div>
-      </DnaDataTableCard>
+      <div className="flex items-start gap-2 rounded-xl border border-blue-100 bg-blue-50/40 px-4 py-3 text-[11px] text-blue-800">
+        <Info className="h-4 w-4 shrink-0 mt-0.5" />
+        <span>
+          Kolom <strong>Pagu Anggaran</strong> dikosongkan karena backend belum menyimpan master anggaran
+          departemen. Angka realisasi di bawah ini berasal dari jurnal akuntansi yang sudah diposting.
+        </span>
+      </div>
 
-      {/* Modal Alokasi Anggaran Baru */}
-      <DnaCrudModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Alokasi Pagu Anggaran Baru"
-        subtitle="Tetapkan pagu belanja dan alokasi modal kerja departemen untuk tahun anggaran aktif"
-        onSave={() => handleCreateBudget()}
-        saveText="Simpan Pagu Anggaran"
-        size="md"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Departemen / Divisi *</label>
-            <DnaInput
-              placeholder="Contoh: Digital Marketing & Ads Spend"
-              value={formDepartment}
-              onChange={(e) => setFormDepartment(e.target.value)}
-              required
-            />
+      <DnaDataTableCard title="Tabel Realisasi Beban per Akun (GL)">
+        {isLoading ? (
+          <DnaLoadingSkeleton rows={5} />
+        ) : isError ? (
+          <DnaErrorState
+            title="Gagal Memuat Realisasi Beban"
+            message="Tidak dapat mengambil neraca saldo dari server. Periksa koneksi lalu coba lagi."
+            onRetry={() => refetch()}
+          />
+        ) : rows.length === 0 ? (
+          <DnaEmptyState
+            title="Belum Ada Realisasi Beban"
+            description={`Tidak ditemukan jurnal beban pada periode ${startDate} s/d ${endDate}.`}
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <DnaTable className="w-full text-left text-[12px]">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
+                <tr>
+                  <th className="px-4 py-3">Akun Beban (CoA)</th>
+                  <th className="px-4 py-3 text-right">Pagu Anggaran</th>
+                  <th className="px-4 py-3 text-right">Realisasi Aktual</th>
+                  <th className="px-4 py-3 text-right">Sisa Anggaran</th>
+                  <th className="px-4 py-3 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {rows.map((b) => (
+                  <tr key={b.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="font-semibold text-slate-900">{b.name}</div>
+                      <div className="text-[11px] text-slate-400 tabular-nums">{b.code}</div>
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-400">— belum tersedia</td>
+                    <td className="px-4 py-3 text-right tabular-nums font-medium text-amber-700">
+                      {formatRupiah(b.actual)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-400">—</td>
+                    <td className="px-4 py-3 text-center">
+                      <DnaBadge variant={b.actual < 0 ? "danger" : "emerald"}>
+                        {b.actual < 0 ? "Saldo Terbalik" : "Normal"}
+                      </DnaBadge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </DnaTable>
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Tahun Anggaran</label>
-            <DnaInput
-              type="number"
-              value={formYear}
-              onChange={(e) => setFormYear(Number(e.target.value))}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Pagu Anggaran Disetujui (Rp) *</label>
-            <DnaCurrencyInput
-              value={formAllocated}
-              onChange={(val) => setFormAllocated(val || 0)}
-              required
-            />
-          </div>
-        </div>
-      </DnaCrudModal>
+        )}
+      </DnaDataTableCard>
     </DnaPageContainer>
   );
 }
 
 export default function BudgetManagementPage() {
-  return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400">Memuat Anggaran Departemen...</div>}>
-      <BudgetManagementContent />
-    </Suspense>
-  );
+  return <BudgetManagementContent />;
 }

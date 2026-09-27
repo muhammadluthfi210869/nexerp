@@ -1,3 +1,7 @@
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { RolesGuard } from '../../auth/roles.guard';
+import { Roles } from '../../auth/roles.decorator';
+import { UserRole } from '@prisma/client';
 import {
   Controller,
   Get,
@@ -6,14 +10,21 @@ import {
   Body,
   Query,
   Req,
-  BadRequestException,
-} from '@nestjs/common';
+  BadRequestException, UseGuards } from '@nestjs/common';
 import { AssetDisposalsService } from './asset-disposals.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateAssetDisposalDto } from './dto/asset-disposals.dto';
 
 @ApiTags('finance/asset-disposals')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(
+  UserRole.SUPER_ADMIN,
+  UserRole.ADMIN,
+  UserRole.FINANCE,
+  UserRole.DIRECTOR,
+  UserRole.HEAD_OPS,
+)
 @Controller('finance/asset-disposals')
 export class AssetDisposalsController {
   constructor(private service: AssetDisposalsService) {}

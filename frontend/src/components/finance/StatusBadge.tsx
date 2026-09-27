@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/dna";
 import { cn } from "@/lib/utils";
 
 interface StatusBadgeProps {

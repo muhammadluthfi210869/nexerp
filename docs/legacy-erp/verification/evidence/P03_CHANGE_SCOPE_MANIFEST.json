@@ -1,9 +1,9 @@
 {
   "manifest_version": "1.0.0",
-  "generated_at": "2026-09-18T06:15:29.019Z",
+  "generated_at": "2026-09-26T16:43:25.645Z",
   "base_commit_sha": "9229478d4d0f037ddb269fc3d5e7fc7e0dd796fb",
-  "candidate_commit_sha": "cf8b725d9fec4c808937c50217a3bc45050d271a",
-  "total_changed_paths": 93,
+  "candidate_commit_sha": "5de307dbb9bae51d3906828a62ede079388ae87c",
+  "total_changed_paths": 1228,
   "paths": [
     {
       "path": ".github/PULL_REQUEST_TEMPLATE/ssot-change.md",
@@ -11,6 +11,34 @@
     },
     {
       "path": ".github/workflows/ci.yml",
+      "applicable_analyzers": []
+    },
+    {
+      "path": ".gitignore",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "AGENTS.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "RUNBOOK.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/.env.example",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/Dockerfile",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/Dockerfile.self-qr",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/init-db.sh",
       "applicable_analyzers": []
     },
     {
@@ -22,7 +50,127 @@
       "applicable_analyzers": []
     },
     {
+      "path": "backend/prisma.config.ts",
+      "applicable_analyzers": []
+    },
+    {
       "path": "backend/prisma/diff_p04.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260918120000_p04_deduplicate_slug_indexes/down.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260918120000_p04_deduplicate_slug_indexes/migration.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260918_p05_platform_controls/down.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260918_p05_platform_controls/migration.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260919120000_p06_import_idempotency/migration.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260920120000_p07_tenant_isolation/down.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260920120000_p07_tenant_isolation/migration.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260920130000_p08_design_feedback_version/down.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260920130000_p08_design_feedback_version/migration.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260921120000_p09_commercial_controls/migration.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260921140000_p10_procurement_controls/migration.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260926100000_user_tenant_binding/migration.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/migrations/20260926110000_fase2_ledger_indexes/migration.sql",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/auth.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/bussdev.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/creative.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/enums.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/finance-extension.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/finance.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/hr.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/marketing.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/master-extension.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/platform-controls.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/self-qr.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/system.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/warehouse.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/schema/website.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/seed-coa-v2.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/seed-fase1-master.js",
       "applicable_analyzers": []
     },
     {
@@ -50,7 +198,1615 @@
       "applicable_analyzers": []
     },
     {
+      "path": "backend/prisma/seed-golden-showcase.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/seed-master-data.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/prisma/seed.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/scripts/apply-p09-migration.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/scripts/apply-p10-migration.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/scripts/apply-p15-migration.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/scripts/check-coa-codes.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/scripts/generate-swagger.ts",
+      "applicable_analyzers": []
+    },
+    {
       "path": "backend/scripts/prepare-p04-migration.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/app.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/common/helpers/best-effort.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/main.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/metadata.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/activity-log/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/activity-log/__tests__/activity-log.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/activity-stream/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/activity-stream/__tests__/activity-stream.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/activity-stream/activity-stream.listener.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/activity-stream/activity-stream.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/analytics/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/analytics/__tests__/analytics.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/analytics/services/analytics.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/auth/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/auth/__tests__/auth.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/auth/auth.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/auth/auth.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/auth/auth.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/auth/jwt.strategy.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/auth/roles.guard.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/bussdev/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/bussdev/__tests__/bussdev.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/bussdev/bussdev.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/bussdev/bussdev.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/bussdev/bussdev.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/bussdev/bussdev.service.ts.tmp",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/bussdev/dto/create-lead.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/bussdev/returns/dto/create-return.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/bussdev/returns/returns.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/bussdev/services/lead.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/__tests__/commercial.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/commercial.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/controllers/invoices.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/controllers/sales-down-payments.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/controllers/sales-orders.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/dto/amend-sales-order.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/dto/create-invoice.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/dto/create-payment.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/dto/create-sales-dp.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/dto/create-sales-order.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/services/invoices.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/services/payments.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/services/sales-down-payments.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/commercial/services/sales-orders.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/communication/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/communication/__tests__/communication.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/communication/communication.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/communication/communication.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/communication/entity-communication.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/creative/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/creative/__tests__/creative.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/creative/creative.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/creative/creative.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/creative/dto/apj-review.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/creative/dto/client-review.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/creative/dto/unlock-task.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/crm/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/crm/__tests__/crm.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/crm/busdevs/busdevs.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/crm/crm.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/crm/dto/update-display-name.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/crm/dto/update-stage.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/crm/guestbook/guestbook.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/crm/guestbook/guestbook.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/crm/kpi/kpi.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/crm/kpi/kpi.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/crm/leads/leads.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/crm/leads/leads.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/dashboards/dashboards.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/dashboards/dashboards.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/dashboards/dashboards.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/digimar/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/digimar/__tests__/digimar.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/document-automation/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/document-automation/__tests__/document-automation.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/document-automation/services/document-automation.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/document-automation/services/pdf-engine.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/events/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/events/__tests__/events.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/executive/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/executive/__tests__/executive.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/executive/executive.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/executive/executive.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/executive/executive.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/executive/reports.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/executive/reports.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/files/files.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/files/files.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/files/files.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/finance/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/finance/bills/bills.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/finance/cash.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/finance/dto/cash.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/finance/finance-report.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/finance/finance.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/finance/finance.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/finance/finance.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/finance/fixed-assets/fixed-assets.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/finance/job-order-costings/job-order-costings.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/floor-execution/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/floor-execution/__tests__/floor-execution.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/fulfillment/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/fulfillment/__tests__/fulfillment.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/fulfillment/dto/shipment.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/fulfillment/services/shipments.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/guests/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/guests/__tests__/guests.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/hr/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/hr/__tests__/hr.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/hr/dto/create-employee.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/hr/hr.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/hr/hr.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/hr/hr.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/hr/tickets/tickets.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/kpi/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/kpi/__tests__/kpi.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/kpi/kpi-governance.registry.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/kpi/kpi.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/kpi/kpi.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/kpi/kpi.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/lead-capture/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/lead-capture/auto-greet.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/lead-capture/lead-capture.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/lead-capture/lead-capture.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/lead-capture/lead-validation.events.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/legality/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/legality/__tests__/legality.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/legality/legality.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/legality/legality.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/legality/legality.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/logistics/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/logistics/__tests__/logistics.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/marketing/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/marketing/canonical/canonical-marketing.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/marketing/landing-tracker.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/marketing/marketing-command.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/marketing/marketing.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/marketing/marketing/marketing.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/marketing/omni-crm/omni-crm-state.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/marketing/omni-crm/omni-crm-state.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/__tests__/master.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/controllers/categories.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/controllers/customers.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/controllers/divisions.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/controllers/materials.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/controllers/personnel.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/controllers/suppliers.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/controllers/system-config.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/controllers/units.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/controllers/warehouses.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/dto/import-export.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/dto/supplier.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/dto/warehouse-access.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/master.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/services/categories.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/services/customers.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/services/divisions.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/services/import-export.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/services/personnel.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/services/suppliers.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/services/system-config.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/master/services/warehouses.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/my-dashboard/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/my-dashboard/__tests__/my-dashboard.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/notification/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/notification/__tests__/notification.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/notification/notification.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/notification/notification.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/notification/notification.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/production-planning/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/production-planning/__tests__/production-planning.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/production-planning/services/production-plans.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/production/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/production/__tests__/production.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/production/production-analytics.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/production/production.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/production/production.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/production/production.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/qc/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/qc/controllers/qc-checklists.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/qc/controllers/qc.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/qc/dto/create-audit.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/qc/qc.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/qc/services/qc-audits.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/qc/services/qc-checklists.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/qc/services/qc-release.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/qc/services/qc-traceability.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/reports/dto/report-query.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/reports/reports.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/reports/reports.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/reports/services/financial-reports.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/reports/services/operational-reports.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/rnd/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/rnd/__tests__/rnd.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/rnd/formulas/formulas.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/rnd/formulas/formulas.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/rnd/npf/npf.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/rnd/rnd.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/rnd/rnd.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/rnd/samples/samples.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/controllers/goods-requirement.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/controllers/inbounds.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/controllers/materials.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/controllers/purchase-invoices.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/controllers/purchase-orders.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/controllers/purchase-payments.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/controllers/purchase-requests.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/controllers/purchase-returns.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/dto/create-po.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/dto/inbound.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/dto/purchase-invoice.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/dto/purchase-payment.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/dto/purchase-request.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/dto/purchase-return.dto.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/scm.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/services/goods-requirement.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/services/inbounds.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/services/purchase-invoices.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/services/purchase-orders.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/services/purchase-payments.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/services/purchase-requests.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/scm/services/purchase-returns.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/system/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/system/communication-protocol/communication-protocol.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/system/services/error-aggregation.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/system/system.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/system/system.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/todo/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/todo/__tests__/todo.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/users/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/users/__tests__/users.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/__tests__/collector-public-boundary.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/__tests__/dedup-key.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/__tests__/getMessage-callback.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/__tests__/identity-resolver.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/__tests__/internal-device-protection.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/__tests__/message-classifier.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/__tests__/phone-normalizer.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/collector.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/connect-page.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/coverage.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/dedup-key.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/identity-resolver.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/internal-device-protection.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/message-classifier.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/phone-normalizer.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/sales-device-manager.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/self-qr.types.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/storage.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/wa-self-qr.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/wa-self-qr.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-self-qr/whatsapp-webjs-transport.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-webhook/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-webhook/wa-webhook.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/wa-webhook/wa-webhook.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/warehouse/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/warehouse/services/stock-intelligence.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/warehouse/warehouse.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/modules/warehouse/warehouse.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/approval/approval.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/approval/decision.controller.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/audit/audit.interceptor.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/audit/audit.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/auth/mfa.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/auth/session.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/communication/acl.adapter.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/config/OWNER.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/config/__tests__/config.module.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/config/config.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/errors/error.factory.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/errors/error.filter.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/index.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/outbox/outbox.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/platform.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/policy/policy.guard.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/policy/policy.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/scope/scope.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/tenant/tenant.context.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/tenant/tenant.interceptor.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/platform/tenant/tenant.middleware.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/prisma/prisma.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/prisma/prisma/prisma.service.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/self-qr-app.module.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/self-qr.main.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/types/qrcode.d.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/src/types/whatsapp-web.js.d.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/swagger-spec.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/__mocks__/qrcode.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/__mocks__/whatsapp-web.js.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/document-automation/unit/pdf-engine.service.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/finance/auto-journal-balance.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/finance/coa-seed-integrity.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/integration/bridges/bridge-1-commercial.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/integration/bridges/bridge-2-sales-finance.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/integration/bridges/bridge-3-procurement-valuation.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/integration/bridges/bridge-4-production-costing.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/integration/bridges/bridge-5-qc-copq.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/integration/bridges/bridge-6-closing-hardlock.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/integration/bridges/bridge-harness.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/integration/cumulative-p15-checkpoint.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/jest-e2e.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/jest-self-qr.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/jest-unit.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/master/master-active-route-order.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/master/master-governed-import.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p07/p07-http-closure.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p08/p08-golden-thread.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p08/p08-http-harness.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p08/p08-s1-sample-http.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p08/p08-s2-formulation.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p08/p08-s3-release.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p09/p09-golden-thread.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p09/p09-http-harness.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p09/p09-s1-sales-order.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p09/p09-s2-down-payment.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p09/p09-s3-invoicing.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p09/p09-s4-delivery.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p09/p09-s5-ar-returns.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p10/p10-golden-thread.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p10/p10-http-harness.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p10/p10-s1-pr.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p10/p10-s2-po.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p10/p10-s3-gr.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p10/p10-s4-invoice.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p10/p10-s5-ap-returns.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p11/p11-golden-thread.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p11/p11-http-harness.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p11/p11-s1-inbound-quarantine.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p11/p11-s2-fefo-reservation.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p11/p11-s3-transfer-access.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p11/p11-s4-opname-threshold.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p11/p11-s5-adjustment-deadstock.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p12/p12-golden-thread.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p12/p12-http-harness.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p12/p12-s1-mrp-wo.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p12/p12-s2-material-readiness.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p12/p12-s3-schedule-collision.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p12/p12-s4-reschedule-audit.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p12/p12-s5-dispatch.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p13/p13-golden-thread.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p13/p13-http-harness.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p13/p13-s1-batch-record.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p13/p13-s2-mixing-fefo-weight.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p13/p13-s3-filling-qc-limit.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p13/p13-s4-packaging-artwork-traceability.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p13/p13-s5-downtime-return.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p14/p14-golden-thread.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p14/p14-http-harness.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p14/p14-s1-quarantine-auth.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p14/p14-s2-inspections-parameters.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p14/p14-s3-disposition-retest.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p14/p14-s4-release-idempotency.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p14/p14-s5-recall-traceability.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p15/p15-golden-thread.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p15/p15-http-harness.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p15/p15-s1-double-entry-auto-journal.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p15/p15-s2-valuation-cogs.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p15/p15-s3-cash-escrow-funds.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p15/p15-s4-period-lock-reversal.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p15/p15-s5-subledgers-statements.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p16/p16-golden-thread.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p16/p16-http-harness.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p16/p16-s1-recruitment-training.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p16/p16-s2-employee-contract.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p16/p16-s3-attendance-tickets.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p16/p16-s4-kpi-engine.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p16/p16-s5-payroll-loan.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p17/p17-golden-thread.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p17/p17-http-harness.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p17/p17-s1-communication-mentions.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p17/p17-s2-files-attachments.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p17/p17-s3-document-automation.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p17/p17-s4-integrations-dlq.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p18/p18-golden-thread.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p18/p18-http-harness.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p18/p18-s1-executive-kpi.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p18/p18-s2-financial-reports-reconciliation.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p18/p18-s3-operational-reports.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p18/p18-s4-rbac-audit-governance.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p20/p20-concurrency.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p20/p20-golden-thread.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p20/p20-http-harness.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/p21/p21-migration-pipeline.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/rnd-audit.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/rnd-business-process.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/security/login-tenant-claim.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/security/tenant-isolation.e2e-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/setup-fast-pdf.cjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/audit-log-coverage.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/best-effort-audit-swallow.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/bussdev.controller.unit-spec.ts",
       "applicable_analyzers": []
     },
     {
@@ -58,11 +1814,323 @@
       "applicable_analyzers": []
     },
     {
+      "path": "backend/test/unit/creative.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/finance-coa-integrity.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/finance-report-extraction.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/finance.service.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/finance.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/hr.service.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/legality.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/notification.service.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/p07/p07-negative-audit-outbox.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/p07/p07-negative-dashboard-divergence.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/p07/p07-sf2-intake.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/p07/p07-sf3-pipeline.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/p07/p07-sf4-activity.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/p07/p07-sf4-dashboard.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/p07/p07-sf6-golden-thread.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/p08/p08-sf2-sample-payment.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/p08/p08-sf3-formulation.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/p08/p08-sf4-design-legal.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/production-analytics-extraction.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/production.service.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/production.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/rnd.service.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/tenant-context.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/test/unit/typed-http-exceptions.unit-spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "backend/tsconfig.self-qr-test.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docker-compose.yml",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/E2E_BROWSER_AUTOMATION_AND_INTER_DIVISION_FLOW_MASTER_PLAN.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/INDEX.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/PLAN_SELF_QR_JESSICA_2026-09-25.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/ROADMAP-6-FASE-GO-LIVE-ZERO-ERROR.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/RUNBOOK-DEPLOY-NEXERP-V2.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/AGENTS.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/README.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/contracts/01_DOMAIN_MODEL.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/contracts/02_DATA_OWNERSHIP.yaml",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/contracts/03_WORKFLOW_STATE_MACHINE.yaml",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/contracts/04_BUSINESS_RULES.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/contracts/05_API_CONTRACT.yaml",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/contracts/06_SCREEN_CONTRACT.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/contracts/07_RBAC_MATRIX.yaml",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/contracts/08_INTEGRATION_EVENT_CONTRACT.yaml",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/contracts/09_NON_FUNCTIONAL_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/contracts/10_TRACEABILITY_MATRIX.yaml",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/contracts/schema.prisma",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/generated/INPUT_OUTPUT_LINEAGE.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/process/_DELIVERY_PROCESS_POSTMORTEM_AND_DECISION_2026-09-20.md",
+      "applicable_analyzers": []
+    },
+    {
       "path": "docs/legacy-erp/process/_FULL_ERP_PRODUCTION_READINESS_ROADMAP.md",
       "applicable_analyzers": []
     },
     {
+      "path": "docs/legacy-erp/process/_PROCESS_DECISIONS_LOG.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/reference/REQUIREMENT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/ALL_PHASE_LEGACY_PARITY_AND_PROVENANCE_AUDIT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/FE-LEGACY-PARITY.html",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P04_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P05_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P06_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P06_SUBPHASE_MANIFEST.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P07_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P07_SUBPHASE_MANIFEST.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P08_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P09_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P10_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P11_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P12_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P13_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P14_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P15_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P16_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P17_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P18_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/P19_FROZEN_ACCEPTANCE_CONTRACT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/TESTING_STRATEGY.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_BATCH_VERIFICATION_PLAN.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_CUMULATIVE_REGRESSION_AND_CERTIFICATE_VALIDITY_STANDARD.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_FAST_DELIVERY_EXECUTION_STANDARD.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_FE_LEGACY_DELTA.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_IMPLEMENTATION_READINESS_BASELINE.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_LAYERED_CERTIFICATION_ACCELERATION_STANDARD.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_LIFECYCLE_REGISTRY.json",
+      "applicable_analyzers": []
+    },
+    {
       "path": "docs/legacy-erp/verification/_ONE_PASS_PHASE_EXECUTION_STANDARD.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_PARITY_CROSSCHECK.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_PHASE_DELIVERY_LEDGER.md",
       "applicable_analyzers": []
     },
     {
@@ -74,11 +2142,31 @@
       "applicable_analyzers": []
     },
     {
+      "path": "docs/legacy-erp/verification/_digest.txt",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_fe_be_parity.json",
+      "applicable_analyzers": []
+    },
+    {
       "path": "docs/legacy-erp/verification/_p02_test_results.json",
       "applicable_analyzers": []
     },
     {
       "path": "docs/legacy-erp/verification/_p03_test_results.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_p04_test_results.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_p05_test_results.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/_p06_test_results.json",
       "applicable_analyzers": []
     },
     {
@@ -102,6 +2190,82 @@
       "applicable_analyzers": []
     },
     {
+      "path": "docs/legacy-erp/verification/evidence/P04_MIGRATION_SCOPE_MANIFEST.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P04_PHASE_CERTIFICATION_RESULT.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P05_BASELINE_AND_ROOT_CAUSE_2026-09-18.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P05_CHANGE_SCOPE_MANIFEST.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P05_CONTROL_MATRIX.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P05_DEPENDENCY_GRAPH.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P05_MODULE_OWNERSHIP.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P05_PHASE_CERTIFICATION_RESULT.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P06_BASELINE_AND_REMEDIATION_MAP_2026-09-19.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P06_CHANGE_SCOPE_MANIFEST.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P06_MASTER_INVENTORY.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P06_PHASE_CERTIFICATION_RESULT.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P06_R1_WORK_LEDGER.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P06_SEAM_MATRIX.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P06_SUBPHASE_RESULT.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P07_BASELINE_AND_REMEDIATION_MAP_2026-09-20.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/P07_PHASE_CERTIFICATION_RESULT.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P01-P05_BATCH_REVERIFICATION_2026-09-19.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P03-P03_BATCH_CERTIFICATION_R6_2026-09-18.md",
+      "applicable_analyzers": []
+    },
+    {
       "path": "docs/legacy-erp/verification/evidence/batches/P03-P03_BATCH_REVERIFICATION_R3_2026-09-18.md",
       "applicable_analyzers": []
     },
@@ -118,6 +2282,102 @@
       "applicable_analyzers": []
     },
     {
+      "path": "docs/legacy-erp/verification/evidence/batches/P04-P04_AUDIT_R1_2026-09-18.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P04-P04_AUDIT_R2_2026-09-18.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P04-P04_AUDIT_R3_2026-09-18.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P04-P04_AUDIT_R4_2026-09-18.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P05-P05_AUDIT_R1_2026-09-18.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P05-P05_AUDIT_R2_2026-09-19.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P05-P05_AUDIT_R3_2026-09-19.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P06-P06_AUDIT_R1_2026-09-19.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P06-P06_AUDIT_R2_2026-09-19.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P06-P06_AUDIT_R3_2026-09-19.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P06-P06_AUDIT_R4_2026-09-20.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P06-P06_AUDIT_R5_2026-09-20.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P06-P06_BATCH_REVERIFICATION_2026-09-19.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P06-P06_FINAL_CLOSEOUT_2026-09-20.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P07-P07_BATCH_VERIFICATION_2026-09-20.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P07-P07_BOUNDED_CLOSURE_2026-09-20.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P07-P07_BOUNDED_CLOSURE_AUDIT_2026-09-20.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P08-P08_FULL_CONFORMANCE_2026-09-21.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P08-P08_FULL_CONFORMANCE_AUDIT_2026-09-21.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P09-P13_BATCH_VERIFICATION_2026-09-23.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P11-P11_FULL_CONFORMANCE_2026-09-21.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P14-P18_BATCH_VERIFICATION_2026-09-23.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P15-P15_CUMULATIVE_CHECKPOINT_2026-09-22.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/evidence/batches/P19-P19_BATCH_VERIFICATION_2026-09-23.md",
+      "applicable_analyzers": []
+    },
+    {
       "path": "docs/legacy-erp/verification/prompts/P03_ONE_PASS_REMEDIATION_PROMPT.md",
       "applicable_analyzers": []
     },
@@ -126,7 +2386,195 @@
       "applicable_analyzers": []
     },
     {
+      "path": "docs/legacy-erp/verification/prompts/P04_ONE_PASS_IMPLEMENTATION_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P04_R1_ONE_PASS_REMEDIATION_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P04_R2_FINAL_REMEDIATION_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P04_R3_SECRET_REDACTION_FINAL_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P05_ONE_PASS_IMPLEMENTATION_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P05_R1_ONE_PASS_REMEDIATION_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P05_R2_FINAL_HARNESS_AND_CONTROL_REMEDIATION_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P06_ONE_PASS_IMPLEMENTATION_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P06_R1_ONE_PASS_REMEDIATION_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P06_R2_FINAL_PRODUCTION_REMEDIATION_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P06_R3_FINAL_ONE_PASS_REMEDIATION_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P06_R4_FINAL_CORRECTIVE_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P06_R5_CLOSEOUT_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P07_FINAL_BOUNDED_CLOSURE_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P07_FINAL_HTTP_SEAM_FIX_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P07_FOCUSED_CORRECTION_AND_PREDECESSOR_SMOKE_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P07_ONE_PASS_IMPLEMENTATION_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P08_FAST_PILOT_EXECUTION_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P08_FULL_CONFORMANCE_CLOSURE_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P08_LEGALITY_ARTWORK_FIX_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P08_NEW_CHAT_PILOT_HANDOFF_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/P08_STATIC_CONTENT_SWEEP_PROMPT.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/legacy-erp/verification/prompts/README.md",
+      "applicable_analyzers": []
+    },
+    {
       "path": "docs/legacy-erp/verification/prompts/_PHASE_ONE_PASS_PROMPT_TEMPLATE.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-20-p07-focused-correction.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-21-p11-warehouse-inventory.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-22-p15-cumulative-checkpoint.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-23-audit-p09-p19.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-24-fase1-build-stabilization.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-24-reports-6-halaman-wire.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-25-fase2-eliminasi-mock-plumbing.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-25-fase3a-tenant-lock.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-25-fase3b-auto-journal-balance.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-25-g4-gate-ladder-tenant-recon.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-25-p20-golden-thread-concurrency.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-25-p21-data-migration-disaster-recovery.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-25-p22-pdf-export-dan-seed-master.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-25-p22-uat-preflight-browser-agent.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-26-fase1-tenant-binding-dan-audit-trail.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-26-fase2-integritas-ledger-dan-coa.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-26-fase3-vokabulari-error.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-26-fase3c-dekomposisi-god-service.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-26-rute-mati-dan-shape-live.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-26-tahap2-batch1-master.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-26-tahap2-batch2-pembelian-gudang.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-26-tahap3-commercial-penjualan-rnd.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-26-tahap4-finance-reports.md",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "docs/qa-gate/2026-09-26-tahap5-dashboards-marketing.md",
       "applicable_analyzers": []
     },
     {
@@ -286,6 +2734,186 @@
       "applicable_analyzers": []
     },
     {
+      "path": "frontend/eslint.config.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/next.config.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/package.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/playwright.config.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/scripts/audit-table-compliance.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/scripts/categorize-tables.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/scripts/clean-font-mono.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/scripts/devils-advocate-audit.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/scripts/dna-table-migrator.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/scripts/find-dna-aliases.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/scripts/find-table-lines.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/scripts/inspect-tables.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/scripts/inspect-three-data-cells.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/scripts/migrate-dna-aliases.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/scripts/orphan-routes.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/scripts/run-dna-migration.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/__tests__/live-shape-crash-guards.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/__tests__/tahap3-write-path.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/__tests__/tahap4-reports-persistence.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/__tests__/tahap5-dashboards-persistence.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/__tests__/tahap5-marketing-dashboard-wiring.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/__tests__/write-path-persistence.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/approvals/artwork-approval/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/approvals/finance-approvals/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/approvals/goods-request/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/approvals/purchase-approval/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/approvals/purchase-request/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/approvals/purchase-return/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/approvals/purchase/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/approvals/request-cogs/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/approvals/sales-return/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/approvals/sales-sample/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/approvals/sales/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/bussdev/dashboard/BussdevDashboardClient.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/bussdev/dashboard/loading.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/bussdev/my-performance/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/bussdev/returns/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/creative/board/CreativeBoardClient.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/creative/board/components/CreateDesignTaskModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/creative/board/components/DesignHubDrawer.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/creative/board/components/KanbanBoard.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/creative/board/loading.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/creative/board/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/creative/finalized/__tests__/p08-live-flow.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/creative/finalized/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
       "path": "frontend/src/app/(dashboard)/dashboard/__tests__/__snapshots__/commercial.snapshot.test.tsx.snap",
       "applicable_analyzers": []
     },
@@ -310,7 +2938,1455 @@
       "applicable_analyzers": []
     },
     {
+      "path": "frontend/src/app/(dashboard)/dashboard/__tests__/super-admin.snapshot.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/dashboard/commercial/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/dashboard/finance/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/dashboard/fulfillment/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/dashboard/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/dashboard/qc/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/dashboard/super-admin/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/document-center/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/documents/drafts/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/error.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/executive/__tests__/p18-live-flow.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/executive/audit/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/executive/dashboard/ExecutiveDashboardClient.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/executive/dashboard/NotificationHubClient.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/executive/dashboard/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/__tests__/bills-live-shape.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/__tests__/jurnal-static-coa-fabrication.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/__tests__/p15-live-flow.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/__tests__/piutang-ar-hub-fabrication.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/accounting/auto-journal/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/accounting/coa-auto/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/accounting/coa/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/ap-aging/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/ar-hub/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/assets/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
       "path": "frontend/src/app/(dashboard)/finance/audit-ledger/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/bank-accounts/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/bank-reconciliation/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/bayar-sample/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/bayar/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/bills/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/budget/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/cash-in/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/cash-out/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/client-escrow/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/closing/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/cogs-request-rnd/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/cogs-request/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/collections/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/compliance-asset/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/cost-allocation-setup/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/cost-variance/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/currencies/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/dashboard/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/fund-requests/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/fund/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/input/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/invoices/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/jurnal-umum/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/jurnal/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/kas/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/laba-rugi/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/ledger/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/periods/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/piutang/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/profitability/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/taxes/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/finance/transactions/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/hr/HRDashboardClient.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/hr/__tests__/p16-live-flow.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/hr/kpi/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/hr/tickets/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/inventory/formula-adjustment-rnd/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/inventory/mutation/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/inventory/outbound/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/inventory/production-warehouse/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/inventory/requisition/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/inventory/stock-adjustment/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/inventory/stock-opname/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/inventory/warehouse-dashboard/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/legality/ckpb-audit/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/legality/dashboard/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/legality/inbox/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/legality/input/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/legality/permits/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/legality/records/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/logistics/logs/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/dashboard/MarketingReferenceDashboard.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/digital/components/AttributionPanel.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/digital/components/ClientTable.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/digital/components/ConnectionStatusGrid.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/digital/components/CrmFunnel.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/digital/components/ExecutiveFunnelOverview.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/digital/components/KpiStrip.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/digital/components/LeadTrendChart.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/digital/tabs/CampaignsTab.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/digital/tabs/ConnectionsTab.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/digital/tabs/PipelineTab.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/digital/tabs/PlannerTab.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/landing-tracker/LandingTrackerClient.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/logs/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/management-task/ManagementTaskWorkspace.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/management-task/TaskWorkspaceV2.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/management-task/components/CreateTaskModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/management-task/components/MemberEditModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/management-task/components/MemberProfileView.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/management-task/components/TaskDetailModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/management-task/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/omnicrm/CrmKpiTiles.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/omnicrm/__tests__/p07-crm-kpi-tiles.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/omnicrm/leads/[id]/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/components/PostModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/components/views/PostDatabase.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/components/views/PostPlanner.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/workspace/BrandWorkspace.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/workspace/components/BrandReportingView.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/workspace/components/ContentPlannerView.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/workspace/components/MemberProfileView.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/workspace/components/Modals.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/workspace/components/MonthlyStoriesModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/workspace/components/NurturingFunnelSection.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/workspace/components/PaidAdsSection.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/workspace/components/TaskOverview.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/workspace/components/TikTokSection.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/workspace/components/WebsiteSection.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/workspace/components/WeeklyReportingSection.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/reports/workspace/components/YouTubeSection.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/social-tracker/SocialPlanner.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/social-tracker/reporting/MarketingReporting.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/toribio/components/BestContentTable.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/toribio/components/PaidAdsTable.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/marketing/toribio/components/WeeklyTable.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/__tests__/master-crud-persistence.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/automation/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/categories/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/customers/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/goods/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/hr-attendance/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/hr-payroll/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/hr-recruitment/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/kpi-department/[departmentId]/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/kpi-department/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/kpi-individual/[employeeId]/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/kpi-individual/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/materials/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/personnel/PersonnelRegistry.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/personnel/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/suppliers/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/tax-rates/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/units/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/vendors/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/master/warehouses/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/my-requests/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/notifications/[id]/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/notifications/__tests__/p17-live-flow.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/notifications/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/__tests__/p10-live-flow.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/bayar-pembelian/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/change-requests/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/company/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/dp-pembelian/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/faktur-pembelian/_data.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/faktur-pembelian/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/kebutuhan/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/purchase-requests/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/purchase-returns/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/purchasing/down-payment/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/purchasing/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/purchasing/payments/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/rangkuman-kebutuhan/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/receiving/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/request-list/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/scm-pembelian/create/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/scm-pembelian/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/pembelian/vendor-performance/performance/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/__tests__/p09-live-flow.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/bayar-penjualan/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/client-manager/ami-sample-data.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/client-manager/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/crm-leads/CRMLeadsClient.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/crm-leads/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/delivery-orders/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/down-payment/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/dp-finance/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/dp-penjualan-finance/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/faktur-penjualan/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/guest-book/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/job-order-costing/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/lost/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/pipeline-legal/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/pipeline-rnd/PipelineContent.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/retur-penjualan/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/sales-orders-finance/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/sales-orders/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/sales-return-in/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/sales-target/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/sample-fee/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/penjualan/sample-sales/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/__tests__/p12-live-flow.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/__tests__/p13-live-flow.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/batch-record-rnd/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/filling/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/loading.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/material-requisition/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/mixing/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/my-performance/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/operations/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/packaging/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/production-floor-dashboard/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/production-planning-dashboard/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/realization-calendar/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/schedule-calendar/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/schedule-filling/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/schedule-mixing/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/schedule-packaging/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/schedule/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/spk/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/production/work-orders/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/__tests__/checklist-category-fabrication.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/__tests__/checklist-hub-fabrication.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/__tests__/p14-live-flow.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/apj-release/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/checklist-category/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/checklist-progress/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/checklist-tracking/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/checklist/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/coa/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/dashboard/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/inspections/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/karantina/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/lab-test/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/qc-release/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/report/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/stability/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/quality/workbench/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/__tests__/p18-live-flow.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/ar-aging/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/balance-sheet/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/busdev-follow-up/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/cash-flow/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/finance-reports/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/goods-receipt/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/guest-book/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/mutation-goods/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/notifications/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/sales-summary/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/stock-valuation/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/stock/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/reports/trial-balance/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/rnd/dashboard/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/rnd/project-monitoring/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/__tests__/npf-fabrication.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/design/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/formula/[id]/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/formula/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/inbox/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/input/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/npf/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/omni-crm/components/BentoOverview.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/omni-crm/components/BroadcastEngine.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/omni-crm/components/BusDevManager.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/omni-crm/components/CreatePipelineModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/omni-crm/components/EngineConsole.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/omni-crm/components/GuestbookIntakeModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/omni-crm/components/LeadDetailModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/omni-crm/components/Navbar.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/omni-crm/components/PipelineKanban.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/omni-crm/components/SalesbotFlowModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/omni-crm/components/SettingsPipelineModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/omni-crm/components/WhatsAppCoexistence.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/project-control/[projectId]/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/project-control/checklist-tracking/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/project-control/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/project-monitoring/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/repository/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/revision-tracker/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/rnd-dashboard/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/sample-tracking/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/schedule/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/SocialTrackerClient.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/components/DatabaseViewTabs.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/components/NewPostModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/components/PageHeader.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/components/PostDrawer.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/components/Sidebar.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/components/views/AiStudioView.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/components/views/BoardView.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/components/views/CalendarView.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/components/views/CampaignOkrsView.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/components/views/GalleryView.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/components/views/ListView.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/components/views/MetaApiHubView.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/samples/social-tracker/components/views/TableView.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/scm/dashboard/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/settings/notifications/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/settings/templates/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/system/audit-logs/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/system/change-requests/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/system/error-dashboard/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/system/profile/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/system/settings/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/user/todo/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/visual-dna/__tests__/p19-dna-system.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/visual-dna/golden-reference/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/visual-dna/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/WarehouseDashboardClient.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/__tests__/p11-live-flow.behavior.test.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/adjustment/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/gudang/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/hub/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/inbound/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/map/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/mutasi-stok/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/opname/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/pindah-gudang/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/release/ReleaseClient.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/release/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/stok/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/transfers/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/(dashboard)/warehouse/workstation/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/error.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/layout.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/app/login/page.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/automation/AutomationShell.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/bussdev/ActivityStream.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/bussdev/ActivityStreamTimeline.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/bussdev/BussdevActionDialog.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/bussdev/DashboardCards.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/bussdev/GranularPipelineTable.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/bussdev/PipelineLeadTable.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/bussdev/StageConfirmDialog.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/bussdev/StatusActions.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/commercial/lead-board.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/commercial/marketing-form.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/commercial/retention-radar.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dashboard/QCNotificationHub.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/DnaButton.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/DnaDataTable.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/DnaDecisionModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/DnaDetailDrawer.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/DnaFieldCompat.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/DnaLegacyCompat.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/approval/ApprovalDetailModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/approval/ApprovalPageShell.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/cells/DnaCell.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/index.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/layout/DnaKpiGrid.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/layout/DnaPageHeader.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/layout/DnaStandardPageShell.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/dna/table/DnaTableToolbar.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/error-boundary.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/executive/QCExecutiveWidget.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/finance/AccountsPayableTable.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/finance/AccountsReceivableTable.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/finance/CashFlowCard.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/finance/CogsHppCard.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/finance/ExpenseCard.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/finance/GeneralLedgerTable.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/finance/ProfitabilityCard.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/finance/RevenueCard.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/finance/RiskAlertCard.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/finance/StatusBadge.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/finance/TransactionLedgerTable.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/finance/UtilityUsageWidget.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/hr/AttendanceLiveFeed.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/hr/KpiConfigManager.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/hr/KpiLeaderboard.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/hr/OrganogramManager.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/hr/PayrollWorkbench.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/kpi-management/mock-data.ts",
       "applicable_analyzers": []
     },
     {
@@ -338,7 +4414,59 @@
       "applicable_analyzers": []
     },
     {
+      "path": "frontend/src/components/layout/Sidebar.tsx",
+      "applicable_analyzers": []
+    },
+    {
       "path": "frontend/src/components/layout/TableShell.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/marketing/marketing-log-manager.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/qc/DefectDetailModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/qc/PatternTrackers.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/qc/QcSignatureModal.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/query-states.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/components/rnd/formula-builder.tsx",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/lib/mock-data.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/lib/unwrap-response.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/middleware.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/types/api-schema.d.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/src/types/api.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/test/master-screens-behavior.test.tsx",
       "applicable_analyzers": []
     },
     {
@@ -354,7 +4482,203 @@
       "applicable_analyzers": []
     },
     {
+      "path": "frontend/tests/e2e/uat-preflight/pilot-uat.spec.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "frontend/tests/e2e/uat-preflight/uat.ts",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "nginx.conf",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "package.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scratch/audit_ui_imports.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scratch/check_fk.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scratch/check_import_syntax.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scratch/migrate_ui_imports.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/backend-lint-clean.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/backend-route-uniqueness.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/ci-prisma-cwd.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/clean-db-admin-connection.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/clean-db-gates-fail-closed.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/clean-db-phantom-tables.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/consolidation.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/fabrication-guards.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/finance-invoice-alias-contract.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/finance-ledger-indexes.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/gate-tables-are-migration-created.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/init-db-idempotency.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/lockfile-in-sync.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/master-seed-guard.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/nest-multi-root-reachability.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/p21-disaster-recovery.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/p22-pdf-live-probe.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/p22-uat-preflight.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/run-all.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/__tests__/validate-env-ci-checkout.test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/audit/backend_fabrication_report.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/audit/frontend_fabrication_report.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/audit/scan-backend-fabrication.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/audit/scan-frontend-fabrication.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/build-fe-legacy-report.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/check-lockfile-sync.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/deploy.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/dna-boundary-baseline.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/dna-boundary-gate.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/dr-drill.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/legacy-fe-delta-digest.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/legacy-fe-delta.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/parity-crosscheck.mjs",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/security/validate_env.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/_cleanup_nex_p05.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/_gen_owners.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/_p05_integration_tests.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/_p05_run_and_commit.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/_p05_unit_tests.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/audit_fe_be_parity.js",
+      "applicable_analyzers": []
+    },
+    {
       "path": "scripts/ssot/audit_p03_architecture_gates.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/audit_p04_database_migrations.js",
       "applicable_analyzers": []
     },
     {
@@ -362,7 +4686,95 @@
       "applicable_analyzers": []
     },
     {
+      "path": "scripts/ssot/certify_p04_phase.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/certify_p05_phase.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/certify_p06_phase.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/check_page_shell_layout.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/diagnose_p06_phase.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/generate_lifecycle_registry.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/generated_models_catalog.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/nest_registration_graph.js",
+      "applicable_analyzers": []
+    },
+    {
       "path": "scripts/ssot/lib/p03_analyzers.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p04_analyzers.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p04_certification.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p04_gates.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p04_safety.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p05_analyzers.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p05_certification.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p05_gates.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p05_safety.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p06_analyzers.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p06_certification.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p06_gates.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p06_safety.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p06_test_registry.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/lib/p07_verify.js",
       "applicable_analyzers": []
     },
     {
@@ -374,7 +4786,135 @@
       "applicable_analyzers": []
     },
     {
+      "path": "scripts/ssot/p04_acceptance_contract.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p05_acceptance_contract.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p06_acceptance_contract.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p07_clean_db.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p07_verify.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p08_clean_db.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p09_clean_db.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p10_clean_db.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p11_clean_db.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p12_clean_db.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p13_clean_db.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p14_clean_db.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p15_clean_db.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p16_clean_db.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p17_clean_db.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p18_clean_db.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/p19_dna_verify.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/screen_contract_reconciliation.json",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/test_dependency_analyzer.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/test_lifecycle_reconciliation_negative.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/test_mutation_oracle_meta.js",
+      "applicable_analyzers": []
+    },
+    {
       "path": "scripts/ssot/test_p03_architecture_gates_negative.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/test_p04_database_migrations_negative.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/test_p05_platform_negative.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/test_p06_master_negative.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/test_porcelain_parser_regression.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/ssot/validate_ssot.js",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/stress-test.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/test-browser-agent.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/test-golden-thread.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/test-migration-pipeline.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/test-rollback-rehearsal.sh",
+      "applicable_analyzers": []
+    },
+    {
+      "path": "scripts/verify-pdf-live.sh",
       "applicable_analyzers": []
     }
   ]

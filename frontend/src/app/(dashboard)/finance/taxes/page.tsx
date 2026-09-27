@@ -16,6 +16,12 @@ import {
   DnaModal,
   DnaConfirmDialog,
   useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
 } from "@/components/dna";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
@@ -27,13 +33,6 @@ interface TaxRate {
   isActive: boolean;
   description?: string;
 }
-
-const FALLBACK: TaxRate[] = [
-  { id: "tx-1", name: "PPN 11%", rate: 11, isActive: true, description: "Pajak Pertambahan Nilai standar 2026" },
-  { id: "tx-2", name: "PPh 21", rate: 5, isActive: true, description: "Potongan pajak penghasilan karyawan" },
-  { id: "tx-3", name: "PPh 23", rate: 2, isActive: true, description: "Potongan pajak jasa" },
-  { id: "tx-4", name: "Pajak Daerah 0.5%", rate: 0.5, isActive: false, description: "Pajak restoran (legacy)" },
-];
 
 export default function FinanceTaxesPage() {
   const toast = useDnaToast();
@@ -48,16 +47,18 @@ export default function FinanceTaxesPage() {
   const [isActive, setIsActive] = useState(true);
   const [description, setDescription] = useState("");
 
-  const { data: taxes = FALLBACK, isLoading } = useQuery({
+  const { data: taxes = [], isLoading } = useQuery({
     queryKey: ["finance-taxes"],
     queryFn: async () => {
-      try {
-        const res = await api.get("/finance/taxes");
-        const body = unwrapResponse(res);
-        return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : FALLBACK;
-      } catch {
-        return FALLBACK;
-      }
+      const res = await api.get("/finance/taxes");
+      const body = unwrapResponse(res);
+      const rows: any[] = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+      // `rate` is a Prisma Decimal, so it arrives as a JSON string ("11", "0.5") while
+      // this screen treats it as a number: `t.rate.toFixed(2)` threw for every row and
+      // took the page down. Coerced here, at the boundary, so the interface above is
+      // true for every reader. Pinned by
+      // src/app/(dashboard)/__tests__/live-shape-crash-guards.behavior.test.tsx.
+      return rows.map((t) => ({ ...t, rate: Number(t.rate) }));
     },
   });
 
@@ -180,55 +181,54 @@ export default function FinanceTaxesPage() {
         />
       </DnaKpiGrid>
 
-      <DnaDataTableCard
-        title="Daftar Tarif Pajak"
-        badge={<DnaBadge variant="indigo">{taxes.length} Entri</DnaBadge>}
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="px-3.5 py-3">Nama Pajak</th>
-                <th className="px-3.5 py-3 text-right">Tarif (%)</th>
-                <th className="px-3.5 py-3">Deskripsi</th>
-                <th className="px-3.5 py-3 text-center">Status</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {isLoading ? (
-                <tr><td colSpan={5} className="text-center py-8 text-slate-400">Memuat...</td></tr>
-              ) : taxes.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-8 text-slate-400">Belum ada data tarif pajak</td></tr>
-              ) : taxes.map((t: TaxRate) => (
-                <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3.5 py-2.5 font-bold text-slate-900">{t.name}</td>
-                  <td className="px-3.5 py-2.5 text-right">
-                    <span className="font-mono font-bold text-indigo-700">{t.rate.toFixed(2)}%</span>
-                  </td>
-                  <td className="px-3.5 py-2.5 text-slate-600">{t.description ?? "—"}</td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    {t.isActive ? (
-                      <DnaBadge variant="success">Aktif</DnaBadge>
-                    ) : (
-                      <DnaBadge variant="secondary"><XCircle className="w-3 h-3 mr-1 inline" />Non-Aktif</DnaBadge>
-                    )}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <DnaButton variant="secondary" size="sm" onClick={() => openEdit(t)}>
-                        <Pencil className="w-3.5 h-3.5" />
-                      </DnaButton>
-                      <DnaButton variant="danger" size="sm" onClick={() => setDeletingId(t.id)}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </DnaButton>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <DnaDataTableCard>
+        <DnaTable>
+          <DnaTableHead>
+            <tr>
+              <DnaTh>Nama Pajak</DnaTh>
+              <DnaTh align="right" className="w-[140px]">Tarif (%)</DnaTh>
+              <DnaTh>Deskripsi</DnaTh>
+              <DnaTh align="center" className="w-[120px]">Status</DnaTh>
+              <DnaTh align="center" className="w-[100px]">Aksi</DnaTh>
+            </tr>
+          </DnaTableHead>
+          <DnaTableBody>
+            {isLoading ? (
+              <DnaTableRow>
+                <DnaTd colSpan={5} className="text-center py-8 text-slate-400">Memuat...</DnaTd>
+              </DnaTableRow>
+            ) : taxes.length === 0 ? (
+              <DnaTableRow>
+                <DnaTd colSpan={5} className="text-center py-8 text-slate-400">Belum ada data tarif pajak</DnaTd>
+              </DnaTableRow>
+            ) : taxes.map((t: TaxRate) => (
+              <DnaTableRow key={t.id}>
+                <DnaTd className="font-semibold text-slate-900">{t.name}</DnaTd>
+                <DnaTd align="right">
+                  <span className="font-semibold tabular-nums text-indigo-700">{t.rate.toFixed(2)}%</span>
+                </DnaTd>
+                <DnaTd className="text-slate-600">{t.description ?? "—"}</DnaTd>
+                <DnaTd align="center">
+                  {t.isActive ? (
+                    <DnaBadge variant="success">Aktif</DnaBadge>
+                  ) : (
+                    <DnaBadge variant="secondary"><XCircle className="w-3 h-3 mr-1 inline" />Non-Aktif</DnaBadge>
+                  )}
+                </DnaTd>
+                <DnaTd align="center">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <DnaButton variant="secondary" size="sm" onClick={() => openEdit(t)} title="Edit">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </DnaButton>
+                    <DnaButton variant="danger" size="sm" onClick={() => setDeletingId(t.id)} title="Hapus">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </DnaButton>
+                  </div>
+                </DnaTd>
+              </DnaTableRow>
+            ))}
+          </DnaTableBody>
+        </DnaTable>
       </DnaDataTableCard>
 
       <DnaModal

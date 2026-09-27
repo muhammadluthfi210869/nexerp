@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { WarehouseService } from '../../warehouse/warehouse.service';
 import { CreateStepLogDto } from '../dto/create-step-log.dto';
 import { LifecycleStatus, QCStatus } from '@prisma/client';
 
@@ -16,7 +15,6 @@ export class ProductionExecutionService {
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
-    private warehouseService: WarehouseService,
     private idGenerator: IdGeneratorService,
   ) {}
 

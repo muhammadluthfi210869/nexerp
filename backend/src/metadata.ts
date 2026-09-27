@@ -1,4 +1,4 @@
-/* eslint-disable */
+ 
 export default async () => {
     const t = {
         ["./modules/finance/dto/create-journal.dto"]: await import("./modules/finance/dto/create-journal.dto"),

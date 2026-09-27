@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   Award,
   TrendingUp,
   Target,
   Search,
-  Filter,
   Eye,
   Star,
   CheckCircle2,
@@ -14,7 +15,9 @@ import {
   Printer,
   Sparkles,
   Sliders,
-  DollarSign
+  DollarSign,
+  Check,
+  Loader2,
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -22,12 +25,14 @@ import {
   DnaKpiGrid,
   DnaStatCard,
   DnaDataTableCard,
-  DnaTabNav,
   DnaButton,
   DnaBadge,
-  DnaModal,
+  DnaDetailDrawer,
   formatRupiah,
-  useDnaToast
+  useDnaToast,
+  DnaInput,
+  DnaSelect,
+  DnaTable
 } from "@/components/dna";
 
 interface KpiScorecard {
@@ -45,14 +50,6 @@ interface KpiScorecard {
   bonusAmount: number;
 }
 
-const INITIAL_KPIS: KpiScorecard[] = [
-  { id: "KPI-01", empId: "KIL-2022-001", empName: "Budi Santoso, S.T", empRole: "Supervisor Produksi", department: "Produksi Mixing", targetKpi: "Zero Batch Scrap & OEE > 85%", achievement: 95.4, disciplineScore: 98, objectiveScore: 94, grade: "A", bonusMultiplier: 1.0, bonusAmount: 6500000 },
-  { id: "KPI-02", empId: "KIL-2023-014", empName: "Rian Saputra, S.Farm", empRole: "Senior Formulator", department: "R&D Formulasi", targetKpi: "Lead Time Sample < 5 Hari", achievement: 92.0, disciplineScore: 96, objectiveScore: 90, grade: "A", bonusMultiplier: 1.0, bonusAmount: 8000000 },
-  { id: "KPI-03", empId: "KIL-2023-022", empName: "Siti Rahmawati, S.Si", empRole: "QC Inspector", department: "QC Mikrobiologi", targetKpi: "COA Release SLA < 24 Jam", achievement: 88.5, disciplineScore: 90, objectiveScore: 87, grade: "B+", bonusMultiplier: 0.75, bonusAmount: 4125000 },
-  { id: "KPI-04", empId: "KIL-2024-005", empName: "Dewi Lestari, S.E", empRole: "Senior AE BusDev", department: "BusDev Maklon", targetKpi: "Monthly Deals > Rp 800 Juta", achievement: 104.2, disciplineScore: 100, objectiveScore: 106, grade: "A", bonusMultiplier: 1.0, bonusAmount: 7000000 },
-  { id: "KPI-05", empId: "KIL-2024-031", empName: "Ahmad Dani", empRole: "Staff Inbound", department: "Warehouse Material", targetKpi: "Akurasi Stock Opname > 99%", achievement: 82.0, disciplineScore: 88, objectiveScore: 79, grade: "B", bonusMultiplier: 0.5, bonusAmount: 2400000 },
-];
-
 export default function HrKpiPage() {
   const toast = useDnaToast();
   const [period, setPeriod] = useState("Q3-2026");
@@ -60,37 +57,79 @@ export default function HrKpiPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedKpi, setSelectedKpi] = useState<KpiScorecard | null>(null);
 
-  const totalBonus = INITIAL_KPIS.reduce((acc, k) => acc + k.bonusAmount, 0);
-  const avgScore = (INITIAL_KPIS.reduce((acc, k) => acc + k.achievement, 0) / INITIAL_KPIS.length).toFixed(1);
-
-  const filteredKpis = INITIAL_KPIS.filter(k => {
-    const matchSearch = k.empName.toLowerCase().includes(searchQuery.toLowerCase()) || k.empRole.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchDept = deptFilter === "ALL" || k.department.includes(deptFilter);
-    return matchSearch && matchDept;
+  const { data: rawKpis = [], isLoading } = useQuery({
+    queryKey: ["hr-kpi-employees"],
+    queryFn: async () => {
+      const res = await api.get("/hr/kpi/employees");
+      return res.data;
+    },
   });
+
+  const kpis: KpiScorecard[] = useMemo(() => {
+    if (!rawKpis || rawKpis.length === 0) return [];
+    return (rawKpis as any[]).map((emp: any, idx: number) => {
+      const ach = emp.finalKpiScore || 0;
+      let grade: "A" | "B+" | "B" | "C" = "C";
+      let mult = 0.5;
+      if (ach >= 90) { grade = "A"; mult = 1.0; }
+      else if (ach >= 85) { grade = "B+"; mult = 0.75; }
+      else if (ach >= 75) { grade = "B"; mult = 0.5; }
+      else { grade = "C"; mult = 0.25; }
+
+      return {
+        id: emp.id || `kpi-${idx}`,
+        empId: emp.employeeId || emp.nik || `EMP-${idx + 1}`,
+        empName: emp.employeeName || emp.name || "Karyawan",
+        empRole: emp.role || "Staff",
+        department: emp.department || "Operasional",
+        targetKpi: emp.kpiItems?.[0]?.name || "Target Operasional Divisi",
+        achievement: Math.round(ach * 10) / 10,
+        disciplineScore: 95,
+        objectiveScore: Math.round((emp.roleSpecificScore || ach) * 10) / 10,
+        grade,
+        bonusMultiplier: mult,
+        bonusAmount: Math.round(mult * 5000000),
+      };
+    });
+  }, [rawKpis]);
+
+  const totalBonus = kpis.reduce((acc, k) => acc + k.bonusAmount, 0);
+  const avgScore = kpis.length > 0 ? (kpis.reduce((acc, k) => acc + k.achievement, 0) / kpis.length).toFixed(1) : "0.0";
+
+  const filteredKpis = useMemo(() => {
+    return kpis.filter(k => {
+      const matchSearch = k.empName.toLowerCase().includes(searchQuery.toLowerCase()) || k.empRole.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchDept = deptFilter === "ALL" || k.department.includes(deptFilter);
+      return matchSearch && matchDept;
+    });
+  }, [kpis, searchQuery, deptFilter]);
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
         title="Evaluasi Kinerja & KPI Karyawan (Performance Scorecard)"
         description="Sistem penilaian KPI 360 derajat manufaktur pabrik kosmetik, SLA operasional antar divisi, grading kinerja, dan kalkulasi bonus insentif."
-        badge={
-          <div className="flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200 font-semibold">
-            <Award className="w-3.5 h-3.5" />
-            <span>Periode Review: {period}</span>
-          </div>
-        }
+        tabs={[
+          { id: "ALL", label: "Semua Divisi" },
+          { id: "Produksi", label: "Produksi Mixing" },
+          { id: "R&D", label: "R&D Formulasi" },
+          { id: "QC", label: "QC Mikrobiologi" },
+          { id: "BusDev", label: "BusDev Maklon" },
+          { id: "Warehouse", label: "Warehouse Material" }
+        ]}
+        activeTab={deptFilter}
+        onTabChange={setDeptFilter}
         actions={
           <div className="flex items-center gap-2">
-            <select
+            <DnaSelect
               value={period}
-              onChange={(e) => setPeriod(e.target.value)}
+              onChange={setPeriod}
               className="px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white shadow-sm font-semibold"
             >
               <option value="Q3-2026">Kuartal 3 (Q3 2026)</option>
               <option value="Q2-2026">Kuartal 2 (Q2 2026)</option>
               <option value="Q1-2026">Kuartal 1 (Q1 2026)</option>
-            </select>
+            </DnaSelect>
             <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
               <Printer className="w-4 h-4 mr-1.5" />
               Cetak Scorecard
@@ -137,153 +176,183 @@ export default function HrKpiPage() {
         />
       </DnaKpiGrid>
 
-      {/* TABLE DATA */}
+      {/* DATA TABLE */}
       <DnaDataTableCard
-        title="Matriks Evaluasi Kinerja Karyawan & Pembobotan"
-        badge={<DnaBadge variant="purple">{filteredKpis.length} Karyawan</DnaBadge>}
         customToolbar={
-          <div className="flex items-center gap-2.5">
-            <div className="relative min-w-[220px]">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
+          <div className="flex items-center justify-between w-full">
+            <div className="relative w-80">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+              <DnaInput
                 type="text"
-                placeholder="Cari nama atau divisi..."
+                placeholder="Cari nama karyawan atau jabatan..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none"
+                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <select
-              value={deptFilter}
-              onChange={(e) => setDeptFilter(e.target.value)}
-              className="px-2.5 py-1 text-xs border border-slate-200 rounded-lg bg-slate-50 font-semibold"
-            >
-              <option value="ALL">Semua Departemen</option>
-              <option value="Produksi">Produksi Mixing</option>
-              <option value="R&D">R&D Formulasi</option>
-              <option value="QC">QC Mikrobiologi</option>
-              <option value="BusDev">BusDev</option>
-              <option value="Warehouse">Warehouse</option>
-            </select>
+            <div className="text-xs text-slate-500 font-medium">
+              Matriks Evaluasi Kinerja Karyawan & Pembobotan: Menampilkan <span className="font-semibold text-slate-800">{filteredKpis.length}</span> Karyawan Dievaluasi
+            </div>
           </div>
         }
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider">
+        <DnaTable className="w-full text-xs text-left table-fixed">
+          <thead>
+            <tr className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
+              <th className="px-3.5 py-3 w-[22%]">Karyawan & NIK</th>
+              <th className="px-3.5 py-3 w-[20%]">Departemen & Jabatan</th>
+              <th className="px-3.5 py-3 w-[24%]">Key Performance Indicator (Target)</th>
+              <th className="px-3.5 py-3 w-[14%]">Pencapaian & Grade</th>
+              <th className="px-3.5 py-3 text-right w-[14%]">Estimasi Bonus</th>
+              <th className="px-3.5 py-3 text-center w-[6%]">Aksi</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredKpis.length === 0 ? (
               <tr>
-                <th className="px-3.5 py-3">Karyawan & NIK</th>
-                <th className="px-3.5 py-3">Departemen & Jabatan</th>
-                <th className="px-3.5 py-3">Key Performance Indicator (Target)</th>
-                <th className="px-3.5 py-3 text-center">Disiplin</th>
-                <th className="px-3.5 py-3 text-center">Objektif</th>
-                <th className="px-3.5 py-3 text-center">Pencapaian Akhir</th>
-                <th className="px-3.5 py-3 text-center">Grade</th>
-                <th className="px-3.5 py-3 text-right">Estimasi Bonus</th>
-                <th className="px-3.5 py-3 text-center">Aksi</th>
+                <td colSpan={6} className="px-3.5 py-8 text-center text-slate-400">
+                  Tidak ada evaluasi kinerja yang sesuai dengan filter.
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredKpis.map((kpi) => (
+            ) : (
+              filteredKpis.map((kpi) => (
                 <tr key={kpi.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="px-3.5 py-3">
-                    <div className="font-bold text-slate-900">{kpi.empName}</div>
-                    <div className="text-[11px] font-mono text-slate-500">{kpi.empId}</div>
+                  <td className="px-3.5 py-2.5 truncate">
+                    <div className="font-bold text-slate-900 truncate">{kpi.empName}</div>
+                    <div className="text-[11px] tabular-nums text-slate-500">{kpi.empId}</div>
                   </td>
-                  <td className="px-3.5 py-3">
-                    <div className="font-semibold text-slate-800">{kpi.empRole}</div>
-                    <div className="text-[11px] text-slate-500">{kpi.department}</div>
+                  <td className="px-3.5 py-2.5 truncate">
+                    <div className="font-semibold text-slate-800 truncate">{kpi.empRole}</div>
+                    <div className="text-[11px] text-slate-500 truncate">{kpi.department}</div>
                   </td>
-                  <td className="px-3.5 py-3 text-slate-700 font-medium">
-                    {kpi.targetKpi}
+                  <td className="px-3.5 py-2.5 truncate">
+                    <div className="font-medium text-slate-800 truncate">{kpi.targetKpi}</div>
+                    <div className="text-[11px] text-slate-500 tabular-nums">
+                      Obj: {kpi.objectiveScore}% &bull; Disp: {kpi.disciplineScore}%
+                    </div>
                   </td>
-                  <td className="px-3.5 py-3 text-center font-mono font-semibold text-slate-700">
-                    {kpi.disciplineScore}%
+                  <td className="px-3.5 py-2.5 truncate">
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-xs text-blue-700 tabular-nums">
+                        {kpi.achievement}%
+                      </span>
+                      <DnaBadge
+                        variant={
+                          kpi.grade === "A" ? "success" :
+                          kpi.grade === "B+" ? "purple" :
+                          kpi.grade === "B" ? "info" : "warning"
+                        }
+                      >
+                        Grade {kpi.grade}
+                      </DnaBadge>
+                    </div>
                   </td>
-                  <td className="px-3.5 py-3 text-center font-mono font-semibold text-slate-700">
-                    {kpi.objectiveScore}%
+                  <td className="px-3.5 py-2.5 text-right truncate">
+                    <div className="tabular-nums font-bold text-emerald-700">{formatRupiah(kpi.bonusAmount)}</div>
+                    <div className="text-[10px] text-slate-400">Bonus Kuartal</div>
                   </td>
-                  <td className="px-3.5 py-3 text-center">
-                    <span className="font-black text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 font-mono">
-                      {kpi.achievement}%
-                    </span>
-                  </td>
-                  <td className="px-3.5 py-3 text-center">
-                    <DnaBadge
-                      variant={
-                        kpi.grade === "A" ? "success" :
-                        kpi.grade === "B+" ? "purple" :
-                        kpi.grade === "B" ? "info" : "warning"
-                      }
+                  <td className="px-3.5 py-2.5 text-center">
+                    <DnaButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedKpi(kpi)}
+                      title="Lihat Detail Scorecard"
                     >
-                      Grade {kpi.grade}
-                    </DnaBadge>
-                  </td>
-                  <td className="px-3.5 py-3 text-right font-mono font-bold text-emerald-700">
-                    {formatRupiah(kpi.bonusAmount)}
-                  </td>
-                  <td className="px-3.5 py-3 text-center">
-                    <DnaButton variant="ghost" size="sm" onClick={() => setSelectedKpi(kpi)}>
-                      <Eye className="w-3.5 h-3.5 mr-1" />
-                      Detail
+                      <Eye className="w-3.5 h-3.5 text-blue-600" />
                     </DnaButton>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </DnaTable>
       </DnaDataTableCard>
 
-      {/* MODAL: DETAIL SCORECARD */}
-      <DnaModal
+      {/* QUICK PEEK DRAWER: DETAIL SCORECARD */}
+      <DnaDetailDrawer
         isOpen={!!selectedKpi}
         onClose={() => setSelectedKpi(null)}
-        title={"Rincian Evaluasi Kinerja: " + (selectedKpi?.empName || "")}
-        maxWidth="max-w-lg"
-      >
-        {selectedKpi && (
-          <div className="space-y-4 text-xs">
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <div className="font-bold text-sm text-slate-900">{selectedKpi.empName}</div>
-              <div className="text-slate-500 font-medium">{selectedKpi.empRole} • {selectedKpi.department}</div>
-            </div>
+        title={selectedKpi?.empName || "Evaluasi Kinerja"}
+        subtitle={`${selectedKpi?.empRole} • ${selectedKpi?.department}`}
+        badge={
+          selectedKpi ? (
+            <DnaBadge
+              variant={
+                selectedKpi.grade === "A" ? "success" :
+                selectedKpi.grade === "B+" ? "purple" : "info"
+              }
+            >
+              Grade {selectedKpi.grade}
+            </DnaBadge>
+          ) : undefined
+        }
+        tabs={[
+          {
+            id: "review",
+            label: "Evaluasi 360 & Target",
+            content: selectedKpi && (
+              <div className="space-y-4 text-xs">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-slate-400 block text-[11px] mb-0.5">Target Kinerja Utama (SLA Divisi):</span>
+                  <div className="font-bold text-slate-900 text-sm">{selectedKpi.targetKpi}</div>
+                </div>
 
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg">
-                <span className="text-slate-600 font-medium">Target Utama (SLA Divisi):</span>
-                <span className="font-bold text-slate-900">{selectedKpi.targetKpi}</span>
-              </div>
-              <div className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg">
-                <span className="text-slate-600 font-medium">Skor Objektif (Output Produksi/Lab):</span>
-                <span className="font-mono font-bold text-blue-700">{selectedKpi.objectiveScore}%</span>
-              </div>
-              <div className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg">
-                <span className="text-slate-600 font-medium">Skor Kedisiplinan & 5R Pabrik:</span>
-                <span className="font-mono font-bold text-emerald-700">{selectedKpi.disciplineScore}%</span>
-              </div>
-              <div className="flex items-center justify-between p-2.5 bg-purple-50 border border-purple-200 rounded-lg">
-                <span className="text-purple-900 font-bold">Total Pencapaian Akhir:</span>
-                <span className="font-mono font-black text-purple-900 text-sm">{selectedKpi.achievement}% (Grade {selectedKpi.grade})</span>
-              </div>
-            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-white border border-slate-200 rounded-xl">
+                    <span className="text-slate-400 block text-[11px]">Skor Objektif (Output Kerja)</span>
+                    <span className="tabular-nums font-bold text-blue-700 text-base">{selectedKpi.objectiveScore}%</span>
+                  </div>
+                  <div className="p-3 bg-white border border-slate-200 rounded-xl">
+                    <span className="text-slate-400 block text-[11px]">Skor Kedisiplinan & 5R Pabrik</span>
+                    <span className="tabular-nums font-bold text-emerald-700 text-base">{selectedKpi.disciplineScore}%</span>
+                  </div>
+                </div>
 
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
-              <div>
-                <span className="text-emerald-800 font-semibold block text-[11px]">Insentif Bonus Kuartal (100%):</span>
-                <span className="font-mono font-bold text-emerald-900 text-sm">{formatRupiah(selectedKpi.bonusAmount)}</span>
+                <div className="p-3.5 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between">
+                  <div>
+                    <span className="text-purple-800 text-[11px] block">Total Pencapaian Akhir</span>
+                    <span className="font-black text-purple-900 text-lg">{selectedKpi.achievement}%</span>
+                  </div>
+                  <DnaBadge variant="purple">Kinerja Istimewa</DnaBadge>
+                </div>
               </div>
-              <DnaBadge variant="success">Eligible</DnaBadge>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <DnaButton variant="secondary" size="md" onClick={() => setSelectedKpi(null)}>
-                Tutup
+            )
+          },
+          {
+            id: "bonus",
+            label: "Kalkulasi Bonus Insentif",
+            content: selectedKpi && (
+              <div className="space-y-3 text-xs">
+                <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-2">
+                  <span className="text-emerald-800 font-semibold block text-[11px]">Hak Bonus Kuartal (Multiplier {selectedKpi.bonusMultiplier}x):</span>
+                  <div className="tabular-nums font-black text-emerald-900 text-xl">{formatRupiah(selectedKpi.bonusAmount)}</div>
+                  <div className="text-[11px] text-emerald-700">Dicairkan bersamaan dengan siklus penggajian payroll batch akhir kuartal.</div>
+                </div>
+              </div>
+            )
+          }
+        ]}
+        footerActions={
+          <div className="flex items-center justify-between w-full">
+            <DnaButton variant="secondary" size="md" onClick={() => setSelectedKpi(null)}>
+              Tutup
+            </DnaButton>
+            <div className="flex gap-2">
+              <DnaButton variant="secondary" size="md" onClick={() => toast.success("Mencetak lembar evaluasi scorecard...")}>
+                <Printer className="w-4 h-4 mr-1.5" />
+                Cetak Scorecard
+              </DnaButton>
+              <DnaButton variant="primary" size="md" onClick={() => {
+                toast.success("Evaluasi Karyawan Telah Disign-off HR Director!");
+                setSelectedKpi(null);
+              }}>
+                <Check className="w-4 h-4 mr-1.5" />
+                Sign-off Evaluasi
               </DnaButton>
             </div>
           </div>
-        )}
-      </DnaModal>
+        }
+      />
     </DnaPageContainer>
   );
 }

@@ -262,7 +262,7 @@ export const AiStudioView: React.FC<AiStudioViewProps> = ({ onInsertAsNewPost })
                     className="p-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-lg border border-zinc-200 dark:border-zinc-700/60 hover:border-purple-400 transition cursor-pointer flex items-start justify-between gap-3 text-xs"
                   >
                     <div className="flex gap-2">
-                      <span className="font-bold text-purple-600 font-mono">#{idx + 1}</span>
+                      <span className="font-bold text-purple-600 tabular-nums">#{idx + 1}</span>
                       <span className="text-[#37352f] dark:text-zinc-200 font-medium">{hk}</span>
                     </div>
                     <Copy className="w-3.5 h-3.5 text-zinc-400 hover:text-zinc-600 flex-shrink-0" />
@@ -290,7 +290,7 @@ export const AiStudioView: React.FC<AiStudioViewProps> = ({ onInsertAsNewPost })
                     {generatedResult.hashtags.map((tag: string, idx: number) => (
                       <span
                         key={idx}
-                        className="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 rounded text-[11px] font-mono"
+                        className="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 rounded text-[11px] tabular-nums"
                       >
                         {tag}
                       </span>

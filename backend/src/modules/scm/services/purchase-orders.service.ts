@@ -1,4 +1,4 @@
-﻿import {
+import {
   Injectable,
   NotFoundException,
   BadRequestException,
@@ -13,11 +13,15 @@ import { CreatePurchaseOrderDto } from '../dto/create-po.dto';
 import { LegalityService } from '../../legality/legality.service';
 
 import { IdGeneratorService } from '../../system/id-generator.service';
+import { logBestEffort } from '../../../common/helpers/best-effort';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class PurchaseOrdersService {
+  private readonly logger = new Logger(PurchaseOrdersService.name);
+
   constructor(
     private prisma: PrismaService,
     @Inject(forwardRef(() => LegalityService))
@@ -110,52 +114,198 @@ export class PurchaseOrdersService {
       }
     }
 
-    const { totalAmount, ...otherData } = poData;
+    // Price Range SOP Check (BUS-RULE-025)
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const mat = await this.prisma.materialItem.findUnique({
+          where: { id: item.materialId },
+        });
+        if (mat && mat.unitPrice && Number(mat.unitPrice) > 0) {
+          const refPrice = Number(mat.unitPrice);
+          if (Number(item.unitPrice) > refPrice * 1.10 && !dto.priceOverrideReason) {
+            throw new BadRequestException(
+              `Harga untuk item ${mat.name} (${item.unitPrice}) melebihi SOP 110% dari harga referensi (${refPrice}). Alasan override harga wajib diisi.`,
+            );
+          }
+        }
+      }
+    }
 
-    return this.prisma.purchaseOrder.create({
-      data: {
-        ...otherData,
-        poNumber,
-        totalValue: totalAmount || 0,
-        scmId: userId,
-        status: 'DRAFT' as any,
-        dueDate: dueDate ? new Date(dueDate) : undefined,
-        estArrival: dto.estArrival ? new Date(dto.estArrival) : undefined,
-        items: items
-          ? {
-              create: items.map((i) => ({
-                materialId: i.materialId,
-                quantity: i.quantity,
-                unitPrice: i.unitPrice,
-                totalPrice: Number(i.quantity) * Number(i.unitPrice),
-              })),
-            }
-          : undefined,
-      },
+    // Discount, Shipping & Total calculation (BUS-RULE-017)
+    const subtotal =
+      items?.reduce((sum, i) => sum + Number(i.quantity) * Number(i.unitPrice), 0) || 0;
+    const discountManual = Number(dto.discountManual || dto.discount || 0);
+    const discountRounding = Number(dto.discountRounding || 0);
+    const totalDiscount = discountManual + discountRounding;
+    const taxableSubtotal = Math.max(0, subtotal - totalDiscount);
+    const taxPercent = Number(dto.taxPercent || 0);
+    const tax = taxableSubtotal * (taxPercent / 100);
+    const shippingCost = Number(dto.shippingCost || 0);
+    const totalValue = taxableSubtotal + shippingCost + tax;
+
+    const { totalAmount, discount, ...otherData } = poData;
+
+    return this.prisma.$transaction(async (tx) => {
+      const po = await tx.purchaseOrder.create({
+        data: {
+          ...otherData,
+          poNumber,
+          totalValue,
+          discountManual,
+          discountRounding,
+          shippingCost,
+          taxPercent,
+          priceOverrideReason: dto.priceOverrideReason,
+          signatureUrl: dto.signatureUrl,
+          organizationId: dto.organizationId,
+          prId: dto.prId,
+          scmId: userId,
+          status: 'DRAFT' as any,
+          // BUS-RULE-016: Server-side auto read-only date today()
+          createdAt: new Date(),
+          dueDate: dueDate ? new Date(dueDate) : undefined,
+          estArrival: dto.estArrival ? new Date(dto.estArrival) : undefined,
+          items: items
+            ? {
+                create: items.map((i) => ({
+                  materialId: i.materialId,
+                  quantity: i.quantity,
+                  unitPrice: i.unitPrice,
+                  totalPrice: Number(i.quantity) * Number(i.unitPrice),
+                })),
+              }
+            : undefined,
+        },
+        include: {
+          items: { include: { material: true } },
+          supplier: true,
+          purchaseRequest: true,
+        },
+      });
+
+      // If created from PR, mark PR as converted
+      if (dto.prId) {
+        await tx.purchaseRequest.update({
+          where: { id: dto.prId },
+          data: { status: 'CONVERTED' as any },
+        });
+      }
+
+      try {
+        await tx.auditLog.create({
+          data: {
+            entityType: 'PurchaseOrder',
+            entityId: po.id,
+            action: 'CREATE',
+            source: 'SCM_PROCUREMENT',
+            correlationId: po.id,
+            actorPermissionSnapshot: { poNumber, totalValue },
+            actorUserId: userId,
+            txId: randomUUID(),
+          },
+        });
+      } catch (err) {
+        logBestEffort(this.logger, 'audit:PurchaseOrder:CREATE', err);
+      }
+
+      return po;
     });
   }
 
-  async findAll() {
+  async findAll(filter?: { status?: string; search?: string; organizationId?: string }) {
+    const where: any = {};
+    if (filter?.status) where.status = filter.status;
+    if (filter?.organizationId) where.organizationId = filter.organizationId;
+    if (filter?.search) {
+      where.OR = [
+        { poNumber: { contains: filter.search, mode: 'insensitive' } },
+        { notes: { contains: filter.search, mode: 'insensitive' } },
+      ];
+    }
+
     return this.prisma.purchaseOrder.findMany({
+      where,
       include: {
         supplier: true,
         scm: { select: { id: true, fullName: true } },
+        purchaseRequest: true,
         inbounds: { include: { items: true } },
         items: {
           include: { material: true },
         },
       },
-      orderBy: { id: 'desc' },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
   async findOne(id: string) {
     const po = await this.prisma.purchaseOrder.findUnique({
       where: { id },
-      include: { supplier: true, inbounds: { include: { items: true } } },
+      include: {
+        supplier: true,
+        purchaseRequest: true,
+        inbounds: { include: { items: true } },
+        items: { include: { material: true } },
+      },
     });
     if (!po) throw new NotFoundException(`PO ${id} not found`);
     return po;
+  }
+
+  async approve(id: string, user: { id: string; roles: UserRole[] }, signatureUrl?: string) {
+    const po = await this.findOne(id);
+
+    // BUS-RULE-022: Tanda tangan digital mandatory
+    const finalSignature = signatureUrl || po.signatureUrl;
+    if (!finalSignature) {
+      throw new BadRequestException('Tanda tangan digital wajib diunggah sebelum approve PO.');
+    }
+
+    // 07_RBAC_MATRIX.yaml multi-tier approval
+    const totalAmount = Number(po.totalValue);
+    const roles = user.roles || [];
+    const isDirectorOrSuper = roles.includes(UserRole.DIRECTOR) || roles.includes(UserRole.SUPER_ADMIN);
+    const isPurchasingAdmin = roles.includes(UserRole.PURCHASING) || isDirectorOrSuper;
+
+    if (totalAmount > 100_000_000) {
+      if (!isDirectorOrSuper) {
+        throw new ForbiddenException('PO dengan nilai > Rp 100.000.000 memerlukan persetujuan Direktur.');
+      }
+    } else if (totalAmount > 5_000_000) {
+      if (!isPurchasingAdmin) {
+        throw new ForbiddenException('PO dengan nilai Rp 5.000.000 - Rp 100.000.000 memerlukan persetujuan Purchasing Admin/Manager.');
+      }
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.purchaseOrder.update({
+        where: { id },
+        data: {
+          status: 'APPROVED' as any,
+          signatureUrl: finalSignature,
+        },
+        include: { items: true, supplier: true },
+      });
+
+      try {
+        await tx.auditLog.create({
+          data: {
+            entityType: 'PurchaseOrder',
+            entityId: id,
+            action: 'APPROVE',
+            source: 'SCM_PROCUREMENT',
+            correlationId: id,
+            actorPermissionSnapshot: { signatureUrl: finalSignature, totalAmount },
+            actorUserId: user.id,
+            txId: randomUUID(),
+          },
+        });
+      } catch (err) {
+        logBestEffort(this.logger, 'audit:PurchaseOrder:APPROVE', err);
+      }
+
+      return updated;
+    });
   }
 
   async updateStatus(id: string, status: string, reason?: string) {

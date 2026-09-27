@@ -311,24 +311,28 @@ export function ApprovalPageShell<T extends { id: string; code: string; status: 
           label="Total Pengajuan"
           value={calculatedStats.total}
           subtext="Seluruh dokumen tercatat"
-          variant="default"
+          icon={<FileCheck2 className="w-3.5 h-3.5" />}
+          variant="primary"
         />
         <DnaStatCard
           label="Menunggu Persetujuan"
           value={calculatedStats.pending}
           subtext="Perlu tindakan verifikasi"
+          icon={<Clock className="w-3.5 h-3.5" />}
           variant="warning"
         />
         <DnaStatCard
           label="Telah Disetujui"
           value={calculatedStats.approved}
           subtext="Persetujuan tuntas"
+          icon={<CheckCircle2 className="w-3.5 h-3.5" />}
           variant="success"
         />
         <DnaStatCard
           label="Pengajuan Ditolak"
           value={calculatedStats.rejected}
           subtext="Perlu revisi / dibatalkan"
+          icon={<XCircle className="w-3.5 h-3.5" />}
           variant="danger"
         />
       </div>

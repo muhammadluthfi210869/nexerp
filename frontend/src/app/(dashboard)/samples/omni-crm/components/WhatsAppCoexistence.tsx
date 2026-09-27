@@ -303,7 +303,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                 <span className="text-xs font-extrabold text-emerald-950">
                   Mode BusDev Terisolasi: {currentUser?.name}
                 </span>
-                <span className="text-[10px] font-mono font-bold bg-emerald-200 text-emerald-900 px-2 py-0.2 rounded-full">
+                <span className="text-[10px] tabular-nums font-bold bg-emerald-200 text-emerald-900 px-2 py-0.2 rounded-full">
                   📱 {currentUser?.phone}
                 </span>
               </div>
@@ -370,7 +370,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
           </div>
           <span className="text-slate-300 hidden sm:inline">|</span>
           <p className="text-[12px] text-slate-500 hidden sm:block">
-            Coexistence Sinkronisasi Real-Time: HP Sales (<code className="text-emerald-700 font-mono bg-emerald-50 px-1 rounded font-bold">WHATSAPP_HP</code>) ↔ Web CRM (<code className="text-blue-700 font-mono bg-blue-50 px-1 rounded font-bold">CRM_WEB</code>)
+            Coexistence Sinkronisasi Real-Time: HP Sales (<code className="text-emerald-700 tabular-nums bg-emerald-50 px-1 rounded font-bold">WHATSAPP_HP</code>) ↔ Web CRM (<code className="text-blue-700 tabular-nums bg-blue-50 px-1 rounded font-bold">CRM_WEB</code>)
           </p>
         </div>
 
@@ -419,7 +419,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                     Kotak Masuk WhatsApp
                   </h3>
                 </div>
-                <span className="text-[11px] font-mono font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                <span className="text-[11px] tabular-nums font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
                   {filteredLeads.length} Obrolan
                 </span>
               </div>
@@ -533,14 +533,14 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                           <span className={`text-xs block truncate ${isSelected ? 'font-bold text-blue-950' : 'font-bold text-slate-900'}`}>
                             {lead.name}
                           </span>
-                          <span className="text-[10px] text-slate-500 font-mono">
+                          <span className="text-[10px] text-slate-500 tabular-nums">
                             +{lead.phone}
                           </span>
                         </div>
                       </div>
 
                       <div className="text-right shrink-0">
-                        <span className="text-[9px] text-slate-400 font-mono block">
+                        <span className="text-[9px] text-slate-400 tabular-nums block">
                           {lastMsg ? new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '12:30'}
                         </span>
                         {hasUnread && (
@@ -586,7 +586,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                       <h2 className="text-sm font-bold text-slate-900 truncate max-w-[180px]">
                         {activeLead.name}
                       </h2>
-                      <span className="text-[10px] font-mono bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded">
+                      <span className="text-[10px] tabular-nums bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded">
                         #{activeLead.leadNumber || '28981912'}
                       </span>
                     </div>
@@ -610,7 +610,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
               <div className="mt-3">
                 <div className="flex items-center justify-between text-[10px] font-bold text-slate-600 mb-1">
                   <span>Tahapan Funnel Maklon:</span>
-                  <span className="text-blue-700 uppercase font-mono">
+                  <span className="text-blue-700 uppercase tabular-nums">
                     {activeLead.stageId.replace('stage_', '').replace('_', ' ')}
                   </span>
                 </div>
@@ -696,7 +696,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                     <div className="grid grid-cols-2 gap-2 text-slate-700 pt-1">
                       <div>
                         <span className="text-[10px] text-slate-400 block">WhatsApp:</span>
-                        <span className="font-mono font-bold text-slate-900">+{activeLead.phone}</span>
+                        <span className="tabular-nums font-bold text-slate-900">+{activeLead.phone}</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-400 block">Sumber Trafik:</span>
@@ -712,7 +712,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-400 block">Estimasi Omset / Nilai:</span>
-                        <span className="font-bold text-emerald-700 font-mono">
+                        <span className="font-bold text-emerald-700 tabular-nums">
                           Rp {(activeLead.value || 0).toLocaleString('id-ID')}
                         </span>
                       </div>
@@ -735,7 +735,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                           <span className="font-bold text-slate-900 block text-xs">
                             {assignedSales?.name || 'Belum Ditugaskan'}
                           </span>
-                          <span className="text-[10px] text-slate-500 font-mono">
+                          <span className="text-[10px] text-slate-500 tabular-nums">
                             📱 {assignedSales?.formattedPhone || assignedSales?.phone || '-'}
                           </span>
                         </div>
@@ -819,7 +819,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                       </div>
                       <div className="flex justify-between border-b border-slate-200 pb-1">
                         <span className="text-slate-500">Estimasi MOQ:</span>
-                        <span className="font-bold text-blue-700 font-mono">1.000 - 3.000 Pcs</span>
+                        <span className="font-bold text-blue-700 tabular-nums">1.000 - 3.000 Pcs</span>
                       </div>
                       <div className="flex justify-between border-b border-slate-200 pb-1">
                         <span className="text-slate-500">Status Izin BPOM:</span>
@@ -835,11 +835,11 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] space-y-1.5">
                     <div className="flex justify-between">
                       <span className="text-slate-500">Waktu Lead Masuk:</span>
-                      <span className="font-mono text-slate-800">{new Date(activeLead.createdAt).toLocaleString('id-ID')}</span>
+                      <span className="tabular-nums text-slate-800">{new Date(activeLead.createdAt).toLocaleString('id-ID')}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Terakhir Berinteraksi:</span>
-                      <span className="font-mono text-slate-800">{new Date(activeLead.updatedAt).toLocaleString('id-ID')}</span>
+                      <span className="tabular-nums text-slate-800">{new Date(activeLead.updatedAt).toLocaleString('id-ID')}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Durasi di Tahap Ini:</span>
@@ -865,7 +865,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                   <span className="text-[12px] font-bold text-slate-900 block">
                     {activeLead.name}
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono">
+                  <span className="text-[10px] text-slate-500 tabular-nums">
                     Nomor Client: +{activeLead.phone}
                   </span>
                 </div>
@@ -911,7 +911,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                             isOutbound && !isHpChannel ? 'text-blue-100' : 'text-slate-400'
                           }`}
                         >
-                          <span className="font-mono">
+                          <span className="tabular-nums">
                             {new Date(msg.timestamp).toLocaleTimeString([], {
                               hour: '2-digit',
                               minute: '2-digit',
@@ -1022,7 +1022,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                   <h3 className="text-xs font-bold text-slate-900">
                     Handphone Fisik Sales ({assignedSales?.name || 'BusDev'})
                   </h3>
-                  <span className="text-[10px] text-slate-500 font-mono">
+                  <span className="text-[10px] text-slate-500 tabular-nums">
                     Device: {assignedSales?.deviceModel || 'Samsung S24 (WhatsApp Bisnis)'}
                   </span>
                 </div>
@@ -1043,7 +1043,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                   }`}
                 >
                   <p>{m.message}</p>
-                  <span className="text-[9px] block text-right mt-1 opacity-75 font-mono">
+                  <span className="text-[9px] block text-right mt-1 opacity-75 tabular-nums">
                     {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -1078,7 +1078,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                   <h3 className="text-xs font-bold text-slate-900">
                     Web CRM Hub & Dashboard
                   </h3>
-                  <span className="text-[10px] text-slate-500 font-mono">
+                  <span className="text-[10px] text-slate-500 tabular-nums">
                     Channel: CRM_WEB (Realtime Webhook)
                   </span>
                 </div>
@@ -1099,7 +1099,7 @@ export const WhatsAppCoexistence: React.FC<WhatsAppCoexistenceProps> = ({
                   }`}
                 >
                   <p>{m.message}</p>
-                  <span className="text-[9px] block text-right mt-1 opacity-75 font-mono">
+                  <span className="text-[9px] block text-right mt-1 opacity-75 tabular-nums">
                     {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>

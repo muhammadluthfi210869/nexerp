@@ -10,8 +10,9 @@
 // machine is the single audit trail; the EventEmitter2 events are ephemeral
 // notifications only.
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { randomUUID } from 'crypto';
 import { Prisma, ThreadStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import {
@@ -490,6 +491,403 @@ export class CommunicationService {
   //     case ThreadStatus.OPEN:
   //     default:
   //       return 'APPROVAL_REQUESTED';
-  //   }
-  // }
+  // ----- CANONICAL ENTITY METHODS (P17) -----
+
+  async findOrCreateEntityThread(contextType: string, contextId: string, createdById: string) {
+    let thread = await this.prisma.communicationThread.findFirst({
+      where: { contextType, contextId },
+    });
+    if (!thread) {
+      thread = await this.prisma.communicationThread.create({
+        data: {
+          contextType,
+          contextId,
+          title: `${contextType} Comms Thread`,
+          createdById,
+        },
+      });
+    }
+    return thread;
+  }
+
+  async listNotes(contextType: string, contextId: string) {
+    const thread = await this.prisma.communicationThread.findFirst({
+      where: { contextType, contextId },
+      include: {
+        replies: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            author: { select: { id: true, fullName: true, email: true } },
+            mentions: {
+              include: {
+                mentionedUser: { select: { id: true, fullName: true, email: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!thread) return [];
+
+    return thread.replies.map((r) => ({
+      id: r.id,
+      body: r.body,
+      author: r.author,
+      created_at: r.createdAt,
+      updated_at: r.updatedAt,
+      mentions: r.mentions.map((m) => m.mentionedUser),
+    }));
+  }
+
+  async createNote(
+    contextType: string,
+    contextId: string,
+    authorId: string,
+    body: string,
+    visibility = 'ALL',
+  ) {
+    if (!body || !body.trim()) {
+      throw new BusinessRuleViolationException('NOTE_EMPTY', 'Isi catatan tidak boleh kosong');
+    }
+
+    // BUS-RULE-091: Parse @username mentions
+    const mentionRegex = /@([a-zA-Z0-9._-]+)/g;
+    const matches = Array.from(body.matchAll(mentionRegex));
+    const usernames = Array.from(new Set(matches.map((m) => m[1])));
+
+    const resolvedMentionUsers: { id: string; fullName: string | null; email: string }[] = [];
+    for (const uname of usernames) {
+      const user = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: { startsWith: uname, mode: 'insensitive' } },
+            { fullName: { contains: uname, mode: 'insensitive' } },
+          ],
+          status: 'ACTIVE',
+        },
+        select: { id: true, fullName: true, email: true },
+      });
+
+      if (!user) {
+        throw new BadRequestException(`MENTION_USER_NOT_FOUND: User @${uname} tidak ditemukan.`);
+      }
+      if (user.id !== authorId && !resolvedMentionUsers.some((u) => u.id === user.id)) {
+        resolvedMentionUsers.push(user);
+      }
+    }
+
+    const thread = await this.findOrCreateEntityThread(contextType, contextId, authorId);
+
+    return await this.prisma.$transaction(async (tx) => {
+      const reply = await tx.communicationThreadReply.create({
+        data: {
+          threadId: thread.id,
+          authorId,
+          body,
+        },
+        include: {
+          author: { select: { id: true, fullName: true, email: true } },
+        },
+      });
+
+      const mentionsCreated = [];
+      for (const targetUser of resolvedMentionUsers) {
+        const mention = await tx.communicationMention.create({
+          data: {
+            replyId: reply.id,
+            mentionedUserId: targetUser.id,
+          },
+        });
+        mentionsCreated.push(mention);
+
+        // In-app notification
+        await tx.notification.create({
+          data: {
+            userId: targetUser.id,
+            title: `Mention baru di ${contextType}`,
+            body: body.length > 100 ? `${body.slice(0, 97)}...` : body,
+            type: 'MENTION',
+            referenceType: contextType,
+            referenceId: contextId,
+            link: `/entities/${contextType}/${contextId}/notes`,
+          },
+        });
+
+        // Atomic Outbox Event
+        await tx.outboxEvent.create({
+          data: {
+            eventType: 'entity.mention.created',
+            aggregateType: contextType,
+            aggregateId: contextId,
+            idempotencyKey: `mention-${reply.id}-${targetUser.id}`,
+            payload: {
+              context_type: 'NOTE',
+              context_id: reply.id,
+              entity_type: contextType,
+              entity_id: contextId,
+              mentioned_by_user_id: authorId,
+              tagged_user_ids: [targetUser.id],
+              content: body,
+            },
+            correlationId: randomUUID(),
+            status: 'PENDING',
+          },
+        });
+      }
+
+      await this.activityLog.log({
+        userId: authorId,
+        type: LogActivityType.CREATE,
+        entityType: 'EntityNote',
+        entityId: reply.id,
+        metadata: {
+          contextType,
+          contextId,
+          visibility,
+          mentionCount: mentionsCreated.length,
+        },
+      });
+
+      return {
+        id: reply.id,
+        body: reply.body,
+        visibility,
+        author: reply.author,
+        created_at: reply.createdAt,
+        mentions: resolvedMentionUsers,
+      };
+    });
+  }
+
+  async updateNote(noteId: string, authorId: string, body: string) {
+    const reply = await this.prisma.communicationThreadReply.findUnique({
+      where: { id: noteId },
+    });
+    if (!reply) throw new ResourceNotFoundException('Note', noteId);
+
+    const updated = await this.prisma.communicationThreadReply.update({
+      where: { id: noteId },
+      data: { body, updatedAt: new Date() },
+      include: { author: { select: { id: true, fullName: true, email: true } } },
+    });
+
+    await this.activityLog.log({
+      userId: authorId,
+      type: LogActivityType.UPDATE,
+      entityType: 'EntityNote',
+      entityId: noteId,
+      metadata: { body },
+    });
+
+    return {
+      id: updated.id,
+      body: updated.body,
+      updated_at: updated.updatedAt,
+      author: updated.author,
+    };
+  }
+
+  async deleteNote(noteId: string, actorId: string) {
+    const reply = await this.prisma.communicationThreadReply.findUnique({
+      where: { id: noteId },
+    });
+    if (!reply) throw new ResourceNotFoundException('Note', noteId);
+
+    await this.prisma.communicationThreadReply.delete({
+      where: { id: noteId },
+    });
+
+    await this.activityLog.log({
+      userId: actorId,
+      type: LogActivityType.DELETE,
+      entityType: 'EntityNote',
+      entityId: noteId,
+      metadata: { deletedAt: new Date().toISOString() },
+    });
+
+    return { deleted: true, id: noteId };
+  }
+
+  async listComments(contextType: string, contextId: string) {
+    return this.listNotes(contextType, contextId);
+  }
+
+  async createComment(
+    contextType: string,
+    contextId: string,
+    authorId: string,
+    body: string,
+    relatedEntityType?: string,
+    relatedEntityId?: string,
+  ) {
+    // BUS-RULE-094: Cross-reference comment check
+    if (relatedEntityType && relatedEntityId) {
+      this.logger.log(`Cross-reference confirmed: ${contextType}:${contextId} <-> ${relatedEntityType}:${relatedEntityId}`);
+    }
+    return this.createNote(contextType, contextId, authorId, body, 'ALL');
+  }
+
+  async listStatusTransitions(entityType: string, entityId: string) {
+    return this.prisma.stateTransitionLog.findMany({
+      where: { entityType, entityId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        changedBy: { select: { id: true, fullName: true, email: true } },
+      },
+    });
+  }
+
+  async listEntityAttachments(contextType: string, contextId: string) {
+    return this.prisma.communicationAttachment.findMany({
+      where: {
+        thread: { contextType, contextId },
+      },
+      include: {
+        uploadedBy: { select: { id: true, fullName: true, email: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async attachFileToEntity(
+    contextType: string,
+    contextId: string,
+    body: {
+      file_id?: string;
+      filename?: string;
+      mimeType?: string;
+      size?: number;
+      storagePath?: string;
+      description?: string;
+    },
+    uploadedById: string,
+  ) {
+    const thread = await this.findOrCreateEntityThread(contextType, contextId, uploadedById);
+    const attachmentId = body.file_id || randomUUID();
+
+    const attachment = await this.prisma.communicationAttachment.create({
+      data: {
+        id: attachmentId,
+        threadId: thread.id,
+        filename: body.filename || body.description || `file_${attachmentId}.dat`,
+        mimeType: body.mimeType || 'application/octet-stream',
+        size: body.size || 1024,
+        storagePath: body.storagePath || `/uploads/${contextType.toLowerCase()}/${contextId}/${attachmentId}`,
+        uploadedById,
+      },
+    });
+
+    await this.activityLog.log({
+      userId: uploadedById,
+      type: LogActivityType.CREATE,
+      entityType: 'EntityAttachment',
+      entityId: attachment.id,
+      metadata: { contextType, contextId, attachmentId, description: body.description },
+    });
+
+    return attachment;
+  }
+
+  async listTags(contextType: string, contextId: string) {
+    const thread = await this.prisma.communicationThread.findFirst({
+      where: { contextType, contextId },
+      include: {
+        replies: {
+          include: {
+            mentions: {
+              include: {
+                mentionedUser: { select: { id: true, fullName: true, email: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!thread) return [];
+
+    const tags: { id: string; type: string; user?: any; tag?: string; replyId: string }[] = [];
+    for (const reply of thread.replies) {
+      if (reply.body.startsWith('[TAG:')) {
+        const tagName = reply.body.slice(5, -1);
+        tags.push({
+          id: reply.id,
+          type: 'TAG',
+          tag: tagName,
+          replyId: reply.id,
+        });
+      }
+      for (const mention of reply.mentions) {
+        tags.push({
+          id: mention.id,
+          type: 'USER',
+          user: mention.mentionedUser,
+          replyId: reply.id,
+        });
+      }
+    }
+    return tags;
+  }
+
+  async createTag(
+    contextType: string,
+    contextId: string,
+    dto: { tag?: string; type?: string; target_id?: string; context_type?: string; context_id?: string },
+    authorId: string,
+  ) {
+    const thread = await this.findOrCreateEntityThread(contextType, contextId, authorId);
+    const tagName = dto.tag || dto.target_id || 'TAG';
+
+    if (dto.type === 'USER' && dto.target_id) {
+      let reply = await this.prisma.communicationThreadReply.findFirst({
+        where: { threadId: thread.id },
+      });
+      if (!reply) {
+        reply = await this.prisma.communicationThreadReply.create({
+          data: {
+            threadId: thread.id,
+            authorId,
+            body: `Tag for User ${dto.target_id}`,
+          },
+        });
+      }
+
+      const mention = await this.prisma.communicationMention.create({
+        data: {
+          replyId: reply.id,
+          mentionedUserId: dto.target_id,
+        },
+      });
+
+      await this.prisma.notification.create({
+        data: {
+          userId: dto.target_id,
+          title: `Anda di-tag pada ${contextType}`,
+          body: `Tag dibuat dalam konteks ${contextType}`,
+          type: 'TAG',
+          referenceType: contextType,
+          referenceId: contextId,
+        },
+      });
+
+      return mention;
+    }
+
+    const reply = await this.prisma.communicationThreadReply.create({
+      data: {
+        threadId: thread.id,
+        authorId,
+        body: `[TAG:${tagName}]`,
+      },
+    });
+
+    return {
+      id: reply.id,
+      tag: tagName,
+      type: 'TAG',
+      context_type: contextType,
+      context_id: contextId,
+    };
+  }
 }

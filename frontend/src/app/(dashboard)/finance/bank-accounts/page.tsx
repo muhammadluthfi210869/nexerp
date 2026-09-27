@@ -1,6 +1,9 @@
-﻿"use client";
+"use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   DnaPageContainer,
   DnaPageHeader,
@@ -16,8 +19,14 @@ import {
   DnaCurrencyInput,
   CoaSelect,
   formatRupiah,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
+  useDnaToast,
 } from "@/components/dna";
-import { DnaTable } from "@/components/dna";
 import { Plus, Building2, CreditCard, Wallet, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 interface BankAccount {
@@ -32,57 +41,38 @@ interface BankAccount {
   isActive: boolean;
 }
 
-const INITIAL_ACCOUNTS: BankAccount[] = [
-  {
-    id: "bank-1",
-    bankName: "Bank Central Asia (BCA)",
-    accountNumber: "541-0988-121",
-    accountName: "PT Karya Impian Laboratoris (Operasional)",
-    accountType: "BANK",
-    currency: "IDR",
-    currentBalance: 1250000000,
-    glAccountCode: "11300",
-    isActive: true,
-  },
-  {
-    id: "bank-2",
-    bankName: "Bank Mandiri",
-    accountNumber: "132-00-987654-1",
-    accountName: "PT Karya Impian Laboratoris (Payroll)",
-    accountType: "BANK",
-    currency: "IDR",
-    currentBalance: 420000000,
-    glAccountCode: "11310",
-    isActive: true,
-  },
-  {
-    id: "cash-1",
-    bankName: "Brankas Utama Pabrik",
-    accountNumber: "CASH-MAIN",
-    accountName: "Kas Operasional Pabrik",
-    accountType: "CASH",
-    currency: "IDR",
-    currentBalance: 35000000,
-    glAccountCode: "11100",
-    isActive: true,
-  },
-  {
-    id: "petty-1",
-    bankName: "Petty Cash Finance Lab",
-    accountNumber: "CASH-PETTY",
-    accountName: "Kas Kecil R&D & Operasional",
-    accountType: "PETTY_CASH",
-    currency: "IDR",
-    currentBalance: 12500000,
-    glAccountCode: "11200",
-    isActive: true,
-  },
-];
-
 export default function BankAccountsPage() {
-  const [accounts, setAccounts] = useState<BankAccount[]>(INITIAL_ACCOUNTS);
+  const qc = useQueryClient();
+  const toast = useDnaToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const { data: rawAccounts = [], isLoading } = useQuery<any[]>({
+    queryKey: ["finance-bank-accounts"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/bank-accounts");
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const accounts: BankAccount[] = useMemo(() => {
+    return rawAccounts.map((a: any) => ({
+      id: a.id,
+      bankName: a.bankName || a.accountCode || "Bank",
+      accountNumber: a.accountNumber || "-",
+      accountName: a.notes || a.bankName || "Rekening Operasional",
+      accountType: (a.accountType || "BANK") as "BANK" | "CASH" | "PETTY_CASH",
+      currency: a.currencyCode || a.currency || "IDR",
+      currentBalance: Number(a.currentBalance || a.initialBalance || 0),
+      glAccountCode: a.glAccountId || a.glAccountCode || "1110",
+      isActive: a.isActive !== false,
+    }));
+  }, [rawAccounts]);
 
   const totalBalance = accounts.reduce((acc, a) => acc + (a.isActive ? a.currentBalance : 0), 0);
   const totalBank = accounts.filter((a) => a.accountType === "BANK").reduce((acc, a) => acc + a.currentBalance, 0);
@@ -98,28 +88,52 @@ export default function BankAccountsPage() {
     glAccountCode: "11300",
   });
 
+  const createMutation = useMutation({
+    mutationFn: async (payload: any) => api.post("/finance/bank-accounts", payload),
+    onSuccess: () => {
+      toast.success("Rekening kas/bank berhasil ditambahkan");
+      qc.invalidateQueries({ queryKey: ["finance-bank-accounts"] });
+      setIsModalOpen(false);
+      setFormData({
+        bankName: "",
+        accountNumber: "",
+        accountName: "",
+        accountType: "BANK",
+        currency: "IDR",
+        initialBalance: 0,
+        glAccountCode: "11300",
+      });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal membuat rekening kas/bank");
+    },
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) =>
+      api.patch(`/finance/bank-accounts/${id}`, { isActive }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["finance-bank-accounts"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal mengubah status rekening");
+    },
+  });
+
   const handleCreate = () => {
-    const newAcc: BankAccount = {
-      id: "acc-" + Date.now(),
+    if (!formData.bankName || !formData.accountNumber) {
+      toast.error("Nama bank dan nomor rekening wajib diisi");
+      return;
+    }
+    const accountCode = `${formData.bankName.slice(0, 4).toUpperCase()}-${formData.accountNumber.slice(-4)}`;
+    createMutation.mutate({
+      accountCode,
       bankName: formData.bankName,
       accountNumber: formData.accountNumber,
-      accountName: formData.accountName,
       accountType: formData.accountType,
-      currency: formData.currency,
-      currentBalance: formData.initialBalance,
-      glAccountCode: formData.glAccountCode,
-      isActive: true,
-    };
-    setAccounts([newAcc, ...accounts]);
-    setIsModalOpen(false);
-    setFormData({
-      bankName: "",
-      accountNumber: "",
-      accountName: "",
-      accountType: "BANK",
-      currency: "IDR",
-      initialBalance: 0,
-      glAccountCode: "11300",
+      currencyCode: formData.currency,
+      initialBalance: Number(formData.initialBalance),
+      notes: formData.accountName,
     });
   };
 
@@ -173,74 +187,93 @@ export default function BankAccountsPage() {
         />
       </DnaKpiGrid>
 
+      {/* Main Table Card (Rule 1: No title prop, Rule 4: Clean responsive columns) */}
       <DnaDataTableCard
-        searchPlaceholder="Cari nama bank, nomor rekening, atau pemegang rekening..."
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari nama bank, nomor rekening, atau pemegang rekening...",
+        }}
       >
         <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left text-[12px]">
-            <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-semibold">
-              <tr>
-                <th className="px-4 py-3">Nama Bank / Kas</th>
-                <th className="px-4 py-3">Nomor Rekening</th>
-                <th className="px-4 py-3">Atas Nama</th>
-                <th className="px-4 py-3">Tipe Rekening</th>
-                <th className="px-4 py-3">Mapping Akun COA</th>
-                <th className="px-4 py-3 text-right">Saldo Berjalan</th>
-                <th className="px-4 py-3 text-center">Status</th>
-                <th className="px-4 py-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh>Nama Bank / Kas</DnaTh>
+                <DnaTh className="w-[140px]">Nomor Rekening</DnaTh>
+                <DnaTh>Atas Nama</DnaTh>
+                <DnaTh align="center" className="w-[120px]">Tipe Rekening</DnaTh>
+                <DnaTh className="w-[120px]">Mapping COA</DnaTh>
+                <DnaTh align="right" className="w-[150px]">Saldo Berjalan</DnaTh>
+                <DnaTh align="center" className="w-[110px]">Status</DnaTh>
+                <DnaTh align="center" className="w-[110px]">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filtered.map((acc) => (
-                <tr key={acc.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-slate-900">{acc.bankName}</div>
-                    <div className="text-[11px] text-slate-400">{acc.currency} (Indonesian Rupiah)</div>
-                  </td>
-                  <td className="px-4 py-3">
+                <DnaTableRow key={acc.id} className="group">
+                  {/* Kolom 1: Nama Bank / Kas (1 Natural Pair) */}
+                  <DnaTd>
+                    <DnaCell.Text
+                      primary={acc.bankName}
+                      secondary={`${acc.currency} (Indonesian Rupiah)`}
+                    />
+                  </DnaTd>
+
+                  {/* Kolom 2: Nomor Rekening */}
+                  <DnaTd>
                     <DnaCell.Code value={acc.accountNumber} />
-                  </td>
-                  <td className="px-4 py-3 text-slate-700 font-medium">{acc.accountName}</td>
-                  <td className="px-4 py-3">
+                  </DnaTd>
+
+                  {/* Kolom 3: Atas Nama */}
+                  <DnaTd isPrimary className="truncate max-w-[200px]">
+                    {acc.accountName}
+                  </DnaTd>
+
+                  {/* Kolom 4: Tipe Rekening */}
+                  <DnaTd align="center">
                     <DnaBadge
                       variant={
-                        acc.accountType === "BANK" ? "blue" : acc.accountType === "CASH" ? "amber" : "purple"
+                        acc.accountType === "BANK" ? "info" : acc.accountType === "CASH" ? "warning" : "purple"
                       }
                     >
                       {acc.accountType}
                     </DnaBadge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md text-[11px]">
-                      {acc.glAccountCode}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-slate-900">
-                    {formatRupiah(acc.currentBalance)}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <DnaBadge variant={acc.isActive ? "emerald" : "slate"}>
+                  </DnaTd>
+
+                  {/* Kolom 5: Mapping Akun COA */}
+                  <DnaTd>
+                    <DnaCell.Code value={acc.glAccountCode} />
+                  </DnaTd>
+
+                  {/* Kolom 6: Saldo Berjalan */}
+                  <DnaTd align="right">
+                    <DnaCell.Currency value={acc.currentBalance} className="font-semibold text-slate-900" />
+                  </DnaTd>
+
+                  {/* Kolom 7: Status */}
+                  <DnaTd align="center">
+                    <DnaBadge variant={acc.isActive ? "success" : "default"}>
                       {acc.isActive ? "Aktif" : "Non-Aktif"}
                     </DnaBadge>
-                  </td>
-                  <td className="px-4 py-3 text-center">
+                  </DnaTd>
+
+                  {/* Kolom 8: Aksi */}
+                  <DnaTd align="center">
                     <DnaButton
                       variant="secondary"
                       size="sm"
                       onClick={() =>
-                        setAccounts(
-                          accounts.map((a) => (a.id === acc.id ? { ...a, isActive: !a.isActive } : a))
-                        )
+                        toggleMutation.mutate({ id: acc.id, isActive: !acc.isActive })
                       }
+                      disabled={toggleMutation.isPending}
                     >
                       {acc.isActive ? "Nonaktifkan" : "Aktifkan"}
                     </DnaButton>
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ))}
-            </tbody>
+            </DnaTableBody>
           </DnaTable>
         </div>
       </DnaDataTableCard>

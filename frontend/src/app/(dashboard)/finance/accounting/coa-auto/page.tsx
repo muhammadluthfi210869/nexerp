@@ -11,6 +11,9 @@
 
 import React, { useState, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Zap,
   Plus,
@@ -30,6 +33,12 @@ import {
   DnaSelect,
   DnaModal,
   DnaCell,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
   useDnaToast,
 } from "@/components/dna";
 
@@ -37,76 +46,67 @@ interface CoaAutoRule {
   id: string;
   ruleName: string;
   documentType: "Faktur Pembelian" | "Faktur Penjualan" | "DP Penjualan" | "DP Pembelian" | "Pembayaran Piutang" | "Pembayaran Hutang" | "Konsumsi BOM Mixing" | "Retur Penjualan" | "Retur Pembelian";
-  condition: string; // misal "Jasa Maklon", "Jual Putus", "Bahan Baku Impor", "Semua Transaksi"
+  condition: string;
   debitAccount: string;
   creditAccount: string;
   isActive: boolean;
   notes?: string;
 }
 
-const INITIAL_RULES: CoaAutoRule[] = [
-  {
-    id: "rule-1",
-    ruleName: "Posting Invoice Maklon Baru (AR vs Pendapatan)",
-    documentType: "Faktur Penjualan",
-    condition: "Kontrak Jasa Maklon",
-    debitAccount: "1-1201 — Piutang Usaha Maklon",
-    creditAccount: "4-1101 — Pendapatan Jasa Maklon",
-    isActive: true,
-    notes: "Dipicu saat Faktur Penjualan disetujui",
-  },
-  {
-    id: "rule-2",
-    ruleName: "Penerimaan Down Payment Klien (Kas vs Hutang DP)",
-    documentType: "DP Penjualan",
-    condition: "Semua Kategori (Sample/Produksi)",
-    debitAccount: "1-1101 — Kas & Bank Operasional (BCA)",
-    creditAccount: "2-1201 — Uang Muka Penjualan (DP Pelanggan)",
-    isActive: true,
-    notes: "Dipicu saat konfirmasi bayar DP penjualan",
-  },
-  {
-    id: "rule-3",
-    ruleName: "Pembelian Bahan Baku CPKB (Persediaan vs AP)",
-    documentType: "Faktur Pembelian",
-    condition: "Bahan Baku (BBK)",
-    debitAccount: "1-1301 — Persediaan Bahan Baku",
-    creditAccount: "2-1101 — Hutang Usaha Supplier",
-    isActive: true,
-    notes: "Dipicu saat Faktur Pembelian vendor divalidasi",
-  },
-  {
-    id: "rule-4",
-    ruleName: "Konsumsi BOM Mixing (WIP vs Bahan Baku)",
-    documentType: "Konsumsi BOM Mixing",
-    condition: "Batch Produksi Aktif",
-    debitAccount: "1-1304 — Persediaan Barang Dalam Proses (WIP)",
-    creditAccount: "1-1301 — Persediaan Bahan Baku",
-    isActive: true,
-    notes: "Dipicu saat penimbangan & mixing bahan baku",
-  },
-  {
-    id: "rule-5",
-    ruleName: "Penyelesaian Produksi / Release (Barang Jadi vs WIP)",
-    documentType: "Faktur Penjualan",
-    condition: "Barang Jadi Siap Kirim",
-    debitAccount: "5-1101 — Beban Pokok Penjualan (HPP)",
-    creditAccount: "1-1303 — Persediaan Barang Jadi (BJD)",
-    isActive: true,
-    notes: "Dipicu saat DO dan Gatekeeper rilis barang",
-  },
-];
-
 function CoaAutoContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const toast = useDnaToast();
+  const qc = useQueryClient();
 
-  const [rules, setRules] = useState<CoaAutoRule[]>(INITIAL_RULES);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDocFilter, setSelectedDocFilter] = useState("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingRule, setEditingRule] = useState<CoaAutoRule | null>(null);
+
+  // 1. Fetch live COA accounts
+  const { data: accounts = [] } = useQuery<any[]>({
+    queryKey: ["finance-accounts"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/accounts");
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  // 2. Fetch live auto-journal configs
+  const { data: rawConfigs = [] } = useQuery<any[]>({
+    queryKey: ["finance-auto-journal-configs"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/finance/auto-journal-configs");
+        const body = unwrapResponse<any[]>(res);
+        return Array.isArray(body) ? body : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const rules: CoaAutoRule[] = useMemo(() => {
+    return rawConfigs.map((cfg: any) => {
+      const debitAcc = accounts.find((a: any) => a.id === cfg.coaDebetId || a.code === cfg.coaDebetId);
+      const creditAcc = accounts.find((a: any) => a.id === cfg.coaCreditId || a.code === cfg.coaCreditId);
+      return {
+        id: cfg.transactionType,
+        ruleName: cfg.description || `Auto Journal: ${cfg.transactionType}`,
+        documentType: (cfg.transactionType as any) || "Faktur Penjualan",
+        condition: "Semua Transaksi",
+        debitAccount: debitAcc ? `${debitAcc.code} — ${debitAcc.name}` : cfg.coaDebetId,
+        creditAccount: creditAcc ? `${creditAcc.code} — ${creditAcc.name}` : cfg.coaCreditId,
+        isActive: true,
+        notes: `Aturan database untuk ${cfg.transactionType}`,
+      };
+    });
+  }, [rawConfigs, accounts]);
 
   React.useEffect(() => {
     if (searchParams.get("action") === "create") {
@@ -118,8 +118,8 @@ function CoaAutoContent() {
   const [formName, setFormName] = useState("");
   const [formDocType, setFormDocType] = useState<CoaAutoRule["documentType"]>("Faktur Penjualan");
   const [formCondition, setFormCondition] = useState("Semua Transaksi");
-  const [formDebit, setFormDebit] = useState("1-1201 — Piutang Usaha Maklon");
-  const [formCredit, setFormCredit] = useState("4-1101 — Pendapatan Jasa Maklon");
+  const [formDebit, setFormDebit] = useState("");
+  const [formCredit, setFormCredit] = useState("");
 
   const filteredRules = useMemo(() => {
     return rules.filter((r) => {
@@ -132,12 +132,30 @@ function CoaAutoContent() {
     });
   }, [rules, searchQuery, selectedDocFilter]);
 
-  const handleToggleActive = (id: string) => {
-    setRules((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, isActive: !r.isActive } : r))
-    );
-    toast.success("Status Diperbarui", "Status rule posting otomatis berhasil diubah.");
-  };
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const debitAcc = accounts.find((a: any) => a.code === formDebit || a.id === formDebit) || accounts[0];
+      const creditAcc = accounts.find((a: any) => a.code === formCredit || a.id === formCredit) || accounts[1] || debitAcc;
+      return api.post("/finance/auto-journal-configs", {
+        transactionType: formDocType,
+        coaDebetId: debitAcc?.id || formDebit || "DEBIT",
+        coaCreditId: creditAcc?.id || formCredit || "CREDIT",
+        description: formName,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Rule Disimpan", `Aturan auto-posting '${formName}' berhasil disimpan ke database.`);
+      qc.invalidateQueries({ queryKey: ["finance-auto-journal-configs"] });
+      setIsModalOpen(false);
+      setFormName("");
+      if (searchParams.get("action") === "create") {
+        router.replace("/finance/accounting/coa-auto");
+      }
+    },
+    onError: (err: any) => {
+      toast.error("Gagal", err?.response?.data?.message || "Gagal menyimpan aturan jurnal");
+    },
+  });
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,25 +163,7 @@ function CoaAutoContent() {
       toast.error("Validasi Gagal", "Nama Rule wajib diisi.");
       return;
     }
-
-    const newRule: CoaAutoRule = {
-      id: `rule-${Date.now()}`,
-      ruleName: formName,
-      documentType: formDocType,
-      condition: formCondition,
-      debitAccount: formDebit,
-      creditAccount: formCredit,
-      isActive: true,
-      notes: "Aturan posting otomatis dikonfigurasi",
-    };
-
-    setRules((prev) => [newRule, ...prev]);
-    toast.success("Rule Disimpan", `Aturan auto-posting '${formName}' berhasil ditambahkan.`);
-    setIsModalOpen(false);
-    setFormName("");
-    if (searchParams.get("action") === "create") {
-      router.replace("/finance/accounting/coa-auto");
-    }
+    saveMutation.mutate();
   };
 
   return (
@@ -171,171 +171,141 @@ function CoaAutoContent() {
       <DnaPageHeader
         title="CoA Jurnal Otomatis (Kelola CoA)"
         description="Konfigurasi Aturan Auto-Posting Debit dan Kredit per Jenis Dokumen Transaksi Operasional"
-        badge={
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
-            <Zap className="w-3.5 h-3.5" />
-            POSTING ENGINE (0.5)
-          </span>
-        }
         actions={
-          <DnaButton
-            variant="primary"
-            size="sm"
-            onClick={() => setIsModalOpen(true)}
-            className="gap-1.5 bg-purple-600 hover:bg-purple-700 text-white"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            + Tambah Rule
+          <DnaButton variant="primary" size="md" onClick={() => setIsModalOpen(true)}>
+            <Plus className="w-4 h-4 mr-1.5" />
+            Tambah Aturan Posting
           </DnaButton>
         }
       />
 
-      <DnaKpiGrid
-        columns={4}
-        items={[
-          {
-            label: "TOTAL ATURAN POSTING",
-            value: `${rules.length} Rule`,
-            subtext: "Mencakup siklus P2P & O2C",
-            icon: BookOpen,
-            status: "neutral",
-          },
-          {
-            label: "RULE AKTIF",
-            value: `${rules.filter((r) => r.isActive).length} Aktif`,
-            subtext: "Otomasi posting berjalan",
-            icon: CheckCircle2,
-            status: "success",
-          },
-          {
-            label: "DOKUMEN TERPROTEKSI",
-            value: "100%",
-            subtext: "Semua transaksi wajib ada rule",
-            icon: Settings2,
-            status: "purple",
-          },
-          {
-            label: "JURNAL MANUAL TERKUNCI",
-            value: "Aktif",
-            subtext: "Mencegah bypass kontrol internal",
-            icon: ArrowRightLeft,
-            status: "neutral",
-          },
-        ]}
-      />
+      <DnaKpiGrid cols={4}>
+        <div className="bg-white p-4 rounded-xl border border-slate-200">
+          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold">
+            <Zap className="w-4 h-4 text-amber-500" />
+            <span>TOTAL ATURAN AKTIF</span>
+          </div>
+          <p className="text-2xl font-black text-slate-900 mt-2">{rules.filter((r) => r.isActive).length}</p>
+          <span className="text-[10px] text-slate-400">Aturan posting otomatis siap kerja</span>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200">
+          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>DOKUMEN TERINTEGRASI</span>
+          </div>
+          <p className="text-2xl font-black text-slate-900 mt-2">
+            {new Set(rules.map((r) => r.documentType)).size}
+          </p>
+          <span className="text-[10px] text-slate-400">Faktur AR/AP, DP, Produksi</span>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200">
+          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold">
+            <BookOpen className="w-4 h-4 text-blue-600" />
+            <span>AKUN COA TERPETAKAN</span>
+          </div>
+          <p className="text-2xl font-black text-slate-900 mt-2">{accounts.length}</p>
+          <span className="text-[10px] text-slate-400">Bagan akun aktif dalam GL</span>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200">
+          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold">
+            <Settings2 className="w-4 h-4 text-purple-600" />
+            <span>DOUBLE-ENTRY ENGINE</span>
+          </div>
+          <p className="text-2xl font-black text-emerald-600 mt-2">100%</p>
+          <span className="text-[10px] text-slate-400">Prinsip balance ketat</span>
+        </div>
+      </DnaKpiGrid>
 
       <DnaDataTableCard
-        title="Daftar Aturan Jurnal Otomatis (GL Auto-Posting Matrix)"
-        count={filteredRules.length}
-        totalItems={rules.length}
-        actions={
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="w-64">
-              <DnaInput
-                placeholder="Cari nama rule, akun..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                icon={<Search className="w-4 h-4 text-slate-400" />}
-              />
-            </div>
-            <select
-              value={selectedDocFilter}
-              onChange={(e) => setSelectedDocFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-purple-500"
-            >
-              <option value="ALL">Semua Jenis Dokumen</option>
-              <option value="Faktur Pembelian">Faktur Pembelian</option>
-              <option value="Faktur Penjualan">Faktur Penjualan</option>
-              <option value="DP Penjualan">DP Penjualan</option>
-              <option value="DP Pembelian">DP Pembelian</option>
-              <option value="Konsumsi BOM Mixing">Konsumsi BOM Mixing</option>
-            </select>
-          </div>
-        }
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari nama aturan, akun debit, akun kredit...",
+          filterColumns: [
+            {
+              key: "docType",
+              label: "Tipe Dokumen",
+              type: "select",
+              options: [
+                "Faktur Penjualan",
+                "Faktur Pembelian",
+                "DP Penjualan",
+                "DP Pembelian",
+                "Pembayaran Piutang",
+                "Pembayaran Hutang",
+                "Konsumsi BOM Mixing",
+              ],
+            },
+          ],
+          selectedColumn: "docType",
+          onSelectColumn: () => {},
+          filterValue: selectedDocFilter,
+          onFilterValueChange: setSelectedDocFilter,
+        }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                <th className="p-3.5">RULE NAME</th>
-                <th className="p-3.5">DOCUMENT TYPE</th>
-                <th className="p-3.5">CONDITION</th>
-                <th className="p-3.5">DEBIT ACCOUNT</th>
-                <th className="p-3.5">CREDIT ACCOUNT</th>
-                <th className="p-3.5 text-center">ACTIVE</th>
-                <th className="p-3.5 text-right">#</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredRules.map((r) => (
-                <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="p-3.5 font-semibold text-slate-800">
-                    {r.ruleName}
-                  </td>
-                  <td className="p-3.5">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
-                      {r.documentType}
-                    </span>
-                  </td>
-                  <td className="p-3.5 text-slate-600">
-                    {r.condition}
-                  </td>
-                  <td className="p-3.5 font-mono text-[11px] text-slate-700">
-                    {r.debitAccount}
-                  </td>
-                  <td className="p-3.5 font-mono text-[11px] text-slate-700">
-                    {r.creditAccount}
-                  </td>
-                  <td className="p-3.5 text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleActive(r.id)}
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
-                        r.isActive
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-300"
-                          : "bg-slate-100 text-slate-500 border border-slate-200"
-                      }`}
-                    >
-                      {r.isActive ? "Aktif" : "Nonaktif"}
-                    </button>
-                  </td>
-                  <td className="p-3.5 text-right">
-                    <DnaCell.Actions
-                      onEdit={() => {
-                        setEditingRule(r);
-                        setFormName(r.ruleName);
-                        setFormDocType(r.documentType);
-                        setFormCondition(r.condition);
-                        setFormDebit(r.debitAccount);
-                        setFormCredit(r.creditAccount);
-                        setIsModalOpen(true);
-                      }}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DnaTable className="w-full text-left border-collapse text-xs">
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="w-[28%]">Nama Aturan & Pemicu</DnaTh>
+                <DnaTh className="w-[18%]">Tipe Dokumen</DnaTh>
+                <DnaTh className="w-[22%]">Akun Debit (Dr)</DnaTh>
+                <DnaTh className="w-[22%]">Akun Kredit (Cr)</DnaTh>
+                <DnaTh align="center" className="w-[10%]">Status</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
+              {filteredRules.length === 0 ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={5} className="py-8 text-center text-slate-400">
+                    Belum ada aturan posting jurnal otomatis. Klik &quot;Tambah Aturan Posting&quot; untuk mengonfigurasi.
+                  </DnaTd>
+                </DnaTableRow>
+              ) : (
+                filteredRules.map((rule) => (
+                  <DnaTableRow key={rule.id}>
+                    <DnaTd>
+                      <DnaCell.Text
+                        primary={rule.ruleName}
+                        secondary={rule.notes || rule.condition}
+                      />
+                    </DnaTd>
+                    <DnaTd>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                        {rule.documentType}
+                      </span>
+                    </DnaTd>
+                    <DnaTd>
+                      <span className="font-semibold text-blue-700">{rule.debitAccount}</span>
+                    </DnaTd>
+                    <DnaTd>
+                      <span className="font-semibold text-emerald-700">{rule.creditAccount}</span>
+                    </DnaTd>
+                    <DnaTd align="center">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        AKTIF
+                      </span>
+                    </DnaTd>
+                  </DnaTableRow>
+                ))
+              )}
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
-      {/* MODAL BUAT / EDIT RULE */}
+      {/* MODAL TAMBAH ATURAN */}
       <DnaModal
         isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingRule(null);
-        }}
-        title={editingRule ? "Sunting Aturan Auto-Posting" : "Tambah Rule Jurnal Otomatis Baru"}
+        onClose={() => setIsModalOpen(false)}
+        title="Tambah Aturan Posting Jurnal Otomatis"
         size="md"
       >
         <form onSubmit={handleSave} className="space-y-4 text-xs">
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">
-              Nama Aturan (Rule Name) *
-            </label>
+            <label className="font-semibold text-slate-700 block mb-1">Nama Aturan Pemicu *</label>
             <DnaInput
-              placeholder="Contoh: Auto Jurnal Faktur Penjualan Jasa Maklon"
+              placeholder="Misal: Posting Invoice Maklon Baru"
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               required
@@ -344,84 +314,75 @@ function CoaAutoContent() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">
-                Tipe Dokumen (Document Type) *
-              </label>
+              <label className="font-semibold text-slate-700 block mb-1">Tipe Dokumen Transaksi *</label>
               <DnaSelect
                 value={formDocType}
-                onChange={(val) => setFormDocType(val as any)}
+                onChange={(v) => setFormDocType(v as any)}
                 options={[
-                  { value: "Faktur Penjualan", label: "Faktur Penjualan" },
-                  { value: "Faktur Pembelian", label: "Faktur Pembelian" },
-                  { value: "DP Penjualan", label: "DP Penjualan" },
-                  { value: "DP Pembelian", label: "DP Pembelian" },
-                  { value: "Pembayaran Piutang", label: "Pembayaran Piutang" },
-                  { value: "Pembayaran Hutang", label: "Pembayaran Hutang" },
-                  { value: "Konsumsi BOM Mixing", label: "Konsumsi BOM Mixing" },
-                  { value: "Retur Penjualan", label: "Retur Penjualan" },
+                  { value: "Faktur Penjualan", label: "Faktur Penjualan (AR)" },
+                  { value: "Faktur Pembelian", label: "Faktur Pembelian (AP)" },
+                  { value: "DP Penjualan", label: "DP Penjualan Pelanggan" },
+                  { value: "DP Pembelian", label: "DP Pembelian Supplier" },
+                  { value: "Pembayaran Piutang", label: "Penerimaan Kas Piutang" },
+                  { value: "Pembayaran Hutang", label: "Pelunasan Hutang Usaha" },
+                  { value: "Konsumsi BOM Mixing", label: "Konsumsi Batch Produksi" },
                 ]}
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">
-                Kondisi (Condition)
-              </label>
+              <label className="font-semibold text-slate-700 block mb-1">Kondisi / Kategori</label>
               <DnaInput
-                placeholder="misal: Jasa Maklon / Jual Putus"
                 value={formCondition}
                 onChange={(e) => setFormCondition(e.target.value)}
+                placeholder="Misal: Jasa Maklon"
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">
-              Akun Debit (Debit Account) *
-            </label>
+            <label className="font-semibold text-blue-700 block mb-1">Akun Sisi Debit (Dr) *</label>
             <DnaSelect
               value={formDebit}
-              onChange={(val) => setFormDebit(val)}
-              options={[
-                { value: "1-1201 — Piutang Usaha Maklon", label: "1-1201 — Piutang Usaha Maklon" },
-                { value: "1-1101 — Kas & Bank Operasional (BCA)", label: "1-1101 — Kas & Bank Operasional (BCA)" },
-                { value: "1-1301 — Persediaan Bahan Baku", label: "1-1301 — Persediaan Bahan Baku" },
-                { value: "1-1304 — Persediaan Barang Dalam Proses (WIP)", label: "1-1304 — Persediaan Barang Dalam Proses (WIP)" },
-                { value: "5-1101 — Beban Pokok Penjualan (HPP)", label: "5-1101 — Beban Pokok Penjualan (HPP)" },
-              ]}
+              onChange={(v) => setFormDebit(v)}
+              options={
+                accounts.length > 0
+                  ? accounts.map((a: any) => ({
+                      value: a.code,
+                      label: `${a.code} — ${a.name} (${a.type})`,
+                    }))
+                  : [
+                      { value: "11411", label: "11411 — Piutang Dagang" },
+                      { value: "11111", label: "11111 — Kas Utama" },
+                    ]
+              }
             />
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">
-              Akun Kredit (Credit Account) *
-            </label>
+            <label className="font-semibold text-emerald-700 block mb-1">Akun Sisi Kredit (Cr) *</label>
             <DnaSelect
               value={formCredit}
-              onChange={(val) => setFormCredit(val)}
-              options={[
-                { value: "4-1101 — Pendapatan Jasa Maklon", label: "4-1101 — Pendapatan Jasa Maklon" },
-                { value: "2-1201 — Uang Muka Penjualan (DP Pelanggan)", label: "2-1201 — Uang Muka Penjualan (DP Pelanggan)" },
-                { value: "2-1101 — Hutang Usaha Supplier", label: "2-1101 — Hutang Usaha Supplier" },
-                { value: "1-1301 — Persediaan Bahan Baku", label: "1-1301 — Persediaan Bahan Baku" },
-                { value: "1-1303 — Persediaan Barang Jadi (BJD)", label: "1-1303 — Persediaan Barang Jadi (BJD)" },
-              ]}
+              onChange={(v) => setFormCredit(v)}
+              options={
+                accounts.length > 0
+                  ? accounts.map((a: any) => ({
+                      value: a.code,
+                      label: `${a.code} — ${a.name} (${a.type})`,
+                    }))
+                  : [
+                      { value: "41111", label: "41111 — Penjualan" },
+                      { value: "21111", label: "21111 — Hutang Dagang" },
+                    ]
+              }
             />
           </div>
 
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-            <DnaButton
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                setIsModalOpen(false);
-                setEditingRule(null);
-              }}
-            >
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <DnaButton variant="secondary" size="md" onClick={() => setIsModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton type="submit" variant="primary" size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
-              Simpan Rule Jurnal
+            <DnaButton variant="primary" size="md" type="submit" disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? "Menyimpan..." : "Simpan Aturan"}
             </DnaButton>
           </div>
         </form>
@@ -430,9 +391,9 @@ function CoaAutoContent() {
   );
 }
 
-export default function CoaAutoManagePage() {
+export default function CoaAutoPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400 font-mono text-xs">Memuat CoA Jurnal Otomatis...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Memuat aturan CoA...</div>}>
       <CoaAutoContent />
     </Suspense>
   );

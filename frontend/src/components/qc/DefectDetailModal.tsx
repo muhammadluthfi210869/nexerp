@@ -11,17 +11,17 @@ import {
   Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/dna";
+import { Input } from "@/components/dna";
+import { Label } from "@/components/dna";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { DnaBadge } from "@/components/dna/DnaBadge";
+  DnaBadge,
+} from "@/components/dna";
 
 const DEFECT_CATEGORIES = [
   "FISIK",

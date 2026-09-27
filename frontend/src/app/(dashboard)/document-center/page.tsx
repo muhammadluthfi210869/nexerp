@@ -20,7 +20,18 @@ import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 import { TableShell } from "@/components/layout/TableShell";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { TableWrapper, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
+import {
+  TableWrapper,
+  DnaBadge,
+  DnaButton,
+  DnaInput,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import {
   Table,
   TableBody,
@@ -28,7 +39,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/dna";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +47,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from "@/components/ui/dialog";
+} from "@/components/dna";
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   SALES_ORDER: "Sales Order",
@@ -202,39 +213,39 @@ export default function DocumentCenterPage() {
 
       {/* Table */}
       <TableShell title="Document" titleAccent="Center">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-white/10">
-              <TableHead className="text-white/60">Draft #</TableHead>
-              <TableHead className="text-white/60">Type</TableHead>
-              <TableHead className="text-white/60">Status</TableHead>
-              <TableHead className="text-white/60">Auto-Approve</TableHead>
-              <TableHead className="text-white/60">Created</TableHead>
-              <TableHead className="text-white/60 text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <DnaTable>
+          <DnaTableHead>
+            <DnaTableRow className="border-white/10">
+              <DnaTh className="text-white/60">Draft #</DnaTh>
+              <DnaTh className="text-white/60">Type</DnaTh>
+              <DnaTh className="text-white/60">Status</DnaTh>
+              <DnaTh className="text-white/60">Auto-Approve</DnaTh>
+              <DnaTh className="text-white/60">Created</DnaTh>
+              <DnaTh className="text-white/60 text-right">Actions</DnaTh>
+            </DnaTableRow>
+          </DnaTableHead>
+          <DnaTableBody>
             {filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-white/40 py-8">
+              <DnaTableRow>
+                <DnaTd colSpan={6} className="text-center text-white/40 py-8">
                   {isLoading ? "Loading..." : "No document drafts found"}
-                </TableCell>
-              </TableRow>
+                </DnaTd>
+              </DnaTableRow>
             ) : (
               filtered.map((draft: any) => {
                 const cfg = STATUS_CONFIG[draft.status] || STATUS_CONFIG.DRAFT;
                 return (
-                  <TableRow key={draft.id} className="border-white/10 hover:bg-white/5">
-                    <TableCell className="text-white font-mono text-sm">
+                  <DnaTableRow key={draft.id} className="border-white/10 hover:bg-white/5">
+                    <DnaTd className="text-white tabular-nums text-sm">
                       {draft.draftNumber}
-                    </TableCell>
-                    <TableCell className="text-white/80">
+                    </DnaTd>
+                    <DnaTd className="text-white/80">
                       {DOCUMENT_TYPE_LABELS[draft.documentType] || draft.documentType}
-                    </TableCell>
-                    <TableCell>
-                      <DnaBadge status={cfg.color as any}>{cfg.label}</DnaBadge>
-                    </TableCell>
-                    <TableCell className="text-white/60 text-sm">
+                    </DnaTd>
+                    <DnaTd>
+                      <DnaBadge variant={cfg.color as any}>{cfg.label}</DnaBadge>
+                    </DnaTd>
+                    <DnaTd className="text-white/60 text-sm">
                       {draft.autoApproveAt ? (
                         <span className="flex items-center gap-1">
                           <Timer className="w-3 h-3" />
@@ -243,11 +254,11 @@ export default function DocumentCenterPage() {
                       ) : (
                         "-"
                       )}
-                    </TableCell>
-                    <TableCell className="text-white/60 text-sm">
+                    </DnaTd>
+                    <DnaTd className="text-white/60 text-sm">
                       {new Date(draft.createdAt).toLocaleDateString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-right">
+                    </DnaTd>
+                    <DnaTd className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <DnaButton
                           size="sm"
@@ -293,13 +304,13 @@ export default function DocumentCenterPage() {
                           </>
                         )}
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </DnaTd>
+                  </DnaTableRow>
                 );
               })
             )}
-          </TableBody>
-        </Table>
+          </DnaTableBody>
+        </DnaTable>
       </TableShell>
 
       {/* Detail Dialog */}
@@ -321,7 +332,7 @@ export default function DocumentCenterPage() {
                   <span className="text-xs text-white/40 uppercase">Status</span>
                   <div>
                     <DnaBadge
-                      status={(STATUS_CONFIG[selectedDraft.status]?.color as any) || "default"}
+                      variant={(STATUS_CONFIG[selectedDraft.status]?.color as any) || "default"}
                     >
                       {STATUS_CONFIG[selectedDraft.status]?.label || selectedDraft.status}
                     </DnaBadge>
@@ -394,7 +405,7 @@ export default function DocumentCenterPage() {
                   setEditPayload(JSON.parse(e.target.value));
                 } catch {}
               }}
-              className="w-full h-64 p-3 rounded-lg bg-black/30 text-white/80 text-xs font-mono border border-white/10 focus:border-white/30 focus:outline-none"
+              className="w-full h-64 p-3 rounded-lg bg-black/30 text-white/80 text-xs tabular-nums border border-white/10 focus:border-white/30 focus:outline-none"
             />
           </div>
           <DialogFooter>

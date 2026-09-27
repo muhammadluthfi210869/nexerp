@@ -35,7 +35,13 @@ import {
   DnaTabNav,
   DnaToolbar,
   DnaButton,
-} from '@/components/dna';
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import {
   Table,
   LayoutGrid,
@@ -492,7 +498,7 @@ export default function SocialTrackerClient() {
                 <span>{p.icon}</span>
                 <span>{p.label}</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full tabular-nums font-bold ${
                     isActive ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-500'
                   }`}
                 >

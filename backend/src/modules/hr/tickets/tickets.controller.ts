@@ -1,23 +1,29 @@
 import {
   Controller,
   Get,
-  Post,
   Patch,
   Delete,
   Body,
   Param,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { TicketsService } from './tickets.service';
-import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';
 
+// `GET`/`POST hr/tickets` used to be declared here as well. HrController is
+// registered first, so Express answered both from `hr/hr.controller.ts` and these
+// could never run. They were removed rather than the live ones because the live
+// ones are the correct implementation: `Ticket.amount` is stored encrypted and
+// `hr.service.getTickets` decrypts it, while `TicketsService.create` would have
+// written the amount as plaintext into a column every reader tries to decrypt.
+//
+// The routes below have no duplicate owner, and the tickets screen approves
+// through `PATCH hr/tickets/:id`, which only this controller declares.
 @ApiTags('hr/tickets')
 @ApiBearerAuth()
 @Controller('hr/tickets')
@@ -25,25 +31,11 @@ import { Roles } from '../../auth/roles.decorator';
 export class TicketsController {
   constructor(private readonly service: TicketsService) {}
 
-  @Get()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.HR, UserRole.FINANCE)
-  @ApiOperation({ summary: 'List all HR tickets (filter by status/type)' })
-  findAll(@Query('status') status?: string, @Query('type') type?: string) {
-    return this.service.findAll(status, type);
-  }
-
   @Get(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.HR, UserRole.FINANCE)
   @ApiOperation({ summary: 'Get ticket by ID' })
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
-  }
-
-  @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.HR)
-  @ApiOperation({ summary: 'Create a new HR ticket' })
-  create(@Body() dto: CreateTicketDto) {
-    return this.service.create(dto);
   }
 
   @Patch(':id')

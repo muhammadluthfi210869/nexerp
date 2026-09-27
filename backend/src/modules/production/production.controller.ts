@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -50,6 +52,21 @@ export class ProductionController {
   @Post('work-orders')
   async createWO(@Body() dto: any) {
     return this.productionService.createWorkOrder(dto);
+  }
+
+  @Post('work-orders/from-so')
+  async createWOFromSO(@Body() dto: any, @Request() req: any) {
+    return this.productionService.createWorkOrderFromSO(dto, req.user);
+  }
+
+  @Get('work-orders/:id/readiness')
+  async getReadiness(@Param('id') id: string) {
+    return this.productionService.checkMaterialReadiness(id);
+  }
+
+  @Post('work-orders/:id/dispatch')
+  async dispatchWO(@Param('id') id: string, @Request() req: any) {
+    return this.productionService.dispatchWorkOrder(id, req.user);
   }
 
   @Get('work-orders')
@@ -182,9 +199,67 @@ export class ProductionController {
     return this.productionService.createBatchSchedule(dto);
   }
 
+  @Patch('schedules/:id/reschedule')
+  async rescheduleSchedule(
+    @Param('id') id: string,
+    @Body() dto: { startTime: string; endTime: string; reason: string; machineId?: string },
+    @Request() req: any,
+  ) {
+    return this.productionService.rescheduleBatchSchedule(id, dto, req.user);
+  }
+
   @Get('schedules')
   async getSchedules(@Query('stage') stage?: string) {
     return this.productionService.getSchedulesByStage(stage);
+  }
+
+  // Canonical stage endpoints
+  @Get('schedule-mixing')
+  async listScheduleMixing() {
+    return this.productionService.getSchedulesByStage('MIXING');
+  }
+
+  @Post('schedule-mixing')
+  async createScheduleMixing(@Body() dto: any) {
+    return this.productionService.createBatchSchedule({
+      ...dto,
+      stage: 'MIXING',
+      targetQty: dto.targetQty || dto.target_pcs || 1000,
+      startTime: dto.startTime || dto.schedule_date || dto.scheduleDate,
+      endTime: dto.endTime || new Date(new Date(dto.startTime || dto.schedule_date || dto.scheduleDate).getTime() + 4 * 3600 * 1000).toISOString(),
+    });
+  }
+
+  @Get('schedule-filling')
+  async listScheduleFilling() {
+    return this.productionService.getSchedulesByStage('FILLING');
+  }
+
+  @Post('schedule-filling')
+  async createScheduleFilling(@Body() dto: any) {
+    return this.productionService.createBatchSchedule({
+      ...dto,
+      stage: 'FILLING',
+      targetQty: dto.targetQty || dto.target_pcs || 1000,
+      startTime: dto.startTime || dto.schedule_date || dto.scheduleDate,
+      endTime: dto.endTime || new Date(new Date(dto.startTime || dto.schedule_date || dto.scheduleDate).getTime() + 4 * 3600 * 1000).toISOString(),
+    });
+  }
+
+  @Get('schedule-packaging')
+  async listSchedulePackaging() {
+    return this.productionService.getSchedulesByStage('PACKAGING');
+  }
+
+  @Post('schedule-packaging')
+  async createSchedulePackaging(@Body() dto: any) {
+    return this.productionService.createBatchSchedule({
+      ...dto,
+      stage: 'PACKAGING',
+      targetQty: dto.targetQty || dto.target_pcs || 1000,
+      startTime: dto.startTime || dto.schedule_date || dto.scheduleDate,
+      endTime: dto.endTime || new Date(new Date(dto.startTime || dto.schedule_date || dto.scheduleDate).getTime() + 4 * 3600 * 1000).toISOString(),
+    });
   }
 
   @Post('schedules/:id/result')
@@ -230,9 +305,48 @@ export class ProductionController {
     return this.productionService.getBatchRecords();
   }
 
+  @Post('batch-records')
+  async createBatchRecord(@Body() dto: any, @Request() req: any) {
+    return this.productionService.createBatchRecord(dto, req.user);
+  }
+
   @Get('batch-records/:batchNo/detail')
   async getBatchRecordDetail(@Param('batchNo') batchNo: string) {
     return this.productionService.getBatchRecordDetail(batchNo);
+  }
+
+  @Get('batch-records/:id')
+  async getBatchRecord(@Param('id') id: string) {
+    return this.productionService.getBatchRecord(id);
+  }
+
+  @Patch('batch-records/:id')
+  async updateBatchRecord(
+    @Param('id') id: string,
+    @Body() dto: any,
+    @Request() req: any,
+  ) {
+    return this.productionService.updateBatchRecord(id, dto, req.user);
+  }
+
+  @Delete('batch-records/:id')
+  async deleteBatchRecord(@Param('id') id: string, @Request() req: any) {
+    return this.productionService.deleteBatchRecord(id, req.user);
+  }
+
+  @Post('batch-records/:id/process')
+  async transitionBatchRecord(
+    @Param('id') id: string,
+    @Body() dto: { to_status?: string; toStatus?: string; notes?: string },
+    @Request() req: any,
+  ) {
+    const toStatus = dto.to_status || dto.toStatus;
+    return this.productionService.transitionBatchRecord(
+      id,
+      toStatus!,
+      req.user,
+      dto.notes,
+    );
   }
 
   @Post('qc/verify')

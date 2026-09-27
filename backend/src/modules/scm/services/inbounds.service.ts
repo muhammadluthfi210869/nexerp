@@ -22,6 +22,32 @@ export class InboundsService {
     const inboundNumber = await this.idGenerator.generateId('GRN');
 
     return this.prisma.$transaction(async (tx: any) => {
+      // BUS-RULE-018: Invariant sum = qtyGood + qtyReject + qtyFree == poLine.qtyOrdered
+      if (dto.poId) {
+        const po = await tx.purchaseOrder.findUnique({
+          where: { id: dto.poId },
+          include: { items: true },
+        });
+        if (po && po.items) {
+          for (const item of dto.items) {
+            const poItem = po.items.find((pi: any) => pi.materialId === item.materialId);
+            if (poItem) {
+              const qtyGood = item.qtyGood !== undefined ? Number(item.qtyGood) : Number(item.qtyActual);
+              const qtyReject = Number(item.qtyReject || 0);
+              const qtyFree = Number(item.qtyFree || 0);
+              const sum = qtyGood + qtyReject + qtyFree;
+              const poQty = Number(poItem.quantity);
+
+              if (sum !== poQty) {
+                throw new BadRequestException(
+                  `Total qty (${sum}) tidak sama dengan qty PO (${poQty}). Mohon cek kembali.`,
+                );
+              }
+            }
+          }
+        }
+      }
+
       const inbound = await tx.warehouseInbound.create({
         data: {
           inboundNumber,
@@ -29,24 +55,34 @@ export class InboundsService {
           warehouseId: dto.warehouseId,
           status: InboundStatus.PENDING,
           items: {
-            create: dto.items.map((item: any) => ({
-              materialId: item.materialId,
-              qtyActual: item.qtyActual,
-              isQuarantine: true,
-            })),
+            create: dto.items.map((item: any) => {
+              const qtyGood = item.qtyGood !== undefined ? Number(item.qtyGood) : Number(item.qtyActual);
+              const qtyReject = Number(item.qtyReject || 0);
+              const qtyFree = Number(item.qtyFree || 0);
+              const sum = qtyGood + qtyReject + qtyFree;
+
+              return {
+                materialId: item.materialId,
+                qtyActual: sum,
+                qtyGood,
+                qtyReject,
+                qtyFree,
+                isQuarantine: true,
+              };
+            }),
           },
         },
-        include: { items: true },
+        include: { items: { include: { material: true } }, po: true },
       });
       return inbound;
     });
   }
 
   async updateStatus(id: string, dto: UpdateInboundStatusDto) {
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx: any) => {
       const inbound = await tx.warehouseInbound.findUnique({
         where: { id },
-        include: { items: true },
+        include: { items: true, po: { include: { items: true } } },
       });
 
       if (!inbound) throw new NotFoundException('Inbound not found');
@@ -56,42 +92,63 @@ export class InboundsService {
         );
       }
 
-      // [QC GATE] — validate QC before approving inbound
       if (dto.status === InboundStatus.APPROVED) {
-        // Check that no items are still in quarantine for this inbound
-        const quarantinedItems = await tx.materialInventory.findMany({
-          where: {
-            materialId: { in: inbound.items.map((i) => i.materialId) },
-            qcStatus: 'QUARANTINE',
-          },
-        });
-        if (quarantinedItems.length > 0) {
-          throw new BadRequestException(
-            `QC Gate: ${quarantinedItems.length} item(s) masih berstatus QUARANTINE. Lakukan inspeksi QC terlebih dahulu.`,
-          );
+        // BUS-RULE-018: Real stock increases ONLY for qtyGood!
+        for (const item of inbound.items) {
+          const qtyGood = Number(item.qtyGood || item.qtyActual);
+          if (qtyGood > 0) {
+            await tx.materialItem.update({
+              where: { id: item.materialId },
+              data: {
+                stockQty: { increment: qtyGood },
+              },
+            });
+          }
+
+          // Update PO item stats if linked
+          if (inbound.poId) {
+            const poItem = inbound.po?.items?.find((pi: any) => pi.materialId === item.materialId);
+            if (poItem) {
+              await tx.purchaseOrderItem.update({
+                where: { id: poItem.id },
+                data: {
+                  qtyBagus: { increment: Number(item.qtyGood || 0) },
+                  qtyReject: { increment: Number(item.qtyReject || 0) },
+                  receivedQty: { increment: Number(item.qtyGood || 0) + Number(item.qtyReject || 0) + Number(item.qtyFree || 0) },
+                },
+              });
+            }
+          }
         }
 
-        this.eventEmitter.emit('warehouse.inbound.approved', {
+        this.eventEmitter.emit('scm.inbound.approved', {
           inboundId: inbound.id,
           poId: inbound.poId,
           warehouseId: inbound.warehouseId,
-          items: inbound.items.map((i) => ({
+          items: inbound.items.map((i: any) => ({
             materialId: i.materialId,
             qty: i.qtyActual,
+            qtyGood: i.qtyGood,
+            qtyReject: i.qtyReject,
+            qtyFree: i.qtyFree,
           })),
         });
 
-        // Auto update PO status to RECEIVED
-        if (inbound.poId) {
-          const po = await tx.purchaseOrder.update({
+        // Update PO status: check if fully received or partial
+        if (inbound.poId && inbound.po) {
+          const po = await tx.purchaseOrder.findUnique({
             where: { id: inbound.poId },
-            data: { status: POStatus.RECEIVED },
+            include: { items: true },
           });
 
-          this.eventEmitter.emit('PO_RECEIVED_ON_TIME', {
-            employeeId: po?.scmId,
-            referenceId: inbound.poId,
-            metadata: { poNumber: po?.poNumber, inboundId: id },
+          const allReceived = po?.items.every(
+            (pi: any) => Number(pi.receivedQty) >= Number(pi.quantity),
+          );
+
+          const newPoStatus = allReceived ? 'CLOSED' : 'PARTIAL';
+          await tx.purchaseOrder.update({
+            where: { id: inbound.poId },
+            data: { status: newPoStatus as any },
           });
         }
       }
@@ -99,6 +156,7 @@ export class InboundsService {
       return tx.warehouseInbound.update({
         where: { id },
         data: { status: dto.status },
+        include: { items: true, po: true },
       });
     });
   }

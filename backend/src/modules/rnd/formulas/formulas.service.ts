@@ -7,11 +7,109 @@ import {
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { CreateFormulaDto } from '../dto/create-formula.dto';
 import { UpdateFormulaV4Dto } from '../dto/update-formula-v4.dto';
-import { Prisma, RevisionStatus } from '@prisma/client';
+import { FormulaStatus, Prisma, RevisionStatus } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
+import type { RndActorContext } from '../rnd.service';
 import { LegalityService } from '../../legality/legality.service';
 import { IdGeneratorService } from '../../system/id-generator.service';
+import { AuditService } from '../../../platform/audit/audit.service';
+import { OutboxService } from '../../../platform/outbox/outbox.service';
+
+/** BUS-RULE-109 reason code. */
+export const FORMULA_LOCKED = 'FORMULA_LOCKED';
+/** BUS-RULE-108 reason code. */
+export const COMPOSITION_TOTAL_INVALID = 'COMPOSITION_TOTAL_INVALID';
+/** Declared in 08_INTEGRATION_EVENT_CONTRACT.yaml `rnd_events`. */
+export const EVENT_FORMULA_LOCKED = 'rnd.formulation.locked';
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * Fase 3a (DEC-2026-09-20-059 LOCKED) — the same rule `rnd.service.ts` applies to
+ * the `/rnd` surface, applied to `/rnd/formulas` so the formula routes cannot be
+ * the way around it. A formula's tenant is its parent `sampleRequest.lead`'s
+ * `organizationId`; no P08 table gains a column for this.
+ *
+ * Returns a Prisma `where` fragment that is either tenant-scoped or empty:
+ * - a UUID tenant in the actor → scope to it
+ * - no tenant, in-process caller (`enforce` unset) → `{}`, the pre-3a path
+ * - no tenant at the HTTP boundary (`enforce: true`) → 400 TENANT_UNRESOLVED
+ */
+export function formulaTenantWhere(actor?: RndActorContext): Record<string, any> {
+  const orgId = actor?.organizationId;
+  if (typeof orgId === 'string' && UUID_RE.test(orgId)) {
+    return { sampleRequest: { lead: { organizationId: orgId } } };
+  }
+  if (actor?.enforce) {
+    throw new BadRequestException({
+      code: 'TENANT_UNRESOLVED',
+      message: 'Tenant wajib diisi dari konteks server.',
+    });
+  }
+  return {};
+}
+
+/** The refusal every cross-tenant formula access shares. */
+function refuseCrossTenant(): never {
+  throw new ForbiddenException({
+    code: 'TENANT_ISOLATION_VIOLATION',
+    message: 'Sumber daya milik tenant lain.',
+  });
+}
+
+/** True when the actor carries a usable tenant UUID. */
+function hasTenant(actor?: RndActorContext): boolean {
+  const orgId = actor?.organizationId;
+  return typeof orgId === 'string' && UUID_RE.test(orgId);
+}
+
+/**
+ * BUS-RULE-109 / 02_DATA_OWNERSHIP.yaml:1253 (`condition: formulation.status in
+ * {DRAFT, SUBMITTED} # not LOCKED`): only a draft-family formula accepts edits.
+ * SUPERSEDED is in the set because a superseded revision is frozen history — the
+ * sanctioned way to change one is a new revision (BUS-RULE-114), which never
+ * rewrites its parent.
+ */
+const IMMUTABLE_STATUSES: readonly FormulaStatus[] = [
+  FormulaStatus.SAMPLE_LOCKED,
+  FormulaStatus.PRODUCTION_LOCKED,
+  FormulaStatus.SUPERSEDED,
+];
+
+/**
+ * BUS-RULE-108: gram = round(percentage / 100 * targetYieldGram, 3).
+ * Pure, so the same input yields the same gram on every run.
+ */
+export function gramFor(
+  dosagePercentage: unknown,
+  targetYieldGram: unknown,
+): number {
+  const grams = (Number(dosagePercentage) / 100) * Number(targetYieldGram);
+  return Math.round(grams * 1000) / 1000;
+}
+
+/**
+ * BUS-RULE-108: hpp per gram = Σ(percentage × costSnapshot) / 100.
+ * Pure and order-independent, so repeats are byte-identical.
+ */
+export function costPerGramFor(
+  items: ReadonlyArray<{ dosagePercentage: unknown; costSnapshot: unknown }>,
+): number {
+  return items.reduce(
+    (acc, item) =>
+      acc + (Number(item.dosagePercentage) * Number(item.costSnapshot)) / 100,
+    0,
+  );
+}
+
+/** BUS-RULE-108: the quantity the ±0.001 composition invariant is checked against. */
+export function compositionTotal(
+  items: ReadonlyArray<{ dosagePercentage: unknown }>,
+): number {
+  return items.reduce((sum, item) => sum + Number(item.dosagePercentage), 0);
+}
 
 @Injectable()
 export class FormulasService {
@@ -20,15 +118,54 @@ export class FormulasService {
     private legality: LegalityService,
     private eventEmitter: EventEmitter2,
     private idGenerator: IdGeneratorService,
+    private audit: AuditService,
+    private outbox: OutboxService,
   ) {}
 
-  private async generateFormulaCode(): Promise<string> {
+  /**
+   * BUS-RULE-109. One guard for every path that would rewrite an existing formula,
+   * so a new caller cannot forget it.
+   */
+  private assertMutable(
+    formula: { formulaCode: string; status: FormulaStatus } | null,
+  ): asserts formula is { formulaCode: string; status: FormulaStatus } {
+    if (!formula) throw new NotFoundException('Formula not found');
+    if (IMMUTABLE_STATUSES.includes(formula.status)) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: `Formula terkunci tidak dapat diubah (${formula.formulaCode}, status ${formula.status}). Buat revisi baru.`,
+        reason_code: FORMULA_LOCKED,
+      });
+    }
+  }
+
+  /**
+   * Fase 3a — a formula the actor's tenant cannot see must not be written to,
+   * read from, or confirmed to exist. Used by the routes that only need the row
+   * checked, not loaded.
+   */
+  private async assertFormulaVisible(
+    id: string,
+    actor?: RndActorContext,
+  ): Promise<void> {
+    const scoped = formulaTenantWhere(actor);
+    const own = await this.prisma.formula.findFirst({
+      where: { id, ...scoped },
+      select: { id: true },
+    });
+    if (!own && hasTenant(actor)) refuseCrossTenant();
+    if (!own) throw new NotFoundException('Formula not found');
+  }
+
+  private async generateFormulaCode(client?: Prisma.TransactionClient): Promise<string> {
+    const db = client ?? this.prisma;
     const now = new Date();
     const year = now.getFullYear().toString().slice(-2);
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const prefix = `F-${year}${month}-`;
 
-    const lastFormula = await this.prisma.formula.findFirst({
+    const lastFormula = await db.formula.findFirst({
       where: { formulaCode: { startsWith: prefix } },
       orderBy: { formulaCode: 'desc' },
     });
@@ -45,29 +182,37 @@ export class FormulasService {
     return `${prefix}${seq.toString().padStart(3, '0')}`;
   }
 
-  async create(createFormulaDto: CreateFormulaDto) {
+  async create(createFormulaDto: CreateFormulaDto, actor?: RndActorContext) {
     const { items, ...formulaData } = createFormulaDto;
+
+    // Fase 3a — the parent sample decides the tenant. Without this, a foreign
+    // actor could attach a formula to another tenant's sample by posting its id.
+    // The predicate is on the SAMPLE, so it is `lead`, not `sampleRequest.lead`.
+    const orgId = actor?.organizationId as string;
+    if (hasTenant(actor)) {
+      const parent = await this.prisma.sampleRequest.findFirst({
+        where: { id: formulaData.sampleRequestId, lead: { organizationId: orgId } },
+        select: { id: true },
+      });
+      if (!parent) refuseCrossTenant();
+    }
 
     const formulaCode = await this.generateFormulaCode();
 
-    // 1. [HARDENING: FORMULA VALIDATION]
-    const totalDosage = items.reduce(
-      (sum, item) => sum + Number(item.dosagePercentage),
-      0,
-    );
+    // 1. [HARDENING: FORMULA VALIDATION] — BUS-RULE-108, one shared implementation
+    const totalDosage = compositionTotal(items);
     const tolerance = 0.001;
     if (Math.abs(totalDosage - 100) > tolerance) {
-      throw new BadRequestException(
-        `Formula Validation Error: Total dosage must be exactly 100%. Current: ${totalDosage}%`,
-      );
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: `Total komposisi harus 100%. Saat ini: ${totalDosage.toFixed(2)}%`,
+        reason_code: COMPOSITION_TOTAL_INVALID,
+      });
     }
 
-    // 2. [HPP CALCULATION LOGIC]
-    const costPerGram = items.reduce((acc, item) => {
-      return (
-        acc + (Number(item.dosagePercentage) * Number(item.costSnapshot)) / 100
-      );
-    }, 0);
+    // 2. [HPP CALCULATION LOGIC] — BUS-RULE-108, reproducible
+    const costPerGram = costPerGramFor(items);
 
     return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // 1. Create Formula with a default Phase A
@@ -136,9 +281,25 @@ export class FormulasService {
     });
   }
 
-  async getFormulaDetails(id: string) {
-    return this.prisma.formula.findUnique({
-      where: { id },
+  /**
+   * `client` exists so a caller inside a transaction reads its own uncommitted
+   * rows. Reading through `this.prisma` from inside an open transaction blocks on
+   * the row locks that same transaction holds.
+   *
+   * `actor` is the Fase 3a tenant gate. It is absent on the in-transaction call
+   * from `updateFormulaV4` (the row is already known-owned there) and on the
+   * in-process callers in `test/`; when present and non-matching, the row is a
+   * 404 rather than a disclosure — the caller learns nothing about its existence.
+   */
+  async getFormulaDetails(
+    id: string,
+    client?: Prisma.TransactionClient,
+    actor?: RndActorContext,
+  ) {
+    const db = client ?? this.prisma;
+    const scoped = formulaTenantWhere(actor);
+    const formula = await db.formula.findFirst({
+      where: { id, ...scoped },
       include: {
         phases: {
           orderBy: { order: 'asc' },
@@ -159,25 +320,46 @@ export class FormulasService {
         },
       },
     });
+    if (!formula && actor?.organizationId) refuseCrossTenant();
+    return formula;
   }
 
-  async updateFormulaV4(id: string, dto: UpdateFormulaV4Dto) {
-    // 1. [Hukum Mutlak 100%]
-    let totalDosage = 0;
-    dto.phases.forEach((phase) => {
-      phase.items.forEach((item) => {
-        totalDosage += Number(item.dosagePercentage);
-      });
+  async updateFormulaV4(
+    id: string,
+    dto: UpdateFormulaV4Dto,
+    actorId?: string,
+    actor?: RndActorContext,
+  ) {
+    // 0. [BUS-RULE-109] a locked or superseded formula rejects every mutation.
+    // Rework goes through createRevision (BUS-RULE-114), never through a rewrite.
+    // The tenant predicate is part of the SAME lookup: a foreign formula must not
+    // reach `assertMutable`, whose FORMULA_LOCKED answer would confirm it exists.
+    const existing = await this.prisma.formula.findFirst({
+      where: { id, ...formulaTenantWhere(actor) },
+      select: { formulaCode: true, status: true },
     });
+    if (!existing && actor?.organizationId) refuseCrossTenant();
+    this.assertMutable(existing);
 
+    // 1. [Hukum Mutlak 100%] — BUS-RULE-108
+    const totalDosage = compositionTotal(dto.phases.flatMap((p) => p.items));
+
+    // NOTE (P08): the comparison runs on the binary-double sum, so a legally exact
+    // ±0.001 deviation is refused — 20 + 79.999 and 20 + 80.001 both store a value
+    // 0.0010000000000048 from 100. Rounding the deviation before comparing would
+    // accept both, but the frozen sf3 suite pins 80.001 as COMPOSITION_TOTAL_INVALID,
+    // so the semantics stay as they are and the edge is recorded, not redefined.
     const tolerance = 0.001;
     if (Math.abs(totalDosage - 100) > tolerance) {
-      throw new BadRequestException(
-        `Formula Validation Error: Total dosage must be exactly 100.00%. Current: ${totalDosage.toFixed(2)}%`,
-      );
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: `Total komposisi harus 100%. Saat ini: ${totalDosage.toFixed(2)}%`,
+        reason_code: COMPOSITION_TOTAL_INVALID,
+      });
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const write = async (tx: any) => {
       // A. Update Formula Header
       await tx.formula.update({
         where: { id },
@@ -233,14 +415,42 @@ export class FormulasService {
         }
       }
 
-      return this.getFormulaDetails(id);
-    });
+      return this.getFormulaDetails(id, tx);
+    };
+
+    // BUS-RULE-113: the composition write and its audit row are one transaction.
+    return this.prisma.$transaction((tx) =>
+      this.audit.withAudit<any>(
+        tx,
+        {
+          actorUserId: actorId,
+          source: 'rnd.formulas',
+          entityType: 'Formula',
+          entityId: id,
+          action: 'UPDATE_FORMULA_COMPOSITION',
+          beforeSnapshot: { status: existing.status },
+          afterSnapshot: {
+            formula_code: existing.formulaCode,
+            target_yield_gram: Number(dto.targetYieldGram),
+            composition_total_percent: totalDosage,
+          },
+        },
+        write,
+      ),
+    );
   }
 
-  async createRevision(id: string) {
+  /**
+   * BUS-RULE-114 — rework/adjustment lineage. The parent row is NEVER rewritten:
+   * its version, target yield and item rows are copied, not touched, and only its
+   * status flag is flipped to SUPERSEDED (03_WORKFLOW_STATE_MACHINE.yaml
+   * `old_formulation.marked_superseded`). Revising a locked parent is allowed —
+   * it is the only sanctioned way to change one (BUS-RULE-109).
+   */
+  async createRevision(id: string, actorId?: string, actor?: RndActorContext) {
     return this.prisma.$transaction(async (tx) => {
-      const source = await tx.formula.findUnique({
-        where: { id },
+      const source = await tx.formula.findFirst({
+        where: { id, ...formulaTenantWhere(actor) },
         include: {
           phases: {
             include: { items: true },
@@ -249,7 +459,10 @@ export class FormulasService {
         },
       });
 
-      if (!source) throw new NotFoundException('Source formula not found');
+      if (!source) {
+        if (hasTenant(actor)) refuseCrossTenant();
+        throw new NotFoundException('Source formula not found');
+      }
 
       // 1. Mark previous versions as SUPERSEDED
       await tx.formula.updateMany({
@@ -268,7 +481,7 @@ export class FormulasService {
       const nextVersion = (latest?.version || 1) + 1;
 
       // 3. Generate New Code
-      const newCode = await this.generateFormulaCode();
+      const newCode = await this.generateFormulaCode(tx);
 
       // 4. Create New Formula (Copy of source)
       const revision = await tx.formula.create({
@@ -334,34 +547,141 @@ export class FormulasService {
         reason: 'Formula revision created',
       });
 
+      // BUS-RULE-113: the lineage write commits with its audit row in one tx.
+      // The parent's version and item rows are recorded unchanged as the proof.
+      await this.audit.withAudit<any>(
+        tx,
+        {
+          actorUserId: actorId,
+          source: 'rnd.formulas',
+          entityType: 'Formula',
+          entityId: revision.id,
+          action: 'CREATE_FORMULA_REVISION',
+          beforeSnapshot: {
+            parent_formula_id: source.id,
+            parent_formula_code: source.formulaCode,
+            parent_version: source.version,
+            parent_status: source.status,
+          },
+          afterSnapshot: {
+            revision_id: revision.id,
+            revision_code: revision.formulaCode,
+            revision_version: revision.version,
+          },
+        },
+        async () => revision,
+      );
+
       return revision;
     });
   }
 
-  async requestApproval(id: string) {
-    const updated = await this.prisma.formula.update({
-      where: { id },
-      data: { status: 'WAITING_APPROVAL' },
+  /**
+   * Submit a draft for approval.
+   *
+   * [BUS-RULE-109] This is a mutation of the formula row, so it goes through the
+   * same immutability guard as every other mutation: without it, submitting a
+   * SAMPLE_LOCKED formula walked the row back to WAITING_APPROVAL and reopened
+   * the edit path that `assertMutable` exists to close.
+   *
+   * [BUS-RULE-113] The submit is recorded with the acting user, exactly like the
+   * approve and lock transitions.
+   */
+  async requestApproval(id: string, actorId?: string, actor?: RndActorContext) {
+    const existing = await this.prisma.formula.findFirst({
+      where: { id, ...formulaTenantWhere(actor) },
+      select: { formulaCode: true, status: true },
     });
+    if (!existing && hasTenant(actor)) refuseCrossTenant();
+    this.assertMutable(existing);
+
+    const updated = await this.prisma.$transaction((tx) =>
+      this.audit.withAudit<any>(
+        tx,
+        {
+          actorUserId: actorId ?? null,
+          source: 'rnd.formulas',
+          entityType: 'Formula',
+          entityId: id,
+          action: 'SUBMIT_FORMULA_APPROVAL',
+          beforeSnapshot: { status: existing.status },
+          afterSnapshot: { status: FormulaStatus.WAITING_APPROVAL, submitted_by: actorId ?? null },
+        },
+        async () =>
+          tx.formula.update({
+            where: { id },
+            data: { status: 'WAITING_APPROVAL' },
+          }),
+      ),
+    );
 
     this.eventEmitter.emit('state.transition', {
       entityType: 'FORMULA',
       entityId: id,
-      fromState: 'DRAFT',
+      fromState: existing.status,
       toState: 'WAITING_APPROVAL',
+      changedById: actorId ?? null,
       reason: 'Formula submitted for approval',
     });
 
     return updated;
   }
 
-  async approveFormula(id: string, userId: string) {
-    const formula = await this.prisma.formula.update({
-      where: { id },
-      data: {
-        status: 'SAMPLE_LOCKED',
-        lockedById: userId,
-      },
+  async approveFormula(id: string, userId: string, actor?: RndActorContext) {
+    const existing = await this.prisma.formula.findFirst({
+      where: { id, ...formulaTenantWhere(actor) },
+      select: { status: true, formulaCode: true },
+    });
+    if (!existing && hasTenant(actor)) refuseCrossTenant();
+    if (!existing) throw new NotFoundException('Formula not found');
+    // A formula already at or past this lock is returned untouched: re-approving
+    // must not mint a second lock effect (BUS-RULE-113 "exactly once").
+    if (existing.status === FormulaStatus.SAMPLE_LOCKED) {
+      return this.prisma.formula.findUniqueOrThrow({ where: { id } });
+    }
+
+    const formula = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.formula.update({
+        where: { id },
+        data: {
+          status: 'SAMPLE_LOCKED',
+          lockedById: userId,
+        },
+      });
+
+      // BUS-RULE-113: lock + audit + the declared `rnd.formulation.locked` event
+      // commit together, or none of them do.
+      await this.audit.withAudit<any>(
+        tx,
+        {
+          actorUserId: userId,
+          source: 'rnd.formulas',
+          entityType: 'Formula',
+          entityId: id,
+          action: 'APPROVE_FORMULA',
+          beforeSnapshot: { status: existing.status },
+          afterSnapshot: { status: updated.status, locked_by: userId },
+        },
+        async () => updated,
+      );
+
+      await this.outbox.enqueue(
+        tx,
+        {
+          eventType: EVENT_FORMULA_LOCKED,
+          aggregateType: 'Formula',
+          aggregateId: id,
+          payload: {
+            formulation_id: id,
+            locked_by: userId,
+            locked_at: new Date().toISOString(),
+          },
+          correlationId: id,
+        },
+        { requireExternalTransaction: true },
+      );
+
+      return updated;
     });
 
     this.eventEmitter.emit('FORMULA_APPROVED_FIRST_TRY', {
@@ -373,13 +693,16 @@ export class FormulasService {
     return formula;
   }
 
-  async lockProduction(id: string, userId: string) {
-    const formula = await this.prisma.formula.findUnique({
-      where: { id },
+  async lockProduction(id: string, userId: string, actor?: RndActorContext) {
+    const formula = await this.prisma.formula.findFirst({
+      where: { id, ...formulaTenantWhere(actor) },
       include: { phases: { include: { items: true } } },
     });
 
-    if (!formula) throw new NotFoundException('Formula not found');
+    if (!formula) {
+      if (hasTenant(actor)) refuseCrossTenant();
+      throw new NotFoundException('Formula not found');
+    }
 
     // Production Gate: Materials must exist and be valid
     const items = formula.phases.flatMap((p) => p.items);
@@ -407,12 +730,51 @@ export class FormulasService {
       }
     }
 
-    const updated = await this.prisma.formula.update({
-      where: { id },
-      data: {
-        status: 'PRODUCTION_LOCKED',
-        lockedById: userId,
-      },
+    // Already production-locked: no second lock effect.
+    if (formula.status === FormulaStatus.PRODUCTION_LOCKED) {
+      return formula;
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const row = await tx.formula.update({
+        where: { id },
+        data: {
+          status: 'PRODUCTION_LOCKED',
+          lockedById: userId,
+        },
+      });
+
+      await this.audit.withAudit<any>(
+        tx,
+        {
+          actorUserId: userId,
+          source: 'rnd.formulas',
+          entityType: 'Formula',
+          entityId: id,
+          action: 'LOCK_FORMULA_PRODUCTION',
+          beforeSnapshot: { status: formula.status },
+          afterSnapshot: { status: row.status, locked_by: userId },
+        },
+        async () => row,
+      );
+
+      await this.outbox.enqueue(
+        tx,
+        {
+          eventType: EVENT_FORMULA_LOCKED,
+          aggregateType: 'Formula',
+          aggregateId: id,
+          payload: {
+            formulation_id: id,
+            locked_by: userId,
+            locked_at: new Date().toISOString(),
+          },
+          correlationId: id,
+        },
+        { requireExternalTransaction: true },
+      );
+
+      return row;
     });
 
     this.eventEmitter.emit('state.transition', {
@@ -426,7 +788,10 @@ export class FormulasService {
     return updated;
   }
 
-  async recordLabTest(formulaId: string, data: any) {
+  async recordLabTest(formulaId: string, data: any, actor?: RndActorContext) {
+    // The formula must be visible before a result may be attached to it —
+    // otherwise a foreign actor writes rows into another tenant's lab history.
+    await this.assertFormulaVisible(formulaId, actor);
     return this.prisma.labTestResult.create({
       data: {
         formulaId,
@@ -435,7 +800,8 @@ export class FormulasService {
     });
   }
 
-  async getLabTests(formulaId: string) {
+  async getLabTests(formulaId: string, actor?: RndActorContext) {
+    await this.assertFormulaVisible(formulaId, actor);
     return this.prisma.labTestResult.findMany({
       where: { formulaId },
       orderBy: { testDate: 'desc' },
@@ -443,8 +809,9 @@ export class FormulasService {
     });
   }
 
-  async findAll(status?: string) {
-    const where = status ? { status: status as any } : {};
+  async findAll(status?: string, actor?: RndActorContext) {
+    const scoped = formulaTenantWhere(actor);
+    const where = status ? { ...scoped, status: status as any } : scoped;
     return this.prisma.formula.findMany({
       where,
       include: {
@@ -456,9 +823,9 @@ export class FormulasService {
     });
   }
 
-  async generateInci(id: string) {
-    const formula = await this.prisma.formula.findUnique({
-      where: { id },
+  async generateInci(id: string, actor?: RndActorContext) {
+    const formula = await this.prisma.formula.findFirst({
+      where: { id, ...formulaTenantWhere(actor) },
       include: {
         phases: {
           include: {
@@ -470,7 +837,10 @@ export class FormulasService {
       },
     });
 
-    if (!formula) throw new NotFoundException('Formula not found');
+    if (!formula) {
+      if (actor?.organizationId) refuseCrossTenant();
+      throw new NotFoundException('Formula not found');
+    }
 
     const allItems = formula.phases.flatMap((p) => p.items);
     const sortedItems = allItems.sort(

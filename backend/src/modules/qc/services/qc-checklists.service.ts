@@ -138,4 +138,8 @@ export class QCChecklistsService {
       data,
     });
   }
+
+  getCategories() {
+    return CHECKLIST_CATEGORIES;
+  }
 }

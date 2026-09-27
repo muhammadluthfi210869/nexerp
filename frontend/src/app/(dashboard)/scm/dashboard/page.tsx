@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -63,16 +63,16 @@ import {
 import { cn } from "@/lib/utils";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DataCard, TableWrapper, DnaBadge, DnaButton, DnaInput } from "@/components/dna";
-import { KpiCard } from "@/components/dna/KpiCard";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/dna";
+import { Button } from "@/components/dna";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+  KpiCard,
+} from "@/components/dna";
 
 
 interface DashStats {
@@ -140,8 +140,15 @@ export default function ScmDashboardPage() {
   const { data: dashStats, isLoading: statsLoading } = useQuery<DashStats>({
     queryKey: ["scm-dashboard-stats"],
     queryFn: async () => {
-      const res = await api.get("/scm/dashboard");
-      return unwrapResponse(res);
+      try {
+        const dashRes = await api.get("/dashboards/procurement");
+        if (dashRes.data?.cards) return unwrapResponse(dashRes);
+        const res = await api.get("/scm/dashboard");
+        return unwrapResponse(res);
+      } catch {
+        const res = await api.get("/scm/dashboard");
+        return unwrapResponse(res);
+      }
     },
   });
 

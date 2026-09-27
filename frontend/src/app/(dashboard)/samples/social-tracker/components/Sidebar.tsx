@@ -133,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <span className="text-sm">📅</span>
               <span className="flex-1 truncate">Content Planner</span>
-              <span className="text-[10px] text-[#787774] font-mono">({postsCount})</span>
+              <span className="text-[10px] text-[#787774] tabular-nums">({postsCount})</span>
             </div>
           </div>
         )}
@@ -279,7 +279,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             Meta API v19.0
           </span>
-          <span className="font-mono text-[10px]">{metaAccount.isConnected ? 'Connected' : 'Ready'}</span>
+          <span className="tabular-nums text-[10px]">{metaAccount.isConnected ? 'Connected' : 'Ready'}</span>
         </div>
 
         <button
@@ -290,7 +290,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {isDarkMode ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}
             <span>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
           </span>
-          <span className="text-[10px] font-mono text-[#787774]">{isDarkMode ? 'ON' : 'OFF'}</span>
+          <span className="text-[10px] tabular-nums text-[#787774]">{isDarkMode ? 'ON' : 'OFF'}</span>
         </button>
       </div>
     </aside>

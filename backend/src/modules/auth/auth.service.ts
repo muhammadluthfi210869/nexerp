@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { SessionService } from '../../platform/auth/session.service';
@@ -37,7 +37,11 @@ export class AuthService {
    */
   async validateUserSafe(email: string, password: string): Promise<{ id: string; mfaRequired: boolean } | null> {
     const dummyHash = '$2b$12$umqdDvLnBf2TfoTGNPZfmOeP8qPcYF2kjFKnSA.X9h0bjutAN82Gm';
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    let user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user && (email.endsWith('@dreamlab.com') || email.endsWith('@dreamlab.id'))) {
+      const altEmail = email.replace(/@dreamlab\.(com|id)$/, '@nexerp.id');
+      user = await this.prisma.user.findUnique({ where: { email: altEmail } });
+    }
     const hash = user?.passwordHash || dummyHash;
     const matches = await bcrypt.compare(password || '', hash);
     if (!user || !matches) return null;
@@ -47,7 +51,11 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const dummyHash = '$2b$12$umqdDvLnBf2TfoTGNPZfmOeP8qPcYF2kjFKnSA.X9h0bjutAN82Gm';
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    let user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user && (email.endsWith('@dreamlab.com') || email.endsWith('@dreamlab.id'))) {
+      const altEmail = email.replace(/@dreamlab\.(com|id)$/, '@nexerp.id');
+      user = await this.prisma.user.findUnique({ where: { email: altEmail } });
+    }
     const hash = user?.passwordHash || dummyHash;
     const matches = await bcrypt.compare(password || '', hash);
     if (!user || !matches) return null;
@@ -58,6 +66,31 @@ export class AuthService {
     const mfaRec = await this.prisma.mfaSecret.findUnique({ where: { userId } });
     if (!mfaRec) return false;
     return Boolean(mfaRec.confirmedAt || mfaRec.required);
+  }
+
+  /**
+   * Fase 3a — the tenant a login is scoped to, read from `tenant_scopes` (the
+   * membership table `platform/scope/scope.service.ts` already uses). The primary
+   * scope wins; an expired row never counts. Returns undefined when the user has
+   * no membership at all, which is deliberate: a missing claim fail-closes at the
+   * guards, while a fabricated default would silently grant access to one tenant.
+   */
+  private async resolvePrimaryTenant(userId: string): Promise<string | undefined> {
+    const now = new Date();
+    const scope = await this.prisma.tenantScope.findFirst({
+      where: {
+        userId,
+        OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }],
+      },
+      orderBy: [{ primary: 'desc' }, { effectiveFrom: 'desc' }],
+      select: { organizationId: true },
+    });
+    if (scope?.organizationId) return scope.organizationId;
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true },
+    });
+    return user?.organizationId || undefined;
   }
 
   private async resolveLoginUser(userOrEmail: any, password?: string): Promise<any> {
@@ -74,10 +107,11 @@ export class AuthService {
     const user = await this.resolveLoginUser(userOrEmail, password);
     if (!user) {
       if (password !== undefined) {
-        throw Object.assign(new Error('Invalid email or password'), {
+        throw new UnauthorizedException({
+          message: 'Invalid email or password',
           code: 'INVALID_CREDENTIALS',
           reason_code: 'INVALID_CREDENTIALS',
-          gateId: 'auth_session_mfa'
+          gateId: 'auth_session_mfa',
         });
       }
       return null;
@@ -91,11 +125,21 @@ export class AuthService {
       familyId: randomUUID()
     });
 
+    // The membership the session is scoped to, from the server only. A user with
+    // no active `tenant_scopes` row yields no claim — the guards then fail closed
+    // rather than treating the session as belonging to every organization.
+    const tenantId = await this.resolvePrimaryTenant(user.id);
+
     const payload = {
       sub: user.id,
       email: user.email,
       roles: user.roles || [],
-      sessionId: session.id
+      sessionId: session.id,
+      // Fase 3a — the tenant a session belongs to. Without this claim every real
+      // login reached the P07/P08 fail-closed guards with `organizationId ===
+      // undefined` and was refused with TENANT_UNRESOLVED. `jwt.strategy.ts:60`
+      // already reads this field; nothing consumes it from the request body.
+      ...(tenantId ? { organizationId: tenantId, tenantId } : {})
     };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
 
@@ -105,7 +149,13 @@ export class AuthService {
       refresh_token: session.refreshToken,
       refreshToken: session.refreshToken,
       session_id: session.id,
-      mfa_required: session.mfaPending
+      mfa_required: session.mfaPending,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        roles: user.roles || []
+      }
     };
   }
 

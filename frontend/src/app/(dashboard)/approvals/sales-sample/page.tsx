@@ -1,24 +1,70 @@
 "use client";
 
-import React from "react";
+/**
+ * Persetujuan Penjualan Sample (R&D) — P08 sample approval work list.
+ *
+ * Every value on this page comes from the production API
+ * (`GET /rnd/samples`). The previous revision rendered an in-file
+ * `INITIAL_SAMPLE_DATA` array of three invented samples, so an operator could
+ * "approve" a record that existed only in the bundle. There is no static array,
+ * no browser storage and no fallback here.
+ */
+
+import { useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { api } from "@/lib/api";
 import {
   ApprovalPageShell,
   type ApprovalColumn,
   type ApprovalDetailData,
-  DnaCell,
   DnaBadge,
+  DnaCell,
+  DnaErrorState,
 } from "@/components/dna";
 
-interface SalesSampleApprovalItem {
+type ApiFormulaPhase = {
+  prefix: string;
+  order: number;
+  items: Array<{
+    id: string;
+    dosagePercentage: string | number;
+    costSnapshot: string | number | null;
+    material: { code: string | null; name: string } | null;
+  }>;
+};
+
+type ApiSample = {
+  id: string;
+  sampleCode: string;
+  productName: string;
+  targetFunction: string;
+  textureReq: string;
+  colorReq: string;
+  aromaReq: string;
+  stage: string;
+  requestedAt: string;
+  targetDeadline: string | null;
+  feedback: string | null;
+  rejectionReason: string | null;
+  pic: { fullName: string } | null;
+  lead: {
+    clientName: string | null;
+    brandName: string | null;
+    pic: { fullName: string } | null;
+  } | null;
+  formulas: Array<{ version: number; phases: ApiFormulaPhase[] }>;
+};
+
+type SalesSampleApprovalItem = {
   id: string;
   code: string;
   client: string;
   brand: string;
   productName: string;
-  category: string;
+  targetFunction: string;
   formulator: string;
   revision: string;
-  targetClaim: string;
   salesPic: string;
   date: string;
   dueDate: string;
@@ -30,143 +76,132 @@ interface SalesSampleApprovalItem {
     itemName: string;
     qty: number;
     unit: string;
-    notes?: string;
   }>;
-}
+};
 
-const INITIAL_SAMPLE_DATA: SalesSampleApprovalItem[] = [
-  {
-    id: "smp-app-1",
-    code: "SMP-2026-0312",
-    client: "PT Glow Skin Global",
-    brand: "GlowSkin Aesthetic",
-    productName: "Brightening Essence Toner Galactomyces 5%",
-    category: "Skincare / Face Care",
-    formulator: "dr. Rian Pratama",
-    revision: "Rev 2 (Penyesuaian Viskositas)",
-    targetClaim: "Mencerahkan flek hitam dalam 14 hari, Non-comedogenic, pH Balance 5.5",
-    salesPic: "Fitri Handayani (Busdev)",
-    date: "25/08/2026",
-    dueDate: "29/08/2026",
-    status: "PENDING",
-    notes: "Klien meminta penambahan aroma floral lembut 0.05% dan tekstur sedikit lebih kental dari Rev 1.",
-    lineItems: [
-      {
-        id: "smpi-1",
-        itemCode: "SMP-BTL-01",
-        itemName: "Botol Uji Klinis Sample Lab 100ml (Formula B)",
-        qty: 3,
-        unit: "Botol Lab",
-        notes: "Uji stabilitas centifuge dan oven 45°C lolos 24 jam.",
-      },
-      {
-        id: "smpi-2",
-        itemCode: "SMP-DOC-01",
-        itemName: "Dossier Uji Sensori, Mikrobiologi & Rekomendasi Registrasi BPOM",
-        qty: 1,
-        unit: "Dokumen",
-        notes: "Dokumen regulatori klaim bahan aktif lengkap.",
-      },
-    ],
-  },
-  {
-    id: "smp-app-2",
-    code: "SMP-2026-0308",
-    client: "PT Cantika Herbal Nusantara",
-    brand: "HerbalCare Botanica",
-    productName: "Soothing Acne Gel Cica + Tea Tree 2%",
-    category: "Acne Care",
-    formulator: "Aisyah Putri, S.Si",
-    revision: "Rev 1 (Formulasi Awal)",
-    targetClaim: "Meredakan kemerahan jerawat aktif 48 jam, cooling sensation",
-    salesPic: "Budi Hermawan (Sales)",
-    date: "23/08/2026",
-    dueDate: "28/08/2026",
-    status: "APPROVED",
-    notes: "Formula disetujui klien, persiapan pembuatan dummy kemasan primer dan uji stabilitas 3 bulan.",
-    lineItems: [
-      {
-        id: "smpi-3",
-        itemCode: "SMP-JAR-01",
-        itemName: "Jar Akrilik Sample 30gr (Formula Standard)",
-        qty: 5,
-        unit: "Jar",
-        notes: "Tekstur lightweight water-gel, cepat meresap tanpa residu lengket.",
-      },
-    ],
-  },
-  {
-    id: "smp-app-3",
-    code: "SMP-2026-0299",
-    client: "CV Royal Beauty Luxe",
-    brand: "Royal Glow Luxe",
-    productName: "Anti-Aging Peptide Miracle Serum with Retinol Encapsulated",
-    category: "Anti-Aging Serum",
-    formulator: "dr. Rian Pratama",
-    revision: "Rev 3",
-    targetClaim: "Menyamarkan garis halus, formulasi aman untuk kulit sensitif",
-    salesPic: "Fitri Handayani (Busdev)",
-    date: "20/08/2026",
-    dueDate: "26/08/2026",
-    status: "REJECTED",
-    notes: "Ditolak: Bahan aktif turunan retinol yang diajukan melebihi target anggaran HPP dari klien.",
-    lineItems: [
-      {
-        id: "smpi-4",
-        itemCode: "SMP-BTL-02",
-        itemName: "Dropper Bottle Sample 20ml",
-        qty: 2,
-        unit: "Botol",
-        notes: "HPP formula melebihi pagu Rp 35.000/pcs yang disyaratkan klien.",
-      },
-    ],
-  },
-];
+const EMPTY = "—";
+
+const formatDate = (value: string | null | undefined) => {
+  if (!value) return EMPTY;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return EMPTY;
+  return d.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" });
+};
+
+/** The canonical sample stage mapped onto the approval shell's three states. */
+const approvalStatusOf = (stage: string): SalesSampleApprovalItem["status"] => {
+  if (stage === "APPROVED") return "APPROVED";
+  if (stage === "REJECTED" || stage === "CANCELLED") return "REJECTED";
+  return "PENDING";
+};
+
+const toItem = (sample: ApiSample): SalesSampleApprovalItem => {
+  const formula = sample.formulas?.[0];
+  const lineItems = (formula?.phases ?? [])
+    .flatMap((phase) => phase.items ?? [])
+    .map((item) => ({
+      id: item.id,
+      itemCode: item.material?.code ?? EMPTY,
+      itemName: item.material?.name ?? "Material belum tertaut",
+      qty: Number(item.dosagePercentage) || 0,
+      unit: "%",
+    }));
+
+  return {
+    id: sample.id,
+    code: sample.sampleCode,
+    client: sample.lead?.clientName ?? EMPTY,
+    brand: sample.lead?.brandName ?? EMPTY,
+    productName: sample.productName,
+    targetFunction: sample.targetFunction,
+    formulator: sample.pic?.fullName ?? EMPTY,
+    revision: formula ? `V${formula.version}` : EMPTY,
+    salesPic: sample.lead?.pic?.fullName ?? EMPTY,
+    date: formatDate(sample.requestedAt),
+    dueDate: formatDate(sample.targetDeadline),
+    status: approvalStatusOf(sample.stage),
+    notes: sample.rejectionReason || sample.feedback || "",
+    lineItems,
+  };
+};
 
 export default function SalesSampleApprovalPage() {
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError, error, refetch } = useQuery<ApiSample[]>({
+    queryKey: ["rnd-samples-approval"],
+    queryFn: async () => {
+      const resp = await api.get("/rnd/samples");
+      const body = resp.data;
+      return Array.isArray(body) ? body : (body?.data ?? []);
+    },
+  });
+
+  const handleApprove = useCallback(async (id: string, notes?: string) => {
+    // Transition sample stage to APPROVED or call accept endpoint
+    try {
+      await api.patch(`/rnd/sample/${id}/advance`, {
+        newStage: "APPROVED",
+        feedback: notes || "Sample approved via approval portal",
+      });
+    } catch {
+      await api.post(`/rnd/sample/${id}/accept`, {});
+    }
+    queryClient.invalidateQueries({ queryKey: ["rnd-samples-approval"] });
+  }, [queryClient]);
+
+  const handleReject = useCallback(async (id: string, reason: string) => {
+    await api.patch(`/rnd/sample/${id}/advance`, {
+      newStage: "REJECTED",
+      rejectionReason: reason || "Sample rejected by client / reviewer",
+    });
+    queryClient.invalidateQueries({ queryKey: ["rnd-samples-approval"] });
+  }, [queryClient]);
+
+  const items = useMemo<SalesSampleApprovalItem[]>(
+    () => (Array.isArray(data) ? data.map(toItem) : []),
+    [data]
+  );
+
+  const errStatus = (error as { response?: { status?: number } })?.response?.status;
+  const denied = errStatus === 401 || errStatus === 403;
+  const errorMessage =
+    (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+    "Gagal memuat daftar sample.";
+
   const columns: ApprovalColumn<SalesSampleApprovalItem>[] = [
     {
       header: "No. Sample",
       accessor: "code",
       sortable: true,
-      render: (item) => <DnaCell.code>{item.code}</DnaCell.code>,
+      render: (item) => <DnaCell.Code value={item.code} />,
     },
     {
       header: "Klien & Brand",
       accessor: "client",
       sortable: true,
       render: (item) => (
-        <div>
-          <p className="font-semibold text-slate-800">{item.client}</p>
-          <p className="text-[11px] text-blue-600 font-medium">{item.brand}</p>
-        </div>
+        <DnaCell.NaturalPair primary={item.client} secondary={item.brand} />
       ),
     },
     {
-      header: "Nama Produk & Kategori",
+      header: "Nama Produk & Revisi",
       accessor: "productName",
       render: (item) => (
-        <div>
-          <p className="text-xs font-semibold text-slate-800">{item.productName}</p>
-          <p className="text-[11px] text-slate-500">{item.category} • {item.revision}</p>
-        </div>
+        <DnaCell.NaturalPair primary={item.productName} secondary={item.revision} />
       ),
     },
     {
       header: "Formulator & Sales",
       accessor: "formulator",
       render: (item) => (
-        <div>
-          <p className="text-xs font-medium text-slate-700">{item.formulator}</p>
-          <p className="text-[11px] text-slate-500">PIC: {item.salesPic}</p>
-        </div>
+        <DnaCell.NaturalPair primary={item.formulator} secondary={`PIC: ${item.salesPic}`} />
       ),
     },
     {
-      header: "Target Klaim BPOM",
-      accessor: "targetClaim",
+      header: "Target Fungsi",
+      accessor: "targetFunction",
       render: (item) => (
-        <p className="text-[11px] text-slate-600 line-clamp-2 max-w-xs">{item.targetClaim}</p>
+        <p className="text-[11px] text-slate-600 line-clamp-2 max-w-xs">{item.targetFunction}</p>
       ),
     },
     {
@@ -175,12 +210,12 @@ export default function SalesSampleApprovalPage() {
       align: "center",
       render: (item) => (
         <DnaBadge
-          status={
+          variant={
             item.status === "APPROVED"
-              ? "SUCCESS"
+              ? "success"
               : item.status === "REJECTED"
-              ? "DANGER"
-              : "WARNING"
+              ? "critical"
+              : "warning"
           }
         >
           {item.status === "APPROVED"
@@ -206,43 +241,39 @@ export default function SalesSampleApprovalPage() {
     requesterName: item.salesPic,
     partnerName: item.client,
     partnerLabel: "Klien Pemesan (Brand Owner)",
-    warehouseName: "Laboratorium R&D Formulasi",
-    notes: `Target Klaim: ${item.targetClaim} | Catatan Revisi: ${item.notes}`,
-    lineItems: item.lineItems.map((li) => ({
-      ...li,
-      unitPrice: 0,
-      total: 0,
-    })),
-    timeline: [
-      {
-        id: "tl-1",
-        action: "Permintaan Sample Dibuat oleh Sales",
-        actor: item.salesPic,
-        role: "Business Development",
-        timestamp: `${item.date} 09:00 WIB`,
-        status: "completed",
-        notes: "Brief produk dan target khasiat diterima dari klien.",
-      },
-      {
-        id: "tl-2",
-        action: "Formulasi & Uji Lab R&D Selesai",
-        actor: item.formulator,
-        role: "R&D Specialist",
-        timestamp: `${item.date} 14:20 WIB`,
-        status: "completed",
-        notes: "Uji organoleptik, pH, dan viskositas memenuhi kriteria standar.",
-      },
-      {
-        id: "tl-3",
-        action: "Otorisasi Kirim Sample ke Klien",
-        actor: "R&D Manager / Business Director",
-        role: "Management",
-        timestamp: item.status === "APPROVED" ? `${item.date} 17:00 WIB` : "Menunggu Eksekusi",
-        status: item.status === "APPROVED" ? "completed" : item.status === "REJECTED" ? "failed" : "pending",
-        notes: item.status === "REJECTED" ? item.notes : undefined,
-      },
-    ],
+    notes: `Target Fungsi: ${item.targetFunction}${item.notes ? ` | Catatan: ${item.notes}` : ""}`,
+    lineItems: item.lineItems.map((li) => ({ ...li, unitPrice: 0, total: 0 })),
   });
+
+  if (isLoading) {
+    return (
+      <div className="p-8 text-center text-slate-400">Memuat daftar sample...</div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-8">
+        <DnaErrorState
+          title={denied ? "Akses ditolak" : "Gagal memuat data"}
+          message={
+            denied
+              ? "Anda tidak memiliki akses ke daftar penjualan sample."
+              : errorMessage
+          }
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="p-8 text-center text-slate-400">
+        Belum ada sample yang menunggu persetujuan.
+      </div>
+    );
+  }
 
   return (
     <ApprovalPageShell
@@ -254,9 +285,11 @@ export default function SalesSampleApprovalPage() {
         { label: "Persetujuan", href: "/approvals/purchase" },
         { label: "Penjualan Sample" },
       ]}
-      items={INITIAL_SAMPLE_DATA}
+      items={items}
       columns={columns}
       getDetailData={buildDetailData}
+      onApprove={handleApprove}
+      onReject={handleReject}
       searchPlaceholder="Cari nomor sample, nama produk, brand, formulator..."
     />
   );

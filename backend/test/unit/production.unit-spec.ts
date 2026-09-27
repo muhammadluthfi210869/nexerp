@@ -1,5 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductionService } from '../../src/modules/production/production.service';
+import { ProductionBatchRecordService } from '../../src/modules/production/production-batch-record.service';
+import { ProductionPlanningService } from '../../src/modules/production/production-planning.service';
+import { ProductionActualsService } from '../../src/modules/production/production-actuals.service';
+import { ProductionExecutionService } from '../../src/modules/production/production-execution.service';
+import { ProductionAuditService } from '../../src/modules/production/production-audit.service';
+import { ProductionMachineService } from '../../src/modules/production/production-machine.service';
+import { ProductionQrContextService } from '../../src/modules/production/production-qr-context.service';
+import { ProductionWorkOrderService } from '../../src/modules/production/production-work-order.service';
+import { ProductionAnalyticsService } from '../../src/modules/production/production-analytics.service';
 import { LegalityService } from '../../src/modules/legality/legality.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -17,6 +26,15 @@ describe('ProductionService — Unit (DI unresolved — $transaction mock)', () 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductionService,
+        ProductionBatchRecordService, // Fase 3C — batch-record cluster
+        ProductionPlanningService, // Fase 3C — planning cluster
+        ProductionActualsService, // Fase 3C — actuals cluster
+        ProductionExecutionService, // Fase 3C — execution cluster
+        ProductionAuditService, // Fase 3C — QC audit cluster
+        ProductionMachineService, // Fase 3C — machine registry
+        ProductionQrContextService, // Fase 3C — QR scan context
+        ProductionWorkOrderService, // Fase 3C — work orders & requisitions
+        ProductionAnalyticsService, // Fase 3C — getMicroFlowDiagnostics lives here
         { provide: PrismaService, useValue: prisma },
         {
           provide: LegalityService,
@@ -125,9 +143,11 @@ describe('ProductionService — Unit (DI unresolved — $transaction mock)', () 
 
     beforeEach(() => {
       prisma.$transaction = jest.fn((fn: any) => fn(prisma));
-      jest
-        .spyOn(service as any, 'calculateNextStage')
-        .mockReturnValue('FILLING');
+      // Fase 3C part 7: the stage calculator left ProductionService together with
+      // submitAudit, so it can no longer be spied on from this facade. The spy
+      // was redundant anyway — it returned 'FILLING' for a 'MIXING' log, which is
+      // what the real mapping returns, and none of the three assertions below
+      // read the next stage. They now exercise the real calculator.
     });
 
     it('advances WO on GOOD audit in PENDING_QC', async () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/dna";
 import { Clock, AlertTriangle, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { differenceInDays } from "date-fns";
@@ -24,7 +24,7 @@ export function KanbanBoard({ tasks, onTaskClick }: { tasks: any[], onTaskClick:
           <div className="flex items-center justify-between mb-5 px-2">
             <div className="flex items-center gap-3">
                <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-wider leading-none">{col.label}</h3>
-               <DnaBadge status={col.status} className="shadow-none rounded-full px-2 py-0.5 text-[8px] font-mono">
+               <DnaBadge status={col.status} className="shadow-none rounded-full px-2 py-0.5 text-[8px] tabular-nums">
                   {tasks.filter(t => t.kanbanState === col.id).length}
                </DnaBadge>
             </div>

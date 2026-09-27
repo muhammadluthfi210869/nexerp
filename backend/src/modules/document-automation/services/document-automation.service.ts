@@ -600,12 +600,13 @@ export class DocumentAutomationService {
       throw new BadRequestException('Draft already approved');
     }
 
+    const validUserId = userId && userId !== 'system' && userId.length === 36 ? userId : null;
     const approved = await this.prisma.documentDraft.update({
       where: { id },
       data: {
         status: DocumentDraftStatus.APPROVED,
         approvedAt: new Date(),
-        approvedById: userId,
+        approvedById: validUserId,
         notes: dto.notes || draft.notes,
       },
     });
@@ -622,13 +623,14 @@ export class DocumentAutomationService {
 
   async rejectDraft(id: string, dto: RejectDraftDto, userId: string) {
     const draft = await this.findOne(id);
+    const validUserId = userId && userId !== 'system' && userId.length === 36 ? userId : null;
 
     return this.prisma.documentDraft.update({
       where: { id },
       data: {
         status: DocumentDraftStatus.REJECTED,
         rejectedAt: new Date(),
-        rejectedById: userId,
+        rejectedById: validUserId,
         rejectReason: dto.reason,
       },
     });

@@ -10,22 +10,15 @@ import {
   FileSpreadsheet,
   CheckCircle2,
   Clock,
-  AlertCircle,
   AlertTriangle,
   Lock,
   Unlock,
-  KeyRound,
   Eye,
-  Calendar,
-  Building2,
-  Package,
+  Warehouse,
   Printer,
-  ShieldCheck,
-  Upload,
-  Layers,
-  Search,
-  Check,
-  RotateCcw
+  TrendingDown,
+  TrendingUp,
+  FileText
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -36,12 +29,19 @@ import {
   DnaButton,
   DnaBadge,
   DnaModal,
-  DnaTabNav,
+  DnaDetailDrawer,
   DnaInput,
   DnaSelect,
   DnaTextarea,
   DnaTable,
-  useDnaToast
+  formatRupiah,
+  useDnaToast,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+  DnaCell,
 } from "@/components/dna";
 
 interface OpnameItem {
@@ -78,128 +78,6 @@ interface OpnameSession {
   items: OpnameItem[];
 }
 
-const MOCK_OPNAME_SESSIONS: OpnameSession[] = [
-  {
-    id: "opn-01",
-    sessionCode: "OPN-202603-0001",
-    sessionDate: "2026-03-09",
-    warehouseCode: "WH-01",
-    warehouseName: "WH-01 Gudang Bahan Baku",
-    auditorLead: "Hendro Wibowo",
-    auditorTeam: ["Budi Santoso", "Dewi Sartika", "Rian Hendra"],
-    totalSkus: 4,
-    countedSkus: 4,
-    matchedSkus: 2,
-    varianceSkus: 2,
-    netVarianceValuation: -610000,
-    status: "IN_COUNT",
-    isInventoryFrozen: true,
-    notes: "Stok Opname Triwulan I Gudang Bahan Baku Kosmetik & Ekstrak Botani.",
-    items: [
-      {
-        itemCode: "RAW-NIA-001",
-        itemName: "Niacinamide USP Grade 99%",
-        batchLot: "LOT-NIA-202603-01",
-        binLocation: "Rak A-01 / Level 1",
-        systemQty: 1252,
-        actualQty: 1250,
-        differenceQty: -2,
-        unit: "Kg",
-        unitHpp: 185000,
-        varianceValuation: -370000,
-        status: "DEFICIT",
-        notes: "2 kg dipakai untuk retain sample uji stabilitas"
-      },
-      {
-        itemCode: "RAW-HA-002",
-        itemName: "Hyaluronic Acid 1% Solution",
-        batchLot: "LOT-HA-202602-03",
-        binLocation: "Rak A-02 / Level 2",
-        systemQty: 120,
-        actualQty: 120,
-        differenceQty: 0,
-        unit: "Kg",
-        unitHpp: 850000,
-        varianceValuation: 0,
-        status: "MATCH"
-      },
-      {
-        itemCode: "RAW-CET-003",
-        itemName: "Cetearyl Alcohol Pastilles",
-        batchLot: "LOT-CET-202601-09",
-        binLocation: "Rak B-01 / Level 1",
-        systemQty: 485,
-        actualQty: 480,
-        differenceQty: -5,
-        unit: "Kg",
-        unitHpp: 48000,
-        varianceValuation: -240000,
-        status: "DEFICIT",
-        notes: "Susut kelembaban penyimpanan karung terbuka"
-      },
-      {
-        itemCode: "RAW-GLY-004",
-        itemName: "Glycerin Pharma Grade 99.7%",
-        batchLot: "LOT-GLY-202602-11",
-        binLocation: "Rak B-02 / Level 2",
-        systemQty: 800,
-        actualQty: 800,
-        differenceQty: 0,
-        unit: "Kg",
-        unitHpp: 28000,
-        varianceValuation: 0,
-        status: "MATCH"
-      }
-    ]
-  },
-  {
-    id: "opn-02",
-    sessionCode: "OPN-202602-0002",
-    sessionDate: "2026-02-28",
-    warehouseCode: "WH-02",
-    warehouseName: "WH-02 Gudang Bahan Kemas",
-    auditorLead: "Hendro Wibowo",
-    auditorTeam: ["Siti Rahma", "Ahmad Fauzi"],
-    totalSkus: 2,
-    countedSkus: 2,
-    matchedSkus: 1,
-    varianceSkus: 1,
-    netVarianceValuation: -210000,
-    status: "RECONCILED_CLOSED",
-    isInventoryFrozen: false,
-    notes: "Audit Akhir Bulan Bahan Kemas Botol & Tube.",
-    items: [
-      {
-        itemCode: "KMS-BTL-030",
-        itemName: "Botol Dropper Frosted Glass 30ml",
-        batchLot: "LOT-BTL-202601-14",
-        binLocation: "Pallet C-01",
-        systemQty: 9550,
-        actualQty: 9500,
-        differenceQty: -50,
-        unit: "Pcs",
-        unitHpp: 4200,
-        varianceValuation: -210000,
-        status: "DEFICIT",
-        notes: "Botol pecah telah dibuatkan Berita Acara Kerusakan"
-      },
-      {
-        itemCode: "KMS-BOX-001",
-        itemName: "Inner Box Hologram Foil 30ml",
-        batchLot: "LOT-BOX-202603-02",
-        binLocation: "Pallet C-03",
-        systemQty: 15400,
-        actualQty: 15400,
-        differenceQty: 0,
-        unit: "Pcs",
-        unitHpp: 1650,
-        varianceValuation: 0,
-        status: "MATCH"
-      }
-    ]
-  }
-];
-
 export default function StockOpnamePage() {
   const toast = useDnaToast();
   const queryClient = useQueryClient();
@@ -207,42 +85,130 @@ export default function StockOpnamePage() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSession, setSelectedSession] = useState<OpnameSession | null>(null);
-
-  // Modals state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isCountModalOpen, setIsCountModalOpen] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isCloseSessionModalOpen, setIsCloseSessionModalOpen] = useState(false);
-  const [managerPin, setManagerPin] = useState("");
 
-  // Create form state
+  // Form State
   const [newSessionForm, setNewSessionForm] = useState({
-    warehouseCode: "WH-01",
-    warehouseName: "WH-01 Gudang Bahan Baku",
-    auditorLead: "Hendro Wibowo (Kepala Gudang)",
-    auditorTeam: "Budi Santoso, Dewi Sartika",
+    warehouseId: "",
+    warehouseCode: "",
+    warehouseName: "",
+    auditorLead: "",
+    auditorTeam: "",
     notes: "",
-    freezeInventory: true
+    freezeInventory: true,
+  });
+
+  // Query warehouse list
+  const { data: warehouseList = [] } = useQuery({
+    queryKey: ["warehouse-list-options"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/warehouse/warehouses");
+        return (unwrapResponse(res.data) as any[]) || [];
+      } catch {
+        return [];
+      }
+    },
   });
 
   // Query sessions
-  const { data: rawSessions, isLoading } = useQuery({
+  const { data: rawSessions } = useQuery({
     queryKey: ["warehouse-opname-sessions"],
     queryFn: async () => {
       try {
         const res = await api.get("/warehouse/opname");
         return unwrapResponse(res.data) as OpnameSession[];
-      } catch (e) {
+      } catch {
         return null;
       }
-    }
+    },
   });
 
-  const sessions: OpnameSession[] = useMemo(() => {
-    if (rawSessions && Array.isArray(rawSessions) && rawSessions.length > 0) {
-      return rawSessions;
+  const handleCreateOpname = async () => {
+    if (!newSessionForm.warehouseId && warehouseList.length > 0) {
+      toast.error("Pilih gudang terlebih dahulu");
+      return;
     }
-    return MOCK_OPNAME_SESSIONS;
+    const targetWhId = newSessionForm.warehouseId || warehouseList[0]?.id;
+    if (!targetWhId) {
+      toast.error("Gudang tidak tersedia");
+      return;
+    }
+    try {
+      await api.post("/warehouse/opname", {
+        warehouseId: targetWhId,
+        picId: newSessionForm.auditorLead || "SYSTEM",
+        notes: newSessionForm.notes || undefined,
+        items: [],
+      });
+      toast.success("Sesi opname dimulai. Transaksi di gudang terpilih telah dibekukan (FROZEN).");
+      queryClient.invalidateQueries({ queryKey: ["warehouse-opname-sessions"] });
+      setIsCreateModalOpen(false);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Gagal memulai sesi opname");
+    }
+  };
+
+  const handleApproveOpname = async (id: string) => {
+    try {
+      await api.post(`/warehouse/opname/${id}/approve`, {});
+      toast.success("Rekonsiliasi opname disetujui & penyesuaian stok otomatis dibukukan.");
+      queryClient.invalidateQueries({ queryKey: ["warehouse-opname-sessions"] });
+      setSelectedSession(null);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Gagal menyetujui opname");
+    }
+  };
+
+  const sessions: OpnameSession[] = useMemo(() => {
+    if (!rawSessions || !Array.isArray(rawSessions)) return [];
+    return rawSessions.map((s: any) => {
+      const items: OpnameItem[] = (s.items || []).map((i: any) => {
+        const sys = Number(i.systemQty || 0);
+        const act = i.actualQty !== null && i.actualQty !== undefined ? Number(i.actualQty) : null;
+        const diff = act !== null ? act - sys : 0;
+        const hpp = Number(i.material?.unitPrice || 0);
+        const val = diff * hpp;
+        const status: any = act === null ? "PENDING_COUNT" : diff === 0 ? "MATCH" : diff > 0 ? "SURPLUS" : "DEFICIT";
+        return {
+          itemCode: i.material?.code || i.materialId?.slice(0, 8) || "MAT",
+          itemName: i.material?.name || "Material",
+          batchLot: i.batchNumber || "-",
+          binLocation: i.binLocation || "A-01",
+          systemQty: sys,
+          actualQty: act,
+          differenceQty: diff,
+          unit: i.material?.unit || "Unit",
+          unitHpp: hpp,
+          varianceValuation: val,
+          status,
+          notes: i.notes,
+        };
+      });
+      const counted = items.filter((it: any) => it.actualQty !== null).length;
+      const matched = items.filter((it: any) => it.status === "MATCH").length;
+      const variance = items.filter((it: any) => it.status === "DEFICIT" || it.status === "SURPLUS").length;
+      const netVal = items.reduce((sum: number, it: any) => sum + it.varianceValuation, 0);
+
+      return {
+        id: s.id,
+        sessionCode: s.opnameNumber || ("OPN-" + s.id.slice(0, 8).toUpperCase()),
+        sessionDate: s.createdAt ? new Date(s.createdAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+        warehouseCode: s.warehouse?.code || "WH-01",
+        warehouseName: s.warehouse?.name || "Gudang Utama",
+        auditorLead: s.pic?.name || s.picId || "Auditor Lead",
+        auditorTeam: [],
+        totalSkus: items.length,
+        countedSkus: counted,
+        matchedSkus: matched,
+        varianceSkus: variance,
+        netVarianceValuation: netVal,
+        status: (s.status === "COMPLETED" ? "RECONCILED_CLOSED" : s.status === "PENDING_APPROVAL" ? "IN_COUNT" : "DRAFT_FREEZE") as any,
+        notes: s.notes,
+        isInventoryFrozen: s.status !== "COMPLETED",
+        items,
+      };
+    });
   }, [rawSessions]);
 
   // Filtering
@@ -256,551 +222,413 @@ export default function StockOpnamePage() {
         return (
           s.sessionCode.toLowerCase().includes(q) ||
           s.warehouseName.toLowerCase().includes(q) ||
-          s.auditorLead.toLowerCase().includes(q) ||
-          (s.notes && s.notes.toLowerCase().includes(q))
+          s.auditorLead.toLowerCase().includes(q)
         );
       }
       return true;
     });
-  }, [sessions, activeTab, searchQuery]);
+  }, [sessions, searchQuery, activeTab]);
 
-  // Metric Computations
-  const totalSessionsCount = sessions.length;
-  const activeSessionsCount = sessions.filter(s => s.status !== "RECONCILED_CLOSED").length;
-  const closedSessionsCount = sessions.filter(s => s.status === "RECONCILED_CLOSED").length;
-  const totalNetVariance = sessions.reduce((acc, curr) => acc + curr.netVarianceValuation, 0);
-
-  // Handlers
-  const handleCreateSession = () => {
-    toast.success(
-      "Sesi Opname Dibuat",
-      `Sesi ${newSessionForm.warehouseName} berhasil dimulai. Status freeze persediaan: AKTIF.`
-    );
-    setIsCreateModalOpen(false);
-  };
-
-  const handleUpdateCountItem = (itemCode: string, newActualQty: number) => {
-    if (!selectedSession) return;
-    const updatedItems = selectedSession.items.map(item => {
-      if (item.itemCode === itemCode) {
-        const diff = newActualQty - item.systemQty;
-        const val = diff * item.unitHpp;
-        const st: OpnameItem["status"] = diff === 0 ? "MATCH" : diff > 0 ? "SURPLUS" : "DEFICIT";
-        return { ...item, actualQty: newActualQty, differenceQty: diff, varianceValuation: val, status: st };
-      }
-      return item;
-    });
-
-    const counted = updatedItems.filter(i => i.actualQty !== null).length;
-    const matched = updatedItems.filter(i => i.differenceQty === 0).length;
-    const variance = updatedItems.filter(i => i.differenceQty !== 0).length;
-    const netVal = updatedItems.reduce((acc, curr) => acc + curr.varianceValuation, 0);
-
-    setSelectedSession({
-      ...selectedSession,
-      items: updatedItems,
-      countedSkus: counted,
-      matchedSkus: matched,
-      varianceSkus: variance,
-      netVarianceValuation: netVal,
-      status: "IN_COUNT"
-    });
-
-    toast.info("Hitungan Tersimpan", `Hasil hitung fisik untuk item ${itemCode} berhasil diperbarui.`);
-  };
-
-  const handleCloseAndReconcile = () => {
-    if (managerPin !== "1234" && managerPin.length < 4) {
-      toast.error("Otorisasi PIN Gagal", "Masukkan 4-digit PIN Manager yang valid untuk otorisasi rekonsiliasi.");
-      return;
-    }
-
-    toast.success(
-      "Sesi Opname Selesai & Direkonsiliasi",
-      `Sesi ${selectedSession?.sessionCode} ditutup. Jurnal penyesuaian selisih stok (GL 510501) berhasil di-posting. Freeze gudang telah dibuka.`
-    );
-
-    setIsCloseSessionModalOpen(false);
-    setIsCountModalOpen(false);
-    setManagerPin("");
-  };
+  // KPIs
+  const kpis = useMemo(() => {
+    const total = sessions.length;
+    const active = sessions.filter((s) => s.status !== "RECONCILED_CLOSED").length;
+    const closed = sessions.filter((s) => s.status === "RECONCILED_CLOSED").length;
+    const netVariance = sessions.reduce((acc, s) => acc + s.netVarianceValuation, 0);
+    return { total, active, closed, netVariance };
+  }, [sessions]);
 
   const getStatusBadge = (status: OpnameSession["status"]) => {
     switch (status) {
       case "DRAFT_FREEZE":
-        return <DnaBadge variant="purple">FREEZE / DRAFT</DnaBadge>;
+        return <DnaBadge variant="critical">Inventory Frozen</DnaBadge>;
       case "IN_COUNT":
-        return <DnaBadge variant="warning">PROSES HITUNG FISIK</DnaBadge>;
+        return <DnaBadge variant="warning">Proses Hitung</DnaBadge>;
       case "RECONCILED_CLOSED":
-        return <DnaBadge variant="success">SELESAI & DIREKONSILIASI</DnaBadge>;
-      default:
-        return <DnaBadge variant="neutral">{status}</DnaBadge>;
+        return <DnaBadge variant="success">Selesai Rekonsiliasi</DnaBadge>;
     }
   };
 
   return (
     <DnaPageContainer>
-      {/* 1. Header Page */}
+      {/* Header with Top-Right Unified Tabs (Rule 2) */}
       <DnaPageHeader
-        title="Stok Opname (Physical Count Audit)"
-        description="Perekaman hitung fisik persediaan (Metode Form Cepat V1 & Import Spreadsheet V2), audit selisih otomatis, dan rekonsiliasi Manager PIN."
-        badge={<DnaBadge variant="neutral">SCR-150 & SCR-151</DnaBadge>}
-        breadcrumbs={[
-          { label: "Warehouse Hub", href: "/warehouse" },
-          { label: "Stok Barang", href: "/warehouse/stok" },
-          { label: "Stok Opname", href: "/warehouse/opname" }
+        title="Stok Opname (Physical Count)"
+        description="Pelaksanaan audit fisik persediaan berkala dengan fitur Inventory Freeze dan rekonsiliasi varians otomatis."
+        badge={
+          <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 font-semibold">
+            <ClipboardCheck className="w-3.5 h-3.5" />
+            <span>Inventory Freeze Control</span>
+          </div>
+        }
+        tabs={[
+          { id: "all", label: "Semua Sesi Opname", count: sessions.length },
+          { id: "active", label: "Sesi Berjalan / Frozen", count: kpis.active },
+          { id: "closed", label: "Selesai Rekonsiliasi", count: kpis.closed },
         ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         actions={
           <div className="flex items-center gap-2">
-            <DnaButton variant="secondary" onClick={() => setIsImportModalOpen(true)}>
-              <Upload className="w-4 h-4 mr-2" />
-              Import Excel (V2)
+            <DnaButton
+              variant="outline"
+              size="sm"
+              icon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
+              onClick={() => toast.success("Laporan Rekonsiliasi Opname diexport ke Excel")}
+            >
+              Export Excel
             </DnaButton>
-            <DnaButton variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Mulai Sesi Opname (V1)
+            <DnaButton
+              variant="primary"
+              size="sm"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              + Mulai Sesi Opname
             </DnaButton>
           </div>
         }
       />
 
-      {/* 2. KPI Cards */}
+      {/* KPI Cards */}
       <DnaKpiGrid cols={4}>
         <DnaStatCard
-          label="TOTAL SESI AUDIT"
-          value={`${totalSessionsCount} Sesi`}
-          subValue="Riwayat Periode Berjalan"
-          icon={<ClipboardCheck className="w-5 h-5 text-blue-600" />}
+          label="Total Sesi Opname"
+          value={`${kpis.total} Sesi`}
+          icon={<FileText className="w-5 h-5 text-indigo-600" />}
+          delta={{ value: "+1 bulan ini", isPositive: true }}
+          variant="info"
         />
         <DnaStatCard
-          label="SESI BERJALAN (FREEZING)"
-          value={`${activeSessionsCount} Gudang`}
-          subValue="Operasional Mutasi Dikunci"
-          icon={<Lock className="w-5 h-5 text-amber-600" />}
+          label="Sesi Berjalan (Frozen)"
+          value={`${kpis.active} Sesi`}
+          icon={<Lock className="w-5 h-5 text-amber-500" />}
+          variant={kpis.active > 0 ? "warning" : "default"}
         />
         <DnaStatCard
-          label="SESI SELESAI & RECONCILED"
-          value={`${closedSessionsCount} Selesai`}
-          subValue="Jurnal Penyesuaian Terposting"
+          label="Selesai Rekonsiliasi"
+          value={`${kpis.closed} Sesi`}
           icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+          variant="success"
         />
         <DnaStatCard
-          label="NET VALUASI SELISIH"
-          value={`Rp ${(totalNetVariance / 1000).toLocaleString()} Rb`}
-          subValue="Dampak Beban Selisih Stok"
-          icon={<AlertTriangle className="w-5 h-5 text-rose-600" />}
+          label="Net Varians Akumulasi"
+          value={formatRupiah(kpis.netVariance)}
+          icon={kpis.netVariance < 0 ? <TrendingDown className="w-5 h-5 text-red-500" /> : <TrendingUp className="w-5 h-5 text-emerald-600" />}
+          subtext="Selisih Fisik vs Sistem"
+          variant={kpis.netVariance < 0 ? "warning" : "success"}
         />
       </DnaKpiGrid>
 
-      {/* 3. Tabs */}
-      <DnaTabNav
-        tabs={[
-          { id: "all", label: `Semua Sesi (${totalSessionsCount})` },
-          { id: "active", label: `Sesi Berjalan / Freeze (${activeSessionsCount})` },
-          { id: "closed", label: `Selesai Ditutup (${closedSessionsCount})` }
-        ]}
-        activeTab={activeTab}
-        onChange={setActiveTab}
-      />
-
-      {/* 4. DataTable Card */}
+      {/* Main Table Card (Rule 1: No title prop, Rule 4: Clean responsive columns) */}
       <DnaDataTableCard
-        title="Daftar Sesi Rekonsiliasi Stok Opname"
-        description="Sesi audit hitung fisik persediaan per gudang fasilitas maklon."
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Cari Kode Sesi, Gudang, PIC Auditor..."
+        toolbarProps={{
+          searchQuery,
+          onSearchChange: setSearchQuery,
+          searchPlaceholder: "Cari Sesi Opname, Gudang, Auditor...",
+        }}
       >
         <div className="overflow-x-auto">
-          <DnaTable className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-4">Sesi & Tanggal</th>
-                <th className="py-3 px-4">Gudang Fasilitas</th>
-                <th className="py-3 px-4">Progress Audit Fisik</th>
-                <th className="py-3 px-4 text-right">Valuasi Selisih (Rp)</th>
-                <th className="py-3 px-4">Status Sesi</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <DnaTh className="px-4 py-3 h-[40px] w-[140px]">No. Sesi</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] w-[110px]">Tgl Opname</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Gudang Audit</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px]">Lead Auditor</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[100px]">Total SKU</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-center w-[140px]">Progres Hitung</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-right w-[140px]">Varians Bersih</DnaTh>
+                <DnaTh className="px-3 py-3 h-[40px] text-center w-[140px]">Status</DnaTh>
+                <DnaTh className="px-4 py-3 h-[40px] text-right w-[70px]">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {filteredSessions.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                <DnaTableRow>
+                  <DnaTd colSpan={9} className="py-12 text-center text-slate-400">
                     <ClipboardCheck className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada sesi stok opname yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
-                filteredSessions.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-900">
-                        {row.isInventoryFrozen && <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
-                        <span>{row.sessionCode}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
-                        <Calendar className="w-3 h-3" />
-                        <span>{row.sessionDate}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <p className="text-xs font-semibold text-slate-800">{row.warehouseName}</p>
-                      <span className="text-[11px] text-slate-500">Lead: {row.auditorLead}</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="space-y-1 text-xs">
-                        <div className="flex items-center justify-between font-mono text-[11px]">
-                          <span>{row.countedSkus} / {row.totalSkus} SKU</span>
-                          <span className="font-bold text-slate-700">{Math.round((row.countedSkus / row.totalSkus) * 100)}%</span>
-                        </div>
-                        <div className="w-28 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                filteredSessions.map((s) => (
+                  <DnaTableRow
+                    key={s.id}
+                    onClick={() => setSelectedSession(s)}
+                    className="hover:bg-slate-50/60 transition-colors cursor-pointer group h-[48px]"
+                  >
+                    {/* Kolom 1: No. Sesi */}
+                    <DnaTd className="px-4 py-2">
+                      <DnaCell.Code value={s.sessionCode} />
+                    </DnaTd>
+
+                    {/* Kolom 2: Tgl Opname */}
+                    <DnaTd className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                      {s.sessionDate}
+                    </DnaTd>
+
+                    {/* Kolom 3: Gudang Audit */}
+                    <DnaTd className="px-3 py-2 text-slate-800 font-medium truncate max-w-[180px]">
+                      {s.warehouseName}
+                    </DnaTd>
+
+                    {/* Kolom 4: Lead Auditor */}
+                    <DnaTd className="px-3 py-2 text-slate-800 truncate max-w-[160px]">
+                      {s.auditorLead}
+                    </DnaTd>
+
+                    {/* Kolom 5: Total SKU */}
+                    <DnaTd className="px-3 py-2 text-right">
+                      <DnaCell.Number
+                        value={s.totalSkus}
+                        unit="SKU"
+                      />
+                    </DnaTd>
+
+                    {/* Kolom 6: Progres Hitung */}
+                    <DnaTd className="px-3 py-2">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-[11px] font-semibold text-slate-700">
+                          {s.countedSkus}/{s.totalSkus} SKU ({Math.round((s.countedSkus / (s.totalSkus || 1)) * 100)}%)
+                        </span>
+                        <div className="w-24 bg-slate-200 h-1.5 rounded-full overflow-hidden">
                           <div
                             className="bg-blue-600 h-full rounded-full"
-                            style={{ width: `${(row.countedSkus / row.totalSkus) * 100}%` }}
+                            style={{ width: `${Math.min(100, Math.round((s.countedSkus / (s.totalSkus || 1)) * 100))}%` }}
                           />
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono">
-                          <span className="text-emerald-600 font-bold">{row.matchedSkus} Cocok</span>
-                          <span>•</span>
-                          <span className={row.varianceSkus > 0 ? "text-rose-600 font-bold" : "text-slate-400"}>
-                            {row.varianceSkus} Selisih
-                          </span>
-                        </div>
                       </div>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <p className={`font-mono text-xs font-bold ${row.netVarianceValuation >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                        {row.netVarianceValuation >= 0 ? "+" : ""}Rp {row.netVarianceValuation.toLocaleString()}
-                      </p>
-                      <span className="text-[10px] text-slate-400">Akun GL 510501</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      {getStatusBadge(row.status)}
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <DnaButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedSession(row);
-                            setIsCountModalOpen(true);
-                          }}
-                          title="Input Hitung Fisik (V1) & Rincian Selisih"
-                        >
-                          <Eye className="w-4 h-4 text-slate-600" />
-                        </DnaButton>
-                        {row.status !== "RECONCILED_CLOSED" && (
-                          <DnaButton
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedSession(row);
-                              setIsCloseSessionModalOpen(true);
-                            }}
-                            title="Tutup & Rekonsiliasi PIN"
-                          >
-                            <KeyRound className="w-3.5 h-3.5 mr-1 text-amber-600" /> Tutup
-                          </DnaButton>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                    </DnaTd>
+
+                    {/* Kolom 7: Varians Bersih */}
+                    <DnaTd className="px-3 py-2 text-right">
+                      <span className={`tabular-nums font-semibold text-[12px] ${s.netVarianceValuation < 0 ? "text-rose-600" : "text-emerald-700"}`}>
+                        {formatRupiah(s.netVarianceValuation)}
+                      </span>
+                    </DnaTd>
+
+                    {/* Kolom 8: Status */}
+                    <DnaTd className="px-3 py-2 text-center">
+                      {getStatusBadge(s.status)}
+                    </DnaTd>
+
+                    {/* Kolom 9: Aksi */}
+                    <DnaTd className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedSession(s)}
+                        className="text-slate-400 hover:text-blue-600"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </DnaButton>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
+            </DnaTableBody>
           </DnaTable>
         </div>
       </DnaDataTableCard>
 
-      {/* 5. Modal Buat Sesi Opname Baru */}
-      <DnaModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        title="Mulai Sesi Stok Opname Baru"
-        description="Inisialisasi audit hitung fisik dan penguncian mutasi gudang (Freeze Policy)."
-        size="md"
-        footer={
-          <div className="flex items-center justify-end gap-2 w-full">
-            <DnaButton variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
-              Batal
-            </DnaButton>
-            <DnaButton variant="primary" onClick={handleCreateSession}>
-              Aktifkan Sesi & Freeze
-            </DnaButton>
-          </div>
-        }
-      >
-        <div className="space-y-4 text-xs">
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700 uppercase">Pilih Gudang Target Audit *</label>
-<DnaSelect 
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              value={newSessionForm.warehouseCode}
-              onChange={(value) => {
-                const val = value;
-                const label = val === "WH-01" ? "WH-01 Gudang Bahan Baku" : val === "WH-02" ? "WH-02 Gudang Bahan Kemas" : "WH-03 Gudang Produk Jadi";
-                setNewSessionForm(prev => ({ ...prev, warehouseCode: val, warehouseName: label }));
-              }}
+      {/* Quick Peek Drawer (Rule 5) */}
+      <DnaDetailDrawer
+        isOpen={!!selectedSession}
+        onClose={() => setSelectedSession(null)}
+        title={selectedSession?.sessionCode || "Detail Sesi Opname"}
+        subtitle={`Gudang: ${selectedSession?.warehouseName} • Tgl: ${selectedSession?.sessionDate}`}
+        badge={selectedSession && getStatusBadge(selectedSession.status)}
+        footerActions={
+          <div className="flex items-center gap-2">
+            <DnaButton
+              variant="outline"
+              size="sm"
+              onClick={() => toast.success(`Mencetak Formulir Hitung Fisik ${selectedSession?.sessionCode}...`)}
             >
-              <option value="WH-01">WH-01 Gudang Bahan Baku</option>
-              <option value="WH-02">WH-02 Gudang Bahan Kemas</option>
-              <option value="WH-03">WH-03 Gudang Produk Jadi</option>
-            </DnaSelect>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700 uppercase">Ketua Tim Auditor (Lead PIC) *</label>
-            <DnaInput
-              type="text"
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-              value={newSessionForm.auditorLead}
-              onChange={(e) => setNewSessionForm(prev => ({ ...prev, auditorLead: e.target.value }))}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700 uppercase">Anggota Tim Auditor Lapangan</label>
-            <DnaInput
-              type="text"
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-              value={newSessionForm.auditorTeam}
-              onChange={(e) => setNewSessionForm(prev => ({ ...prev, auditorTeam: e.target.value }))}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700 uppercase">Catatan / Agenda Opname</label>
-            <DnaTextarea
-              rows={2}
-              placeholder="Contoh: Stok Opname Triwulan I..."
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
-              value={newSessionForm.notes}
-              onChange={(e) => setNewSessionForm(prev => ({ ...prev, notes: e.target.value }))}
-            />
-          </div>
-
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
-            <div className="flex items-center gap-2 text-amber-900 font-bold">
-              <Lock className="w-4 h-4 text-amber-600" />
-              <span>Kebijakan Freeze Mutasi (Poin 68-70)</span>
-            </div>
-            <p className="text-amber-800 text-[11px] leading-relaxed">
-              Selama sesi berlangsung, transaksi Inbound (GRN), Outbound (SJ), dan Transfer di gudang terpilih akan ditangguhkan hingga sesi direkonsiliasi.
-            </p>
-          </div>
-        </div>
-      </DnaModal>
-
-      {/* 6. Modal Input Hitung Fisik V1 (SCR-151) & Rekonsiliasi */}
-      <DnaModal
-        isOpen={isCountModalOpen}
-        onClose={() => setIsCountModalOpen(false)}
-        title={selectedSession ? `Hitung Fisik (V1): ${selectedSession.sessionCode}` : "Hitung Fisik"}
-        description="Masukkan kuantitas fisik aktual hasil penghitungan rak / bin lapangan."
-        size="lg"
-        footer={
-          <div className="flex items-center justify-between w-full">
-            <div className="text-xs font-semibold text-slate-600">
-              {selectedSession?.countedSkus} / {selectedSession?.totalSkus} SKU Terhitung ({selectedSession?.varianceSkus} Memiliki Selisih)
-            </div>
-            <div className="flex items-center gap-2">
-              <DnaButton variant="secondary" onClick={() => setIsCountModalOpen(false)}>
-                Tutup
+              <Printer className="w-4 h-4 mr-1.5" />
+              Cetak Form Hitung
+            </DnaButton>
+            {selectedSession && selectedSession.status !== "RECONCILED_CLOSED" && (
+              <DnaButton
+                variant="primary"
+                size="sm"
+                onClick={() => handleApproveOpname(selectedSession.id)}
+              >
+                Tutup Sesi & Rekonsiliasi
               </DnaButton>
-              {selectedSession?.status !== "RECONCILED_CLOSED" && (
-                <DnaButton
-                  variant="primary"
-                  onClick={() => setIsCloseSessionModalOpen(true)}
-                >
-                  <KeyRound className="w-3.5 h-3.5 mr-1" />
-                  Rekonsiliasi & Tutup Sesi
-                </DnaButton>
-              )}
-            </div>
+            )}
           </div>
         }
       >
         {selectedSession && (
-          <div className="space-y-6">
-            {/* Header info */}
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-slate-500">Kode Sesi Audit</span>
-                  <p className="font-mono text-sm font-bold text-slate-900">{selectedSession.sessionCode}</p>
+          <div className="space-y-6 text-xs">
+            {/* Freeze Notice */}
+            <div className={`p-4 rounded-xl border flex items-center justify-between ${
+              selectedSession.isInventoryFrozen ? "bg-amber-50 border-amber-200" : "bg-emerald-50 border-emerald-200"
+            }`}>
+              <div className="space-y-1">
+                <div className="font-semibold text-xs flex items-center gap-1.5">
+                  {selectedSession.isInventoryFrozen ? (
+                    <Lock className="w-4 h-4 text-amber-600" />
+                  ) : (
+                    <Unlock className="w-4 h-4 text-emerald-600" />
+                  )}
+                  <span>Status Pembekuan Stok (Inventory Freeze)</span>
                 </div>
-                <div>{getStatusBadge(selectedSession.status)}</div>
+                <div className="text-[11px] text-slate-600">
+                  {selectedSession.isInventoryFrozen
+                    ? "Transaksi keluar/masuk gudang ini dibekukan sementara agar hasil hitung fisik akurat."
+                    : "Sesi opname selesai. Pembekuan transaksi telah dibuka kembali."}
+                </div>
               </div>
-              <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-slate-200">
+              <DnaBadge variant={selectedSession.isInventoryFrozen ? "warning" : "success"}>
+                {selectedSession.isInventoryFrozen ? "FROZEN" : "UNLOCKED"}
+              </DnaBadge>
+            </div>
+
+            {/* Audit Team & Progress */}
+            <div className="space-y-3 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+              <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                Tim Auditor & Hasil Rekonsiliasi
+              </h4>
+              <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <span className="text-slate-500">Gudang:</span>
-                  <p className="font-semibold text-slate-800">{selectedSession.warehouseName}</p>
+                  <span className="text-slate-400 block">Lead Auditor:</span>
+                  <span className="font-semibold text-slate-800">{selectedSession.auditorLead}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500">Lead Auditor:</span>
-                  <p className="font-semibold text-slate-800">{selectedSession.auditorLead}</p>
+                  <span className="text-slate-400 block">Total Material Dihitung:</span>
+                  <span className="tabular-nums font-semibold text-slate-800">
+                    {selectedSession.countedSkus} / {selectedSession.totalSkus} SKU
+                  </span>
                 </div>
                 <div>
-                  <span className="text-slate-500">Net Valuasi Selisih:</span>
-                  <p className={`font-mono font-bold ${selectedSession.netVarianceValuation >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                    Rp {selectedSession.netVarianceValuation.toLocaleString()}
-                  </p>
+                  <span className="text-slate-400 block">Jumlah Sesuai (Match):</span>
+                  <span className="font-semibold text-emerald-700">{selectedSession.matchedSkus} SKU</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block">Material Selisih (Variance):</span>
+                  <span className="font-semibold text-red-600">{selectedSession.varianceSkus} SKU</span>
                 </div>
               </div>
             </div>
 
-            {/* Table of items to count */}
-            <div className="border border-slate-200 rounded-xl overflow-hidden">
-              <DnaTable className="w-full text-xs text-left">
-                <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
-                  <tr>
-                    <th className="p-3">Barang & Lokasi Bin</th>
-                    <th className="p-3 text-right">Stok Sistem</th>
-                    <th className="p-3 text-right">Hitung Fisik (Input)</th>
-                    <th className="p-3 text-right">Selisih Fisik</th>
-                    <th className="p-3 text-right">Dampak Valuasi</th>
-                    <th className="p-3 text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {selectedSession.items.map((item) => (
-                    <tr key={item.itemCode} className="hover:bg-slate-50">
-                      <td className="p-3">
-                        <p className="font-semibold text-slate-900">{item.itemName}</p>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono mt-0.5">
-                          <span>{item.itemCode}</span>
-                          <span>•</span>
-                          <span className="text-indigo-600 font-bold">{item.binLocation}</span>
-                        </div>
-                      </td>
-                      <td className="p-3 text-right font-mono font-semibold text-slate-700">
-                        {item.systemQty} {item.unit}
-                      </td>
-                      <td className="p-3 text-right">
-                        {selectedSession.status === "RECONCILED_CLOSED" ? (
-                          <span className="font-mono font-bold text-slate-900">{item.actualQty} {item.unit}</span>
-                        ) : (
-                          <DnaInput
-                            type="number"
-                            className="w-24 text-right font-mono font-bold text-xs bg-white border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-blue-500"
-                            defaultValue={item.actualQty !== null ? item.actualQty : item.systemQty}
-                            onBlur={(e) => handleUpdateCountItem(item.itemCode, Number(e.target.value))}
-                          />
-                        )}
-                      </td>
-                      <td className={`p-3 text-right font-mono font-bold ${item.differenceQty === 0 ? "text-slate-600" : item.differenceQty > 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                        {item.differenceQty > 0 ? `+${item.differenceQty}` : item.differenceQty} {item.unit}
-                      </td>
-                      <td className={`p-3 text-right font-mono font-bold ${item.varianceValuation === 0 ? "text-slate-600" : item.varianceValuation > 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                        Rp {item.varianceValuation.toLocaleString()}
-                      </td>
-                      <td className="p-3 text-center">
-                        {item.status === "MATCH" && <DnaBadge variant="success">COCOK</DnaBadge>}
-                        {item.status === "DEFICIT" && <DnaBadge variant="danger">KURANG</DnaBadge>}
-                        {item.status === "SURPLUS" && <DnaBadge variant="purple">LEBIH</DnaBadge>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </DnaTable>
-            </div>
+            {/* Items Table */}
+            {selectedSession.items.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                  Rincian Varians per Material
+                </h4>
+                <div className="border border-slate-200 rounded-xl overflow-hidden">
+                  <DnaTable className="w-full text-left text-xs">
+                    <DnaTableHead>
+                      <DnaTableRow>
+                        <DnaTh className="py-2.5 px-3">Item</DnaTh>
+                        <DnaTh className="py-2.5 px-3 text-right">Sistem</DnaTh>
+                        <DnaTh className="py-2.5 px-3 text-right">Fisik</DnaTh>
+                        <DnaTh className="py-2.5 px-3 text-right">Selisih</DnaTh>
+                      </DnaTableRow>
+                    </DnaTableHead>
+                    <DnaTableBody>
+                      {selectedSession.items.map((it, idx) => (
+                        <DnaTableRow key={idx}>
+                          <DnaTd className="py-2.5 px-3 font-sans">
+                            <div className="font-semibold text-slate-800">{it.itemName}</div>
+                            <div className="text-[10px] text-slate-400 tabular-nums">{it.itemCode} • Rak {it.binLocation}</div>
+                          </DnaTd>
+                          <DnaTd className="py-2.5 px-3 text-right text-slate-600">{it.systemQty} {it.unit}</DnaTd>
+                          <DnaTd className="py-2.5 px-3 text-right font-bold text-slate-900">
+                            {it.actualQty !== null ? `${it.actualQty} ${it.unit}` : "-"}
+                          </DnaTd>
+                          <DnaTd className={`py-2.5 px-3 text-right font-bold ${it.differenceQty < 0 ? "text-red-600" : it.differenceQty > 0 ? "text-emerald-700" : "text-slate-500"}`}>
+                            {it.differenceQty > 0 ? `+${it.differenceQty}` : it.differenceQty}
+                          </DnaTd>
+                        </DnaTableRow>
+                      ))}
+                    </DnaTableBody>
+                  </DnaTable>
+                </div>
+              </div>
+            )}
           </div>
         )}
-      </DnaModal>
+      </DnaDetailDrawer>
 
-      {/* 7. Modal Import Spreadsheet V2 */}
+      {/* Modal Mulai Sesi Opname Baru */}
       <DnaModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        title="Import Spreadsheet Opname (V2)"
-        description="Unggah template file Excel / CSV hasil barcode scanner massal."
-        size="md"
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Mulai Sesi Stok Opname Baru"
+        description="Inisiasi sesi audit fisik dengan pembekuan transaksi mutasi stok di gudang terpilih."
+        size="xl"
         footer={
-          <div className="flex items-center justify-end gap-2 w-full">
-            <DnaButton variant="secondary" onClick={() => setIsImportModalOpen(false)}>
+          <div className="flex items-center justify-end gap-2.5 w-full">
+            <DnaButton variant="outline" size="sm" onClick={() => setIsCreateModalOpen(false)}>
               Batal
             </DnaButton>
             <DnaButton
               variant="primary"
-              onClick={() => {
-                toast.success(
-                  "Import Berhasil Diproses",
-                  "Sebanyak 12 SKU berhasil diimpor dan disinkronkan ke sesi hitung fisik."
-                );
-                setIsImportModalOpen(false);
-              }}
-            >
-              Proses Import File
-            </DnaButton>
-          </div>
-        }
-      >
-        <div className="space-y-4 text-xs">
-          <div className="border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center p-6 text-center space-y-2 hover:border-blue-500 bg-slate-50">
-            <FileSpreadsheet className="w-10 h-10 text-emerald-600" />
-            <p className="font-semibold text-slate-800">Tarik file Excel (.xlsx / .csv) ke sini</p>
-            <p className="text-[11px] text-slate-500">atau klik untuk memilih file dari komputer</p>
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-xl">
-            <div className="text-blue-900">
-              <p className="font-bold">Belum punya template file?</p>
-              <p className="text-[11px] text-blue-700">Unduh format resmi kolom hitung barcode.</p>
-            </div>
-            <DnaButton
-              variant="secondary"
               size="sm"
-              onClick={() => toast.info("Template Diunduh", "Format template-opname.xlsx berhasil disimpan.")}
+              icon={<Lock className="w-4 h-4" />}
+              onClick={handleCreateOpname}
             >
-              Unduh Template
-            </DnaButton>
-          </div>
-        </div>
-      </DnaModal>
-
-      {/* 8. Modal Otorisasi Manager PIN & Tutup Sesi */}
-      <DnaModal
-        isOpen={isCloseSessionModalOpen}
-        onClose={() => setIsCloseSessionModalOpen(false)}
-        title="Otorisasi PIN & Rekonsiliasi Sesi Opname"
-        description="Penutupan sesi audit fisik akan otomatis membukukan selisih stok ke Jurnal Penyesuaian Akuntansi."
-        size="md"
-        footer={
-          <div className="flex items-center justify-end gap-2 w-full">
-            <DnaButton variant="secondary" onClick={() => setIsCloseSessionModalOpen(false)}>
-              Batal
-            </DnaButton>
-            <DnaButton variant="primary" onClick={handleCloseAndReconcile}>
-              <Check className="w-4 h-4 mr-1" />
-              Otorisasi & Tutup Sesi
+              Bekukan Stok & Mulai Opname
             </DnaButton>
           </div>
         }
       >
         <div className="space-y-4 text-xs">
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
-            <div className="flex items-center gap-2 text-amber-900 font-bold">
-              <ShieldCheck className="w-4 h-4 text-amber-700" />
-              <span>Verifikasi Finansial & Pelepasan Status Freeze</span>
-            </div>
-            <p className="text-amber-800 text-[11px] leading-relaxed">
-              Setelah diverifikasi oleh Manager, kuantitas sistem akan disesuaikan dengan kuantitas fisik aktual, dan jurnal selisih (Beban Akun 510501) akan dibuat otomatis.
-            </p>
+          <div>
+            <label className="block text-slate-700 font-bold mb-1">Pilih Gudang Target Opname *</label>
+            <DnaSelect
+              aria-label="Pilih Gudang"
+              value={newSessionForm.warehouseId}
+              onChange={(val) => setNewSessionForm({ ...newSessionForm, warehouseId: val })}
+              className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white"
+            >
+              {warehouseList.length === 0 ? (
+                <option value="">Tidak ada gudang aktif</option>
+              ) : (
+                warehouseList.map((w: any) => (
+                  <option key={w.id} value={w.id}>
+                    {w.code} - {w.name}
+                  </option>
+                ))
+              )}
+            </DnaSelect>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700 uppercase">Masukkan PIN Otorisasi Manager *</label>
-            <DnaInput
-              type="password"
-              placeholder="••••"
-              maxLength={6}
-              className="w-full text-center font-mono text-xl tracking-[0.5em] bg-slate-50 border border-slate-300 rounded-lg p-3 text-slate-900 focus:ring-2 focus:ring-blue-500"
-              value={managerPin}
-              onChange={(e) => setManagerPin(e.target.value)}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Lead Auditor *</label>
+              <DnaInput
+                type="text"
+                value={newSessionForm.auditorLead}
+                onChange={(e) => setNewSessionForm({ ...newSessionForm, auditorLead: e.target.value })}
+                className="w-full text-xs border border-slate-300 rounded-lg p-2"
+              />
+            </div>
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Anggota Tim Auditor</label>
+              <DnaInput
+                type="text"
+                value={newSessionForm.auditorTeam}
+                onChange={(e) => setNewSessionForm({ ...newSessionForm, auditorTeam: e.target.value })}
+                className="w-full text-xs border border-slate-300 rounded-lg p-2"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-slate-700 font-bold mb-1">Catatan Pelaksanaan Sesi</label>
+            <DnaTextarea
+              rows={2}
+              placeholder="Jadwal audit, shift tim, atau instruksi khusus..."
+              value={newSessionForm.notes}
+              onChange={(e) => setNewSessionForm({ ...newSessionForm, notes: e.target.value })}
+              className="w-full text-xs border border-slate-300 rounded-lg p-2"
             />
-            <p className="text-[10px] text-slate-500 text-center">Default PIN Otorisasi: 1234</p>
           </div>
         </div>
       </DnaModal>

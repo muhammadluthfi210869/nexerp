@@ -1,33 +1,23 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   FlaskConical,
   Plus,
   Search,
-  Filter,
   FileSpreadsheet,
   Eye,
   Calendar,
   User,
-  Building2,
   Clock,
   CheckCircle2,
   AlertTriangle,
   FolderOpen,
-  ExternalLink,
-  Edit2,
-  FileText,
-  Tag,
-  Check,
-  RotateCcw,
-  Sparkles,
   Send,
-  Layers,
-  ArrowRight
+  ExternalLink
 } from "lucide-react";
 import {
   DnaPageContainer,
@@ -37,9 +27,16 @@ import {
   DnaDataTableCard,
   DnaButton,
   DnaBadge,
+  DnaDetailDrawer,
   DnaModal,
-  DnaTabNav,
-  useDnaToast
+  DnaInput,
+  useDnaToast,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
 } from "@/components/dna";
 
 interface RndProject {
@@ -50,97 +47,55 @@ interface RndProject {
   brandName: string;
   status: "PENDING" | "IN_PROGRESS" | "TERKIRIM" | "OVERDUE" | "APPROVED" | "REVISION";
   statusLabel: string;
-  npfEntryDate: string; // Tgl NPF Masuk
-  targetFinishDate: string; // Tgl Target Selesai
-  shippingDate?: string; // Tgl Pengiriman Sample
-  sampleWorkDays: number; // Total Pengerjaan Sample (hari kerja)
-  formulaFolderUrl: string; // Folder Formula / Drive Link
+  npfEntryDate: string;
+  targetFinishDate: string;
+  shippingDate?: string;
+  sampleWorkDays: number;
+  formulaFolderUrl: string;
   notes: string;
-  activeRevision: string; // Rev 1, Rev 2, etc.
+  activeRevision: string;
 }
 
-const MOCK_RND_PROJECTS: RndProject[] = [
-  {
-    id: "proj-01",
-    projectName: "Serum Brightening Niacinamide 10% + Zinc PCA",
-    picFormulator: "Apt. Dedi Kurniawan, S.Farm",
-    clientName: "PT Cantika Glow Nusantara",
-    brandName: "GlowAura Skin",
-    status: "IN_PROGRESS",
-    statusLabel: "In Progress (Formulasi Lab)",
-    npfEntryDate: "2026-03-01",
-    targetFinishDate: "2026-03-12",
-    shippingDate: undefined,
-    sampleWorkDays: 7,
-    formulaFolderUrl: "https://drive.google.com/drive/folders/rnd-serum-001",
-    notes: "Tekstur watery-gel transparan, tidak lengket, pH target 5.5 - 6.0.",
-    activeRevision: "Rev 1"
-  },
-  {
-    id: "proj-02",
-    projectName: "Acne Spot Gel Centella + Salicylic Acid 2%",
-    picFormulator: "Dr. Maya Sp.KK",
-    clientName: "CV Derma Estetika Mandiri",
-    brandName: "DermaPure",
-    status: "TERKIRIM",
-    statusLabel: "Sample Terkirim (Menunggu Review Klien)",
-    npfEntryDate: "2026-02-20",
-    targetFinishDate: "2026-03-02",
-    shippingDate: "2026-03-03",
-    sampleWorkDays: 9,
-    formulaFolderUrl: "https://drive.google.com/drive/folders/rnd-acne-002",
-    notes: "Sample 3 botol dropper 15ml dikirim via JNE YES Resi #JNE88921102.",
-    activeRevision: "Rev 1"
-  },
-  {
-    id: "proj-03",
-    projectName: "Moisturizer Ceramide Barrier Repair 5X",
-    picFormulator: "Apt. Siska Handayani, M.Farm",
-    clientName: "PT Miracle Beauty Lab",
-    brandName: "MiracleSkin",
-    status: "APPROVED",
-    statusLabel: "Sample Disetujui (Lanjut HPP & SPK)",
-    npfEntryDate: "2026-02-10",
-    targetFinishDate: "2026-02-22",
-    shippingDate: "2026-02-23",
-    sampleWorkDays: 10,
-    formulaFolderUrl: "https://drive.google.com/drive/folders/rnd-moist-003",
-    notes: "Klien approve sample Rev 2. Menunggu PO & pendaftaran BPOM NA.",
-    activeRevision: "Rev 2"
-  },
-  {
-    id: "proj-04",
-    projectName: "Sunscreen Serum SPF 50+ PA++++ Hybrid",
-    picFormulator: "Apt. Dedi Kurniawan, S.Farm",
-    clientName: "PT Kosmetika Surya Abadi",
-    brandName: "SunGlow",
-    status: "REVISION",
-    statusLabel: "Revisi Sample (Rev 2)",
-    npfEntryDate: "2026-02-15",
-    targetFinishDate: "2026-03-05",
-    shippingDate: undefined,
-    sampleWorkDays: 14,
-    formulaFolderUrl: "https://drive.google.com/drive/folders/rnd-sunscreen-004",
-    notes: "Klien request tekstur lebih matte dan minim whitecast saat blending.",
-    activeRevision: "Rev 2"
-  },
-  {
-    id: "proj-05",
-    projectName: "Gentle Facial Wash Oat + Ceramide Low pH",
-    picFormulator: "Ahmad Fauzi",
-    clientName: "PT Natural Botani Pratama",
-    brandName: "OatCare",
-    status: "OVERDUE",
-    statusLabel: "Overdue (Melewati Target)",
-    npfEntryDate: "2026-02-18",
-    targetFinishDate: "2026-03-02",
-    shippingDate: undefined,
-    sampleWorkDays: 16,
-    formulaFolderUrl: "https://drive.google.com/drive/folders/rnd-fw-005",
-    notes: "Menunggu pasokan bahan baku surfaktan amino acid impor tiba di gudang.",
-    activeRevision: "Rev 1"
+const mapSampleToProject = (s: any): RndProject => {
+  let status: RndProject["status"] = "IN_PROGRESS";
+  let statusLabel = "In Progress";
+  if (s.stage === "APPROVED") {
+    status = "APPROVED";
+    statusLabel = "Sample Disetujui";
+  } else if (s.stage === "REVISING" || s.stage === "FEEDBACK_RECEIVED") {
+    status = "REVISION";
+    statusLabel = "Revisi Sample";
+  } else if (s.stage === "SENT_TO_CLIENT") {
+    status = "TERKIRIM";
+    statusLabel = "Sample Terkirim";
+  } else if (s.stage === "QUEUE" || s.stage === "WAITING_FINANCE") {
+    status = "PENDING";
+    statusLabel = "Menunggu Antrian";
+  } else if (s.targetDeadline && new Date(s.targetDeadline) < new Date() && s.stage !== "APPROVED") {
+    status = "OVERDUE";
+    statusLabel = "Overdue";
   }
-];
+
+  const createdDate = s.createdAt ? new Date(s.createdAt) : new Date();
+  const workDays = Math.max(1, Math.round((new Date().getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)));
+
+  return {
+    id: s.id,
+    projectName: s.productName || "Formula R&D",
+    picFormulator: s.pic?.fullName || s.pic?.name || "Belum Ditugaskan",
+    clientName: s.lead?.clientName || s.lead?.companyName || "Klien Mandiri",
+    brandName: s.lead?.brandName || "Brand",
+    status,
+    statusLabel,
+    npfEntryDate: s.createdAt ? new Date(s.createdAt).toISOString().split("T")[0] : "-",
+    targetFinishDate: s.targetDeadline ? new Date(s.targetDeadline).toISOString().split("T")[0] : "-",
+    shippingDate: s.sentToClientAt ? new Date(s.sentToClientAt).toISOString().split("T")[0] : undefined,
+    sampleWorkDays: workDays,
+    formulaFolderUrl: s.formulaFolderUrl || `https://drive.google.com/drive/folders/rnd-${s.sampleCode || s.id}`,
+    notes: s.targetFunction || s.feedbackNotes || s.textureReq || "Parameter spesifikasi lab aktif.",
+    activeRevision: s.formulas?.[0] ? `Rev ${s.formulas[0].version}` : `Rev ${s.revisionCount || 1}`,
+  };
+};
 
 export default function RndProjectMonitoringPage() {
   const toast = useDnaToast();
@@ -148,13 +103,13 @@ export default function RndProjectMonitoringPage() {
 
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [picFilter, setPicFilter] = useState("ALL");
   const [selectedProject, setSelectedProject] = useState<RndProject | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form State for new project
   const [newProjectForm, setNewProjectForm] = useState({
+    leadId: "",
     projectName: "",
     picFormulator: "Apt. Dedi Kurniawan, S.Farm",
     clientName: "",
@@ -165,35 +120,43 @@ export default function RndProjectMonitoringPage() {
     notes: ""
   });
 
-  // Query API
-  const { data: rawProjects, isLoading } = useQuery({
+  const { data: leads = [] } = useQuery({
+    queryKey: ["leads-selection"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/bussdev/pipeline-v2/leads");
+        return unwrapResponse(res.data) || [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const { data: rawSamples, isLoading } = useQuery({
     queryKey: ["rnd-project-monitoring"],
     queryFn: async () => {
       try {
-        const res = await api.get("/rnd/dashboard");
-        return unwrapResponse(res.data) as RndProject[];
-      } catch (e) {
-        return null;
+        const res = await api.get("/rnd/samples");
+        return unwrapResponse(res.data) as any[];
+      } catch {
+        return [];
       }
     }
   });
 
   const projects: RndProject[] = useMemo(() => {
-    if (rawProjects && Array.isArray(rawProjects) && rawProjects.length > 0) {
-      return rawProjects;
+    if (rawSamples && Array.isArray(rawSamples)) {
+      return rawSamples.map(mapSampleToProject);
     }
-    return MOCK_RND_PROJECTS;
-  }, [rawProjects]);
+    return [];
+  }, [rawSamples]);
 
-  // Filtering
   const filteredProjects = useMemo(() => {
     return projects.filter((p) => {
       if (activeTab === "progress" && p.status !== "IN_PROGRESS" && p.status !== "REVISION") return false;
       if (activeTab === "shipped" && p.status !== "TERKIRIM") return false;
       if (activeTab === "approved" && p.status !== "APPROVED") return false;
       if (activeTab === "overdue" && p.status !== "OVERDUE") return false;
-
-      if (picFilter !== "ALL" && !p.picFormulator.includes(picFilter)) return false;
 
       if (searchQuery.trim() !== "") {
         const q = searchQuery.toLowerCase();
@@ -207,45 +170,69 @@ export default function RndProjectMonitoringPage() {
       }
       return true;
     });
-  }, [projects, activeTab, picFilter, searchQuery]);
+  }, [projects, activeTab, searchQuery]);
 
-  // KPI Calculations
   const totalProjects = projects.length;
   const inProgressCount = projects.filter(p => p.status === "IN_PROGRESS" || p.status === "REVISION").length;
   const shippedCount = projects.filter(p => p.status === "TERKIRIM").length;
   const approvedCount = projects.filter(p => p.status === "APPROVED").length;
   const overdueCount = projects.filter(p => p.status === "OVERDUE").length;
 
-  const handleCreateProject = () => {
-    if (!newProjectForm.projectName || !newProjectForm.clientName) {
-      toast.warning("Form Belum Lengkap", "Nama Project dan Nama Klien wajib diisi.");
+  const handleCreateProject = async () => {
+    if (!newProjectForm.projectName) {
+      toast.warning("Form Belum Lengkap", "Nama Project formulasi wajib diisi.");
       return;
     }
 
-    toast.success("Project R&D Dibuat", `Project ${newProjectForm.projectName} berhasil didaftarkan ke timeline R&D.`);
-    setIsCreateModalOpen(false);
-    setNewProjectForm({
-      projectName: "",
-      picFormulator: "Apt. Dedi Kurniawan, S.Farm",
-      clientName: "",
-      brandName: "",
-      npfEntryDate: new Date().toISOString().split("T")[0],
-      targetFinishDate: "",
-      formulaFolderUrl: "",
-      notes: ""
-    });
+    const leadId = newProjectForm.leadId || (leads && leads.length > 0 ? leads[0].id : null);
+    if (!leadId) {
+      toast.warning("Lead Belum Dipilih", "Pilih Klien / Lead terkait formulasi ini.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await api.post("/rnd/samples", {
+        leadId,
+        productName: newProjectForm.projectName,
+        targetFunction: newProjectForm.notes || "Pengembangan Formulasi R&D",
+        textureReq: "Sesuai Standar Lab",
+        colorReq: "Sesuai Standar Lab",
+        aromaReq: "Sesuai Standar Lab",
+        targetDeadline: newProjectForm.targetFinishDate ? new Date(newProjectForm.targetFinishDate).toISOString() : undefined,
+      });
+
+      toast.success("Project R&D Dibuat", `Project ${newProjectForm.projectName} berhasil didaftarkan ke timeline R&D.`);
+      setIsCreateModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["rnd-project-monitoring"] });
+      setNewProjectForm({
+        leadId: "",
+        projectName: "",
+        picFormulator: "Apt. Dedi Kurniawan, S.Farm",
+        clientName: "",
+        brandName: "",
+        npfEntryDate: new Date().toISOString().split("T")[0],
+        targetFinishDate: "",
+        formulaFolderUrl: "",
+        notes: ""
+      });
+    } catch (err: any) {
+      toast.error("Gagal Mendaftarkan Project", err?.response?.data?.message || "Terjadi kesalahan saat memproses ke server.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusBadge = (status: RndProject["status"]) => {
     switch (status) {
       case "APPROVED":
-        return <DnaBadge variant="success">APPROVED (DEAL)</DnaBadge>;
+        return <DnaBadge variant="success">APPROVED</DnaBadge>;
       case "IN_PROGRESS":
-        return <DnaBadge variant="blue">IN PROGRESS</DnaBadge>;
+        return <DnaBadge variant="info">IN PROGRESS</DnaBadge>;
       case "REVISION":
-        return <DnaBadge variant="purple">REVISI SAMPLE</DnaBadge>;
+        return <DnaBadge variant="warning">REVISI</DnaBadge>;
       case "TERKIRIM":
-        return <DnaBadge variant="info">SAMPLE TERKIRIM</DnaBadge>;
+        return <DnaBadge variant="info">TERKIRIM</DnaBadge>;
       case "OVERDUE":
         return <DnaBadge variant="danger">OVERDUE</DnaBadge>;
       default:
@@ -255,34 +242,43 @@ export default function RndProjectMonitoringPage() {
 
   return (
     <DnaPageContainer>
-      {/* 1. Header Page */}
+      {/* 1. Header Page with Unified Top-Right Tabs */}
       <DnaPageHeader
-        title="Project Monitoring R&D & Formulasi"
-        description="Pelacakan menyeluruh timeline NPF (New Product Formulation), progres formulasi lab, pengiriman sample, revisi, hingga persetujuan formula klien."
-        badge={<DnaBadge variant="neutral">SCR-021 & SCR-176</DnaBadge>}
+        title="Monitoring Project R&D & Formulasi"
+        description="Pelacakan timeline NPF (New Product Formulation), progres formulasi lab, pengiriman sample, revisi, hingga persetujuan formula klien."
+        badge={<DnaBadge variant="neutral">SCR-021</DnaBadge>}
         breadcrumbs={[
-          { label: "R&D & Pra-Produksi", href: "/rnd/dashboard" },
-          { label: "Project Monitoring", href: "/rnd/project-monitoring" }
+          { label: "R&D & Pra-Produksi", href: "/samples/rnd-dashboard" },
+          { label: "Project Monitoring", href: "/samples/project-monitoring" }
         ]}
+        tabs={[
+          { id: "all", label: `Semua (${totalProjects})` },
+          { id: "progress", label: `Proses Lab (${inProgressCount})` },
+          { id: "shipped", label: `Terkirim (${shippedCount})` },
+          { id: "approved", label: `Approved (${approvedCount})` },
+          { id: "overdue", label: `Overdue (${overdueCount})` }
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         actions={
           <div className="flex items-center gap-2">
             <DnaButton
               variant="secondary"
-              onClick={() => toast.success("Export Berhasil", "Data Project Monitoring R&D berhasil diekspor ke format Excel.")}
+              onClick={() => toast.success("Export Berhasil", "Data Project Monitoring R&D berhasil diekspor.")}
             >
               <FileSpreadsheet className="w-4 h-4 mr-2" />
               Export Excel
             </DnaButton>
             <DnaButton variant="primary" onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              Tambah Project R&D
+              Tambah Project
             </DnaButton>
           </div>
         }
       />
 
       {/* 2. KPI Cards */}
-      <DnaKpiGrid cols={5}>
+      <DnaKpiGrid cols={4}>
         <DnaStatCard
           label="TOTAL PROJECT R&D"
           value={`${totalProjects} Project`}
@@ -302,270 +298,207 @@ export default function RndProjectMonitoringPage() {
           icon={<Send className="w-5 h-5 text-cyan-600" />}
         />
         <DnaStatCard
-          label="APPROVED (DEAL)"
-          value={`${approvedCount} Disetujui`}
-          subValue="Siap Masuk Pra-Produksi"
-          icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
-        />
-        <DnaStatCard
           label="OVERDUE SLA"
           value={`${overdueCount} Project`}
-          subValue="Memerlukan Eskalasi PIC"
+          subValue="Perlu Eskalasi Formulator"
           icon={<AlertTriangle className="w-5 h-5 text-rose-600" />}
         />
       </DnaKpiGrid>
 
-      {/* 3. Filter Bar & Tabs */}
-      <div className="space-y-4">
-        <DnaTabNav
-          tabs={[
-            { id: "all", label: `Semua Project (${totalProjects})` },
-            { id: "progress", label: `Proses Lab (${inProgressCount})` },
-            { id: "shipped", label: `Sample Terkirim (${shippedCount})` },
-            { id: "approved", label: `Approved (${approvedCount})` },
-            { id: "overdue", label: `Overdue (${overdueCount})` }
-          ]}
-          activeTab={activeTab}
-          onChange={setActiveTab}
-        />
-
-        <div className="flex flex-wrap items-center gap-3 bg-white p-3 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
-            <Filter className="w-4 h-4 text-slate-400" />
-            <span>Filter PIC Formulator:</span>
-          </div>
-
-          <select
-            className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            value={picFilter}
-            onChange={(e) => setPicFilter(e.target.value)}
-          >
-            <option value="ALL">Semua Formulator</option>
-            <option value="Dedi">Apt. Dedi Kurniawan, S.Farm</option>
-            <option value="Maya">Dr. Maya Sp.KK</option>
-            <option value="Siska">Apt. Siska Handayani, M.Farm</option>
-            <option value="Fauzi">Ahmad Fauzi</option>
-          </select>
-
-          {picFilter !== "ALL" && (
-            <button
-              onClick={() => setPicFilter("ALL")}
-              className="text-xs text-rose-600 hover:text-rose-700 font-medium underline ml-auto"
-            >
-              Reset Filter
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 4. DataTable Card (11 Kolom standar legacy Project_Monitoring_RND.csv) */}
+      {/* 3. DataTable Card (Zero redundant title, zero horizontal scroll, max 6 cols) */}
       <DnaDataTableCard
-        title="Daftar Project Monitoring R&D (11 Kolom Legacy Standard)"
-        description="Satu baris mewakili 1 project NPF terpadu dengan link folder formula drive dan riwayat revisi."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         searchPlaceholder="Cari Project, Klien, Brand, PIC Formulator..."
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-4">#</th>
-                <th className="py-3 px-4">Project Name & Brand</th>
-                <th className="py-3 px-4">PIC Formulator</th>
-                <th className="py-3 px-4">Client / Perusahaan</th>
-                <th className="py-3 px-4">Status & Revisi</th>
-                <th className="py-3 px-4">Tgl NPF Masuk</th>
-                <th className="py-3 px-4">Target Selesai</th>
-                <th className="py-3 px-4">Tgl Pengiriman</th>
-                <th className="py-3 px-4 text-center">Pengerjaan</th>
-                <th className="py-3 px-4 text-center">Folder Formula</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredProjects.length === 0 ? (
-                <tr>
-                  <td colSpan={11} className="py-12 text-center text-slate-400">
+        <div className="w-full">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow>
+                <DnaTh className="py-3 px-4 w-[26%]">Project & Brand</DnaTh>
+                <DnaTh className="py-3 px-4 w-[24%]">Klien & Formulator</DnaTh>
+                <DnaTh className="py-3 px-4 w-[20%]">Target & Pengerjaan</DnaTh>
+                <DnaTh className="py-3 px-4 w-[14%]">Status & Revisi</DnaTh>
+                <DnaTh className="py-3 px-4 w-[10%]">Folder Drive</DnaTh>
+                <DnaTh className="py-3 px-4 w-[6%] text-right">Aksi</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
+              {isLoading ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
+                    Memuat data project R&D...
+                  </DnaTd>
+                </DnaTableRow>
+              ) : filteredProjects.length === 0 ? (
+                <DnaTableRow>
+                  <DnaTd colSpan={6} className="py-12 text-center text-slate-400">
                     <FlaskConical className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     Tidak ada project R&D yang sesuai filter.
-                  </td>
-                </tr>
+                  </DnaTd>
+                </DnaTableRow>
               ) : (
-                filteredProjects.map((row, idx) => (
-                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-slate-400">{idx + 1}</td>
-                    <td className="py-3 px-4">
-                      <p className="font-semibold text-slate-900 text-xs">{row.projectName}</p>
-                      <span className="inline-block text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 mt-0.5">
-                        {row.brandName}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
+                filteredProjects.map((row) => (
+                  <DnaTableRow key={row.id} className="hover:bg-slate-50/70 transition-colors">
+                    <DnaTd className="py-3 px-4 truncate">
+                      <p className="font-semibold text-slate-900 text-xs truncate">{row.projectName}</p>
+                      <p className="text-[11px] text-indigo-600 font-medium truncate">{row.brandName}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
+                      <p className="font-semibold text-slate-800 text-xs truncate">{row.clientName}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{row.picFormulator}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
+                      <p className="tabular-nums text-xs font-bold text-slate-900 truncate">
+                        Target: {row.targetFinishDate}
+                      </p>
+                      <p className="text-[11px] text-slate-500 tabular-nums truncate">
+                        Masuk: {row.npfEntryDate} • {row.sampleWorkDays} Hari
+                      </p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <div className="flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="font-medium text-slate-800">{row.picFormulator}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-xs font-medium text-slate-800">
-                      {row.clientName}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="space-y-1">
                         {getStatusBadge(row.status)}
-                        <p className="text-[10px] font-mono text-slate-400">{row.activeRevision}</p>
                       </div>
-                    </td>
-                    <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
-                      {row.npfEntryDate}
-                    </td>
-                    <td className="py-3 px-4 font-mono text-[11px]">
-                      <span className={row.status === "OVERDUE" ? "text-rose-600 font-bold" : "text-slate-600"}>
-                        {row.targetFinishDate}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
-                      {row.shippingDate || <span className="text-slate-300">-</span>}
-                    </td>
-                    <td className="py-3 px-4 text-center font-mono font-bold text-indigo-700">
-                      {row.sampleWorkDays} Hari
-                    </td>
-                    <td className="py-3 px-4 text-center">
+                      <p className="text-[10px] tabular-nums text-slate-400 mt-0.5 truncate">{row.activeRevision}</p>
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 truncate">
                       <a
                         href={row.formulaFolderUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-100 hover:bg-blue-50 text-blue-600 text-[11px] font-semibold border border-slate-200"
-                        title="Buka Google Drive Folder Formula"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 hover:bg-blue-50 text-blue-600 text-[11px] font-medium border border-slate-200"
                       >
-                        <FolderOpen className="w-3.5 h-3.5" /> Link
+                        <FolderOpen className="w-3.5 h-3.5" /> Drive
                       </a>
-                    </td>
-                    <td className="py-3 px-4 text-center">
+                    </DnaTd>
+                    <DnaTd className="py-3 px-4 text-right">
                       <DnaButton
                         variant="ghost"
                         size="sm"
                         onClick={() => {
                           setSelectedProject(row);
-                          setIsDetailModalOpen(true);
+                          setIsDetailDrawerOpen(true);
                         }}
-                        title="Lihat Detail Project & Catatan"
+                        title="Lihat Detail Project"
                       >
                         <Eye className="w-4 h-4 text-slate-600" />
                       </DnaButton>
-                    </td>
-                  </tr>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </div>
       </DnaDataTableCard>
 
-      {/* 5. Modal Tambah Project R&D Baru */}
+      {/* 4. Modal Tambah Project R&D Baru */}
       <DnaModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Tambah Project R&D Baru (SCR-176)"
+        title="Tambah Project R&D Baru"
         description="Pendaftaran project formulasi baru dari dokumen NPF (New Product Formulation)."
-        size="lg"
+        size="md"
         footer={
           <div className="flex items-center justify-end gap-2 w-full">
             <DnaButton variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" onClick={handleCreateProject}>
-              Simpan Project
+            <DnaButton variant="primary" onClick={handleCreateProject} disabled={isSubmitting}>
+              {isSubmitting ? "Menyimpan..." : "Simpan Project"}
             </DnaButton>
           </div>
         }
       >
         <div className="space-y-4 text-xs">
-          <div className="space-y-1.5">
+          {leads && leads.length > 0 && (
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Pilih Lead / Klien Terdaftar</label>
+              <select
+                aria-label="Pilih Lead / Klien Terdaftar"
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                value={newProjectForm.leadId}
+                onChange={(e) => {
+                  const selected = leads.find((l: any) => String(l.id) === e.target.value);
+                  setNewProjectForm(prev => ({
+                    ...prev,
+                    leadId: e.target.value,
+                    clientName: selected?.clientName || prev.clientName,
+                    brandName: selected?.brandName || prev.brandName,
+                  }));
+                }}
+              >
+                <option value="">-- Pilih Lead --</option>
+                {leads.map((l: any) => (
+                  <option key={l.id} value={l.id}>
+                    {l.clientName} {l.brandName ? `(${l.brandName})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="space-y-1">
             <label className="font-bold text-slate-700 uppercase">Nama Project Formulasi *</label>
-            <input
-              type="text"
+            <DnaInput
               placeholder="Contoh: Serum Anti-Aging Peptide 5% + Bakuchiol"
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800 focus:ring-1 focus:ring-blue-500"
               value={newProjectForm.projectName}
               onChange={(e) => setNewProjectForm(prev => ({ ...prev, projectName: e.target.value }))}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Nama Klien / Perusahaan *</label>
-              <input
-                type="text"
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Nama Klien *</label>
+              <DnaInput
                 placeholder="PT Cantika Nusantara"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
                 value={newProjectForm.clientName}
                 onChange={(e) => setNewProjectForm(prev => ({ ...prev, clientName: e.target.value }))}
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Nama Brand / Merk *</label>
-              <input
-                type="text"
-                placeholder="GlowSkin Co."
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Nama Brand</label>
+              <DnaInput
+                placeholder="GlowSkin"
                 value={newProjectForm.brandName}
                 onChange={(e) => setNewProjectForm(prev => ({ ...prev, brandName: e.target.value }))}
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">PIC Formulator *</label>
-              <select
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium text-slate-800"
-                value={newProjectForm.picFormulator}
-                onChange={(e) => setNewProjectForm(prev => ({ ...prev, picFormulator: e.target.value }))}
-              >
-                <option value="Apt. Dedi Kurniawan, S.Farm">Apt. Dedi Kurniawan, S.Farm</option>
-                <option value="Dr. Maya Sp.KK">Dr. Maya Sp.KK</option>
-                <option value="Apt. Siska Handayani, M.Farm">Apt. Siska Handayani, M.Farm</option>
-                <option value="Ahmad Fauzi">Ahmad Fauzi</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Tgl NPF Masuk *</label>
-              <input
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Tgl Masuk NPF</label>
+              <DnaInput
                 type="date"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800 font-mono"
                 value={newProjectForm.npfEntryDate}
                 onChange={(e) => setNewProjectForm(prev => ({ ...prev, npfEntryDate: e.target.value }))}
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 uppercase">Target Selesai Sample *</label>
-              <input
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 uppercase">Target Selesai Formulasi</label>
+              <DnaInput
                 type="date"
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800 font-mono"
                 value={newProjectForm.targetFinishDate}
                 onChange={(e) => setNewProjectForm(prev => ({ ...prev, targetFinishDate: e.target.value }))}
               />
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700 uppercase">Folder Google Drive Formula (Opsional)</label>
-            <input
-              type="text"
-              placeholder="https://drive.google.com/..."
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800 font-mono"
+          <div className="space-y-1">
+            <label className="font-bold text-slate-700 uppercase">Link Folder Formula (Drive)</label>
+            <DnaInput
+              placeholder="https://drive.google.com/drive/folders/..."
               value={newProjectForm.formulaFolderUrl}
               onChange={(e) => setNewProjectForm(prev => ({ ...prev, formulaFolderUrl: e.target.value }))}
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700 uppercase">Catatan & Parameter Spesifikasi NPF</label>
-            <textarea
-              rows={2}
-              placeholder="Target tekstur, aroma, warna, klaim aktif, target pH..."
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
+          <div className="space-y-1">
+            <label className="font-bold text-slate-700 uppercase">Catatan Spesifikasi</label>
+            <DnaInput
+              placeholder="Tekstur, warna, target pH, active ingredients..."
               value={newProjectForm.notes}
               onChange={(e) => setNewProjectForm(prev => ({ ...prev, notes: e.target.value }))}
             />
@@ -573,76 +506,100 @@ export default function RndProjectMonitoringPage() {
         </div>
       </DnaModal>
 
-      {/* 6. Modal Detail & Riwayat Revisi */}
-      <DnaModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        title="Rincian Project R&D & Status Sample"
-        description="Detail riwayat pengerjaan formula lab dan catatan revisi klien."
-        size="lg"
-        footer={
+      {/* 5. Quick Peek Drawer (Rule 5) */}
+      <DnaDetailDrawer
+        isOpen={isDetailDrawerOpen}
+        onClose={() => setIsDetailDrawerOpen(false)}
+        title={selectedProject?.projectName || "Detail Project R&D"}
+        subtitle={selectedProject ? `${selectedProject.clientName} (${selectedProject.brandName})` : undefined}
+        badge={selectedProject ? getStatusBadge(selectedProject.status) : undefined}
+        tabs={[
+          {
+            id: "summary",
+            label: "Ringkasan Project",
+            content: selectedProject ? (
+              <div className="space-y-4 text-xs">
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-900 text-sm">{selectedProject.projectName}</span>
+                    <span className="tabular-nums text-slate-500">{selectedProject.activeRevision}</span>
+                  </div>
+                  <p className="text-slate-600">{selectedProject.clientName} • Brand: {selectedProject.brandName}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="text-slate-500 block mb-1">PIC Formulator</span>
+                    <p className="font-semibold text-slate-900">{selectedProject.picFormulator}</p>
+                    <span className="text-[10px] text-slate-400">R&D Lab Formulator</span>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="text-slate-500 block mb-1">Durasi Pengerjaan</span>
+                    <p className="tabular-nums font-bold text-indigo-700">{selectedProject.sampleWorkDays} Hari Kerja</p>
+                    <span className="text-[10px] text-slate-400">Terhitung sejak NPF masuk</span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white rounded-lg border border-slate-200 space-y-1">
+                  <span className="text-slate-500 block">Jadwal & Timeline</span>
+                  <div className="grid grid-cols-3 gap-2 mt-1">
+                    <div>
+                      <span className="text-[10px] text-slate-400">Tgl Masuk NPF</span>
+                      <p className="tabular-nums font-bold text-slate-700">{selectedProject.npfEntryDate}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400">Target Selesai</span>
+                      <p className="tabular-nums font-bold text-slate-700">{selectedProject.targetFinishDate}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400">Tgl Pengiriman</span>
+                      <p className="tabular-nums font-bold text-slate-700">{selectedProject.shippingDate || "—"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                  <span className="font-bold text-slate-700">Catatan Formulator:</span>
+                  <p className="text-slate-600">{selectedProject.notes || "Tidak ada catatan."}</p>
+                </div>
+              </div>
+            ) : null
+          },
+          {
+            id: "folder",
+            label: "Dokumen Formula",
+            content: selectedProject ? (
+              <div className="space-y-3 text-xs">
+                <p className="font-bold text-slate-700 uppercase">Akses Cloud Storage & Formula:</p>
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FolderOpen className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <p className="font-bold text-slate-800">Google Drive Folder Formula</p>
+                      <p className="text-[11px] text-slate-500 tabular-nums truncate max-w-xs">{selectedProject.formulaFolderUrl}</p>
+                    </div>
+                  </div>
+                  <a
+                    href={selectedProject.formulaFolderUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold flex items-center gap-1.5 hover:bg-blue-700"
+                  >
+                    Buka Drive <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            ) : null
+          }
+        ]}
+        footerActions={
           <div className="flex items-center justify-end gap-2 w-full">
-            <DnaButton variant="secondary" onClick={() => setIsDetailModalOpen(false)}>
+            <DnaButton variant="secondary" onClick={() => setIsDetailDrawerOpen(false)}>
               Tutup
             </DnaButton>
           </div>
         }
-      >
-        {selectedProject && (
-          <div className="space-y-6">
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-slate-500">Nama Project</span>
-                  <p className="text-sm font-bold text-slate-900">{selectedProject.projectName}</p>
-                </div>
-                <div>{getStatusBadge(selectedProject.status)}</div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t border-slate-200 text-xs">
-                <div>
-                  <span className="text-slate-500">Klien / Brand:</span>
-                  <p className="font-semibold text-slate-800">{selectedProject.clientName} ({selectedProject.brandName})</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">PIC Formulator:</span>
-                  <p className="font-semibold text-slate-800">{selectedProject.picFormulator}</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">Tgl Masuk NPF:</span>
-                  <p className="font-semibold text-slate-800">{selectedProject.npfEntryDate}</p>
-                </div>
-                <div>
-                  <span className="text-slate-500">Target Selesai:</span>
-                  <p className="font-semibold text-slate-800">{selectedProject.targetFinishDate}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
-              <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
-                Catatan & Spesifikasi Produk
-              </h4>
-              <p className="text-slate-600 leading-relaxed">{selectedProject.notes}</p>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-blue-50/60 border border-blue-200 rounded-xl text-xs">
-              <div className="flex items-center gap-2 text-blue-900 font-semibold">
-                <FolderOpen className="w-4 h-4 text-blue-600" />
-                <span>Google Drive Repository Formulasi</span>
-              </div>
-              <a
-                href={selectedProject.formulaFolderUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900 font-bold underline text-xs"
-              >
-                Buka Folder Formula <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
-          </div>
-        )}
-      </DnaModal>
+      />
     </DnaPageContainer>
   );
 }

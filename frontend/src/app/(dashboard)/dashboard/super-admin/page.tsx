@@ -1,24 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  Terminal, 
-  ShieldCheck, 
-  Search, 
-  Users, 
-  FlaskConical, 
-  History, 
+import {
+  Terminal,
+  ShieldCheck,
+  Search,
+  Users,
+  FlaskConical,
+  History,
   CreditCard,
   Zap,
   Boxes,
   Wifi,
   Server
 } from "lucide-react";
-import { KpiCard } from "@/components/dna/KpiCard";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { KpiCard } from "@/components/dna";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/dna";
+import { Card } from "@/components/dna";
+import { Badge } from "@/components/dna";
+import { Button } from "@/components/dna";
 
 // Import Departmental Views (We will use the actual page components or variants)
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -27,7 +29,56 @@ import RndDashboard from "../../samples/rnd-dashboard/page";
 import ProductionFloor from "../../production/production-floor-dashboard/page";
 import FinanceDashboard from "../finance/page";
 
+type SystemHealth = {
+  status?: string;
+  version?: string;
+  modules?: { name: string; status: string }[];
+};
+
+type ErrorSummary = {
+  totalErrors?: number;
+  criticalErrors?: number;
+};
+
+type AuditLog = {
+  id: string;
+  timestamp: string;
+  user: string;
+  module: string;
+  description: string;
+  status: string;
+};
+
 export default function SuperAdminTerminal() {
+  const health = useQuery<SystemHealth>({
+    queryKey: ["system-health"],
+    queryFn: async () => (await api.get("/system/health")).data,
+    staleTime: 30_000,
+  });
+
+  const errors = useQuery<ErrorSummary>({
+    queryKey: ["system-error-summary", 24],
+    queryFn: async () => (await api.get("/system/errors/summary", { params: { hours: 24 } })).data,
+    staleTime: 30_000,
+  });
+
+  const auditLogs = useQuery<AuditLog[]>({
+    queryKey: ["system-audit-logs", 20],
+    queryFn: async () => (await api.get("/system/audit-logs", { params: { limit: 20 } })).data,
+    staleTime: 30_000,
+  });
+
+  const anyError = health.isError || errors.isError || auditLogs.isError;
+  const modules = health.data?.modules ?? [];
+  const activeModules = modules.filter((m) => m.status === "ACTIVE").length;
+  const logs = Array.isArray(auditLogs.data) ? auditLogs.data : [];
+  const lastLog = logs[0];
+
+  const retryAll = () => {
+    void health.refetch();
+    void errors.refetch();
+    void auditLogs.refetch();
+  };
 
   return (
     <DashboardShell
@@ -36,11 +87,44 @@ export default function SuperAdminTerminal() {
       subtitle="Hyper-Unified Audit Interface. Monitoring cross-departmental UX integrity and data interlocks across the entire ERP ecosystem from a single encrypted link."
     >
       <div className="grid grid-cols-4 gap-8 mb-6">
-        <KpiCard label="Network Status" value="ENCRYPTED" targetPct={100} icon={<Wifi />} />
-        <KpiCard label="Active Nodes" value="14/14" targetPct={100} icon={<Server />} />
-        <KpiCard label="Logic Interlocks" value="ACTIVE" targetPct={100} icon={<ShieldCheck />} />
-        <KpiCard label="System Load" value="1.2ms" targetPct={100} icon={<Zap />} />
+        <KpiCard
+          label="Network Status"
+          value={health.data?.status ?? "—"}
+          subValue={health.data?.version ? `Build ${health.data.version}` : "GET /system/health"}
+          icon={<Wifi />}
+        />
+        <KpiCard
+          label="Active Modules"
+          value={modules.length > 0 ? `${activeModules}/${modules.length}` : "—"}
+          subValue={modules.length > 0 ? modules.map((m) => m.name).join(" · ") : "GET /system/health"}
+          icon={<Server />}
+        />
+        <KpiCard
+          label="Audit Trail (24h)"
+          value={auditLogs.isLoading ? "…" : logs.length}
+          subValue={lastLog ? `${lastLog.user} · ${lastLog.module}` : "GET /system/audit-logs"}
+          icon={<ShieldCheck />}
+        />
+        <KpiCard
+          label="Errors (24h)"
+          value={errors.isLoading ? "…" : (errors.data?.totalErrors ?? "—")}
+          subValue={
+            errors.data
+              ? `${errors.data.criticalErrors ?? 0} critical · GET /system/errors/summary`
+              : "GET /system/errors/summary"
+          }
+          icon={<Zap />}
+        />
       </div>
+
+      {anyError && (
+        <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-800">
+          <span>Sebagian metrik sistem gagal dimuat dari server — nilai ditampilkan sebagai &quot;—&quot;.</span>
+          <Button variant="outline" size="sm" onClick={retryAll} className="rounded-xl">
+            Retry
+          </Button>
+        </div>
+      )}
 
       <Tabs defaultValue="marketing" className="w-full space-y-8">
         <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl py-4 -mx-4 px-4 border-b border-gray-200">
@@ -89,7 +173,7 @@ export default function SuperAdminTerminal() {
                  <h3 className="text-xl font-bold text-gray-900 uppercase italic">Chemical R&D Audit</h3>
                 <p className="text-xs text-zinc-500 font-medium">Validating Dosage Precision & Formula Interlocks</p>
               </div>
-              <Badge className="bg-orange-500 text-black font-black italic">INTERLOCK_ACTIVE: 100%_DOSAGE</Badge>
+              <Badge className="bg-orange-500 text-black font-black italic">MODULE: R&D</Badge>
             </div>
             <div className="p-4 bg-gray-50">
               <RndDashboard />
@@ -105,7 +189,7 @@ export default function SuperAdminTerminal() {
                  <h3 className="text-xl font-bold text-gray-900 uppercase italic">Floor Execution Audit</h3>
                 <p className="text-xs text-zinc-500 font-medium">Validating Mass Balance & Station Telemetry</p>
               </div>
-              <Badge className="bg-emerald-500 text-black font-black italic">LIVE_FEED: WORKSTATION_ALPHA</Badge>
+              <Badge className="bg-emerald-500 text-black font-black italic">MODULE: PRODUCTION</Badge>
             </div>
             <div className="p-4 bg-gray-50">
               <ProductionFloor />
@@ -139,26 +223,22 @@ export default function SuperAdminTerminal() {
         </TabsContent>
       </Tabs>
 
-      {/* Audit Notification Rail */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <div className="flex items-center gap-4 bg-white text-black p-4 rounded-xl shadow-[0_20px_50px_rgba(255,255,255,0.2)] animate-in slide-in-from-right duration-700 border-2 border-white overflow-hidden">
-           <div className="absolute top-0 left-0 h-1 bg-gray-900" />
-           <div className="p-2 bg-gray-900 text-white rounded">
-              <Zap size={16} className="fill-current" />
-           </div>
-           <div>
-              <p className="text-[10px] font-black uppercase tracking-tight leading-none">Super Admin Notice</p>
-              <p className="text-xs font-bold leading-none mt-1 uppercase italic">Multi-View Audit Port Activated</p>
-           </div>
+      {/* Audit Notification Rail — hanya muncul kalau ada audit log nyata. */}
+      {lastLog && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <div className="flex items-center gap-4 bg-white text-black p-4 rounded-xl shadow-[0_20px_50px_rgba(255,255,255,0.2)] border-2 border-white overflow-hidden">
+             <div className="p-2 bg-gray-900 text-white rounded">
+                <ShieldCheck size={16} className="fill-current" />
+             </div>
+             <div>
+                <p className="text-[10px] font-black uppercase tracking-tight leading-none">
+                  {lastLog.user} · {lastLog.module}
+                </p>
+                <p className="text-xs font-bold leading-none mt-1 uppercase italic">{lastLog.description}</p>
+             </div>
+          </div>
         </div>
-      </div>
-
-      <style jsx>{`
-        @keyframes shrink {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
+      )}
     </DashboardShell>
   );
 }

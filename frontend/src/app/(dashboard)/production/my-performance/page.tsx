@@ -3,7 +3,19 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { DnaPageContainer, DnaPageHeader, DnaKpiGrid, DnaDataTableCard, DnaStatCard } from "@/components/dna";
+import {
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaDataTableCard,
+  DnaStatCard,
+  DnaTable,
+  DnaTableHead,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTh,
+  DnaTd,
+} from "@/components/dna";
 import { Factory, TrendingUp, AlertTriangle, ClipboardCheck, Clock, Gauge } from "lucide-react";
 
 // SPEC: SCR-PROD-MINE-001 — Personal Operator Performance dashboard
@@ -44,33 +56,33 @@ export default function ProductionMyPerformancePage() {
         />
 
         <DnaDataTableCard title="My Work Orders" count={(myWorkOrders || []).length}>
-          <table className="w-full text-left border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
-                <th className="px-6 py-4">WO#</th>
-                <th className="px-6 py-4">Product</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Qty</th>
-                <th className="px-6 py-4">Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <DnaTable>
+            <DnaTableHead>
+              <DnaTableRow className="border-b border-slate-200 bg-slate-50/75 text-slate-600 text-[11px] font-bold tracking-wider">
+                <DnaTh className="px-6 py-4">WO#</DnaTh>
+                <DnaTh className="px-6 py-4">Product</DnaTh>
+                <DnaTh className="px-6 py-4">Status</DnaTh>
+                <DnaTh className="px-6 py-4">Qty</DnaTh>
+                <DnaTh className="px-6 py-4">Date</DnaTh>
+              </DnaTableRow>
+            </DnaTableHead>
+            <DnaTableBody>
               {(myWorkOrders || []).slice(0, 10).map((wo: any, i: number) => (
-                <tr key={wo.id || i} className="hover:bg-slate-50/80">
-                  <td className="text-[11px] font-bold text-blue-600 tabular-nums px-6 py-4">{wo.woNumber || wo.id?.slice(0, 8) || "—"}</td>
-                  <td className="text-[11px] font-bold text-slate-700 px-6 py-4">{wo.product || "—"}</td>
-                  <td className="px-6 py-4"><span className="text-[9px] font-bold text-slate-500 uppercase">{wo.status || "—"}</span></td>
-                  <td className="text-[11px] font-bold text-slate-700 tabular-nums px-6 py-4">{wo.qty || "—"}</td>
-                  <td className="text-[10px] font-bold text-slate-400 px-6 py-4">{wo.createdAt ? new Date(wo.createdAt).toLocaleDateString() : "—"}</td>
-                </tr>
+                <DnaTableRow key={wo.id || i} className="hover:bg-slate-50/80">
+                  <DnaTd className="text-[11px] font-bold text-blue-600 tabular-nums px-6 py-4">{wo.woNumber || wo.id?.slice(0, 8) || "—"}</DnaTd>
+                  <DnaTd className="text-[11px] font-bold text-slate-700 px-6 py-4">{wo.product || "—"}</DnaTd>
+                  <DnaTd className="px-6 py-4"><span className="text-[9px] font-bold text-slate-500 uppercase">{wo.status || "—"}</span></DnaTd>
+                  <DnaTd className="text-[11px] font-bold text-slate-700 tabular-nums px-6 py-4">{wo.qty || "—"}</DnaTd>
+                  <DnaTd className="text-[10px] font-bold text-slate-400 px-6 py-4">{wo.createdAt ? new Date(wo.createdAt).toLocaleDateString() : "—"}</DnaTd>
+                </DnaTableRow>
               ))}
               {(!myWorkOrders || myWorkOrders.length === 0) && (
-                <tr>
-                  <td colSpan={5} className="text-center text-[11px] font-bold text-slate-400 py-12">No work orders assigned yet</td>
-                </tr>
+                <DnaTableRow>
+                  <DnaTd colSpan={5} className="text-center text-[11px] font-bold text-slate-400 py-12">No work orders assigned yet</DnaTd>
+                </DnaTableRow>
               )}
-            </tbody>
-          </table>
+            </DnaTableBody>
+          </DnaTable>
         </DnaDataTableCard>
 
         <div className="grid grid-cols-2 gap-8">

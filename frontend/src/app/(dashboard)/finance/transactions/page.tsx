@@ -5,12 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
-  DnaTable as Table,
-  DnaTableBody as TableBody,
-  DnaTd as TableCell,
-  DnaTh as TableHead,
-  DnaTableHead as TableHeader,
-  DnaTableRow as TableRow,
+  DnaTable,
+  DnaTableHead,
+  DnaTh,
+  DnaTableBody,
+  DnaTableRow,
+  DnaTd,
   DnaDialog as Dialog,
   DnaDialogContent as DialogContent,
   DnaDialogDescription as DialogDescription,
@@ -18,6 +18,16 @@ import {
   DnaDialogTrigger as DialogTrigger,
   DnaDialogHeader as DialogHeader,
   DnaDialogFooter as DialogFooter,
+  DnaPageContainer,
+  DnaPageHeader,
+  DnaKpiGrid,
+  DnaStatCard,
+  DnaDataTableCard,
+  DnaBadge,
+  DnaButton,
+  DnaInput,
+  DnaSelect,
+  DnaCell,
 } from "@/components/dna";
 import { 
   Plus, 
@@ -30,9 +40,7 @@ import {
   DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DashboardShell } from "@/components/layout/DashboardShell";
 import { QueryLoading, QueryError } from "@/components/query-states";
-import { DnaInput, DnaButton, DnaDataTableCard, DnaStatCard, DnaBadge, DnaSelect } from "@/components/dna";
 
 interface TransactionLine {
   accountId: string;
@@ -90,130 +98,117 @@ export default function CashTransactionsPage() {
   ) || [];
 
   return (
-    <DashboardShell
-      title="CASH"
-      titleAccent="FLOW"
-      subtitle="(Real-time Cash & Bank Operations • Liquidity Hub v1.0)"
-      actions={
-        <div className="flex gap-3">
-          <Dialog open={isModalOpen && mode === "RECEIPT"} onOpenChange={(o) => { setIsModalOpen(o); if(o) setMode("RECEIPT"); }}>
-            <DialogTrigger asChild>
-              <DnaButton variant="primary" className="h-11 px-5 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-tighter text-xs">
-                <ArrowUpRight className="mr-2 h-4.5 w-4.5 stroke-[3px]" /> Cash Receipt
-              </DnaButton>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl bg-white rounded-2xl border-none shadow-sm p-0 overflow-hidden">
-               <TransactionForm mode="RECEIPT" coa={coa} lines={lines} setLiness={setLiness} onSuccess={() => setIsModalOpen(false)} />
-             </DialogContent>
-           </Dialog>
+    <DnaPageContainer>
+      <DnaPageHeader
+        title="Cash Flow & Bank"
+        subtitle="Real-time Cash & Bank Operations • Liquidity Hub"
+        badgeText="Finance"
+        actionButtons={
+          <div className="flex items-center gap-2.5">
+            <Dialog open={isModalOpen && mode === "RECEIPT"} onOpenChange={(o) => { setIsModalOpen(o); if(o) setMode("RECEIPT"); }}>
+              <DialogTrigger asChild>
+                <DnaButton variant="primary" className="h-9 px-4 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700">
+                  <ArrowUpRight className="mr-1.5 h-4 w-4" /> Cash Receipt
+                </DnaButton>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl bg-white rounded-2xl border-none shadow-sm p-0 overflow-hidden">
+                <TransactionForm mode="RECEIPT" coa={coa} lines={lines} setLiness={setLiness} onSuccess={() => setIsModalOpen(false)} />
+              </DialogContent>
+            </Dialog>
 
-           <Dialog open={isModalOpen && mode === "DISBURSEMENT"} onOpenChange={(o) => { setIsModalOpen(o); if(o) setMode("DISBURSEMENT"); }}>
-             <DialogTrigger asChild>
-               <DnaButton variant="primary" className="h-11 px-5 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-tighter text-xs bg-rose-600 hover:bg-rose-700">
-                 <ArrowDownLeft className="mr-2 h-4.5 w-4.5 stroke-[3px]" /> Disbursement
-               </DnaButton>
-             </DialogTrigger>
-             <DialogContent className="sm:max-w-2xl bg-white rounded-2xl border-none shadow-sm p-0 overflow-hidden">
+            <Dialog open={isModalOpen && mode === "DISBURSEMENT"} onOpenChange={(o) => { setIsModalOpen(o); if(o) setMode("DISBURSEMENT"); }}>
+              <DialogTrigger asChild>
+                <DnaButton variant="primary" className="h-9 px-4 text-xs font-semibold bg-rose-600 hover:bg-rose-700">
+                  <ArrowDownLeft className="mr-1.5 h-4 w-4" /> Disbursement
+                </DnaButton>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl bg-white rounded-2xl border-none shadow-sm p-0 overflow-hidden">
                 <TransactionForm mode="DISBURSEMENT" coa={coa} lines={lines} setLiness={setLiness} onSuccess={() => setIsModalOpen(false)} />
-            </DialogContent>
-          </Dialog>
-        </div>
-      }
-    >
+              </DialogContent>
+            </Dialog>
+          </div>
+        }
+      />
+
       {statsLoading || txnLoading ? (
         <QueryLoading message="Loading transactions..." />
       ) : statsError || txnError ? (
         <QueryError error="Failed to load transaction data" onRetry={() => window.location.reload()} />
       ) : (
-      <>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <DnaStatCard icon={<Wallet className="text-emerald-600" />} label="Main Cash" value={stats?.balance ? `Rp ${(Number(stats.balance) / 1000000).toFixed(1)}M` : "Rp 0"} />
-        <DnaStatCard icon={<CreditCard className="text-blue-600" />} label="Bank Balance" value={stats?.cashIn ? `Rp ${(Number(stats.cashIn) / 1000000).toFixed(1)}M` : "Rp 0"} />
-        <DnaStatCard icon={<ArrowUpRight className="text-emerald-500" />} label="Inflow MTD" value={stats?.cashIn ? `+ Rp ${(Number(stats.cashIn) / 1000000).toFixed(0)}M` : "+ Rp 0"} />
-        <DnaStatCard icon={<ArrowDownLeft className="text-rose-500" />} label="Outflow MTD" value={stats?.cashOut ? `- Rp ${(Number(stats.cashOut) / 1000000).toFixed(0)}M` : "- Rp 0"} />
-      </div>
+        <>
+          <DnaKpiGrid cols={4}>
+            <DnaStatCard icon={<Wallet className="text-emerald-600" />} label="Main Cash" value={stats?.balance ? `Rp ${(Number(stats.balance) / 1000000).toFixed(1)}M` : "Rp 0"} />
+            <DnaStatCard icon={<CreditCard className="text-blue-600" />} label="Bank Balance" value={stats?.cashIn ? `Rp ${(Number(stats.cashIn) / 1000000).toFixed(1)}M` : "Rp 0"} />
+            <DnaStatCard icon={<ArrowUpRight className="text-emerald-500" />} label="Inflow MTD" value={stats?.cashIn ? `+ Rp ${(Number(stats.cashIn) / 1000000).toFixed(0)}M` : "+ Rp 0"} />
+            <DnaStatCard icon={<ArrowDownLeft className="text-rose-500" />} label="Outflow MTD" value={stats?.cashOut ? `- Rp ${(Number(stats.cashOut) / 1000000).toFixed(0)}M` : "- Rp 0"} />
+          </DnaKpiGrid>
 
-      <div className="mt-6">
-        <DnaDataTableCard
-          customToolbar={
-            <div className="flex items-center gap-3 w-full justify-between">
-              <div>
-                <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">
-                  Journal Transactions Registry
-                </h3>
-                <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tight mt-0.5">
-                  Real-time Fiscal Ledger • {filteredTransactions.length} Records
-                </p>
-              </div>
-              <div className="relative w-64">
-                <DnaInput 
-                  icon={<Search className="h-4 w-4" />}
-                  placeholder="Search ledger..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-          }
-        >
-          <Table className="table-dense">
-            <TableHeader className="bg-slate-50/70">
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="py-4 pl-6 text-left font-black text-slate-400 uppercase tracking-tight text-[9px]">ID / Date</TableHead>
-                <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">Type</TableHead>
-                <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px]">Entity / Reason</TableHead>
-                <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-right">Amount</TableHead>
-                <TableHead className="font-black text-slate-400 uppercase tracking-tight text-[9px] text-center">Status</TableHead>
-                <TableHead className="pr-6 text-right font-black text-slate-400 uppercase tracking-tight text-[9px]">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTransactions.map((t: any) => (
-                <TableRow key={t.id} className="group hover:bg-slate-50/50 transition-all duration-300 border-b border-slate-50">
-                  <TableCell className="py-3 pl-6">
-                    <div>
-                      <p className="font-black text-slate-900 tracking-tight text-xs uppercase italic">{t.id}</p>
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight mt-0.5 italic">{t.date}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <DnaBadge status={t.type === 'RECEIPT' ? 'success' : 'critical'}>
-                      {t.type}
-                    </DnaBadge>
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <p className="font-black text-slate-900 text-xs uppercase italic">{t.entity}</p>
-                    <p className="text-[9px] font-medium text-slate-400 uppercase italic mt-0.5">Operational Transfer</p>
-                  </TableCell>
-                  <TableCell className="py-3 text-right font-mono tabular-nums">
-                    <p className={cn("font-black text-xs", t.type === 'RECEIPT' ? "text-emerald-600" : "text-rose-600")}>
-                      {t.type === 'RECEIPT' ? '+' : '-'} Rp {t.amount.toLocaleString()}
-                    </p>
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <DnaBadge status="success">
-                      {t.status}
-                    </DnaBadge>
-                  </TableCell>
-                  <TableCell className="py-3 pr-6 text-right">
-                    <DnaButton variant="outline" className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100">
-                      <Search size={14} />
-                    </DnaButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </DnaDataTableCard>
-      </div>
-      </>)}
-    </DashboardShell>
+          <DnaDataTableCard
+            toolbarProps={{
+              searchProps: {
+                value: searchTerm,
+                onChange: setSearchTerm,
+                placeholder: "Cari transaksi ledger...",
+              },
+            }}
+          >
+            <DnaTable>
+              <DnaTableHead>
+                <DnaTableRow className="h-[40px] bg-slate-50/75 hover:bg-slate-50/75">
+                  <DnaTh className="w-[180px] px-4 text-left text-[11px] font-bold text-slate-600 uppercase tracking-wider">No. Jurnal</DnaTh>
+                  <DnaTh className="w-[120px] px-4 text-left text-[11px] font-bold text-slate-600 uppercase tracking-wider">Tanggal</DnaTh>
+                  <DnaTh className="w-[130px] px-4 text-center text-[11px] font-bold text-slate-600 uppercase tracking-wider">Tipe</DnaTh>
+                  <DnaTh className="px-4 text-left text-[11px] font-bold text-slate-600 uppercase tracking-wider">Entitas / Deskripsi</DnaTh>
+                  <DnaTh className="w-[160px] px-4 text-right text-[11px] font-bold text-slate-600 uppercase tracking-wider">Nominal</DnaTh>
+                  <DnaTh className="w-[120px] px-4 text-center text-[11px] font-bold text-slate-600 uppercase tracking-wider">Status</DnaTh>
+                  <DnaTh className="w-[70px] pr-4 text-right text-[11px] font-bold text-slate-600 uppercase tracking-wider">Aksi</DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
+                {filteredTransactions.map((t: any) => (
+                  <DnaTableRow key={t.id} className="h-[48px] hover:bg-slate-50/60 transition-colors border-b border-slate-100">
+                    <DnaTd className="px-4 py-2.5">
+                      <DnaCell.Code code={t.id} />
+                    </DnaTd>
+                    <DnaTd className="px-4 py-2.5">
+                      <DnaCell.Text text={t.date} />
+                    </DnaTd>
+                    <DnaTd className="px-4 py-2.5 text-center">
+                      <DnaBadge variant={t.type === 'RECEIPT' ? 'success' : 'critical'}>
+                        {t.type}
+                      </DnaBadge>
+                    </DnaTd>
+                    <DnaTd className="px-4 py-2.5">
+                      <span className="text-[12px] font-medium text-slate-800 line-clamp-1">{t.entity}</span>
+                    </DnaTd>
+                    <DnaTd className="px-4 py-2.5 text-right tabular-nums">
+                      <span className={cn("text-[12px] font-semibold", t.type === 'RECEIPT' ? "text-emerald-600" : "text-rose-600")}>
+                        {t.type === 'RECEIPT' ? '+' : '-'} Rp {t.amount.toLocaleString()}
+                      </span>
+                    </DnaTd>
+                    <DnaTd className="px-4 py-2.5 text-center">
+                      <DnaBadge variant="success">
+                        {t.status}
+                      </DnaBadge>
+                    </DnaTd>
+                    <DnaTd className="pr-4 py-2.5 text-right">
+                      <DnaButton variant="ghost" className="h-7 w-7 p-0 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600">
+                        <Search size={14} />
+                      </DnaButton>
+                    </DnaTd>
+                  </DnaTableRow>
+                ))}
+              </DnaTableBody>
+            </DnaTable>
+          </DnaDataTableCard>
+        </>
+      )}
+    </DnaPageContainer>
   );
 }
 
 function TransactionForm({ mode, coa, lines, setLiness, onSuccess }: any) {
   const isReceipt = mode === "RECEIPT";
-  const color = isReceipt ? "emerald" : "rose";
   
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [lineAmount, setLinesAmount] = useState("");
@@ -278,10 +273,10 @@ function TransactionForm({ mode, coa, lines, setLiness, onSuccess }: any) {
   return (
     <>
       <div className={cn("p-8 text-white relative", isReceipt ? "bg-emerald-600" : "bg-rose-600")}>
-        <DialogTitle className="text-2xl font-black uppercase tracking-tighter leading-none italic text-white">
+        <DialogTitle className="text-xl font-bold uppercase tracking-tight leading-none text-white">
           Cash {isReceipt ? "Receipt" : "Disbursement"}
         </DialogTitle>
-        <DialogDescription className="text-white/70 font-medium uppercase text-[9px] tracking-tight mt-2">
+        <DialogDescription className="text-white/80 font-medium text-xs tracking-tight mt-1.5">
           {isReceipt ? "Record Incoming Funds" : "Authorize Outgoing Payment"}
         </DialogDescription>
         <DollarSign className="absolute right-8 top-1/2 -translate-y-1/2 h-10 w-10 opacity-30 text-white" />
@@ -289,15 +284,15 @@ function TransactionForm({ mode, coa, lines, setLiness, onSuccess }: any) {
       <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide font-inter">
         <div className="grid grid-cols-2 gap-6">
           <div className="space-y-2">
-            <div className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">Tanggal</div>
-            <DnaInput type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border-2 border-slate-50 bg-slate-50 rounded-xl text-xs" />
+            <div className="text-[11px] font-bold uppercase tracking-tight text-slate-500 pl-1">Tanggal</div>
+            <DnaInput type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border-slate-200 rounded-lg text-xs" />
           </div>
           <div className="space-y-2">
-            <div className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">{isReceipt ? "Terima Dari" : "Bayar Kepada"}</div>
-            <DnaInput placeholder="Nama individu / instansi..." value={entityName} onChange={(e) => setEntityName(e.target.value)} className="border-2 border-slate-50 bg-slate-50 rounded-xl text-xs" />
+            <div className="text-[11px] font-bold uppercase tracking-tight text-slate-500 pl-1">{isReceipt ? "Terima Dari" : "Bayar Kepada"}</div>
+            <DnaInput placeholder="Nama individu / instansi..." value={entityName} onChange={(e) => setEntityName(e.target.value)} className="border-slate-200 rounded-lg text-xs" />
           </div>
           <div className="space-y-2">
-            <div className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">{isReceipt ? "Simpan Ke Akun" : "Ambil Dari Akun"}</div>
+            <div className="text-[11px] font-bold uppercase tracking-tight text-slate-500 pl-1">{isReceipt ? "Simpan Ke Akun" : "Ambil Dari Akun"}</div>
              <DnaSelect
                label="Simpan Ke Akun"
                value={cashAccountId}
@@ -307,13 +302,13 @@ function TransactionForm({ mode, coa, lines, setLiness, onSuccess }: any) {
              />
           </div>
           <div className="space-y-2">
-            <div className="text-[9px] font-black uppercase tracking-tight text-slate-400 pl-1">Keterangan</div>
-            <DnaInput placeholder="Catatan transaksi..." value={notes} onChange={(e) => setNotes(e.target.value)} className="border-2 border-slate-50 bg-slate-50 rounded-xl text-xs" />
+            <div className="text-[11px] font-bold uppercase tracking-tight text-slate-500 pl-1">Keterangan</div>
+            <DnaInput placeholder="Catatan transaksi..." value={notes} onChange={(e) => setNotes(e.target.value)} className="border-slate-200 rounded-lg text-xs" />
           </div>
         </div>
 
         <div className="space-y-4">
-          <div className="text-[9px] font-black uppercase tracking-tight text-slate-900">Allocation Table</div>
+          <div className="text-[11px] font-bold uppercase tracking-tight text-slate-700">Allocation Table</div>
           <div className="grid grid-cols-12 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100 items-center">
             <div className="col-span-7">
                <DnaSelect
@@ -326,7 +321,7 @@ function TransactionForm({ mode, coa, lines, setLiness, onSuccess }: any) {
             <DnaInput 
               type="number" 
               placeholder="Nominal (Rp)" 
-              className="border-none bg-white col-span-4 shadow-sm text-xs h-10"
+              className="border-slate-200 bg-white col-span-4 shadow-sm text-xs h-10"
               value={lineAmount}
               onChange={(e) => setLinesAmount(e.target.value)}
             />
@@ -336,28 +331,28 @@ function TransactionForm({ mode, coa, lines, setLiness, onSuccess }: any) {
           </div>
 
           <div className="border border-slate-100 rounded-xl overflow-hidden shadow-sm bg-white">
-            <Table className="table-dense">
-              <TableHeader className="bg-slate-50">
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="h-9 text-[9px] font-black uppercase text-slate-400">Target Account</TableHead>
-                  <TableHead className="h-9 text-[9px] font-black uppercase text-slate-400 text-right">Amount</TableHead>
-                  <TableHead className="h-9 text-right"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <DnaTable className="table-dense">
+              <DnaTableHead className="bg-slate-50">
+                <DnaTableRow className="hover:bg-transparent">
+                  <DnaTh className="h-9 text-[11px] font-bold uppercase text-slate-500">Target Account</DnaTh>
+                  <DnaTh className="h-9 text-[11px] font-bold uppercase text-slate-500 text-right">Amount</DnaTh>
+                  <DnaTh className="h-9 text-right"></DnaTh>
+                </DnaTableRow>
+              </DnaTableHead>
+              <DnaTableBody>
                 {lines.map((line: any, idx: number) => (
-                  <TableRow key={idx} className="bg-white">
-                    <TableCell className="font-medium text-xs">{line.accountName}</TableCell>
-                    <TableCell className="font-black text-xs text-right italic font-mono tabular-nums">Rp {line.amount.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">
-                      <DnaButton variant="outline" className="text-slate-300 hover:text-rose-500 h-8 w-8 p-0 rounded-lg" onClick={() => setLiness(lines.filter((_: any, i: number) => i !== idx))}>
+                  <DnaTableRow key={idx} className="bg-white">
+                    <DnaTd className="font-medium text-[12px] text-slate-800">{line.accountName}</DnaTd>
+                    <DnaTd className="font-semibold text-[12px] text-right tabular-nums text-slate-800">Rp {line.amount.toLocaleString()}</DnaTd>
+                    <DnaTd className="text-right">
+                      <DnaButton variant="outline" className="text-slate-400 hover:text-rose-500 h-8 w-8 p-0 rounded-lg" onClick={() => setLiness(lines.filter((_: any, i: number) => i !== idx))}>
                         <Trash2 size={14} />
                       </DnaButton>
-                    </TableCell>
-                  </TableRow>
+                    </DnaTd>
+                  </DnaTableRow>
                 ))}
-              </TableBody>
-            </Table>
+              </DnaTableBody>
+            </DnaTable>
           </div>
         </div>
 
@@ -371,7 +366,7 @@ function TransactionForm({ mode, coa, lines, setLiness, onSuccess }: any) {
           <DialogHeader>
             <DialogTitle>Konfirmasi</DialogTitle>
           </DialogHeader>
-          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <p className="text-sm text-slate-600">Apakah Anda yakin ingin menyimpan data ini?</p>
           <DialogFooter>
             <DnaButton variant="outline" onClick={() => setShowConfirm(false)}>Batal</DnaButton>
             <DnaButton variant="primary" onClick={confirmSubmit}>Ya, Simpan</DnaButton>

@@ -3,6 +3,7 @@ import { LegalityService } from '../../src/modules/legality/legality.service';
 import { BussdevService } from '../../src/modules/bussdev/bussdev.service';
 import { PrismaService } from '../../src/prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ResourceNotFoundException } from '../../src/common/exceptions/api-exception';
 import { TestModule } from '../utilities/test-module';
 
 describe('LegalityService — Unit', () => {
@@ -76,9 +77,12 @@ describe('LegalityService — Unit', () => {
 
     it('throws error when formula not found', async () => {
       prisma.formula = { findUnique: jest.fn().mockResolvedValue(null) };
-      await expect(service.validateFormula('VOID')).rejects.toThrow(
-        'Formula not found',
-      );
+      // Asserted by type and status rather than by prose: Fase 3B moved this guard
+      // from a bare Error (answered 500) to a typed 404, and the message changed
+      // language with it. The contract is "missing row → 404", not the wording.
+      const thrown = await service.validateFormula('VOID').catch((e) => e);
+      expect(thrown).toBeInstanceOf(ResourceNotFoundException);
+      expect((thrown as ResourceNotFoundException).getStatus()).toBe(404);
     });
   });
 

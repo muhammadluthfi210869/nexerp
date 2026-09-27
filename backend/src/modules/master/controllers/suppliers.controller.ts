@@ -66,6 +66,13 @@ export class SuppliersController {
     return this.suppliersService.findAll(query);
   }
 
+  // Must stay above `:id`. Below it, GET /master/suppliers/active — which SupplierSelect asks
+  // for on every open — matches `:id` instead and fails as "invalid input syntax for type uuid".
+  @Get('active')
+  findActive(@Query('search') search?: string) {
+    return this.suppliersService.findActive(search);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.suppliersService.findOne(id);

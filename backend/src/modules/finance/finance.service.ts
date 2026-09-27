@@ -1,11 +1,13 @@
-﻿import {
+import {
   Injectable,
   BadRequestException,
+  HttpStatus,
   NotFoundException,
   Inject,
   forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
+import { BusinessException } from '../../common/exceptions/api-exception';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ACTIVITY_EVENT } from '../activity-stream/events/activity.events';
 import {
@@ -13,7 +15,6 @@ import {
   StreamEventType,
   AccountType,
   NormalBalance,
-  PaymentStatus,
   PeriodStatus,
   ReportGroup,
   RegStage,
@@ -33,10 +34,10 @@ import { FundRequestStatus } from '@prisma/client';
 import { VerifyArPaymentDto, ArPaymentType } from './dto/verify-ar-payment.dto';
 
 import { IdGeneratorService } from '../system/id-generator.service';
-import { ModuleRef } from '@nestjs/core';
 
 import { ScmService } from '../scm/services/scm.service';
 import { CreativeService } from '../creative/creative.service';
+import { FinanceReportService } from './finance-report.service';
 
 @Injectable()
 export class FinanceService {
@@ -47,50 +48,36 @@ export class FinanceService {
     @Inject(forwardRef(() => ScmService))
     private scmService: ScmService,
     private creativeService: CreativeService,
-    private moduleRef: ModuleRef,
+    private reportService: FinanceReportService,
   ) {}
 
-  private async getWarehouseService() {
-    const { WarehouseService } = await import('../warehouse/warehouse.service');
-    return this.moduleRef.get(WarehouseService, { strict: false });
-  }
-
+  /**
+   * Ensure every account the journal-posting code resolves actually exists.
+   *
+   * This used to open with `if (await account.count() > 0) return;`, so once any
+   * other COA seed had populated the table this became a permanent no-op — and
+   * the OR-fallbacks in this file then posted Work In Progress to
+   * `1401 Uang Muka Pembelian` and Finished Goods to `1400 PPN Masukan`, because
+   * `1153`/`1154` did not exist. It now upserts each required code, so it is
+   * both idempotent and able to repair a partially populated chart of accounts.
+   *
+   * `update: {}` on purpose: an account that already exists keeps its name and
+   * `reportGroup`. This adds missing codes; renaming or reclassifying a live
+   * account is a deliberate data migration, not a side effect of seeding.
+   */
   async seedInitialAccounts() {
-    const existing = await this.prisma.account.count();
-    if (existing > 0) return;
-
+    // Four entries were removed from this list rather than kept:
+    //   `1121` (a second bank account), `1132` (a second receivable),
+    //   `1153` and `1154` (a second WIP and a second Finished Goods).
+    // Each one duplicated an account that already exists and means the same
+    // thing — `1110`, `1200/1201`, `1302`, `1303` — and nothing referenced them
+    // once the posting chains above were pointed at the real accounts. Seeding
+    // them would have grown the chart of accounts by four rows that no report
+    // can distinguish from the four they shadow.
     const initialAccounts = [
-      {
-        code: '1121',
-        name: 'Bank BCA (2640351589)',
-        type: AccountType.ASSET,
-        normalBalance: NormalBalance.DEBIT,
-        reportGroup: ReportGroup.CURRENT_ASSET,
-      },
-      {
-        code: '1132',
-        name: 'Piutang Dagang - kosmetik',
-        type: AccountType.ASSET,
-        normalBalance: NormalBalance.DEBIT,
-        reportGroup: ReportGroup.CURRENT_ASSET,
-      },
       {
         code: '1151',
         name: 'Persediaan Bahan Baku',
-        type: AccountType.ASSET,
-        normalBalance: NormalBalance.DEBIT,
-        reportGroup: ReportGroup.CURRENT_ASSET,
-      },
-      {
-        code: '1153',
-        name: 'Persediaan Dalam Proses/ Barang Setengah Jadi',
-        type: AccountType.ASSET,
-        normalBalance: NormalBalance.DEBIT,
-        reportGroup: ReportGroup.CURRENT_ASSET,
-      },
-      {
-        code: '1154',
-        name: 'Persediaan Barang Jadi',
         type: AccountType.ASSET,
         normalBalance: NormalBalance.DEBIT,
         reportGroup: ReportGroup.CURRENT_ASSET,
@@ -146,9 +133,27 @@ export class FinanceService {
       },
     ];
 
+    const created: string[] = [];
+    const existing: string[] = [];
+
     for (const acc of initialAccounts) {
-      await this.prisma.account.create({ data: acc });
+      const already = await this.prisma.account.findFirst({
+        where: { code: acc.code },
+        select: { id: true },
+      });
+      if (already) {
+        existing.push(acc.code);
+        continue;
+      }
+      await this.prisma.account.upsert({
+        where: { code: acc.code },
+        update: {},
+        create: acc,
+      });
+      created.push(acc.code);
     }
+
+    return { created, existing, required: initialAccounts.length };
   }
 
   async createJournalEntry(dto: CreateJournalDto) {
@@ -173,17 +178,27 @@ export class FinanceService {
 
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
       throw new BadRequestException(
-        `Journal is not balanced. Debit: ${totalDebit}, Credit: ${totalCredit}`,
+        `Journal is not balanced. Debit: ${totalDebit}, Credit: ${totalCredit} [JOURNAL_UNBALANCED]`,
       );
     }
 
-    // MANDATORY PROOF VALIDATION (POINT 2)
-    // Rule: For Expense (6xxx) or Fixed Asset (15xx), proof is mandatory.
+    // BUS-RULE-068: Control accounts block manual posting
     const accountIds = [...new Set(dto.lines.map((l) => l.accountId))];
     const accounts = await this.prisma.account.findMany({
       where: { id: { in: accountIds } },
     });
     const accountMap = new Map(accounts.map((a) => [a.id, a]));
+
+    if (!dto.sourceDocumentType || (dto.sourceDocumentType) === 'MANUAL') {
+      for (const l of dto.lines) {
+        const acc = accountMap.get(l.accountId);
+        if (acc && acc.allowManualJournal === false) {
+          throw new BadRequestException(
+            `Akun ${acc.code} (${acc.name}) tidak boleh diposting manual. Gunakan Adjustment Journal. [MANUAL_JOURNAL_BLOCKED]`,
+          );
+        }
+      }
+    }
     const expenseLines = dto.lines.map((l) => {
       const acc = accountMap.get(l.accountId);
       return (
@@ -248,11 +263,26 @@ export class FinanceService {
       throw new BadRequestException('Cannot reverse a reversal journal');
     }
 
+    const entryDate = new Date();
+    const lockedPeriod = await this.prisma.financialPeriod.findFirst({
+      where: {
+        startDate: { lte: entryDate },
+        endDate: { gte: entryDate },
+        status: { in: [PeriodStatus.SOFT_LOCKED, PeriodStatus.CLOSED] },
+      },
+    });
+    if (lockedPeriod) {
+      throw new BadRequestException(
+        `Transaksi ditolak: Periode ${lockedPeriod.name} sudah dikunci atau ditutup. [PERIOD_HARD_LOCKED]`,
+      );
+    }
+
     return this.prisma.journalEntry.create({
       data: {
-        date: new Date(),
+        date: entryDate,
         reference: `REV-${original.reference || original.id}`,
         description: `REVERSAL of: ${original.description}`,
+        sourceDocumentType: 'ADJUSTMENT' as any,
         lines: {
           create: original.lines.map((l) => ({
             accountId: l.accountId,
@@ -294,10 +324,18 @@ export class FinanceService {
 
     if (totalCost <= 0) return;
 
-    // Accounts
+    // Accounts.
+    //
+    // `1153` used to lead the WIP chain but was never created by any seeder, so
+    // the chain silently resolved to `1401 Uang Muka Pembelian (Advance)` — a
+    // supplier advance posted to as work in progress. `1302` is the account that
+    // actually means WIP, and it exists in every environment.
     const wipAcc = await this.prisma.account.findFirst({
-      where: { OR: [{ code: '1153' }, { code: '1401' }] },
+      where: { OR: [{ code: '1302' }, { code: '1153' }, { code: '1401' }] },
     }); // WIP
+    // `1151` first, unchanged: it is the account the existing stock balances sit
+    // in, and `1300 Persediaan Bahan Baku` carries none. Preferring the better
+    // name over the account that holds the data would split inventory in two.
     const rmAcc = await this.prisma.account.findFirst({
       where: { OR: [{ code: '1151' }, { code: '1300' }] },
     }); // Raw Materials
@@ -365,13 +403,20 @@ export class FinanceService {
     const finalTotalHpp = totalHpp * wo.targetQty;
 
     // Multiply by batch size if needed, but usually formula is per batch/unit
-    // Post Journal: Debit Finished Goods / Credit Raw Materials
+    // Post Journal: Debit Finished Goods / Credit Raw Materials.
+    //
+    // `1154` and `1153` led these chains but were never created, so the HPP
+    // automator posted Finished Goods to `1400 PPN Masukan (Input Tax)` and WIP
+    // to `1401 Uang Muka Pembelian (Advance)` — both inside the asset section, so
+    // the balance sheet still balanced and nothing looked wrong. `1303` and
+    // `1302` are the accounts that mean Finished Goods and WIP; the dead codes
+    // stay behind them as a fallback for an environment that does define them.
     const fgAcc = await this.prisma.account.findFirst({
-      where: { OR: [{ code: '1154' }, { code: '1400' }] },
-    }); // Finished Goods (1154)
+      where: { OR: [{ code: '1303' }, { code: '1154' }, { code: '1400' }] },
+    }); // Finished Goods
     const wipAcc = await this.prisma.account.findFirst({
-      where: { OR: [{ code: '1153' }, { code: '1401' }] },
-    }); // WIP (1153)
+      where: { OR: [{ code: '1302' }, { code: '1153' }, { code: '1401' }] },
+    }); // WIP
 
     if (fgAcc && wipAcc && totalHpp > 0) {
       await this.prisma.journalEntry.create({
@@ -399,17 +444,36 @@ export class FinanceService {
     totalLossValue: number;
     notes: string;
   }) {
-    const inventoryAcc = await this.prisma.account.findFirst({
+    let inventoryAcc = await this.prisma.account.findFirst({
       where: { OR: [{ code: '1151' }, { code: '1300' }] },
     });
-    const lossAcc = await this.prisma.account.findFirst({
-      where: { OR: [{ code: '1157' }, { code: '6232' }, { code: '6102' }] },
-    });
+    if (!inventoryAcc) {
+      inventoryAcc = await this.prisma.account.create({
+        data: {
+          code: '1151',
+          name: 'Persediaan Barang',
+          type: 'ASSET' as any,
+          normalBalance: 'DEBIT' as any,
+        },
+      });
+    }
 
-    if (!inventoryAcc || !lossAcc) {
-      throw new BadRequestException(
-        'Finance Accounts (1151/1157/6232) not configured for inventory adjustment.',
-      );
+    // `1157` used to lead this chain but is never created by any seeder, so it
+    // could only ever resolve to the next code. It was removed rather than
+    // created: `6232` already carries the stock-opname losses, and introducing
+    // an empty account ahead of it would split the balance in two.
+    let lossAcc = await this.prisma.account.findFirst({
+      where: { OR: [{ code: '6232' }, { code: '6102' }] },
+    });
+    if (!lossAcc) {
+      lossAcc = await this.prisma.account.create({
+        data: {
+          code: '6232',
+          name: 'Beban Selisih Stok Opname',
+          type: 'EXPENSE' as any,
+          normalBalance: 'DEBIT' as any,
+        },
+      });
     }
 
     return this.prisma.journalEntry.create({
@@ -440,7 +504,7 @@ export class FinanceService {
       where: { OR: [{ code: '1151' }, { code: '1300' }] },
     });
     const wipAcc = await this.prisma.account.findFirst({
-      where: { OR: [{ code: '1153' }, { code: '1401' }] },
+      where: { OR: [{ code: '1302' }, { code: '1153' }, { code: '1401' }] },
     });
 
     if (!inventoryAcc || !wipAcc) {
@@ -474,15 +538,31 @@ export class FinanceService {
     platform: string;
     refId: string;
   }) {
+    // `1121` and `1120` led this chain and neither was ever created, so every ad
+    // spend debit landed on `1100 Kas & Bank` — the catch-all — instead of the
+    // operating bank account. `1110 Bank BCA (Operasional)` already exists and is
+    // the account that means what this code intends.
     const bankAcc = await this.prisma.account.findFirst({
-      where: { OR: [{ code: '1121' }, { code: '1120' }, { code: '1100' }] },
+      where: { OR: [{ code: '1110' }, { code: '1121' }, { code: '1100' }] },
     });
     const marketingAcc = await this.prisma.account.findFirst({
       where: { OR: [{ code: '6101' }, { code: '5101' }] },
     });
 
     if (!bankAcc || !marketingAcc) {
-      throw new Error('Finance Accounts (1121 or 6101) not configured.');
+      // Still a 500: the COA is ours to configure, not the caller's mistake. But it
+      // carries a stable code so ops can tell a missing seed from a crashed process.
+      throw new BusinessException(
+        'FINANCE_COA_NOT_CONFIGURED',
+        'Akun finance untuk posting iklan (1110/1100/1121 atau 6101/5101) belum ada di COA.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        {
+          missing: [
+            ...(bankAcc ? [] : ['1110/1100/1121']),
+            ...(marketingAcc ? [] : ['6101/5101']),
+          ],
+        },
+      );
     }
 
     return this.createJournalEntry({
@@ -1105,6 +1185,13 @@ export class FinanceService {
         inv.so?.lead?.clientName || inv.workOrder?.lead?.clientName || null,
       vendorName: inv.supplier?.name || null,
       billNumber: inv.invoiceNumber,
+      // The vendor-bill screens read `totalAmount`/`paidAmount`/`remaining`; the
+      // Invoice model has only `amountDue`/`outstandingAmount`. Without these the
+      // money columns render NaN — no error, just "NaN" where a rupiah figure
+      // belongs. Pinned by scripts/__tests__/finance-invoice-alias-contract.test.sh.
+      totalAmount: Number(inv.amountDue ?? 0),
+      paidAmount: Number(inv.amountDue ?? 0) - Number(inv.outstandingAmount ?? 0),
+      remaining: Number(inv.outstandingAmount ?? 0),
     }));
   }
 
@@ -1268,6 +1355,13 @@ export class FinanceService {
   }
 
   async approveFundRequest(id: string, dto: ApproveFundRequestDto) {
+    const req = await this.prisma.fundRequest.findUnique({ where: { id } });
+    if (!req) throw new NotFoundException('Fund Request not found');
+    if (req.requesterId === dto.approvedById) {
+      throw new BadRequestException(
+        'Maker-checker violation: requester cannot approve their own fund request. [SOD_VIOLATION]',
+      );
+    }
     return this.prisma.fundRequest.update({
       where: { id },
       data: {
@@ -1281,6 +1375,13 @@ export class FinanceService {
     id: string,
     dto: DirectorApproveFundRequestDto,
   ) {
+    const req = await this.prisma.fundRequest.findUnique({ where: { id } });
+    if (!req) throw new NotFoundException('Fund Request not found');
+    if (req.requesterId === dto.approvedById) {
+      throw new BadRequestException(
+        'Maker-checker violation: requester cannot approve their own fund request. [SOD_VIOLATION]',
+      );
+    }
     return this.prisma.fundRequest.update({
       where: { id },
       data: {
@@ -1308,6 +1409,11 @@ export class FinanceService {
       });
 
       if (!req) throw new NotFoundException('Fund Request not found');
+      if (req.requesterId === dto.disbursedById) {
+        throw new BadRequestException(
+          'Maker-checker violation: requester cannot disburse their own fund request. [SOD_VIOLATION]',
+        );
+      }
 
       // Create Journal Entry automatically
       const cashAcc = await tx.account.findUnique({
@@ -1331,7 +1437,14 @@ export class FinanceService {
       // Fallback: if no specific expense account found, use general expense account
       if (!expenseAcc) {
         const generalExpense = await tx.account.findFirst({
-          where: { code: { startsWith: '6' }, name: { contains: 'General' } },
+          where: {
+            code: { startsWith: '6' },
+            OR: [
+              { name: { contains: 'General', mode: 'insensitive' } },
+              { name: { contains: 'Umum', mode: 'insensitive' } },
+              { name: { contains: 'Operasional', mode: 'insensitive' } },
+            ],
+          },
         });
         if (generalExpense) {
           // Create journal with general expense + note
@@ -1562,19 +1675,8 @@ export class FinanceService {
           loggedBy: 'SYSTEM_CREATIVE',
         });
 
-        // F. PHASE 4: WAREHOUSE READINESS
-        const whSvc = await this.getWarehouseService();
-        const whResult = await whSvc.checkCapacityForNewDeal(leadId);
-        if (whResult.status !== 'OK') {
-          this.eventEmitter.emit(ACTIVITY_EVENT, {
-            leadId: leadId,
-            senderDivision: Division.WAREHOUSE,
-            eventType: StreamEventType.STOCK_CHECK_SHORTAGE, // Reusing shortage as a capacity issue
-            notes: whResult.message,
-            loggedBy: 'SYSTEM_WAREHOUSE',
-            isCritical: whResult.status === 'CRITICAL',
-          });
-        }
+        // F. PHASE 4: WAREHOUSE READINESS (Decoupled Event)
+        this.eventEmitter.emit('finance.payment_verified_warehouse_check', { leadId });
       } else if (type === ArPaymentType.PELUNASAN) {
         const activity = await tx.leadActivity.findUnique({
           where: { id },
@@ -1593,15 +1695,25 @@ export class FinanceService {
             include: { lead: true },
           });
 
-          await tx.salesOrder.update({
-            where: { id: salesOrderId },
-            data: { status: SOStatus.COMPLETED },
-          });
+          // Early payment protection: only transition to COMPLETED if already SHIPPED
+          if (so && (so.status === SOStatus.SHIPPED || so.status === SOStatus.COMPLETED)) {
+            await tx.salesOrder.update({
+              where: { id: salesOrderId },
+              data: { status: SOStatus.COMPLETED },
+            });
+          }
 
-          await tx.salesLead.update({
-            where: { id: leadId },
-            data: { status: WorkflowStatus.WON_DEAL, wonAt: new Date() },
-          });
+          if (leadId) {
+            const lead = await tx.salesLead.findUnique({
+              where: { id: leadId },
+            });
+            if (lead && (lead.status === WorkflowStatus.READY_TO_SHIP || lead.status === WorkflowStatus.WON_DEAL)) {
+              await tx.salesLead.update({
+                where: { id: leadId },
+                data: { status: WorkflowStatus.WON_DEAL, wonAt: new Date() },
+              });
+            }
+          }
 
           // Auto-create JournalEntry for Final Payment
           if (so) {
@@ -1779,451 +1891,36 @@ export class FinanceService {
   }
 
   // --- FINANCIAL REPORTS (PHASE 4) ---
+  //
+  // The bodies moved to FinanceReportService (Fase 3C). These six stay on
+  // FinanceService because they are the published contract, and because the
+  // ledger path should not have to change to follow a file split.
+  //
+  // `Parameters<...>` rather than copied signatures: the arity cannot drift
+  // from the real method, and `...args` cannot drop a parameter.
 
-  async getTrialBalance(startDate?: Date, endDate?: Date) {
-    const where: any = {};
-    if (startDate || endDate) {
-      where.date = {};
-      if (startDate) where.date.gte = startDate;
-      if (endDate) where.date.lte = endDate;
-    }
-
-    // 1. Fetch all accounts with their journal lines within the filter
-    const accounts = await this.prisma.account.findMany({
-      include: {
-        journalLines: {
-          where: {
-            journal: where,
-          },
-        },
-      },
-      orderBy: { code: 'asc' },
-    });
-
-    // 2. Calculate balances
-    const trialBalance = accounts.map((acc) => {
-      let totalDebit = 0;
-      let totalCredit = 0;
-
-      acc.journalLines.forEach((l) => {
-        totalDebit += Number(l.debit);
-        totalCredit += Number(l.credit);
-      });
-
-      // Net balance based on account type
-      let debitBalance = 0;
-      let creditBalance = 0;
-
-      const net = totalDebit - totalCredit;
-
-      // Standard Accounting Rule:
-      // Assets (1xxx) & Expenses (5xxx, 6xxx) usually have Debit balances.
-      // Liabilities (2xxx), Equity (3xxx), & Revenue (4xxx) usually have Credit balances.
-      if (acc.type === AccountType.ASSET || acc.type === AccountType.EXPENSE) {
-        if (net >= 0) {
-          debitBalance = net;
-        } else {
-          creditBalance = Math.abs(net);
-        }
-      } else {
-        if (net <= 0) {
-          creditBalance = Math.abs(net);
-        } else {
-          debitBalance = net;
-        }
-      }
-
-      return {
-        id: acc.id,
-        code: acc.code,
-        name: acc.name,
-        type: acc.type,
-        reportGroup: acc.reportGroup,
-        parentId: acc.parentId,
-        totalDebit,
-        totalCredit,
-        debitBalance,
-        creditBalance,
-      };
-    });
-
-    const totals = trialBalance.reduce(
-      (acc, curr) => ({
-        debit: acc.debit + curr.debitBalance,
-        credit: acc.credit + curr.creditBalance,
-      }),
-      { debit: 0, credit: 0 },
-    );
-
-    return {
-      data: trialBalance,
-      totals,
-      isBalanced: Math.abs(totals.debit - totals.credit) < 0.01,
-    };
+  getTrialBalance(...args: Parameters<FinanceReportService['getTrialBalance']>) {
+    return this.reportService.getTrialBalance(...args);
   }
 
-  async getDetailedTrialBalance(startDate: Date, endDate: Date) {
-    // 1. Fetch Beginning Balances (everything before startDate)
-    const begDate = new Date(startDate);
-    begDate.setSeconds(begDate.getSeconds() - 1);
-    const begTb = await this.getTrialBalance(undefined, begDate);
-
-    // 2. Fetch Period Activity (within startDate and endDate)
-    const actTb = await this.getTrialBalance(startDate, endDate);
-
-    // 3. Fetch Closing Balances (everything before endDate)
-    const endTb = await this.getTrialBalance(undefined, endDate);
-
-    const detailedData = endTb.data.map((endItem) => {
-      const begItem = begTb.data.find((a) => a.id === endItem.id);
-      const actItem = actTb.data.find((a) => a.id === endItem.id);
-
-      return {
-        ...endItem,
-        awalDebit: begItem?.debitBalance || 0,
-        awalCredit: begItem?.creditBalance || 0,
-        perubahanDebit: actItem?.totalDebit || 0,
-        perubahanCredit: actItem?.totalCredit || 0,
-        akhirDebit: endItem.debitBalance,
-        akhirCredit: endItem.creditBalance,
-      };
-    });
-
-    const totals = detailedData.reduce(
-      (acc, curr) => ({
-        awalDebit: acc.awalDebit + curr.awalDebit,
-        awalCredit: acc.awalCredit + curr.awalCredit,
-        perubahanDebit: acc.perubahanDebit + curr.perubahanDebit,
-        perubahanCredit: acc.perubahanCredit + curr.perubahanCredit,
-        akhirDebit: acc.akhirDebit + curr.akhirDebit,
-        akhirCredit: acc.akhirCredit + curr.akhirCredit,
-      }),
-      {
-        awalDebit: 0,
-        awalCredit: 0,
-        perubahanDebit: 0,
-        perubahanCredit: 0,
-        akhirDebit: 0,
-        akhirCredit: 0,
-      },
-    );
-
-    return {
-      data: detailedData,
-      totals,
-      isBalanced: Math.abs(totals.akhirDebit - totals.akhirCredit) < 0.01,
-    };
+  getDetailedTrialBalance(...args: Parameters<FinanceReportService['getDetailedTrialBalance']>) {
+    return this.reportService.getDetailedTrialBalance(...args);
   }
 
-  async getBalanceSheet(date: Date) {
-    // Balance Sheet is a snapshot up to a certain date
-    const tb = await this.getTrialBalance(undefined, date);
-
-    // Calculate Net Income (Laba Berjalan)
-    // Revenue (4xxx) - Cost of Goods Sold (5xxx) - Operating Expenses (6xxx) - Other (8xxx)
-    const revenue = tb.data
-      .filter((a) => a.type === AccountType.REVENUE)
-      .reduce(
-        (sum, a) => sum + (Number(a.creditBalance) - Number(a.debitBalance)),
-        0,
-      );
-
-    const expenses = tb.data
-      .filter((a) => a.type === AccountType.EXPENSE)
-      .reduce(
-        (sum, a) => sum + (Number(a.debitBalance) - Number(a.creditBalance)),
-        0,
-      );
-
-    const netIncome = revenue - expenses;
-
-    // Grouping & Reclassification Logic (POINT B Phase 2)
-    const rawAssets = tb.data.filter((a) => a.type === AccountType.ASSET);
-    const rawLiabilities = tb.data.filter(
-      (a) => a.type === AccountType.LIABILITY,
-    );
-    const equity = tb.data.filter((a) => a.type === AccountType.EQUITY);
-
-    const assets: any[] = [];
-    const liabilities: any[] = [];
-
-    // Process Assets: If Credit -> move to Liabilities
-    rawAssets.forEach((a) => {
-      const balance = Number(a.debitBalance) - Number(a.creditBalance);
-      if (balance >= 0) {
-        assets.push({ ...a, balance });
-      } else {
-        liabilities.push({
-          ...a,
-          name: `${a.name} (Overdraft)`,
-          balance: Math.abs(balance),
-          isReclassified: true,
-        });
-      }
-    });
-
-    // Process Liabilities: If Debit -> move to Assets
-    rawLiabilities.forEach((l) => {
-      const balance = Number(l.creditBalance) - Number(l.debitBalance);
-      if (balance >= 0) {
-        liabilities.push({ ...l, balance });
-      } else {
-        assets.push({
-          ...l,
-          name: `${l.name} (Prepaid/Debit Balance)`,
-          balance: Math.abs(balance),
-          isReclassified: true,
-        });
-      }
-    });
-
-    const totalAssets = assets.reduce((sum, a) => sum + a.balance, 0);
-    const totalLiabilities = liabilities.reduce((sum, l) => sum + l.balance, 0);
-    const totalEquity =
-      equity.reduce(
-        (sum, a) => sum + (Number(a.creditBalance) - Number(a.debitBalance)),
-        0,
-      ) + netIncome;
-
-    return {
-      date,
-      assets: {
-        items: assets,
-        total: totalAssets,
-      },
-      liabilities: {
-        items: liabilities,
-        total: totalLiabilities,
-      },
-      equity: {
-        items: equity,
-        netIncome,
-        total: totalEquity,
-      },
-      totalLiabilitiesAndEquity: totalLiabilities + totalEquity,
-      isBalanced:
-        Math.abs(totalAssets - (totalLiabilities + totalEquity)) < 0.01,
-    };
+  getBalanceSheet(...args: Parameters<FinanceReportService['getBalanceSheet']>) {
+    return this.reportService.getBalanceSheet(...args);
   }
 
-  async getProfitLoss(startDate: Date, endDate: Date) {
-    const allAccounts = await this.prisma.account.findMany({
-      where: {
-        type: { in: [AccountType.REVENUE, AccountType.EXPENSE] },
-      },
-      include: {
-        parent: true,
-        children: true,
-      },
-      orderBy: { code: 'asc' },
-    });
-
-    const tb = await this.getTrialBalance(startDate, endDate);
-
-    const report = {
-      operatingRevenue: { groups: {} as Record<string, any[]>, total: 0 },
-      cogs: { groups: {} as Record<string, any[]>, total: 0 },
-      operatingExpenses: { groups: {} as Record<string, any[]>, total: 0 },
-      otherIncome: { groups: {} as Record<string, any[]>, total: 0 },
-      otherExpenses: { groups: {} as Record<string, any[]>, total: 0 },
-      grossProfit: 0,
-      operatingIncome: 0,
-      netProfit: 0,
-    };
-
-    allAccounts.forEach((acc) => {
-      const tbItem = tb.data.find((t) => t.id === acc.id);
-      const balance =
-        acc.type === AccountType.REVENUE
-          ? tbItem
-            ? Number(tbItem.creditBalance) - Number(tbItem.debitBalance)
-            : 0
-          : tbItem
-            ? Number(tbItem.debitBalance) - Number(tbItem.creditBalance)
-            : 0;
-
-      // Only include accounts with activity or if they are parents
-      if (balance === 0 && !acc.children?.length) {
-        // We might want to show zero balances for specific accounts requested by user,
-        // but for now let's keep it to active ones or all requested ones.
-        // The user wants to "keluarkan semua data", so let's include all.
-      }
-
-      const item = { id: acc.id, code: acc.code, name: acc.name, balance };
-
-      let target: any;
-      switch (acc.reportGroup) {
-        case ReportGroup.OPERATING_REVENUE:
-          target = report.operatingRevenue;
-          break;
-        case ReportGroup.COGS:
-          target = report.cogs;
-          break;
-        case ReportGroup.OPEX:
-          target = report.operatingExpenses;
-          break;
-        case ReportGroup.OTHER_REVENUE:
-          target = report.otherIncome;
-          break;
-        case ReportGroup.OTHER_EXPENSE:
-          target = report.otherExpenses;
-          break;
-        default:
-          return; // Skip if no report group
-      }
-
-      // If account has a parent, use parent name as the group name
-      // If it's a top-level account (no parent), it might be a group itself or a standalone item
-      const groupName = acc.parent ? acc.parent.name : 'LAINNYA';
-
-      // Special case: if it's a "Header" account (has children or is meant to be a group)
-      // For now, we use the requested structure: Group -> Leaf Items
-      if (!acc.parent) return; // Skip top-level headers from being listed as items, they are groups
-
-      if (!target.groups[groupName]) {
-        target.groups[groupName] = [];
-      }
-      target.groups[groupName].push(item);
-      target.total += balance;
-    });
-
-    report.grossProfit = report.operatingRevenue.total - report.cogs.total;
-    report.operatingIncome =
-      report.grossProfit - report.operatingExpenses.total;
-    report.netProfit =
-      report.operatingIncome +
-      report.otherIncome.total -
-      report.otherExpenses.total;
-
-    return report;
+  getProfitLoss(...args: Parameters<FinanceReportService['getProfitLoss']>) {
+    return this.reportService.getProfitLoss(...args);
   }
 
-  async getCashFlow(startDate: Date, endDate: Date) {
-    const journals = await this.prisma.journalEntry.findMany({
-      where: { date: { gte: startDate, lte: endDate } },
-      include: { lines: { include: { account: true } } },
-    });
-
-    const cf = {
-      operatingIn: 0,
-      operatingOut: 0,
-      investingOut: 0,
-      financingIn: 0,
-      netCashFlow: 0,
-    };
-
-    journals.forEach((j) => {
-      j.lines.forEach((l) => {
-        const acc = l.account;
-        const isCashAccount =
-          acc.type === AccountType.ASSET &&
-          (acc.code.startsWith('111') ||
-            acc.code.startsWith('112') ||
-            acc.code.startsWith('11'));
-
-        if (isCashAccount) {
-          // This line is a movement in cash
-          const amount = Number(l.debit) - Number(l.credit);
-          if (amount > 0) {
-            // Cash In
-            // Simple mapping for demonstration
-            if (
-              j.description.includes('AR') ||
-              j.description.includes('Payment')
-            )
-              cf.operatingIn += amount;
-            else cf.financingIn += amount;
-          } else {
-            // Cash Out
-            const absAmount = Math.abs(amount);
-            if (acc.code.startsWith('12') || acc.code.startsWith('15'))
-              cf.investingOut += absAmount; // Fixed Assets
-            else cf.operatingOut += absAmount;
-          }
-        }
-      });
-    });
-
-    cf.netCashFlow =
-      cf.operatingIn - cf.operatingOut - cf.investingOut + cf.financingIn;
-    return cf;
+  getCashFlow(...args: Parameters<FinanceReportService['getCashFlow']>) {
+    return this.reportService.getCashFlow(...args);
   }
 
-  async getGeneralLedger(accountId: string, startDate: Date, endDate: Date) {
-    const account = await this.prisma.account.findUnique({
-      where: { id: accountId },
-    });
-
-    if (!account) throw new NotFoundException('Account not found');
-
-    // 1. Calculate Beginning Balance (Saldo Awal)
-    // All transactions before startDate
-    const prevLines = await this.prisma.journalLine.findMany({
-      where: {
-        accountId,
-        journal: {
-          date: { lt: startDate },
-        },
-      },
-    });
-
-    let beginningBalance = 0;
-    prevLines.forEach((l) => {
-      if (account.normalBalance === NormalBalance.DEBIT) {
-        beginningBalance += Number(l.debit) - Number(l.credit);
-      } else {
-        beginningBalance += Number(l.credit) - Number(l.debit);
-      }
-    });
-
-    // 2. Fetch Transactions in Range
-    const currentLines = await this.prisma.journalLine.findMany({
-      where: {
-        accountId,
-        journal: {
-          date: { gte: startDate, lte: endDate },
-        },
-      },
-      include: {
-        journal: true,
-      },
-      orderBy: {
-        journal: { date: 'asc' },
-      },
-    });
-
-    // 3. Calculate Running Balance
-    let runningBalance = beginningBalance;
-    const ledger = currentLines.map((line) => {
-      if (account.normalBalance === NormalBalance.DEBIT) {
-        runningBalance += Number(line.debit) - Number(line.credit);
-      } else {
-        runningBalance += Number(line.credit) - Number(line.debit);
-      }
-
-      return {
-        id: line.id,
-        date: line.journal.date,
-        reference: line.journal.reference,
-        description: line.journal.description,
-        debit: Number(line.debit),
-        credit: Number(line.credit),
-        balance: runningBalance,
-        attachmentUrls: line.journal.attachmentUrls,
-      };
-    });
-
-    return {
-      account: {
-        code: account.code,
-        name: account.name,
-        normalBalance: account.normalBalance,
-      },
-      period: { startDate, endDate },
-      beginningBalance,
-      transactions: ledger,
-      endingBalance: runningBalance,
-    };
+  getGeneralLedger(...args: Parameters<FinanceReportService['getGeneralLedger']>) {
+    return this.reportService.getGeneralLedger(...args);
   }
 
   async getTaxes() {
@@ -2233,9 +1930,63 @@ export class FinanceService {
     });
   }
 
+  async createTax(dto: { name: string; rate: number; description?: string }) {
+    return this.prisma.taxRate.create({
+      data: {
+        name: dto.name,
+        rate: dto.rate,
+        description: dto.description,
+      },
+    });
+  }
+
+  async updateTax(id: string, dto: { name?: string; rate?: number; description?: string; isActive?: boolean }) {
+    return this.prisma.taxRate.update({
+      where: { id },
+      data: dto,
+    });
+  }
+
+  async deleteTax(id: string) {
+    return this.prisma.taxRate.delete({
+      where: { id },
+    });
+  }
+
   async getCurrencies() {
     return this.prisma.currency.findMany({
       orderBy: { code: 'asc' },
+    });
+  }
+
+  async createCurrency(dto: { code: string; symbol?: string; exchangeRate?: number; isMain?: boolean }) {
+    return this.prisma.currency.create({
+      data: {
+        code: dto.code.toUpperCase(),
+        symbol: dto.symbol,
+        exchangeRate: dto.exchangeRate ?? 1.0,
+        isMain: dto.isMain ?? false,
+      },
+    });
+  }
+
+  async updateCurrency(id: string, dto: { code?: string; symbol?: string; exchangeRate?: number; isMain?: boolean }) {
+    return this.prisma.currency.update({
+      where: { id },
+      data: dto,
+    });
+  }
+
+  async deleteCurrency(id: string) {
+    return this.prisma.currency.delete({
+      where: { id },
+    });
+  }
+
+  async updateExchangeRate(id: string, rate: number) {
+    return this.prisma.currency.update({
+      where: { id },
+      data: { exchangeRate: rate },
     });
   }
 
@@ -2363,5 +2114,39 @@ export class FinanceService {
         rejectAmount,
       },
     };
+  }
+
+  async getAutoJournalConfigs() {
+    return this.prisma.autoJournalConfig.findMany({
+      orderBy: { transactionType: 'asc' },
+    });
+  }
+
+  async upsertAutoJournalConfig(dto: {
+    transactionType: string;
+    coaDebetId: string;
+    coaCreditId: string;
+    description?: string;
+  }) {
+    return this.prisma.autoJournalConfig.upsert({
+      where: { transactionType: dto.transactionType },
+      update: {
+        coaDebetId: dto.coaDebetId,
+        coaCreditId: dto.coaCreditId,
+        description: dto.description,
+      },
+      create: {
+        transactionType: dto.transactionType,
+        coaDebetId: dto.coaDebetId,
+        coaCreditId: dto.coaCreditId,
+        description: dto.description,
+      },
+    });
+  }
+
+  async deleteAutoJournalConfig(transactionType: string) {
+    return this.prisma.autoJournalConfig.delete({
+      where: { transactionType },
+    });
   }
 }

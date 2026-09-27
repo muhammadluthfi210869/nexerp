@@ -11,18 +11,18 @@ import {
   DialogTitle, 
   DialogDescription,
   DialogFooter
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/dna";
+import { Button } from "@/components/dna";
+import { Badge } from "@/components/dna";
+import { Textarea } from "@/components/dna";
 import { 
   Select, 
   SelectContent, 
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+} from "@/components/dna";
+import { Label } from "@/components/dna";
 import { 
   Phone, 
   Clock, 
@@ -42,7 +42,7 @@ export function LeadBoard() {
   const { data: leads, isLoading } = useQuery<Lead[]>({
     queryKey: ["leads"],
     queryFn: async () => {
-      const res = await api.get("/leads");
+      const res = await api.get("/bussdev/leads");
       return res.data;
     }
   });
@@ -50,7 +50,7 @@ export function LeadBoard() {
   // Mutation for adding activity
   const activityMutation = useMutation({
     mutationFn: async (data: Partial<Activity>) => {
-      return api.post("/leads/activity", data);
+      return api.post(`/bussdev/lead/${selectedLead?.id}/activity`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
@@ -87,11 +87,11 @@ export function LeadBoard() {
         <Button 
           className="bg-white text-black hover:bg-emerald-500 hover:text-white font-black uppercase text-[10px] tracking-tight h-8"
           onClick={() => {
-             api.post("/leads", {
-                client_name: `Automated Lead ${Date.now().toString().slice(-6)}`,
-                phone_number: "081234567890",
+             api.post("/bussdev/lead", {
+                clientName: `Automated Lead ${Date.now().toString().slice(-6)}`,
+                contactInfo: "081234567890",
                 city: "Jakarta",
-                source_id: "TIKTOK"
+                source: "TIKTOK"
              }).then(() => {
                 queryClient.invalidateQueries({ queryKey: ["leads"] });
                 toast.success("New Client Vector synchronized.");
