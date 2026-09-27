@@ -94,8 +94,8 @@ UPDATE "accounts"
 --
 -- `gen_random_uuid()` because the `id` column has no database default: Prisma
 -- generates the UUID client-side, so a SQL insert must supply its own.
-INSERT INTO "accounts" ("id", "code", "name", "isActive", "allowManualJournal",
+INSERT INTO "accounts" ("id", "code", "name", "isActive",
                         "type", "normalBalance", "reportGroup")
-SELECT gen_random_uuid(), '6224', 'Beban Administrasi Bank', true, true,
+SELECT gen_random_uuid(), '6224', 'Beban Administrasi Bank', true,
        'EXPENSE', 'DEBIT', 'OPEX'
  WHERE NOT EXISTS (SELECT 1 FROM "accounts" WHERE "code" = '6224');
