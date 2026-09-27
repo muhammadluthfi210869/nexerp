@@ -53,9 +53,45 @@ const rel = p => p.replace(ROOT + path.sep, '').replace(/\\/g, '/');
 function normPath(raw) {
   let p = String(raw).trim();
   p = p.replace(/^https?:\/\/[^/]+/i, '');      // absolute URL -> path
+
+  // Replace balanced ${...} template holes with :p or strip if query-only
+  let depth = 0;
+  let out = '';
+  let inHole = false;
+  let holeBuf = '';
+  for (let i = 0; i < p.length; i++) {
+    if (p[i] === '$' && p[i + 1] === '{') {
+      if (!inHole) {
+        inHole = true;
+        depth = 1;
+        holeBuf = '';
+        i++;
+        continue;
+      }
+    }
+    if (inHole) {
+      if (p[i] === '{') depth++;
+      else if (p[i] === '}') {
+        depth--;
+        if (depth === 0) {
+          inHole = false;
+          // If hole is an inline conditional query param (e.g. ${q ? `?search=...` : ""}), skip
+          if (/^\s*\w+\s*\?\s*[`'"]\?/.test(holeBuf)) {
+            // query string hole
+          } else {
+            out += ':p';
+          }
+        }
+      } else {
+        holeBuf += p[i];
+      }
+      continue;
+    }
+    out += p[i];
+  }
+  p = out;
+
   p = p.split('?')[0].split('#')[0];
-  p = p.replace(/\$\{[^}]*\}[^/`'"]*/g, ':p');  // complete template hole
-  p = p.replace(/\$\{?[^}]*$/, '');             // truncated template hole
   p = p.replace(/\{[^}]*\}/g, ':p');            // {id} -> :p
   p = p.replace(/\/:p(?=\/|$)/g, '/:p');
   p = p.replace(/^\/?(api|v1)(\/|$)/, '');      // strip one leading /api or /v1

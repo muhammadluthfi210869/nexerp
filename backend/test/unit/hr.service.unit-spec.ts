@@ -194,7 +194,15 @@ describe('HrService — Unit', () => {
         where: { id: 'EMP-1' },
         include: {
           roles: true,
-          user: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+              fullName: true,
+              status: true,
+              roles: true,
+            },
+          },
           manager: { select: { id: true, name: true } },
           subordinates: { select: { id: true, name: true, roles: true } },
         },

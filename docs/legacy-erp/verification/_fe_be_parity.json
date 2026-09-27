@@ -1,20 +1,20 @@
 {
-  "generated_at": "2026-09-25T01:58:55.367Z",
+  "generated_at": "2026-09-27T15:29:23.988Z",
   "sources": {
     "backend_swagger": {
       "path": "backend/swagger-spec.json",
-      "ops": 991,
+      "ops": 996,
       "note": "ground truth — emitted by NestJS at boot"
     },
     "backend_source_parse": {
-      "ops": 991,
+      "ops": 1010,
       "files_with_multiple_controllers": [
         "backend/src/modules/notification/notification.controller.ts",
         "backend/src/modules/scm/controllers/purchase-payments.controller.ts",
         "backend/src/modules/scm/controllers/purchase-requests.controller.ts"
       ]
     },
-    "frontend_calls": 420,
+    "frontend_calls": 464,
     "screen_contract": {
       "total_screens": 184,
       "screens_with_data_source": 164,
@@ -22,16 +22,34 @@
     }
   },
   "parser_validation": {
-    "source_routes_not_in_swagger_explained": 0,
+    "source_routes_not_in_swagger_explained": 14,
     "source_routes_not_in_swagger_unexplained": [],
     "swagger_routes_not_in_source": [],
     "ok": true
   },
   "dead_controllers": {
-    "unserved_controller_files": [],
-    "unreachable_modules": [],
+    "unserved_controller_files": [
+      {
+        "file": "backend/src/modules/wa-self-qr/connect-page.controller.ts",
+        "classes": [
+          "ConnectPageController"
+        ],
+        "listed_by_any_module": true
+      },
+      {
+        "file": "backend/src/modules/wa-self-qr/wa-self-qr.controller.ts",
+        "classes": [
+          "WaSelfQrController"
+        ],
+        "listed_by_any_module": true
+      }
+    ],
+    "unreachable_modules": [
+      "WaSelfQrModule",
+      "SelfQrAppModule"
+    ],
     "reachable_modules": 75,
-    "total_modules": 75
+    "total_modules": 77
   },
   "violations": {
     "fe_calls_with_no_backend_route": [],
@@ -616,81 +634,9 @@
         ]
       },
       {
-        "route": "GET dashboards/busdev",
-        "screens": [
-          "SCR-DASH-003"
-        ]
-      },
-      {
-        "route": "GET dashboards/executive",
-        "screens": [
-          "SCR-DASH-001"
-        ]
-      },
-      {
-        "route": "GET dashboards/finance",
-        "screens": [
-          "SCR-DASH-002"
-        ]
-      },
-      {
-        "route": "GET dashboards/hr",
-        "screens": [
-          "SCR-DASH-009"
-        ]
-      },
-      {
-        "route": "GET dashboards/legality",
-        "screens": [
-          "SCR-DASH-010"
-        ]
-      },
-      {
         "route": "GET dashboards/marketing",
         "screens": [
           "SCR-DASH-008"
-        ]
-      },
-      {
-        "route": "GET dashboards/notifications",
-        "screens": [
-          "SCR-DASH-011"
-        ]
-      },
-      {
-        "route": "GET dashboards/procurement",
-        "screens": [
-          "SCR-DASH-013"
-        ]
-      },
-      {
-        "route": "GET dashboards/production",
-        "screens": [
-          "SCR-DASH-004"
-        ]
-      },
-      {
-        "route": "GET dashboards/qc",
-        "screens": [
-          "SCR-DASH-006"
-        ]
-      },
-      {
-        "route": "GET dashboards/rnd",
-        "screens": [
-          "SCR-DASH-007"
-        ]
-      },
-      {
-        "route": "GET dashboards/system-errors",
-        "screens": [
-          "SCR-DASH-012"
-        ]
-      },
-      {
-        "route": "GET dashboards/warehouse",
-        "screens": [
-          "SCR-DASH-005"
         ]
       },
       {
@@ -757,12 +703,6 @@
         "route": "GET finance/cash-banks/:p",
         "screens": [
           "SCR-107"
-        ]
-      },
-      {
-        "route": "GET finance/fixed-assets",
-        "screens": [
-          "SCR-116"
         ]
       },
       {
@@ -945,45 +885,15 @@
         ]
       },
       {
-        "route": "GET reports/ap-aging",
-        "screens": [
-          "SCR-132"
-        ]
-      },
-      {
-        "route": "GET reports/budget-vs-actual",
-        "screens": [
-          "SCR-135"
-        ]
-      },
-      {
-        "route": "GET reports/cash-flow",
-        "screens": [
-          "SCR-133"
-        ]
-      },
-      {
         "route": "GET reports/general-ledger",
         "screens": [
           "SCR-125"
         ]
       },
       {
-        "route": "GET reports/mutation-goods",
-        "screens": [
-          "SCR-128"
-        ]
-      },
-      {
         "route": "GET reports/profit-loss",
         "screens": [
           "SCR-122"
-        ]
-      },
-      {
-        "route": "GET reports/trial-balance",
-        "screens": [
-          "SCR-124"
         ]
       },
       {
@@ -1011,12 +921,6 @@
         "route": "GET rnd/request-cogs/:p",
         "screens": [
           "SCR-071"
-        ]
-      },
-      {
-        "route": "GET roles",
-        "screens": [
-          "SCR-009"
         ]
       },
       {
@@ -2506,81 +2410,9 @@
           ]
         },
         {
-          "route": "GET dashboards/busdev",
-          "screens": [
-            "SCR-DASH-003"
-          ]
-        },
-        {
-          "route": "GET dashboards/executive",
-          "screens": [
-            "SCR-DASH-001"
-          ]
-        },
-        {
-          "route": "GET dashboards/finance",
-          "screens": [
-            "SCR-DASH-002"
-          ]
-        },
-        {
-          "route": "GET dashboards/hr",
-          "screens": [
-            "SCR-DASH-009"
-          ]
-        },
-        {
-          "route": "GET dashboards/legality",
-          "screens": [
-            "SCR-DASH-010"
-          ]
-        },
-        {
           "route": "GET dashboards/marketing",
           "screens": [
             "SCR-DASH-008"
-          ]
-        },
-        {
-          "route": "GET dashboards/notifications",
-          "screens": [
-            "SCR-DASH-011"
-          ]
-        },
-        {
-          "route": "GET dashboards/procurement",
-          "screens": [
-            "SCR-DASH-013"
-          ]
-        },
-        {
-          "route": "GET dashboards/production",
-          "screens": [
-            "SCR-DASH-004"
-          ]
-        },
-        {
-          "route": "GET dashboards/qc",
-          "screens": [
-            "SCR-DASH-006"
-          ]
-        },
-        {
-          "route": "GET dashboards/rnd",
-          "screens": [
-            "SCR-DASH-007"
-          ]
-        },
-        {
-          "route": "GET dashboards/system-errors",
-          "screens": [
-            "SCR-DASH-012"
-          ]
-        },
-        {
-          "route": "GET dashboards/warehouse",
-          "screens": [
-            "SCR-DASH-005"
           ]
         },
         {
@@ -2623,12 +2455,6 @@
           "route": "GET entities/:p/:p/transitions",
           "screens": [
             "SCR-143"
-          ]
-        },
-        {
-          "route": "GET finance/fixed-assets",
-          "screens": [
-            "SCR-116"
           ]
         },
         {
@@ -2681,45 +2507,15 @@
           ]
         },
         {
-          "route": "GET reports/ap-aging",
-          "screens": [
-            "SCR-132"
-          ]
-        },
-        {
-          "route": "GET reports/budget-vs-actual",
-          "screens": [
-            "SCR-135"
-          ]
-        },
-        {
-          "route": "GET reports/cash-flow",
-          "screens": [
-            "SCR-133"
-          ]
-        },
-        {
           "route": "GET reports/general-ledger",
           "screens": [
             "SCR-125"
           ]
         },
         {
-          "route": "GET reports/mutation-goods",
-          "screens": [
-            "SCR-128"
-          ]
-        },
-        {
           "route": "GET reports/profit-loss",
           "screens": [
             "SCR-122"
-          ]
-        },
-        {
-          "route": "GET reports/trial-balance",
-          "screens": [
-            "SCR-124"
           ]
         },
         {
@@ -2735,12 +2531,6 @@
             "SCR-098",
             "SCR-099",
             "SCR-100"
-          ]
-        },
-        {
-          "route": "GET roles",
-          "screens": [
-            "SCR-009"
           ]
         },
         {
@@ -2780,18 +2570,18 @@
     "fe_calls_unmatched": 0,
     "fe_calls_unmatched_dead_controller": 0,
     "fe_method_mismatch": 0,
-    "unserved_controller_files": 0,
-    "unreachable_modules": 0,
+    "unserved_controller_files": 2,
+    "unreachable_modules": 2,
     "screen_ops_unmatched": 76,
     "screen_ops_unmatched_unclassified": 0,
     "screen_ops_unmatched_bad_target": 0,
     "screen_ops_renamed": 49,
     "screen_ops_absent": 26,
     "screen_ops_out_of_scope": 1,
-    "screen_ops_never_called": 121,
+    "screen_ops_never_called": 102,
     "screen_ops_never_called_absent": 26,
     "screen_ops_never_called_renamed": 49,
     "screen_ops_never_called_oos": 1,
-    "screen_ops_live_but_unwired": 45
+    "screen_ops_live_but_unwired": 26
   }
 }

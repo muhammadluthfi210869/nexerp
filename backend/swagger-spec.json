@@ -4831,23 +4831,6 @@
         "operationId": "LeadsController_list",
         "parameters": [
           {
-            "name": "stage",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "LEADS_MASUK",
-                "FOLLOW_UP",
-                "INTERESTED",
-                "DEAL_NEGOTIATION",
-                "DEAL_WON",
-                "DEAL_LOST",
-                "NURTURING"
-              ]
-            }
-          },
-          {
             "name": "assignedToId",
             "required": true,
             "in": "query",
@@ -4924,23 +4907,6 @@
       "get": {
         "operationId": "LeadsController_listLive",
         "parameters": [
-          {
-            "name": "stage",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "LEADS_MASUK",
-                "FOLLOW_UP",
-                "INTERESTED",
-                "DEAL_NEGOTIATION",
-                "DEAL_WON",
-                "DEAL_LOST",
-                "NURTURING"
-              ]
-            }
-          },
           {
             "name": "assignedToId",
             "required": true,
@@ -11085,20 +11051,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "status",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "PENDING",
-                "PAID",
-                "PARTIAL",
-                "OVERDUE"
-              ]
-            }
           }
         ],
         "responses": {
@@ -11302,20 +11254,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "status",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "PENDING",
-                "PAID",
-                "PARTIAL",
-                "OVERDUE"
-              ]
-            }
           }
         ],
         "responses": {
@@ -11498,20 +11436,6 @@
             "in": "query",
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "status",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "PENDING",
-                "PAID",
-                "PARTIAL",
-                "OVERDUE"
-              ]
             }
           }
         ],
@@ -18722,33 +18646,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "status",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "PENDING",
-                "APPROVED",
-                "REJECTED",
-                "DISBURSED"
-              ]
-            }
-          },
-          {
-            "name": "type",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "LEAVE",
-                "OVERTIME",
-                "REIMBURSE"
-              ]
-            }
           }
         ],
         "responses": {
@@ -23538,19 +23435,6 @@
             }
           },
           {
-            "name": "status",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "OPEN",
-                "CLOSED",
-                "ARCHIVED"
-              ]
-            }
-          },
-          {
             "name": "mine",
             "required": true,
             "in": "query",
@@ -24935,25 +24819,12 @@
     }
   },
   "info": {
-    "title": "NexERP API",
+    "title": "Porto Aureon ERP API",
     "description": "The ultimate manufacturing ERP system API documentation",
     "version": "4.0",
     "contact": {}
   },
-  "tags": [
-    {
-      "name": "rnd",
-      "description": ""
-    },
-    {
-      "name": "finance",
-      "description": ""
-    },
-    {
-      "name": "bussdev",
-      "description": ""
-    }
-  ],
+  "tags": [],
   "servers": [],
   "components": {
     "schemas": {

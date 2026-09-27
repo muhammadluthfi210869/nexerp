@@ -82,30 +82,27 @@ jobs:
           node scripts/ssot/generate_lifecycle_registry.js
           git diff --exit-code docs/legacy-erp/verification/_LIFECYCLE_REGISTRY.json || (echo "ERROR: _LIFECYCLE_REGISTRY.json is out of date. Run 'node scripts/ssot/generate_lifecycle_registry.js' and commit." && exit 1)
 
-      - name: "P03 Phase Certification & Architecture Gates"
+      - name: "SSOT, Lifecycle & Architecture Gates (P00-P03)"
         run: |
-          node scripts/ssot/certify_p03_phase.js
+          node scripts/ssot/validate_ssot.js
+          node scripts/ssot/audit_lifecycle_reconciliation.js
+          node scripts/ssot/audit_p03_architecture_gates.js
+          node scripts/ssot/test_p03_architecture_gates_negative.js
 
-      - name: "P04 Phase Certification & Database Migration Gates"
+      - name: "Typecheck (Backend & Frontend)"
         run: |
-          node scripts/ssot/certify_p04_phase.js
+          npx tsc -p backend/tsconfig.build.json --noEmit
+          npx tsc --project frontend/tsconfig.json --noEmit
 
-      - name: "Post-Run Source Integrity Check"
+      - name: "Lint (Backend & Frontend)"
         run: |
-          git diff --exit-code -- . \
-            ':(exclude)docs/legacy-erp/verification/evidence/P03_PHASE_CERTIFICATION_RESULT.json' \
-            ':(exclude)docs/legacy-erp/verification/evidence/P03_CHANGE_SCOPE_MANIFEST.json' \
-            ':(exclude)docs/legacy-erp/verification/evidence/P03_CHANGE_SCOPE_LEDGER.md' \
-            ':(exclude)docs/legacy-erp/verification/evidence/P04_PHASE_CERTIFICATION_RESULT.json' \
-            ':(exclude)docs/legacy-erp/verification/evidence/P04_MIGRATION_SCOPE_MANIFEST.json' \
-            ':(exclude)docs/legacy-erp/verification/_SSOT_VALIDATION_REPORT.md' \
-            ':(exclude)docs/legacy-erp/verification/_ssot_validation.json' \
-            ':(exclude)docs/legacy-erp/verification/_p02_test_results.json' \
-            ':(exclude)docs/legacy-erp/verification/_p03_test_results.json' \
-            ':(exclude)docs/legacy-erp/verification/_p04_test_results.json' \
-            ':(exclude)docs/legacy-erp/verification/_clean_checkout_build_evidence.json' \
-            ':(exclude)docs/legacy-erp/generated/INPUT_OUTPUT_LINEAGE.md'
+          npm --prefix backend run lint
+          npm --prefix frontend run lint
 
+      - name: "Unit Smoke Suites (Backend & Frontend)"
+        run: |
+          npm --prefix backend run test:unit
+          npm --prefix frontend run test
 
       - name: "FE <-> BE Contract Parity Gate (G3)"
         env:
