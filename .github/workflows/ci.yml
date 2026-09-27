@@ -67,6 +67,7 @@ jobs:
           npm ci --ignore-scripts=false --no-audit
           npm --prefix backend ci --ignore-scripts=false --no-audit
           npm --prefix frontend ci --ignore-scripts=false --no-audit
+          npm --prefix frontend i --no-save --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu@1.0.0-rc.17
 
       - name: "Security & Secret Gate (P00)"
         run: |
@@ -164,6 +165,7 @@ jobs:
           npm ci --ignore-scripts=false --no-audit
           npm --prefix backend ci --ignore-scripts=false --no-audit
           npm --prefix frontend ci --ignore-scripts=false --no-audit
+          npm --prefix frontend i --no-save --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu@1.0.0-rc.17
 
       - name: "Security, SSOT, Lifecycle & Architecture Gates (P00-P03)"
         run: |
