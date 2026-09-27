@@ -20,6 +20,7 @@ frontend/.env
 *.zip
 *.tar.gz
 *.sql
+!backend/prisma/migrations/**/*.sql
 *.sql.gz
 _backup*
 _archive/
