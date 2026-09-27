@@ -89,8 +89,8 @@ describe('P08-SF4 design approval + permit expiry (real services, real audit + o
   const reasonOf = (err: any): string | undefined =>
     err?.response?.reason_code ?? err?.reason_code;
 
-  const daysFromNow = (days: number) => {
-    const d = new Date();
+  const daysFromNow = (days: number, base: Date = new Date()) => {
+    const d = new Date(base.getTime());
     d.setDate(d.getDate() + days);
     return d;
   };
@@ -558,21 +558,22 @@ describe('P08-SF4 design approval + permit expiry (real services, real audit + o
 
   describe('BUS-RULE-112 — one permit expiry policy', () => {
     it('buckets at 0 / 30 / 90 and never calls an unknown expiry safe', () => {
-      expect(permitExpiryBucket(daysFromNow(-1))).toBe('EXPIRED');
-      expect(permitExpiryBucket(daysFromNow(0))).toBe('EXPIRED');
-      expect(permitExpiryBucket(daysFromNow(1))).toBe('CRITICAL');
-      expect(permitExpiryBucket(daysFromNow(30))).toBe('CRITICAL');
-      expect(permitExpiryBucket(daysFromNow(31))).toBe('WARNING');
-      expect(permitExpiryBucket(daysFromNow(90))).toBe('WARNING');
-      expect(permitExpiryBucket(daysFromNow(91))).toBe('SAFE');
-      expect(permitExpiryBucket(null)).toBe('NO_EXPIRY');
-      expect(permitDaysLeft(null)).toBeNull();
+      const now = new Date();
+      expect(permitExpiryBucket(daysFromNow(-1, now), now)).toBe('EXPIRED');
+      expect(permitExpiryBucket(daysFromNow(0, now), now)).toBe('EXPIRED');
+      expect(permitExpiryBucket(daysFromNow(1, now), now)).toBe('CRITICAL');
+      expect(permitExpiryBucket(daysFromNow(30, now), now)).toBe('CRITICAL');
+      expect(permitExpiryBucket(daysFromNow(31, now), now)).toBe('WARNING');
+      expect(permitExpiryBucket(daysFromNow(90, now), now)).toBe('WARNING');
+      expect(permitExpiryBucket(daysFromNow(91, now), now)).toBe('SAFE');
+      expect(permitExpiryBucket(null, now)).toBe('NO_EXPIRY');
+      expect(permitDaysLeft(null, now)).toBeNull();
 
-      expect(permitAuditRisk(null)).toBe('DELAY_AUDIT');
-      expect(permitAuditRisk(daysFromNow(-5))).toBe('CRITICAL');
-      expect(permitAuditRisk(daysFromNow(10))).toBe('CRITICAL');
-      expect(permitAuditRisk(daysFromNow(60))).toBe('DELAY_AUDIT');
-      expect(permitAuditRisk(daysFromNow(400))).toBe('OK');
+      expect(permitAuditRisk(null, now)).toBe('DELAY_AUDIT');
+      expect(permitAuditRisk(daysFromNow(-5, now), now)).toBe('CRITICAL');
+      expect(permitAuditRisk(daysFromNow(10, now), now)).toBe('CRITICAL');
+      expect(permitAuditRisk(daysFromNow(60, now), now)).toBe('DELAY_AUDIT');
+      expect(permitAuditRisk(daysFromNow(400, now), now)).toBe('OK');
     });
 
     it('derives the permit audit risk at insert and respects a caller-supplied status', async () => {

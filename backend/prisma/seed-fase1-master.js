@@ -243,27 +243,43 @@ async function main() {
 
   const seedPassword = process.env.SEED_DEFAULT_PASSWORD || require('crypto').randomBytes(16).toString('hex');
   const defaultPasswordHash = await bcrypt.hash(seedPassword, 10);
+  const DEFAULT_ORG = 'a0000000-0000-4000-8000-000000000001';
   let userCount = 0;
   for (const r of userRows) {
     if (!r.email || !r.nama) continue;
     const roleKey = (r.hak_akses || '').toLowerCase().trim();
     const roleEnum = roleMap[roleKey] || 'SUPER_ADMIN';
 
-    await prisma.user.upsert({
+    const seededUser = await prisma.user.upsert({
       where: { email: r.email },
       update: {
         fullName: r.nama,
         status: 'ACTIVE',
-        roles: [roleEnum]
+        roles: [roleEnum],
+        organizationId: DEFAULT_ORG,
       },
       create: {
         fullName: r.nama,
         email: r.email,
         passwordHash: defaultPasswordHash,
         status: 'ACTIVE',
-        roles: [roleEnum]
+        roles: [roleEnum],
+        organizationId: DEFAULT_ORG,
       }
     });
+
+    const existingScope = await prisma.tenantScope.findFirst({ where: { userId: seededUser.id } });
+    if (!existingScope) {
+      await prisma.tenantScope.create({
+        data: {
+          userId: seededUser.id,
+          organizationId: DEFAULT_ORG,
+          effectiveFrom: new Date('2020-01-01'),
+          primary: true,
+        },
+      });
+    }
+
     userCount++;
   }
   console.log(`✅ ${userCount} Users seeded with encrypted credentials.`);
@@ -391,6 +407,7 @@ async function main() {
       contactInfo: r.phone || '-',
       city: r.kota || null,
       source: 'LEGACY_KIL_IMPORT',
+      organizationId: DEFAULT_ORG,
       // No CSV column carries this. Empty rather than an invented category.
       productInterest: '',
       // WON_DEAL, not the NEW_LEAD column default: these are parties the legacy system already
