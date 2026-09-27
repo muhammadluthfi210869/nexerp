@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { FinanceService } from './finance.service';
 import { FinanceReportService } from './finance-report.service';
 import { FinanceController } from './finance.controller';
@@ -9,7 +9,6 @@ import { JournalEngineService } from './journal-engine.service';
 
 import { ScmModule } from '../scm/scm.module';
 import { CreativeModule } from '../creative/creative.module';
-import { WarehouseModule } from '../warehouse/warehouse.module';
 
 // Sprint 1 entity modules
 import { BillsModule } from './bills/bills.module';
@@ -45,7 +44,6 @@ import { BillMatchResultsModule } from './bill-match-results/bill-match-results.
     PrismaModule,
     ScmModule,
     CreativeModule,
-    forwardRef(() => WarehouseModule),
     // Sprint 1 entity modules
     BillsModule,
     BillLineItemsModule,

@@ -55,7 +55,6 @@ const buildFacade = (reportService: unknown) =>
     {} as never, // idGenerator
     {} as never, // scmService
     {} as never, // creativeService
-    {} as never, // moduleRef
     reportService as never,
   );
 

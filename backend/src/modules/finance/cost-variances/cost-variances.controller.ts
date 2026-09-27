@@ -1,10 +1,22 @@
-import { Controller, Get, Post, Param, Body, Query, Req } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { RolesGuard } from '../../auth/roles.guard';
+import { Roles } from '../../auth/roles.decorator';
+import { UserRole } from '@prisma/client';
+import { Controller, Get, Post, Param, Body, Query, Req, UseGuards } from '@nestjs/common';
 import { CostVariancesService } from './cost-variances.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateCostVarianceDto } from './dto/cost-variances.dto';
 
 @ApiTags('finance/cost-variances')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(
+  UserRole.SUPER_ADMIN,
+  UserRole.ADMIN,
+  UserRole.FINANCE,
+  UserRole.DIRECTOR,
+  UserRole.HEAD_OPS,
+)
 @Controller('finance/cost-variances')
 export class CostVariancesController {
   constructor(private service: CostVariancesService) {}

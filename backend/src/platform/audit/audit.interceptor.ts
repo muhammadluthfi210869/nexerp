@@ -72,6 +72,12 @@ function headerValue(req: Request, name: string): string | undefined {
 
 function sanitizePayload(obj: unknown, depth = 0): unknown {
   if (depth > MAX_DEPTH || obj === null || typeof obj !== 'object') return obj;
+  if (typeof (obj as any).toJSON === 'function') {
+    return (obj as any).toJSON();
+  }
+  if (typeof (obj as any).toNumber === 'function') {
+    return (obj as any).toNumber();
+  }
   if (Array.isArray(obj)) {
     return obj
       .slice(0, MAX_ARRAY_ITEMS)
@@ -79,6 +85,7 @@ function sanitizePayload(obj: unknown, depth = 0): unknown {
   }
   const clean: Jsonish = {};
   for (const [key, val] of Object.entries(obj as Jsonish)) {
+    if (typeof val === 'function') continue;
     clean[key] = SENSITIVE_KEY_PARTS.some((s) => key.toLowerCase().includes(s))
       ? '[REDACTED]'
       : sanitizePayload(val, depth + 1);

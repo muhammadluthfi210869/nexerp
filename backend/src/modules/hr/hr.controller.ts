@@ -7,8 +7,13 @@ import {
   Body,
   Query,
   Param,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '@prisma/client';
 
 import { HrService } from './hr.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
@@ -19,6 +24,8 @@ import { TicketStatus, TicketType } from '@prisma/client';
 
 @ApiTags('hr')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.SUPER_ADMIN, UserRole.HR, UserRole.ADMIN, UserRole.DIRECTOR, UserRole.HEAD_OPS)
 @Controller('hr')
 export class HrController {
   constructor(private readonly hrService: HrService) {}
@@ -113,11 +120,13 @@ export class HrController {
   }
 
   @Post('attendance/clock-in')
+  @Roles(...Object.values(UserRole))
   clockIn(@Body() body: { employeeId: string; lat: number; lng: number }) {
     return this.hrService.clockIn(body.employeeId, body.lat, body.lng);
   }
 
   @Post('attendance/clock-out')
+  @Roles(...Object.values(UserRole))
   clockOut(@Body() dto: ClockOutDto) {
     return this.hrService.clockOut(dto.employeeId);
   }
@@ -125,6 +134,7 @@ export class HrController {
   // --- TICKETS (CUTI, IZIN, LEMBUR, REIMBURSE) (BUS-RULE-075) ---
 
   @Post('tickets')
+  @Roles(...Object.values(UserRole))
   @ApiOperation({ summary: 'Create a request ticket (Leave, Overtime, Reimbursement)' })
   createTicket(
     @Body()

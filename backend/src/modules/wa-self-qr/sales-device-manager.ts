@@ -10,7 +10,13 @@
  * surface is added. Inbound + history observation only.
  */
 
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
@@ -136,7 +142,7 @@ export class SalesDeviceManager implements OnModuleInit {
     expiresAt: Date;
   } {
     const dev = this.devices.get(internalCode);
-    if (!dev) throw new Error(`unknown device: ${internalCode}`);
+    if (!dev) throw new NotFoundException(`unknown device: ${internalCode}`);
     // Invalidate any existing token for the same device.
     for (const [key, tok] of this.tokens) {
       if (tok.deviceInternalCode === internalCode) this.tokens.delete(key);
@@ -235,7 +241,7 @@ export class SalesDeviceManager implements OnModuleInit {
     rawPhone: string;
   }): Promise<void> {
     const normalizedPhone = normalizeIdPhone(d.rawPhone);
-    if (!normalizedPhone) throw new Error(`phone cannot be normalized: ${d.rawPhone}`);
+    if (!normalizedPhone) throw new BadRequestException(`phone cannot be normalized: ${d.rawPhone}`);
 
     const existing = await this.prisma.selfQrDevice.findUnique({
       where: { internalCode: d.internalCode },
@@ -281,7 +287,7 @@ export class SalesDeviceManager implements OnModuleInit {
   /// issued. Called from the controller's token-create handler.
   async startDeviceTransport(internalCode: string): Promise<void> {
     const dev = this.devices.get(internalCode);
-    if (!dev) throw new Error(`unknown device: ${internalCode}`);
+    if (!dev) throw new NotFoundException(`unknown device: ${internalCode}`);
     if (dev.transport) return; // already started
     const authDir = path.join(this.authRoot, internalCode);
     fs.mkdirSync(authDir, { recursive: true });

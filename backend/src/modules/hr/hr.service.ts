@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   BadRequestException,
   ForbiddenException,
   NotFoundException,
@@ -22,6 +23,8 @@ import { UpdateEmployeeDto } from './dto/update-employee.dto';
 
 @Injectable()
 export class HrService {
+  private readonly logger = new Logger(HrService.name);
+
   constructor(
     private prisma: PrismaService,
     private encryption: EncryptionService,
@@ -546,7 +549,8 @@ export class HrService {
       try {
         const kpiScore = await this.calculateEmployeeKPI(emp.id, period.name);
         incentive = Math.round(kpiScore * 1000);
-      } catch {
+      } catch (err: any) {
+        this.logger.warn(`Failed to calculate KPI incentive for employee ${emp.id}: ${err?.message ?? 'unknown'}`);
         incentive = 0;
       }
 
@@ -1101,7 +1105,7 @@ export class HrService {
       where: { isActive: true },
       include: {
         roles: true,
-        user: true,
+        user: { select: { id: true, email: true, fullName: true, status: true, roles: true } },
         manager: { select: { id: true, name: true } },
       },
     });
@@ -1148,7 +1152,7 @@ export class HrService {
       where: { id },
       include: {
         roles: true,
-        user: true,
+        user: { select: { id: true, email: true, fullName: true, status: true, roles: true } },
         manager: { select: { id: true, name: true } },
         subordinates: { select: { id: true, name: true, roles: true } },
       },

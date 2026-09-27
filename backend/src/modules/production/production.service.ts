@@ -491,15 +491,24 @@ export class ProductionService {
     reason: string;
     changes: any;
   }) {
+    const isUuid =
+      typeof dto.requestedBy === 'string' &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        dto.requestedBy,
+      );
+
     const log = await this.prisma.stateTransitionLog.create({
       data: {
         entityType: 'FORMULA_ADJUSTMENT',
         entityId: dto.formulaId,
         fromState: 'PENDING',
         toState: 'REQUESTED',
-        changedById: dto.requestedBy,
+        changedById: isUuid ? dto.requestedBy : null,
         reason: dto.reason,
-        metadata: dto.changes,
+        metadata: {
+          changes: dto.changes,
+          requestedBy: dto.requestedBy,
+        },
       },
     });
 

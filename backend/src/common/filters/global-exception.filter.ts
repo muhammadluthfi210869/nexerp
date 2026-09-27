@@ -73,10 +73,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         `Unhandled exception on ${request.method} ${request.url}`,
         err.stack,
       );
-      detail = err.message ?? detail;
+      detail = process.env.NODE_ENV === 'production'
+        ? 'An unexpected internal error occurred'
+        : (err.message ?? detail);
     }
 
-    const body = toProblemDetails(status, code, detail, request.url, details);
+    const body = {
+      ...toProblemDetails(status, code, detail, request.url, details),
+      message: detail,
+    };
 
     const headers = corsHeaders(request);
     for (const [key, value] of Object.entries(headers)) {

@@ -30,6 +30,15 @@ export class ProductionWorkOrderService {
     targetCompletion: string | Date;
     notes?: string;
   }) {
+    if (!dto || !dto.leadId || !dto.targetQty || !dto.targetCompletion) {
+      throw new BadRequestException('leadId, targetQty, and targetCompletion are required');
+    }
+
+    const targetDate = new Date(dto.targetCompletion);
+    if (isNaN(targetDate.getTime())) {
+      throw new BadRequestException('Invalid targetCompletion date format');
+    }
+
     const woNumber = await this.idGenerator.generateId('WO');
 
     return this.prisma.$transaction(async (tx: any) => {
@@ -37,11 +46,21 @@ export class ProductionWorkOrderService {
         data: {
           woNumber,
           leadId: dto.leadId,
-          targetQty: dto.targetQty,
-          targetCompletion: new Date(dto.targetCompletion),
+          targetQty: Number(dto.targetQty),
+          targetCompletion: targetDate,
           stage: 'WAITING_MATERIAL',
         },
-        include: { lead: true },
+        include: {
+          lead: {
+            include: {
+              sampleRequests: {
+                include: {
+                  billOfMaterials: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       // Create Material Requisitions from BOM

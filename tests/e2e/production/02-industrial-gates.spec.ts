@@ -6,21 +6,29 @@ test.describe('Industrial Gates — Security & Validation', () => {
   let detailId: string;
   let woId: string;
 
+  let scheduleCounter = 0;
+
   test.beforeEach(async ({ request }) => {
-    // Create a fresh WO + schedule for each gate test
+    scheduleCounter++;
+    // Create a fresh WO + schedule for each gate test with unique non-overlapping time window
     const woRes = await request.post(`${API_BASE}/production/work-orders`, {
       data: { leadId: TEST_LEAD_ID, targetQty: 100, targetCompletion: '2026-07-30' }
     });
     const wo = await woRes.json();
     woId = wo.id;
 
+    // Use unique timestamp + counter offset to prevent collision
+    const baseTime = Date.now() + (100 + scheduleCounter * 10) * 86400000;
+    const start = new Date(baseTime).toISOString();
+    const end = new Date(baseTime + 3600000).toISOString();
+
     const schRes = await request.post(`${API_BASE}/production/schedules`, {
       data: {
         workOrderId: woId,
         machineId: TEST_MACHINE_IDS.mixing,
         stage: 'MIXING',
-        startTime: new Date().toISOString(),
-        endTime: new Date(Date.now() + 3600000).toISOString(),
+        startTime: start,
+        endTime: end,
         targetQty: 100,
         formulaDetails: [
           { materialId: TEST_MATERIAL_IDS.raw, qtyTheoretical: 50, category: 'RAW' },
@@ -34,20 +42,25 @@ test.describe('Industrial Gates — Security & Validation', () => {
   });
 
   test('Gate 1: Atomic Phase Interlock', async ({ request }) => {
+    scheduleCounter++;
     // Try to submit actuals for a component BEFORE the first one
     // First create a schedule with 2 components
     const woRes2 = await request.post(`${API_BASE}/production/work-orders`, {
       data: { leadId: TEST_LEAD_ID, targetQty: 100, targetCompletion: '2026-07-30' }
     });
     const wo2 = await woRes2.json();
-    
+
+    const baseTime2 = Date.now() + (100 + scheduleCounter * 10) * 86400000;
+    const start2 = new Date(baseTime2).toISOString();
+    const end2 = new Date(baseTime2 + 3600000).toISOString();
+
     const schRes2 = await request.post(`${API_BASE}/production/schedules`, {
       data: {
         workOrderId: wo2.id,
         machineId: TEST_MACHINE_IDS.mixing,
         stage: 'MIXING',
-        startTime: new Date().toISOString(),
-        endTime: new Date(Date.now() + 3600000).toISOString(),
+        startTime: start2,
+        endTime: end2,
         targetQty: 100,
         formulaDetails: [
           { materialId: TEST_MATERIAL_IDS.raw, qtyTheoretical: 50, category: 'RAW' },
@@ -70,14 +83,38 @@ test.describe('Industrial Gates — Security & Validation', () => {
   });
 
   test('Gate 3: Physical Law Validation', async ({ request }) => {
+    // Create dedicated schedule with unique timestamp to avoid collision/undefined state
+    const woRes = await request.post(`${API_BASE}/production/work-orders`, {
+      data: { leadId: TEST_LEAD_ID, targetQty: 100, targetCompletion: '2026-07-30' }
+    });
+    const wo = await woRes.json();
+
+    const t = Date.now() + (2000 + Math.floor(Math.random() * 500)) * 86400000;
+    const schRes = await request.post(`${API_BASE}/production/schedules`, {
+      data: {
+        workOrderId: wo.id,
+        machineId: TEST_MACHINE_IDS.mixing,
+        stage: 'MIXING',
+        startTime: new Date(t).toISOString(),
+        endTime: new Date(t + 3600000).toISOString(),
+        targetQty: 100,
+        formulaDetails: [
+          { materialId: TEST_MATERIAL_IDS.raw, qtyTheoretical: 50, category: 'RAW' },
+          { materialId: TEST_MATERIAL_IDS.bulk, qtyTheoretical: 30, category: 'BULK' },
+        ],
+      }
+    });
+    expect(schRes.ok()).toBeTruthy();
+    const sch = await schRes.json();
+
     // Bulk actual=50kg, theoretical=50kg, target=100pcs → max 101pcs
     // Try resultQty=200 → should be rejected
-    const resultRes = await request.post(`${API_BASE}/production/schedules/${scheduleId}/result`, {
+    const resultRes = await request.post(`${API_BASE}/production/schedules/${sch.id}/result`, {
       data: { resultQty: 200, notes: 'E2E: test physical limit' }
     });
     expect(resultRes.status()).toBe(400);
     const body = await resultRes.json();
-    expect(body.message).toMatch(/fisika|PHYSICAL|limit|exceeded/i);
+    expect(body.message || body.detail || body.code).toMatch(/fisika|PHYSICAL|limit|exceeded/i);
   });
 
   test('Gate 5: Weight Tolerance PIN', async ({ request }) => {
@@ -104,18 +141,22 @@ test.describe('Industrial Gates — Security & Validation', () => {
   });
 
   test('Gate 5b: Hard-Stop 10% Deviation', async ({ request }) => {
+    scheduleCounter++;
     // Submit actual with deviation > 10% → should be blocked even WITH PIN
     const woRes = await request.post(`${API_BASE}/production/work-orders`, {
       data: { leadId: TEST_LEAD_ID, targetQty: 100, targetCompletion: '2026-07-30' }
     });
     const wo = await woRes.json();
+    const baseTime5b = Date.now() + (100 + scheduleCounter * 10) * 86400000;
+    const start5b = new Date(baseTime5b).toISOString();
+    const end5b = new Date(baseTime5b + 3600000).toISOString();
     const schRes = await request.post(`${API_BASE}/production/schedules`, {
       data: {
         workOrderId: wo.id,
         machineId: TEST_MACHINE_IDS.mixing,
         stage: 'MIXING',
-        startTime: new Date().toISOString(),
-        endTime: new Date(Date.now() + 3600000).toISOString(),
+        startTime: start5b,
+        endTime: end5b,
         targetQty: 100,
         formulaDetails: [{ materialId: TEST_MATERIAL_IDS.raw, qtyTheoretical: 100, category: 'RAW' }],
       }

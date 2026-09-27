@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { SessionService } from '../../platform/auth/session.service';
@@ -85,7 +85,12 @@ export class AuthService {
       orderBy: [{ primary: 'desc' }, { effectiveFrom: 'desc' }],
       select: { organizationId: true },
     });
-    return scope?.organizationId;
+    if (scope?.organizationId) return scope.organizationId;
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true },
+    });
+    return user?.organizationId || undefined;
   }
 
   private async resolveLoginUser(userOrEmail: any, password?: string): Promise<any> {
@@ -102,10 +107,11 @@ export class AuthService {
     const user = await this.resolveLoginUser(userOrEmail, password);
     if (!user) {
       if (password !== undefined) {
-        throw Object.assign(new Error('Invalid email or password'), {
+        throw new UnauthorizedException({
+          message: 'Invalid email or password',
           code: 'INVALID_CREDENTIALS',
           reason_code: 'INVALID_CREDENTIALS',
-          gateId: 'auth_session_mfa'
+          gateId: 'auth_session_mfa',
         });
       }
       return null;

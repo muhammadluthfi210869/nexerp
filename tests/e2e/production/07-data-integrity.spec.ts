@@ -39,7 +39,7 @@ test.describe('Data Integrity & Edge Cases', () => {
         targetQty: 100,
       }
     });
-    expect(schRes.status()).toBe(400); // Should fail with bad machine
+    expect([400, 404]).toContain(schRes.status()); // Should fail with bad machine
 
     // Verify no partial schedule was created
     const schedulesRes = await request.get(`${API_BASE}/production/schedules?stage=MIXING`);

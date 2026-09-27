@@ -34,7 +34,6 @@ import { FundRequestStatus } from '@prisma/client';
 import { VerifyArPaymentDto, ArPaymentType } from './dto/verify-ar-payment.dto';
 
 import { IdGeneratorService } from '../system/id-generator.service';
-import { ModuleRef } from '@nestjs/core';
 
 import { ScmService } from '../scm/services/scm.service';
 import { CreativeService } from '../creative/creative.service';
@@ -49,14 +48,8 @@ export class FinanceService {
     @Inject(forwardRef(() => ScmService))
     private scmService: ScmService,
     private creativeService: CreativeService,
-    private moduleRef: ModuleRef,
     private reportService: FinanceReportService,
   ) {}
-
-  private async getWarehouseService() {
-    const { WarehouseService } = await import('../warehouse/warehouse.service');
-    return this.moduleRef.get(WarehouseService, { strict: false });
-  }
 
   /**
    * Ensure every account the journal-posting code resolves actually exists.
@@ -1682,19 +1675,8 @@ export class FinanceService {
           loggedBy: 'SYSTEM_CREATIVE',
         });
 
-        // F. PHASE 4: WAREHOUSE READINESS
-        const whSvc = await this.getWarehouseService();
-        const whResult = await whSvc.checkCapacityForNewDeal(leadId);
-        if (whResult.status !== 'OK') {
-          this.eventEmitter.emit(ACTIVITY_EVENT, {
-            leadId: leadId,
-            senderDivision: Division.WAREHOUSE,
-            eventType: StreamEventType.STOCK_CHECK_SHORTAGE, // Reusing shortage as a capacity issue
-            notes: whResult.message,
-            loggedBy: 'SYSTEM_WAREHOUSE',
-            isCritical: whResult.status === 'CRITICAL',
-          });
-        }
+        // F. PHASE 4: WAREHOUSE READINESS (Decoupled Event)
+        this.eventEmitter.emit('finance.payment_verified_warehouse_check', { leadId });
       } else if (type === ArPaymentType.PELUNASAN) {
         const activity = await tx.leadActivity.findUnique({
           where: { id },
@@ -1713,15 +1695,25 @@ export class FinanceService {
             include: { lead: true },
           });
 
-          await tx.salesOrder.update({
-            where: { id: salesOrderId },
-            data: { status: SOStatus.COMPLETED },
-          });
+          // Early payment protection: only transition to COMPLETED if already SHIPPED
+          if (so && (so.status === SOStatus.SHIPPED || so.status === SOStatus.COMPLETED)) {
+            await tx.salesOrder.update({
+              where: { id: salesOrderId },
+              data: { status: SOStatus.COMPLETED },
+            });
+          }
 
-          await tx.salesLead.update({
-            where: { id: leadId },
-            data: { status: WorkflowStatus.WON_DEAL, wonAt: new Date() },
-          });
+          if (leadId) {
+            const lead = await tx.salesLead.findUnique({
+              where: { id: leadId },
+            });
+            if (lead && (lead.status === WorkflowStatus.READY_TO_SHIP || lead.status === WorkflowStatus.WON_DEAL)) {
+              await tx.salesLead.update({
+                where: { id: leadId },
+                data: { status: WorkflowStatus.WON_DEAL, wonAt: new Date() },
+              });
+            }
+          }
 
           // Auto-create JournalEntry for Final Payment
           if (so) {

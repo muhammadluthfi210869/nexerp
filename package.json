@@ -39,7 +39,8 @@
     "verify:p17": "npx tsc --noEmit -p backend/tsconfig.json && npx tsc --noEmit -p frontend/tsconfig.json && npm --prefix backend run test:p17 && npm --prefix frontend run test:p17 && npm run verify:p17:clean-db",
     "verify:p18:clean-db": "node scripts/ssot/p18_clean_db.js",
     "verify:p18": "npx tsc --noEmit -p backend/tsconfig.json && npx tsc --noEmit -p frontend/tsconfig.json && npm --prefix backend run test:p18 && npm --prefix frontend run test:p18 && npm run verify:p18:clean-db",
-    "verify:p19": "node scripts/ssot/p19_dna_verify.js && node scripts/ssot/check_page_shell_layout.js && npx tsc --noEmit -p frontend/tsconfig.json && npm --prefix frontend run test:p19 && npm --prefix frontend run build"
+    "verify:p19": "node scripts/ssot/p19_dna_verify.js && node scripts/ssot/check_page_shell_layout.js && npx tsc --noEmit -p frontend/tsconfig.json && npm --prefix frontend run test:p19 && npm --prefix frontend run build",
+    "test:acid": "node scripts/__tests__/test_acid_invariants.js"
   },
   "keywords": [],
   "author": "",

@@ -13,8 +13,9 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const defaultPassword = 'DreamLab2024!';
+  const defaultPassword = process.env.SEED_DEFAULT_PASSWORD || 'password123';
   const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+  const DEFAULT_ORG_ID = 'a0000000-0000-4000-8000-000000000001';
 
   const personnel = [
     { name: 'Zaki', email: 'zaki@dreamlab.com', roles: [UserRole.SUPER_ADMIN], division: Division.MANAGEMENT, position: 'Direktur Utama' },
@@ -59,6 +60,8 @@ async function main() {
           fullName: p.name,
           roles: p.roles,
           status: UserStatus.ACTIVE,
+          passwordHash: hashedPassword,
+          organizationId: DEFAULT_ORG_ID,
         },
         create: {
           email: p.email,
@@ -66,6 +69,19 @@ async function main() {
           passwordHash: hashedPassword,
           roles: p.roles,
           status: UserStatus.ACTIVE,
+          organizationId: DEFAULT_ORG_ID,
+        },
+      });
+
+      await prisma.tenantScope.deleteMany({
+        where: { userId: user.id },
+      });
+      await prisma.tenantScope.create({
+        data: {
+          userId: user.id,
+          organizationId: DEFAULT_ORG_ID,
+          effectiveFrom: new Date('2020-01-01'),
+          primary: true,
         },
       });
 

@@ -4360,9 +4360,9 @@
         ]
       }
     },
-    "/v1/bussdev/pipeline-v2/audit": {
+    "/v1/legality/audits": {
       "get": {
-        "operationId": "BussdevController_getPipelineV2Audit",
+        "operationId": "AuditsController_findAll",
         "parameters": [],
         "responses": {
           "200": {
@@ -4374,42 +4374,20 @@
             "bearer": []
           }
         ],
-        "summary": "Get pipeline audit log",
+        "summary": "List all internal audits",
         "tags": [
-          "bussdev"
+          "legality/audits"
         ]
-      }
-    },
-    "/v1/bussdev/pipeline-v2/leads": {
-      "get": {
-        "operationId": "BussdevController_getPipelineV2Leads",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get pipeline v2 active leads",
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/lead": {
+      },
       "post": {
-        "operationId": "BussdevController_createLead",
+        "operationId": "AuditsController_create",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateLeadDto"
+                "$ref": "#/components/schemas/CreateAuditDto"
               }
             }
           }
@@ -4424,15 +4402,44 @@
             "bearer": []
           }
         ],
-        "summary": "Create a new business lead",
+        "summary": "Create a new internal audit",
         "tags": [
-          "bussdev"
+          "legality/audits"
         ]
       }
     },
-    "/v1/bussdev/lead/{id}/advance": {
+    "/v1/legality/audits/{id}": {
+      "get": {
+        "operationId": "AuditsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get internal audit by ID",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/legality/audits/{id}/checklist": {
       "patch": {
-        "operationId": "BussdevController_advanceLead",
+        "operationId": "AuditsController_updateChecklist",
         "parameters": [
           {
             "name": "id",
@@ -4448,7 +4455,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AdvanceLeadDto"
+                "$ref": "#/components/schemas/UpdateAuditChecklistDto"
               }
             }
           }
@@ -4463,114 +4470,18 @@
             "bearer": []
           }
         ],
-        "summary": "Advance a lead to the next stage",
+        "summary": "Update CPKB/CARA checklist for an audit",
         "tags": [
-          "bussdev"
+          "legality/audits"
         ]
       }
     },
-    "/v1/bussdev/dashboard": {
-      "get": {
-        "operationId": "BussdevController_getDashboard",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Tenant-scoped sales dashboard",
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/analytics/funnel": {
-      "get": {
-        "operationId": "BussdevController_getFunnelAnalytics",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/analytics/pipeline-granular": {
-      "get": {
-        "operationId": "BussdevController_getGranularPipelineTable",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/analytics/staff-performance": {
-      "get": {
-        "operationId": "BussdevController_getBDPerformance",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/analytics/lost-churn": {
-      "get": {
-        "operationId": "BussdevController_getLostChurnTable",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/analytics/{group}": {
-      "get": {
-        "operationId": "BussdevController_getPageAnalytics",
+    "/v1/legality/audits/{id}/status": {
+      "patch": {
+        "operationId": "AuditsController_updateStatus",
         "parameters": [
           {
-            "name": "group",
+            "name": "id",
             "required": true,
             "in": "path",
             "schema": {
@@ -4588,17 +4499,404 @@
             "bearer": []
           }
         ],
+        "summary": "Update audit status",
         "tags": [
-          "bussdev"
+          "legality/audits"
         ]
       }
     },
-    "/v1/bussdev/leads": {
-      "get": {
-        "operationId": "BussdevController_getLeads",
+    "/v1/legality/audits/{id}/finding": {
+      "post": {
+        "operationId": "AuditsController_addFinding",
         "parameters": [
           {
-            "name": "mine",
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddFindingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Append a finding to an audit",
+        "tags": [
+          "legality/audits"
+        ]
+      }
+    },
+    "/v1/digimar/summary": {
+      "get": {
+        "operationId": "DigimarController_getSummary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/v1/digimar/weekly": {
+      "get": {
+        "operationId": "DigimarController_getWeekly",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/v1/digimar/paid-ads": {
+      "get": {
+        "operationId": "DigimarController_getPaidAds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/v1/digimar/content": {
+      "get": {
+        "operationId": "DigimarController_getContent",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/v1/digimar/months": {
+      "get": {
+        "operationId": "DigimarController_getMonths",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/v1/digimar/all": {
+      "get": {
+        "operationId": "DigimarController_getAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/v1/digimar/sheet-names": {
+      "get": {
+        "operationId": "DigimarController_getSheetNames",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/v1/digimar/cache/invalidate": {
+      "get": {
+        "operationId": "DigimarController_invalidateCache",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Digimar"
+        ]
+      }
+    },
+    "/v1/wa-webhook": {
+      "get": {
+        "operationId": "WaWebhookController_verify[0]",
+        "parameters": [
+          {
+            "name": "hub.mode",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.verify_token",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.challenge",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WaWebhook"
+        ]
+      },
+      "post": {
+        "operationId": "WaWebhookController_incoming[0]",
+        "parameters": [
+          {
+            "name": "x-hub-signature-256",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WaWebhook"
+        ]
+      }
+    },
+    "/v1/webhooks/whatsapp": {
+      "get": {
+        "operationId": "WaWebhookController_verify[1]",
+        "parameters": [
+          {
+            "name": "hub.mode",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.verify_token",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.challenge",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WaWebhook"
+        ]
+      },
+      "post": {
+        "operationId": "WaWebhookController_incoming[1]",
+        "parameters": [
+          {
+            "name": "x-hub-signature-256",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WaWebhook"
+        ]
+      }
+    },
+    "/v1/wa-gateway/webhook": {
+      "post": {
+        "operationId": "WaGatewayController_gateway",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WaGateway"
+        ]
+      }
+    },
+    "/v1/crm/lost-deals": {
+      "post": {
+        "operationId": "LostDealsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLostDealDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LostDeals"
+        ]
+      },
+      "get": {
+        "operationId": "LostDealsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LostDeals"
+        ]
+      }
+    },
+    "/v1/crm/leads": {
+      "get": {
+        "operationId": "LeadsController_list",
+        "parameters": [
+          {
+            "name": "stage",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LEADS_MASUK",
+                "FOLLOW_UP",
+                "INTERESTED",
+                "DEAL_NEGOTIATION",
+                "DEAL_WON",
+                "DEAL_LOST",
+                "NURTURING"
+              ]
+            }
+          },
+          {
+            "name": "assignedToId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bukuTamuStatus",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
             "required": true,
             "in": "query",
             "schema": {
@@ -4616,16 +4914,90 @@
             "bearer": []
           }
         ],
-        "summary": "Get all leads",
+        "summary": "List CRM leads with filters (RBAC auto-scoped for DIGIMAR)",
         "tags": [
-          "bussdev"
+          "crm/leads"
         ]
       }
     },
-    "/v1/bussdev/leads/stuck": {
+    "/v1/crm/leads/live": {
       "get": {
-        "operationId": "BussdevController_getStuckLeads",
-        "parameters": [],
+        "operationId": "LeadsController_listLive",
+        "parameters": [
+          {
+            "name": "stage",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LEADS_MASUK",
+                "FOLLOW_UP",
+                "INTERESTED",
+                "DEAL_NEGOTIATION",
+                "DEAL_WON",
+                "DEAL_LOST",
+                "NURTURING"
+              ]
+            }
+          },
+          {
+            "name": "assignedToId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bukuTamuStatus",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -4636,17 +5008,18 @@
             "bearer": []
           }
         ],
+        "summary": "Live capture feed: CrmLead joined with GuestbookEvent",
         "tags": [
-          "bussdev"
+          "crm/leads"
         ]
       }
     },
-    "/v1/bussdev/leads/group/{group}": {
+    "/v1/crm/leads/{id}": {
       "get": {
-        "operationId": "BussdevController_getLeadsByGroup",
+        "operationId": "LeadsController_getById",
         "parameters": [
           {
-            "name": "group",
+            "name": "id",
             "required": true,
             "in": "path",
             "schema": {
@@ -4664,15 +5037,35 @@
             "bearer": []
           }
         ],
+        "summary": "Get single CrmLead by ID",
         "tags": [
-          "bussdev"
+          "crm/leads"
         ]
       }
     },
-    "/v1/bussdev/staffs": {
-      "get": {
-        "operationId": "BussdevController_getStaffs",
-        "parameters": [],
+    "/v1/crm/leads/{id}/stage": {
+      "patch": {
+        "operationId": "LeadsController_updateStage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStageDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -4683,15 +5076,35 @@
             "bearer": []
           }
         ],
+        "summary": "Advance or transition lead stage",
         "tags": [
-          "bussdev"
+          "crm/leads"
         ]
       }
     },
-    "/v1/bussdev/samples": {
-      "get": {
-        "operationId": "BussdevController_getClientSamples",
-        "parameters": [],
+    "/v1/crm/leads/{id}/displayName": {
+      "patch": {
+        "operationId": "LeadsController_updateDisplayName",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDisplayNameDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -4702,13 +5115,163 @@
             "bearer": []
           }
         ],
+        "summary": "Update customer display name",
         "tags": [
-          "bussdev"
+          "crm/leads"
+        ]
+      }
+    },
+    "/v1/crm/leads/{id}/assign": {
+      "post": {
+        "operationId": "LeadsController_assign",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Assign lead to sales representative",
+        "tags": [
+          "crm/leads"
+        ]
+      }
+    },
+    "/v1/crm/leads/{id}/messages": {
+      "get": {
+        "operationId": "LeadsController_getMessages",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get chat timeline messages for a lead",
+        "tags": [
+          "crm/leads"
+        ]
+      }
+    },
+    "/v1/crm/guestbook/events": {
+      "get": {
+        "operationId": "GuestbookController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assignedToId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List Buku Tamu guestbook events",
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/v1/crm/guestbook/events/{id}": {
+      "get": {
+        "operationId": "GuestbookController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get single guestbook event",
+        "tags": [
+          "crm"
         ]
       },
       "post": {
-        "operationId": "BussdevController_createSample",
-        "parameters": [],
+        "operationId": "GuestbookController_decideDirect",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": ""
@@ -4719,71 +5282,15 @@
             "bearer": []
           }
         ],
-        "summary": "Create a new sample sales order",
+        "summary": "Decide on Buku Tamu event directly",
         "tags": [
-          "bussdev"
+          "crm"
         ]
       }
     },
-    "/v1/bussdev/sample/{id}/ship": {
-      "patch": {
-        "operationId": "BussdevController_shipSample",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/sample/{id}/feedback": {
-      "patch": {
-        "operationId": "BussdevController_submitFeedback",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/lead/{id}/activity": {
+    "/v1/crm/guestbook/events/{id}/approve": {
       "post": {
-        "operationId": "BussdevController_logActivity",
+        "operationId": "GuestbookController_approve",
         "parameters": [
           {
             "name": "id",
@@ -4794,6 +5301,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveGuestbookDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -4804,71 +5321,15 @@
             "bearer": []
           }
         ],
-        "summary": "Log a text interaction (Chat/Call/Meeting)",
+        "summary": "Approve Buku Tamu event",
         "tags": [
-          "bussdev"
+          "crm"
         ]
       }
     },
-    "/v1/bussdev/lead/{id}/activity-stream": {
-      "get": {
-        "operationId": "BussdevController_getActivityStream",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/lead/{id}/balance": {
-      "get": {
-        "operationId": "BussdevController_getLeadBalance",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/guest/{id}/convert": {
+    "/v1/crm/guestbook/events/{id}/reject": {
       "post": {
-        "operationId": "BussdevController_convertGuestToLead",
+        "operationId": "GuestbookController_reject",
         "parameters": [
           {
             "name": "id",
@@ -4879,6 +5340,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveGuestbookDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -4889,70 +5360,15 @@
             "bearer": []
           }
         ],
+        "summary": "Reject Buku Tamu event",
         "tags": [
-          "bussdev"
+          "crm"
         ]
       }
     },
-    "/v1/bussdev/sales-order/{id}/status": {
-      "patch": {
-        "operationId": "BussdevController_updateSoStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/lead/{id}/override": {
-      "patch": {
-        "operationId": "BussdevController_emergencyOverride",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/debug/leads": {
+    "/v1/crm/kpi/summary": {
       "get": {
-        "operationId": "BussdevController_debugLeads",
+        "operationId": "KpiController_summary",
         "parameters": [],
         "responses": {
           "200": {
@@ -4964,47 +5380,20 @@
             "bearer": []
           }
         ],
+        "summary": "Get CRM KPI summary tiles and performance aggregates",
         "tags": [
-          "bussdev"
+          "crm"
         ]
       }
     },
-    "/v1/bussdev/retention-engine/{id}/trigger": {
-      "post": {
-        "operationId": "BussdevController_triggerRetention",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/lead/{id}": {
+    "/v1/crm/busdevs": {
       "get": {
-        "operationId": "BussdevController_getLead",
+        "operationId": "BusDevsController_list",
         "parameters": [
           {
-            "name": "id",
+            "name": "isActive",
             "required": true,
-            "in": "path",
+            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -5020,13 +5409,51 @@
             "bearer": []
           }
         ],
-        "summary": "Get single lead detail",
+        "summary": "List active business development staff for assignment",
         "tags": [
-          "bussdev"
+          "crm"
+        ]
+      }
+    },
+    "/v1/commercial/sales-orders": {
+      "post": {
+        "operationId": "SalesOrdersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSalesOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalesOrders"
         ]
       },
-      "put": {
-        "operationId": "BussdevController_updateLead",
+      "get": {
+        "operationId": "SalesOrdersController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalesOrders"
+        ]
+      }
+    },
+    "/v1/commercial/sales-orders/{id}": {
+      "get": {
+        "operationId": "SalesOrdersController_findOne",
         "parameters": [
           {
             "name": "id",
@@ -5042,67 +5469,170 @@
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update (or reassign) a lead",
         "tags": [
-          "bussdev"
+          "SalesOrders"
         ]
       },
-      "delete": {
-        "operationId": "BussdevController_deleteLead",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete a lead",
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/sample-request": {
-      "post": {
-        "operationId": "BussdevController_createSampleRequest",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create sample request (from SOT)",
-        "tags": [
-          "bussdev"
-        ]
-      }
-    },
-    "/v1/bussdev/sample-request/{id}": {
       "patch": {
-        "operationId": "BussdevController_updateSampleRequest",
+        "operationId": "SalesOrdersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSalesOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalesOrders"
+        ]
+      }
+    },
+    "/v1/commercial/sales-orders/{id}/amend": {
+      "post": {
+        "operationId": "SalesOrdersController_amend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AmendSalesOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalesOrders"
+        ]
+      }
+    },
+    "/v1/commercial/sales-orders/{id}/approve-amendment": {
+      "post": {
+        "operationId": "SalesOrdersController_approveAmendment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalesOrders"
+        ]
+      }
+    },
+    "/v1/commercial/sales-orders/{id}/delivery-gate": {
+      "post": {
+        "operationId": "SalesOrdersController_setDeliveryGate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDeliveryGateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalesOrders"
+        ]
+      }
+    },
+    "/v1/commercial/invoices": {
+      "post": {
+        "operationId": "InvoicesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvoiceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Invoices"
+        ]
+      },
+      "get": {
+        "operationId": "InvoicesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Invoices"
+        ]
+      }
+    },
+    "/v1/commercial/invoices/{id}": {
+      "get": {
+        "operationId": "InvoicesController_findOne",
         "parameters": [
           {
             "name": "id",
@@ -5118,74 +5648,138 @@
             "description": ""
           }
         },
-        "security": [
+        "tags": [
+          "Invoices"
+        ]
+      },
+      "patch": {
+        "operationId": "InvoicesController_update",
+        "parameters": [
           {
-            "bearer": []
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
-        "summary": "Update a sample request",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
         "tags": [
-          "bussdev"
+          "Invoices"
         ]
       }
     },
-    "/v1/bussdev/approve-sample": {
+    "/v1/commercial/invoices/{id}/release-delivery": {
       "post": {
-        "operationId": "BussdevController_approveSample",
-        "parameters": [],
+        "operationId": "InvoicesController_releaseDelivery",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Approve a sample",
         "tags": [
-          "bussdev"
+          "Invoices"
         ]
       }
     },
-    "/v1/bussdev/sales-order": {
+    "/v1/commercial/payments": {
       "post": {
-        "operationId": "BussdevController_createSalesOrder",
+        "operationId": "PaymentsController_create",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a sales order",
         "tags": [
-          "bussdev"
+          "Payments"
         ]
-      }
-    },
-    "/v1/bussdev/sales-orders": {
+      },
       "get": {
-        "operationId": "BussdevController_getSalesOrders",
+        "operationId": "PaymentsController_findAll",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all sales orders",
         "tags": [
-          "bussdev"
+          "Payments"
+        ]
+      }
+    },
+    "/v1/commercial/retention/radar": {
+      "get": {
+        "operationId": "RetentionController_getRadar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Retention"
+        ]
+      }
+    },
+    "/v1/commercial/down-payments": {
+      "post": {
+        "operationId": "SalesDownPaymentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSalesDpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalesDownPayments"
+        ]
+      },
+      "get": {
+        "operationId": "SalesDownPaymentsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalesDownPayments"
         ]
       }
     },
@@ -7491,1560 +8085,6 @@
         ]
       }
     },
-    "/v1/legality/audits": {
-      "get": {
-        "operationId": "AuditsController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all internal audits",
-        "tags": [
-          "legality/audits"
-        ]
-      },
-      "post": {
-        "operationId": "AuditsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAuditDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a new internal audit",
-        "tags": [
-          "legality/audits"
-        ]
-      }
-    },
-    "/v1/legality/audits/{id}": {
-      "get": {
-        "operationId": "AuditsController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get internal audit by ID",
-        "tags": [
-          "legality/audits"
-        ]
-      }
-    },
-    "/v1/legality/audits/{id}/checklist": {
-      "patch": {
-        "operationId": "AuditsController_updateChecklist",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateAuditChecklistDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update CPKB/CARA checklist for an audit",
-        "tags": [
-          "legality/audits"
-        ]
-      }
-    },
-    "/v1/legality/audits/{id}/status": {
-      "patch": {
-        "operationId": "AuditsController_updateStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update audit status",
-        "tags": [
-          "legality/audits"
-        ]
-      }
-    },
-    "/v1/legality/audits/{id}/finding": {
-      "post": {
-        "operationId": "AuditsController_addFinding",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AddFindingDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Append a finding to an audit",
-        "tags": [
-          "legality/audits"
-        ]
-      }
-    },
-    "/v1/bussdev/returns": {
-      "get": {
-        "operationId": "ReturnsController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all sales returns",
-        "tags": [
-          "bussdev/returns"
-        ]
-      },
-      "post": {
-        "operationId": "ReturnsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateReturnDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a sales return record",
-        "tags": [
-          "bussdev/returns"
-        ]
-      }
-    },
-    "/v1/bussdev/returns/{id}": {
-      "get": {
-        "operationId": "ReturnsController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get sales return by ID",
-        "tags": [
-          "bussdev/returns"
-        ]
-      },
-      "patch": {
-        "operationId": "ReturnsController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update return status/notes",
-        "tags": [
-          "bussdev/returns"
-        ]
-      },
-      "delete": {
-        "operationId": "ReturnsController_remove",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Soft-delete a sales return",
-        "tags": [
-          "bussdev/returns"
-        ]
-      }
-    },
-    "/v1/digimar/summary": {
-      "get": {
-        "operationId": "DigimarController_getSummary",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Digimar"
-        ]
-      }
-    },
-    "/v1/digimar/weekly": {
-      "get": {
-        "operationId": "DigimarController_getWeekly",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Digimar"
-        ]
-      }
-    },
-    "/v1/digimar/paid-ads": {
-      "get": {
-        "operationId": "DigimarController_getPaidAds",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Digimar"
-        ]
-      }
-    },
-    "/v1/digimar/content": {
-      "get": {
-        "operationId": "DigimarController_getContent",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Digimar"
-        ]
-      }
-    },
-    "/v1/digimar/months": {
-      "get": {
-        "operationId": "DigimarController_getMonths",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Digimar"
-        ]
-      }
-    },
-    "/v1/digimar/all": {
-      "get": {
-        "operationId": "DigimarController_getAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Digimar"
-        ]
-      }
-    },
-    "/v1/digimar/sheet-names": {
-      "get": {
-        "operationId": "DigimarController_getSheetNames",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Digimar"
-        ]
-      }
-    },
-    "/v1/digimar/cache/invalidate": {
-      "get": {
-        "operationId": "DigimarController_invalidateCache",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Digimar"
-        ]
-      }
-    },
-    "/v1/wa-webhook": {
-      "get": {
-        "operationId": "WaWebhookController_verify[0]",
-        "parameters": [
-          {
-            "name": "hub.mode",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "hub.verify_token",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "hub.challenge",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "WaWebhook"
-        ]
-      },
-      "post": {
-        "operationId": "WaWebhookController_incoming[0]",
-        "parameters": [
-          {
-            "name": "x-hub-signature-256",
-            "required": true,
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "WaWebhook"
-        ]
-      }
-    },
-    "/v1/webhooks/whatsapp": {
-      "get": {
-        "operationId": "WaWebhookController_verify[1]",
-        "parameters": [
-          {
-            "name": "hub.mode",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "hub.verify_token",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "hub.challenge",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "WaWebhook"
-        ]
-      },
-      "post": {
-        "operationId": "WaWebhookController_incoming[1]",
-        "parameters": [
-          {
-            "name": "x-hub-signature-256",
-            "required": true,
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "WaWebhook"
-        ]
-      }
-    },
-    "/v1/wa-gateway/webhook": {
-      "post": {
-        "operationId": "WaGatewayController_gateway",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "WaGateway"
-        ]
-      }
-    },
-    "/v1/crm/lost-deals": {
-      "post": {
-        "operationId": "LostDealsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateLostDealDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LostDeals"
-        ]
-      },
-      "get": {
-        "operationId": "LostDealsController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "LostDeals"
-        ]
-      }
-    },
-    "/v1/crm/leads": {
-      "get": {
-        "operationId": "LeadsController_list",
-        "parameters": [
-          {
-            "name": "stage",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "LEADS_MASUK",
-                "FOLLOW_UP",
-                "INTERESTED",
-                "DEAL_NEGOTIATION",
-                "DEAL_WON",
-                "DEAL_LOST",
-                "NURTURING"
-              ]
-            }
-          },
-          {
-            "name": "assignedToId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "from",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "to",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "bukuTamuStatus",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "source",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "offset",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List CRM leads with filters (RBAC auto-scoped for DIGIMAR)",
-        "tags": [
-          "crm/leads"
-        ]
-      }
-    },
-    "/v1/crm/leads/live": {
-      "get": {
-        "operationId": "LeadsController_listLive",
-        "parameters": [
-          {
-            "name": "stage",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "LEADS_MASUK",
-                "FOLLOW_UP",
-                "INTERESTED",
-                "DEAL_NEGOTIATION",
-                "DEAL_WON",
-                "DEAL_LOST",
-                "NURTURING"
-              ]
-            }
-          },
-          {
-            "name": "assignedToId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "from",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "to",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "bukuTamuStatus",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "source",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "offset",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Live capture feed: CrmLead joined with GuestbookEvent",
-        "tags": [
-          "crm/leads"
-        ]
-      }
-    },
-    "/v1/crm/leads/{id}": {
-      "get": {
-        "operationId": "LeadsController_getById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get single CrmLead by ID",
-        "tags": [
-          "crm/leads"
-        ]
-      }
-    },
-    "/v1/crm/leads/{id}/stage": {
-      "patch": {
-        "operationId": "LeadsController_updateStage",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateStageDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Advance or transition lead stage",
-        "tags": [
-          "crm/leads"
-        ]
-      }
-    },
-    "/v1/crm/leads/{id}/displayName": {
-      "patch": {
-        "operationId": "LeadsController_updateDisplayName",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateDisplayNameDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update customer display name",
-        "tags": [
-          "crm/leads"
-        ]
-      }
-    },
-    "/v1/crm/leads/{id}/assign": {
-      "post": {
-        "operationId": "LeadsController_assign",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Assign lead to sales representative",
-        "tags": [
-          "crm/leads"
-        ]
-      }
-    },
-    "/v1/crm/leads/{id}/messages": {
-      "get": {
-        "operationId": "LeadsController_getMessages",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get chat timeline messages for a lead",
-        "tags": [
-          "crm/leads"
-        ]
-      }
-    },
-    "/v1/crm/guestbook/events": {
-      "get": {
-        "operationId": "GuestbookController_list",
-        "parameters": [
-          {
-            "name": "status",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "assignedToId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "offset",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List Buku Tamu guestbook events",
-        "tags": [
-          "crm"
-        ]
-      }
-    },
-    "/v1/crm/guestbook/events/{id}": {
-      "get": {
-        "operationId": "GuestbookController_getById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get single guestbook event",
-        "tags": [
-          "crm"
-        ]
-      },
-      "post": {
-        "operationId": "GuestbookController_decideDirect",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Decide on Buku Tamu event directly",
-        "tags": [
-          "crm"
-        ]
-      }
-    },
-    "/v1/crm/guestbook/events/{id}/approve": {
-      "post": {
-        "operationId": "GuestbookController_approve",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ApproveGuestbookDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Approve Buku Tamu event",
-        "tags": [
-          "crm"
-        ]
-      }
-    },
-    "/v1/crm/guestbook/events/{id}/reject": {
-      "post": {
-        "operationId": "GuestbookController_reject",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ApproveGuestbookDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Reject Buku Tamu event",
-        "tags": [
-          "crm"
-        ]
-      }
-    },
-    "/v1/crm/kpi/summary": {
-      "get": {
-        "operationId": "KpiController_summary",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get CRM KPI summary tiles and performance aggregates",
-        "tags": [
-          "crm"
-        ]
-      }
-    },
-    "/v1/crm/busdevs": {
-      "get": {
-        "operationId": "BusDevsController_list",
-        "parameters": [
-          {
-            "name": "isActive",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List active business development staff for assignment",
-        "tags": [
-          "crm"
-        ]
-      }
-    },
-    "/v1/commercial/sales-orders": {
-      "post": {
-        "operationId": "SalesOrdersController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSalesOrderDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "SalesOrders"
-        ]
-      },
-      "get": {
-        "operationId": "SalesOrdersController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "SalesOrders"
-        ]
-      }
-    },
-    "/v1/commercial/sales-orders/{id}": {
-      "get": {
-        "operationId": "SalesOrdersController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "SalesOrders"
-        ]
-      },
-      "patch": {
-        "operationId": "SalesOrdersController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateSalesOrderDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "SalesOrders"
-        ]
-      }
-    },
-    "/v1/commercial/sales-orders/{id}/amend": {
-      "post": {
-        "operationId": "SalesOrdersController_amend",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AmendSalesOrderDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "SalesOrders"
-        ]
-      }
-    },
-    "/v1/commercial/sales-orders/{id}/approve-amendment": {
-      "post": {
-        "operationId": "SalesOrdersController_approveAmendment",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "SalesOrders"
-        ]
-      }
-    },
-    "/v1/commercial/sales-orders/{id}/delivery-gate": {
-      "post": {
-        "operationId": "SalesOrdersController_setDeliveryGate",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetDeliveryGateDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "SalesOrders"
-        ]
-      }
-    },
-    "/v1/commercial/invoices": {
-      "post": {
-        "operationId": "InvoicesController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateInvoiceDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Invoices"
-        ]
-      },
-      "get": {
-        "operationId": "InvoicesController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Invoices"
-        ]
-      }
-    },
-    "/v1/commercial/invoices/{id}": {
-      "get": {
-        "operationId": "InvoicesController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Invoices"
-        ]
-      },
-      "patch": {
-        "operationId": "InvoicesController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Invoices"
-        ]
-      }
-    },
-    "/v1/commercial/invoices/{id}/release-delivery": {
-      "post": {
-        "operationId": "InvoicesController_releaseDelivery",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Invoices"
-        ]
-      }
-    },
-    "/v1/commercial/payments": {
-      "post": {
-        "operationId": "PaymentsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePaymentDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Payments"
-        ]
-      },
-      "get": {
-        "operationId": "PaymentsController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Payments"
-        ]
-      }
-    },
-    "/v1/commercial/retention/radar": {
-      "get": {
-        "operationId": "RetentionController_getRadar",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Retention"
-        ]
-      }
-    },
-    "/v1/commercial/down-payments": {
-      "post": {
-        "operationId": "SalesDownPaymentsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSalesDpDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "SalesDownPayments"
-        ]
-      },
-      "get": {
-        "operationId": "SalesDownPaymentsController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "SalesDownPayments"
-        ]
-      }
-    },
     "/v1/production-plans": {
       "post": {
         "operationId": "ProductionPlansController_create",
@@ -9303,427 +8343,207 @@
         ]
       }
     },
-    "/v1/warehouse/stats": {
+    "/v1/qc/dashboard": {
       "get": {
-        "operationId": "WarehouseController_getStats",
+        "operationId": "QcController_getDashboard",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/audit": {
-      "get": {
-        "operationId": "WarehouseController_getAudit",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/catalog": {
-      "get": {
-        "operationId": "WarehouseController_getCatalog",
-        "parameters": [
+        "security": [
           {
-            "name": "warehouseId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
+            "bearer": []
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
+        "summary": "Get QC dashboard stats",
         "tags": [
-          "Warehouse"
+          "qc"
         ]
       }
     },
-    "/v1/warehouse/warehouses": {
+    "/v1/qc/workbench": {
       "get": {
-        "operationId": "WarehouseController_getWarehouses",
+        "operationId": "QcController_getWorkbench",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/transactions": {
-      "get": {
-        "operationId": "WarehouseController_getTransactions",
-        "parameters": [
+        "security": [
           {
-            "name": "materialId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
+            "bearer": []
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
+        "summary": "Get QC workbench (quarantine audits)",
         "tags": [
-          "Warehouse"
+          "qc"
         ]
       }
     },
-    "/v1/warehouse/history/{materialId}": {
-      "get": {
-        "operationId": "WarehouseController_getHistory",
-        "parameters": [
-          {
-            "name": "materialId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/check-thresholds": {
-      "get": {
-        "operationId": "WarehouseController_checkThresholds",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/locations": {
-      "get": {
-        "operationId": "WarehouseController_getLocations",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/suggest-batch/{materialId}": {
-      "get": {
-        "operationId": "WarehouseController_getSuggestedBatch",
-        "parameters": [
-          {
-            "name": "materialId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/validate-handover": {
+    "/v1/qc": {
       "post": {
-        "operationId": "WarehouseController_validateHandover",
+        "operationId": "QcController_createLegacy",
         "parameters": [],
         "responses": {
           "201": {
             "description": ""
           }
         },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/opname/{id}/approve": {
-      "post": {
-        "operationId": "WarehouseController_approveOpname",
-        "parameters": [
+        "security": [
           {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
+            "bearer": []
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
+        "summary": "Submit QC audit (alias for POST /qc/audits with snake_case support)",
         "tags": [
-          "Warehouse"
+          "qc"
         ]
       }
     },
-    "/v1/warehouse/release/{workOrderId}": {
-      "post": {
-        "operationId": "WarehouseController_releaseMaterial",
-        "parameters": [
-          {
-            "name": "workOrderId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/batches/{id}/status": {
-      "post": {
-        "operationId": "WarehouseController_updateBatchStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/transfers": {
-      "post": {
-        "operationId": "WarehouseController_createTransfer",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      },
+    "/v1/qc/report": {
       "get": {
-        "operationId": "WarehouseController_getTransfers",
+        "operationId": "QcController_getReport",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/transfers/{id}/execute": {
-      "post": {
-        "operationId": "WarehouseController_executeTransfer",
-        "parameters": [
+        "security": [
           {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
+            "bearer": []
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
+        "summary": "Get QC audit report",
         "tags": [
-          "Warehouse"
+          "qc"
         ]
       }
     },
-    "/v1/warehouse/warehouses/{id}/check-access": {
+    "/v1/qc/analytics/reject-analysis": {
       "get": {
-        "operationId": "WarehouseController_checkWarehouseAccess",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/opname": {
-      "post": {
-        "operationId": "WarehouseController_createOpname",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      },
-      "get": {
-        "operationId": "WarehouseController_getOpnames",
+        "operationId": "QcController_getRejectAnalysis",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get reject analysis",
         "tags": [
-          "Warehouse"
+          "qc"
         ]
       }
     },
-    "/v1/warehouse/opname/{id}/approve-pin": {
+    "/v1/qc/release": {
       "post": {
-        "operationId": "WarehouseController_approveOpnameWithPin",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "QcController_executeRelease",
+        "parameters": [],
         "responses": {
           "201": {
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Release quarantined stock to AVAILABLE",
         "tags": [
-          "Warehouse"
+          "qc"
         ]
       }
     },
-    "/v1/warehouse/inbounds": {
+    "/v1/qc/release/batches": {
       "get": {
-        "operationId": "WarehouseController_getInbounds",
+        "operationId": "QcController_getReleaseBatches",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get batches eligible for or already released",
         "tags": [
-          "Warehouse"
+          "qc"
+        ]
+      }
+    },
+    "/v1/qc/apj-releases": {
+      "get": {
+        "operationId": "QcController_getApjReleases",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get APJ release records",
+        "tags": [
+          "qc"
         ]
       },
       "post": {
-        "operationId": "WarehouseController_createInbound",
+        "operationId": "QcController_createApjRelease",
         "parameters": [],
         "responses": {
           "201": {
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Submit APJ release record",
         "tags": [
-          "Warehouse"
+          "qc"
         ]
       }
     },
-    "/v1/warehouse/adjustments": {
-      "get": {
-        "operationId": "WarehouseController_getAdjustments",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      },
+    "/v1/qc/disposition/partial": {
       "post": {
-        "operationId": "WarehouseController_createAdjustment",
+        "operationId": "QcController_executePartialDisposition",
         "parameters": [],
         "responses": {
           "201": {
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Execute partial disposition (Pass, Rework, Scrap)",
         "tags": [
-          "Warehouse"
+          "qc"
         ]
       }
     },
-    "/v1/warehouse/adjustments/{id}/approve": {
+    "/v1/qc/audits/{id}/retest": {
       "post": {
-        "operationId": "WarehouseController_approveAdjustment",
+        "operationId": "QcController_executeRetest",
         "parameters": [
           {
             "name": "id",
@@ -9739,17 +8559,23 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Execute retest audit for a rework or held batch",
         "tags": [
-          "Warehouse"
+          "qc"
         ]
       }
     },
-    "/v1/warehouse/adjustments/{id}/reject": {
-      "post": {
-        "operationId": "WarehouseController_rejectAdjustment",
+    "/v1/qc/traceability/backward/{batchNumber}": {
+      "get": {
+        "operationId": "QcController_getBackwardTraceability",
         "parameters": [
           {
-            "name": "id",
+            "name": "batchNumber",
             "required": true,
             "in": "path",
             "schema": {
@@ -9758,63 +8584,27 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/release-requests": {
-      "get": {
-        "operationId": "WarehouseController_getReleaseRequests",
-        "parameters": [],
-        "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/picking/validate": {
-      "post": {
-        "operationId": "WarehouseController_validatePicking",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
+        "security": [
+          {
+            "bearer": []
           }
-        },
+        ],
+        "summary": "Backward traceability tree (FG -> Stages -> Raw Material lots)",
         "tags": [
-          "Warehouse"
+          "qc"
         ]
       }
     },
-    "/v1/warehouse/picking/execute": {
-      "post": {
-        "operationId": "WarehouseController_executePicking",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/inbounds/{id}/release": {
-      "post": {
-        "operationId": "WarehouseController_releaseFromQuarantine",
+    "/v1/qc/traceability/forward/{materialBatch}": {
+      "get": {
+        "operationId": "QcController_getForwardRecallTraceability",
         "parameters": [
           {
-            "name": "id",
+            "name": "materialBatch",
             "required": true,
             "in": "path",
             "schema": {
@@ -9823,127 +8613,31 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/stock-intelligence/abc": {
-      "get": {
-        "operationId": "WarehouseController_getABCAnalysis",
-        "parameters": [],
-        "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/stock-intelligence/dead-stock": {
-      "get": {
-        "operationId": "WarehouseController_getDeadStock",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/stock-intelligence/fast-movers": {
-      "get": {
-        "operationId": "WarehouseController_getFastMovers",
-        "parameters": [
+        "security": [
           {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
+            "bearer": []
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
+        "summary": "Forward recall traceability (Material Lot -> Affected Batches & Deliveries)",
         "tags": [
-          "Warehouse"
+          "qc"
         ]
       }
     },
-    "/v1/warehouse/stock-intelligence/slow-movers": {
-      "get": {
-        "operationId": "WarehouseController_getSlowMovers",
-        "parameters": [
-          {
-            "name": "days",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/stock-intelligence/reorder-suggestions": {
-      "get": {
-        "operationId": "WarehouseController_getReorderSuggestions",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/stock-intelligence/critical": {
-      "get": {
-        "operationId": "WarehouseController_getCriticalItems",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Warehouse"
-        ]
-      }
-    },
-    "/v1/warehouse/requisitions": {
+    "/v1/qc/audits": {
       "post": {
-        "operationId": "WarehouseController_createRequisition",
+        "operationId": "QCAuditsController_create",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateRequisitionDto"
+                "$ref": "#/components/schemas/CreateQCAuditDto"
               }
             }
           }
@@ -9954,25 +8648,50 @@
           }
         },
         "tags": [
-          "Warehouse"
+          "QCAudits"
         ]
       },
       "get": {
-        "operationId": "WarehouseController_listRequisitions",
-        "parameters": [],
+        "operationId": "QCAuditsController_findAll",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mine",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
         "tags": [
-          "Warehouse"
+          "QCAudits"
         ]
       }
     },
-    "/v1/warehouse/requisitions/{id}": {
+    "/v1/qc/audits/{id}": {
       "get": {
-        "operationId": "WarehouseController_getRequisition",
+        "operationId": "QCAuditsController_findOne",
         "parameters": [
           {
             "name": "id",
@@ -9989,13 +8708,337 @@
           }
         },
         "tags": [
-          "Warehouse"
+          "QCAudits"
         ]
       }
     },
-    "/v1/warehouse/requisitions/{id}/status": {
+    "/v1/qc/checklists": {
+      "get": {
+        "operationId": "QCChecklistsController_findAll",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all checklists with progress",
+        "tags": [
+          "qc"
+        ]
+      },
+      "post": {
+        "operationId": "QCChecklistsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create checklist",
+        "tags": [
+          "qc"
+        ]
+      }
+    },
+    "/v1/qc/checklists/completed": {
+      "get": {
+        "operationId": "QCChecklistsController_findCompleted",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List completed checklists",
+        "tags": [
+          "qc"
+        ]
+      }
+    },
+    "/v1/qc/checklists/categories": {
+      "get": {
+        "operationId": "QCChecklistsController_getCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List checklist categories",
+        "tags": [
+          "qc"
+        ]
+      }
+    },
+    "/v1/qc/checklists/{id}": {
+      "get": {
+        "operationId": "QCChecklistsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get single checklist detail",
+        "tags": [
+          "qc"
+        ]
+      },
       "patch": {
-        "operationId": "WarehouseController_updateRequisitionStatus",
+        "operationId": "QCChecklistsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update checklist status",
+        "tags": [
+          "qc"
+        ]
+      }
+    },
+    "/v1/qc/analytics/defect-pareto": {
+      "get": {
+        "operationId": "QCAnalyticsController_getDefectPareto",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "QCAnalytics"
+        ]
+      }
+    },
+    "/v1/qc/analytics/supplier-quality": {
+      "get": {
+        "operationId": "QCAnalyticsController_getSupplierQuality",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "QCAnalytics"
+        ]
+      }
+    },
+    "/v1/qc/analytics/funnel-degradation/{planId}": {
+      "get": {
+        "operationId": "QCAnalyticsController_getFunnelDegradation",
+        "parameters": [
+          {
+            "name": "planId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "QCAnalytics"
+        ]
+      }
+    },
+    "/v1/qc/analytics/vendor-watchlist": {
+      "get": {
+        "operationId": "QCAnalyticsController_getVendorWatchlist",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "QCAnalytics"
+        ]
+      }
+    },
+    "/v1/qc/analytics/rework-hold-log": {
+      "get": {
+        "operationId": "QCAnalyticsController_getReworkHoldLog",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "QCAnalytics"
+        ]
+      }
+    },
+    "/v1/qc/analytics/phase-breakdown": {
+      "get": {
+        "operationId": "QCAnalyticsController_getPhaseBreakdown",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get per-phase quality breakdown with pass/reject counts and defect details",
+        "tags": [
+          "QCAnalytics"
+        ]
+      }
+    },
+    "/v1/fulfillment/shipments": {
+      "post": {
+        "operationId": "ShipmentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShipmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Shipments"
+        ]
+      },
+      "get": {
+        "operationId": "ShipmentsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Shipments"
+        ]
+      }
+    },
+    "/v1/fulfillment/shipments/{id}/status": {
+      "patch": {
+        "operationId": "ShipmentsController_updateStatus",
         "parameters": [
           {
             "name": "id",
@@ -10011,7 +9054,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateRequisitionStatusDto"
+                "$ref": "#/components/schemas/UpdateShipmentStatusDto"
               }
             }
           }
@@ -10022,30 +9065,63 @@
           }
         },
         "tags": [
-          "Warehouse"
+          "Shipments"
         ]
       }
     },
-    "/v1/warehouse/stock-summary": {
+    "/v1/analytics/executive": {
       "get": {
-        "operationId": "WarehouseController_getStockSummary",
-        "parameters": [
-          {
-            "name": "groupBy",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "AnalyticsController_getExecutiveKPIs",
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
         "tags": [
-          "Warehouse"
+          "Analytics"
+        ]
+      }
+    },
+    "/v1/analytics/trends": {
+      "get": {
+        "operationId": "AnalyticsController_getTrends",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/v1/analytics/products": {
+      "get": {
+        "operationId": "AnalyticsController_getProductPerformance",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/v1/analytics/social": {
+      "get": {
+        "operationId": "AnalyticsController_getSocialAnalytics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Analytics"
         ]
       }
     },
@@ -16532,9 +15608,9 @@
         ]
       }
     },
-    "/v1/qc/dashboard": {
+    "/v1/bussdev/pipeline-v2/audit": {
       "get": {
-        "operationId": "QcController_getDashboard",
+        "operationId": "BussdevController_getPipelineV2Audit",
         "parameters": [],
         "responses": {
           "200": {
@@ -16546,15 +15622,15 @@
             "bearer": []
           }
         ],
-        "summary": "Get QC dashboard stats",
+        "summary": "Get pipeline audit log",
         "tags": [
-          "qc"
+          "bussdev"
         ]
       }
     },
-    "/v1/qc/workbench": {
+    "/v1/bussdev/pipeline-v2/leads": {
       "get": {
-        "operationId": "QcController_getWorkbench",
+        "operationId": "BussdevController_getPipelineV2Leads",
         "parameters": [],
         "responses": {
           "200": {
@@ -16566,16 +15642,26 @@
             "bearer": []
           }
         ],
-        "summary": "Get QC workbench (quarantine audits)",
+        "summary": "Get pipeline v2 active leads",
         "tags": [
-          "qc"
+          "bussdev"
         ]
       }
     },
-    "/v1/qc": {
+    "/v1/bussdev/lead": {
       "post": {
-        "operationId": "QcController_createLegacy",
+        "operationId": "BussdevController_createLead",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLeadDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -16586,153 +15672,15 @@
             "bearer": []
           }
         ],
-        "summary": "Submit QC audit (alias for POST /qc/audits with snake_case support)",
+        "summary": "Create a new business lead",
         "tags": [
-          "qc"
+          "bussdev"
         ]
       }
     },
-    "/v1/qc/report": {
-      "get": {
-        "operationId": "QcController_getReport",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get QC audit report",
-        "tags": [
-          "qc"
-        ]
-      }
-    },
-    "/v1/qc/analytics/reject-analysis": {
-      "get": {
-        "operationId": "QcController_getRejectAnalysis",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get reject analysis",
-        "tags": [
-          "qc"
-        ]
-      }
-    },
-    "/v1/qc/release": {
-      "post": {
-        "operationId": "QcController_executeRelease",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Release quarantined stock to AVAILABLE",
-        "tags": [
-          "qc"
-        ]
-      }
-    },
-    "/v1/qc/release/batches": {
-      "get": {
-        "operationId": "QcController_getReleaseBatches",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get batches eligible for or already released",
-        "tags": [
-          "qc"
-        ]
-      }
-    },
-    "/v1/qc/apj-releases": {
-      "get": {
-        "operationId": "QcController_getApjReleases",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get APJ release records",
-        "tags": [
-          "qc"
-        ]
-      },
-      "post": {
-        "operationId": "QcController_createApjRelease",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Submit APJ release record",
-        "tags": [
-          "qc"
-        ]
-      }
-    },
-    "/v1/qc/disposition/partial": {
-      "post": {
-        "operationId": "QcController_executePartialDisposition",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Execute partial disposition (Pass, Rework, Scrap)",
-        "tags": [
-          "qc"
-        ]
-      }
-    },
-    "/v1/qc/audits/{id}/retest": {
-      "post": {
-        "operationId": "QcController_executeRetest",
+    "/v1/bussdev/lead/{id}/advance": {
+      "patch": {
+        "operationId": "BussdevController_advanceLead",
         "parameters": [
           {
             "name": "id",
@@ -16743,122 +15691,160 @@
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Execute retest audit for a rework or held batch",
-        "tags": [
-          "qc"
-        ]
-      }
-    },
-    "/v1/qc/traceability/backward/{batchNumber}": {
-      "get": {
-        "operationId": "QcController_getBackwardTraceability",
-        "parameters": [
-          {
-            "name": "batchNumber",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Backward traceability tree (FG -> Stages -> Raw Material lots)",
-        "tags": [
-          "qc"
-        ]
-      }
-    },
-    "/v1/qc/traceability/forward/{materialBatch}": {
-      "get": {
-        "operationId": "QcController_getForwardRecallTraceability",
-        "parameters": [
-          {
-            "name": "materialBatch",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Forward recall traceability (Material Lot -> Affected Batches & Deliveries)",
-        "tags": [
-          "qc"
-        ]
-      }
-    },
-    "/v1/qc/audits": {
-      "post": {
-        "operationId": "QCAuditsController_create",
-        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateQCAuditDto"
+                "$ref": "#/components/schemas/AdvanceLeadDto"
               }
             }
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Advance a lead to the next stage",
         "tags": [
-          "QCAudits"
+          "bussdev"
         ]
-      },
+      }
+    },
+    "/v1/bussdev/dashboard": {
       "get": {
-        "operationId": "QCAuditsController_findAll",
+        "operationId": "BussdevController_getDashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tenant-scoped sales dashboard",
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/analytics/funnel": {
+      "get": {
+        "operationId": "BussdevController_getFunnelAnalytics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/analytics/pipeline-granular": {
+      "get": {
+        "operationId": "BussdevController_getGranularPipelineTable",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/analytics/staff-performance": {
+      "get": {
+        "operationId": "BussdevController_getBDPerformance",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/analytics/lost-churn": {
+      "get": {
+        "operationId": "BussdevController_getLostChurnTable",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/analytics/{group}": {
+      "get": {
+        "operationId": "BussdevController_getPageAnalytics",
         "parameters": [
           {
-            "name": "status",
+            "name": "group",
             "required": true,
-            "in": "query",
+            "in": "path",
             "schema": {
               "type": "string"
             }
-          },
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
           {
-            "name": "type",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/leads": {
+      "get": {
+        "operationId": "BussdevController_getLeads",
+        "parameters": [
           {
             "name": "mine",
             "required": true,
@@ -16873,42 +15859,44 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all leads",
         "tags": [
-          "QCAudits"
+          "bussdev"
         ]
       }
     },
-    "/v1/qc/audits/{id}": {
+    "/v1/bussdev/leads/stuck": {
       "get": {
-        "operationId": "QCAuditsController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "BussdevController_getStuckLeads",
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
-          "QCAudits"
+          "bussdev"
         ]
       }
     },
-    "/v1/qc/checklists": {
+    "/v1/bussdev/leads/group/{group}": {
       "get": {
-        "operationId": "QCChecklistsController_findAll",
+        "operationId": "BussdevController_getLeadsByGroup",
         "parameters": [
           {
-            "name": "status",
+            "name": "group",
             "required": true,
-            "in": "query",
+            "in": "path",
             "schema": {
               "type": "string"
             }
@@ -16924,13 +15912,50 @@
             "bearer": []
           }
         ],
-        "summary": "List all checklists with progress",
         "tags": [
-          "qc"
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/staffs": {
+      "get": {
+        "operationId": "BussdevController_getStaffs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/samples": {
+      "get": {
+        "operationId": "BussdevController_getClientSamples",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
         ]
       },
       "post": {
-        "operationId": "QCChecklistsController_create",
+        "operationId": "BussdevController_createSample",
         "parameters": [],
         "responses": {
           "201": {
@@ -16942,55 +15967,15 @@
             "bearer": []
           }
         ],
-        "summary": "Create checklist",
+        "summary": "Create a new sample sales order",
         "tags": [
-          "qc"
+          "bussdev"
         ]
       }
     },
-    "/v1/qc/checklists/completed": {
-      "get": {
-        "operationId": "QCChecklistsController_findCompleted",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List completed checklists",
-        "tags": [
-          "qc"
-        ]
-      }
-    },
-    "/v1/qc/checklists/categories": {
-      "get": {
-        "operationId": "QCChecklistsController_getCategories",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List checklist categories",
-        "tags": [
-          "qc"
-        ]
-      }
-    },
-    "/v1/qc/checklists/{id}": {
-      "get": {
-        "operationId": "QCChecklistsController_findOne",
+    "/v1/bussdev/sample/{id}/ship": {
+      "patch": {
+        "operationId": "BussdevController_shipSample",
         "parameters": [
           {
             "name": "id",
@@ -17011,13 +15996,285 @@
             "bearer": []
           }
         ],
-        "summary": "Get single checklist detail",
         "tags": [
-          "qc"
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/sample/{id}/feedback": {
+      "patch": {
+        "operationId": "BussdevController_submitFeedback",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/lead/{id}/activity": {
+      "post": {
+        "operationId": "BussdevController_logActivity",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Log a text interaction (Chat/Call/Meeting)",
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/lead/{id}/activity-stream": {
+      "get": {
+        "operationId": "BussdevController_getActivityStream",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/lead/{id}/balance": {
+      "get": {
+        "operationId": "BussdevController_getLeadBalance",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/guest/{id}/convert": {
+      "post": {
+        "operationId": "BussdevController_convertGuestToLead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/sales-order/{id}/status": {
+      "patch": {
+        "operationId": "BussdevController_updateSoStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/lead/{id}/override": {
+      "patch": {
+        "operationId": "BussdevController_emergencyOverride",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/debug/leads": {
+      "get": {
+        "operationId": "BussdevController_debugLeads",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/retention-engine/{id}/trigger": {
+      "post": {
+        "operationId": "BussdevController_triggerRetention",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/lead/{id}": {
+      "get": {
+        "operationId": "BussdevController_getLead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get single lead detail",
+        "tags": [
+          "bussdev"
         ]
       },
-      "patch": {
-        "operationId": "QCChecklistsController_update",
+      "put": {
+        "operationId": "BussdevController_updateLead",
         "parameters": [
           {
             "name": "id",
@@ -17038,80 +16295,16 @@
             "bearer": []
           }
         ],
-        "summary": "Update checklist status",
+        "summary": "Update (or reassign) a lead",
         "tags": [
-          "qc"
+          "bussdev"
         ]
-      }
-    },
-    "/v1/qc/analytics/defect-pareto": {
-      "get": {
-        "operationId": "QCAnalyticsController_getDefectPareto",
+      },
+      "delete": {
+        "operationId": "BussdevController_deleteLead",
         "parameters": [
           {
-            "name": "from",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "to",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "QCAnalytics"
-        ]
-      }
-    },
-    "/v1/qc/analytics/supplier-quality": {
-      "get": {
-        "operationId": "QCAnalyticsController_getSupplierQuality",
-        "parameters": [
-          {
-            "name": "from",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "to",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "QCAnalytics"
-        ]
-      }
-    },
-    "/v1/qc/analytics/funnel-degradation/{planId}": {
-      "get": {
-        "operationId": "QCAnalyticsController_getFunnelDegradation",
-        "parameters": [
-          {
-            "name": "planId",
+            "name": "id",
             "required": true,
             "in": "path",
             "schema": {
@@ -17124,55 +16317,45 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a lead",
         "tags": [
-          "QCAnalytics"
+          "bussdev"
         ]
       }
     },
-    "/v1/qc/analytics/vendor-watchlist": {
-      "get": {
-        "operationId": "QCAnalyticsController_getVendorWatchlist",
+    "/v1/bussdev/sample-request": {
+      "post": {
+        "operationId": "BussdevController_createSampleRequest",
         "parameters": [],
         "responses": {
-          "200": {
+          "201": {
             "description": ""
           }
         },
-        "tags": [
-          "QCAnalytics"
-        ]
-      }
-    },
-    "/v1/qc/analytics/rework-hold-log": {
-      "get": {
-        "operationId": "QCAnalyticsController_getReworkHoldLog",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
+        "security": [
+          {
+            "bearer": []
           }
-        },
+        ],
+        "summary": "Create sample request (from SOT)",
         "tags": [
-          "QCAnalytics"
+          "bussdev"
         ]
       }
     },
-    "/v1/qc/analytics/phase-breakdown": {
-      "get": {
-        "operationId": "QCAnalyticsController_getPhaseBreakdown",
+    "/v1/bussdev/sample-request/{id}": {
+      "patch": {
+        "operationId": "BussdevController_updateSampleRequest",
         "parameters": [
           {
-            "name": "from",
+            "name": "id",
             "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "to",
-            "required": true,
-            "in": "query",
+            "in": "path",
             "schema": {
               "type": "string"
             }
@@ -17183,22 +16366,849 @@
             "description": ""
           }
         },
-        "summary": "Get per-phase quality breakdown with pass/reject counts and defect details",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a sample request",
         "tags": [
-          "QCAnalytics"
+          "bussdev"
         ]
       }
     },
-    "/v1/fulfillment/shipments": {
+    "/v1/bussdev/approve-sample": {
       "post": {
-        "operationId": "ShipmentsController_create",
+        "operationId": "BussdevController_approveSample",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve a sample",
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/sales-order": {
+      "post": {
+        "operationId": "BussdevController_createSalesOrder",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a sales order",
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/sales-orders": {
+      "get": {
+        "operationId": "BussdevController_getSalesOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all sales orders",
+        "tags": [
+          "bussdev"
+        ]
+      }
+    },
+    "/v1/bussdev/returns": {
+      "get": {
+        "operationId": "ReturnsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all sales returns",
+        "tags": [
+          "bussdev/returns"
+        ]
+      },
+      "post": {
+        "operationId": "ReturnsController_create",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateShipmentDto"
+                "$ref": "#/components/schemas/CreateReturnDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a sales return record",
+        "tags": [
+          "bussdev/returns"
+        ]
+      }
+    },
+    "/v1/bussdev/returns/{id}": {
+      "get": {
+        "operationId": "ReturnsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get sales return by ID",
+        "tags": [
+          "bussdev/returns"
+        ]
+      },
+      "patch": {
+        "operationId": "ReturnsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update return status/notes",
+        "tags": [
+          "bussdev/returns"
+        ]
+      },
+      "delete": {
+        "operationId": "ReturnsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soft-delete a sales return",
+        "tags": [
+          "bussdev/returns"
+        ]
+      }
+    },
+    "/v1/warehouse/stats": {
+      "get": {
+        "operationId": "WarehouseController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/audit": {
+      "get": {
+        "operationId": "WarehouseController_getAudit",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/catalog": {
+      "get": {
+        "operationId": "WarehouseController_getCatalog",
+        "parameters": [
+          {
+            "name": "warehouseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/warehouses": {
+      "get": {
+        "operationId": "WarehouseController_getWarehouses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/transactions": {
+      "get": {
+        "operationId": "WarehouseController_getTransactions",
+        "parameters": [
+          {
+            "name": "materialId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/history/{materialId}": {
+      "get": {
+        "operationId": "WarehouseController_getHistory",
+        "parameters": [
+          {
+            "name": "materialId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/check-thresholds": {
+      "get": {
+        "operationId": "WarehouseController_checkThresholds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/locations": {
+      "get": {
+        "operationId": "WarehouseController_getLocations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/suggest-batch/{materialId}": {
+      "get": {
+        "operationId": "WarehouseController_getSuggestedBatch",
+        "parameters": [
+          {
+            "name": "materialId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/validate-handover": {
+      "post": {
+        "operationId": "WarehouseController_validateHandover",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/opname/{id}/approve": {
+      "post": {
+        "operationId": "WarehouseController_approveOpname",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/release/{workOrderId}": {
+      "post": {
+        "operationId": "WarehouseController_releaseMaterial",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/batches/{id}/status": {
+      "post": {
+        "operationId": "WarehouseController_updateBatchStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/transfers": {
+      "post": {
+        "operationId": "WarehouseController_createTransfer",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      },
+      "get": {
+        "operationId": "WarehouseController_getTransfers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/transfers/{id}/execute": {
+      "post": {
+        "operationId": "WarehouseController_executeTransfer",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/warehouses/{id}/check-access": {
+      "get": {
+        "operationId": "WarehouseController_checkWarehouseAccess",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/opname": {
+      "post": {
+        "operationId": "WarehouseController_createOpname",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      },
+      "get": {
+        "operationId": "WarehouseController_getOpnames",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/opname/{id}/approve-pin": {
+      "post": {
+        "operationId": "WarehouseController_approveOpnameWithPin",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/inbounds": {
+      "get": {
+        "operationId": "WarehouseController_getInbounds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      },
+      "post": {
+        "operationId": "WarehouseController_createInbound",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/adjustments": {
+      "get": {
+        "operationId": "WarehouseController_getAdjustments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      },
+      "post": {
+        "operationId": "WarehouseController_createAdjustment",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/adjustments/{id}/approve": {
+      "post": {
+        "operationId": "WarehouseController_approveAdjustment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/adjustments/{id}/reject": {
+      "post": {
+        "operationId": "WarehouseController_rejectAdjustment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/release-requests": {
+      "get": {
+        "operationId": "WarehouseController_getReleaseRequests",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/picking/validate": {
+      "post": {
+        "operationId": "WarehouseController_validatePicking",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/picking/execute": {
+      "post": {
+        "operationId": "WarehouseController_executePicking",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/inbounds/{id}/release": {
+      "post": {
+        "operationId": "WarehouseController_releaseFromQuarantine",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/stock-intelligence/abc": {
+      "get": {
+        "operationId": "WarehouseController_getABCAnalysis",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/stock-intelligence/dead-stock": {
+      "get": {
+        "operationId": "WarehouseController_getDeadStock",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/stock-intelligence/fast-movers": {
+      "get": {
+        "operationId": "WarehouseController_getFastMovers",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/stock-intelligence/slow-movers": {
+      "get": {
+        "operationId": "WarehouseController_getSlowMovers",
+        "parameters": [
+          {
+            "name": "days",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/stock-intelligence/reorder-suggestions": {
+      "get": {
+        "operationId": "WarehouseController_getReorderSuggestions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/stock-intelligence/critical": {
+      "get": {
+        "operationId": "WarehouseController_getCriticalItems",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/requisitions": {
+      "post": {
+        "operationId": "WarehouseController_createRequisition",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRequisitionDto"
               }
             }
           }
@@ -17209,11 +17219,11 @@
           }
         },
         "tags": [
-          "Shipments"
+          "Warehouse"
         ]
       },
       "get": {
-        "operationId": "ShipmentsController_findAll",
+        "operationId": "WarehouseController_listRequisitions",
         "parameters": [],
         "responses": {
           "200": {
@@ -17221,13 +17231,36 @@
           }
         },
         "tags": [
-          "Shipments"
+          "Warehouse"
         ]
       }
     },
-    "/v1/fulfillment/shipments/{id}/status": {
+    "/v1/warehouse/requisitions/{id}": {
+      "get": {
+        "operationId": "WarehouseController_getRequisition",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Warehouse"
+        ]
+      }
+    },
+    "/v1/warehouse/requisitions/{id}/status": {
       "patch": {
-        "operationId": "ShipmentsController_updateStatus",
+        "operationId": "WarehouseController_updateRequisitionStatus",
         "parameters": [
           {
             "name": "id",
@@ -17243,7 +17276,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateShipmentStatusDto"
+                "$ref": "#/components/schemas/UpdateRequisitionStatusDto"
               }
             }
           }
@@ -17254,63 +17287,30 @@
           }
         },
         "tags": [
-          "Shipments"
+          "Warehouse"
         ]
       }
     },
-    "/v1/analytics/executive": {
+    "/v1/warehouse/stock-summary": {
       "get": {
-        "operationId": "AnalyticsController_getExecutiveKPIs",
-        "parameters": [],
+        "operationId": "WarehouseController_getStockSummary",
+        "parameters": [
+          {
+            "name": "groupBy",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
         "tags": [
-          "Analytics"
-        ]
-      }
-    },
-    "/v1/analytics/trends": {
-      "get": {
-        "operationId": "AnalyticsController_getTrends",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Analytics"
-        ]
-      }
-    },
-    "/v1/analytics/products": {
-      "get": {
-        "operationId": "AnalyticsController_getProductPerformance",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Analytics"
-        ]
-      }
-    },
-    "/v1/analytics/social": {
-      "get": {
-        "operationId": "AnalyticsController_getSocialAnalytics",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Analytics"
+          "Warehouse"
         ]
       }
     },
@@ -22714,6 +22714,20 @@
         ]
       }
     },
+    "/v1/notifications/unread": {
+      "get": {
+        "operationId": "NotificationController_getUnread",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
     "/v1/notifications/unread-count": {
       "get": {
         "operationId": "NotificationController_getUnreadCount",
@@ -25283,11 +25297,59 @@
         "type": "object",
         "properties": {}
       },
-      "CreateLeadDto": {
+      "CreateAuditDto": {
         "type": "object",
         "properties": {}
       },
-      "AdvanceLeadDto": {
+      "UpdateAuditChecklistDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AddFindingDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateLostDealDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateStageDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateDisplayNameDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ApproveGuestbookDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateSalesOrderDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateSalesOrderDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AmendSalesOrderDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SetDeliveryGateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateInvoiceDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreatePaymentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateSalesDpDto": {
         "type": "object",
         "properties": {}
       },
@@ -25525,66 +25587,6 @@
         "type": "object",
         "properties": {}
       },
-      "CreateAuditDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "UpdateAuditChecklistDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "AddFindingDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "CreateReturnDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "CreateLostDealDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "UpdateStageDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "UpdateDisplayNameDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "ApproveGuestbookDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "CreateSalesOrderDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "UpdateSalesOrderDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "AmendSalesOrderDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "SetDeliveryGateDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "CreateInvoiceDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "CreatePaymentDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "CreateSalesDpDto": {
-        "type": "object",
-        "properties": {}
-      },
       "CreateProductionPlanDto": {
         "type": "object",
         "properties": {}
@@ -25605,7 +25607,15 @@
         "type": "object",
         "properties": {}
       },
-      "UpdateRequisitionStatusDto": {
+      "CreateQCAuditDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateShipmentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateShipmentStatusDto": {
         "type": "object",
         "properties": {}
       },
@@ -27047,15 +27057,19 @@
           "actualPrice"
         ]
       },
-      "CreateQCAuditDto": {
+      "CreateLeadDto": {
         "type": "object",
         "properties": {}
       },
-      "CreateShipmentDto": {
+      "AdvanceLeadDto": {
         "type": "object",
         "properties": {}
       },
-      "UpdateShipmentStatusDto": {
+      "CreateReturnDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateRequisitionStatusDto": {
         "type": "object",
         "properties": {}
       },

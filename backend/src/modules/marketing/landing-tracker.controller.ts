@@ -7,7 +7,12 @@ import {
   Put,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '@prisma/client';
 import { LandingTrackerService } from './landing-tracker.service';
 import {
   CreateVisitDto,
@@ -76,11 +81,15 @@ export class LandingTrackerController {
 
   // ========== REST ENDPOINTS FOR SALES ROTATION AND CONFIG ==========
   @Get('sales')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MARKETING, UserRole.COMMERCIAL)
   async getSales(): Promise<any[]> {
     return await this.landingTrackerService.getSales();
   }
 
   @Post('sales')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MARKETING, UserRole.COMMERCIAL)
   async saveSales(@Body() sales: any[]) {
     return {
       success: await this.landingTrackerService.saveSales(sales),
@@ -88,6 +97,8 @@ export class LandingTrackerController {
   }
 
   @Post('sales/reset-counter')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MARKETING)
   async resetRotationCounter() {
     return {
       success: await this.landingTrackerService.resetRotationCounter(),
@@ -130,6 +141,8 @@ export class LandingTrackerController {
 
   // ========== ADMIN ACTION PERSISTENCE ==========
   @Put('conversions/:id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MARKETING, UserRole.COMMERCIAL)
   async updateConversionStatus(
     @Param('id') id: string,
     @Body('status') status: string,
@@ -138,11 +151,15 @@ export class LandingTrackerController {
   }
 
   @Delete('conversions/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async deleteConversion(@Param('id') id: string) {
     return await this.landingTrackerService.deleteConversion(id);
   }
 
   @Delete('conversions')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
   async clearAllConversions() {
     return await this.landingTrackerService.clearAllConversions();
   }

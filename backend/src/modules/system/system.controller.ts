@@ -6,12 +6,19 @@ import {
   Body,
   Param,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { StateTransitionService } from './state-transition.service';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { ErrorAggregationService } from './services/error-aggregation.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '@prisma/client';
 
 @Controller('system')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.IT_SYS)
 export class SystemController {
   constructor(
     private stateTransition: StateTransitionService,

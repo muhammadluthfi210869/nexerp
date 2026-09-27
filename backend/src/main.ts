@@ -27,6 +27,21 @@ async function bootstrap() {
   // every browser bundle and existing integration.
   app.setGlobalPrefix('v1');
 
+  // Support direct requests without /v1 prefix or using /api/* prefix (e.g. E2E tests, scripts)
+  app.use((req: any, _res: any, next: any) => {
+    if (req.url.startsWith('/api/docs')) {
+      return next();
+    }
+    if (req.url.startsWith('/api/')) {
+      req.url = req.url.replace(/^\/api/, '/v1');
+      return next();
+    }
+    if (!req.url.startsWith('/v1') && !req.url.startsWith('/socket.io')) {
+      req.url = '/v1' + (req.url.startsWith('/') ? req.url : '/' + req.url);
+    }
+    next();
+  });
+
   // Enable Global Response Standardization
   app.useGlobalFilters(new GlobalExceptionFilter());
 

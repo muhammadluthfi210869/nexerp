@@ -14,6 +14,7 @@ export class CommunicationProtocolService {
    * Listener for Stage Finalization in Production.
    * Automatically deducts materials used during the stage.
    */
+  @OnEvent('production.schedule_completed')
   @OnEvent('production.schedule.finished')
   async handleProductionFinished(payload: {
     scheduleId: string;

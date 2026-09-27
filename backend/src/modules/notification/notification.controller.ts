@@ -32,12 +32,21 @@ export class NotificationController {
     @Query('limit') limit?: string,
   ) {
     const isRead = read === undefined ? undefined : read === 'true';
-    return this.notificationService.listNotifications(getUserId(req), {
+    const result = await this.notificationService.listNotifications(getUserId(req), {
       read: isRead,
       type,
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 50,
     });
+    return result.data;
+  }
+
+  @Get('unread')
+  async getUnread(@Req() req: any) {
+    const result = await this.notificationService.listNotifications(getUserId(req), {
+      read: false,
+    });
+    return result.data;
   }
 
   @Get('unread-count')

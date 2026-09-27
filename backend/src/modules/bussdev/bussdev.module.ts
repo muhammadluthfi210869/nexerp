@@ -1,10 +1,9 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { BussdevService } from './bussdev.service';
 import { BussdevController } from './bussdev.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { BussdevListener } from './bussdev.listener';
 
-import { ScmModule } from '../scm/scm.module';
 import { LeadService } from './services/lead.service';
 import { PipelineService } from './services/pipeline.service';
 import { RetentionService } from './services/retention.service';
@@ -15,7 +14,7 @@ import { OutboxService } from '../../platform/outbox/outbox.service';
 import { ReturnsModule } from './returns/returns.module';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => ScmModule), ReturnsModule],
+  imports: [PrismaModule, ReturnsModule],
   controllers: [BussdevController],
   providers: [
     BussdevService,

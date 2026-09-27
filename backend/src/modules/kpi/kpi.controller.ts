@@ -55,6 +55,7 @@ export class KpiController {
   }
 
   @Post('manual-score')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HR, UserRole.ADMIN, UserRole.HEAD_OPS, UserRole.DIRECTOR)
   saveManualScore(@Body() body: any) {
     return this.kpi.saveManualScore(body);
   }
@@ -85,6 +86,7 @@ export class KpiController {
   }
 
   @Post('employees/:id/recalculate')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HR, UserRole.ADMIN, UserRole.HEAD_OPS, UserRole.DIRECTOR)
   recalculate(@Param('id') id: string) {
     return this.kpi.computePerson(id, this.kpi.periodThisMonth());
   }

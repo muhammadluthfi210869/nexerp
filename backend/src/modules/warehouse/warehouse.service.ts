@@ -10,8 +10,9 @@ import { ModuleRef } from '@nestjs/core';
 import { logBestEffort } from '../../common/helpers/best-effort';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
 import { ScmService } from '../scm/services/scm.service';
-import { LifecycleStatus } from '@prisma/client';
+import { LifecycleStatus, Division, StreamEventType } from '@prisma/client';
 import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
+import { ACTIVITY_EVENT } from '../activity-stream/events/activity.events';
 import { StockLedgerService } from './services/stock-ledger.service';
 import { IdGeneratorService } from '../system/id-generator.service';
 
@@ -2169,6 +2170,25 @@ export class WarehouseService {
     }
 
     return { status: 'OK', utility: currentUtility };
+  }
+
+  @OnEvent('finance.payment_verified_warehouse_check')
+  async handlePaymentVerifiedWarehouseCheck(payload: { leadId: string }) {
+    try {
+      const whResult = await this.checkCapacityForNewDeal(payload.leadId);
+      if (whResult && whResult.status !== 'OK') {
+        this.eventEmitter.emit(ACTIVITY_EVENT, {
+          leadId: payload.leadId,
+          senderDivision: Division.WAREHOUSE,
+          eventType: StreamEventType.STOCK_CHECK_SHORTAGE,
+          notes: whResult.message,
+          loggedBy: 'SYSTEM_WAREHOUSE',
+          isCritical: whResult.status === 'CRITICAL',
+        });
+      }
+    } catch (err) {
+      logBestEffort(this.logger, 'warehouse:payment-verified-check', err);
+    }
   }
 
   // Item 53: Get stock summary grouped by bahanType

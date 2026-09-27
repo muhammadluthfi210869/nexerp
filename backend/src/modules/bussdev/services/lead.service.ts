@@ -142,24 +142,24 @@ export class LeadService {
   > = {
     NEW_LEAD: ['CONTACTED', 'FOLLOW_UP_1', 'COLD', 'WARM', 'LOST', 'ABORTED'],
     CONTACTED: [
-      'FOLLOW_UP_1', 'FOLLOW_UP_2', 'SAMPLE_REQUESTED', 'LOST', 'ABORTED',
+      'FOLLOW_UP_1', 'FOLLOW_UP_2', 'NEGOTIATION', 'SAMPLE_REQUESTED', 'SPK_SIGNED', 'LOST', 'ABORTED',
     ],
     FOLLOW_UP_1: [
-      'FOLLOW_UP_2', 'SAMPLE_REQUESTED', 'LOST', 'ABORTED',
+      'FOLLOW_UP_2', 'NEGOTIATION', 'SAMPLE_REQUESTED', 'SPK_SIGNED', 'LOST', 'ABORTED',
     ],
     FOLLOW_UP_2: [
-      'FOLLOW_UP_3', 'SAMPLE_REQUESTED', 'LOST', 'ABORTED',
+      'FOLLOW_UP_3', 'NEGOTIATION', 'SAMPLE_REQUESTED', 'SPK_SIGNED', 'LOST', 'ABORTED',
     ],
     FOLLOW_UP_3: [
-      'NEGOTIATION', 'SAMPLE_REQUESTED', 'LOST', 'ABORTED',
+      'NEGOTIATION', 'SAMPLE_REQUESTED', 'SPK_SIGNED', 'LOST', 'ABORTED',
     ],
     NEGOTIATION: [
-      'SAMPLE_REQUESTED', 'SPK_SIGNED', 'LOST', 'ABORTED',
+      'SAMPLE_REQUESTED', 'SPK_SIGNED', 'WON_DEAL', 'LOST', 'ABORTED',
     ],
-    SAMPLE_REQUESTED: ['SAMPLE_SENT', 'LOST', 'ABORTED'],
-    SAMPLE_SENT: ['SAMPLE_APPROVED', 'LOST', 'ABORTED'],
-    SAMPLE_APPROVED: ['SPK_SIGNED', 'LOST', 'ABORTED'],
-    SPK_SIGNED: ['WAITING_FINANCE_APPROVAL', 'DP_PAID', 'LOST', 'ABORTED'],
+    SAMPLE_REQUESTED: ['SAMPLE_SENT', 'SAMPLE_APPROVED', 'SPK_SIGNED', 'WON_DEAL', 'LOST', 'ABORTED'],
+    SAMPLE_SENT: ['SAMPLE_APPROVED', 'SPK_SIGNED', 'WON_DEAL', 'LOST', 'ABORTED'],
+    SAMPLE_APPROVED: ['SPK_SIGNED', 'WON_DEAL', 'LOST', 'ABORTED'],
+    SPK_SIGNED: ['WAITING_FINANCE_APPROVAL', 'DP_PAID', 'WON_DEAL', 'LOST', 'ABORTED'],
     WAITING_FINANCE_APPROVAL: ['DP_PAID', 'LOST', 'ABORTED'],
     DP_PAID: ['PRODUCTION_PLAN', 'LOST', 'ABORTED'],
     PRODUCTION_PLAN: ['READY_TO_SHIP', 'LOST', 'ABORTED'],
@@ -751,6 +751,16 @@ export class LeadService {
         },
       });
 
+      await tx.activityStream.create({
+        data: {
+          leadId: dto.leadId,
+          senderDivision: Division.BD,
+          eventType: StreamEventType.MANUAL_LOG,
+          notes: `[${dto.activityType}] ${dto.notes}`,
+          loggedBy: 'system',
+        },
+      });
+
       await tx.salesLead.update({
         where: { id: dto.leadId },
         data: { lastFollowUpAt: new Date() },
@@ -800,7 +810,7 @@ export class LeadService {
 
   private isUuid(value: unknown): value is string {
     return typeof value === 'string' &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
   }
 
   private assertTrustedOrganization(orgId: unknown): string {
@@ -901,6 +911,12 @@ export class LeadService {
     leadId: string,
     dto: AdvanceLeadDto,
     actor: P07ActorContext,
+    files?: {
+      paymentProof?: Express.Multer.File[];
+      spkFile?: Express.Multer.File[];
+      pnfFile?: Express.Multer.File[];
+      quotationFile?: Express.Multer.File[];
+    },
   ) {
     const orgId = this.assertTrustedOrganization(actor.organizationId);
     // Mirrors the route's RolesGuard, including its SUPER_ADMIN/DIRECTOR bypass.
@@ -932,7 +948,6 @@ export class LeadService {
       //    non-disclosing 404 and never touch consent, audit or outbox.
       const currentLead = await tx.salesLead.findUnique({
         where: { id: leadId },
-        select: { id: true, organizationId: true, status: true, leadCaptureId: true },
       });
       if (!currentLead || currentLead.organizationId !== orgId) {
         throw new NotFoundException('Lead tidak ditemukan');
@@ -992,9 +1007,182 @@ export class LeadService {
           afterSnapshot: { status: dto.newStatus },
         },
         async () => {
+          const paymentProofUrl =
+            files?.paymentProof?.[0]?.path || dto.paymentProofUrl;
+          const spkFileUrl = files?.spkFile?.[0]?.path || dto.spkFileUrl;
+          const pnfFileUrl = files?.pnfFile?.[0]?.path || dto.pnfFileUrl;
+
+          const now = new Date();
+          const lastStageAt = currentLead.lastStageAt || currentLead.createdAt;
+          const durationHours = Math.floor(
+            (now.getTime() - lastStageAt.getTime()) / (1000 * 60 * 60),
+          );
+
           const updatedLead = await tx.salesLead.update({
             where: { id: leadId },
-            data: { status: dto.newStatus, lastStageAt: new Date() },
+            data: {
+              status: dto.newStatus,
+              paymentType: dto.paymentType || currentLead.paymentType,
+              lostReason: dto.newStatus === 'LOST' ? dto.lostReason : null,
+              isRepeatOrder:
+                dto.isRepeatOrder !== undefined
+                  ? dto.isRepeatOrder
+                  : currentLead.isRepeatOrder,
+              lastStageAt: now,
+              statusDuration: durationHours,
+              categoryEnum: (dto.productCategory ||
+                currentLead.categoryEnum) as any,
+              moq: dto.estimatedMoq || currentLead.moq,
+              planOmset: dto.planOmset || currentLead.planOmset,
+              packagingSuggestion:
+                dto.packagingSuggestion || currentLead.packagingSuggestion,
+              designSuggestion:
+                dto.designSuggestion || currentLead.designSuggestion,
+              valueSuggestion: dto.valueSuggestion || currentLead.valueSuggestion,
+              notes: dto.notes || currentLead.notes,
+              spkFileUrl: spkFileUrl || currentLead.spkFileUrl,
+            },
+          });
+
+          if (dto.newStatus === WorkflowStatus.SAMPLE_REQUESTED) {
+            let npf = await tx.newProductForm.findFirst({
+              where: { leadId: leadId },
+            });
+
+            if (npf) {
+              npf = await tx.newProductForm.update({
+                where: { id: npf.id },
+                data: {
+                  conceptNotes: dto.productConcept || npf.conceptNotes,
+                  targetPrice: dto.targetPrice || npf.targetPrice,
+                  status: 'PENDING',
+                },
+              });
+            } else {
+              npf = await tx.newProductForm.create({
+                data: {
+                  leadId: leadId,
+                  productName: currentLead.productInterest,
+                  targetPrice: dto.targetPrice || 0,
+                  conceptNotes: dto.productConcept,
+                },
+              });
+            }
+
+            const existingSample = await tx.sampleRequest.findFirst({
+              where: { leadId: leadId },
+            });
+
+            if (existingSample) {
+              await tx.sampleRequest.update({
+                where: { id: existingSample.id },
+                data: {
+                  stage: SampleStage.WAITING_FINANCE,
+                  pnfFileUrl: pnfFileUrl || existingSample.pnfFileUrl,
+                  paymentProofUrl:
+                    paymentProofUrl || existingSample.paymentProofUrl,
+                  currentExpectations:
+                    dto.clientExpectations || existingSample.currentExpectations,
+                },
+              });
+            } else {
+              const sampleCode = await this.idGenerator.generateId('SMP');
+              await tx.sampleRequest.create({
+                data: {
+                  sampleCode: sampleCode,
+                  leadId: leadId,
+                  npfId: npf.id,
+                  productName: currentLead.brandName || currentLead.productInterest,
+                  stage: SampleStage.WAITING_FINANCE,
+                  pnfFileUrl: pnfFileUrl,
+                  paymentProofUrl: paymentProofUrl,
+                  currentExpectations: dto.clientExpectations,
+                  targetFunction: '',
+                  textureReq: '',
+                  colorReq: '',
+                  aromaReq: '',
+                },
+              });
+            }
+
+            if (pnfFileUrl) {
+              this.eventEmitter.emit('sample.requested', {
+                leadId: leadId,
+                requestedBy: dto.loggedBy || actor.userId || 'SYSTEM_BD',
+                notes: dto.notes,
+              });
+            }
+          }
+
+          if (dto.newStatus === WorkflowStatus.SPK_SIGNED) {
+            const orderId = await this.idGenerator.generateId('SO');
+            let approvedSample = await tx.sampleRequest.findFirst({
+              where: { leadId: leadId, stage: SampleStage.APPROVED },
+              orderBy: { createdAt: 'desc' },
+            });
+
+            if (!approvedSample) {
+              approvedSample = await tx.sampleRequest.findFirst({
+                where: { leadId: leadId },
+                orderBy: { createdAt: 'desc' },
+              });
+            }
+
+            if (!approvedSample) {
+              const sampleCode = await this.idGenerator.generateId('SMP');
+              approvedSample = await tx.sampleRequest.create({
+                data: {
+                  sampleCode,
+                  leadId,
+                  productName: currentLead.brandName || currentLead.productInterest || 'Sample Product',
+                  stage: SampleStage.APPROVED,
+                  targetFunction: '',
+                  textureReq: '',
+                  colorReq: '',
+                  aromaReq: '',
+                },
+              });
+            }
+
+            await tx.salesOrder.create({
+              data: {
+                orderNumber: orderId,
+                leadId: leadId,
+                sampleId: approvedSample.id,
+                totalAmount:
+                  dto.planOmset ||
+                  currentLead.planOmset ||
+                  currentLead.estimatedValue ||
+                  0,
+                quantity: currentLead.moq || 0,
+                status: 'PENDING_DP',
+                brandName: currentLead.brandName,
+                organizationId: orgId,
+              },
+            });
+
+            await tx.leadTimelineLog.create({
+              data: {
+                leadId: leadId,
+                action: 'SO_DRAFT_CREATED',
+                notes:
+                  'Sales Order ' +
+                  orderId +
+                  ' diterbitkan. Menunggu pembayaran DP oleh Client.',
+                loggedBy: 'SYSTEM_FINANCE_BRIDGE',
+              },
+            });
+          }
+
+          await tx.leadTimelineLog.create({
+            data: {
+              leadId: leadId,
+              action: dto.action || 'STAGE_UPDATED',
+              previousStatus: currentLead.status,
+              newStatus: dto.newStatus,
+              notes: dto.notes || `Lead Stage berubah dari ${currentLead.status} ke ${dto.newStatus}`,
+              loggedBy: dto.loggedBy || actor.userId || 'SYSTEM',
+            },
           });
 
           await this.outboxService.enqueue(
@@ -1025,6 +1213,25 @@ export class LeadService {
               statusCode: 200,
               expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
             },
+          });
+
+          this.eventEmitter.emit(ACTIVITY_EVENT, {
+            leadId: leadId,
+            senderDivision: Division.BD,
+            eventType: StreamEventType.STATE_CHANGE,
+            notes: dto.notes || `Lead Stage berubah dari ${currentLead.status} ke ${dto.newStatus}`,
+            loggedBy: dto.loggedBy || actor.userId || 'SYSTEM',
+            payload: {
+              previousStage: currentLead.status,
+              newStatus: dto.newStatus,
+            },
+          });
+
+          this.eventEmitter.emit(BUSSDEV_EVENTS.STAGE_UPDATED, {
+            leadId,
+            previousStage: currentLead.status,
+            newStage: dto.newStatus,
+            loggedBy: dto.loggedBy || actor.userId || 'SYSTEM',
           });
 
           return updatedLead;

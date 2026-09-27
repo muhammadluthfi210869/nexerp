@@ -13,8 +13,6 @@ import {
 } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BussdevService } from '../bussdev/bussdev.service';
-import { Inject, forwardRef } from '@nestjs/common';
 import { AuditService } from '../../platform/audit/audit.service';
 import { OutboxService } from '../../platform/outbox/outbox.service';
 
@@ -52,8 +50,6 @@ export class CreativeService {
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
-    @Inject(forwardRef(() => BussdevService))
-    private bussdevService: BussdevService,
     private audit: AuditService,
     private outbox: OutboxService,
   ) {}
@@ -539,6 +535,7 @@ export class CreativeService {
         });
         this.eventEmitter.emit('creative.task.locked', {
           taskId,
+          leadId: task.leadId,
           finalArtworkUrl: latestVersion!.artworkUrl,
           finalMockupUrl: latestVersion!.mockupUrl,
         });
@@ -547,10 +544,6 @@ export class CreativeService {
           notes: `Design task ${taskId.slice(0, 8)} LOCKED — Client approved V${latestVersion!.versionNumber}. Auto-generated PO.`,
           loggedBy: 'SYSTEM:CREATIVE',
         });
-
-        if (task.leadId) {
-          await this.bussdevService.checkSalesOrderReadiness(task.leadId);
-        }
 
         return updated;
       }

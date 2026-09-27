@@ -1,3 +1,7 @@
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { RolesGuard } from '../../auth/roles.guard';
+import { Roles } from '../../auth/roles.decorator';
+import { UserRole } from '@prisma/client';
 import {
   Controller,
   Get,
@@ -6,8 +10,7 @@ import {
   Delete,
   Param,
   Body,
-  Req,
-} from '@nestjs/common';
+  Req, UseGuards } from '@nestjs/common';
 import { BillLineItemsService } from './bill-line-items.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import {
@@ -17,6 +20,14 @@ import {
 
 @ApiTags('finance/bill-line-items')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(
+  UserRole.SUPER_ADMIN,
+  UserRole.ADMIN,
+  UserRole.FINANCE,
+  UserRole.DIRECTOR,
+  UserRole.HEAD_OPS,
+)
 @Controller('finance/bill-line-items')
 export class BillLineItemsController {
   constructor(private service: BillLineItemsService) {}

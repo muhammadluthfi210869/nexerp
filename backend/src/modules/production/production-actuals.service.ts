@@ -54,6 +54,15 @@ export class ProductionActualsService {
     elapsedSeconds?: number,
     downtimeMinutes?: number,
   ) {
+    const isUuid =
+      typeof scheduleId === 'string' &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        scheduleId,
+      );
+    if (!isUuid) {
+      throw new BadRequestException(`Invalid schedule ID: ${scheduleId}`);
+    }
+
     return this.prisma.$transaction(async (tx: any) => {
       const schedule = await tx.productionSchedule.findUnique({
         where: { id: scheduleId },
@@ -341,10 +350,9 @@ export class ProductionActualsService {
       if (!schedule) throw new BadRequestException('Schedule not found');
 
       // PHASE 3: Atomic Phase Enforcement
-      // Ensure we are scanning the NEXT expected component in the sequence.
+      // Order of items in actuals or insertion order
       const allDetails = await tx.productionStepDetail.findMany({
         where: { scheduleId },
-        orderBy: { id: 'asc' }, // Assuming insertion order is sequence
       });
 
       for (const item of actuals) {

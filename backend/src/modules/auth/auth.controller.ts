@@ -33,6 +33,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Request() req: { user: User }) {
-    return req.user;
+    const { passwordHash, managerPin, approvalPin, ...safeUser } = req.user as any;
+    return safeUser;
   }
 }

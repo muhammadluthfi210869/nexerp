@@ -3,7 +3,6 @@ import {
   BadRequestException,
   NotFoundException,
   Logger,
-  Optional,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -11,7 +10,7 @@ import { CreateSalesOrderDto } from '../dto/create-sales-order.dto';
 import { UpdateSalesOrderDto } from '../dto/update-sales-order.dto';
 import { SOStatus, InvoiceType, InvoiceStatus } from '@prisma/client';
 import { IdGeneratorService } from '../../system/id-generator.service';
-import { AuditService } from '../../../platform/audit/audit.service';
+import { StateTransitionService } from '../../system/state-transition.service';
 
 @Injectable()
 export class SalesOrdersService {
@@ -21,7 +20,7 @@ export class SalesOrdersService {
     private prisma: PrismaService,
     private idGenerator: IdGeneratorService,
     private eventEmitter: EventEmitter2,
-    @Optional() private audit?: AuditService,
+    private stateTransition: StateTransitionService,
   ) {}
 
   async create(dto: CreateSalesOrderDto, user?: any) {
@@ -142,7 +141,16 @@ export class SalesOrdersService {
   }
 
   async update(id: string, dto: UpdateSalesOrderDto) {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
+
+    // [STATE MACHINE GUARD]
+    if (dto.status !== undefined && dto.status !== existing.status) {
+      this.stateTransition.validateTransition(
+        'SOStatus',
+        existing.status,
+        dto.status,
+      );
+    }
 
     // [INTERLOCK PROTOCOL]
     // Status SO cannot be ACTIVE unless DP Invoice is PAID

@@ -1,10 +1,22 @@
-import { Controller, Get, Post, Param, Body, Query, Req } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { RolesGuard } from '../../auth/roles.guard';
+import { Roles } from '../../auth/roles.decorator';
+import { UserRole } from '@prisma/client';
+import { Controller, Get, Post, Param, Body, Query, Req, UseGuards } from '@nestjs/common';
 import { AdjustmentJournalsService } from './adjustment-journals.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateAdjustmentJournalDto } from './dto/adjustment-journals.dto';
 
 @ApiTags('finance/adjustment-journals')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(
+  UserRole.SUPER_ADMIN,
+  UserRole.ADMIN,
+  UserRole.FINANCE,
+  UserRole.DIRECTOR,
+  UserRole.HEAD_OPS,
+)
 @Controller('finance/adjustment-journals')
 export class AdjustmentJournalsController {
   constructor(private service: AdjustmentJournalsService) {}

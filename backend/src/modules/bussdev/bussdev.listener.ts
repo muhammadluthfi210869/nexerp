@@ -9,6 +9,7 @@ import { ACTIVITY_EVENT } from '../activity-stream/events/activity.events';
 import { Division, StreamEventType, WorkflowStatus } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationService } from '../notification/notification.service';
+import { PipelineService } from './services/pipeline.service';
 
 @Injectable()
 export class BussdevListener {
@@ -18,6 +19,7 @@ export class BussdevListener {
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
     private readonly notificationService: NotificationService,
+    private readonly pipelineService: PipelineService,
   ) {}
 
   @OnEvent(BUSSDEV_EVENTS.STAGE_UPDATED)
@@ -32,7 +34,7 @@ export class BussdevListener {
     }
   }
 
-  private async handleDealHandover(leadId: string, loggedBy: string) {
+  private async handleDealHandover(leadId: string, _loggedBy: string) {
     try {
       const lead = await this.prisma.salesLead.findUnique({
         where: { id: leadId },
@@ -49,14 +51,19 @@ export class BussdevListener {
       });
 
       // 2. Auto-create Legality Request (Regulatory Pipeline)
-      await this.prisma.regulatoryPipeline.create({
-        data: {
-          leadId: leadId,
-          type: 'BPOM',
-          currentStage: 'DRAFT',
-          legalPicId: lead.picId, // Temporary: Assigning to the same PIC for now as fallback
-        },
+      const legalUser = await this.prisma.user.findFirst({
+        where: { roles: { hasSome: ['APJ', 'COMPLIANCE', 'SUPER_ADMIN', 'ADMIN'] } },
       });
+      if (legalUser) {
+        await this.prisma.regulatoryPipeline.create({
+          data: {
+            leadId: leadId,
+            type: 'BPOM',
+            currentStage: 'DRAFT',
+            legalPicId: legalUser.id,
+          },
+        });
+      }
 
       this.logger.log(
         `[HANDOVER] Created Design Task and Legality Request for Lead ${leadId}`,
@@ -211,5 +218,12 @@ export class BussdevListener {
   @OnEvent(BUSSDEV_EVENTS.FORMULA_LOCKED)
   handleFormulaLocked(event: any) {
     this.logger.log(`[EVENT] Formula Locked for Lead ${event.leadId}.`);
+  }
+
+  @OnEvent('creative.task.locked')
+  async handleCreativeTaskLocked(event: { leadId?: string; taskId?: string }) {
+    if (event?.leadId) {
+      await this.pipelineService.checkSalesOrderReadiness(event.leadId);
+    }
   }
 }

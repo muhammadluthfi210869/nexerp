@@ -1,10 +1,22 @@
-import { Controller, Get, Post, Param, Body, Query, Req } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { RolesGuard } from '../../auth/roles.guard';
+import { Roles } from '../../auth/roles.decorator';
+import { UserRole } from '@prisma/client';
+import { Controller, Get, Post, Param, Body, Query, Req, UseGuards } from '@nestjs/common';
 import { BillMatchResultsService } from './bill-match-results.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateBillMatchResultDto } from './dto/bill-match-results.dto';
 
 @ApiTags('finance/bill-match-results')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(
+  UserRole.SUPER_ADMIN,
+  UserRole.ADMIN,
+  UserRole.FINANCE,
+  UserRole.DIRECTOR,
+  UserRole.HEAD_OPS,
+)
 @Controller('finance/bill-match-results')
 export class BillMatchResultsController {
   constructor(private service: BillMatchResultsService) {}

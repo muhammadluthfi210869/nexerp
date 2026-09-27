@@ -1,4 +1,8 @@
-import { Controller, Get, Post, Param, Body, Req } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { RolesGuard } from '../../auth/roles.guard';
+import { Roles } from '../../auth/roles.decorator';
+import { UserRole } from '@prisma/client';
+import { Controller, Get, Post, Param, Body, Req, UseGuards } from '@nestjs/common';
 import { BillsService } from './bills.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CancelBillDto } from './dto/create-bill.dto';
@@ -13,6 +17,14 @@ import { CancelBillDto } from './dto/create-bill.dto';
 // stay here, where they serve the `Bill` entity itself.
 @ApiTags('finance/bills')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(
+  UserRole.SUPER_ADMIN,
+  UserRole.ADMIN,
+  UserRole.FINANCE,
+  UserRole.DIRECTOR,
+  UserRole.HEAD_OPS,
+)
 @Controller('finance/bills')
 export class BillsController {
   constructor(private service: BillsService) {}

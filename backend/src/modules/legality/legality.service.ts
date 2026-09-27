@@ -1,7 +1,5 @@
 import {
   Injectable,
-  Inject,
-  forwardRef,
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
@@ -16,7 +14,6 @@ import {
   RegType,
 } from '@prisma/client';
 
-import { BussdevService } from '../bussdev/bussdev.service';
 import {
   BusinessRuleViolationException,
   ResourceNotFoundException,
@@ -112,8 +109,6 @@ export class LegalityService {
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
-    @Inject(forwardRef(() => BussdevService))
-    private bussdevService: BussdevService,
   ) {}
 
   async getDashboardMetrics() {

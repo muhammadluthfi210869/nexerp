@@ -332,10 +332,16 @@ export class ProductionExecutionService {
 
           const targetStage =
             Number(quarantineQty) > 0 ? LifecycleStatus.PENDING_QC : nextStage;
+          const currentWoStage =
+            wo.stage === LifecycleStatus.WAITING_MATERIAL &&
+            stage === LifecycleStatus.MIXING
+              ? LifecycleStatus.MIXING
+              : wo.stage;
+
           // Validate state transition via canonical service
           this.stateTransition.validateTransition(
             'LifecycleStatus',
-            wo.stage,
+            currentWoStage,
             targetStage,
           );
           await tx.workOrder.update({

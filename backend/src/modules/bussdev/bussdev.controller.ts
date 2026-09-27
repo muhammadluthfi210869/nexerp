@@ -111,13 +111,19 @@ export class BussdevController {
     ),
   )
   @ApiOperation({ summary: 'Advance a lead to the next stage' })
-  advanceLead(@Param('id') id: string, @Body() dto: AdvanceLeadDto, @Req() req: any) {
+  advanceLead(
+    @Param('id') id: string,
+    @Body() dto: AdvanceLeadDto,
+    @Req() req: any,
+    @UploadedFiles() files?: any,
+  ) {
     // The governed path owns tenant scope, consent, idempotency and the atomic
     // audit + outbox effects. The legacy `advanceLeadStage` is not tenant-aware.
     return this.leadService.advanceLeadStageGoverned(
       id,
       dto,
       this.trustedActor(req),
+      files,
     );
   }
 

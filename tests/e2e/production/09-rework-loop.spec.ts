@@ -14,13 +14,15 @@ test.describe('Production — QC Fail → Rework', () => {
     expect(woRes.status()).toBe(201);
     woId = (await woRes.json()).id;
 
+    // Use non-colliding dynamic future time window
+    const baseTime = Date.now() + (600 + Math.floor(Math.random() * 500)) * 86400000;
     const scheduleRes = await request.post(`${API_BASE}/production/schedules`, {
       data: {
         workOrderId: woId,
         machineId: TEST_MACHINE_IDS.mixing,
         stage: 'MIXING',
-        startTime: new Date().toISOString(),
-        endTime: new Date(Date.now() + 7200000).toISOString(),
+        startTime: new Date(baseTime).toISOString(),
+        endTime: new Date(baseTime + 7200000).toISOString(),
         targetQty: 200,
         formulaDetails: [{ materialId: TEST_MATERIAL_IDS.raw, qtyTheoretical: 40, category: 'RAW' }],
       }
@@ -37,6 +39,9 @@ test.describe('Production — QC Fail → Rework', () => {
         nextStage: 'FILLING', machineId: TEST_MACHINE_IDS.mixing,
       }
     });
+    if (!logRes.ok()) {
+      console.error('submit-log error status:', logRes.status(), await logRes.text());
+    }
     expect(logRes.ok()).toBeTruthy();
 
     const woCheckRes = await request.get(`${API_BASE}/production/work-orders`);

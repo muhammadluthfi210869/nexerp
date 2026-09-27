@@ -330,10 +330,20 @@ export class NotificationService {
 
   async markAsRead(notificationId: string, userId?: string) {
     if (userId) {
-      return this.prisma.notification.updateMany({
+      const res = await this.prisma.notification.updateMany({
         where: { id: notificationId, userId },
         data: { isRead: true },
       });
+      if (res.count === 0) {
+        throw new ResourceNotFoundException('Notification', notificationId);
+      }
+      return res;
+    }
+    const exists = await this.prisma.notification.findUnique({
+      where: { id: notificationId },
+    });
+    if (!exists) {
+      throw new ResourceNotFoundException('Notification', notificationId);
     }
     return this.prisma.notification.update({
       where: { id: notificationId },
