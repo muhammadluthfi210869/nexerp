@@ -30,7 +30,9 @@ function exists(rel) { return fs.existsSync(path.join(ROOT, rel)); }
 function uniq(arr) { return [...new Set(arr)]; }
 function walk(dir) {
   if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => {
+  const entries = fs.readdirSync(dir, { withFileTypes: true })
+    .sort((a, b) => a.name.localeCompare(b.name));
+  return entries.flatMap(e => {
     const p = path.join(dir, e.name);
     return e.isDirectory() ? walk(p) : [p];
   });

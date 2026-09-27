@@ -28413,6 +28413,16 @@
       "reachable": true
     },
     {
+      "file": "frontend/src/app/(dashboard)/marketing/management-task/[member]/page.tsx",
+      "route": "/marketing/management-task/{}",
+      "normalized_route": "/marketing/management-task/{}",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Marketing & Omni-CRM Team",
+      "rationale": "Application screen for marketing workflow.",
+      "reachable": true
+    },
+    {
       "file": "frontend/src/app/(dashboard)/marketing/management-task/overview/page.tsx",
       "route": "/marketing/management-task/overview",
       "normalized_route": "/marketing/management-task/overview",
@@ -28426,16 +28436,6 @@
       "file": "frontend/src/app/(dashboard)/marketing/management-task/page.tsx",
       "route": "/marketing/management-task",
       "normalized_route": "/marketing/management-task",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "implementation_state": "IMPLEMENTED_EXACT",
-      "owner": "Marketing & Omni-CRM Team",
-      "rationale": "Application screen for marketing workflow.",
-      "reachable": true
-    },
-    {
-      "file": "frontend/src/app/(dashboard)/marketing/management-task/[member]/page.tsx",
-      "route": "/marketing/management-task/{}",
-      "normalized_route": "/marketing/management-task/{}",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "implementation_state": "IMPLEMENTED_EXACT",
       "owner": "Marketing & Omni-CRM Team",
@@ -28493,16 +28493,6 @@
       "reachable": true
     },
     {
-      "file": "frontend/src/app/(dashboard)/marketing/reports/[brand]/page.tsx",
-      "route": "/marketing/reports/{}",
-      "normalized_route": "/marketing/reports/{}",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "implementation_state": "IMPLEMENTED_EXACT",
-      "owner": "Marketing & Omni-CRM Team",
-      "rationale": "Application screen for marketing workflow.",
-      "reachable": true
-    },
-    {
       "file": "frontend/src/app/(dashboard)/marketing/reports/[brand]/[channel]/calendar/page.tsx",
       "route": "/marketing/reports/{}/{}/calendar",
       "normalized_route": "/marketing/reports/{}/{}/calendar",
@@ -28536,6 +28526,16 @@
       "file": "frontend/src/app/(dashboard)/marketing/reports/[brand]/[channel]/page.tsx",
       "route": "/marketing/reports/{}/{}",
       "normalized_route": "/marketing/reports/{}/{}",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Marketing & Omni-CRM Team",
+      "rationale": "Application screen for marketing workflow.",
+      "reachable": true
+    },
+    {
+      "file": "frontend/src/app/(dashboard)/marketing/reports/[brand]/page.tsx",
+      "route": "/marketing/reports/{}",
+      "normalized_route": "/marketing/reports/{}",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "implementation_state": "IMPLEMENTED_EXACT",
       "owner": "Marketing & Omni-CRM Team",
@@ -28693,16 +28693,6 @@
       "reachable": true
     },
     {
-      "file": "frontend/src/app/(dashboard)/master/kpi-department/page.tsx",
-      "route": "/master/kpi-department",
-      "normalized_route": "/master/kpi-department",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "implementation_state": "IMPLEMENTED_EXACT",
-      "owner": "Master Data Team",
-      "rationale": "Application screen for master workflow.",
-      "reachable": true
-    },
-    {
       "file": "frontend/src/app/(dashboard)/master/kpi-department/[departmentId]/page.tsx",
       "route": "/master/kpi-department/{}",
       "normalized_route": "/master/kpi-department/{}",
@@ -28713,9 +28703,9 @@
       "reachable": true
     },
     {
-      "file": "frontend/src/app/(dashboard)/master/kpi-individual/page.tsx",
-      "route": "/master/kpi-individual",
-      "normalized_route": "/master/kpi-individual",
+      "file": "frontend/src/app/(dashboard)/master/kpi-department/page.tsx",
+      "route": "/master/kpi-department",
+      "normalized_route": "/master/kpi-department",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "implementation_state": "IMPLEMENTED_EXACT",
       "owner": "Master Data Team",
@@ -28726,6 +28716,16 @@
       "file": "frontend/src/app/(dashboard)/master/kpi-individual/[employeeId]/page.tsx",
       "route": "/master/kpi-individual/{}",
       "normalized_route": "/master/kpi-individual/{}",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Master Data Team",
+      "rationale": "Application screen for master workflow.",
+      "reachable": true
+    },
+    {
+      "file": "frontend/src/app/(dashboard)/master/kpi-individual/page.tsx",
+      "route": "/master/kpi-individual",
+      "normalized_route": "/master/kpi-individual",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "implementation_state": "IMPLEMENTED_EXACT",
       "owner": "Master Data Team",
@@ -28833,9 +28833,9 @@
       "reachable": true
     },
     {
-      "file": "frontend/src/app/(dashboard)/notifications/page.tsx",
-      "route": "/notifications",
-      "normalized_route": "/notifications",
+      "file": "frontend/src/app/(dashboard)/notifications/[id]/page.tsx",
+      "route": "/notifications/{}",
+      "normalized_route": "/notifications/{}",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "implementation_state": "IMPLEMENTED_EXACT",
       "owner": "Frontend Team",
@@ -28843,9 +28843,9 @@
       "reachable": true
     },
     {
-      "file": "frontend/src/app/(dashboard)/notifications/[id]/page.tsx",
-      "route": "/notifications/{}",
-      "normalized_route": "/notifications/{}",
+      "file": "frontend/src/app/(dashboard)/notifications/page.tsx",
+      "route": "/notifications",
+      "normalized_route": "/notifications",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "implementation_state": "IMPLEMENTED_EXACT",
       "owner": "Frontend Team",
@@ -29783,9 +29783,9 @@
       "reachable": true
     },
     {
-      "file": "frontend/src/app/(dashboard)/samples/formula/page.tsx",
-      "route": "/samples/formula",
-      "normalized_route": "/samples/formula",
+      "file": "frontend/src/app/(dashboard)/samples/formula/[id]/page.tsx",
+      "route": "/samples/formula/{}",
+      "normalized_route": "/samples/formula/{}",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "implementation_state": "IMPLEMENTED_EXACT",
       "owner": "Frontend Team",
@@ -29793,9 +29793,9 @@
       "reachable": true
     },
     {
-      "file": "frontend/src/app/(dashboard)/samples/formula/[id]/page.tsx",
-      "route": "/samples/formula/{}",
-      "normalized_route": "/samples/formula/{}",
+      "file": "frontend/src/app/(dashboard)/samples/formula/page.tsx",
+      "route": "/samples/formula",
+      "normalized_route": "/samples/formula",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "implementation_state": "IMPLEMENTED_EXACT",
       "owner": "Frontend Team",
@@ -29863,6 +29863,16 @@
       "reachable": true
     },
     {
+      "file": "frontend/src/app/(dashboard)/samples/project-control/[projectId]/page.tsx",
+      "route": "/samples/project-control/{}",
+      "normalized_route": "/samples/project-control/{}",
+      "lifecycle_classification": "APPROVED_EXTENSION",
+      "implementation_state": "IMPLEMENTED_EXACT",
+      "owner": "Frontend Team",
+      "rationale": "Application screen for samples workflow.",
+      "reachable": true
+    },
+    {
       "file": "frontend/src/app/(dashboard)/samples/project-control/checklist-tracking/page.tsx",
       "route": "/samples/project-control/checklist-tracking",
       "normalized_route": "/samples/project-control/checklist-tracking",
@@ -29876,16 +29886,6 @@
       "file": "frontend/src/app/(dashboard)/samples/project-control/page.tsx",
       "route": "/samples/project-control",
       "normalized_route": "/samples/project-control",
-      "lifecycle_classification": "APPROVED_EXTENSION",
-      "implementation_state": "IMPLEMENTED_EXACT",
-      "owner": "Frontend Team",
-      "rationale": "Application screen for samples workflow.",
-      "reachable": true
-    },
-    {
-      "file": "frontend/src/app/(dashboard)/samples/project-control/[projectId]/page.tsx",
-      "route": "/samples/project-control/{}",
-      "normalized_route": "/samples/project-control/{}",
       "lifecycle_classification": "APPROVED_EXTENSION",
       "implementation_state": "IMPLEMENTED_EXACT",
       "owner": "Frontend Team",
@@ -31280,6 +31280,16 @@
       "disposition": "PARTIALLY_MIGRATED"
     },
     {
+      "file": "frontend/src/app/(dashboard)/marketing/management-task/[member]/page.tsx",
+      "imports_dna": false,
+      "imports_ui_kit": false,
+      "raw_buttons": 0,
+      "raw_inputs": 0,
+      "hardcoded_hex_colors": [],
+      "inline_styles_count": 0,
+      "disposition": "SCHEDULED_P19_MIGRATION"
+    },
+    {
       "file": "frontend/src/app/(dashboard)/marketing/management-task/overview/page.tsx",
       "imports_dna": false,
       "imports_ui_kit": false,
@@ -31291,16 +31301,6 @@
     },
     {
       "file": "frontend/src/app/(dashboard)/marketing/management-task/page.tsx",
-      "imports_dna": false,
-      "imports_ui_kit": false,
-      "raw_buttons": 0,
-      "raw_inputs": 0,
-      "hardcoded_hex_colors": [],
-      "inline_styles_count": 0,
-      "disposition": "SCHEDULED_P19_MIGRATION"
-    },
-    {
-      "file": "frontend/src/app/(dashboard)/marketing/management-task/[member]/page.tsx",
       "imports_dna": false,
       "imports_ui_kit": false,
       "raw_buttons": 0,
@@ -31360,16 +31360,6 @@
       "disposition": "SCHEDULED_P19_MIGRATION"
     },
     {
-      "file": "frontend/src/app/(dashboard)/marketing/reports/[brand]/page.tsx",
-      "imports_dna": false,
-      "imports_ui_kit": false,
-      "raw_buttons": 0,
-      "raw_inputs": 0,
-      "hardcoded_hex_colors": [],
-      "inline_styles_count": 0,
-      "disposition": "SCHEDULED_P19_MIGRATION"
-    },
-    {
       "file": "frontend/src/app/(dashboard)/marketing/reports/[brand]/[channel]/calendar/page.tsx",
       "imports_dna": false,
       "imports_ui_kit": false,
@@ -31401,6 +31391,16 @@
     },
     {
       "file": "frontend/src/app/(dashboard)/marketing/reports/[brand]/[channel]/page.tsx",
+      "imports_dna": false,
+      "imports_ui_kit": false,
+      "raw_buttons": 0,
+      "raw_inputs": 0,
+      "hardcoded_hex_colors": [],
+      "inline_styles_count": 0,
+      "disposition": "SCHEDULED_P19_MIGRATION"
+    },
+    {
+      "file": "frontend/src/app/(dashboard)/marketing/reports/[brand]/page.tsx",
       "imports_dna": false,
       "imports_ui_kit": false,
       "raw_buttons": 0,
@@ -31562,6 +31562,18 @@
       "disposition": "ALREADY_DNA"
     },
     {
+      "file": "frontend/src/app/(dashboard)/master/kpi-department/[departmentId]/page.tsx",
+      "imports_dna": true,
+      "imports_ui_kit": false,
+      "raw_buttons": 0,
+      "raw_inputs": 0,
+      "hardcoded_hex_colors": [
+        "#F8FAFC"
+      ],
+      "inline_styles_count": 0,
+      "disposition": "PARTIALLY_MIGRATED"
+    },
+    {
       "file": "frontend/src/app/(dashboard)/master/kpi-department/page.tsx",
       "imports_dna": true,
       "imports_ui_kit": false,
@@ -31574,7 +31586,7 @@
       "disposition": "PARTIALLY_MIGRATED"
     },
     {
-      "file": "frontend/src/app/(dashboard)/master/kpi-department/[departmentId]/page.tsx",
+      "file": "frontend/src/app/(dashboard)/master/kpi-individual/[employeeId]/page.tsx",
       "imports_dna": true,
       "imports_ui_kit": false,
       "raw_buttons": 0,
@@ -31595,18 +31607,6 @@
         "#F8FAFC"
       ],
       "inline_styles_count": 4,
-      "disposition": "PARTIALLY_MIGRATED"
-    },
-    {
-      "file": "frontend/src/app/(dashboard)/master/kpi-individual/[employeeId]/page.tsx",
-      "imports_dna": true,
-      "imports_ui_kit": false,
-      "raw_buttons": 0,
-      "raw_inputs": 0,
-      "hardcoded_hex_colors": [
-        "#F8FAFC"
-      ],
-      "inline_styles_count": 0,
       "disposition": "PARTIALLY_MIGRATED"
     },
     {
@@ -31720,7 +31720,7 @@
       "disposition": "ALREADY_DNA"
     },
     {
-      "file": "frontend/src/app/(dashboard)/notifications/page.tsx",
+      "file": "frontend/src/app/(dashboard)/notifications/[id]/page.tsx",
       "imports_dna": true,
       "imports_ui_kit": false,
       "raw_buttons": 0,
@@ -31730,7 +31730,7 @@
       "disposition": "ALREADY_DNA"
     },
     {
-      "file": "frontend/src/app/(dashboard)/notifications/[id]/page.tsx",
+      "file": "frontend/src/app/(dashboard)/notifications/page.tsx",
       "imports_dna": true,
       "imports_ui_kit": false,
       "raw_buttons": 0,
@@ -32761,16 +32761,6 @@
       "disposition": "PARTIALLY_MIGRATED"
     },
     {
-      "file": "frontend/src/app/(dashboard)/samples/formula/page.tsx",
-      "imports_dna": true,
-      "imports_ui_kit": false,
-      "raw_buttons": 1,
-      "raw_inputs": 0,
-      "hardcoded_hex_colors": [],
-      "inline_styles_count": 0,
-      "disposition": "PARTIALLY_MIGRATED"
-    },
-    {
       "file": "frontend/src/app/(dashboard)/samples/formula/[id]/page.tsx",
       "imports_dna": true,
       "imports_ui_kit": false,
@@ -32778,6 +32768,16 @@
       "raw_inputs": 0,
       "hardcoded_hex_colors": [],
       "inline_styles_count": 3,
+      "disposition": "PARTIALLY_MIGRATED"
+    },
+    {
+      "file": "frontend/src/app/(dashboard)/samples/formula/page.tsx",
+      "imports_dna": true,
+      "imports_ui_kit": false,
+      "raw_buttons": 1,
+      "raw_inputs": 0,
+      "hardcoded_hex_colors": [],
+      "inline_styles_count": 0,
       "disposition": "PARTIALLY_MIGRATED"
     },
     {
@@ -32844,6 +32844,18 @@
       "disposition": "SCHEDULED_P19_MIGRATION"
     },
     {
+      "file": "frontend/src/app/(dashboard)/samples/project-control/[projectId]/page.tsx",
+      "imports_dna": true,
+      "imports_ui_kit": false,
+      "raw_buttons": 0,
+      "raw_inputs": 0,
+      "hardcoded_hex_colors": [
+        "#F8FAFC"
+      ],
+      "inline_styles_count": 0,
+      "disposition": "PARTIALLY_MIGRATED"
+    },
+    {
       "file": "frontend/src/app/(dashboard)/samples/project-control/checklist-tracking/page.tsx",
       "imports_dna": true,
       "imports_ui_kit": false,
@@ -32865,18 +32877,6 @@
         "#F8FAFC"
       ],
       "inline_styles_count": 5,
-      "disposition": "PARTIALLY_MIGRATED"
-    },
-    {
-      "file": "frontend/src/app/(dashboard)/samples/project-control/[projectId]/page.tsx",
-      "imports_dna": true,
-      "imports_ui_kit": false,
-      "raw_buttons": 0,
-      "raw_inputs": 0,
-      "hardcoded_hex_colors": [
-        "#F8FAFC"
-      ],
-      "inline_styles_count": 0,
       "disposition": "PARTIALLY_MIGRATED"
     },
     {
