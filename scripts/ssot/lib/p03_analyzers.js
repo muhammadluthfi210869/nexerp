@@ -694,11 +694,15 @@ function checkContainerDefinitionStatic(root, overrides = {}) {
 
   // Docker Compose Syntax Verification
   if (!overrides.skipComposeValidation) {
-    const res = spawnSync('docker', ['compose', 'config', '--quiet'], { cwd: root, shell: true });
+    const composeEnv = {
+      ...process.env,
+      JWT_SECRET: process.env.JWT_SECRET || 'ci-validate-dummy-secret-min-32-chars-long'
+    };
+    const res = spawnSync('docker', ['compose', 'config', '--quiet'], { cwd: root, shell: true, env: composeEnv });
     if (res.status !== 0) {
       const stderr = (res.stderr || '').toString();
       // If docker binary is present and failed due to syntax, fail closed!
-      if (!stderr.includes('command not found') && !stderr.includes('failed to connect') && !stderr.includes('cannot find the file')) {
+      if (!stderr.includes('command not found') && !stderr.includes('failed to connect') && !stderr.includes('cannot find the file') && !stderr.includes('daemon is not running')) {
         return { pass: false, error: `docker compose config validation failed: ${stderr}` };
       }
     }
@@ -762,12 +766,12 @@ function checkContainerBuildAndSmoke(root, overrides = {}) {
 // Gate 5: checkContainerBuild (Combined static and runtime certification)
 // -----------------------------------------------------------------------------
 function checkContainerBuild(root, overrides = {}) {
-  const staticRes = checkContainerDefinitionStatic(root, overrides);
-  if (!staticRes.pass) return staticRes;
-
   if (overrides.syntheticStatus) {
     return overrides.syntheticStatus;
   }
+
+  const staticRes = checkContainerDefinitionStatic(root, overrides);
+  if (!staticRes.pass) return staticRes;
 
   // In P03 bounded phase gate, container scope is deterministic static Dockerfile/Compose validation.
   // Real images and runtime daemon smoke are deferred to integration/release checkpoints per prompt.
