@@ -31,7 +31,7 @@ const dotenv = requireBackend('dotenv');
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 dotenv.config({ path: path.join(__dirname, '../../backend/.env') });
 
-const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres:66luthfi29@localhost:5432/erp_db_test?schema=public';
+const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres@localhost:5432/erp_db_test?schema=public';
 
 async function runAcidSuite() {
   const pool = new Pool({ connectionString: dbUrl });

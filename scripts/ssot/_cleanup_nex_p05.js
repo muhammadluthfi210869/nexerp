@@ -1,5 +1,8 @@
 const { Client } = require('../../backend/node_modules/pg');
-const c = new Client({ connectionString: 'postgresql://postgres:66luthfi29@localhost:5432/postgres' });
+const c = new Client({
+  connectionString:
+    process.env.DATABASE_URL || 'postgresql://postgres@localhost:5432/postgres',
+});
 c.connect()
   .then(() => c.query("SELECT datname FROM pg_database WHERE datname LIKE 'nex_p05%'"))
   .then(r => {

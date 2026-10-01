@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 dotenv.config({ path: path.join(process.cwd(), 'backend', '.env') });
 
-const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres:66luthfi29@localhost:5432/erp_db_test?schema=public';
+const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres@localhost:5432/erp_db_test?schema=public';
 const pool = new Pool({ connectionString: dbUrl });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });

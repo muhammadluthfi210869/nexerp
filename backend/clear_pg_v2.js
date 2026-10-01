@@ -1,5 +1,6 @@
 const { Client } = require('pg');
-const connectionString = "postgresql://postgres:66luthfi29@localhost:5432/erp_db?schema=public";
+const connectionString =
+  process.env.DATABASE_URL || 'postgresql://postgres@localhost:5432/erp_db?schema=public';
 
 async function main() {
   const client = new Client({ connectionString });
