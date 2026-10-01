@@ -1,0 +1,2038 @@
+{
+  "fetchedAt": "2026-09-30T16:23:43.807Z",
+  "sourceUrl": "https://kil.gserp.id",
+  "totalUsers": 45,
+  "users": [
+    {
+      "no": 1,
+      "nip": "000",
+      "name": "Super Admin",
+      "email": "goodsyst@gmail.com",
+      "phone": "081231418159",
+      "role": "Administrator"
+    },
+    {
+      "no": 2,
+      "nip": "001",
+      "name": "Fadilah Syahab",
+      "email": "fadilah.syahab@dreamlab.id",
+      "phone": "087722291012",
+      "role": "Administrator BD"
+    },
+    {
+      "no": 3,
+      "nip": "002",
+      "name": "Achmad Bagir",
+      "email": "achmad.bagir@dreamlab.id",
+      "phone": "081999122990",
+      "role": "Administrator BD"
+    },
+    {
+      "no": 4,
+      "nip": "003",
+      "name": "Zaki",
+      "email": "zaki@dreamlab.id",
+      "phone": "085659360766",
+      "role": "Administrator"
+    },
+    {
+      "no": 5,
+      "nip": "004",
+      "name": "Fatimah Amira",
+      "email": "fatimah.amira@dreamlab.id",
+      "phone": "085174191902",
+      "role": "Head Research and Development"
+    },
+    {
+      "no": 6,
+      "nip": "005",
+      "name": "Ribut Supriyono",
+      "email": "ribut.supriyono@dreamlab.id",
+      "phone": "085604348983",
+      "role": "Research and Development"
+    },
+    {
+      "no": 7,
+      "nip": "006",
+      "name": "Riyantita Tunjungsari",
+      "email": "riyantita.tunjungsari@dreamlab.id",
+      "phone": "081356351997",
+      "role": "Production Mixing &amp; Filling"
+    },
+    {
+      "no": 8,
+      "nip": "007",
+      "name": "Muhammad Ghufron",
+      "email": "muhammad.ghufron@dreamlab.id",
+      "phone": "0895341099232",
+      "role": "Warehouse"
+    },
+    {
+      "no": 9,
+      "nip": "008",
+      "name": "Akhmad Ratriono Anggoro",
+      "email": "akhmad.ratriono@dreamlab.id",
+      "phone": "081213971639",
+      "role": "Business Development"
+    },
+    {
+      "no": 10,
+      "nip": "009",
+      "name": "Dicky Barkah",
+      "email": "dicky.barkah@dreamlab.id",
+      "phone": "628979152855",
+      "role": "Production Packaging"
+    },
+    {
+      "no": 11,
+      "nip": "010",
+      "name": "Keviana",
+      "email": "keviana@dreamlab.id",
+      "phone": "62895375470001",
+      "role": "Business Development"
+    },
+    {
+      "no": 12,
+      "nip": "012",
+      "name": "Irma Safarina",
+      "email": "irma.safarina@dreamlab.id",
+      "phone": "083820898788",
+      "role": "BusDev + Purchasing BD"
+    },
+    {
+      "no": 13,
+      "nip": "013",
+      "name": "Ekky Ilham",
+      "email": "ekky.ilham@dreamlab.id",
+      "phone": "081214727282",
+      "role": "Finance"
+    },
+    {
+      "no": 14,
+      "nip": "014",
+      "name": "Irma Finance",
+      "email": "irma.finance@dreamlab.id",
+      "phone": "088229186548",
+      "role": "Finance"
+    },
+    {
+      "no": 15,
+      "nip": "015",
+      "name": "Vira",
+      "email": "vira@dreamlab.id",
+      "phone": "088235482487",
+      "role": "Business Development"
+    },
+    {
+      "no": 16,
+      "nip": "016",
+      "name": "Desy",
+      "email": "desy@dreamlab.id",
+      "phone": "085604015560",
+      "role": "Business Development"
+    },
+    {
+      "no": 17,
+      "nip": "017",
+      "name": "Gabriella Maulidha",
+      "email": "gabriella.maulidha@dreamlab.id",
+      "phone": "087899752715",
+      "role": "Research and Development"
+    },
+    {
+      "no": 18,
+      "nip": "018",
+      "name": "Nur Kholilah",
+      "email": "nur.kholilah@dreamlab.id",
+      "phone": "085851237453",
+      "role": "Production Mixing &amp; Filling"
+    },
+    {
+      "no": 19,
+      "nip": "019",
+      "name": "Muhammad Ruhullah",
+      "email": "muhammad.ruhullah@dreamlab.id",
+      "phone": "089524640010",
+      "role": "Production Mixing &amp; Filling"
+    },
+    {
+      "no": 20,
+      "nip": "020",
+      "name": "salfa delia fernanda",
+      "email": "salfa.delia@dreamlab.id",
+      "phone": "08819405360",
+      "role": "Business Development"
+    },
+    {
+      "no": 21,
+      "nip": "021",
+      "name": "Rudy Affandy",
+      "email": "rudy.affandy@dreamlab.id",
+      "phone": "081358590645",
+      "role": "Production Packaging"
+    },
+    {
+      "no": 22,
+      "nip": "022",
+      "name": "Yulia Esther",
+      "email": "yulia.esther@dreamlab.id",
+      "phone": "082337458118",
+      "role": "HRD"
+    },
+    {
+      "no": 23,
+      "nip": "023",
+      "name": "Ayu Anindya",
+      "email": "ayu.anindya@dreamlab.id",
+      "phone": "085731558835",
+      "role": "Business Development"
+    },
+    {
+      "no": 24,
+      "nip": "024",
+      "name": "Krisna Putra Ramadhani",
+      "email": "krisna.putra@dreamlab.id",
+      "phone": "082230206692",
+      "role": "Warehouse"
+    },
+    {
+      "no": 25,
+      "nip": "025",
+      "name": "Ciptaning",
+      "email": "ciptaning@dreamlab.id",
+      "phone": "081334163882",
+      "role": "Apoteker Penanggung Jawab"
+    },
+    {
+      "no": 26,
+      "nip": "026",
+      "name": "Panca",
+      "email": "panca@dreamlab.id",
+      "phone": "081231944581",
+      "role": "Research and Development"
+    },
+    {
+      "no": 27,
+      "nip": "027",
+      "name": "Diaz Muhammad Irsyadi",
+      "email": "diaz.muhammad@dreamlab.id",
+      "phone": "082266781965",
+      "role": "BusDev + HRD BD"
+    },
+    {
+      "no": 28,
+      "nip": "028",
+      "name": "Edi Design",
+      "email": "edi.design@dreamlab.id",
+      "phone": "6287820625288",
+      "role": "Staff Back Office"
+    },
+    {
+      "no": 29,
+      "nip": "029",
+      "name": "BRIAN BUDY CAHYONO",
+      "email": "brian.budy@dreamlab.id",
+      "phone": "083831038899",
+      "role": "Research and Development"
+    },
+    {
+      "no": 30,
+      "nip": "030",
+      "name": "Lee Maychael",
+      "email": "lee.maychael@dreamlab.id",
+      "phone": "08112287773",
+      "role": "Research and Development"
+    },
+    {
+      "no": 31,
+      "nip": "031",
+      "name": "SHIRLEY IRMA JUNITA",
+      "email": "shirley.irma@dreamlab.id",
+      "phone": "082260099901",
+      "role": "Business Development"
+    },
+    {
+      "no": 32,
+      "nip": "032",
+      "name": "Siti",
+      "email": "siti@dreamlab.id",
+      "phone": "0895359873700",
+      "role": "Finance"
+    },
+    {
+      "no": 33,
+      "nip": "033",
+      "name": "Estisan Septyana Atwinda",
+      "email": "estisan.septyanaatwinda@dreamlab.id",
+      "phone": "0817403344",
+      "role": "Business Development"
+    },
+    {
+      "no": 34,
+      "nip": "034",
+      "name": "Laksmi Diah Ahmada",
+      "email": "laksmi.diah@dreamlab.id",
+      "phone": "0817740233",
+      "role": "Head Business Development BD"
+    },
+    {
+      "no": 35,
+      "nip": "035",
+      "name": "Annisa Shalihah",
+      "email": "annisa.shalihah@dreamlab.id",
+      "phone": "081952417051",
+      "role": "Business Development BD"
+    },
+    {
+      "no": 36,
+      "nip": "036",
+      "name": "Diva",
+      "email": "diva@dreamlab.id",
+      "phone": "087712232389",
+      "role": "Business Development"
+    },
+    {
+      "no": 37,
+      "nip": "037",
+      "name": "Latifatus Cahya Ningtyas",
+      "email": "latifatus.cahya@dreamlab.id",
+      "phone": "08123456789",
+      "role": "Research and Development"
+    },
+    {
+      "no": 38,
+      "nip": "038",
+      "name": "Revita Yustianawati",
+      "email": "revita.yustianawati@dreamlab.id",
+      "phone": "085816961799",
+      "role": "Digital Marketing"
+    },
+    {
+      "no": 39,
+      "nip": "039",
+      "name": "Etika Citra Nuraisah",
+      "email": "etika.citra.nuraisah@dreamlab.id",
+      "phone": "082229212228‬",
+      "role": "Finance"
+    },
+    {
+      "no": 40,
+      "nip": "040",
+      "name": "R.A Ami Wulandari Soedewo",
+      "email": "ami@dreamlab.id",
+      "phone": "087776550657",
+      "role": "Business Development"
+    },
+    {
+      "no": 41,
+      "nip": "041",
+      "name": "Umar Nurbana",
+      "email": "umar.nurbana@dreamlab.id",
+      "phone": "0895630271008",
+      "role": "Warehouse"
+    },
+    {
+      "no": 42,
+      "nip": "042",
+      "name": "Siti Mutmainah",
+      "email": "siti.mutmainah@dreamlab.id",
+      "phone": "087712232381",
+      "role": "Business Development"
+    },
+    {
+      "no": 43,
+      "nip": "01072606",
+      "name": "Jessica Dwipuspita",
+      "email": "jessica@dreamlab.id",
+      "phone": "081231418157",
+      "role": "Business Development BD"
+    },
+    {
+      "no": 44,
+      "nip": "043",
+      "name": "Eunike Putriningtyas",
+      "email": "eunike@dreamlab.id",
+      "phone": "085231660403",
+      "role": "Purchasing"
+    },
+    {
+      "no": 45,
+      "nip": "05092602",
+      "name": "Edvin Porvianto Sutedjo",
+      "email": "edvin@dreamlab.id",
+      "phone": "081212315021",
+      "role": "Finance"
+    }
+  ],
+  "totalRoles": 16,
+  "roles": [
+    {
+      "id": "1",
+      "roleName": "Administrator",
+      "totalModul": 124,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Penjualan Sample",
+          "subItems": []
+        },
+        {
+          "group": "D. Penjualan Barang",
+          "subItems": []
+        },
+        {
+          "group": "D. Pelanggan",
+          "subItems": []
+        },
+        {
+          "group": "D. Sample",
+          "subItems": []
+        },
+        {
+          "group": "D. Eksekutif",
+          "subItems": []
+        },
+        {
+          "group": "D. Notifikasi",
+          "subItems": []
+        },
+        {
+          "group": "D. Digital Marketing",
+          "subItems": []
+        },
+        {
+          "group": "D. BusDev",
+          "subItems": []
+        },
+        {
+          "group": "D. RnD",
+          "subItems": []
+        },
+        {
+          "group": "D. Purchasing",
+          "subItems": []
+        },
+        {
+          "group": "D. Legalitas",
+          "subItems": []
+        },
+        {
+          "group": "D. Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Gudang",
+          "subItems": []
+        },
+        {
+          "group": "D. HR",
+          "subItems": []
+        },
+        {
+          "group": "D. Keuangan",
+          "subItems": []
+        },
+        {
+          "group": "D. Buku Tamu",
+          "subItems": []
+        },
+        {
+          "group": "D. Client Sample",
+          "subItems": []
+        },
+        {
+          "group": "D. Client Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Client RO",
+          "subItems": []
+        },
+        {
+          "group": "D. Lost",
+          "subItems": []
+        },
+        {
+          "group": "Kelola Pengguna",
+          "subItems": [
+            {
+              "label": "Hak Akses",
+              "slug": "role-manage"
+            },
+            {
+              "label": "Pengguna",
+              "slug": "user-manage"
+            }
+          ]
+        },
+        {
+          "group": "Kelola CoA",
+          "subItems": [
+            {
+              "label": "CoA",
+              "slug": "coa-manage"
+            },
+            {
+              "label": "CoA Jurnal Otomatis",
+              "slug": "coa-auto-manage"
+            }
+          ]
+        },
+        {
+          "group": "Kelola Gudang",
+          "subItems": [
+            {
+              "label": "Gudang",
+              "slug": "warehouse-manage"
+            },
+            {
+              "label": "Hak Akses Gudang",
+              "slug": "warehouse-access-manage"
+            }
+          ]
+        },
+        {
+          "group": "Kelola Barang",
+          "subItems": [
+            {
+              "label": "Kategori Barang",
+              "slug": "goods-category-manage"
+            },
+            {
+              "label": "Barang",
+              "slug": "goods-manage"
+            }
+          ]
+        },
+        {
+          "group": "Kelola Supplier",
+          "subItems": [
+            {
+              "label": "Kategori Supplier",
+              "slug": "supplier-category-manage"
+            },
+            {
+              "label": "Supplier",
+              "slug": "supplier-manage"
+            }
+          ]
+        },
+        {
+          "group": "Kelola Pelanggan",
+          "subItems": [
+            {
+              "label": "Kategori Pelanggan",
+              "slug": "customer-category-manage"
+            },
+            {
+              "label": "Pelanggan",
+              "slug": "customer-manage"
+            },
+            {
+              "label": "Pelanggan Saya",
+              "slug": "customer-my-manage"
+            }
+          ]
+        },
+        {
+          "group": "Kelola Penjualan",
+          "subItems": [
+            {
+              "label": "Kategori Penjualan",
+              "slug": "sales-category"
+            },
+            {
+              "label": "Target Penjualan",
+              "slug": "sales-target"
+            }
+          ]
+        },
+        {
+          "group": "Pembelian ~",
+          "subItems": []
+        },
+        {
+          "group": "Retur Pembelian ~",
+          "subItems": []
+        },
+        {
+          "group": "Penjualan Sample ~",
+          "subItems": []
+        },
+        {
+          "group": "Penjualan Produk ~",
+          "subItems": []
+        },
+        {
+          "group": "Retur Penjualan ~",
+          "subItems": []
+        },
+        {
+          "group": "Permintaan HPP ~",
+          "subItems": []
+        },
+        {
+          "group": "Permintaan Pembelian ~",
+          "subItems": []
+        },
+        {
+          "group": "Permintaan Barang ~",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Checklist",
+          "subItems": []
+        },
+        {
+          "group": "Kategori Checklist",
+          "subItems": []
+        },
+        {
+          "group": "Kelola Checklist",
+          "subItems": []
+        },
+        {
+          "group": "Pembelian",
+          "subItems": [
+            {
+              "label": "Buat Pembelian",
+              "slug": "purchase"
+            },
+            {
+              "label": "Faktur Pembelian",
+              "slug": "purchase-invoice"
+            },
+            {
+              "label": "Retur Pembelian",
+              "slug": "purchase-return"
+            },
+            {
+              "label": "DP Pembelian",
+              "slug": "purchase-down-payment"
+            },
+            {
+              "label": "Bayar Pembelian",
+              "slug": "purchase-payment"
+            }
+          ]
+        },
+        {
+          "group": "Kebutuhan Barang",
+          "subItems": []
+        },
+        {
+          "group": "Permintaan Barang",
+          "subItems": []
+        },
+        {
+          "group": "Permintaan Pembelian",
+          "subItems": []
+        },
+        {
+          "group": "Barang Masuk",
+          "subItems": [
+            {
+              "label": "Pembelian Masuk",
+              "slug": "purchase-in"
+            },
+            {
+              "label": "Retur Penjualan",
+              "slug": "sales-return-in"
+            }
+          ]
+        },
+        {
+          "group": "Barang Keluar",
+          "subItems": [
+            {
+              "label": "Transfer Barang",
+              "slug": "goods-transfer"
+            },
+            {
+              "label": "Pengiriman Barang",
+              "slug": "delivery-out"
+            },
+            {
+              "label": "Retur Pembelian",
+              "slug": "purchase-return-out"
+            }
+          ]
+        },
+        {
+          "group": "Stok Opname",
+          "subItems": []
+        },
+        {
+          "group": "Leads",
+          "subItems": []
+        },
+        {
+          "group": "Buku Tamu",
+          "subItems": []
+        },
+        {
+          "group": "Client Sample",
+          "subItems": []
+        },
+        {
+          "group": "Client Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Client RO",
+          "subItems": []
+        },
+        {
+          "group": "Client Lost",
+          "subItems": []
+        },
+        {
+          "group": "Penjualan",
+          "subItems": [
+            {
+              "label": "Penjualan Sample",
+              "slug": "sales-sample"
+            },
+            {
+              "label": "Bayar Sample",
+              "slug": "sales-sample-payment"
+            },
+            {
+              "label": "Penjualan",
+              "slug": "sales"
+            },
+            {
+              "label": "Retur Penjualan",
+              "slug": "sales-return"
+            },
+            {
+              "label": "DP Penjualan",
+              "slug": "sales-down-payment"
+            },
+            {
+              "label": "Faktur Penjualan",
+              "slug": "sales-invoice"
+            },
+            {
+              "label": "Bayar Penjualan",
+              "slug": "sales-payment"
+            }
+          ]
+        },
+        {
+          "group": "Projek",
+          "subItems": []
+        },
+        {
+          "group": "Pra Produksi",
+          "subItems": [
+            {
+              "label": "Penyesuaian Formulasi",
+              "slug": "formulation-adjustment"
+            },
+            {
+              "label": "Kelola Formulasi",
+              "slug": "formulation-manage"
+            },
+            {
+              "label": "Formulasi",
+              "slug": "formulation"
+            },
+            {
+              "label": "Permintaan HPP",
+              "slug": "request-cogs"
+            },
+            {
+              "label": "Batch Record",
+              "slug": "batch-record"
+            },
+            {
+              "label": "Jadwal Mixing",
+              "slug": "schedule-mixing"
+            },
+            {
+              "label": "Jadwal Filling",
+              "slug": "schedule-filling"
+            },
+            {
+              "label": "Jadwal Packaging",
+              "slug": "schedule-packaging"
+            }
+          ]
+        },
+        {
+          "group": "Produksi",
+          "subItems": [
+            {
+              "label": "Produksi Mixing",
+              "slug": "production-mixing"
+            },
+            {
+              "label": "Produksi Filling",
+              "slug": "production-filling"
+            },
+            {
+              "label": "Produksi Packaging",
+              "slug": "production-packaging"
+            }
+          ]
+        },
+        {
+          "group": "Akuntansi",
+          "subItems": [
+            {
+              "label": "Jurnal Umum",
+              "slug": "general-journal"
+            },
+            {
+              "label": "Kas Bank Keluar",
+              "slug": "other-payment"
+            },
+            {
+              "label": "Kas Bank Masuk",
+              "slug": "other-deposit"
+            }
+          ]
+        },
+        {
+          "group": "Penyesuaian Stok",
+          "subItems": []
+        },
+        {
+          "group": "Kebutuhan Barang",
+          "subItems": []
+        },
+        {
+          "group": "Laporan Persediaan",
+          "subItems": [
+            {
+              "label": "Stok",
+              "slug": "report-stock"
+            },
+            {
+              "label": "Mutasi Barang",
+              "slug": "report-mutation-goods"
+            },
+            {
+              "label": "Stok Valuation",
+              "slug": "report-stock-valuation"
+            }
+          ]
+        },
+        {
+          "group": "Laporan BusDev",
+          "subItems": [
+            {
+              "label": "Buku Tamu",
+              "slug": "report-guest-book"
+            },
+            {
+              "label": "Follow Up Pelanggan",
+              "slug": "report-follow-up-customer"
+            }
+          ]
+        },
+        {
+          "group": "Laporan Keuangan",
+          "subItems": [
+            {
+              "label": "Buku Besar",
+              "slug": "report-general-ledger"
+            },
+            {
+              "label": "Laba Rugi",
+              "slug": "report-profit-loss"
+            },
+            {
+              "label": "Neraca Saldo",
+              "slug": "report-trial-balance"
+            },
+            {
+              "label": "Neraca",
+              "slug": "report-balance-sheet"
+            }
+          ]
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        },
+        {
+          "group": "Perusahaan",
+          "subItems": []
+        },
+        {
+          "group": "Pengaturan",
+          "subItems": []
+        },
+        {
+          "group": "Catatan Aktifitas",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "roleName": "HRD",
+      "totalModul": 8,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Kelola Pengguna",
+          "subItems": [
+            {
+              "label": "Pengguna",
+              "slug": "user-manage"
+            }
+          ]
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Kelola Checklist",
+          "subItems": []
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "roleName": "Staff Back Office",
+      "totalModul": 5,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "roleName": "Purchasing",
+      "totalModul": 18,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Kelola Barang",
+          "subItems": [
+            {
+              "label": "Barang",
+              "slug": "goods-manage"
+            }
+          ]
+        },
+        {
+          "group": "Kelola Supplier",
+          "subItems": [
+            {
+              "label": "Kategori Supplier",
+              "slug": "supplier-category-manage"
+            },
+            {
+              "label": "Supplier",
+              "slug": "supplier-manage"
+            }
+          ]
+        },
+        {
+          "group": "Permintaan Pembelian ~",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Pembelian",
+          "subItems": [
+            {
+              "label": "Buat Pembelian",
+              "slug": "purchase"
+            },
+            {
+              "label": "Retur Pembelian",
+              "slug": "purchase-return"
+            }
+          ]
+        },
+        {
+          "group": "Kebutuhan Barang",
+          "subItems": []
+        },
+        {
+          "group": "Laporan Persediaan",
+          "subItems": [
+            {
+              "label": "Stok",
+              "slug": "report-stock"
+            },
+            {
+              "label": "Mutasi Barang",
+              "slug": "report-mutation-goods"
+            }
+          ]
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "roleName": "Warehouse",
+      "totalModul": 18,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Permintaan Barang ~",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Permintaan Pembelian",
+          "subItems": []
+        },
+        {
+          "group": "Barang Masuk",
+          "subItems": [
+            {
+              "label": "Pembelian Masuk",
+              "slug": "purchase-in"
+            },
+            {
+              "label": "Retur Penjualan",
+              "slug": "sales-return-in"
+            }
+          ]
+        },
+        {
+          "group": "Barang Keluar",
+          "subItems": [
+            {
+              "label": "Transfer Barang",
+              "slug": "goods-transfer"
+            },
+            {
+              "label": "Pengiriman Barang",
+              "slug": "delivery-out"
+            },
+            {
+              "label": "Retur Pembelian",
+              "slug": "purchase-return-out"
+            }
+          ]
+        },
+        {
+          "group": "Stok Opname",
+          "subItems": []
+        },
+        {
+          "group": "Laporan Persediaan",
+          "subItems": [
+            {
+              "label": "Stok",
+              "slug": "report-stock"
+            },
+            {
+              "label": "Mutasi Barang",
+              "slug": "report-mutation-goods"
+            }
+          ]
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "roleName": "Head Business Development",
+      "totalModul": 20,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Kelola Pelanggan",
+          "subItems": [
+            {
+              "label": "Pelanggan",
+              "slug": "customer-manage"
+            },
+            {
+              "label": "Pelanggan Saya",
+              "slug": "customer-my-manage"
+            }
+          ]
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Checklist",
+          "subItems": []
+        },
+        {
+          "group": "Buku Tamu",
+          "subItems": []
+        },
+        {
+          "group": "Client Sample",
+          "subItems": []
+        },
+        {
+          "group": "Client Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Client RO",
+          "subItems": []
+        },
+        {
+          "group": "Client Lost",
+          "subItems": []
+        },
+        {
+          "group": "Penjualan",
+          "subItems": [
+            {
+              "label": "Penjualan Sample",
+              "slug": "sales-sample"
+            },
+            {
+              "label": "Penjualan",
+              "slug": "sales"
+            },
+            {
+              "label": "Retur Penjualan",
+              "slug": "sales-return"
+            }
+          ]
+        },
+        {
+          "group": "Pra Produksi",
+          "subItems": [
+            {
+              "label": "Permintaan HPP",
+              "slug": "request-cogs"
+            }
+          ]
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "roleName": "Business Development",
+      "totalModul": 25,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. BusDev",
+          "subItems": []
+        },
+        {
+          "group": "D. Buku Tamu",
+          "subItems": []
+        },
+        {
+          "group": "D. Client Sample",
+          "subItems": []
+        },
+        {
+          "group": "D. Client Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Client RO",
+          "subItems": []
+        },
+        {
+          "group": "D. Lost",
+          "subItems": []
+        },
+        {
+          "group": "Kelola Pelanggan",
+          "subItems": [
+            {
+              "label": "Pelanggan Saya",
+              "slug": "customer-my-manage"
+            }
+          ]
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Checklist",
+          "subItems": []
+        },
+        {
+          "group": "Buku Tamu",
+          "subItems": []
+        },
+        {
+          "group": "Client Sample",
+          "subItems": []
+        },
+        {
+          "group": "Client Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Client RO",
+          "subItems": []
+        },
+        {
+          "group": "Client Lost",
+          "subItems": []
+        },
+        {
+          "group": "Penjualan",
+          "subItems": [
+            {
+              "label": "Penjualan Sample",
+              "slug": "sales-sample"
+            },
+            {
+              "label": "Penjualan",
+              "slug": "sales"
+            },
+            {
+              "label": "Retur Penjualan",
+              "slug": "sales-return"
+            }
+          ]
+        },
+        {
+          "group": "Pra Produksi",
+          "subItems": [
+            {
+              "label": "Permintaan HPP",
+              "slug": "request-cogs"
+            }
+          ]
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "roleName": "Head Research and Development",
+      "totalModul": 15,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Sample",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Permintaan Barang",
+          "subItems": []
+        },
+        {
+          "group": "Permintaan Pembelian",
+          "subItems": []
+        },
+        {
+          "group": "Pra Produksi",
+          "subItems": [
+            {
+              "label": "Penyesuaian Formulasi",
+              "slug": "formulation-adjustment"
+            },
+            {
+              "label": "Kelola Formulasi",
+              "slug": "formulation-manage"
+            },
+            {
+              "label": "Formulasi",
+              "slug": "formulation"
+            }
+          ]
+        },
+        {
+          "group": "Laporan Persediaan",
+          "subItems": [
+            {
+              "label": "Stok",
+              "slug": "report-stock"
+            },
+            {
+              "label": "Mutasi Barang",
+              "slug": "report-mutation-goods"
+            }
+          ]
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "roleName": "Research and Development",
+      "totalModul": 11,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Permintaan Barang",
+          "subItems": []
+        },
+        {
+          "group": "Permintaan Pembelian",
+          "subItems": []
+        },
+        {
+          "group": "Pra Produksi",
+          "subItems": [
+            {
+              "label": "Formulasi",
+              "slug": "formulation"
+            }
+          ]
+        },
+        {
+          "group": "Laporan Persediaan",
+          "subItems": [
+            {
+              "label": "Stok",
+              "slug": "report-stock"
+            },
+            {
+              "label": "Mutasi Barang",
+              "slug": "report-mutation-goods"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "roleName": "Production Mixing &amp; Filling",
+      "totalModul": 17,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Kebutuhan Barang",
+          "subItems": []
+        },
+        {
+          "group": "Permintaan Barang",
+          "subItems": []
+        },
+        {
+          "group": "Pra Produksi",
+          "subItems": [
+            {
+              "label": "Batch Record",
+              "slug": "batch-record"
+            },
+            {
+              "label": "Jadwal Mixing",
+              "slug": "schedule-mixing"
+            },
+            {
+              "label": "Jadwal Filling",
+              "slug": "schedule-filling"
+            }
+          ]
+        },
+        {
+          "group": "Produksi",
+          "subItems": [
+            {
+              "label": "Produksi Mixing",
+              "slug": "production-mixing"
+            },
+            {
+              "label": "Produksi Filling",
+              "slug": "production-filling"
+            }
+          ]
+        },
+        {
+          "group": "Laporan Persediaan",
+          "subItems": [
+            {
+              "label": "Stok",
+              "slug": "report-stock"
+            },
+            {
+              "label": "Mutasi Barang",
+              "slug": "report-mutation-goods"
+            }
+          ]
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "roleName": "Production Packaging",
+      "totalModul": 15,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Permintaan Barang",
+          "subItems": []
+        },
+        {
+          "group": "Barang Keluar",
+          "subItems": [
+            {
+              "label": "Pengiriman Barang",
+              "slug": "delivery-out"
+            }
+          ]
+        },
+        {
+          "group": "Pra Produksi",
+          "subItems": [
+            {
+              "label": "Jadwal Packaging",
+              "slug": "schedule-packaging"
+            }
+          ]
+        },
+        {
+          "group": "Produksi",
+          "subItems": [
+            {
+              "label": "Produksi Packaging",
+              "slug": "production-packaging"
+            }
+          ]
+        },
+        {
+          "group": "Laporan Persediaan",
+          "subItems": [
+            {
+              "label": "Stok",
+              "slug": "report-stock"
+            },
+            {
+              "label": "Mutasi Barang",
+              "slug": "report-mutation-goods"
+            }
+          ]
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "roleName": "Apoteker Penanggung Jawab",
+      "totalModul": 8,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Laporan Persediaan",
+          "subItems": [
+            {
+              "label": "Stok",
+              "slug": "report-stock"
+            },
+            {
+              "label": "Mutasi Barang",
+              "slug": "report-mutation-goods"
+            }
+          ]
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "roleName": "Finance",
+      "totalModul": 30,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Kelola CoA",
+          "subItems": [
+            {
+              "label": "CoA",
+              "slug": "coa-manage"
+            },
+            {
+              "label": "CoA Jurnal Otomatis",
+              "slug": "coa-auto-manage"
+            }
+          ]
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Pembelian",
+          "subItems": [
+            {
+              "label": "Faktur Pembelian",
+              "slug": "purchase-invoice"
+            },
+            {
+              "label": "DP Pembelian",
+              "slug": "purchase-down-payment"
+            },
+            {
+              "label": "Bayar Pembelian",
+              "slug": "purchase-payment"
+            }
+          ]
+        },
+        {
+          "group": "Penjualan",
+          "subItems": [
+            {
+              "label": "Bayar Sample",
+              "slug": "sales-sample-payment"
+            },
+            {
+              "label": "DP Penjualan",
+              "slug": "sales-down-payment"
+            },
+            {
+              "label": "Faktur Penjualan",
+              "slug": "sales-invoice"
+            },
+            {
+              "label": "Bayar Penjualan",
+              "slug": "sales-payment"
+            }
+          ]
+        },
+        {
+          "group": "Akuntansi",
+          "subItems": [
+            {
+              "label": "Jurnal Umum",
+              "slug": "general-journal"
+            },
+            {
+              "label": "Kas Bank Keluar",
+              "slug": "other-payment"
+            },
+            {
+              "label": "Kas Bank Masuk",
+              "slug": "other-deposit"
+            }
+          ]
+        },
+        {
+          "group": "Penyesuaian Stok",
+          "subItems": []
+        },
+        {
+          "group": "Laporan Persediaan",
+          "subItems": [
+            {
+              "label": "Stok",
+              "slug": "report-stock"
+            },
+            {
+              "label": "Mutasi Barang",
+              "slug": "report-mutation-goods"
+            }
+          ]
+        },
+        {
+          "group": "Laporan Keuangan",
+          "subItems": [
+            {
+              "label": "Buku Besar",
+              "slug": "report-general-ledger"
+            },
+            {
+              "label": "Laba Rugi",
+              "slug": "report-profit-loss"
+            },
+            {
+              "label": "Neraca Saldo",
+              "slug": "report-trial-balance"
+            },
+            {
+              "label": "Neraca",
+              "slug": "report-balance-sheet"
+            }
+          ]
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "roleName": "Digital Marketing",
+      "totalModul": 8,
+      "modules": [
+        {
+          "group": "D. Buku Tamu",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Leads",
+          "subItems": []
+        },
+        {
+          "group": "Laporan BusDev",
+          "subItems": [
+            {
+              "label": "Buku Tamu",
+              "slug": "report-guest-book"
+            },
+            {
+              "label": "Follow Up Pelanggan",
+              "slug": "report-follow-up-customer"
+            }
+          ]
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "roleName": "BusDev + HRD",
+      "totalModul": 20,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Kelola Pelanggan",
+          "subItems": [
+            {
+              "label": "Pelanggan Saya",
+              "slug": "customer-my-manage"
+            }
+          ]
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Checklist",
+          "subItems": []
+        },
+        {
+          "group": "Kelola Checklist",
+          "subItems": []
+        },
+        {
+          "group": "Buku Tamu",
+          "subItems": []
+        },
+        {
+          "group": "Client Sample",
+          "subItems": []
+        },
+        {
+          "group": "Client Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Client RO",
+          "subItems": []
+        },
+        {
+          "group": "Client Lost",
+          "subItems": []
+        },
+        {
+          "group": "Penjualan",
+          "subItems": [
+            {
+              "label": "Penjualan Sample",
+              "slug": "sales-sample"
+            },
+            {
+              "label": "Penjualan",
+              "slug": "sales"
+            },
+            {
+              "label": "Retur Penjualan",
+              "slug": "sales-return"
+            }
+          ]
+        },
+        {
+          "group": "Pra Produksi",
+          "subItems": [
+            {
+              "label": "Permintaan HPP",
+              "slug": "request-cogs"
+            }
+          ]
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    },
+    {
+      "id": "16",
+      "roleName": "BusDev + Purchasing",
+      "totalModul": 32,
+      "modules": [
+        {
+          "group": "D. Jadwal Produksi",
+          "subItems": []
+        },
+        {
+          "group": "D. Realisasi Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Kelola Barang",
+          "subItems": [
+            {
+              "label": "Barang",
+              "slug": "goods-manage"
+            }
+          ]
+        },
+        {
+          "group": "Kelola Supplier",
+          "subItems": [
+            {
+              "label": "Kategori Supplier",
+              "slug": "supplier-category-manage"
+            },
+            {
+              "label": "Supplier",
+              "slug": "supplier-manage"
+            }
+          ]
+        },
+        {
+          "group": "Kelola Pelanggan",
+          "subItems": [
+            {
+              "label": "Pelanggan Saya",
+              "slug": "customer-my-manage"
+            }
+          ]
+        },
+        {
+          "group": "Permintaan Pembelian ~",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Progress",
+          "subItems": []
+        },
+        {
+          "group": "Checklist Tracking",
+          "subItems": []
+        },
+        {
+          "group": "Checklist",
+          "subItems": []
+        },
+        {
+          "group": "Pembelian",
+          "subItems": [
+            {
+              "label": "Buat Pembelian",
+              "slug": "purchase"
+            },
+            {
+              "label": "Retur Pembelian",
+              "slug": "purchase-return"
+            }
+          ]
+        },
+        {
+          "group": "Kebutuhan Barang",
+          "subItems": []
+        },
+        {
+          "group": "Buku Tamu",
+          "subItems": []
+        },
+        {
+          "group": "Client Sample",
+          "subItems": []
+        },
+        {
+          "group": "Client Produksi",
+          "subItems": []
+        },
+        {
+          "group": "Client RO",
+          "subItems": []
+        },
+        {
+          "group": "Client Lost",
+          "subItems": []
+        },
+        {
+          "group": "Penjualan",
+          "subItems": [
+            {
+              "label": "Penjualan Sample",
+              "slug": "sales-sample"
+            },
+            {
+              "label": "Penjualan",
+              "slug": "sales"
+            },
+            {
+              "label": "Retur Penjualan",
+              "slug": "sales-return"
+            }
+          ]
+        },
+        {
+          "group": "Pra Produksi",
+          "subItems": [
+            {
+              "label": "Permintaan HPP",
+              "slug": "request-cogs"
+            }
+          ]
+        },
+        {
+          "group": "Laporan Persediaan",
+          "subItems": [
+            {
+              "label": "Stok",
+              "slug": "report-stock"
+            },
+            {
+              "label": "Mutasi Barang",
+              "slug": "report-mutation-goods"
+            }
+          ]
+        },
+        {
+          "group": "Akun Saya",
+          "subItems": []
+        }
+      ]
+    }
+  ]
+}

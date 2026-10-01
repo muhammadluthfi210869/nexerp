@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-26T10:15:46.140Z",
+ "generated_at": "2026-10-01T04:59:52.251Z",
  "called_strings": 456,
  "renamed": {
   "total": 49,
@@ -7,8 +7,8 @@
   "target_missed": 22
  },
  "unwired": {
-  "total": 45,
-  "exact": 21,
+  "total": 26,
+  "exact": 2,
   "suffix": 2,
   "missed": 22
  },
@@ -17,6 +17,6 @@
  "corrected": {
   "really_unwired": 44,
   "backend_missing": 27,
-  "overstated_by": 50
+  "overstated_by": 31
  }
 }

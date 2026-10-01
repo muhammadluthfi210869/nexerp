@@ -1,0 +1,889 @@
+{
+  "authCookie": "ci_session=bc787107fb57d1744078c76e05090613; csrf_cookie_gs=ea3a436dd4c2b703ca1dcb595b40dae5",
+  "links": [
+    {
+      "text": "English",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;en"
+    },
+    {
+      "text": "Indonesia",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;locale&#x2F;id"
+    },
+    {
+      "text": "Akun Saya",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account"
+    },
+    {
+      "text": "GsERP KIL",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;"
+    },
+    {
+      "text": "Beranda",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;"
+    },
+    {
+      "text": "D. Jadwal Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-schedule"
+    },
+    {
+      "text": "D. Realisasi Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-realization"
+    },
+    {
+      "text": "D. Penjualan Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-sample"
+    },
+    {
+      "text": "D. Penjualan Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-product"
+    },
+    {
+      "text": "D. Pelanggan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-customer"
+    },
+    {
+      "text": "D. Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sample"
+    },
+    {
+      "text": "D. Eksekutif",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-executive"
+    },
+    {
+      "text": "D. Notifikasi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-notification"
+    },
+    {
+      "text": "D. Digital Marketing",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-digital-marketing"
+    },
+    {
+      "text": "D. BusDev",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-business-development"
+    },
+    {
+      "text": "D. RnD",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-rnd"
+    },
+    {
+      "text": "D. Purchasing",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-purchasing"
+    },
+    {
+      "text": "D. Legalitas",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-legality"
+    },
+    {
+      "text": "D. Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production"
+    },
+    {
+      "text": "D. Gudang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-warehouse"
+    },
+    {
+      "text": "D. HR",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-human-resources"
+    },
+    {
+      "text": "D. Keuangan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-finance"
+    },
+    {
+      "text": "D. Buku Tamu",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-guest-book"
+    },
+    {
+      "text": "D. Client Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-sample"
+    },
+    {
+      "text": "D. Client Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-production"
+    },
+    {
+      "text": "D. Client RO",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-repeat-order"
+    },
+    {
+      "text": "D. Lost",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-lost"
+    },
+    {
+      "text": "Hak Akses",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;role-manage"
+    },
+    {
+      "text": "Pengguna",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;user-manage"
+    },
+    {
+      "text": "CoA",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-manage"
+    },
+    {
+      "text": "CoA Jurnal Otomatis",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-auto-manage"
+    },
+    {
+      "text": "Gudang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-manage"
+    },
+    {
+      "text": "Hak Akses Gudang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-access-manage"
+    },
+    {
+      "text": "Kategori Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-category-manage"
+    },
+    {
+      "text": "Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-manage"
+    },
+    {
+      "text": "Kategori Supplier",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-category-manage"
+    },
+    {
+      "text": "Supplier",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-manage"
+    },
+    {
+      "text": "Kategori Pelanggan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-category-manage"
+    },
+    {
+      "text": "Pelanggan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-manage"
+    },
+    {
+      "text": "Pelanggan Saya",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-my-manage"
+    },
+    {
+      "text": "Kategori Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-category"
+    },
+    {
+      "text": "Target Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-target"
+    },
+    {
+      "text": "Pembelian ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-approval"
+    },
+    {
+      "text": "Retur Pembelian ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-approval"
+    },
+    {
+      "text": "Penjualan Sample ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-approval"
+    },
+    {
+      "text": "Penjualan Produk ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-approval"
+    },
+    {
+      "text": "Retur Penjualan ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-approval"
+    },
+    {
+      "text": "Permintaan HPP ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs-approval"
+    },
+    {
+      "text": "Permintaan Pembelian ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request-approval"
+    },
+    {
+      "text": "Permintaan Barang ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request-approval"
+    },
+    {
+      "text": "Checklist Progress",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-progress"
+    },
+    {
+      "text": "Checklist Tracking",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-tracking"
+    },
+    {
+      "text": "Checklist",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist"
+    },
+    {
+      "text": "Kategori Checklist",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-category"
+    },
+    {
+      "text": "Kelola Checklist",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-manage"
+    },
+    {
+      "text": "Buat Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase"
+    },
+    {
+      "text": "Faktur Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-invoice"
+    },
+    {
+      "text": "Retur Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return"
+    },
+    {
+      "text": "DP Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-down-payment"
+    },
+    {
+      "text": "Bayar Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-payment"
+    },
+    {
+      "text": "Kebutuhan Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;need-for-goods"
+    },
+    {
+      "text": "Permintaan Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request"
+    },
+    {
+      "text": "Permintaan Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request"
+    },
+    {
+      "text": "Pembelian Masuk",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-in"
+    },
+    {
+      "text": "Retur Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-in"
+    },
+    {
+      "text": "Transfer Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-transfer"
+    },
+    {
+      "text": "Pengiriman Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;delivery-out"
+    },
+    {
+      "text": "Retur Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-out"
+    },
+    {
+      "text": "Stok Opname",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;stock-opname"
+    },
+    {
+      "text": "Leads",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;leads"
+    },
+    {
+      "text": "Buku Tamu",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;guest-book"
+    },
+    {
+      "text": "Client Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;client-sample"
+    },
+    {
+      "text": "Client Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;client-production"
+    },
+    {
+      "text": "Client RO",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;client-repeat-order"
+    },
+    {
+      "text": "Client Lost",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;client-lost"
+    },
+    {
+      "text": "Penjualan Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample"
+    },
+    {
+      "text": "Bayar Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-payment"
+    },
+    {
+      "text": "Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales"
+    },
+    {
+      "text": "Retur Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return"
+    },
+    {
+      "text": "DP Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-down-payment"
+    },
+    {
+      "text": "Faktur Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-invoice"
+    },
+    {
+      "text": "Bayar Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-payment"
+    },
+    {
+      "text": "Projek",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;project"
+    },
+    {
+      "text": "Penyesuaian Formulasi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;formulation-adjustment"
+    },
+    {
+      "text": "Kelola Formulasi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;formulation-manage"
+    },
+    {
+      "text": "Formulasi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;formulation"
+    },
+    {
+      "text": "Permintaan HPP",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs"
+    },
+    {
+      "text": "Batch Record",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;batch-record"
+    },
+    {
+      "text": "Jadwal Mixing",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;schedule-mixing"
+    },
+    {
+      "text": "Jadwal Filling",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;schedule-filling"
+    },
+    {
+      "text": "Jadwal Packaging",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;schedule-packaging"
+    },
+    {
+      "text": "Produksi Mixing",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;production-mixing"
+    },
+    {
+      "text": "Produksi Filling",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;production-filling"
+    },
+    {
+      "text": "Produksi Packaging",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;production-packaging"
+    },
+    {
+      "text": "Jurnal Umum",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;general-journal"
+    },
+    {
+      "text": "Kas Bank Keluar",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;other-payment"
+    },
+    {
+      "text": "Kas Bank Masuk",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;other-deposit"
+    },
+    {
+      "text": "Penyesuaian Stok",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;stock-adjustment"
+    },
+    {
+      "text": "Kebutuhan Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-need-for-goods"
+    },
+    {
+      "text": "Stok",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-stock"
+    },
+    {
+      "text": "Mutasi Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-mutation-goods"
+    },
+    {
+      "text": "Stok Valuation",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-stock-valuation"
+    },
+    {
+      "text": "Buku Tamu",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-guest-book"
+    },
+    {
+      "text": "Follow Up Pelanggan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-follow-up-customer"
+    },
+    {
+      "text": "Buku Besar",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-general-ledger"
+    },
+    {
+      "text": "Laba Rugi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-profit-loss"
+    },
+    {
+      "text": "Neraca Saldo",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-trial-balance"
+    },
+    {
+      "text": "Neraca",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-balance-sheet"
+    },
+    {
+      "text": "Akun Saya",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account"
+    },
+    {
+      "text": "Perusahaan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;company"
+    },
+    {
+      "text": "Pengaturan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;setting"
+    },
+    {
+      "text": "Catatan Aktifitas",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;activity-log"
+    },
+    {
+      "text": "Beranda",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;"
+    },
+    {
+      "text": "Dasbor D. Jadwal Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-schedule"
+    },
+    {
+      "text": "Dasbor D. Realisasi Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production-realization"
+    },
+    {
+      "text": "Dasbor D. Penjualan Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-sample"
+    },
+    {
+      "text": "Dasbor D. Penjualan Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sales-product"
+    },
+    {
+      "text": "Dasbor D. Pelanggan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-customer"
+    },
+    {
+      "text": "Dasbor D. Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-sample"
+    },
+    {
+      "text": "Dasbor Eksekutif D. Eksekutif",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-executive"
+    },
+    {
+      "text": "Dasbor Eksekutif D. Notifikasi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-notification"
+    },
+    {
+      "text": "Dasbor Departemen D. Digital Marketing",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-digital-marketing"
+    },
+    {
+      "text": "Dasbor Departemen D. BusDev",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-business-development"
+    },
+    {
+      "text": "Dasbor Departemen D. RnD",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-rnd"
+    },
+    {
+      "text": "Dasbor Departemen D. Purchasing",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-purchasing"
+    },
+    {
+      "text": "Dasbor Departemen D. Legalitas",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-legality"
+    },
+    {
+      "text": "Dasbor Departemen D. Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-production"
+    },
+    {
+      "text": "Dasbor Departemen D. Gudang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-warehouse"
+    },
+    {
+      "text": "Dasbor Departemen D. HR",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-human-resources"
+    },
+    {
+      "text": "Dasbor Departemen D. Keuangan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-finance"
+    },
+    {
+      "text": "Dasbor BusDev D. Buku Tamu",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-guest-book"
+    },
+    {
+      "text": "Dasbor BusDev D. Client Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-sample"
+    },
+    {
+      "text": "Dasbor BusDev D. Client Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-production"
+    },
+    {
+      "text": "Dasbor BusDev D. Client RO",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-repeat-order"
+    },
+    {
+      "text": "Dasbor BusDev D. Lost",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;dashboard-client-lost"
+    },
+    {
+      "text": "Kelola Pengguna Hak Akses",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;role-manage"
+    },
+    {
+      "text": "Kelola Pengguna Pengguna",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;user-manage"
+    },
+    {
+      "text": "Kelola CoA CoA",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-manage"
+    },
+    {
+      "text": "Kelola CoA CoA Jurnal Otomatis",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;coa-auto-manage"
+    },
+    {
+      "text": "Kelola Gudang Gudang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-manage"
+    },
+    {
+      "text": "Kelola Gudang Hak Akses Gudang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;warehouse-access-manage"
+    },
+    {
+      "text": "Kelola Barang Kategori Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-category-manage"
+    },
+    {
+      "text": "Kelola Barang Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-manage"
+    },
+    {
+      "text": "Kelola Supplier Kategori Supplier",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-category-manage"
+    },
+    {
+      "text": "Kelola Supplier Supplier",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;supplier-manage"
+    },
+    {
+      "text": "Kelola Pelanggan Kategori Pelanggan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-category-manage"
+    },
+    {
+      "text": "Kelola Pelanggan Pelanggan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-manage"
+    },
+    {
+      "text": "Kelola Pelanggan Pelanggan Saya",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;customer-my-manage"
+    },
+    {
+      "text": "Kelola Penjualan Kategori Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-category"
+    },
+    {
+      "text": "Kelola Penjualan Target Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-target"
+    },
+    {
+      "text": "Persetujuan Pembelian ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-approval"
+    },
+    {
+      "text": "Persetujuan Retur Pembelian ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-approval"
+    },
+    {
+      "text": "Persetujuan Penjualan Sample ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-approval"
+    },
+    {
+      "text": "Persetujuan Penjualan Produk ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-approval"
+    },
+    {
+      "text": "Persetujuan Retur Penjualan ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-approval"
+    },
+    {
+      "text": "Persetujuan Permintaan HPP ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs-approval"
+    },
+    {
+      "text": "Persetujuan Permintaan Pembelian ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request-approval"
+    },
+    {
+      "text": "Persetujuan Permintaan Barang ~",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request-approval"
+    },
+    {
+      "text": "Umum Checklist Progress",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-progress"
+    },
+    {
+      "text": "Umum Checklist Tracking",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-tracking"
+    },
+    {
+      "text": "Umum Checklist",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist"
+    },
+    {
+      "text": "Umum Kategori Checklist",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-category"
+    },
+    {
+      "text": "Umum Kelola Checklist",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;checklist-manage"
+    },
+    {
+      "text": "Pembelian Buat Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase"
+    },
+    {
+      "text": "Pembelian Faktur Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-invoice"
+    },
+    {
+      "text": "Pembelian Retur Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return"
+    },
+    {
+      "text": "Pembelian DP Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-down-payment"
+    },
+    {
+      "text": "Pembelian Bayar Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-payment"
+    },
+    {
+      "text": "Operasional Kebutuhan Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;need-for-goods"
+    },
+    {
+      "text": "Operasional Permintaan Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-request"
+    },
+    {
+      "text": "Operasional Permintaan Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-request"
+    },
+    {
+      "text": "Barang Masuk Pembelian Masuk",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-in"
+    },
+    {
+      "text": "Barang Masuk Retur Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return-in"
+    },
+    {
+      "text": "Barang Keluar Transfer Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;goods-transfer"
+    },
+    {
+      "text": "Barang Keluar Pengiriman Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;delivery-out"
+    },
+    {
+      "text": "Barang Keluar Retur Pembelian",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;purchase-return-out"
+    },
+    {
+      "text": "Operasional Stok Opname",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;stock-opname"
+    },
+    {
+      "text": "Operasional Leads",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;leads"
+    },
+    {
+      "text": "Operasional Buku Tamu",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;guest-book"
+    },
+    {
+      "text": "Operasional Client Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;client-sample"
+    },
+    {
+      "text": "Operasional Client Produksi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;client-production"
+    },
+    {
+      "text": "Operasional Client RO",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;client-repeat-order"
+    },
+    {
+      "text": "Operasional Client Lost",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;client-lost"
+    },
+    {
+      "text": "Penjualan Penjualan Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample"
+    },
+    {
+      "text": "Penjualan Bayar Sample",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-sample-payment"
+    },
+    {
+      "text": "Penjualan Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales"
+    },
+    {
+      "text": "Penjualan Retur Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-return"
+    },
+    {
+      "text": "Penjualan DP Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-down-payment"
+    },
+    {
+      "text": "Penjualan Faktur Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-invoice"
+    },
+    {
+      "text": "Penjualan Bayar Penjualan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;sales-payment"
+    },
+    {
+      "text": "Operasional Projek",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;project"
+    },
+    {
+      "text": "Pra Produksi Penyesuaian Formulasi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;formulation-adjustment"
+    },
+    {
+      "text": "Pra Produksi Kelola Formulasi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;formulation-manage"
+    },
+    {
+      "text": "Pra Produksi Formulasi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;formulation"
+    },
+    {
+      "text": "Pra Produksi Permintaan HPP",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;request-cogs"
+    },
+    {
+      "text": "Pra Produksi Batch Record",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;batch-record"
+    },
+    {
+      "text": "Pra Produksi Jadwal Mixing",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;schedule-mixing"
+    },
+    {
+      "text": "Pra Produksi Jadwal Filling",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;schedule-filling"
+    },
+    {
+      "text": "Pra Produksi Jadwal Packaging",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;schedule-packaging"
+    },
+    {
+      "text": "Produksi Produksi Mixing",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;production-mixing"
+    },
+    {
+      "text": "Produksi Produksi Filling",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;production-filling"
+    },
+    {
+      "text": "Produksi Produksi Packaging",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;production-packaging"
+    },
+    {
+      "text": "Akuntansi Jurnal Umum",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;general-journal"
+    },
+    {
+      "text": "Akuntansi Kas Bank Keluar",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;other-payment"
+    },
+    {
+      "text": "Akuntansi Kas Bank Masuk",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;other-deposit"
+    },
+    {
+      "text": "Operasional Penyesuaian Stok",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;stock-adjustment"
+    },
+    {
+      "text": "Laporan Kebutuhan Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-need-for-goods"
+    },
+    {
+      "text": "Laporan Persediaan Stok",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-stock"
+    },
+    {
+      "text": "Laporan Persediaan Mutasi Barang",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-mutation-goods"
+    },
+    {
+      "text": "Laporan Persediaan Stok Valuation",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-stock-valuation"
+    },
+    {
+      "text": "Laporan BusDev Buku Tamu",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-guest-book"
+    },
+    {
+      "text": "Laporan BusDev Follow Up Pelanggan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-follow-up-customer"
+    },
+    {
+      "text": "Laporan Keuangan Buku Besar",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-general-ledger"
+    },
+    {
+      "text": "Laporan Keuangan Laba Rugi",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-profit-loss"
+    },
+    {
+      "text": "Laporan Keuangan Neraca Saldo",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-trial-balance"
+    },
+    {
+      "text": "Laporan Keuangan Neraca",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;report-balance-sheet"
+    },
+    {
+      "text": "Pengaturan Akun Saya",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;account"
+    },
+    {
+      "text": "Pengaturan Perusahaan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;company"
+    },
+    {
+      "text": "Pengaturan Pengaturan",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;setting"
+    },
+    {
+      "text": "Pengaturan Catatan Aktifitas",
+      "href": "https&#x3A;&#x2F;&#x2F;kil.gserp.id&#x2F;activity-log"
+    },
+    {
+      "text": "PT. Karya Impian Laboratoris",
+      "href": "https&#x3A;&#x2F;&#x2F;dreamlab.id"
+    }
+  ]
+}

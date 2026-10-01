@@ -1,0 +1,15 @@
+# NEX ERP — Cursor & AI Rules
+
+You are working on NEX ERP. Every modification MUST strictly comply with these clean code rules:
+
+1. Coupling & Cohesion:
+   - Frontend: Tri-Layer Colocation per route folder (`_components/`, `_hooks/`, `_types/`, entry `page.tsx`).
+   - Backend: Domain Sub-Services orchestrated by thin Facade Orchestrators (< 250 lines).
+2. File Size Limits:
+   - `page.tsx` < 120 lines (max limit 150).
+   - Backend Facades < 250 lines.
+   - Sub-services / Components < 300–400 lines.
+3. Cognitive Complexity: Single responsibility, low cognitive complexity.
+4. Zero Dead Code: Check `docs/ROUTE_MAP.md`. Never create duplicate/fossil routes.
+5. UI Integrity: 0% visual regression. Use `@/components/dna`.
+6. Strict Type Safety: Strict TypeScript. Verify with `npm run typecheck` (both frontend and backend) and `npm --prefix frontend run build`.

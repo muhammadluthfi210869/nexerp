@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\logs\\.f0f569b20db76577b3b3c76ba5c15c20a7b7228d-audit.json",
+    "files": [
+        {
+            "date": 1790833486431,
+            "name": "C:\\GAWE\\Web Dev\\Porto Aureon\\ERP FROM ZERO\\logs\\combined-2026-10-01.log",
+            "hash": "4ea434233e916d268bf3fca463a42c4d57ed174db9c20e9b2f37c920290f3bad"
+        }
+    ],
+    "hashType": "sha256"
+}

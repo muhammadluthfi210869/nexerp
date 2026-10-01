@@ -1,0 +1,235 @@
+{
+  "label": "erp_audit",
+  "ranAt": "2026-10-01T06:22:58.401Z",
+  "invariants": {
+    "journalBalance": {
+      "value": {
+        "totalEntries": 0,
+        "unbalanced": 0,
+        "unbalancedPct": 0,
+        "entriesWithNoLines": 0,
+        "totalDebit": 0,
+        "totalCredit": 0,
+        "netDrMinusCr": 0,
+        "worstTen": []
+      }
+    },
+    "invoiceArithmetic": {
+      "value": {
+        "total": 4,
+        "rowsWhereTotalNeSubtotalPlusTax": 0,
+        "sample": []
+      }
+    },
+    "postedInvoicesWithNoJournal": {
+      "value": {
+        "postedTotal": 2,
+        "postedWithNoJournal": 2,
+        "producedByThisHarness": 2,
+        "preExisting": 0,
+        "moneyMarkedPostedButUnposted": 2220000,
+        "moneyPreExisting": 0,
+        "preExistingSample": []
+      },
+      "note": "split on whether the row was created by scripts/audit/proof-server.cjs — counting our own test rows as a finding would inflate the number. Only `preExisting` says anything about real usage."
+    },
+    "stockVsLedger": {
+      "value": {
+        "materialItems": 5,
+        "inventoryTransactions": 0,
+        "materialsWithQtyButNoMatchingLedger": 5,
+        "sumOfMasterStockQty": 60750,
+        "sumOfLedgerQty": 0,
+        "unexplainedDifference": 60750,
+        "sample": [
+          {
+            "id": "f5185243-e06b-4480-8ffb-f34657f44b04",
+            "code": "PKG-BOTTLE-30ML",
+            "name": "Botol Kaca Serum 30ml Amber + Pipet Rubber",
+            "qty": 25000,
+            "ledger": 0
+          },
+          {
+            "id": "28d205ce-9739-4c16-9bb8-d303179cf802",
+            "code": "PKG-BOX-SERUM",
+            "name": "Outer Box Folding Serum Doff Emboss Gold",
+            "qty": 25000,
+            "ledger": 0
+          },
+          {
+            "id": "3695ff56-eef3-43c1-910b-b88915cd99f3",
+            "code": "RAW-AQUA-01",
+            "name": "Aqua Demineralisata (USP Grade)",
+            "qty": 10000,
+            "ledger": 0
+          },
+          {
+            "id": "3ab9df9b-120a-4231-ae26-0ed9babe04bf",
+            "code": "RAW-NIACIN-01",
+            "name": "Niacinamide USP Grade 99.8%",
+            "qty": 500,
+            "ledger": 0
+          },
+          {
+            "id": "49b0408f-9bf1-4a9c-8674-6143dba88b50",
+            "code": "RAW-HYALURON-01",
+            "name": "Hyaluronic Acid Multi-Molecular 1%",
+            "qty": 250,
+            "ledger": 0
+          }
+        ]
+      },
+      "note": "a material with stockQty > 0 and a ledger sum of 0 is stock that materialised with no recorded movement"
+    },
+    "materialAccountPopulation": {
+      "value": {
+        "total": 5,
+        "noinventoryaccount": 5,
+        "nosalesaccount": 5
+      },
+      "note": "null here means getTrialBalance has no account to route this stock through"
+    },
+    "coaCodesReferencedButAbsent": {
+      "value": {
+        "definition": "4-digit string literal assigned to a property named `code`, anywhere in backend/src",
+        "filesScanned": 632,
+        "distinctCodesReferenced": 22,
+        "accountsInDatabase": 17,
+        "databaseCodes": [
+          "1103",
+          "1110",
+          "1111",
+          "1201",
+          "1301",
+          "1302",
+          "1303",
+          "1304",
+          "2101",
+          "2301",
+          "3100",
+          "4101",
+          "4102",
+          "5100",
+          "5110",
+          "5190",
+          "6201"
+        ],
+        "missingCount": 12,
+        "missing": [
+          {
+            "code": "1100",
+            "referencedAt": [
+              "modules/finance/services/__tests__/finance-journal.service.unit-spec.ts:116",
+              "modules/finance/services/__tests__/finance-journal.service.unit-spec.ts:206",
+              "modules/finance/services/__tests__/finance-journal.service.unit-spec.ts:212"
+            ]
+          },
+          {
+            "code": "1101",
+            "referencedAt": [
+              "modules/commercial/services/payments.service.ts:80",
+              "modules/commercial/services/payments.service.ts:116",
+              "modules/finance/services/__tests__/finance-journal.service.unit-spec.ts:137"
+            ]
+          },
+          {
+            "code": "1108",
+            "referencedAt": [
+              "modules/commercial/services/payments.service.ts:82"
+            ]
+          },
+          {
+            "code": "1151",
+            "referencedAt": [
+              "modules/finance/services/finance-cogs.service.ts:48",
+              "modules/finance/services/finance-cogs.service.ts:288",
+              "modules/finance/services/finance-cogs.service.ts:293"
+            ]
+          },
+          {
+            "code": "1310",
+            "referencedAt": [
+              "modules/finance/depreciation-schedules/depreciation-schedules.service.ts:130"
+            ]
+          },
+          {
+            "code": "2102",
+            "referencedAt": [
+              "modules/commercial/services/payments.service.ts:83",
+              "modules/finance/services/finance-invoice.service.ts:986",
+              "modules/finance/services/finance-journal.service.ts:48"
+            ]
+          },
+          {
+            "code": "2201",
+            "referencedAt": [
+              "modules/finance/services/finance-invoice.service.ts:869",
+              "modules/finance/services/__tests__/finance-journal.service.unit-spec.ts:138"
+            ]
+          },
+          {
+            "code": "4001",
+            "referencedAt": [
+              "modules/finance/sales-invoices/sales-invoices.service.ts:140"
+            ]
+          },
+          {
+            "code": "5210",
+            "referencedAt": [
+              "modules/finance/depreciation-schedules/depreciation-schedules.service.ts:127"
+            ]
+          },
+          {
+            "code": "6101",
+            "referencedAt": [
+              "modules/finance/services/finance-journal.service.ts:69",
+              "modules/finance/services/finance-journal.service.ts:545",
+              "modules/finance/services/__tests__/finance-fund-request.service.unit-spec.ts:168"
+            ]
+          },
+          {
+            "code": "6224",
+            "referencedAt": [
+              "modules/finance/services/finance-invoice.service.ts:882",
+              "modules/finance/services/finance-invoice.service.ts:993",
+              "modules/finance/services/finance-journal.service.ts:76"
+            ]
+          },
+          {
+            "code": "6232",
+            "referencedAt": [
+              "modules/finance/services/finance-cogs.service.ts:303",
+              "modules/finance/services/finance-cogs.service.ts:308",
+              "modules/finance/services/finance-journal.service.ts:83"
+            ]
+          }
+        ]
+      }
+    },
+    "customerTable": {
+      "value": {
+        "counts": {
+          "customers": 4,
+          "seededbythisaudit": 4,
+          "salesleads": 15
+        },
+        "customerIdColumns": [
+          {
+            "table_name": "ar_receipts",
+            "is_nullable": "NO"
+          },
+          {
+            "table_name": "client_escrows",
+            "is_nullable": "NO"
+          },
+          {
+            "table_name": "sales_invoices",
+            "is_nullable": "NO"
+          }
+        ]
+      },
+      "note": "AUD- prefixed customers were inserted by scripts/audit/proof-server.cjs, because the API cannot create one. Subtract them: the real figure is `customers - seededByThisAudit`."
+    }
+  },
+  "publicTableCount": 212
+}

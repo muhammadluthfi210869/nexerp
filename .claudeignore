@@ -1,0 +1,42 @@
+# AI Tooling Ignore Patterns (Antigravity, Claude Code, Cursor, Copilot)
+# Keeps AI indexing lightning fast and prevents context pollution
+
+# Historical backups & legacy code
+_archive/**
+_backup*/**
+old_erp/**
+backups/**
+backups-*/**
+r4-local-sandbox/**
+
+# Build outputs & caches
+node_modules/**
+backend/node_modules/**
+frontend/node_modules/**
+frontend/.next/**
+backend/dist/**
+backend/.jest-cache/**
+.kilo/**
+.playwright-cli/**
+
+# Test artifacts & evidence dumps
+evidence/**
+artifacts/**
+playwright-report/**
+test-results/**
+tmp/**
+scratch/**
+
+# Archives & logs
+*.tar.gz
+*.zip
+*.log
+*.sql
+*.sql.gz
+*.csv
+
+# Historical verification reports and audits (contracts remain accessible in docs/legacy-erp/contracts)
+docs/audit/**
+docs/legacy-erp/verification/evidence/**
+docs/qa-gate/**
+docs/gap/**

@@ -1,0 +1,975 @@
+{
+  "ranAt": "2026-10-01T07:34:40.716Z",
+  "mode": "NORMAL",
+  "api": "http://localhost:3004",
+  "database": "postgresql://***@localhost:5432/erp_audit?schema=public",
+  "summary": {
+    "total": 9,
+    "pass": 9,
+    "fail": 0
+  },
+  "sanity": {
+    "erp_audit_customers_went_from": 0,
+    "erp_audit_customers_went_to": 3,
+    "seededCustomersRemoved": 0,
+    "seededCustomersLeftBecauseInvoicesReferenceThem": 2,
+    "note": "T1/T2 seed customers on purpose — the API cannot. Any AUD- customer still present is referenced by a test invoice, so it stays; delete the SI-2610-* audit invoices to clear them. erp_db_test is never connected."
+  },
+  "evidence": [
+    {
+      "id": "T1",
+      "title": "Sales invoice posts a balanced 3-line journal (AR / Revenue / PPN)",
+      "verdict": {
+        "seededCustomer": {
+          "how": "direct SQL — the API cannot create one",
+          "id": "e65482a1-eea6-49ae-a162-9ca5033eaefd",
+          "code": "AUD-T1-053549",
+          "name": "Audit T1"
+        },
+        "create": {
+          "method": "POST",
+          "url": "/finance/sales-invoices",
+          "status": 201,
+          "request": {
+            "customerId": "e65482a1-eea6-49ae-a162-9ca5033eaefd",
+            "invoiceDate": "2026-10-01",
+            "dueDate": "2026-10-31",
+            "notes": "AUDIT T1",
+            "lineItems": [
+              {
+                "itemCode": "AUD-1",
+                "itemName": "Audit item",
+                "qty": 100,
+                "unit": "pcs",
+                "price": 10000,
+                "discount": 0
+              }
+            ]
+          },
+          "json": {
+            "id": "273ff199-c0a9-493a-a830-2e0cbfb9b7f7",
+            "invoiceNumber": "SI-2610-000001",
+            "customerId": "e65482a1-eea6-49ae-a162-9ca5033eaefd",
+            "invoiceDate": "2026-10-01T00:00:00.000Z",
+            "dueDate": "2026-10-31T00:00:00.000Z",
+            "subtotal": "1000000",
+            "taxAmount": "110000",
+            "totalAmount": "1110000",
+            "paidAmount": "0",
+            "paymentStatus": "PENDING",
+            "deliveryStatus": "PENDING",
+            "notes": "AUDIT T1",
+            "attachmentUrls": [],
+            "postedAt": null,
+            "cancelledAt": null,
+            "createdAt": "2026-10-01T07:34:13.617Z",
+            "updatedAt": "2026-10-01T07:34:13.617Z",
+            "lineItems": [
+              {
+                "id": "96d5ac46-bdfc-4123-a102-eb95fbad1c54",
+                "invoiceId": "273ff199-c0a9-493a-a830-2e0cbfb9b7f7",
+                "itemCode": "AUD-1",
+                "itemName": "Audit item",
+                "qty": "100",
+                "unit": "pcs",
+                "price": "10000",
+                "discount": "0",
+                "total": "1000000"
+              }
+            ],
+            "customer": {
+              "id": "e65482a1-eea6-49ae-a162-9ca5033eaefd",
+              "code": "AUD-T1-053549",
+              "name": "Audit T1",
+              "brand": "AuditBrand",
+              "contactPerson": null,
+              "email": "AUD-T1-053549@audit.local",
+              "phone": null,
+              "address": null,
+              "npwp": null,
+              "creditLimit": "0",
+              "paymentTerms": 30,
+              "isActive": true,
+              "notes": null,
+              "createdAt": "2026-10-01T14:34:13.554Z",
+              "updatedAt": "2026-10-01T14:34:13.554Z"
+            }
+          },
+          "raw": "{\"id\":\"273ff199-c0a9-493a-a830-2e0cbfb9b7f7\",\"invoiceNumber\":\"SI-2610-000001\",\"customerId\":\"e65482a1-eea6-49ae-a162-9ca5033eaefd\",\"invoiceDate\":\"2026-10-01T00:00:00.000Z\",\"dueDate\":\"2026-10-31T00:00:00.000Z\",\"subtotal\":\"1000000\",\"taxAmount\":\"110000\",\"totalAmount\":\"1110000\",\"paidAmount\":\"0\",\"paymentStatus\":\"PENDING\",\"deliveryStatus\":\"PENDING\",\"notes\":\"AUDIT T1\",\"attachmentUrls\":[],\"postedAt\":null,\"cancelledAt\":null,\"createdAt\":\"2026-10-01T07:34:13.617Z\",\"updatedAt\":\"2026-10-01T07:34:13.617Z\",\"lin"
+        },
+        "post": {
+          "method": "POST",
+          "url": "/finance/sales-invoices/273ff199-c0a9-493a-a830-2e0cbfb9b7f7/post",
+          "status": 201,
+          "json": {
+            "id": "273ff199-c0a9-493a-a830-2e0cbfb9b7f7",
+            "invoiceNumber": "SI-2610-000001",
+            "customerId": "e65482a1-eea6-49ae-a162-9ca5033eaefd",
+            "invoiceDate": "2026-10-01T00:00:00.000Z",
+            "dueDate": "2026-10-31T00:00:00.000Z",
+            "subtotal": "1000000",
+            "taxAmount": "110000",
+            "totalAmount": "1110000",
+            "paidAmount": "0",
+            "paymentStatus": "PENDING",
+            "deliveryStatus": "PENDING",
+            "notes": "AUDIT T1 [posted by 8e68fd2a-1a43-44a7-a4bd-f49bdce5d214]",
+            "attachmentUrls": [],
+            "postedAt": "2026-10-01T07:34:13.721Z",
+            "cancelledAt": null,
+            "createdAt": "2026-10-01T07:34:13.617Z",
+            "updatedAt": "2026-10-01T07:34:13.731Z"
+          },
+          "raw": "{\"id\":\"273ff199-c0a9-493a-a830-2e0cbfb9b7f7\",\"invoiceNumber\":\"SI-2610-000001\",\"customerId\":\"e65482a1-eea6-49ae-a162-9ca5033eaefd\",\"invoiceDate\":\"2026-10-01T00:00:00.000Z\",\"dueDate\":\"2026-10-31T00:00:00.000Z\",\"subtotal\":\"1000000\",\"taxAmount\":\"110000\",\"totalAmount\":\"1110000\",\"paidAmount\":\"0\",\"paymentStatus\":\"PENDING\",\"deliveryStatus\":\"PENDING\",\"notes\":\"AUDIT T1 [posted by 8e68fd2a-1a43-44a7-a4bd-f49bdce5d214]\",\"attachmentUrls\":[],\"postedAt\":\"2026-10-01T07:34:13.721Z\",\"cancelledAt\":null,\"createdAt\""
+        },
+        "dbInvoice": {
+          "posted": true,
+          "subtotal": 1000000,
+          "taxAmount": 110000,
+          "totalAmount": 1110000
+        },
+        "journalAggregate": {
+          "lines": 3,
+          "dr": 1110000,
+          "cr": 1110000
+        },
+        "journalLegs": [
+          {
+            "code": "1201",
+            "debit": 1110000,
+            "credit": 0
+          },
+          {
+            "code": "4101",
+            "debit": 0,
+            "credit": 1000000
+          },
+          {
+            "code": "2104",
+            "debit": 0,
+            "credit": 110000
+          }
+        ],
+        "observed": {
+          "postedAtSet": true,
+          "threeLines": true,
+          "balanced": true,
+          "dr": 1110000,
+          "cr": 1110000
+        },
+        "assertions": {
+          "arDebitsTotalAmount": true,
+          "revenueCreditsSubtotal": true,
+          "ppnCreditsTaxAmount": true
+        }
+      }
+    },
+    {
+      "id": "T2",
+      "title": "Posting fails CLOSED with a named account, instead of silently skipping the journal",
+      "verdict": {
+        "removedAccount": {
+          "id": "fc53e44e-1dd3-4def-b0d1-de079f7325b5",
+          "code": "2104-AUDIT-HIDDEN"
+        },
+        "create": {
+          "method": "POST",
+          "url": "/finance/sales-invoices",
+          "status": 201,
+          "request": {
+            "customerId": "db1126f7-a625-48a3-898c-50db3d45feef",
+            "invoiceDate": "2026-10-01",
+            "dueDate": "2026-10-31",
+            "notes": "AUDIT T2",
+            "lineItems": [
+              {
+                "itemCode": "AUD-2",
+                "itemName": "Audit item",
+                "qty": 10,
+                "unit": "pcs",
+                "price": 100000,
+                "discount": 0
+              }
+            ]
+          },
+          "json": {
+            "id": "ef1bdc4a-b889-4b85-9dc9-edb5e6fe55eb",
+            "invoiceNumber": "SI-2610-000002",
+            "customerId": "db1126f7-a625-48a3-898c-50db3d45feef",
+            "invoiceDate": "2026-10-01T00:00:00.000Z",
+            "dueDate": "2026-10-31T00:00:00.000Z",
+            "subtotal": "1000000",
+            "taxAmount": "110000",
+            "totalAmount": "1110000",
+            "paidAmount": "0",
+            "paymentStatus": "PENDING",
+            "deliveryStatus": "PENDING",
+            "notes": "AUDIT T2",
+            "attachmentUrls": [],
+            "postedAt": null,
+            "cancelledAt": null,
+            "createdAt": "2026-10-01T07:34:14.675Z",
+            "updatedAt": "2026-10-01T07:34:14.675Z",
+            "lineItems": [
+              {
+                "id": "2822aeec-6de1-449a-87b3-0e9c64662d70",
+                "invoiceId": "ef1bdc4a-b889-4b85-9dc9-edb5e6fe55eb",
+                "itemCode": "AUD-2",
+                "itemName": "Audit item",
+                "qty": "10",
+                "unit": "pcs",
+                "price": "100000",
+                "discount": "0",
+                "total": "1000000"
+              }
+            ],
+            "customer": {
+              "id": "db1126f7-a625-48a3-898c-50db3d45feef",
+              "code": "AUD-T2-054632",
+              "name": "Audit T2",
+              "brand": "AuditBrand",
+              "contactPerson": null,
+              "email": "AUD-T2-054632@audit.local",
+              "phone": null,
+              "address": null,
+              "npwp": null,
+              "creditLimit": "0",
+              "paymentTerms": 30,
+              "isActive": true,
+              "notes": null,
+              "createdAt": "2026-10-01T14:34:14.635Z",
+              "updatedAt": "2026-10-01T14:34:14.635Z"
+            }
+          },
+          "raw": "{\"id\":\"ef1bdc4a-b889-4b85-9dc9-edb5e6fe55eb\",\"invoiceNumber\":\"SI-2610-000002\",\"customerId\":\"db1126f7-a625-48a3-898c-50db3d45feef\",\"invoiceDate\":\"2026-10-01T00:00:00.000Z\",\"dueDate\":\"2026-10-31T00:00:00.000Z\",\"subtotal\":\"1000000\",\"taxAmount\":\"110000\",\"totalAmount\":\"1110000\",\"paidAmount\":\"0\",\"paymentStatus\":\"PENDING\",\"deliveryStatus\":\"PENDING\",\"notes\":\"AUDIT T2\",\"attachmentUrls\":[],\"postedAt\":null,\"cancelledAt\":null,\"createdAt\":\"2026-10-01T07:34:14.675Z\",\"updatedAt\":\"2026-10-01T07:34:14.675Z\",\"lin"
+        },
+        "post": {
+          "method": "POST",
+          "url": "/finance/sales-invoices/ef1bdc4a-b889-4b85-9dc9-edb5e6fe55eb/post",
+          "status": 400,
+          "json": {
+            "type": "https://nexerp.dreamlab.id/errors/http-400",
+            "title": "Http 400",
+            "status": 400,
+            "detail": "Chart of accounts is missing required accounts: 2104 (PPN Keluaran). Run the account seed before posting sales invoices.",
+            "instance": "/v1/finance/sales-invoices/ef1bdc4a-b889-4b85-9dc9-edb5e6fe55eb/post",
+            "code": "HTTP_400",
+            "timestamp": "2026-10-01T07:34:14.751Z",
+            "message": "Chart of accounts is missing required accounts: 2104 (PPN Keluaran). Run the account seed before posting sales invoices."
+          },
+          "raw": "{\"type\":\"https://nexerp.dreamlab.id/errors/http-400\",\"title\":\"Http 400\",\"status\":400,\"detail\":\"Chart of accounts is missing required accounts: 2104 (PPN Keluaran). Run the account seed before posting sales invoices.\",\"instance\":\"/v1/finance/sales-invoices/ef1bdc4a-b889-4b85-9dc9-edb5e6fe55eb/post\",\"code\":\"HTTP_400\",\"timestamp\":\"2026-10-01T07:34:14.751Z\",\"message\":\"Chart of accounts is missing required accounts: 2104 (PPN Keluaran). Run the account seed before posting sales invoices.\"}"
+        },
+        "journalAggregate": {
+          "lines": 0
+        },
+        "invoiceAfterPost": {
+          "posted": false
+        },
+        "blocked": true,
+        "namesTheAccount": true,
+        "nothingWritten": true,
+        "cleanup": "restored 2104",
+        "finding": "Deleting one required account must stop the whole posting, name the account, and leave postedAt unset. Before the fix the same missing account produced HTTP 200, a stamped postedAt, and zero journal lines — revenue silently never reaching the ledger."
+      }
+    },
+    {
+      "id": "T4",
+      "title": "Bank-reconciliation adjustment journal is rejected 400 by the ValidationPipe",
+      "verdict": {
+        "source": "frontend .../useBankReconciliationOperations.ts:238-251",
+        "request": {
+          "method": "POST",
+          "url": "/finance/journals",
+          "status": 400,
+          "request": {
+            "journalNumber": "ADJ-RECON-055509",
+            "transactionDate": "2026-10-01T07:34:15.509Z",
+            "description": "Penyesuaian Rekonsiliasi Bank AUDIT",
+            "sourceDocument": "RECON-audit",
+            "items": [
+              {
+                "accountId": "6190",
+                "description": "Beban Administrasi Bank",
+                "debit": 0,
+                "credit": 0
+              }
+            ]
+          },
+          "json": {
+            "type": "https://nexerp.dreamlab.id/errors/validation-failed",
+            "title": "Validation Failed",
+            "status": 400,
+            "detail": "Request validation failed.",
+            "instance": "/v1/finance/journals",
+            "code": "VALIDATION_FAILED",
+            "timestamp": "2026-10-01T07:34:15.526Z",
+            "message": "Request validation failed."
+          },
+          "raw": "{\"type\":\"https://nexerp.dreamlab.id/errors/validation-failed\",\"title\":\"Validation Failed\",\"status\":400,\"detail\":\"Request validation failed.\",\"instance\":\"/v1/finance/journals\",\"code\":\"VALIDATION_FAILED\",\"timestamp\":\"2026-10-01T07:34:15.526Z\",\"message\":\"Request validation failed.\"}"
+        },
+        "rejected": true
+      }
+    },
+    {
+      "id": "T5",
+      "title": "Currency CRUD: the five endpoints the UI calls, with the payload the UI actually sends",
+      "verdict": {
+        "post": {
+          "method": "POST",
+          "url": "/finance/currencies",
+          "status": 201,
+          "request": {
+            "code": "AUD6649",
+            "symbol": "A$",
+            "exchangeRate": 16000,
+            "isMain": false
+          },
+          "json": {
+            "id": "10116bf7-7f71-44e9-90f9-581a9551338a",
+            "code": "AUD6649",
+            "symbol": "A$",
+            "exchangeRate": "16000",
+            "isMain": false
+          },
+          "raw": "{\"id\":\"10116bf7-7f71-44e9-90f9-581a9551338a\",\"code\":\"AUD6649\",\"symbol\":\"A$\",\"exchangeRate\":\"16000\",\"isMain\":false}"
+        },
+        "get": {
+          "status": 200,
+          "count": 1
+        },
+        "patch": {
+          "method": "PATCH",
+          "url": "/finance/currencies/10116bf7-7f71-44e9-90f9-581a9551338a",
+          "status": 200,
+          "request": {
+            "symbol": "A$$"
+          },
+          "json": {
+            "id": "10116bf7-7f71-44e9-90f9-581a9551338a",
+            "code": "AUD6649",
+            "symbol": "A$$",
+            "exchangeRate": "16000",
+            "isMain": false
+          },
+          "raw": "{\"id\":\"10116bf7-7f71-44e9-90f9-581a9551338a\",\"code\":\"AUD6649\",\"symbol\":\"A$$\",\"exchangeRate\":\"16000\",\"isMain\":false}"
+        },
+        "exchangeRate": {
+          "method": "PUT",
+          "url": "/finance/currencies/10116bf7-7f71-44e9-90f9-581a9551338a/exchange-rate",
+          "status": 200,
+          "request": {
+            "exchangeRate": 16100
+          },
+          "json": {
+            "id": "10116bf7-7f71-44e9-90f9-581a9551338a",
+            "code": "AUD6649",
+            "symbol": "A$$",
+            "exchangeRate": "16100",
+            "isMain": false
+          },
+          "raw": "{\"id\":\"10116bf7-7f71-44e9-90f9-581a9551338a\",\"code\":\"AUD6649\",\"symbol\":\"A$$\",\"exchangeRate\":\"16100\",\"isMain\":false}"
+        },
+        "del": {
+          "method": "DELETE",
+          "url": "/finance/currencies/10116bf7-7f71-44e9-90f9-581a9551338a",
+          "status": 200,
+          "json": {
+            "id": "10116bf7-7f71-44e9-90f9-581a9551338a",
+            "code": "AUD6649",
+            "symbol": "A$$",
+            "exchangeRate": "16100",
+            "isMain": false
+          },
+          "raw": "{\"id\":\"10116bf7-7f71-44e9-90f9-581a9551338a\",\"code\":\"AUD6649\",\"symbol\":\"A$$\",\"exchangeRate\":\"16100\",\"isMain\":false}"
+        },
+        "persistedRowBeforeDelete": {
+          "j": {
+            "id": "10116bf7-7f71-44e9-90f9-581a9551338a",
+            "code": "AUD6649",
+            "isMain": false,
+            "symbol": "A$$",
+            "exchangeRate": 16100
+          }
+        },
+        "rowsAfterDelete": {
+          "n": 0
+        },
+        "allFiveOk": true,
+        "correction": "STATIC AUDIT SAID: no controller serves /finance/currencies and all five endpoints are 404. The route table shows all five exist, and the UI payload is accepted by the Currency model.",
+        "secondary": "finance.service.js:411 `this.prisma.currency?.findMany() || []` — optional chaining means a missing model would return an empty list instead of erroring. Latent, not the active bug."
+      }
+    },
+    {
+      "id": "T9",
+      "title": "Controllers with no JwtAuthGuard: which really answer with no token",
+      "verdict": {
+        "probes": [
+          {
+            "method": "GET",
+            "url": "/events/qc",
+            "status": 0,
+            "snippet": "TRANSPORT ERROR: The operation was aborted due to timeout"
+          },
+          {
+            "method": "GET",
+            "url": "/marketing/brands",
+            "status": 401,
+            "snippet": "{\"type\":\"https://nexerp.dreamlab.id/errors/http-401\",\"title\":\"Http 401\",\"status\":401,\"detail\":\"Unauthorized\",\"instance\":\"/v1/marketing/brands\",\"code\":\"HTTP_401\""
+          },
+          {
+            "method": "GET",
+            "url": "/connect-whatsapp",
+            "status": 404,
+            "snippet": "{\"type\":\"https://nexerp.dreamlab.id/errors/http-404\",\"title\":\"Http 404\",\"status\":404,\"detail\":\"Cannot GET /connect-whatsapp\",\"instance\":\"/v1/connect-whatsapp\",\""
+          },
+          {
+            "method": "POST",
+            "url": "/wa-gateway/webhook",
+            "status": 200,
+            "snippet": "{\"status\":\"incomplete\",\"required\":[\"phone\",\"text\"]}"
+          },
+          {
+            "method": "GET",
+            "url": "/wa-webhook",
+            "status": 200,
+            "snippet": "{\"error\":\"Verification failed\"}"
+          }
+        ],
+        "openWith200": [
+          "/wa-gateway/webhook",
+          "/wa-webhook"
+        ],
+        "timedOutEntirely": [
+          "/events/qc"
+        ],
+        "correction": "Static audit listed 5 open controllers including `app`. Live: marketing/brands is 401, connect-whatsapp has no route. Two are genuinely open to anyone with no token.",
+        "anomaly": "GET /events/qc never answered at all — 20s timeout, no response. A public endpoint that hangs."
+      }
+    },
+    {
+      "id": "T11",
+      "title": "Supplier number minted by the UI is never stored",
+      "verdict": {
+        "sentCode": "VND-BBK-77866",
+        "create": {
+          "method": "POST",
+          "url": "/master/suppliers",
+          "status": 400,
+          "request": {
+            "name": "Audit Supplier 1790840077866",
+            "code": "VND-BBK-77866",
+            "contact": "audit",
+            "phone": "000",
+            "email": "sup@audit.local"
+          },
+          "json": {
+            "type": "https://nexerp.dreamlab.id/errors/validation-failed",
+            "title": "Validation Failed",
+            "status": 400,
+            "detail": "Request validation failed.",
+            "instance": "/v1/master/suppliers",
+            "code": "VALIDATION_FAILED",
+            "timestamp": "2026-10-01T07:34:37.894Z",
+            "message": "Request validation failed."
+          },
+          "raw": "{\"type\":\"https://nexerp.dreamlab.id/errors/validation-failed\",\"title\":\"Validation Failed\",\"status\":400,\"detail\":\"Request validation failed.\",\"instance\":\"/v1/master/suppliers\",\"code\":\"VALIDATION_FAILED\",\"timestamp\":\"2026-10-01T07:34:37.894Z\",\"message\":\"Request validation failed.\"}"
+        },
+        "columnsActuallyPresent": null,
+        "storedCode": "<no code column on the table>"
+      }
+    },
+    {
+      "id": "T13",
+      "title": "A customer created through the UI form can be invoiced end-to-end",
+      "verdict": {
+        "before": {
+          "customers": 2,
+          "salesLeads": 2
+        },
+        "after": {
+          "customers": 2,
+          "salesLeads": 3
+        },
+        "createCustomer": {
+          "method": "POST",
+          "url": "/master/customers",
+          "status": 201,
+          "request": {
+            "clientName": "AUD T13 078645",
+            "name": "AUD T13 078645",
+            "brandName": "AUD T13 078645",
+            "brandCode": "CUST-078645",
+            "code": "CUST-078645",
+            "phone": "000",
+            "email": "t13-078645@audit.local",
+            "creditLimit": 1000
+          },
+          "json": {
+            "id": "bbea0a71-d93c-4dc6-ba27-cba83109e41e",
+            "organizationId": null,
+            "leadCaptureId": null,
+            "clientName": "AUD T13 078645",
+            "brandName": "AUD T13 078645",
+            "brandCode": "CUST-078645",
+            "contactInfo": "000",
+            "source": "DIRECT",
+            "productInterest": "",
+            "estimatedValue": "1000",
+            "status": "NEW_LEAD",
+            "lostReason": null,
+            "picId": "63d1454c-937c-4b1f-9239-54577e6cd407",
+            "isRepeatOrder": false,
+            "createdAt": "2026-10-01T07:34:38.668Z",
+            "updatedAt": "2026-10-01T07:34:38.668Z",
+            "hkiMode": "NEW",
+            "paymentType": "PREPAID",
+            "lastFollowUpAt": null,
+            "marginPercentage": "0",
+            "moq": 0,
+            "planOmset": "0",
+            "categoryEnum": null,
+            "categoryId": null,
+            "province": null,
+            "city": null,
+            "district": null,
+            "addressDetail": null,
+            "campaignName": null,
+            "isHighValue": false,
+            "slaStart": null,
+            "bdId": null,
+            "email": "t13-078645@audit.local",
+            "birthDate": null,
+            "contactChannel": null,
+            "launchingPlan": null,
+            "targetMarket": null,
+            "designSuggestion": null,
+            "notes": null,
+            "packagingSuggestion": null,
+            "sku": null,
+            "unitPrice": null,
+            "valueSuggestion": null,
+            "convertedToProdAt": null,
+            "convertedToSampleAt": null,
+            "firstFollowUpAt": null,
+            "isEmergencyOverride": false,
+            "lastStageAt": "2026-10-01T07:34:38.668Z",
+            "orderCount": 0,
+            "overrideNote": null,
+            "statusDuration": 0,
+            "wonAt": null,
+            "formulaId": null,
+            "isFormulaLocked": false,
+            "spkFileUrl": null,
+            "logoRevision": 0,
+            "hkiProgress": null
+          },
+          "raw": "{\"id\":\"bbea0a71-d93c-4dc6-ba27-cba83109e41e\",\"organizationId\":null,\"leadCaptureId\":null,\"clientName\":\"AUD T13 078645\",\"brandName\":\"AUD T13 078645\",\"brandCode\":\"CUST-078645\",\"contactInfo\":\"000\",\"source\":\"DIRECT\",\"productInterest\":\"\",\"estimatedValue\":\"1000\",\"status\":\"NEW_LEAD\",\"lostReason\":null,\"picId\":\"63d1454c-937c-4b1f-9239-54577e6cd407\",\"isRepeatOrder\":false,\"createdAt\":\"2026-10-01T07:34:38.668Z\",\"updatedAt\":\"2026-10-01T07:34:38.668Z\",\"hkiMode\":\"NEW\",\"paymentType\":\"PREPAID\",\"lastFollowUpAt\":nu"
+        },
+        "salesLeadsGrewByOne": true,
+        "note": "The customer screens still read and write sales_leads — that is unchanged by design. This test only pins that the AR side can now consume the id the UI actually holds."
+      }
+    },
+    {
+      "id": "T14",
+      "title": "A sales_leads id is accepted as customerId and materialises the AR row once",
+      "verdict": {
+        "customersBefore": 2,
+        "createCustomer": {
+          "method": "POST",
+          "url": "/master/customers",
+          "status": 201,
+          "request": {
+            "clientName": "AUD T14 079532",
+            "name": "AUD T14 079532",
+            "brandName": "AUD T14 079532",
+            "brandCode": "CUST-079532",
+            "code": "CUST-079532",
+            "email": "t14-079532@audit.local"
+          },
+          "json": {
+            "id": "8abbf462-df03-441c-8d33-e447190f01bc",
+            "organizationId": null,
+            "leadCaptureId": null,
+            "clientName": "AUD T14 079532",
+            "brandName": "AUD T14 079532",
+            "brandCode": "CUST-079532",
+            "contactInfo": "",
+            "source": "DIRECT",
+            "productInterest": "",
+            "estimatedValue": "0",
+            "status": "NEW_LEAD",
+            "lostReason": null,
+            "picId": "63d1454c-937c-4b1f-9239-54577e6cd407",
+            "isRepeatOrder": false,
+            "createdAt": "2026-10-01T07:34:39.555Z",
+            "updatedAt": "2026-10-01T07:34:39.555Z",
+            "hkiMode": "NEW",
+            "paymentType": "PREPAID",
+            "lastFollowUpAt": null,
+            "marginPercentage": "0",
+            "moq": 0,
+            "planOmset": "0",
+            "categoryEnum": null,
+            "categoryId": null,
+            "province": null,
+            "city": null,
+            "district": null,
+            "addressDetail": null,
+            "campaignName": null,
+            "isHighValue": false,
+            "slaStart": null,
+            "bdId": null,
+            "email": "t14-079532@audit.local",
+            "birthDate": null,
+            "contactChannel": null,
+            "launchingPlan": null,
+            "targetMarket": null,
+            "designSuggestion": null,
+            "notes": null,
+            "packagingSuggestion": null,
+            "sku": null,
+            "unitPrice": null,
+            "valueSuggestion": null,
+            "convertedToProdAt": null,
+            "convertedToSampleAt": null,
+            "firstFollowUpAt": null,
+            "isEmergencyOverride": false,
+            "lastStageAt": "2026-10-01T07:34:39.555Z",
+            "orderCount": 0,
+            "overrideNote": null,
+            "statusDuration": 0,
+            "wonAt": null,
+            "formulaId": null,
+            "isFormulaLocked": false,
+            "spkFileUrl": null,
+            "logoRevision": 0,
+            "hkiProgress": null
+          },
+          "raw": "{\"id\":\"8abbf462-df03-441c-8d33-e447190f01bc\",\"organizationId\":null,\"leadCaptureId\":null,\"clientName\":\"AUD T14 079532\",\"brandName\":\"AUD T14 079532\",\"brandCode\":\"CUST-079532\",\"contactInfo\":\"\",\"source\":\"DIRECT\",\"productInterest\":\"\",\"estimatedValue\":\"0\",\"status\":\"NEW_LEAD\",\"lostReason\":null,\"picId\":\"63d1454c-937c-4b1f-9239-54577e6cd407\",\"isRepeatOrder\":false,\"createdAt\":\"2026-10-01T07:34:39.555Z\",\"updatedAt\":\"2026-10-01T07:34:39.555Z\",\"hkiMode\":\"NEW\",\"paymentType\":\"PREPAID\",\"lastFollowUpAt\":null,\"ma"
+        },
+        "firstInvoice": {
+          "method": "POST",
+          "url": "/finance/sales-invoices",
+          "status": 201,
+          "request": {
+            "customerId": "8abbf462-df03-441c-8d33-e447190f01bc",
+            "invoiceDate": "2026-10-01",
+            "dueDate": "2026-10-31",
+            "notes": "AUDIT T14 1",
+            "lineItems": [
+              {
+                "itemCode": "AUD-14",
+                "itemName": "x",
+                "qty": 1,
+                "unit": "pcs",
+                "price": 1000,
+                "discount": 0
+              }
+            ]
+          },
+          "json": {
+            "id": "fd9815db-a657-4577-97f8-37708e941154",
+            "invoiceNumber": "SI-2610-000003",
+            "customerId": "a8248c99-f8f6-4bbf-a8c8-5be58e356821",
+            "invoiceDate": "2026-10-01T00:00:00.000Z",
+            "dueDate": "2026-10-31T00:00:00.000Z",
+            "subtotal": "1000",
+            "taxAmount": "110",
+            "totalAmount": "1110",
+            "paidAmount": "0",
+            "paymentStatus": "PENDING",
+            "deliveryStatus": "PENDING",
+            "notes": "AUDIT T14 1",
+            "attachmentUrls": [],
+            "postedAt": null,
+            "cancelledAt": null,
+            "createdAt": "2026-10-01T07:34:39.601Z",
+            "updatedAt": "2026-10-01T07:34:39.601Z",
+            "lineItems": [
+              {
+                "id": "32453db5-931b-4d67-ad83-f074822df68e",
+                "invoiceId": "fd9815db-a657-4577-97f8-37708e941154",
+                "itemCode": "AUD-14",
+                "itemName": "x",
+                "qty": "1",
+                "unit": "pcs",
+                "price": "1000",
+                "discount": "0",
+                "total": "1000"
+              }
+            ],
+            "customer": {
+              "id": "a8248c99-f8f6-4bbf-a8c8-5be58e356821",
+              "code": "CUST-079532",
+              "name": "AUD T14 079532",
+              "brand": "AUD T14 079532",
+              "contactPerson": null,
+              "email": "t14-079532@audit.local",
+              "phone": "",
+              "address": null,
+              "npwp": null,
+              "creditLimit": "0",
+              "paymentTerms": 30,
+              "isActive": true,
+              "notes": null,
+              "createdAt": "2026-10-01T07:34:39.587Z",
+              "updatedAt": "2026-10-01T07:34:39.587Z"
+            }
+          },
+          "raw": "{\"id\":\"fd9815db-a657-4577-97f8-37708e941154\",\"invoiceNumber\":\"SI-2610-000003\",\"customerId\":\"a8248c99-f8f6-4bbf-a8c8-5be58e356821\",\"invoiceDate\":\"2026-10-01T00:00:00.000Z\",\"dueDate\":\"2026-10-31T00:00:00.000Z\",\"subtotal\":\"1000\",\"taxAmount\":\"110\",\"totalAmount\":\"1110\",\"paidAmount\":\"0\",\"paymentStatus\":\"PENDING\",\"deliveryStatus\":\"PENDING\",\"notes\":\"AUDIT T14 1\",\"attachmentUrls\":[],\"postedAt\":null,\"cancelledAt\":null,\"createdAt\":\"2026-10-01T07:34:39.601Z\",\"updatedAt\":\"2026-10-01T07:34:39.601Z\",\"lineItems"
+        },
+        "secondInvoice": {
+          "method": "POST",
+          "url": "/finance/sales-invoices",
+          "status": 201,
+          "request": {
+            "customerId": "8abbf462-df03-441c-8d33-e447190f01bc",
+            "invoiceDate": "2026-10-01",
+            "dueDate": "2026-10-31",
+            "notes": "AUDIT T14 2",
+            "lineItems": [
+              {
+                "itemCode": "AUD-14",
+                "itemName": "x",
+                "qty": 1,
+                "unit": "pcs",
+                "price": 1000,
+                "discount": 0
+              }
+            ]
+          },
+          "json": {
+            "id": "249df5d2-395e-4e1d-99f5-b638ddc18c26",
+            "invoiceNumber": "SI-2610-000004",
+            "customerId": "a8248c99-f8f6-4bbf-a8c8-5be58e356821",
+            "invoiceDate": "2026-10-01T00:00:00.000Z",
+            "dueDate": "2026-10-31T00:00:00.000Z",
+            "subtotal": "1000",
+            "taxAmount": "110",
+            "totalAmount": "1110",
+            "paidAmount": "0",
+            "paymentStatus": "PENDING",
+            "deliveryStatus": "PENDING",
+            "notes": "AUDIT T14 2",
+            "attachmentUrls": [],
+            "postedAt": null,
+            "cancelledAt": null,
+            "createdAt": "2026-10-01T07:34:39.665Z",
+            "updatedAt": "2026-10-01T07:34:39.665Z",
+            "lineItems": [
+              {
+                "id": "5bf420d1-7f1a-4096-ba0b-55083a044dbd",
+                "invoiceId": "249df5d2-395e-4e1d-99f5-b638ddc18c26",
+                "itemCode": "AUD-14",
+                "itemName": "x",
+                "qty": "1",
+                "unit": "pcs",
+                "price": "1000",
+                "discount": "0",
+                "total": "1000"
+              }
+            ],
+            "customer": {
+              "id": "a8248c99-f8f6-4bbf-a8c8-5be58e356821",
+              "code": "CUST-079532",
+              "name": "AUD T14 079532",
+              "brand": "AUD T14 079532",
+              "contactPerson": null,
+              "email": "t14-079532@audit.local",
+              "phone": "",
+              "address": null,
+              "npwp": null,
+              "creditLimit": "0",
+              "paymentTerms": 30,
+              "isActive": true,
+              "notes": null,
+              "createdAt": "2026-10-01T07:34:39.587Z",
+              "updatedAt": "2026-10-01T07:34:39.587Z"
+            }
+          },
+          "raw": "{\"id\":\"249df5d2-395e-4e1d-99f5-b638ddc18c26\",\"invoiceNumber\":\"SI-2610-000004\",\"customerId\":\"a8248c99-f8f6-4bbf-a8c8-5be58e356821\",\"invoiceDate\":\"2026-10-01T00:00:00.000Z\",\"dueDate\":\"2026-10-31T00:00:00.000Z\",\"subtotal\":\"1000\",\"taxAmount\":\"110\",\"totalAmount\":\"1110\",\"paidAmount\":\"0\",\"paymentStatus\":\"PENDING\",\"deliveryStatus\":\"PENDING\",\"notes\":\"AUDIT T14 2\",\"attachmentUrls\":[],\"postedAt\":null,\"cancelledAt\":null,\"createdAt\":\"2026-10-01T07:34:39.665Z\",\"updatedAt\":\"2026-10-01T07:34:39.665Z\",\"lineItems"
+        },
+        "unknownIdResponse": {
+          "method": "POST",
+          "url": "/finance/sales-invoices",
+          "status": 404,
+          "request": {
+            "customerId": "4fa78085-0573-4a33-9977-6c43fd674b22",
+            "invoiceDate": "2026-10-01",
+            "dueDate": "2026-10-31",
+            "lineItems": [
+              {
+                "itemCode": "AUD-14",
+                "itemName": "x",
+                "qty": 1,
+                "unit": "pcs",
+                "price": 1000,
+                "discount": 0
+              }
+            ]
+          },
+          "json": {
+            "type": "https://nexerp.dreamlab.id/errors/http-404",
+            "title": "Http 404",
+            "status": 404,
+            "detail": "Customer 4fa78085-0573-4a33-9977-6c43fd674b22 not found",
+            "instance": "/v1/finance/sales-invoices",
+            "code": "HTTP_404",
+            "timestamp": "2026-10-01T07:34:39.709Z",
+            "message": "Customer 4fa78085-0573-4a33-9977-6c43fd674b22 not found"
+          },
+          "raw": "{\"type\":\"https://nexerp.dreamlab.id/errors/http-404\",\"title\":\"Http 404\",\"status\":404,\"detail\":\"Customer 4fa78085-0573-4a33-9977-6c43fd674b22 not found\",\"instance\":\"/v1/finance/sales-invoices\",\"code\":\"HTTP_404\",\"timestamp\":\"2026-10-01T07:34:39.709Z\",\"message\":\"Customer 4fa78085-0573-4a33-9977-6c43fd674b22 not found\"}"
+        },
+        "arRow": {
+          "id": "a8248c99-f8f6-4bbf-a8c8-5be58e356821",
+          "code": "CUST-079532"
+        },
+        "afterFirst": 3,
+        "afterSecond": 3,
+        "observed": {
+          "fkPointsAtArRow": true,
+          "reusedSameCustomer": true,
+          "unknownIdStill404": true
+        }
+      }
+    },
+    {
+      "id": "T15",
+      "title": "The journal balance guard sits below the service layer, so it covers every writer",
+      "verdict": {
+        "guardSource": "backend/src/prisma/prisma/prisma.service.ts assertJournalBalanced, installed as a client extension so it also covers writes issued through `tx` inside $transaction",
+        "unbalancedRequest": {
+          "method": "POST",
+          "url": "/finance/journals",
+          "status": 400,
+          "request": {
+            "date": "2026-10-01",
+            "description": "AUDIT-T15-1790840080602",
+            "attachmentUrls": [
+              "https://audit.local/AUDIT-T15-1790840080602.pdf"
+            ],
+            "reference": "AUDIT-T15-1790840080602-UNBAL",
+            "lines": [
+              {
+                "accountId": "6f9afb72-0f54-4030-91b7-62ee37bcf471",
+                "debit": 500,
+                "credit": 0
+              }
+            ]
+          },
+          "json": {
+            "type": "https://nexerp.dreamlab.id/errors/http-400",
+            "title": "Http 400",
+            "status": 400,
+            "detail": "Journal is not balanced. Debit: 500, Credit: 0 [JOURNAL_UNBALANCED]",
+            "instance": "/v1/finance/journals",
+            "code": "HTTP_400",
+            "timestamp": "2026-10-01T07:34:40.625Z",
+            "message": "Journal is not balanced. Debit: 500, Credit: 0 [JOURNAL_UNBALANCED]"
+          },
+          "raw": "{\"type\":\"https://nexerp.dreamlab.id/errors/http-400\",\"title\":\"Http 400\",\"status\":400,\"detail\":\"Journal is not balanced. Debit: 500, Credit: 0 [JOURNAL_UNBALANCED]\",\"instance\":\"/v1/finance/journals\",\"code\":\"HTTP_400\",\"timestamp\":\"2026-10-01T07:34:40.625Z\",\"message\":\"Journal is not balanced. Debit: 500, Credit: 0 [JOURNAL_UNBALANCED]\"}"
+        },
+        "balancedRequest": {
+          "method": "POST",
+          "url": "/finance/journals",
+          "status": 201,
+          "request": {
+            "date": "2026-10-01",
+            "description": "AUDIT-T15-1790840080602",
+            "attachmentUrls": [
+              "https://audit.local/AUDIT-T15-1790840080602.pdf"
+            ],
+            "reference": "AUDIT-T15-1790840080602-BAL",
+            "lines": [
+              {
+                "accountId": "6f9afb72-0f54-4030-91b7-62ee37bcf471",
+                "debit": 500,
+                "credit": 0
+              },
+              {
+                "accountId": "542ba92e-eced-42ac-aa6f-f7e35ec4b92c",
+                "debit": 0,
+                "credit": 500
+              }
+            ]
+          },
+          "json": {
+            "id": "07d3eb78-51be-4e0a-b36e-35fe16d88b3a",
+            "date": "2026-10-01T00:00:00.000Z",
+            "reference": "AUDIT-T15-1790840080602-BAL",
+            "description": "AUDIT-T15-1790840080602",
+            "attachmentUrls": [
+              "https://audit.local/AUDIT-T15-1790840080602.pdf"
+            ],
+            "sourceDocumentType": null,
+            "soId": null,
+            "poId": null,
+            "paymentId": null,
+            "adjustmentId": null,
+            "returnId": null,
+            "purchaseReturnId": null,
+            "planId": null,
+            "requisitionId": null,
+            "invoiceId": null,
+            "billId": null,
+            "salesInvoiceId": null,
+            "lines": [
+              {
+                "id": "56d3b5a7-a2d7-4a50-9b09-eab1c5c7c1c5",
+                "journalId": "07d3eb78-51be-4e0a-b36e-35fe16d88b3a",
+                "accountId": "6f9afb72-0f54-4030-91b7-62ee37bcf471",
+                "debit": "500",
+                "credit": "0",
+                "taxAccountId": null,
+                "taxRate": "0",
+                "account": {
+                  "id": "6f9afb72-0f54-4030-91b7-62ee37bcf471",
+                  "code": "1201",
+                  "name": "Piutang Usaha Klien Maklon",
+                  "isActive": true,
+                  "allowManualJournal": true,
+                  "type": "ASSET",
+                  "normalBalance": "DEBIT",
+                  "parentId": null,
+                  "reclassifyToAccountId": null,
+                  "reportGroup": "CURRENT_ASSET"
+                }
+              },
+              {
+                "id": "35bf3e06-0f92-40c4-8625-ed8c6eb2c0e5",
+                "journalId": "07d3eb78-51be-4e0a-b36e-35fe16d88b3a",
+                "accountId": "542ba92e-eced-42ac-aa6f-f7e35ec4b92c",
+                "debit": "0",
+                "credit": "500",
+                "taxAccountId": null,
+                "taxRate": "0",
+                "account": {
+                  "id": "542ba92e-eced-42ac-aa6f-f7e35ec4b92c",
+                  "code": "4101",
+                  "name": "Pendapatan Kontrak Maklon Kosmetik",
+                  "isActive": true,
+                  "allowManualJournal": true,
+                  "type": "REVENUE",
+                  "normalBalance": "CREDIT",
+                  "parentId": null,
+                  "reclassifyToAccountId": null,
+                  "reportGroup": "OPERATING_REVENUE"
+                }
+              }
+            ]
+          },
+          "raw": "{\"id\":\"07d3eb78-51be-4e0a-b36e-35fe16d88b3a\",\"date\":\"2026-10-01T00:00:00.000Z\",\"reference\":\"AUDIT-T15-1790840080602-BAL\",\"description\":\"AUDIT-T15-1790840080602\",\"attachmentUrls\":[\"https://audit.local/AUDIT-T15-1790840080602.pdf\"],\"sourceDocumentType\":null,\"soId\":null,\"poId\":null,\"paymentId\":null,\"adjustmentId\":null,\"returnId\":null,\"purchaseReturnId\":null,\"planId\":null,\"requisitionId\":null,\"invoiceId\":null,\"billId\":null,\"salesInvoiceId\":null,\"lines\":[{\"id\":\"56d3b5a7-a2d7-4a50-9b09-eab1c5c7c1c5\",\""
+        },
+        "rowsWritten": [
+          {
+            "id": "07d3eb78-51be-4e0a-b36e-35fe16d88b3a",
+            "reference": "AUDIT-T15-1790840080602-BAL"
+          }
+        ],
+        "guardRejects": true,
+        "guardAllowsValid": true,
+        "correction": "STATIC AUDIT SAID 18 of 19 journal-writing services bypass the balance check. They do not — the check is enforced at the Prisma layer. What is still 1-of-19 is the PERIOD GATE and the CONTROL-ACCOUNT validation, which still live only in finance-journal.service.ts."
+      }
+    }
+  ]
+}

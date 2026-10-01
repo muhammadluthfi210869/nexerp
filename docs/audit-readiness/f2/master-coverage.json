@@ -1,0 +1,78 @@
+{
+  "domain": "master",
+  "port": 3212,
+  "database": "audit_f2_master",
+  "date": "2026-10-01",
+  "agent": "F2-MASTER",
+  "entities": [
+    {
+      "entity": "sales_leads",
+      "note": "Entitas yang benar-benar disentuh endpoint /v1/master/customers. Prisma @@map('sales_leads').",
+      "create": { "api": "PASS", "db": "PASS", "note": "POST /v1/master/customers -> 201. Baris masuk ke sales_leads dengan status NEW_LEAD, picId auto-filled dari bussdevStaff." },
+      "readList": { "api": "PASS", "db": "PASS", "note": "GET /v1/master/customers?search=AUDIT_F2 -> 200, respons berupa array (tanpa envelope/pagination). GET /v1/master/customers/active -> 200, 5 hasil." },
+      "readOne": { "api": "PASS", "db": "PASS", "note": "GET /v1/master/customers/{id} -> 200 clientName terisi. UUID valid tapi tidak ada -> 404 'Customer not found'." },
+      "update": { "api": "PASS", "db": "PASS", "note": "PATCH -> 200 dan TERSIMPAN: clientName -> AUDIT_F2_RENAMED, creditLimit -> estimatedValue 4242.00. Kolom dikembalikan PATCH_KV mapping backend, bukan 1:1." },
+      "delete": { "api": "PASS", "db": "PASS", "contract": "none", "note": "DELETE -> 200. Baris TETAP ADA, hanya status NEW_LEAD -> LOST. Tabel sales_leads tidak punya kolom deletedAt sama sekali, jadi soft delete mustahil tanpa migrasi. Kontrak FE 'Hapus Permanen' tidak dijalankan." },
+      "validation": "FAIL",
+      "duplicate": "FAIL",
+      "referential": "PASS",
+      "authz": "PASS",
+      "authzNote": "GET tanpa token -> 401 Unauthorized. Guard bekerja.",
+      "validationNote": "Empat payload invalid (clientName hilang, body {}, clientName:42, email:'not-an-email') semuanya 400 dengan pesan identik 'Request validation failed.' Body tidak punya array errors dan tidak menyebut nama field. Protokol 6 mensyaratkan nama field.",
+      "duplicateNote": "brandCode @unique tapi tanpa penanganan P2002 -> HTTP 500 + stack trace Prisma + path absolut mesin. Seharusnya 409. clientName duplikat -> 201 DITERIMA (2 baris). email duplikat -> 201 DITERIMA (2 baris).",
+      "referentialNote": "Menghapus lead yang punya 1 work_orders anak -> 200, lead tetap ada, 0 anak jadi yatim. Ini efek samping soft-delete palsu, bukan bukti cascade yang benar.",
+      "additionalFindings": ["F2-MASTER-006", "F2-MASTER-007", "F2-MASTER-008"],
+      "totalChecks": 14,
+      "passed": 10,
+      "failed": 4
+    },
+    {
+      "entity": "customers",
+      "note": "Tabel ada di Prisma (model Customer, @@map('customers')) dan punya 0 baris, 0 produser, 0 endpoint. customers.service.ts tidak pernah menyebut prisma.customer.",
+      "create": { "api": "SKIP", "db": "SKIP", "note": "Tidak ada endpoint yang menulis ke tabel ini. Baski: grep 'prisma.customer.' di backend/src/modules/master = 0 hit. 4 hit semuanya di backend/src/modules/finance dan semuanya findUnique (baca saja)." },
+      "readList": { "api": "SKIP", "db": "SKIP", "note": "Tidak ada route. Tabel berisi 0 baris." },
+      "readOne": { "api": "SKIP", "db": "SKIP", "note": "Tidak ada route." },
+      "update": { "api": "SKIP", "db": "SKIP", "note": "Tidak ada route." },
+      "delete": { "api": "SKIP", "db": "SKIP", "contract": "none", "note": "Tidak ada route. Tabel punya kolom isActive tapi 0 kode menuliskannya." },
+      "validation": "SKIP",
+      "duplicate": "SKIP",
+      "referential": "FAIL",
+      "authz": "SKIP",
+      "referentialNote": "Tabel jadi target FK dari sales_invoices.customerId, ar_receipts.customerId, client_escrows.customerId (semua ON DELETE RESTRICT). Karena tabelnya kosong, ketiga tabel turunan itu tidak bisa diisi. sales_invoices = 0 baris, ar_receipts = 0 baris, client_escrows = 0 baris. Probe INSERT dengan id dari /v1/master/customers gagal 23503 di ketiga tabel.",
+      "totalChecks": 1,
+      "passed": 0,
+      "failed": 1
+    },
+    {
+      "entity": "audit_logs",
+      "note": "Dipakai sebagai instrumen pengukuran, bukan sebagai target CRUD. Global interceptor backend/src/platform/audit/audit.interceptor.ts.",
+      "create": { "api": "PASS", "db": "PASS", "note": "4 dari 4 mutasi sukses pada sales_leads menghasilkan tepat 1 baris audit_logs (create 201, PATCH 200, DELETE 200, DELETE ulang 200). Rasio 100% untuk mutasi sukses." },
+      "readList": { "api": "SKIP", "db": "PASS", "note": "Dibaca langsung. 521 baris total; by entityType: DesignTask 360, Formula 72, SampleRequest 60, Customers 20, SalesLead 12, Categories 1." },
+      "readOne": { "api": "SKIP", "db": "PASS", "note": "select action,\"entityType\" from audit_logs where \"entityId\"=... -> 4 baris, action persis route-nya." },
+      "update": { "api": "SKIP", "db": "SKIP", "note": "Tabel immutable by design." },
+      "delete": { "api": "SKIP", "db": "SKIP", "note": "Tabel immutable by design." },
+      "validation": "SKIP",
+      "duplicate": "SKIP",
+      "referential": "SKIP",
+      "authz": "SKIP",
+      "referentialNote": "Tidak berlaku. Yang diukur: (1) penulisan fire-and-forget - void this.record() di interceptor.ts:152, delta audit_logs = 0 saat response diterima, +1 setelah 1-2 detik, sehingga bisa hilang tanpa error bila proses mati; (2) mutasi yang DITOLAK menulis 0 baris karena tap() hanya jalan di jalur sukses - 4 request gagal (2x400, 2x404) menghasilkan delta 0; (3) beforeSnapshot (interceptor.ts:147) adalah req.body, bukan state pra-mutasi, dan null untuk DELETE, sehingga tidak bisa dipakai rekonstruksi.",
+      "totalChecks": 3,
+      "passed": 3,
+      "failed": 0
+    }
+  ],
+  "summary": {
+    "entities": 3,
+    "checks": 18,
+    "passed": 13,
+    "failed": 5,
+    "blockers": 1,
+    "findings": 8,
+    "severity": { "BLOCKER": 1, "CRITICAL": 3, "MAJOR": 3, "MINOR": 0 },
+    "headline": "customers (0 baris, 0 produser) adalah target FK dari sales_invoices, ar_receipts, dan client_escrows. Endpoint /v1/master/customers menulis ke sales_leads, yang tidak punya relasi ke customers. Id yang dikembalikan API gagal FK 23503 di ketiga tabel finance. sales_invoices, ar_receipts, client_escrows semuanya 0 baris.",
+    "f1Retest": {
+      "D5-005-behavior": "BENAR - DELETE hanya set status LOST, baris tetap ada, tidak ada kolom deletedAt",
+      "D5-005-audit": "SALAH - file itu tidak menulis nol baris audit; global interceptor mencatat 4 dari 4 mutasi sukses"
+    }
+  }
+}

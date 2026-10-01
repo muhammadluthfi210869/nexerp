@@ -1,0 +1,217 @@
+{
+  "headers": [
+    "#",
+    "Hak Akses",
+    "#"
+  ],
+  "roles": [
+    {
+      "cols": [
+        "1",
+        "Administrator",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('1','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F1\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F1\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "2",
+        "HRD",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('2','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F2\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F2\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "3",
+        "Staff Back Office",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('3','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F3\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F3\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "4",
+        "Purchasing",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('4','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F4\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F4\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "5",
+        "Warehouse",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('5','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F5\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F5\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "6",
+        "Head Business Development",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('6','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F6\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F6\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "7",
+        "Business Development",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('7','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F7\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F7\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "8",
+        "Head Research and Development",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('8','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F8\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F8\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "9",
+        "Research and Development",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('9','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F9\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F9\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "10",
+        "Production Mixing &amp; Filling",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('10','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F10\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F10\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "11",
+        "Production Packaging",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('11','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F11\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F11\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "12",
+        "Apoteker Penanggung Jawab",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('12','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F12\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F12\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "13",
+        "Finance",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('13','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F13\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F13\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "14",
+        "Digital Marketing",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('14','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F14\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F14\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "15",
+        "BusDev + HRD",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('15','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F15\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F15\\x2Fdelete', 'menghapus data.');"
+      ]
+    },
+    {
+      "cols": [
+        "16",
+        "BusDev + Purchasing",
+        ""
+      ],
+      "links": [],
+      "buttons": [
+        "ajaxDetail('16','modal-md');",
+        "location.href='https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F16\\x2Fupdate';",
+        "uriAlert('https\\x3A\\x2F\\x2Fkil.gserp.id\\x2Frole\\x2Dmanage\\x2F16\\x2Fdelete', 'menghapus data.');"
+      ]
+    }
+  ]
+}

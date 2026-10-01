@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-27T17:23:56.637Z",
+  "generated_at": "2026-10-01T04:59:53.061Z",
   "gates": {
     "yaml_parse": {
       "status": "PASS",
@@ -11,7 +11,7 @@
     },
     "prisma_validate": {
       "status": "PASS",
-      "message": " | Prisma schema loaded from ..\\tmp\\ssot-prisma7-compat.schema.prisma. |  | Validated through Prisma 7 compatibility projection; canonical schema targets Prisma 5."
+      "message": "│    npm i @prisma/client@latest                          │ | └─────────────────────────────────────────────────────────┘ |  | Validated through Prisma 7 compatibility projection; canonical schema targets Prisma 5."
     },
     "openapi_structure": {
       "status": "PASS",

@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "file": "backend/src/modules/wa-self-qr/connect-page.controller.ts",
+    "line": 1,
+    "type": "EMPTY_CATCH",
+    "detail": "1 empty catch block(s)"
+  }
+]

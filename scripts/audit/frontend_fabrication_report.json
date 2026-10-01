@@ -13,9 +13,15 @@
   },
   {
     "file": "frontend/src/app/(dashboard)/penjualan/sales-target/page.tsx",
-    "line": 68,
+    "line": 57,
     "type": "STATIC_DATA_ARRAY",
     "detail": "const INITIAL_TARGETS: SalesTargetItem[] = ["
+  },
+  {
+    "file": "frontend/src/app/(dashboard)/penjualan/sales-target/page.tsx",
+    "line": 1,
+    "type": "NO_API_INTEGRATION",
+    "detail": "Client page (548 lines) with zero API/React-Query calls, incl. transitively imported children"
   },
   {
     "file": "frontend/src/app/(dashboard)/production/batch-record-rnd/page.tsx",
@@ -70,11 +76,5 @@
     "line": 1,
     "type": "NO_API_INTEGRATION",
     "detail": "Client page (1017 lines) with zero API/React-Query calls, incl. transitively imported children"
-  },
-  {
-    "file": "frontend/src/app/(dashboard)/warehouse/WarehouseDashboardClient.tsx",
-    "line": 1,
-    "type": "NO_API_INTEGRATION",
-    "detail": "Client page (609 lines) with zero API/React-Query calls, incl. transitively imported children"
   }
 ]

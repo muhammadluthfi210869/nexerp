@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-26T10:15:46.008Z",
+ "generated_at": "2026-10-01T04:59:52.911Z",
  "sources": {
   "legacy_crawl": "docs/legacy-erp/reference/kil_erp_full_inventory_v2.csv",
   "screen_contract": "docs/legacy-erp/contracts/06_SCREEN_CONTRACT.json",
@@ -8,36 +8,36 @@
  "totals": {
   "legacy_screens": 176,
   "contract_screens": 184,
-  "frontend_pages": 276,
+  "frontend_pages": 273,
   "verdicts": {
    "NAME_DIFFERS": 32,
-   "NO_PAGE": 71,
-   "PAGE_NO_CONTRACT": 26,
+   "NO_PAGE": 68,
+   "PAGE_NO_CONTRACT": 29,
    "OK": 44,
    "DS_RENAMED": 3
   },
   "legacy_screens_with_inputs": 174,
   "contract_screens_with_forms": 62,
   "contract_form_fields_total": 349,
-  "frontend_pages_with_modal": 140
+  "frontend_pages_with_modal": 131
  },
  "parity_counts": {
   "fe_calls_unmatched": 0,
   "fe_calls_unmatched_dead_controller": 0,
   "fe_method_mismatch": 0,
-  "unserved_controller_files": 0,
-  "unreachable_modules": 0,
+  "unserved_controller_files": 2,
+  "unreachable_modules": 2,
   "screen_ops_unmatched": 76,
   "screen_ops_unmatched_unclassified": 0,
   "screen_ops_unmatched_bad_target": 0,
   "screen_ops_renamed": 49,
   "screen_ops_absent": 26,
   "screen_ops_out_of_scope": 1,
-  "screen_ops_never_called": 121,
+  "screen_ops_never_called": 102,
   "screen_ops_never_called_absent": 26,
   "screen_ops_never_called_renamed": 49,
   "screen_ops_never_called_oos": 1,
-  "screen_ops_live_but_unwired": 45
+  "screen_ops_live_but_unwired": 26
  },
  "pages": [
   {
@@ -45,8 +45,8 @@
    "file": "frontend/src/app/(dashboard)/approvals/artwork-approval/page.tsx",
    "segment": "artwork-approval",
    "lines": 849,
-   "total_lines": 849,
-   "call_files": 1,
+   "total_lines": 1893,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -65,8 +65,8 @@
    "file": "frontend/src/app/(dashboard)/approvals/finance-approvals/page.tsx",
    "segment": "finance-approvals",
    "lines": 203,
-   "total_lines": 203,
-   "call_files": 1,
+   "total_lines": 553,
+   "call_files": 7,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -87,9 +87,9 @@
    "route": "/approvals/goods-request",
    "file": "frontend/src/app/(dashboard)/approvals/goods-request/page.tsx",
    "segment": "goods-request",
-   "lines": 241,
-   "total_lines": 241,
-   "call_files": 1,
+   "lines": 231,
+   "total_lines": 514,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -106,9 +106,9 @@
    "route": "/approvals/purchase",
    "file": "frontend/src/app/(dashboard)/approvals/purchase/page.tsx",
    "segment": "purchase",
-   "lines": 298,
-   "total_lines": 298,
-   "call_files": 1,
+   "lines": 295,
+   "total_lines": 664,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -126,9 +126,9 @@
    "route": "/approvals/purchase-approval",
    "file": "frontend/src/app/(dashboard)/approvals/purchase-approval/page.tsx",
    "segment": "purchase-approval",
-   "lines": 359,
-   "total_lines": 359,
-   "call_files": 1,
+   "lines": 108,
+   "total_lines": 1114,
+   "call_files": 10,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -136,8 +136,8 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
-   "hasKpi": false,
+   "hasTable": false,
+   "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
   },
@@ -145,9 +145,9 @@
    "route": "/approvals/purchase-request",
    "file": "frontend/src/app/(dashboard)/approvals/purchase-request/page.tsx",
    "segment": "purchase-request",
-   "lines": 321,
-   "total_lines": 321,
-   "call_files": 1,
+   "lines": 314,
+   "total_lines": 721,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -165,9 +165,9 @@
    "route": "/approvals/purchase-return",
    "file": "frontend/src/app/(dashboard)/approvals/purchase-return/page.tsx",
    "segment": "purchase-return",
-   "lines": 300,
-   "total_lines": 300,
-   "call_files": 1,
+   "lines": 295,
+   "total_lines": 662,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -185,9 +185,9 @@
    "route": "/approvals/request-cogs",
    "file": "frontend/src/app/(dashboard)/approvals/request-cogs/page.tsx",
    "segment": "request-cogs",
-   "lines": 294,
-   "total_lines": 294,
-   "call_files": 1,
+   "lines": 283,
+   "total_lines": 616,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -206,9 +206,9 @@
    "route": "/approvals/sales",
    "file": "frontend/src/app/(dashboard)/approvals/sales/page.tsx",
    "segment": "sales",
-   "lines": 303,
-   "total_lines": 303,
-   "call_files": 1,
+   "lines": 298,
+   "total_lines": 668,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -225,9 +225,9 @@
    "route": "/approvals/sales-return",
    "file": "frontend/src/app/(dashboard)/approvals/sales-return/page.tsx",
    "segment": "sales-return",
-   "lines": 312,
-   "total_lines": 312,
-   "call_files": 1,
+   "lines": 301,
+   "total_lines": 677,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -244,9 +244,9 @@
    "route": "/approvals/sales-sample",
    "file": "frontend/src/app/(dashboard)/approvals/sales-sample/page.tsx",
    "segment": "sales-sample",
-   "lines": 297,
-   "total_lines": 297,
-   "call_files": 1,
+   "lines": 290,
+   "total_lines": 656,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -355,8 +355,8 @@
    "route": "/creative/finalized",
    "file": "frontend/src/app/(dashboard)/creative/finalized/page.tsx",
    "segment": "finalized",
-   "lines": 300,
-   "total_lines": 300,
+   "lines": 301,
+   "total_lines": 301,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -374,8 +374,8 @@
    "route": "/dashboard/commercial",
    "file": "frontend/src/app/(dashboard)/dashboard/commercial/page.tsx",
    "segment": "commercial",
-   "lines": 108,
-   "total_lines": 108,
+   "lines": 107,
+   "total_lines": 107,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -438,17 +438,15 @@
    "route": "/dashboard",
    "file": "frontend/src/app/(dashboard)/dashboard/page.tsx",
    "segment": "dashboard",
-   "lines": 386,
-   "total_lines": 2093,
+   "lines": 394,
+   "total_lines": 2431,
    "call_files": 9,
    "redirect_to": [],
    "delegates": [
-    "frontend/src/app/(dashboard)/samples/rnd-dashboard/page.tsx",
+    "frontend/src/app/(dashboard)/rnd/dashboard/page.tsx",
     "frontend/src/app/(dashboard)/production/production-floor-dashboard/page.tsx"
    ],
    "calls": [
-    "GET /dashboards/marketing",
-    "GET /analytics/executive",
     "GET /system/health",
     "GET /system/errors/summary",
     "GET /system/audit-logs",
@@ -463,6 +461,8 @@
     "POST /commercial/payments",
     "GET /bussdev/leads",
     "GET /commercial/retention/radar",
+    "GET /dashboards/rnd",
+    "GET /rnd/dashboard",
     "POST /production-plans/log-step"
    ],
    "headings": [
@@ -507,12 +507,12 @@
    "file": "frontend/src/app/(dashboard)/dashboard/super-admin/page.tsx",
    "segment": "super-admin",
    "lines": 246,
-   "total_lines": 1068,
+   "total_lines": 1398,
    "call_files": 5,
    "redirect_to": [],
    "delegates": [
     "frontend/src/app/(dashboard)/dashboard/commercial/page.tsx",
-    "frontend/src/app/(dashboard)/samples/rnd-dashboard/page.tsx",
+    "frontend/src/app/(dashboard)/rnd/dashboard/page.tsx",
     "frontend/src/app/(dashboard)/production/production-floor-dashboard/page.tsx",
     "frontend/src/app/(dashboard)/dashboard/finance/page.tsx"
    ],
@@ -522,6 +522,8 @@
     "GET /system/audit-logs",
     "GET /bussdev/leads",
     "GET /commercial/retention/radar",
+    "GET /dashboards/rnd",
+    "GET /rnd/dashboard",
     "GET /production-plans",
     "POST /production-plans/log-step",
     "GET /dashboards/finance",
@@ -654,9 +656,9 @@
    "route": "/finance/accounting/coa",
    "file": "frontend/src/app/(dashboard)/finance/accounting/coa/page.tsx",
    "segment": "coa",
-   "lines": 915,
-   "total_lines": 915,
-   "call_files": 1,
+   "lines": 127,
+   "total_lines": 1491,
+   "call_files": 10,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -668,7 +670,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -678,14 +680,16 @@
    "file": "frontend/src/app/(dashboard)/finance/accounting/coa-auto/page.tsx",
    "segment": "coa-auto",
    "lines": 401,
-   "total_lines": 401,
-   "call_files": 1,
+   "total_lines": 1100,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
     "GET /finance/accounts",
     "GET /finance/auto-journal-configs",
-    "POST /finance/auto-journal-configs"
+    "POST /finance/auto-journal-configs",
+    "POST /finance/auto-journal-configs/seed",
+    "DELETE /finance/auto-journal-configs/${transactionType}"
    ],
    "headings": [],
    "hasModal": true,
@@ -721,8 +725,8 @@
    "file": "frontend/src/app/(dashboard)/finance/ap-aging/page.tsx",
    "segment": "ap-aging",
    "lines": 431,
-   "total_lines": 431,
-   "call_files": 1,
+   "total_lines": 1016,
+   "call_files": 7,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -742,8 +746,8 @@
    "file": "frontend/src/app/(dashboard)/finance/ar-hub/page.tsx",
    "segment": "ar-hub",
    "lines": 706,
-   "total_lines": 706,
-   "call_files": 1,
+   "total_lines": 1606,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -766,9 +770,9 @@
    "route": "/finance/assets",
    "file": "frontend/src/app/(dashboard)/finance/assets/page.tsx",
    "segment": "assets",
-   "lines": 536,
-   "total_lines": 536,
-   "call_files": 1,
+   "lines": 129,
+   "total_lines": 999,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -778,7 +782,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -827,9 +831,9 @@
    "route": "/finance/bank-reconciliation",
    "file": "frontend/src/app/(dashboard)/finance/bank-reconciliation/page.tsx",
    "segment": "bank-reconciliation",
-   "lines": 493,
-   "total_lines": 493,
-   "call_files": 1,
+   "lines": 149,
+   "total_lines": 1111,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -842,7 +846,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -873,8 +877,8 @@
    "file": "frontend/src/app/(dashboard)/finance/bayar-sample/page.tsx",
    "segment": "bayar-sample",
    "lines": 530,
-   "total_lines": 530,
-   "call_files": 1,
+   "total_lines": 1159,
+   "call_files": 7,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -933,9 +937,9 @@
    "route": "/finance/cash-in",
    "file": "frontend/src/app/(dashboard)/finance/cash-in/page.tsx",
    "segment": "cash-in",
-   "lines": 599,
-   "total_lines": 599,
-   "call_files": 1,
+   "lines": 214,
+   "total_lines": 1374,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -946,7 +950,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -955,9 +959,9 @@
    "route": "/finance/cash-out",
    "file": "frontend/src/app/(dashboard)/finance/cash-out/page.tsx",
    "segment": "cash-out",
-   "lines": 621,
-   "total_lines": 621,
-   "call_files": 1,
+   "lines": 213,
+   "total_lines": 1399,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -968,7 +972,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -977,8 +981,8 @@
    "route": "/finance/client-escrow",
    "file": "frontend/src/app/(dashboard)/finance/client-escrow/page.tsx",
    "segment": "client-escrow",
-   "lines": 352,
-   "total_lines": 352,
+   "lines": 364,
+   "total_lines": 364,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -996,8 +1000,8 @@
    "route": "/finance/closing",
    "file": "frontend/src/app/(dashboard)/finance/closing/page.tsx",
    "segment": "closing",
-   "lines": 385,
-   "total_lines": 385,
+   "lines": 400,
+   "total_lines": 400,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -1019,9 +1023,9 @@
    "route": "/finance/cogs-request",
    "file": "frontend/src/app/(dashboard)/finance/cogs-request/page.tsx",
    "segment": "cogs-request",
-   "lines": 529,
-   "total_lines": 529,
-   "call_files": 1,
+   "lines": 532,
+   "total_lines": 1206,
+   "call_files": 10,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1044,8 +1048,8 @@
    "file": "frontend/src/app/(dashboard)/finance/cogs-request-rnd/page.tsx",
    "segment": "cogs-request-rnd",
    "lines": 488,
-   "total_lines": 488,
-   "call_files": 1,
+   "total_lines": 1063,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1086,8 +1090,8 @@
    "file": "frontend/src/app/(dashboard)/finance/compliance-asset/page.tsx",
    "segment": "compliance-asset",
    "lines": 413,
-   "total_lines": 413,
-   "call_files": 1,
+   "total_lines": 1058,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1106,8 +1110,8 @@
    "file": "frontend/src/app/(dashboard)/finance/cost-allocation-setup/page.tsx",
    "segment": "cost-allocation-setup",
    "lines": 406,
-   "total_lines": 406,
-   "call_files": 1,
+   "total_lines": 961,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1169,8 +1173,8 @@
    "file": "frontend/src/app/(dashboard)/finance/dashboard/page.tsx",
    "segment": "dashboard",
    "lines": 533,
-   "total_lines": 533,
-   "call_files": 1,
+   "total_lines": 1889,
+   "call_files": 10,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1219,9 +1223,9 @@
    "route": "/finance/fund-requests",
    "file": "frontend/src/app/(dashboard)/finance/fund-requests/page.tsx",
    "segment": "fund-requests",
-   "lines": 625,
-   "total_lines": 625,
-   "call_files": 1,
+   "lines": 129,
+   "total_lines": 1341,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1232,7 +1236,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -1304,9 +1308,9 @@
    "route": "/finance/jurnal-umum",
    "file": "frontend/src/app/(dashboard)/finance/jurnal-umum/page.tsx",
    "segment": "jurnal-umum",
-   "lines": 632,
-   "total_lines": 632,
-   "call_files": 1,
+   "lines": 156,
+   "total_lines": 1430,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1316,7 +1320,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -1348,9 +1352,9 @@
    "route": "/finance/laba-rugi",
    "file": "frontend/src/app/(dashboard)/finance/laba-rugi/page.tsx",
    "segment": "laba-rugi",
-   "lines": 501,
-   "total_lines": 501,
-   "call_files": 1,
+   "lines": 111,
+   "total_lines": 737,
+   "call_files": 7,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1359,7 +1363,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -1368,18 +1372,18 @@
    "route": "/finance/ledger",
    "file": "frontend/src/app/(dashboard)/finance/ledger/page.tsx",
    "segment": "ledger",
-   "lines": 390,
-   "total_lines": 390,
-   "call_files": 1,
+   "lines": 138,
+   "total_lines": 856,
+   "call_files": 7,
    "redirect_to": [],
    "delegates": [],
    "calls": [
     "GET /finance/reports/trial-balance/detailed",
-    "GET /finance/reports/general-ledger/${targetId}"
+    "GET /finance/journals"
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -1411,8 +1415,8 @@
    "file": "frontend/src/app/(dashboard)/finance/piutang/page.tsx",
    "segment": "piutang",
    "lines": 1043,
-   "total_lines": 1043,
-   "call_files": 1,
+   "total_lines": 2359,
+   "call_files": 11,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1459,8 +1463,8 @@
    "route": "/finance/taxes",
    "file": "frontend/src/app/(dashboard)/finance/taxes/page.tsx",
    "segment": "taxes",
-   "lines": 282,
-   "total_lines": 282,
+   "lines": 288,
+   "total_lines": 288,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -1504,7 +1508,7 @@
    "file": "frontend/src/app/(dashboard)/hr/dashboard/page.tsx",
    "segment": "dashboard",
    "lines": 20,
-   "total_lines": 421,
+   "total_lines": 472,
    "call_files": 2,
    "redirect_to": [],
    "delegates": [
@@ -1524,12 +1528,36 @@
    "deadlines": 0
   },
   {
+   "route": "/hr/employees",
+   "file": "frontend/src/app/(dashboard)/hr/employees/page.tsx",
+   "segment": "employees",
+   "lines": 25,
+   "total_lines": 1262,
+   "call_files": 8,
+   "redirect_to": [],
+   "delegates": [],
+   "calls": [
+    "GET /hr/employees",
+    "GET /hr/department-scores",
+    "GET /hr/loans",
+    "PATCH /hr/employees/${editingEmployee.id}",
+    "POST /hr/employees",
+    "POST /hr/loans"
+   ],
+   "headings": [],
+   "hasModal": false,
+   "hasTable": false,
+   "hasKpi": false,
+   "expandedRows": false,
+   "deadlines": 0
+  },
+  {
    "route": "/hr/kpi",
    "file": "frontend/src/app/(dashboard)/hr/kpi/page.tsx",
    "segment": "kpi",
    "lines": 359,
-   "total_lines": 359,
-   "call_files": 1,
+   "total_lines": 847,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1547,8 +1575,8 @@
    "file": "frontend/src/app/(dashboard)/hr/page.tsx",
    "segment": "hr",
    "lines": 33,
-   "total_lines": 1404,
-   "call_files": 6,
+   "total_lines": 6358,
+   "call_files": 50,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1556,11 +1584,64 @@
     "GET /hr/executive-summary",
     "GET /hr/department-scores",
     "GET /hr/candidates",
-    "GET /hr/tickets",
     "GET /hr/employees",
+    "GET /hr/employees/${emp.id}/trainings",
+    "POST /hr/employees/${payload.employeeId}/training",
+    "GET /hr/tickets",
     "POST /hr/tickets",
     "PATCH /hr/tickets/${id}",
-    "GET /hr/kpi/employees"
+    "POST /hr/candidates",
+    "PATCH /hr/candidates/${id}/stage",
+    "GET /hr/payrolls",
+    "POST /hr/payroll/generate",
+    "POST /hr/payroll/authorize/${payrollId}",
+    "GET /hr/kpi/employees",
+    "GET /hr/loans",
+    "PATCH /hr/employees/${editingEmployee.id}",
+    "POST /hr/employees",
+    "POST /hr/loans"
+   ],
+   "headings": [],
+   "hasModal": false,
+   "hasTable": false,
+   "hasKpi": false,
+   "expandedRows": false,
+   "deadlines": 0
+  },
+  {
+   "route": "/hr/payroll",
+   "file": "frontend/src/app/(dashboard)/hr/payroll/page.tsx",
+   "segment": "payroll",
+   "lines": 25,
+   "total_lines": 884,
+   "call_files": 8,
+   "redirect_to": [],
+   "delegates": [],
+   "calls": [
+    "GET /hr/payrolls",
+    "POST /hr/payroll/generate",
+    "POST /hr/payroll/authorize/${payrollId}"
+   ],
+   "headings": [],
+   "hasModal": false,
+   "hasTable": false,
+   "hasKpi": false,
+   "expandedRows": false,
+   "deadlines": 0
+  },
+  {
+   "route": "/hr/recruitment",
+   "file": "frontend/src/app/(dashboard)/hr/recruitment/page.tsx",
+   "segment": "recruitment",
+   "lines": 25,
+   "total_lines": 794,
+   "call_files": 7,
+   "redirect_to": [],
+   "delegates": [],
+   "calls": [
+    "GET /hr/candidates",
+    "POST /hr/candidates",
+    "PATCH /hr/candidates/${id}/stage"
    ],
    "headings": [],
    "hasModal": false,
@@ -1573,9 +1654,9 @@
    "route": "/hr/tickets",
    "file": "frontend/src/app/(dashboard)/hr/tickets/page.tsx",
    "segment": "tickets",
-   "lines": 569,
-   "total_lines": 569,
-   "call_files": 1,
+   "lines": 509,
+   "total_lines": 1284,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1592,11 +1673,32 @@
    "deadlines": 0
   },
   {
+   "route": "/hr/training",
+   "file": "frontend/src/app/(dashboard)/hr/training/page.tsx",
+   "segment": "training",
+   "lines": 25,
+   "total_lines": 760,
+   "call_files": 7,
+   "redirect_to": [],
+   "delegates": [],
+   "calls": [
+    "GET /hr/employees",
+    "GET /hr/employees/${emp.id}/trainings",
+    "POST /hr/employees/${payload.employeeId}/training"
+   ],
+   "headings": [],
+   "hasModal": false,
+   "hasTable": false,
+   "hasKpi": false,
+   "expandedRows": false,
+   "deadlines": 0
+  },
+  {
    "route": "/inventory/formula-adjustment-production",
    "file": "frontend/src/app/(dashboard)/inventory/formula-adjustment-production/page.tsx",
    "segment": "formula-adjustment-production",
    "lines": 11,
-   "total_lines": 518,
+   "total_lines": 526,
    "call_files": 2,
    "redirect_to": [],
    "delegates": [
@@ -1616,8 +1718,8 @@
    "route": "/inventory/formula-adjustment-rnd",
    "file": "frontend/src/app/(dashboard)/inventory/formula-adjustment-rnd/page.tsx",
    "segment": "formula-adjustment-rnd",
-   "lines": 507,
-   "total_lines": 507,
+   "lines": 515,
+   "total_lines": 515,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -1636,8 +1738,8 @@
    "file": "frontend/src/app/(dashboard)/inventory/mutation/page.tsx",
    "segment": "mutation",
    "lines": 747,
-   "total_lines": 747,
-   "call_files": 1,
+   "total_lines": 1668,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1659,8 +1761,8 @@
    "file": "frontend/src/app/(dashboard)/inventory/outbound/page.tsx",
    "segment": "outbound",
    "lines": 693,
-   "total_lines": 693,
-   "call_files": 1,
+   "total_lines": 1494,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1702,8 +1804,8 @@
    "file": "frontend/src/app/(dashboard)/inventory/requisition/page.tsx",
    "segment": "requisition",
    "lines": 903,
-   "total_lines": 903,
-   "call_files": 1,
+   "total_lines": 2027,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1726,8 +1828,8 @@
    "file": "frontend/src/app/(dashboard)/inventory/stock-adjustment/page.tsx",
    "segment": "stock-adjustment",
    "lines": 692,
-   "total_lines": 692,
-   "call_files": 1,
+   "total_lines": 1509,
+   "call_files": 7,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1748,8 +1850,8 @@
    "file": "frontend/src/app/(dashboard)/inventory/stock-opname/page.tsx",
    "segment": "stock-opname",
    "lines": 697,
-   "total_lines": 697,
-   "call_files": 1,
+   "total_lines": 1545,
+   "call_files": 7,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -1923,8 +2025,8 @@
    "route": "/logistics/fleet",
    "file": "frontend/src/app/(dashboard)/logistics/fleet/page.tsx",
    "segment": "fleet",
-   "lines": 193,
-   "total_lines": 193,
+   "lines": 191,
+   "total_lines": 191,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -2171,7 +2273,7 @@
    "file": "frontend/src/app/(dashboard)/marketing/management-task/overview/page.tsx",
    "segment": "overview",
    "lines": 8,
-   "total_lines": 3954,
+   "total_lines": 3946,
    "call_files": 6,
    "redirect_to": [],
    "delegates": [
@@ -2201,7 +2303,7 @@
    "file": "frontend/src/app/(dashboard)/marketing/management-task/page.tsx",
    "segment": "management-task",
    "lines": 61,
-   "total_lines": 6830,
+   "total_lines": 6822,
    "call_files": 14,
    "redirect_to": [],
    "delegates": [
@@ -2230,7 +2332,7 @@
    "file": "frontend/src/app/(dashboard)/marketing/management-task/[member]/page.tsx",
    "segment": "[member]",
    "lines": 9,
-   "total_lines": 3955,
+   "total_lines": 3947,
    "call_files": 6,
    "redirect_to": [],
    "delegates": [
@@ -2692,8 +2794,8 @@
    "route": "/master/automation",
    "file": "frontend/src/app/(dashboard)/master/automation/page.tsx",
    "segment": "automation",
-   "lines": 270,
-   "total_lines": 270,
+   "lines": 266,
+   "total_lines": 266,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -2727,7 +2829,10 @@
     "POST /master/materials",
     "DELETE /master/materials/${id}",
     "PATCH /master/categories/${editingCategory.id}",
-    "POST /master/categories"
+    "POST /master/categories",
+    "GET /finance/accounts",
+    "GET /master/materials/${selectedBarang.id}/purchase-history",
+    "DELETE /master/categories/${id}"
    ],
    "headings": [],
    "hasModal": false,
@@ -2740,16 +2845,22 @@
    "route": "/master/customers",
    "file": "frontend/src/app/(dashboard)/master/customers/page.tsx",
    "segment": "customers",
-   "lines": 1202,
-   "total_lines": 1202,
-   "call_files": 1,
+   "lines": 1082,
+   "total_lines": 3087,
+   "call_files": 12,
    "redirect_to": [],
    "delegates": [],
    "calls": [
     "GET /master/customers${searchQuery ? ",
     "PATCH /master/customers/${editingCustomer.id}",
     "POST /master/customers",
-    "DELETE /master/customers/${id}"
+    "DELETE /master/customers/${id}",
+    "GET /master/customers${qs ? ",
+    "GET /master/categories?type=CUSTOMER",
+    "GET /master/customers/sales-staff",
+    "PATCH /master/categories/${editingCategory.id}",
+    "POST /master/categories",
+    "DELETE /master/categories/${id}"
    ],
    "headings": [],
    "hasModal": true,
@@ -2812,9 +2923,9 @@
    "route": "/master/goods",
    "file": "frontend/src/app/(dashboard)/master/goods/page.tsx",
    "segment": "goods",
-   "lines": 1208,
-   "total_lines": 1208,
-   "call_files": 1,
+   "lines": 1180,
+   "total_lines": 3034,
+   "call_files": 12,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -2824,7 +2935,10 @@
     "POST /master/materials",
     "DELETE /master/materials/${id}",
     "PATCH /master/categories/${editingCategory.id}",
-    "POST /master/categories"
+    "POST /master/categories",
+    "GET /finance/accounts",
+    "GET /master/materials/${selectedBarang.id}/purchase-history",
+    "DELETE /master/categories/${id}"
    ],
    "headings": [],
    "hasModal": true,
@@ -2832,86 +2946,22 @@
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
-  },
-  {
-   "route": "/master/hr-attendance",
-   "file": "frontend/src/app/(dashboard)/master/hr-attendance/page.tsx",
-   "segment": "hr-attendance",
-   "lines": 487,
-   "total_lines": 487,
-   "call_files": 1,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /hr/attendance?date=${selectedDate}",
-    "GET /hr/employees",
-    "POST /hr/attendance/clock-in"
-   ],
-   "headings": [],
-   "hasModal": true,
-   "hasTable": true,
-   "hasKpi": true,
-   "expandedRows": false,
-   "deadlines": 0
-  },
-  {
-   "route": "/master/hr-payroll",
-   "file": "frontend/src/app/(dashboard)/master/hr-payroll/page.tsx",
-   "segment": "hr-payroll",
-   "lines": 473,
-   "total_lines": 473,
-   "call_files": 1,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /hr/payrolls"
-   ],
-   "headings": [
-    "PT. KALOPSIA AUREON PHARMA"
-   ],
-   "hasModal": true,
-   "hasTable": true,
-   "hasKpi": true,
-   "expandedRows": false,
-   "deadlines": 0
-  },
-  {
-   "route": "/master/hr-recruitment",
-   "file": "frontend/src/app/(dashboard)/master/hr-recruitment/page.tsx",
-   "segment": "hr-recruitment",
-   "lines": 939,
-   "total_lines": 939,
-   "call_files": 1,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /hr/employees",
-    "GET /hr/candidates",
-    "POST /hr/employees",
-    "POST /hr/candidates"
-   ],
-   "headings": [],
-   "hasModal": true,
-   "hasTable": true,
-   "hasKpi": true,
-   "expandedRows": false,
-   "deadlines": 7
   },
   {
    "route": "/master/kpi-department",
    "file": "frontend/src/app/(dashboard)/master/kpi-department/page.tsx",
    "segment": "kpi-department",
-   "lines": 338,
-   "total_lines": 548,
-   "call_files": 2,
+   "lines": 375,
+   "total_lines": 882,
+   "call_files": 3,
    "redirect_to": [],
    "delegates": [],
    "calls": [
     "GET /hr/kpi/departments",
+    "GET /kpi/lead-times",
     "GET /hr/kpi/departments/${departmentId}"
    ],
    "headings": [
-    "Department KPI Management",
     "+2.4 pts"
    ],
    "hasModal": false,
@@ -2945,8 +2995,8 @@
    "route": "/master/kpi-individual",
    "file": "frontend/src/app/(dashboard)/master/kpi-individual/page.tsx",
    "segment": "kpi-individual",
-   "lines": 481,
-   "total_lines": 715,
+   "lines": 493,
+   "total_lines": 727,
    "call_files": 2,
    "redirect_to": [],
    "delegates": [],
@@ -2954,9 +3004,7 @@
     "GET /hr/kpi/employees",
     "GET /hr/kpi/individual/${employeeId}"
    ],
-   "headings": [
-    "Individual KPI Management"
-   ],
+   "headings": [],
    "hasModal": false,
    "hasTable": true,
    "hasKpi": true,
@@ -3011,8 +3059,8 @@
    "file": "frontend/src/app/(dashboard)/master/page.tsx",
    "segment": "master",
    "lines": 321,
-   "total_lines": 10945,
-   "call_files": 23,
+   "total_lines": 15820,
+   "call_files": 64,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -3026,19 +3074,17 @@
     "DELETE /master/warehouses/${id}",
     "GET /master/warehouses/access",
     "POST /master/warehouses/access",
-    "GET /master/units",
-    "POST /master/units",
-    "PATCH /master/units/${id}",
-    "DELETE /master/units/${id}",
-    "GET /master/tax-rates",
-    "POST /master/tax-rates",
-    "PATCH /master/tax-rates/${id}",
-    "DELETE /master/tax-rates/${id}",
+    "GET /master/warehouses/users-access",
+    "PUT /master/warehouses/access/${targetUserId}",
     "GET /master/suppliers${searchQuery ? ",
     "PATCH /master/suppliers/${editingSupplier.id}",
     "POST /master/suppliers",
     "DELETE /master/suppliers/${id}",
     "POST /master/suppliers/import",
+    "GET /master/categories?type=SUPPLIER",
+    "PATCH /master/categories/${editingCategory.id}",
+    "POST /master/categories",
+    "DELETE /master/categories/${id}",
     "GET /roles",
     "PATCH /users/${editingUser.id}",
     "POST /users",
@@ -3050,23 +3096,20 @@
     "GET /hr/kpi/employees",
     "GET /hr/kpi/individual/${employeeId}",
     "GET /hr/kpi/departments",
+    "GET /kpi/lead-times",
     "GET /hr/kpi/departments/${departmentId}",
-    "GET /hr/employees",
-    "GET /hr/candidates",
-    "POST /hr/employees",
-    "POST /hr/candidates",
-    "GET /hr/payrolls",
-    "GET /hr/attendance?date=${selectedDate}",
-    "POST /hr/attendance/clock-in",
     "GET /master/materials?${params.toString()}",
     "GET /master/categories",
     "PATCH /master/materials/${editingBarang.id}",
-    "PATCH /master/categories/${editingCategory.id}",
-    "POST /master/categories",
+    "GET /finance/accounts",
+    "GET /master/materials/${selectedBarang.id}/purchase-history",
     "GET /master/customers${searchQuery ? ",
     "PATCH /master/customers/${editingCustomer.id}",
     "POST /master/customers",
     "DELETE /master/customers/${id}",
+    "GET /master/customers${qs ? ",
+    "GET /master/categories?type=CUSTOMER",
+    "GET /master/customers/sales-staff",
     "GET /document-automation/drafts/stats"
    ],
    "headings": [],
@@ -3081,7 +3124,7 @@
    "file": "frontend/src/app/(dashboard)/master/personnel/page.tsx",
    "segment": "personnel",
    "lines": 11,
-   "total_lines": 916,
+   "total_lines": 969,
    "call_files": 2,
    "redirect_to": [],
    "delegates": [],
@@ -3100,12 +3143,44 @@
    "deadlines": 0
   },
   {
+   "route": "/master/sales-category",
+   "file": "frontend/src/app/(dashboard)/master/sales-category/page.tsx",
+   "segment": "sales-category",
+   "lines": 19,
+   "total_lines": 19,
+   "call_files": 2,
+   "redirect_to": [
+    "/penjualan/sales-target"
+   ],
+   "delegates": [
+    "frontend/src/app/(dashboard)/penjualan/sales-target/page.tsx"
+   ],
+   "calls": [
+    "GET /master/sales-targets/users",
+    "GET /master/sales-targets",
+    "GET /master/sales-categories",
+    "PUT /master/sales-targets/${editingTarget.id}",
+    "POST /master/sales-targets",
+    "DELETE /master/sales-targets/${id}",
+    "PUT /master/sales-categories/${editingCategory.id}",
+    "POST /master/sales-categories",
+    "DELETE /master/sales-categories/${id}",
+    "POST /master/sales-categories/seed"
+   ],
+   "headings": [],
+   "hasModal": false,
+   "hasTable": false,
+   "hasKpi": false,
+   "expandedRows": false,
+   "deadlines": 0
+  },
+  {
    "route": "/master/suppliers",
    "file": "frontend/src/app/(dashboard)/master/suppliers/page.tsx",
    "segment": "suppliers",
-   "lines": 1256,
-   "total_lines": 1256,
-   "call_files": 1,
+   "lines": 1127,
+   "total_lines": 3115,
+   "call_files": 12,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -3113,7 +3188,11 @@
     "PATCH /master/suppliers/${editingSupplier.id}",
     "POST /master/suppliers",
     "DELETE /master/suppliers/${id}",
-    "POST /master/suppliers/import"
+    "POST /master/suppliers/import",
+    "GET /master/categories?type=SUPPLIER",
+    "PATCH /master/categories/${editingCategory.id}",
+    "POST /master/categories",
+    "DELETE /master/categories/${id}"
    ],
    "headings": [],
    "hasModal": true,
@@ -3123,45 +3202,28 @@
    "deadlines": 0
   },
   {
-   "route": "/master/tax-rates",
-   "file": "frontend/src/app/(dashboard)/master/tax-rates/page.tsx",
-   "segment": "tax-rates",
-   "lines": 476,
-   "total_lines": 476,
-   "call_files": 1,
-   "redirect_to": [],
-   "delegates": [],
+   "route": "/master/users",
+   "file": "frontend/src/app/(dashboard)/master/users/page.tsx",
+   "segment": "users",
+   "lines": 6,
+   "total_lines": 6,
+   "call_files": 2,
+   "redirect_to": [
+    "/master/personnel"
+   ],
+   "delegates": [
+    "frontend/src/app/(dashboard)/master/personnel/page.tsx"
+   ],
    "calls": [
-    "GET /master/tax-rates",
-    "POST /master/tax-rates",
-    "PATCH /master/tax-rates/${id}",
-    "DELETE /master/tax-rates/${id}"
+    "GET /users",
+    "GET /roles",
+    "PATCH /users/${editingUser.id}",
+    "POST /users",
+    "DELETE /users/${id}"
    ],
    "headings": [],
-   "hasModal": true,
-   "hasTable": true,
-   "hasKpi": false,
-   "expandedRows": false,
-   "deadlines": 0
-  },
-  {
-   "route": "/master/units",
-   "file": "frontend/src/app/(dashboard)/master/units/page.tsx",
-   "segment": "units",
-   "lines": 499,
-   "total_lines": 499,
-   "call_files": 1,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /master/units",
-    "POST /master/units",
-    "PATCH /master/units/${id}",
-    "DELETE /master/units/${id}"
-   ],
-   "headings": [],
-   "hasModal": true,
-   "hasTable": true,
+   "hasModal": false,
+   "hasTable": false,
    "hasKpi": false,
    "expandedRows": false,
    "deadlines": 0
@@ -3184,7 +3246,11 @@
     "PATCH /master/suppliers/${editingSupplier.id}",
     "POST /master/suppliers",
     "DELETE /master/suppliers/${id}",
-    "POST /master/suppliers/import"
+    "POST /master/suppliers/import",
+    "GET /master/categories?type=SUPPLIER",
+    "PATCH /master/categories/${editingCategory.id}",
+    "POST /master/categories",
+    "DELETE /master/categories/${id}"
    ],
    "headings": [],
    "hasModal": false,
@@ -3197,9 +3263,9 @@
    "route": "/master/warehouses",
    "file": "frontend/src/app/(dashboard)/master/warehouses/page.tsx",
    "segment": "warehouses",
-   "lines": 1182,
-   "total_lines": 1182,
-   "call_files": 1,
+   "lines": 1111,
+   "total_lines": 2941,
+   "call_files": 11,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -3209,7 +3275,9 @@
     "DELETE /master/warehouses/${id}",
     "GET /users",
     "GET /master/warehouses/access",
-    "POST /master/warehouses/access"
+    "POST /master/warehouses/access",
+    "GET /master/warehouses/users-access",
+    "PUT /master/warehouses/access/${targetUserId}"
    ],
    "headings": [],
    "hasModal": true,
@@ -3222,8 +3290,8 @@
    "route": "/my-dashboard",
    "file": "frontend/src/app/(dashboard)/my-dashboard/page.tsx",
    "segment": "my-dashboard",
-   "lines": 97,
-   "total_lines": 97,
+   "lines": 95,
+   "total_lines": 95,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -3303,9 +3371,9 @@
    "route": "/pembelian/bayar-pembelian",
    "file": "frontend/src/app/(dashboard)/pembelian/bayar-pembelian/page.tsx",
    "segment": "bayar-pembelian",
-   "lines": 594,
-   "total_lines": 594,
-   "call_files": 1,
+   "lines": 93,
+   "total_lines": 1340,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -3315,7 +3383,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -3324,8 +3392,8 @@
    "route": "/pembelian/change-requests",
    "file": "frontend/src/app/(dashboard)/pembelian/change-requests/page.tsx",
    "segment": "change-requests",
-   "lines": 295,
-   "total_lines": 295,
+   "lines": 305,
+   "total_lines": 305,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -3364,9 +3432,9 @@
    "route": "/pembelian/dp-pembelian",
    "file": "frontend/src/app/(dashboard)/pembelian/dp-pembelian/page.tsx",
    "segment": "dp-pembelian",
-   "lines": 700,
-   "total_lines": 700,
-   "call_files": 1,
+   "lines": 697,
+   "total_lines": 1880,
+   "call_files": 10,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -3385,20 +3453,21 @@
    "route": "/pembelian/faktur-pembelian",
    "file": "frontend/src/app/(dashboard)/pembelian/faktur-pembelian/page.tsx",
    "segment": "faktur-pembelian",
-   "lines": 997,
-   "total_lines": 1028,
-   "call_files": 2,
+   "lines": 107,
+   "total_lines": 1478,
+   "call_files": 13,
    "redirect_to": [],
    "delegates": [],
    "calls": [
     "GET /purchase/invoices",
-    "GET /master/suppliers",
+    "GET /purchase/goods-receipts",
     "POST /purchase/invoices",
-    "POST /purchase/invoices/import"
+    "POST /purchase/invoices/import",
+    "PATCH /purchase/invoices/${id}/reason"
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -3407,13 +3476,14 @@
    "route": "/pembelian/kebutuhan",
    "file": "frontend/src/app/(dashboard)/pembelian/kebutuhan/page.tsx",
    "segment": "kebutuhan",
-   "lines": 652,
-   "total_lines": 652,
-   "call_files": 1,
+   "lines": 897,
+   "total_lines": 1612,
+   "call_files": 7,
    "redirect_to": [],
    "delegates": [],
    "calls": [
-    "GET /scm/materials"
+    "GET /scm/materials",
+    "GET /commercial/sales-orders"
    ],
    "headings": [],
    "hasModal": true,
@@ -3427,7 +3497,7 @@
    "file": "frontend/src/app/(dashboard)/pembelian/mrp/page.tsx",
    "segment": "mrp",
    "lines": 44,
-   "total_lines": 1056,
+   "total_lines": 1301,
    "call_files": 3,
    "redirect_to": [],
    "delegates": [
@@ -3436,6 +3506,7 @@
    ],
    "calls": [
     "GET /scm/materials",
+    "GET /commercial/sales-orders",
     "GET /scm/requirements/summary",
     "POST /scm/purchase-orders/from-requirement"
    ],
@@ -3450,9 +3521,9 @@
    "route": "/pembelian/purchase-requests",
    "file": "frontend/src/app/(dashboard)/pembelian/purchase-requests/page.tsx",
    "segment": "purchase-requests",
-   "lines": 863,
-   "total_lines": 863,
-   "call_files": 1,
+   "lines": 986,
+   "total_lines": 2026,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -3473,9 +3544,9 @@
    "route": "/pembelian/purchase-returns",
    "file": "frontend/src/app/(dashboard)/pembelian/purchase-returns/page.tsx",
    "segment": "purchase-returns",
-   "lines": 852,
-   "total_lines": 852,
-   "call_files": 1,
+   "lines": 955,
+   "total_lines": 2000,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -3493,33 +3564,12 @@
    "deadlines": 0
   },
   {
-   "route": "/pembelian/purchasing/down-payment",
-   "file": "frontend/src/app/(dashboard)/pembelian/purchasing/down-payment/page.tsx",
-   "segment": "down-payment",
-   "lines": 459,
-   "total_lines": 459,
-   "call_files": 1,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /scm/purchase-invoices",
-    "GET /scm/purchase-orders",
-    "POST /scm/purchase-orders/${poId}/down-payment"
-   ],
-   "headings": [],
-   "hasModal": false,
-   "hasTable": true,
-   "hasKpi": true,
-   "expandedRows": false,
-   "deadlines": 0
-  },
-  {
    "route": "/pembelian/purchasing",
    "file": "frontend/src/app/(dashboard)/pembelian/purchasing/page.tsx",
    "segment": "purchasing",
    "lines": 756,
-   "total_lines": 1574,
-   "call_files": 3,
+   "total_lines": 2715,
+   "call_files": 10,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -3533,8 +3583,7 @@
     "POST /scm/purchase-requests/${id}/approve",
     "POST /scm/purchase-requests/${id}/reject",
     "GET /scm/purchase-invoices",
-    "POST /scm/purchase-payments",
-    "POST /scm/purchase-orders/${poId}/down-payment"
+    "POST /scm/purchase-payments"
    ],
    "headings": [
     "Daftar Purchase Order",
@@ -3590,15 +3639,16 @@
    "route": "/pembelian/receiving",
    "file": "frontend/src/app/(dashboard)/pembelian/receiving/page.tsx",
    "segment": "receiving",
-   "lines": 494,
-   "total_lines": 494,
-   "call_files": 1,
+   "lines": 492,
+   "total_lines": 1614,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
     "GET /scm/purchase-orders",
     "GET /scm/inbounds",
-    "POST /scm/inbounds"
+    "POST /scm/inbounds",
+    "GET /master/warehouses/active"
    ],
    "headings": [],
    "hasModal": true,
@@ -3632,8 +3682,8 @@
    "file": "frontend/src/app/(dashboard)/pembelian/scm-pembelian/create/page.tsx",
    "segment": "create",
    "lines": 601,
-   "total_lines": 601,
-   "call_files": 1,
+   "total_lines": 1293,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -3657,9 +3707,9 @@
    "route": "/pembelian/scm-pembelian",
    "file": "frontend/src/app/(dashboard)/pembelian/scm-pembelian/page.tsx",
    "segment": "scm-pembelian",
-   "lines": 507,
-   "total_lines": 1108,
-   "call_files": 2,
+   "lines": 816,
+   "total_lines": 3271,
+   "call_files": 17,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -3667,6 +3717,7 @@
     "GET /master/suppliers",
     "GET /master/warehouses/active",
     "GET /master/materials",
+    "POST /scm/purchase-orders",
     "POST /purchase/orders"
    ],
    "headings": [],
@@ -3674,14 +3725,14 @@
    "hasTable": true,
    "hasKpi": true,
    "expandedRows": false,
-   "deadlines": 6
+   "deadlines": 7
   },
   {
    "route": "/pembelian/vendor-performance/performance",
    "file": "frontend/src/app/(dashboard)/pembelian/vendor-performance/performance/page.tsx",
    "segment": "performance",
-   "lines": 314,
-   "total_lines": 314,
+   "lines": 324,
+   "total_lines": 324,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -3699,16 +3750,18 @@
    "route": "/penjualan/bayar-penjualan",
    "file": "frontend/src/app/(dashboard)/penjualan/bayar-penjualan/page.tsx",
    "segment": "bayar-penjualan",
-   "lines": 531,
-   "total_lines": 531,
-   "call_files": 1,
+   "lines": 787,
+   "total_lines": 1428,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
     "GET /commercial/invoices",
     "POST /commercial/payments"
    ],
-   "headings": [],
+   "headings": [
+    "Pencatatan Pembayaran & Settlement Piutang"
+   ],
    "hasModal": true,
    "hasTable": true,
    "hasKpi": true,
@@ -3719,9 +3772,9 @@
    "route": "/penjualan/client-manager",
    "file": "frontend/src/app/(dashboard)/penjualan/client-manager/page.tsx",
    "segment": "client-manager",
-   "lines": 1074,
-   "total_lines": 1074,
-   "call_files": 1,
+   "lines": 1351,
+   "total_lines": 5368,
+   "call_files": 11,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -3742,8 +3795,8 @@
    "file": "frontend/src/app/(dashboard)/penjualan/crm-leads/page.tsx",
    "segment": "crm-leads",
    "lines": 23,
-   "total_lines": 1266,
-   "call_files": 2,
+   "total_lines": 2744,
+   "call_files": 12,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -3754,7 +3807,8 @@
     "POST /marketing/landing-tracker/sales",
     "POST /marketing/landing-tracker/sales/reset-counter",
     "DELETE /marketing/landing-tracker/conversions/${id}",
-    "DELETE /marketing/landing-tracker/conversions"
+    "DELETE /marketing/landing-tracker/conversions",
+    "GET /marketing/landing-tracker/conversions?limit=100"
    ],
    "headings": [],
    "hasModal": false,
@@ -3767,8 +3821,8 @@
    "route": "/penjualan/delivery-orders",
    "file": "frontend/src/app/(dashboard)/penjualan/delivery-orders/page.tsx",
    "segment": "delivery-orders",
-   "lines": 345,
-   "total_lines": 345,
+   "lines": 394,
+   "total_lines": 394,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -3791,9 +3845,9 @@
    "route": "/penjualan/down-payment",
    "file": "frontend/src/app/(dashboard)/penjualan/down-payment/page.tsx",
    "segment": "down-payment",
-   "lines": 590,
-   "total_lines": 590,
-   "call_files": 1,
+   "lines": 161,
+   "total_lines": 1743,
+   "call_files": 10,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -3803,50 +3857,8 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
-   "hasKpi": true,
-   "expandedRows": false,
-   "deadlines": 0
-  },
-  {
-   "route": "/penjualan/dp-finance",
-   "file": "frontend/src/app/(dashboard)/penjualan/dp-finance/page.tsx",
-   "segment": "dp-finance",
-   "lines": 296,
-   "total_lines": 296,
-   "call_files": 1,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /scm/purchase-orders",
-    "GET /finance/sales-orders"
-   ],
-   "headings": [],
-   "hasModal": false,
-   "hasTable": true,
-   "hasKpi": false,
-   "expandedRows": false,
-   "deadlines": 0
-  },
-  {
-   "route": "/penjualan/dp-penjualan-finance",
-   "file": "frontend/src/app/(dashboard)/penjualan/dp-penjualan-finance/page.tsx",
-   "segment": "dp-penjualan-finance",
-   "lines": 482,
-   "total_lines": 482,
-   "call_files": 1,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /finance/sales-orders",
-    "GET /finance/accounts",
-    "POST /upload?module=finance&subFolder=dp_penjualan",
-    "POST /finance/cash/receive"
-   ],
-   "headings": [],
-   "hasModal": true,
    "hasTable": false,
-   "hasKpi": false,
+   "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
   },
@@ -3854,20 +3866,18 @@
    "route": "/penjualan/faktur-penjualan",
    "file": "frontend/src/app/(dashboard)/penjualan/faktur-penjualan/page.tsx",
    "segment": "faktur-penjualan",
-   "lines": 825,
-   "total_lines": 825,
-   "call_files": 1,
+   "lines": 93,
+   "total_lines": 796,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
     "GET /commercial/invoices",
-    "GET /commercial/sales-orders",
-    "POST /commercial/invoices/${invoiceId}/release-delivery",
-    "POST /commercial/invoices"
+    "POST /commercial/invoices/${invoiceId}/release-delivery"
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -3876,16 +3886,18 @@
    "route": "/penjualan/guest-book",
    "file": "frontend/src/app/(dashboard)/penjualan/guest-book/page.tsx",
    "segment": "guest-book",
-   "lines": 547,
-   "total_lines": 547,
-   "call_files": 1,
+   "lines": 854,
+   "total_lines": 1575,
+   "call_files": 7,
    "redirect_to": [],
    "delegates": [],
    "calls": [
     "GET /guests",
     "POST /guests"
    ],
-   "headings": [],
+   "headings": [
+    "CATAT KUNJUNGAN BUKU TAMU BARU"
+   ],
    "hasModal": true,
    "hasTable": true,
    "hasKpi": true,
@@ -3896,8 +3908,8 @@
    "route": "/penjualan/job-order-costing",
    "file": "frontend/src/app/(dashboard)/penjualan/job-order-costing/page.tsx",
    "segment": "job-order-costing",
-   "lines": 334,
-   "total_lines": 334,
+   "lines": 340,
+   "total_lines": 340,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -3915,9 +3927,9 @@
    "route": "/penjualan/lost",
    "file": "frontend/src/app/(dashboard)/penjualan/lost/page.tsx",
    "segment": "lost",
-   "lines": 533,
-   "total_lines": 533,
-   "call_files": 1,
+   "lines": 718,
+   "total_lines": 1435,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4014,9 +4026,9 @@
    "route": "/penjualan/retur-penjualan",
    "file": "frontend/src/app/(dashboard)/penjualan/retur-penjualan/page.tsx",
    "segment": "retur-penjualan",
-   "lines": 664,
-   "total_lines": 664,
-   "call_files": 1,
+   "lines": 829,
+   "total_lines": 1662,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4037,45 +4049,25 @@
    "route": "/penjualan/sales-orders",
    "file": "frontend/src/app/(dashboard)/penjualan/sales-orders/page.tsx",
    "segment": "sales-orders",
-   "lines": 902,
-   "total_lines": 902,
-   "call_files": 1,
+   "lines": 515,
+   "total_lines": 2039,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
     "GET /commercial/sales-orders",
-    "GET /customers",
+    "GET /bussdev/leads",
     "POST /commercial/sales-orders/${id}/delivery-gate",
     "POST /commercial/sales-orders"
    ],
-   "headings": [],
+   "headings": [
+    "PENERBITAN KONTRAK SALES ORDER (SO) BARU"
+   ],
    "hasModal": true,
    "hasTable": true,
    "hasKpi": true,
    "expandedRows": false,
-   "deadlines": 53
-  },
-  {
-   "route": "/penjualan/sales-orders-finance",
-   "file": "frontend/src/app/(dashboard)/penjualan/sales-orders-finance/page.tsx",
-   "segment": "sales-orders-finance",
-   "lines": 297,
-   "total_lines": 297,
-   "call_files": 1,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /finance/sales-orders",
-    "POST /finance/verify-payment"
-   ],
-   "headings": [
-    "Master Sales Order Log"
-   ],
-   "hasModal": true,
-   "hasTable": true,
-   "hasKpi": false,
-   "expandedRows": false,
-   "deadlines": 0
+   "deadlines": 12
   },
   {
    "route": "/penjualan/sales-return-in",
@@ -4100,12 +4092,23 @@
    "route": "/penjualan/sales-target",
    "file": "frontend/src/app/(dashboard)/penjualan/sales-target/page.tsx",
    "segment": "sales-target",
-   "lines": 548,
-   "total_lines": 548,
-   "call_files": 1,
+   "lines": 888,
+   "total_lines": 2257,
+   "call_files": 11,
    "redirect_to": [],
    "delegates": [],
-   "calls": [],
+   "calls": [
+    "GET /master/sales-targets/users",
+    "GET /master/sales-targets",
+    "GET /master/sales-categories",
+    "PUT /master/sales-targets/${editingTarget.id}",
+    "POST /master/sales-targets",
+    "DELETE /master/sales-targets/${id}",
+    "PUT /master/sales-categories/${editingCategory.id}",
+    "POST /master/sales-categories",
+    "DELETE /master/sales-categories/${id}",
+    "POST /master/sales-categories/seed"
+   ],
    "headings": [],
    "hasModal": true,
    "hasTable": true,
@@ -4117,8 +4120,8 @@
    "route": "/penjualan/sample-fee",
    "file": "frontend/src/app/(dashboard)/penjualan/sample-fee/page.tsx",
    "segment": "sample-fee",
-   "lines": 438,
-   "total_lines": 438,
+   "lines": 444,
+   "total_lines": 444,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -4160,18 +4163,19 @@
    "route": "/penjualan/sample-sales",
    "file": "frontend/src/app/(dashboard)/penjualan/sample-sales/page.tsx",
    "segment": "sample-sales",
-   "lines": 644,
-   "total_lines": 892,
-   "call_files": 2,
+   "lines": 100,
+   "total_lines": 1341,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
     "GET /bussdev/samples",
-    "POST /bussdev/samples"
+    "POST /bussdev/samples",
+    "PATCH /bussdev/sample/${sampleId}/feedback"
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -4199,8 +4203,8 @@
    "route": "/production/batch-record-rnd",
    "file": "frontend/src/app/(dashboard)/production/batch-record-rnd/page.tsx",
    "segment": "batch-record-rnd",
-   "lines": 481,
-   "total_lines": 481,
+   "lines": 491,
+   "total_lines": 491,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -4218,20 +4222,20 @@
    "route": "/production/batch-records",
    "file": "frontend/src/app/(dashboard)/production/batch-records/page.tsx",
    "segment": "batch-records",
-   "lines": 11,
-   "total_lines": 492,
-   "call_files": 2,
+   "lines": 250,
+   "total_lines": 1338,
+   "call_files": 8,
    "redirect_to": [],
-   "delegates": [
-    "frontend/src/app/(dashboard)/production/batch-record-rnd/page.tsx"
-   ],
+   "delegates": [],
    "calls": [
-    "GET /production/batch-records"
+    "GET /commercial/sales-orders",
+    "GET /production/batch-records",
+    "POST /production/batch-records"
    ],
    "headings": [],
-   "hasModal": false,
+   "hasModal": true,
    "hasTable": false,
-   "hasKpi": false,
+   "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
   },
@@ -4239,13 +4243,15 @@
    "route": "/production/filling",
    "file": "frontend/src/app/(dashboard)/production/filling/page.tsx",
    "segment": "filling",
-   "lines": 530,
-   "total_lines": 530,
-   "call_files": 1,
+   "lines": 709,
+   "total_lines": 1373,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
-    "GET /production/schedules?stage=FILLING"
+    "GET /production/schedules?stage=FILLING",
+    "PATCH /production/schedules/${item.id}/status",
+    "POST /production/schedules/${produceModalItem.id}/result"
    ],
    "headings": [],
    "hasModal": true,
@@ -4258,17 +4264,18 @@
    "route": "/production/material-requisition",
    "file": "frontend/src/app/(dashboard)/production/material-requisition/page.tsx",
    "segment": "material-requisition",
-   "lines": 584,
-   "total_lines": 584,
-   "call_files": 1,
+   "lines": 116,
+   "total_lines": 1073,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
-    "GET /production/requisitions"
+    "GET /production/requisitions",
+    "POST /production/requisitions"
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -4277,13 +4284,15 @@
    "route": "/production/mixing",
    "file": "frontend/src/app/(dashboard)/production/mixing/page.tsx",
    "segment": "mixing",
-   "lines": 516,
-   "total_lines": 516,
-   "call_files": 1,
+   "lines": 690,
+   "total_lines": 1337,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
-    "GET /production/schedules?stage=MIXING"
+    "GET /production/schedules?stage=MIXING",
+    "PATCH /production/schedules/${item.id}/status",
+    "POST /production/schedules/${produceModalItem.id}/result"
    ],
    "headings": [],
    "hasModal": true,
@@ -4344,13 +4353,15 @@
    "route": "/production/packaging",
    "file": "frontend/src/app/(dashboard)/production/packaging/page.tsx",
    "segment": "packaging",
-   "lines": 530,
-   "total_lines": 530,
-   "call_files": 1,
+   "lines": 709,
+   "total_lines": 1369,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
-    "GET /production/schedules?stage=PACKING"
+    "GET /production/schedules?stage=PACKING",
+    "PATCH /production/schedules/${item.id}/status",
+    "POST /production/schedules/${produceModalItem.id}/result"
    ],
    "headings": [],
    "hasModal": true,
@@ -4364,8 +4375,8 @@
    "file": "frontend/src/app/(dashboard)/production/page.tsx",
    "segment": "production",
    "lines": 509,
-   "total_lines": 8705,
-   "call_files": 21,
+   "total_lines": 17418,
+   "call_files": 103,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4374,24 +4385,28 @@
     "GET /production/micro-flow",
     "GET /production/batch-audit",
     "GET /production/active",
-    "GET /production/batch-records",
-    "GET /production/batch-records/${activeBatchNo}/detail",
+    "GET /production/work-orders",
+    "POST /production/work-orders",
     "GET /production/schedules?stage=PACKING",
     "GET /production/schedules?stage=MIXING",
     "GET /production/schedules?stage=FILLING",
     "GET /production/schedules",
     "GET /production/machines",
-    "GET /production/work-orders",
     "POST /production/schedules",
     "GET /dashboards/production",
     "GET /commercial/sales-orders",
     "GET /production-plans",
     "POST /production-plans",
     "POST /production-plans/log-step",
+    "PATCH /production/schedules/${item.id}/status",
+    "POST /production/schedules/${produceModalItem.id}/result",
     "POST /production/${data.id}/submit-log",
     "GET /my-dashboard/stats",
     "GET /production/work-orders?mine=true",
     "GET /production/requisitions",
+    "POST /production/requisitions",
+    "GET /production/batch-records",
+    "POST /production/batch-records",
     "GET /production/step-logs"
    ],
    "headings": [
@@ -4410,8 +4425,8 @@
    "route": "/production/production-floor-dashboard",
    "file": "frontend/src/app/(dashboard)/production/production-floor-dashboard/page.tsx",
    "segment": "production-floor-dashboard",
-   "lines": 317,
-   "total_lines": 317,
+   "lines": 316,
+   "total_lines": 316,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -4471,9 +4486,9 @@
    "route": "/production/schedule",
    "file": "frontend/src/app/(dashboard)/production/schedule/page.tsx",
    "segment": "schedule",
-   "lines": 696,
-   "total_lines": 696,
-   "call_files": 1,
+   "lines": 146,
+   "total_lines": 1642,
+   "call_files": 10,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4484,27 +4499,8 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
-   "hasKpi": true,
-   "expandedRows": false,
-   "deadlines": 0
-  },
-  {
-   "route": "/production/schedule-calendar",
-   "file": "frontend/src/app/(dashboard)/production/schedule-calendar/page.tsx",
-   "segment": "schedule-calendar",
-   "lines": 358,
-   "total_lines": 358,
-   "call_files": 1,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /production/schedules"
-   ],
-   "headings": [],
-   "hasModal": true,
    "hasTable": false,
-   "hasKpi": false,
+   "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
   },
@@ -4513,8 +4509,8 @@
    "file": "frontend/src/app/(dashboard)/production/schedule-filling/page.tsx",
    "segment": "schedule-filling",
    "lines": 551,
-   "total_lines": 551,
-   "call_files": 1,
+   "total_lines": 1241,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4532,8 +4528,8 @@
    "file": "frontend/src/app/(dashboard)/production/schedule-mixing/page.tsx",
    "segment": "schedule-mixing",
    "lines": 544,
-   "total_lines": 544,
-   "call_files": 1,
+   "total_lines": 1198,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4551,8 +4547,8 @@
    "file": "frontend/src/app/(dashboard)/production/schedule-packaging/page.tsx",
    "segment": "schedule-packaging",
    "lines": 551,
-   "total_lines": 551,
-   "call_files": 1,
+   "total_lines": 1213,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4569,21 +4565,19 @@
    "route": "/production/spk",
    "file": "frontend/src/app/(dashboard)/production/spk/page.tsx",
    "segment": "spk",
-   "lines": 427,
-   "total_lines": 427,
-   "call_files": 1,
+   "lines": 112,
+   "total_lines": 1179,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
-    "GET /production/batch-records",
-    "GET /production/batch-records/${activeBatchNo}/detail"
+    "GET /production/work-orders",
+    "POST /production/work-orders"
    ],
-   "headings": [
-    "PT AUREON NEXERP MANUFACTURING LAB"
-   ],
-   "hasModal": false,
-   "hasTable": true,
-   "hasKpi": false,
+   "headings": [],
+   "hasModal": true,
+   "hasTable": false,
+   "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
   },
@@ -4591,9 +4585,9 @@
    "route": "/production/work-orders",
    "file": "frontend/src/app/(dashboard)/production/work-orders/page.tsx",
    "segment": "work-orders",
-   "lines": 684,
-   "total_lines": 684,
-   "call_files": 1,
+   "lines": 810,
+   "total_lines": 1723,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4611,8 +4605,8 @@
    "file": "frontend/src/app/(dashboard)/quality/apj-release/page.tsx",
    "segment": "apj-release",
    "lines": 509,
-   "total_lines": 509,
-   "call_files": 1,
+   "total_lines": 1151,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4636,8 +4630,8 @@
    "file": "frontend/src/app/(dashboard)/quality/checklist/page.tsx",
    "segment": "checklist",
    "lines": 643,
-   "total_lines": 643,
-   "call_files": 1,
+   "total_lines": 1424,
+   "call_files": 12,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4676,9 +4670,9 @@
    "route": "/quality/checklist-progress",
    "file": "frontend/src/app/(dashboard)/quality/checklist-progress/page.tsx",
    "segment": "checklist-progress",
-   "lines": 290,
-   "total_lines": 290,
-   "call_files": 1,
+   "lines": 97,
+   "total_lines": 527,
+   "call_files": 6,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4686,37 +4680,39 @@
    ],
    "headings": [],
    "hasModal": false,
-   "hasTable": true,
-   "hasKpi": true,
-   "expandedRows": false,
-   "deadlines": 7
-  },
-  {
-   "route": "/quality/checklist-tracking",
-   "file": "frontend/src/app/(dashboard)/quality/checklist-tracking/page.tsx",
-   "segment": "checklist-tracking",
-   "lines": 484,
-   "total_lines": 484,
-   "call_files": 1,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /qc/checklists/completed"
-   ],
-   "headings": [],
-   "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
   },
   {
+   "route": "/quality/checklist-tracking",
+   "file": "frontend/src/app/(dashboard)/quality/checklist-tracking/page.tsx",
+   "segment": "checklist-tracking",
+   "lines": 354,
+   "total_lines": 2531,
+   "call_files": 11,
+   "redirect_to": [],
+   "delegates": [],
+   "calls": [
+    "GET /qc/checklists/project-tracking",
+    "PATCH /qc/checklists/${projectId}/milestones/${milestoneId}",
+    "GET /qc/checklists/completed"
+   ],
+   "headings": [],
+   "hasModal": false,
+   "hasTable": false,
+   "hasKpi": true,
+   "expandedRows": false,
+   "deadlines": 1
+  },
+  {
    "route": "/quality/coa",
    "file": "frontend/src/app/(dashboard)/quality/coa/page.tsx",
    "segment": "coa",
-   "lines": 400,
-   "total_lines": 400,
-   "call_files": 1,
+   "lines": 107,
+   "total_lines": 707,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4724,7 +4720,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -4781,9 +4777,9 @@
    "route": "/quality/karantina",
    "file": "frontend/src/app/(dashboard)/quality/karantina/page.tsx",
    "segment": "karantina",
-   "lines": 491,
-   "total_lines": 491,
-   "call_files": 1,
+   "lines": 72,
+   "total_lines": 851,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4791,7 +4787,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -4800,9 +4796,9 @@
    "route": "/quality/lab-test",
    "file": "frontend/src/app/(dashboard)/quality/lab-test/page.tsx",
    "segment": "lab-test",
-   "lines": 583,
-   "total_lines": 583,
-   "call_files": 1,
+   "lines": 172,
+   "total_lines": 1965,
+   "call_files": 10,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4812,7 +4808,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -4821,9 +4817,9 @@
    "route": "/quality/qc-release",
    "file": "frontend/src/app/(dashboard)/quality/qc-release/page.tsx",
    "segment": "qc-release",
-   "lines": 513,
-   "total_lines": 513,
-   "call_files": 1,
+   "lines": 531,
+   "total_lines": 1227,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4862,8 +4858,8 @@
    "file": "frontend/src/app/(dashboard)/quality/stability/page.tsx",
    "segment": "stability",
    "lines": 555,
-   "total_lines": 555,
-   "call_files": 1,
+   "total_lines": 1271,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4885,8 +4881,8 @@
    "file": "frontend/src/app/(dashboard)/quality/workbench/page.tsx",
    "segment": "workbench",
    "lines": 779,
-   "total_lines": 779,
-   "call_files": 1,
+   "total_lines": 1788,
+   "call_files": 10,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -4975,37 +4971,6 @@
    "headings": [],
    "hasModal": true,
    "hasTable": false,
-   "hasKpi": true,
-   "expandedRows": false,
-   "deadlines": 0
-  },
-  {
-   "route": "/reports/finance-reports",
-   "file": "frontend/src/app/(dashboard)/reports/finance-reports/page.tsx",
-   "segment": "finance-reports",
-   "lines": 914,
-   "total_lines": 914,
-   "call_files": 1,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /finance/reports/trial-balance/detailed",
-    "GET /finance/reports/profit-loss",
-    "GET /finance/reports/balance-sheet",
-    "GET /finance/accounts",
-    "GET /reports/general-ledger",
-    "GET /finance/reports/general-ledger/${selectedAccId}",
-    "GET /reports/budget-vs-actual",
-    "GET /finance/reports/project-budgeting"
-   ],
-   "headings": [
-    "LAPORAN LABA RUGI",
-    "PENDAPATAN / INFLOWS",
-    "BEBAN / OUTFLOWS",
-    "LABA BERSIH"
-   ],
-   "hasModal": false,
-   "hasTable": true,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -5251,9 +5216,9 @@
    "route": "/rnd/project-monitoring",
    "file": "frontend/src/app/(dashboard)/rnd/project-monitoring/page.tsx",
    "segment": "project-monitoring",
-   "lines": 550,
-   "total_lines": 550,
-   "call_files": 1,
+   "lines": 632,
+   "total_lines": 2283,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -5266,15 +5231,42 @@
    "hasTable": true,
    "hasKpi": true,
    "expandedRows": false,
-   "deadlines": 10
+   "deadlines": 0
+  },
+  {
+   "route": "/role-manage",
+   "file": "frontend/src/app/(dashboard)/role-manage/page.tsx",
+   "segment": "role-manage",
+   "lines": 6,
+   "total_lines": 6,
+   "call_files": 2,
+   "redirect_to": [
+    "/master/personnel"
+   ],
+   "delegates": [
+    "frontend/src/app/(dashboard)/master/personnel/page.tsx"
+   ],
+   "calls": [
+    "GET /users",
+    "GET /roles",
+    "PATCH /users/${editingUser.id}",
+    "POST /users",
+    "DELETE /users/${id}"
+   ],
+   "headings": [],
+   "hasModal": false,
+   "hasTable": false,
+   "hasKpi": false,
+   "expandedRows": false,
+   "deadlines": 0
   },
   {
    "route": "/samples/design",
    "file": "frontend/src/app/(dashboard)/samples/design/page.tsx",
    "segment": "design",
    "lines": 665,
-   "total_lines": 665,
-   "call_files": 1,
+   "total_lines": 1411,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -5295,14 +5287,12 @@
    "route": "/samples/formula",
    "file": "frontend/src/app/(dashboard)/samples/formula/page.tsx",
    "segment": "formula",
-   "lines": 498,
-   "total_lines": 1603,
-   "call_files": 2,
+   "lines": 102,
+   "total_lines": 2145,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
-    "GET /rnd/formulas",
-    "PATCH /rnd/formulas/${selectedFormula.id}/lock-production",
     "POST /rnd/formulas",
     "GET /rnd/formulas/${id}",
     "GET /rnd/samples/${formula?.sampleRequestId}/versions",
@@ -5320,7 +5310,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -5390,8 +5380,8 @@
    "file": "frontend/src/app/(dashboard)/samples/input/page.tsx",
    "segment": "input",
    "lines": 813,
-   "total_lines": 813,
-   "call_files": 1,
+   "total_lines": 2335,
+   "call_files": 12,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -5462,9 +5452,9 @@
    "route": "/samples/npf",
    "file": "frontend/src/app/(dashboard)/samples/npf/page.tsx",
    "segment": "npf",
-   "lines": 716,
-   "total_lines": 716,
-   "call_files": 1,
+   "lines": 141,
+   "total_lines": 1070,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -5474,10 +5464,10 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
-   "deadlines": 8
+   "deadlines": 0
   },
   {
    "route": "/samples/omni-crm",
@@ -5501,8 +5491,8 @@
    "file": "frontend/src/app/(dashboard)/samples/project-control/checklist-tracking/page.tsx",
    "segment": "checklist-tracking",
    "lines": 901,
-   "total_lines": 901,
-   "call_files": 1,
+   "total_lines": 1958,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -5523,8 +5513,8 @@
    "file": "frontend/src/app/(dashboard)/samples/project-control/page.tsx",
    "segment": "project-control",
    "lines": 581,
-   "total_lines": 1808,
-   "call_files": 3,
+   "total_lines": 3682,
+   "call_files": 21,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -5569,9 +5559,9 @@
    "route": "/samples/project-monitoring",
    "file": "frontend/src/app/(dashboard)/samples/project-monitoring/page.tsx",
    "segment": "project-monitoring",
-   "lines": 606,
-   "total_lines": 606,
-   "call_files": 1,
+   "lines": 616,
+   "total_lines": 1361,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -5618,9 +5608,9 @@
    "route": "/samples/repository",
    "file": "frontend/src/app/(dashboard)/samples/repository/page.tsx",
    "segment": "repository",
-   "lines": 346,
-   "total_lines": 346,
-   "call_files": 1,
+   "lines": 104,
+   "total_lines": 829,
+   "call_files": 7,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -5628,7 +5618,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -5637,8 +5627,8 @@
    "route": "/samples/revision-tracker",
    "file": "frontend/src/app/(dashboard)/samples/revision-tracker/page.tsx",
    "segment": "revision-tracker",
-   "lines": 394,
-   "total_lines": 394,
+   "lines": 404,
+   "total_lines": 404,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -5652,23 +5642,6 @@
    "hasModal": true,
    "hasTable": true,
    "hasKpi": true,
-   "expandedRows": false,
-   "deadlines": 0
-  },
-  {
-   "route": "/samples/rnd-dashboard",
-   "file": "frontend/src/app/(dashboard)/samples/rnd-dashboard/page.tsx",
-   "segment": "rnd-dashboard",
-   "lines": 8,
-   "total_lines": 11,
-   "call_files": 2,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [],
-   "headings": [],
-   "hasModal": false,
-   "hasTable": false,
-   "hasKpi": false,
    "expandedRows": false,
    "deadlines": 0
   },
@@ -5695,9 +5668,9 @@
    "route": "/samples/schedule",
    "file": "frontend/src/app/(dashboard)/samples/schedule/page.tsx",
    "segment": "schedule",
-   "lines": 605,
-   "total_lines": 605,
-   "call_files": 1,
+   "lines": 610,
+   "total_lines": 1399,
+   "call_files": 8,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -5790,6 +5763,62 @@
    "hasModal": false,
    "hasTable": true,
    "hasKpi": true,
+   "expandedRows": false,
+   "deadlines": 0
+  },
+  {
+   "route": "/scm/pembelian/create",
+   "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+   "segment": "create",
+   "lines": 8,
+   "total_lines": 8,
+   "call_files": 2,
+   "redirect_to": [
+    "/pembelian/scm-pembelian"
+   ],
+   "delegates": [
+    "frontend/src/app/(dashboard)/pembelian/scm-pembelian/page.tsx"
+   ],
+   "calls": [
+    "GET /scm/purchase-orders",
+    "GET /master/suppliers",
+    "GET /master/warehouses/active",
+    "GET /master/materials",
+    "POST /scm/purchase-orders",
+    "POST /purchase/orders"
+   ],
+   "headings": [],
+   "hasModal": false,
+   "hasTable": false,
+   "hasKpi": false,
+   "expandedRows": false,
+   "deadlines": 0
+  },
+  {
+   "route": "/scm/pembelian",
+   "file": "frontend/src/app/(dashboard)/scm/pembelian/page.tsx",
+   "segment": "pembelian",
+   "lines": 8,
+   "total_lines": 16,
+   "call_files": 3,
+   "redirect_to": [
+    "/pembelian/scm-pembelian"
+   ],
+   "delegates": [
+    "frontend/src/app/(dashboard)/pembelian/scm-pembelian/page.tsx"
+   ],
+   "calls": [
+    "GET /scm/purchase-orders",
+    "GET /master/suppliers",
+    "GET /master/warehouses/active",
+    "GET /master/materials",
+    "POST /scm/purchase-orders",
+    "POST /purchase/orders"
+   ],
+   "headings": [],
+   "hasModal": false,
+   "hasTable": false,
+   "hasKpi": false,
    "expandedRows": false,
    "deadlines": 0
   },
@@ -5949,11 +5978,65 @@
    "deadlines": 0
   },
   {
+   "route": "/user-manage/create",
+   "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+   "segment": "create",
+   "lines": 6,
+   "total_lines": 6,
+   "call_files": 2,
+   "redirect_to": [
+    "/master/personnel"
+   ],
+   "delegates": [
+    "frontend/src/app/(dashboard)/master/personnel/page.tsx"
+   ],
+   "calls": [
+    "GET /users",
+    "GET /roles",
+    "PATCH /users/${editingUser.id}",
+    "POST /users",
+    "DELETE /users/${id}"
+   ],
+   "headings": [],
+   "hasModal": false,
+   "hasTable": false,
+   "hasKpi": false,
+   "expandedRows": false,
+   "deadlines": 0
+  },
+  {
+   "route": "/user-manage",
+   "file": "frontend/src/app/(dashboard)/user-manage/page.tsx",
+   "segment": "user-manage",
+   "lines": 6,
+   "total_lines": 12,
+   "call_files": 3,
+   "redirect_to": [
+    "/master/personnel"
+   ],
+   "delegates": [
+    "frontend/src/app/(dashboard)/master/personnel/page.tsx"
+   ],
+   "calls": [
+    "GET /users",
+    "GET /roles",
+    "PATCH /users/${editingUser.id}",
+    "POST /users",
+    "DELETE /users/${id}"
+   ],
+   "headings": [],
+   "hasModal": false,
+   "hasTable": false,
+   "hasKpi": false,
+   "expandedRows": false,
+   "deadlines": 0
+  },
+  {
    "route": "/visual-dna/golden-reference",
    "file": "frontend/src/app/(dashboard)/visual-dna/golden-reference/page.tsx",
    "segment": "golden-reference",
-   "lines": 1356,
-   "total_lines": 1356,
+   "lines": 1600,
+   "total_lines": 1600,
    "call_files": 1,
    "redirect_to": [],
    "delegates": [],
@@ -5964,7 +6047,6 @@
    ],
    "headings": [
     "Simulasi Lebar Tabel: 6, 7, 8, 9, 10, &amp; 11 Kolom",
-    "Inspeksi Work Order Produksi",
     "Buat Work Order Baru",
     "Ubah Data WO"
    ],
@@ -5979,7 +6061,7 @@
    "file": "frontend/src/app/(dashboard)/visual-dna/page.tsx",
    "segment": "visual-dna",
    "lines": 1017,
-   "total_lines": 2373,
+   "total_lines": 2617,
    "call_files": 2,
    "redirect_to": [],
    "delegates": [],
@@ -6011,23 +6093,23 @@
    "route": "/warehouse/adjustment",
    "file": "frontend/src/app/(dashboard)/warehouse/adjustment/page.tsx",
    "segment": "adjustment",
-   "lines": 641,
-   "total_lines": 887,
-   "call_files": 2,
+   "lines": 128,
+   "total_lines": 1867,
+   "call_files": 10,
    "redirect_to": [],
    "delegates": [],
    "calls": [
-    "GET /warehouse/catalog",
     "GET /warehouse/adjustments",
-    "POST /warehouse/adjustments/${adjId}/approve",
-    "POST /warehouse/adjustments/${adjId}/reject",
     "GET /finance/accounts",
     "POST /warehouse/adjustments",
-    "POST /warehouse/adjustments/${id}/approve"
+    "POST /warehouse/adjustments/${id}/approve",
+    "GET /warehouse/catalog",
+    "POST /warehouse/adjustments/${adjId}/approve",
+    "POST /warehouse/adjustments/${adjId}/reject"
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -6036,9 +6118,9 @@
    "route": "/warehouse/gudang",
    "file": "frontend/src/app/(dashboard)/warehouse/gudang/page.tsx",
    "segment": "gudang",
-   "lines": 981,
-   "total_lines": 981,
-   "call_files": 1,
+   "lines": 154,
+   "total_lines": 1540,
+   "call_files": 12,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -6049,29 +6131,8 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
-   "expandedRows": false,
-   "deadlines": 0
-  },
-  {
-   "route": "/warehouse/hub",
-   "file": "frontend/src/app/(dashboard)/warehouse/hub/page.tsx",
-   "segment": "hub",
-   "lines": 564,
-   "total_lines": 613,
-   "call_files": 2,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /warehouse/stats",
-    "GET /warehouse/catalog",
-    "GET /warehouse/history/${selectedItem.id}"
-   ],
-   "headings": [],
-   "hasModal": false,
-   "hasTable": true,
-   "hasKpi": false,
    "expandedRows": false,
    "deadlines": 0
   },
@@ -6079,9 +6140,9 @@
    "route": "/warehouse/inbound",
    "file": "frontend/src/app/(dashboard)/warehouse/inbound/page.tsx",
    "segment": "inbound",
-   "lines": 765,
-   "total_lines": 765,
-   "call_files": 1,
+   "lines": 158,
+   "total_lines": 1613,
+   "call_files": 10,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -6089,25 +6150,6 @@
     "GET /purchase/orders",
     "GET /warehouse/catalog",
     "POST /warehouse/inbounds"
-   ],
-   "headings": [],
-   "hasModal": true,
-   "hasTable": true,
-   "hasKpi": true,
-   "expandedRows": false,
-   "deadlines": 0
-  },
-  {
-   "route": "/warehouse/map",
-   "file": "frontend/src/app/(dashboard)/warehouse/map/page.tsx",
-   "segment": "map",
-   "lines": 334,
-   "total_lines": 334,
-   "call_files": 1,
-   "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /warehouse/locations"
    ],
    "headings": [],
    "hasModal": true,
@@ -6120,9 +6162,9 @@
    "route": "/warehouse/mutasi-stok",
    "file": "frontend/src/app/(dashboard)/warehouse/mutasi-stok/page.tsx",
    "segment": "mutasi-stok",
-   "lines": 406,
-   "total_lines": 406,
-   "call_files": 1,
+   "lines": 99,
+   "total_lines": 786,
+   "call_files": 7,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -6130,7 +6172,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -6139,9 +6181,9 @@
    "route": "/warehouse/opname",
    "file": "frontend/src/app/(dashboard)/warehouse/opname/page.tsx",
    "segment": "opname",
-   "lines": 638,
-   "total_lines": 638,
-   "call_files": 1,
+   "lines": 123,
+   "total_lines": 1112,
+   "call_files": 9,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -6152,7 +6194,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -6162,8 +6204,8 @@
    "file": "frontend/src/app/(dashboard)/warehouse/page.tsx",
    "segment": "warehouse",
    "lines": 27,
-   "total_lines": 8892,
-   "call_files": 22,
+   "total_lines": 14721,
+   "call_files": 98,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -6180,22 +6222,17 @@
     "POST /warehouse/transfers",
     "POST /warehouse/opname/${id}/approve-pin",
     "POST /warehouse/batches/${data.batchId}/status",
-    "POST /warehouse/transfers/${id}/execute",
     "GET /warehouse/catalog",
+    "POST /warehouse/release/${woNumber}",
     "GET /fulfillment/shipments",
     "GET /commercial/sales-orders",
-    "PATCH /fulfillment/shipments/${orderId}/status",
-    "POST /warehouse/release/${woNumber}",
-    "POST /warehouse/transfers/${trfId}/execute",
     "GET /warehouse/warehouses",
     "POST /warehouse/opname/${id}/approve",
     "GET /warehouse/transactions",
-    "GET /warehouse/locations",
     "GET /warehouse/inbounds",
     "GET /purchase/orders",
     "POST /warehouse/inbounds",
-    "GET /warehouse/stats",
-    "GET /warehouse/history/${selectedItem.id}",
+    "GET /warehouse/locations",
     "GET /master/categories",
     "POST /master/warehouses",
     "GET /warehouse/adjustments",
@@ -6216,21 +6253,19 @@
    "route": "/warehouse/pindah-gudang",
    "file": "frontend/src/app/(dashboard)/warehouse/pindah-gudang/page.tsx",
    "segment": "pindah-gudang",
-   "lines": 749,
-   "total_lines": 749,
-   "call_files": 1,
+   "lines": 165,
+   "total_lines": 1966,
+   "call_files": 11,
    "redirect_to": [],
    "delegates": [],
    "calls": [
     "GET /warehouse/transfers",
     "GET /master/warehouses",
-    "GET /warehouse/catalog",
-    "POST /warehouse/transfers/${trfId}/execute",
-    "POST /warehouse/transfers"
+    "GET /warehouse/catalog"
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -6239,21 +6274,20 @@
    "route": "/warehouse/release",
    "file": "frontend/src/app/(dashboard)/warehouse/release/page.tsx",
    "segment": "release",
-   "lines": 645,
-   "total_lines": 932,
-   "call_files": 2,
+   "lines": 224,
+   "total_lines": 1996,
+   "call_files": 11,
    "redirect_to": [],
    "delegates": [],
    "calls": [
-    "GET /fulfillment/shipments",
-    "GET /commercial/sales-orders",
-    "PATCH /fulfillment/shipments/${orderId}/status",
     "GET /warehouse/release-requests",
-    "POST /warehouse/release/${woNumber}"
+    "POST /warehouse/release/${woNumber}",
+    "GET /fulfillment/shipments",
+    "GET /commercial/sales-orders"
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -6262,9 +6296,9 @@
    "route": "/warehouse/stok",
    "file": "frontend/src/app/(dashboard)/warehouse/stok/page.tsx",
    "segment": "stok",
-   "lines": 422,
-   "total_lines": 422,
-   "call_files": 1,
+   "lines": 98,
+   "total_lines": 904,
+   "call_files": 7,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -6272,7 +6306,7 @@
    ],
    "headings": [],
    "hasModal": true,
-   "hasTable": true,
+   "hasTable": false,
    "hasKpi": true,
    "expandedRows": false,
    "deadlines": 0
@@ -6281,23 +6315,17 @@
    "route": "/warehouse/transfers",
    "file": "frontend/src/app/(dashboard)/warehouse/transfers/page.tsx",
    "segment": "transfers",
-   "lines": 459,
-   "total_lines": 459,
-   "call_files": 1,
+   "lines": 9,
+   "total_lines": 174,
+   "call_files": 2,
    "redirect_to": [],
-   "delegates": [],
-   "calls": [
-    "GET /warehouse/transfers",
-    "GET /master/warehouses",
-    "GET /master/materials",
-    "POST /warehouse/transfers",
-    "POST /warehouse/transfers/${id}/execute"
+   "delegates": [
+    "frontend/src/app/(dashboard)/warehouse/pindah-gudang/page.tsx"
    ],
-   "headings": [
-    "📑 III. TRANSFER REGISTRY"
-   ],
-   "hasModal": true,
-   "hasTable": true,
+   "calls": [],
+   "headings": [],
+   "hasModal": false,
+   "hasTable": false,
    "hasKpi": false,
    "expandedRows": false,
    "deadlines": 0
@@ -6307,8 +6335,8 @@
    "file": "frontend/src/app/(dashboard)/warehouse/workstation/page.tsx",
    "segment": "workstation",
    "lines": 691,
-   "total_lines": 691,
-   "call_files": 1,
+   "total_lines": 1913,
+   "call_files": 13,
    "redirect_to": [],
    "delegates": [],
    "calls": [
@@ -6355,7 +6383,7 @@
     {
      "route": "/penjualan/guest-book",
      "file": "frontend/src/app/(dashboard)/penjualan/guest-book/page.tsx",
-     "lines": 547,
+     "lines": 854,
      "calls": [
       "GET /guests",
       "POST /guests"
@@ -6549,7 +6577,7 @@
     {
      "route": "/warehouse/gudang",
      "file": "frontend/src/app/(dashboard)/warehouse/gudang/page.tsx",
-     "lines": 981,
+     "lines": 154,
      "calls": [
       "GET /master/warehouses",
       "GET /warehouse/locations",
@@ -6557,7 +6585,7 @@
       "POST /master/warehouses"
      ],
      "hasModal": true,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
@@ -6604,7 +6632,7 @@
     {
      "route": "/production/schedule",
      "file": "frontend/src/app/(dashboard)/production/schedule/page.tsx",
-     "lines": 696,
+     "lines": 146,
      "calls": [
       "GET /production/schedules",
       "GET /production/machines",
@@ -6612,7 +6640,7 @@
       "POST /production/schedules"
      ],
      "hasModal": true,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
@@ -6752,24 +6780,35 @@
     {
      "route": "/penjualan/sales-orders",
      "file": "frontend/src/app/(dashboard)/penjualan/sales-orders/page.tsx",
-     "lines": 902,
+     "lines": 515,
      "calls": [
       "GET /commercial/sales-orders",
-      "GET /customers",
+      "GET /bussdev/leads",
       "POST /commercial/sales-orders/${id}/delivery-gate",
       "POST /commercial/sales-orders"
      ],
      "hasModal": true,
      "hasTable": true,
      "hasKpi": true,
-     "deadlines": 53,
+     "deadlines": 12,
      "expandedRows": false
     },
     {
      "route": "/penjualan/sales-target",
      "file": "frontend/src/app/(dashboard)/penjualan/sales-target/page.tsx",
-     "lines": 548,
-     "calls": [],
+     "lines": 888,
+     "calls": [
+      "GET /master/sales-targets/users",
+      "GET /master/sales-targets",
+      "GET /master/sales-categories",
+      "PUT /master/sales-targets/${editingTarget.id}",
+      "POST /master/sales-targets",
+      "DELETE /master/sales-targets/${id}",
+      "PUT /master/sales-categories/${editingCategory.id}",
+      "POST /master/sales-categories",
+      "DELETE /master/sales-categories/${id}",
+      "POST /master/sales-categories/seed"
+     ],
      "hasModal": true,
      "hasTable": true,
      "hasKpi": true,
@@ -6779,13 +6818,14 @@
     {
      "route": "/penjualan/sample-sales",
      "file": "frontend/src/app/(dashboard)/penjualan/sample-sales/page.tsx",
-     "lines": 644,
+     "lines": 100,
      "calls": [
       "GET /bussdev/samples",
-      "POST /bussdev/samples"
+      "POST /bussdev/samples",
+      "PATCH /bussdev/sample/${sampleId}/feedback"
      ],
      "hasModal": true,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
@@ -6813,13 +6853,14 @@
     {
      "route": "/penjualan/sample-sales",
      "file": "frontend/src/app/(dashboard)/penjualan/sample-sales/page.tsx",
-     "lines": 644,
+     "lines": 100,
      "calls": [
       "GET /bussdev/samples",
-      "POST /bussdev/samples"
+      "POST /bussdev/samples",
+      "PATCH /bussdev/sample/${sampleId}/feedback"
      ],
      "hasModal": true,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
@@ -6854,24 +6895,28 @@
       "GET /production/micro-flow",
       "GET /production/batch-audit",
       "GET /production/active",
-      "GET /production/batch-records",
-      "GET /production/batch-records/${activeBatchNo}/detail",
+      "GET /production/work-orders",
+      "POST /production/work-orders",
       "GET /production/schedules?stage=PACKING",
       "GET /production/schedules?stage=MIXING",
       "GET /production/schedules?stage=FILLING",
       "GET /production/schedules",
       "GET /production/machines",
-      "GET /production/work-orders",
       "POST /production/schedules",
       "GET /dashboards/production",
       "GET /commercial/sales-orders",
       "GET /production-plans",
       "POST /production-plans",
       "POST /production-plans/log-step",
+      "PATCH /production/schedules/${item.id}/status",
+      "POST /production/schedules/${produceModalItem.id}/result",
       "POST /production/${data.id}/submit-log",
       "GET /my-dashboard/stats",
       "GET /production/work-orders?mine=true",
       "GET /production/requisitions",
+      "POST /production/requisitions",
+      "GET /production/batch-records",
+      "POST /production/batch-records",
       "GET /production/step-logs"
      ],
      "hasModal": false,
@@ -6915,8 +6960,7 @@
       "POST /scm/purchase-requests/${id}/approve",
       "POST /scm/purchase-requests/${id}/reject",
       "GET /scm/purchase-invoices",
-      "POST /scm/purchase-payments",
-      "POST /scm/purchase-orders/${poId}/down-payment"
+      "POST /scm/purchase-payments"
      ],
      "hasModal": true,
      "hasTable": true,
@@ -7097,6 +7141,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -7758,6 +7837,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -8383,6 +8497,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -9029,6 +9178,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -9643,7 +9827,7 @@
     {
      "route": "/warehouse/gudang",
      "file": "frontend/src/app/(dashboard)/warehouse/gudang/page.tsx",
-     "lines": 981,
+     "lines": 154,
      "calls": [
       "GET /master/warehouses",
       "GET /warehouse/locations",
@@ -9651,7 +9835,7 @@
       "POST /master/warehouses"
      ],
      "hasModal": true,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
@@ -9690,6 +9874,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -10316,6 +10535,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -10962,6 +11216,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -11587,6 +11876,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -12214,6 +12538,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -12805,11 +13164,29 @@
    "view_detail": "Modal Detail via AJAX (ajaxDetail('1','modal-md');)",
    "actions": "Buat, Lihat, Sunting, Hapus",
    "notes": "\"\"",
-   "fe": [],
-   "match_confidence": "NONE",
-   "match_score": 0,
+   "fe": [
+    {
+     "route": "/role-manage",
+     "file": "frontend/src/app/(dashboard)/role-manage/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    }
+   ],
+   "match_confidence": "EXACT",
+   "match_score": 1,
    "contract": [],
-   "verdict": "NO_PAGE"
+   "verdict": "PAGE_NO_CONTRACT"
   },
   {
    "area": "Master",
@@ -12839,6 +13216,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -13431,11 +13843,29 @@
    "view_detail": "Modal Detail via AJAX (ajaxDetail('1','modal-lg');)",
    "actions": "Pengguna Tidak Aktif, Buat, Lihat, Sunting, Nonaktifkan",
    "notes": "\"\"",
-   "fe": [],
-   "match_confidence": "NONE",
-   "match_score": 0,
+   "fe": [
+    {
+     "route": "/user-manage",
+     "file": "frontend/src/app/(dashboard)/user-manage/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    }
+   ],
+   "match_confidence": "EXACT",
+   "match_score": 1,
    "contract": [],
-   "verdict": "NO_PAGE"
+   "verdict": "PAGE_NO_CONTRACT"
   },
   {
    "area": "Master",
@@ -13465,6 +13895,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -14057,11 +14522,34 @@
    "view_detail": "[Detail Kategori Penjualan] • Field: Nama Kategori, Deskripsi • Tabel Detail: (#, Urutan, Nama Timeline, Periode, Total) • Aksi Modal: Produk Baru, Tutup",
    "actions": "Buat, Lihat, Timeline, Sunting, Hapus, Modal Produk Baru, Modal Tutup",
    "notes": "\"\"",
-   "fe": [],
-   "match_confidence": "NONE",
-   "match_score": 0,
+   "fe": [
+    {
+     "route": "/master/sales-category",
+     "file": "frontend/src/app/(dashboard)/master/sales-category/page.tsx",
+     "lines": 19,
+     "calls": [
+      "GET /master/sales-targets/users",
+      "GET /master/sales-targets",
+      "GET /master/sales-categories",
+      "PUT /master/sales-targets/${editingTarget.id}",
+      "POST /master/sales-targets",
+      "DELETE /master/sales-targets/${id}",
+      "PUT /master/sales-categories/${editingCategory.id}",
+      "POST /master/sales-categories",
+      "DELETE /master/sales-categories/${id}",
+      "POST /master/sales-categories/seed"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    }
+   ],
+   "match_confidence": "EXACT",
+   "match_score": 1,
    "contract": [],
-   "verdict": "NO_PAGE"
+   "verdict": "PAGE_NO_CONTRACT"
   },
   {
    "area": "Master",
@@ -14091,6 +14579,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -14687,8 +15210,19 @@
     {
      "route": "/penjualan/sales-target",
      "file": "frontend/src/app/(dashboard)/penjualan/sales-target/page.tsx",
-     "lines": 548,
-     "calls": [],
+     "lines": 888,
+     "calls": [
+      "GET /master/sales-targets/users",
+      "GET /master/sales-targets",
+      "GET /master/sales-categories",
+      "PUT /master/sales-targets/${editingTarget.id}",
+      "POST /master/sales-targets",
+      "DELETE /master/sales-targets/${id}",
+      "PUT /master/sales-categories/${editingCategory.id}",
+      "POST /master/sales-categories",
+      "DELETE /master/sales-categories/${id}",
+      "POST /master/sales-categories/seed"
+     ],
      "hasModal": true,
      "hasTable": true,
      "hasKpi": true,
@@ -14729,6 +15263,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -15356,6 +15925,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -15982,6 +16586,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -16577,13 +17216,13 @@
     {
      "route": "/approvals/purchase-approval",
      "file": "frontend/src/app/(dashboard)/approvals/purchase-approval/page.tsx",
-     "lines": 359,
+     "lines": 108,
      "calls": [
       "GET /scm/purchase-orders"
      ],
      "hasModal": true,
-     "hasTable": true,
-     "hasKpi": false,
+     "hasTable": false,
+     "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
     }
@@ -16610,24 +17249,35 @@
     {
      "route": "/penjualan/sales-orders",
      "file": "frontend/src/app/(dashboard)/penjualan/sales-orders/page.tsx",
-     "lines": 902,
+     "lines": 515,
      "calls": [
       "GET /commercial/sales-orders",
-      "GET /customers",
+      "GET /bussdev/leads",
       "POST /commercial/sales-orders/${id}/delivery-gate",
       "POST /commercial/sales-orders"
      ],
      "hasModal": true,
      "hasTable": true,
      "hasKpi": true,
-     "deadlines": 53,
+     "deadlines": 12,
      "expandedRows": false
     },
     {
      "route": "/penjualan/sales-target",
      "file": "frontend/src/app/(dashboard)/penjualan/sales-target/page.tsx",
-     "lines": 548,
-     "calls": [],
+     "lines": 888,
+     "calls": [
+      "GET /master/sales-targets/users",
+      "GET /master/sales-targets",
+      "GET /master/sales-categories",
+      "PUT /master/sales-targets/${editingTarget.id}",
+      "POST /master/sales-targets",
+      "DELETE /master/sales-targets/${id}",
+      "PUT /master/sales-categories/${editingCategory.id}",
+      "POST /master/sales-categories",
+      "DELETE /master/sales-categories/${id}",
+      "POST /master/sales-categories/seed"
+     ],
      "hasModal": true,
      "hasTable": true,
      "hasKpi": true,
@@ -16637,13 +17287,14 @@
     {
      "route": "/penjualan/sample-sales",
      "file": "frontend/src/app/(dashboard)/penjualan/sample-sales/page.tsx",
-     "lines": 644,
+     "lines": 100,
      "calls": [
       "GET /bussdev/samples",
-      "POST /bussdev/samples"
+      "POST /bussdev/samples",
+      "PATCH /bussdev/sample/${sampleId}/feedback"
      ],
      "hasModal": true,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
@@ -16671,13 +17322,14 @@
     {
      "route": "/penjualan/sample-sales",
      "file": "frontend/src/app/(dashboard)/penjualan/sample-sales/page.tsx",
-     "lines": 644,
+     "lines": 100,
      "calls": [
       "GET /bussdev/samples",
-      "POST /bussdev/samples"
+      "POST /bussdev/samples",
+      "PATCH /bussdev/sample/${sampleId}/feedback"
      ],
      "hasModal": true,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
@@ -16910,6 +17562,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -17506,14 +18193,14 @@
     {
      "route": "/quality/checklist-progress",
      "file": "frontend/src/app/(dashboard)/quality/checklist-progress/page.tsx",
-     "lines": 290,
+     "lines": 97,
      "calls": [
       "GET /qc/checklists"
      ],
      "hasModal": false,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
-     "deadlines": 7,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -17539,14 +18226,16 @@
     {
      "route": "/quality/checklist-tracking",
      "file": "frontend/src/app/(dashboard)/quality/checklist-tracking/page.tsx",
-     "lines": 484,
+     "lines": 354,
      "calls": [
+      "GET /qc/checklists/project-tracking",
+      "PATCH /qc/checklists/${projectId}/milestones/${milestoneId}",
       "GET /qc/checklists/completed"
      ],
-     "hasModal": true,
-     "hasTable": true,
+     "hasModal": false,
+     "hasTable": false,
      "hasKpi": true,
-     "deadlines": 0,
+     "deadlines": 1,
      "expandedRows": false
     },
     {
@@ -17649,6 +18338,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -18302,7 +19026,7 @@
     {
      "route": "/finance/bank-reconciliation",
      "file": "frontend/src/app/(dashboard)/finance/bank-reconciliation/page.tsx",
-     "lines": 493,
+     "lines": 149,
      "calls": [
       "GET /finance/bank-accounts",
       "GET /finance/bank-transactions",
@@ -18312,7 +19036,7 @@
       "POST /finance/journals"
      ],
      "hasModal": true,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
@@ -18340,7 +19064,7 @@
     {
      "route": "/finance/client-escrow",
      "file": "frontend/src/app/(dashboard)/finance/client-escrow/page.tsx",
-     "lines": 352,
+     "lines": 364,
      "calls": [
       "GET /finance/client-escrows"
      ],
@@ -18422,6 +19146,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -19064,6 +19823,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -19704,6 +20498,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -20350,6 +21179,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -20975,6 +21839,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -21661,7 +22560,7 @@
     {
      "route": "/penjualan/guest-book",
      "file": "frontend/src/app/(dashboard)/penjualan/guest-book/page.tsx",
-     "lines": 547,
+     "lines": 854,
      "calls": [
       "GET /guests",
       "POST /guests"
@@ -21747,6 +22646,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -22450,6 +23384,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -23115,6 +24084,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -23708,15 +24712,15 @@
    "notes": "Saat Faktur Pembelian dibuat untuk vendor dengan DP outstanding, sistem notifikasi untuk potong/apply DP ke invoice | Poin 9: Urutan card & tab selaras dengan Bayar Pembelian lalu DP Pembelian",
    "fe": [
     {
-     "route": "/pembelian/purchasing/down-payment",
-     "file": "frontend/src/app/(dashboard)/pembelian/purchasing/down-payment/page.tsx",
-     "lines": 459,
+     "route": "/pembelian/dp-pembelian",
+     "file": "frontend/src/app/(dashboard)/pembelian/dp-pembelian/page.tsx",
+     "lines": 697,
      "calls": [
-      "GET /scm/purchase-invoices",
+      "GET /purchase/down-payments",
       "GET /scm/purchase-orders",
-      "POST /scm/purchase-orders/${poId}/down-payment"
+      "POST /purchase/down-payments"
      ],
-     "hasModal": false,
+     "hasModal": true,
      "hasTable": true,
      "hasKpi": true,
      "deadlines": 0,
@@ -23724,7 +24728,7 @@
     }
    ],
    "match_confidence": "FUZZY",
-   "match_score": 0.5,
+   "match_score": 0.4,
    "contract": [],
    "verdict": "NAME_DIFFERS"
   },
@@ -23756,6 +24760,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -24352,15 +25391,16 @@
     {
      "route": "/pembelian/faktur-pembelian",
      "file": "frontend/src/app/(dashboard)/pembelian/faktur-pembelian/page.tsx",
-     "lines": 997,
+     "lines": 107,
      "calls": [
       "GET /purchase/invoices",
-      "GET /master/suppliers",
+      "GET /purchase/goods-receipts",
       "POST /purchase/invoices",
-      "POST /purchase/invoices/import"
+      "POST /purchase/invoices/import",
+      "PATCH /purchase/invoices/${id}/reason"
      ],
      "hasModal": true,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
@@ -24388,14 +25428,14 @@
     {
      "route": "/pembelian/bayar-pembelian",
      "file": "frontend/src/app/(dashboard)/pembelian/bayar-pembelian/page.tsx",
-     "lines": 594,
+     "lines": 93,
      "calls": [
       "GET /purchase/invoices",
       "GET /finance/bank-accounts",
       "POST /purchase/payments"
      ],
      "hasModal": true,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
@@ -24423,7 +25463,7 @@
     {
      "route": "/approvals/purchase-return",
      "file": "frontend/src/app/(dashboard)/approvals/purchase-return/page.tsx",
-     "lines": 300,
+     "lines": 295,
      "calls": [
       "GET /scm/purchase-returns",
       "POST /scm/purchase-returns/${id}/approve"
@@ -24468,6 +25508,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -25075,6 +26150,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -25718,6 +26828,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -26346,7 +27491,7 @@
     {
      "route": "/approvals/sales",
      "file": "frontend/src/app/(dashboard)/approvals/sales/page.tsx",
-     "lines": 303,
+     "lines": 298,
      "calls": [
       "GET /commercial/sales-orders"
      ],
@@ -26420,14 +27565,14 @@
     {
      "route": "/penjualan/down-payment",
      "file": "frontend/src/app/(dashboard)/penjualan/down-payment/page.tsx",
-     "lines": 590,
+     "lines": 161,
      "calls": [
       "GET /commercial/down-payments",
       "GET /commercial/sales-orders",
       "POST /commercial/down-payments"
      ],
      "hasModal": true,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
@@ -26466,6 +27611,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -27062,15 +28242,13 @@
     {
      "route": "/penjualan/faktur-penjualan",
      "file": "frontend/src/app/(dashboard)/penjualan/faktur-penjualan/page.tsx",
-     "lines": 825,
+     "lines": 93,
      "calls": [
       "GET /commercial/invoices",
-      "GET /commercial/sales-orders",
-      "POST /commercial/invoices/${invoiceId}/release-delivery",
-      "POST /commercial/invoices"
+      "POST /commercial/invoices/${invoiceId}/release-delivery"
      ],
      "hasModal": true,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
@@ -27117,7 +28295,7 @@
     {
      "route": "/approvals/sales-return",
      "file": "frontend/src/app/(dashboard)/approvals/sales-return/page.tsx",
-     "lines": 312,
+     "lines": 301,
      "calls": [
       "GET /bussdev/returns"
      ],
@@ -27161,6 +28339,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -27757,7 +28970,7 @@
     {
      "route": "/approvals/sales-sample",
      "file": "frontend/src/app/(dashboard)/approvals/sales-sample/page.tsx",
-     "lines": 297,
+     "lines": 290,
      "calls": [
       "GET /rnd/samples",
       "PATCH /rnd/sample/${id}/advance",
@@ -27792,7 +29005,7 @@
     {
      "route": "/penjualan/sample-fee",
      "file": "frontend/src/app/(dashboard)/penjualan/sample-fee/page.tsx",
-     "lines": 438,
+     "lines": 444,
      "calls": [
       "GET /finance/sample-fees",
       "POST /finance/sample-fees"
@@ -27806,13 +29019,14 @@
     {
      "route": "/penjualan/sample-sales",
      "file": "frontend/src/app/(dashboard)/penjualan/sample-sales/page.tsx",
-     "lines": 644,
+     "lines": 100,
      "calls": [
       "GET /bussdev/samples",
-      "POST /bussdev/samples"
+      "POST /bussdev/samples",
+      "PATCH /bussdev/sample/${sampleId}/feedback"
      ],
      "hasModal": true,
-     "hasTable": true,
+     "hasTable": false,
      "hasKpi": true,
      "deadlines": 0,
      "expandedRows": false
@@ -27851,6 +29065,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -28459,6 +29708,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -28571,6 +29855,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -29167,7 +30486,7 @@
     {
      "route": "/approvals/goods-request",
      "file": "frontend/src/app/(dashboard)/approvals/goods-request/page.tsx",
-     "lines": 241,
+     "lines": 231,
      "calls": [
       "GET /scm/goods-requirements"
      ],
@@ -29211,6 +30530,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -29807,7 +31161,7 @@
     {
      "route": "/approvals/purchase-request",
      "file": "frontend/src/app/(dashboard)/approvals/purchase-request/page.tsx",
-     "lines": 321,
+     "lines": 314,
      "calls": [
       "GET /purchase/requests",
       "POST /purchase/requests/${id}/approve"
@@ -29852,6 +31206,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -30479,6 +31868,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -31104,6 +32528,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -31757,7 +33216,7 @@
     {
      "route": "/approvals/request-cogs",
      "file": "frontend/src/app/(dashboard)/approvals/request-cogs/page.tsx",
-     "lines": 294,
+     "lines": 283,
      "calls": [
       "GET /finance/job-order-costings",
       "POST /finance/job-order-costings/${id}/close",
@@ -31834,6 +33293,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -32475,6 +33969,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -33114,6 +34643,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -33755,6 +35319,41 @@
      "hasKpi": false,
      "deadlines": 1,
      "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
     }
    ],
    "match_confidence": "EXACT",
@@ -34350,7 +35949,7 @@
     {
      "route": "/penjualan/job-order-costing",
      "file": "frontend/src/app/(dashboard)/penjualan/job-order-costing/page.tsx",
-     "lines": 334,
+     "lines": 340,
      "calls": [
       "GET /finance/job-order-costings"
      ],
@@ -34383,9 +35982,11 @@
     {
      "route": "/production/filling",
      "file": "frontend/src/app/(dashboard)/production/filling/page.tsx",
-     "lines": 530,
+     "lines": 709,
      "calls": [
-      "GET /production/schedules?stage=FILLING"
+      "GET /production/schedules?stage=FILLING",
+      "PATCH /production/schedules/${item.id}/status",
+      "POST /production/schedules/${produceModalItem.id}/result"
      ],
      "hasModal": true,
      "hasTable": true,
@@ -34416,9 +36017,11 @@
     {
      "route": "/production/mixing",
      "file": "frontend/src/app/(dashboard)/production/mixing/page.tsx",
-     "lines": 516,
+     "lines": 690,
      "calls": [
-      "GET /production/schedules?stage=MIXING"
+      "GET /production/schedules?stage=MIXING",
+      "PATCH /production/schedules/${item.id}/status",
+      "POST /production/schedules/${produceModalItem.id}/result"
      ],
      "hasModal": true,
      "hasTable": true,
@@ -34449,9 +36052,11 @@
     {
      "route": "/production/packaging",
      "file": "frontend/src/app/(dashboard)/production/packaging/page.tsx",
-     "lines": 530,
+     "lines": 709,
      "calls": [
-      "GET /production/schedules?stage=PACKING"
+      "GET /production/schedules?stage=PACKING",
+      "PATCH /production/schedules/${item.id}/status",
+      "POST /production/schedules/${produceModalItem.id}/result"
      ],
      "hasModal": true,
      "hasTable": true,
@@ -34529,6 +36134,41 @@
      "hasTable": false,
      "hasKpi": false,
      "deadlines": 1,
+     "expandedRows": false
+    },
+    {
+     "route": "/scm/pembelian/create",
+     "file": "frontend/src/app/(dashboard)/scm/pembelian/create/page.tsx",
+     "lines": 8,
+     "calls": [
+      "GET /scm/purchase-orders",
+      "GET /master/suppliers",
+      "GET /master/warehouses/active",
+      "GET /master/materials",
+      "POST /scm/purchase-orders",
+      "POST /purchase/orders"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
+     "expandedRows": false
+    },
+    {
+     "route": "/user-manage/create",
+     "file": "frontend/src/app/(dashboard)/user-manage/create/page.tsx",
+     "lines": 6,
+     "calls": [
+      "GET /users",
+      "GET /roles",
+      "PATCH /users/${editingUser.id}",
+      "POST /users",
+      "DELETE /users/${id}"
+     ],
+     "hasModal": false,
+     "hasTable": false,
+     "hasKpi": false,
+     "deadlines": 0,
      "expandedRows": false
     }
    ],
@@ -35698,7 +37338,7 @@
     {
      "route": "/approvals/purchase",
      "file": "frontend/src/app/(dashboard)/approvals/purchase/page.tsx",
-     "lines": 298,
+     "lines": 295,
      "calls": [
       "GET /scm/purchase-orders",
       "POST /scm/purchase-orders/${id}/approve"
@@ -35732,7 +37372,7 @@
     {
      "route": "/rnd/project-monitoring",
      "file": "frontend/src/app/(dashboard)/rnd/project-monitoring/page.tsx",
-     "lines": 550,
+     "lines": 632,
      "calls": [
       "GET /rnd/samples",
       "GET /bussdev/pipeline-v2/leads",
@@ -35741,13 +37381,13 @@
      "hasModal": true,
      "hasTable": true,
      "hasKpi": true,
-     "deadlines": 10,
+     "deadlines": 0,
      "expandedRows": false
     },
     {
      "route": "/samples/project-monitoring",
      "file": "frontend/src/app/(dashboard)/samples/project-monitoring/page.tsx",
-     "lines": 606,
+     "lines": 616,
      "calls": [
       "GET /bussdev/pipeline-v2/leads",
       "GET /rnd/samples",
