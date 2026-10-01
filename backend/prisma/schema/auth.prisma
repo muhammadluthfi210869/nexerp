@@ -11,6 +11,7 @@ model User {
   // only reachable through a join. FK to tenant_scopes, not to an organization
   // table (none exists).
   organizationId          String?                     @db.Uuid
+  isBd                    Boolean?                    @default(false)
   managerPin              String? // Phase 2: Escalation PIN
   approvalPin             String? // Internal E-Signature PIN (APJ/Legal)
   createdAt               DateTime                    @default(now())

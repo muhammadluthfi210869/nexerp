@@ -67,12 +67,12 @@ export function GrnPrintModal({ isOpen, onClose, grn }: GrnPrintModalProps) {
           header: "No",
           align: "center",
           width: "35px",
-          render: (_, i) => i + 1,
+          render: (_: any, i: number) => i + 1,
         },
         {
           key: "item",
           header: "Nama Bahan / Kemasan & Kode",
-          render: (r) => (
+          render: (r: any) => (
             <div>
               <div className="font-bold text-slate-800">{r.itemName}</div>
               <div className="text-[10px] text-slate-500">Kode: {r.itemCode}</div>
@@ -83,7 +83,7 @@ export function GrnPrintModal({ isOpen, onClose, grn }: GrnPrintModalProps) {
           key: "batch",
           header: "No. Bets / Lot",
           width: "120px",
-          render: (r) => (
+          render: (r: any) => (
             <div>
               <div className="font-mono text-xs font-semibold">{r.batchNumber}</div>
               {r.expiryDate && <div className="text-[10px] text-slate-400">Exp: {r.expiryDate}</div>}
@@ -95,14 +95,14 @@ export function GrnPrintModal({ isOpen, onClose, grn }: GrnPrintModalProps) {
           header: "Datang Fisik",
           align: "right",
           width: "90px",
-          render: (r) => `${r.qtyReceived.toLocaleString("id-ID")} ${r.unit}`,
+          render: (r: any) => `${r.qtyReceived.toLocaleString("id-ID")} ${r.unit}`,
         },
         {
           key: "qtyGood",
           header: "Qty Bagus",
           align: "right",
           width: "90px",
-          render: (r) => (
+          render: (r: any) => (
             <span className="font-bold text-emerald-700">
               {r.qtyGood.toLocaleString("id-ID")} {r.unit}
             </span>
@@ -113,7 +113,7 @@ export function GrnPrintModal({ isOpen, onClose, grn }: GrnPrintModalProps) {
           header: "Qty Reject",
           align: "right",
           width: "80px",
-          render: (r) => (
+          render: (r: any) => (
             <span className={r.qtyReject > 0 ? "font-bold text-rose-600" : "text-slate-400"}>
               {r.qtyReject > 0 ? `${r.qtyReject.toLocaleString("id-ID")} ${r.unit}` : "-"}
             </span>
@@ -124,7 +124,7 @@ export function GrnPrintModal({ isOpen, onClose, grn }: GrnPrintModalProps) {
           header: "Qty Free",
           align: "right",
           width: "80px",
-          render: (r) => (
+          render: (r: any) => (
             <span className={r.qtyFree > 0 ? "font-bold text-blue-600" : "text-slate-400"}>
               {r.qtyFree > 0 ? `${r.qtyFree.toLocaleString("id-ID")} ${r.unit}` : "-"}
             </span>

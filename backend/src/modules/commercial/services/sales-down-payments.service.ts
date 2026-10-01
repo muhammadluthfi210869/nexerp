@@ -28,141 +28,146 @@ export class SalesDownPaymentsService {
       );
     }
 
-    const so = await this.prisma.salesOrder.findUnique({
-      where: { id: dto.soId },
-      include: {
-        lead: true,
-        sample: true,
-        invoices: {
-          where: { type: InvoiceType.DP },
-          include: { payments: true },
-        },
-      },
-    });
+    const dpNumber = await this.idGenerator.generateId('DPJ');
 
-    if (!so) {
-      throw new NotFoundException(`Sales Order ${dto.soId} not found`);
-    }
-
-    let sampleFeeOffsetAmount = 0;
-
-    // BUS-RULE-008: Sample Fee Offset ke DP Produksi
-    let matchedSampleFee: any = null;
-
-    if (dto.applySampleFeeOffset) {
-      if (dto.category !== 'PRODUKSI') {
-        throw new BadRequestException(
-          'SAMPLE_FEE_OFFSET_INVALID_CATEGORY: Offset Sample Fee hanya berlaku untuk kategori PRODUKSI.',
-        );
-      }
-
-      // Check if sample fee exists for this customer/lead
-      const sampleFee = await this.prisma.sampleFee.findFirst({
-        where: {
-          OR: [
-            ...(dto.sampleFeeId ? [{ id: dto.sampleFeeId }] : []),
-            { customerId: so.leadId },
-          ],
+    const result = await this.prisma.$transaction(async (tx) => {
+      const so = await tx.salesOrder.findUnique({
+        where: { id: dto.soId },
+        include: {
+          lead: true,
+          sample: true,
+          invoices: {
+            where: { type: InvoiceType.DP },
+            include: { payments: true },
+          },
         },
       });
 
-      if (sampleFee) {
-        if (sampleFee.offsetToDPId) {
+      if (!so) {
+        throw new NotFoundException(`Sales Order ${dto.soId} not found`);
+      }
+
+      let sampleFeeOffsetAmount = 0;
+      let matchedSampleFee: any = null;
+
+      // BUS-RULE-008: Sample Fee Offset ke DP Produksi
+      if (dto.applySampleFeeOffset) {
+        if (dto.category !== 'PRODUKSI') {
           throw new BadRequestException(
-            'SAMPLE_FEE_ALREADY_OFFSET: Sample Fee sudah di-offset ke DP Produksi. Tidak bisa dipakai dua kali.',
+            'SAMPLE_FEE_OFFSET_INVALID_CATEGORY: Offset Sample Fee hanya berlaku untuk kategori PRODUKSI.',
           );
         }
 
-        sampleFeeOffsetAmount = Number(sampleFee.amount || 0);
-        matchedSampleFee = sampleFee;
+        // Check if sample fee exists for this customer or lead ID
+        const candidateCustomerIds = [so.leadId].filter(Boolean) as string[];
+        const sampleFee = await tx.sampleFee.findFirst({
+          where: {
+            OR: [
+              ...(dto.sampleFeeId ? [{ id: dto.sampleFeeId }] : []),
+              { customerId: { in: candidateCustomerIds } },
+            ],
+          },
+        });
 
-        this.logger.log(
-          `[OFFSET] Sample Fee Rp ${sampleFeeOffsetAmount} applied to SO ${so.id}`,
+        if (sampleFee) {
+          if (sampleFee.offsetToDPId) {
+            throw new BadRequestException(
+              'SAMPLE_FEE_ALREADY_OFFSET: Sample Fee sudah di-offset ke DP Produksi. Tidak bisa dipakai dua kali.',
+            );
+          }
+
+          sampleFeeOffsetAmount = Number(sampleFee.amount || 0);
+          matchedSampleFee = sampleFee;
+
+          this.logger.log(
+            `[OFFSET] Sample Fee Rp ${sampleFeeOffsetAmount} applied to SO ${so.id}`,
+          );
+        }
+      }
+
+      const effectiveTotalDp = Number(dto.amount) + sampleFeeOffsetAmount;
+      const minimumRequiredDp = Number(so.totalAmount) * 0.5;
+
+      // BUS-RULE-002: DP Penjualan minimum 50%
+      if (dto.category === 'PRODUKSI' && effectiveTotalDp < minimumRequiredDp) {
+        throw new BadRequestException(
+          `DP_MINIMUM_NOT_MET: DP minimum 50% belum tercapai. Saat ini: Rp ${effectiveTotalDp} dari Rp ${so.totalAmount} (minimum Rp ${minimumRequiredDp}).`,
         );
       }
-    }
 
-    const effectiveTotalDp = Number(dto.amount) + sampleFeeOffsetAmount;
-    const minimumRequiredDp = Number(so.totalAmount) * 0.5;
-
-    // BUS-RULE-002: DP Penjualan minimum 50%
-    if (dto.category === 'PRODUKSI' && effectiveTotalDp < minimumRequiredDp) {
-      throw new BadRequestException(
-        `DP_MINIMUM_NOT_MET: DP minimum 50% belum tercapai. Saat ini: Rp ${effectiveTotalDp} dari Rp ${so.totalAmount} (minimum Rp ${minimumRequiredDp}).`,
-      );
-    }
-
-    const dpNumber = await this.idGenerator.generateId('DPJ');
-
-    // Create Invoice representing the Down Payment
-    const dpInvoice = await this.prisma.invoice.create({
-      data: {
-        invoiceNumber: dpNumber,
-        category: 'RECEIVABLE',
-        soId: so.id,
-        type: InvoiceType.DP,
-        amountDue: effectiveTotalDp,
-        outstandingAmount: 0,
-        status: InvoiceStatus.PAID,
-        dueDate: new Date(),
-      },
-    });
-
-    if (matchedSampleFee) {
-      await this.prisma.sampleFee.update({
-        where: { id: matchedSampleFee.id },
-        data: { offsetToDPId: dpInvoice.id },
-      });
-    }
-
-    // Record Payment
-    const verifierId = user?.id || (await this.prisma.user.findFirst())?.id;
-    if (verifierId) {
-      await this.prisma.payment.create({
+      // Create Invoice representing the Down Payment
+      const dpInvoice = await tx.invoice.create({
         data: {
-          invoiceId: dpInvoice.id,
-          amountPaid: effectiveTotalDp,
-          verifiedBy: verifierId,
-          paymentDate: new Date(),
+          invoiceNumber: dpNumber,
+          category: 'RECEIVABLE',
+          soId: so.id,
+          type: InvoiceType.DP,
+          amountDue: effectiveTotalDp,
+          outstandingAmount: 0,
+          status: InvoiceStatus.PAID,
+          dueDate: new Date(),
         },
       });
-    }
 
-    // Advance SO status to ACTIVE (DP_PAID)
-    const updatedSo = await this.prisma.salesOrder.update({
-      where: { id: so.id },
-      data: {
-        status: SOStatus.ACTIVE,
-      },
+      if (matchedSampleFee) {
+        await tx.sampleFee.update({
+          where: { id: matchedSampleFee.id },
+          data: { offsetToDPId: dpInvoice.id },
+        });
+      }
+
+      // Record Payment
+      const verifierId = user?.id || (await tx.user.findFirst())?.id;
+      if (verifierId) {
+        await tx.payment.create({
+          data: {
+            invoiceId: dpInvoice.id,
+            amountPaid: effectiveTotalDp,
+            verifiedBy: verifierId,
+            paymentDate: new Date(),
+          },
+        });
+      }
+
+      // Advance SO status to ACTIVE (DP_PAID)
+      const updatedSo = await tx.salesOrder.update({
+        where: { id: so.id },
+        data: {
+          status: SOStatus.ACTIVE,
+        },
+      });
+
+      return {
+        id: dpInvoice.id,
+        dpNumber,
+        category: dto.category,
+        amountPaid: dto.amount,
+        sampleFeeOffset: sampleFeeOffsetAmount,
+        totalDpReceived: effectiveTotalDp,
+        soId: so.id,
+        orderNumber: so.orderNumber,
+        salesOrderStatus: updatedSo.status,
+      };
     });
 
     this.logger.log(
-      `[DP RECEIVED] SO ${so.id} activated with DP ${dpNumber} totaling Rp ${effectiveTotalDp}`,
+      `[DP RECEIVED] SO ${result.soId} activated with DP ${dpNumber} totaling Rp ${result.totalDpReceived}`,
     );
 
     this.eventEmitter.emit('sales_down_payment.recorded', {
       dpNumber,
-      soId: so.id,
-      amount: effectiveTotalDp,
+      soId: result.soId,
+      amount: result.totalDpReceived,
       category: dto.category,
-      sampleFeeOffset: sampleFeeOffsetAmount,
+      sampleFeeOffset: result.sampleFeeOffset,
     });
 
     this.eventEmitter.emit('sales_order.activated', {
-      salesOrderId: so.id,
-      orderNumber: so.orderNumber,
+      salesOrderId: result.soId,
+      orderNumber: result.orderNumber,
     });
 
-    return {
-      id: dpInvoice.id,
-      dpNumber,
-      category: dto.category,
-      amountPaid: dto.amount,
-      sampleFeeOffset: sampleFeeOffsetAmount,
-      totalDpReceived: effectiveTotalDp,
-      soId: so.id,
-      salesOrderStatus: updatedSo.status,
-    };
+    return result;
   }
 
   async findAll(query?: { category?: string; soId?: string }) {

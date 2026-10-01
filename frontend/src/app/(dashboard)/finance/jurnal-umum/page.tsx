@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, extractApiError } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   FileSpreadsheet,
@@ -243,7 +243,7 @@ function JurnalUmumContent() {
       });
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Gagal membuat jurnal umum");
+      toast.error("Gagal Posting Jurnal", extractApiError(err) || "Gagal membuat jurnal umum");
     }
   });
 

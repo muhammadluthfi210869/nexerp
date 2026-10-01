@@ -52,7 +52,7 @@ export function SpkPrintModal({ isOpen, onClose, item }: SpkPrintModalProps) {
         { label: "Batas Akhir Selesai", value: item.targetDate },
       ]}
       columns={[
-        { key: "no", header: "No", width: "35px", align: "center", render: (_, i) => i + 1 },
+        { key: "no", header: "No", width: "35px", align: "center", render: (_: any, i: number) => i + 1 },
         { key: "tahap", header: "Tahapan Alur Proses CPKB", align: "left" },
         { key: "mesin", header: "Mesin / Ruangan", width: "130px", align: "left" },
         { key: "parameter", header: "Parameter Kritis & Batas Standar Mutu", align: "left" },

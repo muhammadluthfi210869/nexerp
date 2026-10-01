@@ -12,6 +12,7 @@ export interface DnaDataTableCardProps {
   description?: string;
   count?: number;
   totalItems?: number;
+  itemCount?: number;
   icon?: any;
   badge?: React.ReactNode;
   actions?: React.ReactNode;
@@ -32,6 +33,7 @@ export function DnaDataTableCard({
   description,
   count,
   totalItems,
+  itemCount,
   icon,
   badge,
   actions,
@@ -45,7 +47,7 @@ export function DnaDataTableCard({
   className,
   tableContainerClassName,
 }: DnaDataTableCardProps) {
-  const displayCount = count !== undefined ? count : totalItems;
+  const displayCount = count !== undefined ? count : totalItems !== undefined ? totalItems : itemCount;
 
   return (
     <div

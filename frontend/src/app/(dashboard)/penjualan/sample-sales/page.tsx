@@ -27,7 +27,9 @@ import {
   DnaTableRow,
   DnaTh,
   DnaTd,
+  SalesSamplePrintModal,
 } from "@/components/dna";
+import { Printer } from "lucide-react";
 
 interface SampleOrder {
   id: string;
@@ -75,6 +77,7 @@ function SampleSalesContent() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [detailOrder, setDetailOrder] = useState<SampleOrder | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("action") === "create") {
@@ -392,6 +395,18 @@ function SampleSalesContent() {
                     </DnaTd>
                     <DnaTd className="py-3 px-3 text-right">
                       <div className="flex justify-end gap-1">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setDetailOrder(sample);
+                            setIsPrintModalOpen(true);
+                          }}
+                          className="h-7 w-7 p-0 text-slate-400 hover:text-blue-600"
+                          title="Cetak Sales Sample (SS)"
+                        >
+                          <Printer className="w-3.5 h-3.5 text-blue-600" />
+                        </DnaButton>
                         <DnaButton variant="ghost" size="sm" onClick={() => setDetailOrder(sample)}>
                           Detail
                         </DnaButton>
@@ -422,15 +437,24 @@ function SampleSalesContent() {
         actions={
           detailOrder ? (
             <div className="flex items-center justify-between w-full">
-              <DnaButton
-                variant="primary"
-                onClick={() => {
-                  toast.success("Sample Disetujui", `Sample ${detailOrder.code} berhasil disetujui klien!`);
-                  setDetailOrder(null);
-                }}
-              >
-                Approve Sample
-              </DnaButton>
+              <div className="flex items-center gap-2">
+                <DnaButton
+                  variant="outline"
+                  onClick={() => setIsPrintModalOpen(true)}
+                >
+                  <Printer className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
+                  Cetak Sample (SS)
+                </DnaButton>
+                <DnaButton
+                  variant="primary"
+                  onClick={() => {
+                    toast.success("Sample Disetujui", `Sample ${detailOrder.code} berhasil disetujui klien!`);
+                    setDetailOrder(null);
+                  }}
+                >
+                  Approve Sample
+                </DnaButton>
+              </div>
               <DnaButton variant="secondary" onClick={() => setDetailOrder(null)}>
                 Tutup
               </DnaButton>
@@ -630,6 +654,38 @@ function SampleSalesContent() {
           </div>
         </form>
       </DnaModal>
+
+      {/* Modal Cetak Sales Sample (SS) Standar Dreamlab */}
+      <SalesSamplePrintModal
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        data={
+          detailOrder
+            ? {
+                sampleCode: detailOrder.code,
+                date: detailOrder.createdAt,
+                status: statusLabelMap[detailOrder.status] || detailOrder.status,
+                customerName: detailOrder.customerName,
+                createdBy: "Bussdev Specialist",
+                formulator: detailOrder.formulator || "R&D Chemist",
+                netto: detailOrder.volumeNetto || "30 ml",
+                form: detailOrder.physicalForm || "Liquid / Serum",
+                color: detailOrder.color || "Transparan",
+                flavor: detailOrder.fragrance || "Soft Berry",
+                description: detailOrder.productName,
+                claim: detailOrder.benefitClaims,
+                revision: "R0",
+                products: [
+                  {
+                    name: detailOrder.productName,
+                    qty: detailOrder.qty,
+                    price: detailOrder.unitPrice,
+                  },
+                ],
+              }
+            : null
+        }
+      />
     </div>
   );
 }

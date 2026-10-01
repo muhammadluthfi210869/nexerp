@@ -6,10 +6,20 @@ import { DocumentAutomationController } from './controllers/document-automation.
 import { SystemModule } from '../system/system.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
+import { DocumentDraftGeneratorService } from './services/document-draft-generator.service';
+
 @Module({
   imports: [SystemModule, EventEmitterModule, ScheduleModule.forRoot()],
-  providers: [DocumentAutomationService, PdfEngineService],
+  providers: [
+    DocumentAutomationService,
+    PdfEngineService,
+    DocumentDraftGeneratorService,
+  ],
   controllers: [DocumentAutomationController],
-  exports: [DocumentAutomationService, PdfEngineService],
+  exports: [
+    DocumentAutomationService,
+    PdfEngineService,
+    DocumentDraftGeneratorService,
+  ],
 })
 export class DocumentAutomationModule {}

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class IssueRequisitionDto {
   @IsNumber()
@@ -7,15 +7,39 @@ export class IssueRequisitionDto {
 }
 
 export class CreateRequisitionDto {
+  @IsOptional()
   @IsUUID()
-  @IsNotEmpty()
-  woId!: string;
+  woId?: string;
 
+  @IsOptional()
   @IsUUID()
-  @IsNotEmpty()
-  materialId!: string;
+  workOrderId?: string;
 
+  @IsOptional()
+  @IsString()
+  woNumber?: string;
+
+  @IsOptional()
+  @IsUUID()
+  materialId?: string;
+
+  @IsOptional()
   @IsNumber()
-  @IsNotEmpty()
-  qtyRequested!: number;
+  qtyRequested?: number;
+
+  @IsOptional()
+  @IsNumber()
+  requestedQty?: number;
+
+  @IsOptional()
+  @IsString()
+  reqNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

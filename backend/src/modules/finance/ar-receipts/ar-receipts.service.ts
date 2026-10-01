@@ -136,16 +136,30 @@ export class ARReceiptsService {
       }
 
       // Update bank balance (increment - cash coming in)
+      let bankGlAccountId: string | null = null;
       if (dto.bankAccountId) {
-        await tx.bankAccount.update({
+        const bankAccount = await tx.bankAccount.findUnique({
           where: { id: dto.bankAccountId },
-          data: { currentBalance: { increment: dto.amount } },
         });
+        if (bankAccount) {
+          await tx.bankAccount.update({
+            where: { id: dto.bankAccountId },
+            data: { currentBalance: { increment: dto.amount } },
+          });
+          bankGlAccountId = bankAccount.glAccountId;
+        }
+      }
+
+      if (!bankGlAccountId) {
+        const fallbackAcc = await tx.account.findFirst({
+          where: { code: { in: ['1101', '1102', '1100'] } },
+        });
+        if (fallbackAcc) bankGlAccountId = fallbackAcc.id;
       }
 
       // Journal entry: Dr. Bank / Cr. AR
       const arAcc = await tx.account.findFirst({ where: { code: '1201' } }); // AR Trade Receivables
-      if (arAcc && dto.bankAccountId) {
+      if (arAcc && bankGlAccountId) {
         await tx.journalEntry.create({
           data: {
             date: now,
@@ -154,7 +168,7 @@ export class ARReceiptsService {
             sourceDocumentType: 'PAYMENT' as any,
             lines: {
               create: [
-                { accountId: dto.bankAccountId, debit: dto.amount, credit: 0 },
+                { accountId: bankGlAccountId, debit: dto.amount, credit: 0 },
                 { accountId: arAcc.id, debit: 0, credit: dto.amount },
               ],
             },

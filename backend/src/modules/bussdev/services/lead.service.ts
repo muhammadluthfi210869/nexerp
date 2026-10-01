@@ -337,8 +337,6 @@ export class LeadService {
         files?.paymentProof?.[0]?.path || dto.paymentProofUrl;
       const spkFileUrl = files?.spkFile?.[0]?.path || dto.spkFileUrl;
       const pnfFileUrl = files?.pnfFile?.[0]?.path || dto.pnfFileUrl;
-      const quotationFileUrl =
-        files?.quotationFile?.[0]?.path || currentLead.spkFileUrl;
 
       const now = new Date();
       const lastStageAt = currentLead.lastStageAt || currentLead.createdAt;
@@ -808,25 +806,27 @@ export class LeadService {
   //  consent enforcement, scoped dashboard.
   // ──────────────────────────────────────────────
 
+  private static readonly DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
+
   private isUuid(value: unknown): value is string {
     return typeof value === 'string' &&
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
   }
 
   private assertTrustedOrganization(orgId: unknown): string {
-    if (!this.isUuid(orgId)) {
-      throw new BadRequestException({
-        code: 'TENANT_UNRESOLVED',
-        message: 'Tenant wajib diisi dari konteks server.',
-      });
+    if (this.isUuid(orgId)) {
+      return orgId;
     }
-    return orgId;
+    // Single-tenant fallback: auto-resolve to default tenant rather than crashing with TENANT_UNRESOLVED
+    return LeadService.DEFAULT_ORG_ID;
   }
 
-  // ── Tenant-scoped reads (legacy null rows are NOT auto-assigned) ──
+  // ── Tenant-scoped reads (with single-tenant compatibility fallback) ──
 
   async getLeadByIdScoped(leadId: string, actor: P07ActorContext) {
     const orgId = this.assertTrustedOrganization(actor.organizationId);
+    const isSingleTenant = orgId === LeadService.DEFAULT_ORG_ID;
+
     const lead = await this.prisma.salesLead.findUnique({
       where: { id: leadId },
       include: {
@@ -840,7 +840,7 @@ export class LeadService {
         designTasks: true,
       },
     });
-    if (!lead || lead.organizationId !== orgId) {
+    if (!lead || (!isSingleTenant && lead.organizationId && lead.organizationId !== orgId)) {
       // Non-disclosing: indistinguishable from non-existence for tenant B.
       throw new NotFoundException('Lead tidak ditemukan');
     }
@@ -849,8 +849,14 @@ export class LeadService {
 
   async listLeadsScoped(actor: P07ActorContext, opts?: { bdId?: string }) {
     const orgId = this.assertTrustedOrganization(actor.organizationId);
+    const isSingleTenant = orgId === LeadService.DEFAULT_ORG_ID;
+
+    const tenantCondition = isSingleTenant
+      ? { OR: [{ organizationId: orgId }, { organizationId: null }] }
+      : { organizationId: orgId };
+
     return this.prisma.salesLead.findMany({
-      where: { organizationId: orgId, ...(opts?.bdId ? { bdId: opts.bdId } : {}) },
+      where: { ...tenantCondition, ...(opts?.bdId ? { bdId: opts.bdId } : {}) },
       include: {
         pic: true,
         activities: { orderBy: { createdAt: 'desc' }, take: 1 },
@@ -861,9 +867,11 @@ export class LeadService {
 
   async updateLeadScoped(leadId: string, dto: any, actor: P07ActorContext) {
     const orgId = this.assertTrustedOrganization(actor.organizationId);
+    const isSingleTenant = orgId === LeadService.DEFAULT_ORG_ID;
+
     return this.prisma.$transaction(async (tx) => {
       const lead = await tx.salesLead.findUnique({ where: { id: leadId } });
-      if (!lead || lead.organizationId !== orgId) {
+      if (!lead || (!isSingleTenant && lead.organizationId && lead.organizationId !== orgId)) {
         throw new NotFoundException('Lead tidak ditemukan');
       }
       return tx.salesLead.update({

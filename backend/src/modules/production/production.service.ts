@@ -171,6 +171,10 @@ export class ProductionService {
   }
 
 
+  createRequisition(...args: Parameters<ProductionWorkOrderService['createRequisition']>) {
+    return this.workOrders.createRequisition(...args);
+  }
+
   getAllRequisitions(...args: Parameters<ProductionWorkOrderService['getAllRequisitions']>) {
     return this.workOrders.getAllRequisitions(...args);
   }

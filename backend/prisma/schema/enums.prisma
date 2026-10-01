@@ -535,6 +535,11 @@ enum SourceDocumentType {
   MANUAL
   ADJUSTMENT
   COPQ
+  BATCH_RECORD
+  GOODS_TRANSFER
+  STOCK_OPNAME
+  SALES_SAMPLE
+  REQUEST_COGS
 }
 
 enum PeriodStatus {

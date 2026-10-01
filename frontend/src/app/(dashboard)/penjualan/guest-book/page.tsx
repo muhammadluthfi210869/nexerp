@@ -54,23 +54,48 @@ function GuestBookContent() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [monthFilter, setMonthFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState<GuestBookEntry | null>(null);
 
-  // Form input
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    city: "Jakarta Selatan",
-    company: "",
-    productInterest: "Serum Retinol 30ml",
-    moq: "1000",
-    targetMarket: "Wanita Dewasa",
-    category: "BRANDED" as GuestBookEntry["category"],
-    meetingWith: "Apt. Rina Lestari",
-    busDev: "Irma Safarina",
+  const DRAFT_STORAGE_KEY = "nexerp_guest_book_draft_page";
+
+  // Form input with auto-save draft
+  const [formData, setFormData] = useState(() => {
+    const initial = {
+      name: "",
+      phone: "",
+      city: "Jakarta Selatan",
+      company: "",
+      productInterest: "Serum Retinol 30ml",
+      moq: "1000",
+      targetMarket: "Wanita Dewasa",
+      category: "BRANDED" as GuestBookEntry["category"],
+      meetingWith: "Apt. Rina Lestari",
+      busDev: "Irma Safarina",
+    };
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
+        if (saved) return { ...initial, ...JSON.parse(saved) };
+      } catch {
+        // fallback
+      }
+    }
+    return initial;
   });
+
+  // Sync draft to localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(formData));
+      } catch {
+        // ignore quota errors
+      }
+    }
+  }, [formData]);
 
   const fetchGuests = useCallback(async () => {
     setLoading(true);
@@ -111,6 +136,17 @@ function GuestBookContent() {
     }
   }, [searchParams]);
 
+  const monthOptions = useMemo(() => {
+    const set = new Set<string>();
+    guests.forEach((g) => {
+      if (g.dateTime) {
+        const yyyymm = g.dateTime.slice(0, 7);
+        if (yyyymm) set.add(yyyymm);
+      }
+    });
+    return Array.from(set).sort().reverse();
+  }, [guests]);
+
   const filteredGuests = useMemo(() => {
     return guests.filter((g) => {
       const matchSearch =
@@ -119,9 +155,10 @@ function GuestBookContent() {
         g.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
         g.contact.includes(searchQuery);
       const matchCategory = categoryFilter === "ALL" || g.category === categoryFilter;
-      return matchSearch && matchCategory;
+      const matchMonth = monthFilter === "ALL" || (g.dateTime && g.dateTime.startsWith(monthFilter));
+      return matchSearch && matchCategory && matchMonth;
     });
-  }, [guests, searchQuery, categoryFilter]);
+  }, [guests, searchQuery, categoryFilter, monthFilter]);
 
   const handleSave = async () => {
     if (!formData.name || !formData.phone || !formData.company) {
@@ -157,6 +194,9 @@ function GuestBookContent() {
         meetingWith: "Apt. Rina Lestari",
         busDev: "Irma Safarina",
       });
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+      }
       await fetchGuests();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || err?.message || "Gagal menyimpan buku tamu");

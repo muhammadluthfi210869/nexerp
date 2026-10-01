@@ -45,6 +45,7 @@ This canonical registry maps all active divisions, menu items, routes, and physi
 | DP Pembelian | `/pembelian/dp-pembelian` | `frontend/src/app/(dashboard)/pembelian/dp-pembelian/page.tsx` | Vendor Down Payments |
 | Faktur Pembelian | `/pembelian/faktur-pembelian` | `frontend/src/app/(dashboard)/pembelian/faktur-pembelian/page.tsx` | AP Vendor Bills |
 | Bayar Pembelian | `/pembelian/bayar-pembelian` | `frontend/src/app/(dashboard)/pembelian/bayar-pembelian/page.tsx` | AP Payment Vouchers |
+| Report Penerimaan | `/pembelian/report-penerimaan` | `frontend/src/app/(dashboard)/pembelian/report-penerimaan/page.tsx` | Goods Receipt Report (Bagus, Reject, Free) |
 | Retur Pembelian | `/pembelian/purchase-returns` | `frontend/src/app/(dashboard)/pembelian/purchase-returns/page.tsx` | Debit Notes & Return to Vendor |
 | Kebutuhan Barang (MRP) | `/pembelian/kebutuhan` | `frontend/src/app/(dashboard)/pembelian/kebutuhan/page.tsx` | Material Requirements Planning |
 

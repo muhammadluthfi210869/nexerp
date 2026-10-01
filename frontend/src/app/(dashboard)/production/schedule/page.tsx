@@ -34,7 +34,10 @@ import {
   DnaTableRow,
   DnaTh,
   DnaTd,
+  MixingSchedulePrintModal,
+  PackagingSchedulePrintModal,
 } from "@/components/dna";
+import { Printer } from "lucide-react";
 import Link from "next/link";
 
 interface ProductionScheduleItem {
@@ -95,6 +98,7 @@ export default function ProductionSchedulePage() {
   const [detailItem, setDetailItem] = useState<ProductionScheduleItem | null>(null);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPrintScheduleModalOpen, setIsPrintScheduleModalOpen] = useState(false);
 
   // Form states
   const [formWorkOrderId, setFormWorkOrderId] = useState("");
@@ -355,7 +359,20 @@ export default function ProductionSchedulePage() {
                     </div>
 
                     {/* Right Action */}
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <DnaButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setDetailItem(item);
+                          setIsPrintScheduleModalOpen(true);
+                        }}
+                        className="h-8 w-8 p-0 text-slate-500 hover:text-blue-600"
+                        title="Cetak Jadwal Produksi"
+                      >
+                        <Printer className="w-4 h-4 text-blue-600" />
+                      </DnaButton>
+
                       <DnaButton
                         variant="ghost"
                         size="sm"
@@ -436,16 +453,32 @@ export default function ProductionSchedulePage() {
                         <p className="text-[11px] text-indigo-600 tabular-nums truncate">{item.progressPct}% Selesai</p>
                       </DnaTd>
                       <DnaTd className="py-3 px-4 text-right">
-                        <DnaButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setDetailItem(item);
-                            setIsDetailDrawerOpen(true);
-                          }}
-                        >
-                          <Eye className="w-4 h-4 text-slate-600" />
-                        </DnaButton>
+                        <div className="flex items-center justify-end gap-1">
+                          <DnaButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setDetailItem(item);
+                              setIsPrintScheduleModalOpen(true);
+                            }}
+                            className="h-7 w-7 p-0 text-slate-400 hover:text-blue-600"
+                            title="Cetak Jadwal Produksi"
+                          >
+                            <Printer className="w-3.5 h-3.5 text-blue-600" />
+                          </DnaButton>
+                          <DnaButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setDetailItem(item);
+                              setIsDetailDrawerOpen(true);
+                            }}
+                            className="h-7 w-7 p-0 text-slate-400 hover:text-slate-600"
+                            title="Lihat Detail"
+                          >
+                            <Eye className="w-4 h-4 text-slate-600" />
+                          </DnaButton>
+                        </div>
                       </DnaTd>
                     </DnaTableRow>
                   ))
@@ -671,6 +704,13 @@ export default function ProductionSchedulePage() {
             <DnaButton variant="secondary" onClick={() => setIsDetailDrawerOpen(false)}>
               Tutup
             </DnaButton>
+            <DnaButton
+              variant="outline"
+              onClick={() => setIsPrintScheduleModalOpen(true)}
+            >
+              <Printer className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
+              Cetak Jadwal
+            </DnaButton>
             {detailItem && (
               <Link
                 href={
@@ -688,6 +728,66 @@ export default function ProductionSchedulePage() {
               </Link>
             )}
           </div>
+        }
+      />
+
+      {/* Modal Cetak Jadwal Mixing (Upscale Formula) */}
+      <MixingSchedulePrintModal
+        isOpen={isPrintScheduleModalOpen && detailItem?.stage === "MIXING"}
+        onClose={() => setIsPrintScheduleModalOpen(false)}
+        data={
+          detailItem && detailItem.stage === "MIXING"
+            ? {
+                scheduleCode: detailItem.code,
+                date: detailItem.startDate,
+                status: detailItem.status,
+                batchCode: detailItem.batchNumber,
+                soCode: detailItem.spkCode,
+                customerName: detailItem.customerName,
+                productName: detailItem.productName,
+                createdBy: detailItem.operator,
+                targetQtyPcs: detailItem.targetQty,
+                nettoPerPcs: 30,
+                baseResultMl: detailItem.targetQty * 30,
+                upscalePercent: 5,
+                hasilUpscaleMl: Math.round(detailItem.targetQty * 30 * 1.05),
+              }
+            : null
+        }
+      />
+
+      {/* Modal Cetak Jadwal Packaging (Kemasan Sekunder) */}
+      <PackagingSchedulePrintModal
+        isOpen={isPrintScheduleModalOpen && detailItem?.stage !== "MIXING"}
+        onClose={() => setIsPrintScheduleModalOpen(false)}
+        data={
+          detailItem && detailItem.stage !== "MIXING"
+            ? {
+                scheduleCode: detailItem.code,
+                date: detailItem.startDate,
+                status: detailItem.status,
+                batchCode: detailItem.batchNumber,
+                soCode: detailItem.spkCode,
+                customerName: detailItem.customerName,
+                productName: detailItem.productName,
+                createdBy: detailItem.operator,
+                targetQtyPcs: detailItem.targetQty,
+                secondaryPackaging: [
+                  {
+                    code: "BOX-001",
+                    name: `Inner Box Primer ${detailItem.productName}`,
+                    qty: detailItem.targetQty,
+                    unit: "PCS",
+                  },
+                  {
+                    code: "MBOX-001",
+                    name: `Master Carton Corrugated (Isi 48 PCS)`,
+                    qty: Math.ceil(detailItem.targetQty / 48),
+                    unit: "BOX",
+                  },
+                ],
+              }
+            : null
         }
       />
     </DnaPageContainer>

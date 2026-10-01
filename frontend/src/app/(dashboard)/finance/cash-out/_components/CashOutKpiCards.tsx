@@ -17,7 +17,7 @@ export const CashOutKpiCards: React.FC<CashOutKpiCardsProps> = ({
   dateRange,
 }) => {
   return (
-    <DnaKpiGrid cols={3}>
+    <DnaKpiGrid cols={1}>
       <DnaStatCard
         label="Total Kas Keluar Periode"
         value={formatRupiah(totalKasKeluar)}
@@ -25,22 +25,6 @@ export const CashOutKpiCards: React.FC<CashOutKpiCardsProps> = ({
         delta={{ value: "Pengeluaran Disetujui", isPositive: false }}
         subtext={dateRange?.start ? `Periode ${dateRange.start} s/d ${dateRange.end}` : "Semua mutasi pengeluaran"}
         variant="critical"
-      />
-      <DnaStatCard
-        label="Kas Keluar Terekonsiliasi"
-        value={`${totalReconciled} Transaksi`}
-        icon={<CheckCircle2 className="w-5 h-5 text-blue-600" />}
-        delta={{ value: "Match Rekening Koran", isPositive: true }}
-        subtext="Disbursement klir di bank"
-        variant="info"
-      />
-      <DnaStatCard
-        label="Belum Rekonsiliasi"
-        value={`${totalUnreconciled} Transaksi`}
-        icon={<Clock className="w-5 h-5 text-amber-600" />}
-        delta={{ value: "Menunggu Rekon", isPositive: false }}
-        subtext="Belum dicocokkan mutasi bank"
-        variant="warning"
       />
     </DnaKpiGrid>
   );

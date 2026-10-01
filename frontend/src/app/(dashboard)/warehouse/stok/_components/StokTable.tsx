@@ -119,7 +119,7 @@ export function StokTable({
               <DnaTh className="px-3 py-3 h-[40px] w-[130px]">Kategori Material</DnaTh>
               <DnaTh className="px-3 py-3 h-[40px] min-w-[160px]">Gudang Penyimpanan</DnaTh>
               <DnaTh className="px-3 py-3 h-[40px] w-[130px]">Lokasi Bin / Rak</DnaTh>
-              <DnaTh className="px-3 py-3 h-[40px] text-right w-[120px]">Kuantitas Fisik</DnaTh>
+              <DnaTh className="px-3 py-3 h-[40px] text-right w-[120px]">Real Stok</DnaTh>
               <DnaTh className="px-3 py-3 h-[40px] text-center w-[75px]">Satuan</DnaTh>
               <DnaTh className="px-3 py-3 h-[40px] text-right w-[110px]">Safety Stock</DnaTh>
               <DnaTh className="px-3 py-3 h-[40px] text-right w-[150px]">Valuasi Nilai FIFO (Rp)</DnaTh>

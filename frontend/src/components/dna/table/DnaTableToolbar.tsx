@@ -13,12 +13,24 @@ export interface DnaFilterColumnConfig {
   options?: string[];
 }
 
+export interface DnaStatusOption {
+  label: string;
+  value: string;
+  dotColor?: string;
+}
+
 export interface DnaTableToolbarProps {
   // Search
   searchQuery?: string;
   searchValue?: string;
   onSearchChange?: (val: string) => void;
   searchPlaceholder?: string;
+
+  // Status Filter
+  statusOptions?: Array<DnaStatusOption | string>;
+  selectedStatus?: string;
+  onSelectStatus?: (status: string) => void;
+  statusPlaceholder?: string;
 
   // 2-Level Column & Value Filter
   filterColumns?: DnaFilterColumnConfig[];
@@ -45,6 +57,12 @@ export interface DnaTableToolbarProps {
   };
 
   // Additional custom actions & custom search/filter
+  onStatusChange?: (status: string) => void;
+  onResetAll?: () => void;
+  onResetFilters?: () => void;
+  activeFiltersCount?: number;
+  isFiltered?: boolean;
+  hasActiveFilters?: boolean;
   searchProps?: {
     value?: string;
     onChange?: (val: string) => void;
@@ -62,6 +80,13 @@ export function DnaTableToolbar({
   searchPlaceholder = "Cari data...",
   searchProps,
   filterElement,
+
+  statusOptions,
+  selectedStatus,
+  onSelectStatus,
+  onStatusChange,
+  statusPlaceholder = "Status",
+  onResetAll,
 
   filterColumns,
   selectedColumn,

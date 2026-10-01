@@ -11,11 +11,11 @@ import { GeofencingService } from '../../shared/geofencing.service';
 import {
   AttendanceStatus,
   PayrollStatus,
-  ContractType,
   Division,
   TicketType,
   TicketStatus,
   FundRequestStatus,
+  SourceDocumentType,
   Prisma,
 } from '@prisma/client';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
@@ -1085,16 +1085,56 @@ export class HrService {
       totalDisbursement += net;
     }
 
-    return this.prisma.payroll.update({
-      where: { id: payrollId },
-      data: {
-        status: PayrollStatus.AUTHORIZED,
-        authorizedById,
-        authorizedAt: new Date(),
-        totalDisbursement: this.encryption.encrypt(
-          totalDisbursement.toString(),
-        ),
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.payroll.update({
+        where: { id: payrollId },
+        data: {
+          status: PayrollStatus.AUTHORIZED,
+          authorizedById,
+          authorizedAt: new Date(),
+          totalDisbursement: this.encryption.encrypt(
+            totalDisbursement.toString(),
+          ),
+        },
+      });
+
+      // BUS-RULE-118: Connect payroll authorization to GL journal creation (Dr. Beban Gaji / Cr. Hutang Gaji)
+      if (totalDisbursement > 0) {
+        const salaryExpenseAcc = await tx.account.findFirst({
+          where: { code: { in: ['6201', '6200', '5103'] } },
+        });
+        const salaryPayableAcc = await tx.account.findFirst({
+          where: { code: { in: ['2102', '2100', '2101'] } },
+        });
+
+        if (salaryExpenseAcc && salaryPayableAcc) {
+          const refCode = `PAYROLL-${String(payroll.periodId || payroll.id).slice(0, 8).toUpperCase()}`;
+          await tx.journalEntry.create({
+            data: {
+              date: new Date(),
+              reference: refCode,
+              description: `Payroll disbursement authorization for period ${payroll.periodId || ''}`,
+              sourceDocumentType: SourceDocumentType.PAYMENT,
+              lines: {
+                create: [
+                  {
+                    accountId: salaryExpenseAcc.id,
+                    debit: totalDisbursement,
+                    credit: 0,
+                  },
+                  {
+                    accountId: salaryPayableAcc.id,
+                    debit: 0,
+                    credit: totalDisbursement,
+                  },
+                ],
+              },
+            },
+          });
+        }
+      }
+
+      return updated;
     });
   }
 

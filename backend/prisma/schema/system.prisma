@@ -16,12 +16,23 @@ model SalesTarget {
   month         Int
   year          Int
   nominalTarget Decimal  @db.Decimal(15, 2)
+  notes         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   user          User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, month, year])
   @@map("sales_targets")
+}
+
+model SalesCategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("sales_categories")
 }
 
 model SystemConfig {

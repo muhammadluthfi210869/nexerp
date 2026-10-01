@@ -70,10 +70,10 @@ export function useEmployeeOperations() {
         joinedAt: formData.joinedAt || new Date().toISOString(),
         contractEnd: formData.contractEnd || undefined,
         contractType: formData.contractType || "PKWT",
-        baseSalary: formData.baseSalary || "0",
-        positionAllowance: formData.positionAllowance || "0",
-        transportFlat: formData.transportFlat || "0",
-        transportTentativeDaily: formData.transportTentativeDaily || "0",
+        baseSalary: formData.baseSalary ? formData.baseSalary : editingEmployee ? undefined : "0",
+        positionAllowance: formData.positionAllowance ? formData.positionAllowance : editingEmployee ? undefined : "0",
+        transportFlat: formData.transportFlat ? formData.transportFlat : editingEmployee ? undefined : "0",
+        transportTentativeDaily: formData.transportTentativeDaily ? formData.transportTentativeDaily : editingEmployee ? undefined : "0",
         roles: [
           {
             division: formData.division || "PRODUCTION",

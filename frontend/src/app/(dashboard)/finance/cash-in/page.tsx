@@ -1,597 +1,106 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { unwrapResponse } from "@/lib/unwrap-response";
-import {
-  ArrowDownLeft,
-  Calendar,
-  FileSpreadsheet,
-  Printer,
-  Search,
-  Filter,
-  Eye,
-  Plus,
-  Trash2,
-  CheckCircle2,
-  DollarSign,
-  Building2,
-  Upload
-} from "lucide-react";
+import React, { Suspense } from "react";
+import { ArrowDownLeft, Plus } from "lucide-react";
 import {
   DnaPageContainer,
   DnaPageHeader,
-  DnaKpiGrid,
-  DnaStatCard,
-  DnaDataTableCard,
   DnaButton,
-  DnaBadge,
-  DnaModal,
-  DnaDetailDrawer,
-  formatRupiah,
-  useDnaToast,
-  DnaInput,
-  DnaSelect,
-  DnaTable,
-  DnaTableHead,
-  DnaTh,
-  DnaTableBody,
-  DnaTableRow,
-  DnaTd,
-  DnaCell,
+  KwitansiPrintModal,
 } from "@/components/dna";
-
-interface CashInItem {
-  id: string;
-  code: string;
-  date: string;
-  description: string;
-  from: string;
-  account: string;
-  amount: number;
-  status: "POSTED" | "DRAFT";
-  category: string;
-  reference?: string;
-}
+import { useCashInOperations } from "./_hooks/useCashInOperations";
+import {
+  CashInKpiCards,
+  CashInTable,
+  CashInFormModal,
+  CashInDetailDrawer,
+} from "./_components";
 
 export default function CashInPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat Kas Masuk...</div>}>
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-slate-500">Memuat Kas Masuk...</div>
+      }
+    >
       <CashInContent />
     </Suspense>
   );
 }
 
 function CashInContent() {
-  const searchParams = useSearchParams();
-  const toast = useDnaToast();
-  const [statusTab, setStatusTab] = useState<string>("ALL");
-  const [dateRange, setDateRange] = useState({ start: "2026-09-01", end: "2026-09-30" });
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedDetail, setSelectedDetail] = useState<CashInItem | null>(null);
-
-  // Live Cash In / Journals query
-  const { data: journalsRaw = [], isLoading, refetch } = useQuery({
-    queryKey: ["finance-cash-in-journals"],
-    queryFn: async (): Promise<any[]> => {
-      const res = await api.get("/finance/journals");
-      return unwrapResponse<any[]>(res) || [];
-    },
-  });
-
-  const { data: accountsRaw = [] } = useQuery({
-    queryKey: ["finance-accounts-for-cash-in"],
-    queryFn: async (): Promise<any[]> => {
-      try {
-        const res = await api.get("/finance/accounts");
-        return unwrapResponse<any[]>(res) || [];
-      } catch {
-        return [];
-      }
-    },
-  });
-
-  const cashInItems: CashInItem[] = useMemo(() => {
-    return (journalsRaw || [])
-      .filter((j: any) =>
-        j.reference?.includes("KM") ||
-        j.reference?.includes("CASH-IN") ||
-        j.sourceDocumentType === "MANUAL" ||
-        j.lines?.some((l: any) => l.account?.type === "REVENUE")
-      )
-      .map((j: any) => {
-        const debitLine = j.lines?.find((l: any) => Number(l.debit) > 0);
-        const creditLine = j.lines?.find((l: any) => Number(l.credit) > 0);
-        return {
-          id: j.id,
-          code: j.reference || `KM-${j.id?.slice(0, 8)}`,
-          date: j.date ? new Date(j.date).toISOString().split("T")[0] : "",
-          description: j.description || "Penerimaan Kas",
-          from: j.sourceDocumentType || "Pelanggan",
-          account: debitLine?.account?.name || "Kas/Bank BCA",
-          amount: Number(debitLine?.debit || creditLine?.credit || 0),
-          status: "POSTED" as const,
-          category: creditLine?.account?.name || "Pendapatan",
-          reference: j.reference,
-        };
-      });
-  }, [journalsRaw]);
-
-  useEffect(() => {
-    if (searchParams.get("action") === "create") {
-      setIsCreateModalOpen(true);
-    }
-  }, [searchParams]);
-
-  // Form states (SCR-082)
-  const [formData, setFormData] = useState({
-    date: new Date().toISOString().split("T")[0],
-    account: "BCA Operasional (521-009182)",
-    description: "",
-    from: "",
-    coaRevenue: "4110 - Pendapatan Produksi Maklon",
-    memo: "",
-    amount: ""
-  });
-
-  const totalKasMasuk = useMemo(() => {
-    return cashInItems.reduce((acc, r) => acc + r.amount, 0);
-  }, [cashInItems]);
-
-  const filteredItems = useMemo(() => {
-    return cashInItems.filter((item) => {
-      const matchSearch =
-        item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.from.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchTab = statusTab === "ALL" || item.status === statusTab;
-      return matchSearch && matchTab;
-    });
-  }, [cashInItems, searchQuery, statusTab]);
-
-  const handleSave = async () => {
-    if (!formData.description || !formData.amount) {
-      toast.error("Mohon lengkapi seluruh kolom bertanda bintang (*)");
-      return;
-    }
-
-    try {
-      const cashAcc = accountsRaw.find((a: any) => a.type === "ASSET" && (a.name.toLowerCase().includes("kas") || a.name.toLowerCase().includes("bank"))) || accountsRaw.find((a: any) => a.type === "ASSET");
-      const revAcc = accountsRaw.find((a: any) => a.type === "REVENUE") || accountsRaw[0];
-
-      if (cashAcc?.id && revAcc?.id) {
-        await api.post("/finance/cash/receive", {
-          date: new Date(formData.date).toISOString(),
-          cashAccountId: cashAcc.id,
-          category: "DP_PENJUALAN",
-          creditAccountId: revAcc.id,
-          amount: Number(formData.amount),
-          entityName: formData.from || "Pelanggan",
-          notes: formData.description,
-        });
-      } else {
-        await api.post("/finance/journals", {
-          date: formData.date,
-          reference: `KM-${Date.now().toString().slice(-6)}`,
-          description: `Kas Masuk: ${formData.from || "Klien"} - ${formData.description}`,
-          lines: [
-            { accountId: cashAcc?.id || "default-cash", debit: Number(formData.amount), credit: 0 },
-            { accountId: revAcc?.id || "default-rev", debit: 0, credit: Number(formData.amount) },
-          ],
-        });
-      }
-
-      toast.success("Bukti Kas Bank Masuk berhasil disimpan dan diposting ke Jurnal!");
-      refetch();
-      setIsCreateModalOpen(false);
-      setFormData({
-        date: new Date().toISOString().split("T")[0],
-        account: "BCA Operasional (521-009182)",
-        description: "",
-        from: "",
-        coaRevenue: "4110 - Pendapatan Produksi Maklon",
-        memo: "",
-        amount: ""
-      });
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || "Gagal menyimpan kas masuk");
-    }
-  };
+  const ops = useCashInOperations();
 
   return (
     <DnaPageContainer>
       <DnaPageHeader
         title="Kas Bank Masuk"
-        description="Pencatatan mutasi penerimaan kas dan bank dari pelunasan piutang, setoran termin maklon, pendapatan jasa BPOM, dan pendapatan lain."
-        badge={
-          <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-semibold">
-            <ArrowDownLeft className="w-3.5 h-3.5" />
-            <span>Poin 18: Single Card Ringkas & Filter Kalender Lengkap</span>
-          </div>
-        }
-        tabs={[
-          { id: "ALL", label: "Semua Mutasi" },
-          { id: "POSTED", label: "Posted (Jurnal)" },
-          { id: "DRAFT", label: "Draft" }
-        ]}
-        activeTab={statusTab}
-        onTabChange={setStatusTab}
+        description="Pencatatan penerimaan kas operasional, setoran modal, dan penerimaan pelunasan piutang."
         actions={
-          <div className="flex items-center gap-2">
-            <DnaButton variant="secondary" size="md" onClick={() => window.print()}>
-              <Printer className="w-4 h-4 mr-1.5" />
-              Cetak Bukti
-            </DnaButton>
-            <DnaButton variant="primary" size="md" onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="w-4 h-4 mr-1.5" />
-              + Buat Kas Masuk
-            </DnaButton>
-          </div>
+          <DnaButton
+            variant="primary"
+            size="sm"
+            onClick={() => ops.setIsCreateModalOpen(true)}
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            Catat Kas Masuk
+          </DnaButton>
         }
       />
 
-      {/* SPECIAL REQUIREMENT POIN 18: HANYA 1 CARD RINGKAS */}
-      <DnaKpiGrid cols={1}>
-        <DnaStatCard
-          label="Total Kas Masuk Periode Terpilih"
-          value={formatRupiah(totalKasMasuk)}
-          icon={<DollarSign className="w-6 h-6 text-emerald-600" />}
-          delta={{ value: "+18.4% Realisasi Inflow", isPositive: true }}
-          subtext={`Akumulasi kas masuk dari ${dateRange.start} s/d ${dateRange.end}`}
-          variant="success"
-        />
-      </DnaKpiGrid>
+      {/* KPI Cards */}
+      <CashInKpiCards
+        totalKasMasuk={ops.totalKasMasuk}
+        totalReconciled={ops.totalReconciled}
+        totalUnreconciled={ops.totalUnreconciled}
+      />
 
-      {/* DATA TABLE CARD DENGAN DATE RANGE PICKER BEBAS */}
-      <DnaDataTableCard
-        customToolbar={
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
-              <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1" />
-              <DnaInput
-                type="date"
-                value={dateRange.start}
-                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
-              />
-              <span className="text-slate-400 font-semibold">s/d</span>
-              <DnaInput
-                type="date"
-                value={dateRange.end}
-                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                className="bg-transparent border-0 text-xs focus:ring-0 text-slate-700 font-medium"
-              />
-            </div>
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <DnaInput
-                type="text"
-                placeholder="Cari kode/deskripsi/pengirim..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
-            <DnaButton variant="secondary" size="sm" onClick={() => toast.success("Filter tanggal diaplikasikan")}>
-              <Filter className="w-3.5 h-3.5 mr-1" />
-              Terapkan
-            </DnaButton>
-          </div>
-        }
-      >
-        <div className="overflow-x-auto">
-          <DnaTable className="min-w-[1100px]">
-            <DnaTableHead>
-              <DnaTableRow>
-                <DnaTh className="w-[130px]">No Bukti</DnaTh>
-                <DnaTh className="w-[110px]">Tanggal</DnaTh>
-                <DnaTh>Deskripsi Penerimaan</DnaTh>
-                <DnaTh>Diterima Dari</DnaTh>
-                <DnaTh>Rekening Kas/Bank</DnaTh>
-                <DnaTh>Kategori / CoA</DnaTh>
-                <DnaTh align="right" className="w-[140px]">Jumlah (Rp)</DnaTh>
-                <DnaTh align="center" className="w-[100px]">Status</DnaTh>
-                <DnaTh align="center" className="w-[80px]">Aksi</DnaTh>
-              </DnaTableRow>
-            </DnaTableHead>
-            <DnaTableBody>
-              {filteredItems.map((item) => (
-                <DnaTableRow
-                  key={item.id}
-                  onClick={() => setSelectedDetail(item)}
-                  className="cursor-pointer"
-                >
-                  <DnaTd>
-                    <DnaCell.Code value={item.code} />
-                  </DnaTd>
-                  <DnaTd>
-                    <DnaCell.Date value={item.date} />
-                  </DnaTd>
-                  <DnaTd isPrimary>
-                    <DnaCell.Text primary={item.description} />
-                  </DnaTd>
-                  <DnaTd>
-                    <DnaCell.Text primary={item.from} />
-                  </DnaTd>
-                  <DnaTd>
-                    <DnaCell.Text primary={item.account} />
-                  </DnaTd>
-                  <DnaTd isMuted>
-                    <DnaCell.Text primary={item.category} />
-                  </DnaTd>
-                  <DnaTd align="right">
-                    <DnaCell.Currency value={item.amount} className="font-semibold text-emerald-700" />
-                  </DnaTd>
-                  <DnaTd align="center">
-                    <DnaBadge variant={item.status === "POSTED" ? "success" : "default"}>
-                      {item.status}
-                    </DnaBadge>
-                  </DnaTd>
-                  <DnaTd align="center" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center justify-center gap-1">
-                      <DnaButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedDetail(item)}
-                        title="Lihat Detail"
-                        className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </DnaButton>
-                      <DnaButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toast.success(`Mencetak Bukti Kas Masuk ${item.code}...`)}
-                        title="Print Bukti"
-                        className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600"
-                      >
-                        <Printer className="w-3.5 h-3.5 text-blue-600" />
-                      </DnaButton>
-                    </div>
-                  </DnaTd>
-                </DnaTableRow>
-              ))}
-              <DnaTableRow className="bg-emerald-50/75 font-semibold border-t-2 border-emerald-300">
-                <DnaTd colSpan={6} className="px-3.5 py-3 text-emerald-950 font-bold text-right text-xs">
-                  TOTAL KAS MASUK:
-                </DnaTd>
-                <DnaTd className="px-3.5 py-3 text-right text-emerald-950 font-bold tabular-nums text-sm">
-                  {formatRupiah(totalKasMasuk)}
-                </DnaTd>
-                <DnaTd colSpan={2}></DnaTd>
-              </DnaTableRow>
-            </DnaTableBody>
-          </DnaTable>
-        </div>
-      </DnaDataTableCard>
+      {/* Main Table */}
+      <CashInTable
+        items={ops.filteredItems}
+        totalKasMasuk={ops.totalKasMasuk}
+        searchQuery={ops.searchQuery}
+        setSearchQuery={ops.setSearchQuery}
+        statusOptions={ops.statusOptions}
+        selectedStatus={ops.selectedStatus}
+        onSelectStatus={ops.setSelectedStatus}
+        filterColumns={ops.filterColumns}
+        selectedColumn={ops.selectedColumn}
+        onSelectColumn={ops.setSelectedColumn}
+        filterValue={ops.filterValue}
+        onFilterValueChange={ops.setFilterValue}
+        dateMode={ops.dateMode}
+        onDateModeChange={ops.setDateMode}
+        startDate={ops.startDate}
+        onStartDateChange={ops.setStartDate}
+        endDate={ops.endDate}
+        onEndDateChange={ops.setEndDate}
+        onResetAll={ops.handleResetAll}
+        onSelectDetail={ops.setSelectedDetail}
+        onPrintItem={ops.handlePrintItem}
+      />
 
-      {/* MODAL BUAT KAS MASUK (SCR-082) */}
-      <DnaModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        title="Buat Kas Bank Masuk (Other Deposit)"
-        size="lg"
-      >
-        <div className="space-y-3.5 text-xs">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-slate-700 font-semibold mb-1">Tanggal Penerimaan *</label>
-              <DnaInput
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-700 font-semibold mb-1">Kas / Bank Akun Penerimaan *</label>
-<DnaSelect 
-                value={formData.account}
-                onChange={(value) => setFormData({ ...formData, account: value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white"
-              >
-                <option value="BCA Operasional (521-009182)">1120 - Bank BCA Operasional (521-009182)</option>
-                <option value="Mandiri Payroll (137-00123)">1130 - Bank Mandiri Payroll & Pajak (137-00123)</option>
-                <option value="Kas Tunai Operasional">1110 - Kas Tunai Petty Cash Kantor</option>
-              </DnaSelect>
-            </div>
-          </div>
+      {/* Create Modal */}
+      <CashInFormModal
+        isOpen={ops.isCreateModalOpen}
+        onClose={() => ops.setIsCreateModalOpen(false)}
+        formData={ops.formData}
+        setFormData={ops.setFormData}
+        onSave={ops.handleSave}
+      />
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-slate-700 font-semibold mb-1">Dari (Nama Pengirim / Klien)</label>
-              <DnaInput
-                type="text"
-                placeholder="e.g. PT Glowing Beauty Indonesia"
-                value={formData.from}
-                onChange={(e) => setFormData({ ...formData, from: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-700 font-semibold mb-1">Chart of Account (CoA) Pendapatan *</label>
-<DnaSelect 
-                value={formData.coaRevenue}
-                onChange={(value) => setFormData({ ...formData, coaRevenue: value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white"
-              >
-                <option value="4110 - Pendapatan Produksi Maklon">4110 - Pendapatan Produksi Maklon OEM</option>
-                <option value="4120 - Pendapatan Sample R&D">4120 - Pendapatan Sample & Prototipe R&D</option>
-                <option value="4130 - Jasa Notifikasi BPOM">4130 - Jasa Notifikasi BPOM & HKI</option>
-                <option value="4190 - Pendapatan Bunga & Lainnya">4190 - Pendapatan Bunga & Lainnya</option>
-              </DnaSelect>
-            </div>
-          </div>
+      {/* Detail Drawer */}
+      <CashInDetailDrawer
+        selectedDetail={ops.selectedDetail}
+        onClose={() => ops.setSelectedDetail(null)}
+        onPrint={ops.handlePrintItem}
+      />
 
-          <div>
-            <label className="block text-slate-700 font-semibold mb-1">Deskripsi / Keterangan Penerimaan *</label>
-            <DnaInput
-              type="text"
-              placeholder="e.g. Penerimaan DP 50% Produksi Batch Serum Niacinamide"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-slate-700 font-semibold mb-1">Jumlah Nominal (Rp) *</label>
-              <DnaInput
-                type="number"
-                placeholder="e.g. 450000000"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold text-emerald-700"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-700 font-semibold mb-1">Memo / Catatan Item</label>
-              <DnaInput
-                type="text"
-                placeholder="Catatan tambahan..."
-                value={formData.memo}
-                onChange={(e) => setFormData({ ...formData, memo: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
-              />
-            </div>
-          </div>
-
-          <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200 flex justify-between items-center">
-            <span className="text-emerald-900 font-medium">Jurnal Otomatis yang Terbentuk:</span>
-            <span className="tabular-nums text-xs font-bold text-emerald-800">
-              Dr Kas/Bank ({formData.account.split(" ")[0]}) / Cr Pendapatan
-            </span>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-            <DnaButton variant="secondary" size="md" onClick={() => setIsCreateModalOpen(false)}>
-              Batal
-            </DnaButton>
-            <DnaButton variant="primary" size="md" onClick={handleSave}>
-              Simpan & Posting
-            </DnaButton>
-          </div>
-        </div>
-      </DnaModal>
-
-      {/* DETAIL DRAWER (QUICK PEEK) */}
-      <DnaDetailDrawer
-        isOpen={!!selectedDetail}
-        onClose={() => setSelectedDetail(null)}
-        title={`Bukti Kas Masuk: ${selectedDetail?.code}`}
-        subtitle={selectedDetail?.description}
-        badge={
-          selectedDetail && (
-            <DnaBadge variant={selectedDetail.status === "POSTED" ? "success" : "default"}>
-              {selectedDetail.status}
-            </DnaBadge>
-          )
-        }
-        tabs={[
-          {
-            id: "info",
-            label: "Rincian Transaksi",
-            content: (
-              <div className="space-y-4 p-4 text-xs">
-                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
-                  <div>
-                    <div className="text-[11px] text-slate-500">Nomor Bukti</div>
-                    <div className="tabular-nums font-bold text-emerald-700 text-sm">{selectedDetail?.code}</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-slate-500">Tanggal Transaksi</div>
-                    <div className="font-medium text-slate-800">{selectedDetail?.date}</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-slate-500">Sumber / Pengirim</div>
-                    <div className="font-semibold text-slate-900">{selectedDetail?.from}</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-slate-500">Akun Rekening Penerima</div>
-                    <div className="font-semibold text-slate-800">{selectedDetail?.account}</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-slate-500">Kategori / Akun Pendapatan</div>
-                    <div className="font-medium text-slate-700">{selectedDetail?.category}</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-slate-500">Dokumen Referensi</div>
-                    <div className="tabular-nums text-slate-800">{selectedDetail?.reference || "-"}</div>
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-emerald-50 rounded-lg border border-emerald-200 flex justify-between items-center">
-                  <div>
-                    <div className="text-[11px] text-emerald-700 font-bold uppercase">Total Nominal Kas Masuk</div>
-                    <div className="text-xl font-black text-emerald-900">
-                      {selectedDetail ? formatRupiah(selectedDetail.amount) : "0"}
-                    </div>
-                  </div>
-                  <DnaBadge variant="success">INFLOW VERIFIED</DnaBadge>
-                </div>
-              </div>
-            )
-          },
-          {
-            id: "journal",
-            label: "Jurnal Posting",
-            content: (
-              <div className="p-4 space-y-3 text-xs">
-                <div className="text-slate-500 font-medium">Entri Jurnal Akuntansi Otomatis:</div>
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
-                  <DnaTable>
-                    <DnaTableHead>
-                      <DnaTableRow>
-                        <DnaTh className="p-2.5">Akun COA</DnaTh>
-                        <DnaTh className="p-2.5 text-right">Debit</DnaTh>
-                        <DnaTh className="p-2.5 text-right">Kredit</DnaTh>
-                      </DnaTableRow>
-                    </DnaTableHead>
-                    <DnaTableBody>
-                      <DnaTableRow>
-                        <DnaTd className="p-2.5 font-medium text-slate-800">
-                          Dr. {selectedDetail?.account}
-                        </DnaTd>
-                        <DnaTd className="p-2.5 text-right font-bold text-emerald-700">
-                          {selectedDetail ? formatRupiah(selectedDetail.amount) : "0"}
-                        </DnaTd>
-                        <DnaTd className="p-2.5 text-right text-slate-400">-</DnaTd>
-                      </DnaTableRow>
-                      <DnaTableRow>
-                        <DnaTd className="p-2.5 font-medium text-slate-800 pl-6">
-                          Cr. {selectedDetail?.category}
-                        </DnaTd>
-                        <DnaTd className="p-2.5 text-right text-slate-400">-</DnaTd>
-                        <DnaTd className="p-2.5 text-right font-bold text-emerald-700">
-                          {selectedDetail ? formatRupiah(selectedDetail.amount) : "0"}
-                        </DnaTd>
-                      </DnaTableRow>
-                    </DnaTableBody>
-                  </DnaTable>
-                </div>
-              </div>
-            )
-          }
-        ]}
-        footerActions={
-          <div className="flex items-center justify-between w-full">
-            <DnaButton
-              variant="secondary"
-              size="md"
-              onClick={() => toast.success(`Mencetak Bukti Kas Masuk ${selectedDetail?.code}...`)}
-            >
-              <Printer className="w-4 h-4 mr-1.5" />
-              Cetak Bukti
-            </DnaButton>
-            <DnaButton variant="primary" size="md" onClick={() => setSelectedDetail(null)}>
-              Tutup
-            </DnaButton>
-          </div>
-        }
+      {/* Kwitansi Print Modal (LUNAS Stamp) */}
+      <KwitansiPrintModal
+        isOpen={ops.isPrintModalOpen}
+        onClose={() => ops.setIsPrintModalOpen(false)}
+        data={ops.printReceiptData}
       />
     </DnaPageContainer>
   );

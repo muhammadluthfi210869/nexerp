@@ -195,7 +195,15 @@ export class APPaymentsService {
 
       // Journal: Dr. AP / Cr. Bank
       const apAcc = await tx.account.findFirst({ where: { code: '2101' } });
-      if (apAcc) {
+      const bankGlAccountId =
+        bankAcc.glAccountId ||
+        (
+          await tx.account.findFirst({
+            where: { code: { in: ['1101', '1102', '1100'] } },
+          })
+        )?.id;
+
+      if (apAcc && bankGlAccountId) {
         await tx.journalEntry.create({
           data: {
             date: new Date(),
@@ -210,7 +218,7 @@ export class APPaymentsService {
                   credit: 0,
                 },
                 {
-                  accountId: bankAcc.id,
+                  accountId: bankGlAccountId,
                   debit: 0,
                   credit: Number(payment.totalAmount),
                 },

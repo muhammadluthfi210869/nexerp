@@ -3,7 +3,6 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
-  Logger,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
@@ -11,8 +10,6 @@ import { IdGeneratorService } from '../../system/id-generator.service';
 
 @Injectable()
 export class WarehouseTransferService {
-  private readonly logger = new Logger(WarehouseTransferService.name);
-
   constructor(
     private prisma: PrismaService,
     private idGenerator: IdGeneratorService,
@@ -162,19 +159,23 @@ export class WarehouseTransferService {
         throw new BadRequestException('Transfer already processed');
 
       for (const item of transfer.items) {
-        // Deduct from source using FEFO batch
+        // Deduct from source warehouse only using FEFO batch with pessimistic locking
         let remainingQty = Number(item.qty);
         const sourceBatches = await tx.materialInventory.findMany({
           where: {
             materialId: item.materialId,
             currentStock: { gt: 0 },
             qcStatus: 'GOOD',
+            location: { warehouseId: transfer.sourceWarehouseId },
           },
           orderBy: [{ expDate: 'asc' }, { lastRestock: 'asc' }],
         });
 
         for (const batch of sourceBatches) {
           if (remainingQty <= 0) break;
+          // Pessimistic lock row before mutating
+          await tx.$executeRaw`SELECT id FROM material_inventories WHERE id = ${batch.id}::uuid FOR UPDATE`;
+
           const deductQty = Math.min(remainingQty, Number(batch.currentStock));
           await tx.materialInventory.update({
             where: { id: batch.id },
@@ -195,19 +196,35 @@ export class WarehouseTransferService {
           remainingQty -= deductQty;
         }
 
+        // Prevent phantom inventory: abort if source warehouse stock is insufficient
         if (remainingQty > 0) {
           const available = Number(item.qty) - remainingQty;
           throw new BadRequestException(
-            `Stok sumber tidak mencukupi untuk bahan ID ${item.materialId}. Diminta: ${Number(item.qty)}, Tersedia: ${available}`,
+            `Stok sumber tidak mencukupi untuk bahan ID ${item.materialId} di gudang asal. Diminta: ${Number(item.qty)}, Tersedia: ${available}`,
           );
         }
 
-        // Increment at destination (create new batch record)
+        // Resolve or create destination location in destination warehouse
+        let destLoc = await tx.warehouseLocation.findFirst({
+          where: { warehouseId: transfer.destWarehouseId },
+        });
+        if (!destLoc) {
+          destLoc = await tx.warehouseLocation.create({
+            data: {
+              name: 'DEFAULT',
+              capacity: 999999,
+              warehouseId: transfer.destWarehouseId,
+            },
+          });
+        }
+
+        // Increment at destination with proper location reference
         const sysSup = await this.getOrCreateSystemSupplier(tx);
         const destBatch = await tx.materialInventory.create({
           data: {
             materialId: item.materialId,
             supplierId: sysSup.id,
+            locationId: destLoc.id,
             batchNumber: `TRF-${transfer.transferNumber.slice(0, 8)}-${item.materialId.slice(0, 4)}`,
             currentStock: Number(item.qty),
             qcStatus: 'GOOD',
@@ -224,7 +241,7 @@ export class WarehouseTransferService {
             referenceNo: transfer.transferNumber,
             warehouseId: transfer.destWarehouseId,
             performedBy: userId,
-            notes: `TRANSFER_IN from ${transfer.sourceWarehouseId}`,
+            notes: `TRANSFER_IN from ${transfer.sourceWarehouseId} | Batch: ${destBatch.batchNumber}`,
           },
         });
 

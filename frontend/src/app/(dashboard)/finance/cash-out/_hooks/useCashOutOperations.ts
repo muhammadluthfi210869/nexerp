@@ -342,6 +342,10 @@ export function useCashOutOperations() {
     totalUnreconciled,
     isLoading,
     refetch,
+    dateRange: {
+      start: startDate || "Semua",
+      end: endDate || "Semua",
+    },
     handleSave,
     handlePrintItem,
   };

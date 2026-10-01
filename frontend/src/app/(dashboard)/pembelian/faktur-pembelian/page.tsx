@@ -336,16 +336,21 @@ export default function FakturPembelianPage() {
     createBillMut.mutate();
   };
 
+  const updateReasonMut = useMutation({
+    mutationFn: async ({ id, unpaidReason }: { id: string; unpaidReason: string }) =>
+      unwrapResponse(await api.patch(`/purchase/invoices/${id}/reason`, { unpaidReason })),
+    onSuccess: () => {
+      toast.success("Catatan Tersimpan", "Alasan belum lunas faktur berhasil diperbarui.");
+      setReasonModalBill(null);
+      setNewReasonText("");
+      queryClient.invalidateQueries({ queryKey: ["purchase-invoices"] });
+    },
+    onError: (e) => toast.error(extractApiError(e).message),
+  });
+
   const handleSaveReason = () => {
     if (!reasonModalBill) return;
-    // `bill.unpaidReason` exists on the table, but the invoices controller exposes no PATCH:
-    // only POST /, POST /import, GET / and GET /:id. There is nothing to write to, so this
-    // stops claiming an update instead of dropping the edit.
-    toast.warning(
-      "Catatan belum tersimpan",
-      "Backend belum menyediakan rute ubah faktur (PATCH /purchase/invoices/:id). Catatan tidak dipersist.",
-    );
-    setReasonModalBill(null);
+    updateReasonMut.mutate({ id: reasonModalBill.id, unpaidReason: newReasonText });
   };
 
   const IMPORT_HEADERS = "vendor,invoice number,due date,item,qty,unit,price,notes";
@@ -415,7 +420,7 @@ export default function FakturPembelianPage() {
       {/* Header with Top-Right Tabs */}
       <DnaPageHeader
         title="Faktur Pembelian (Purchase Invoices)"
-        description="Kelola tagihan masuk dari supplier, pencatatan hutang dagang (AP), dan verifikasi termin jatuh tempo."
+        description="Kelola tagihan masuk dari supplier, pencatatan hutang dagang (AP), dan verifikasi termin deadline."
         badge={<DnaBadge variant="neutral">SCR-046 / FIN-PUR-BILL</DnaBadge>}
         tabs={[
           { key: "ALL", label: "Semua Faktur", count: dataList.length },
@@ -518,7 +523,7 @@ export default function FakturPembelianPage() {
                   <DnaTh className="px-4 py-2.5 w-[170px]">No. Faktur</DnaTh>
                   <DnaTh className="px-4 py-2.5 w-[160px]">No. Purchase Order</DnaTh>
                   <DnaTh className="px-4 py-2.5 w-[110px]">Tgl Faktur</DnaTh>
-                  <DnaTh className="px-4 py-2.5 w-[110px]">Jatuh Tempo</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Deadline</DnaTh>
                   <DnaTh className="px-4 py-2.5 min-w-[180px]">Supplier</DnaTh>
                   <DnaTh className="px-4 py-2.5 w-[160px]">Kategori Pengadaan</DnaTh>
                   <DnaTh className="px-4 py-2.5 w-[140px] text-right">Nilai Tagihan</DnaTh>
@@ -650,9 +655,9 @@ export default function FakturPembelianPage() {
             {/* Summary Cards */}
             <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
-                <span className="text-slate-500 block text-[11px]">Tgl Faktur / Jatuh Tempo</span>
+                <span className="text-slate-500 block text-[11px]">Tgl Faktur / Deadline</span>
                 <span className="font-bold text-slate-900 tabular-nums text-sm block">{selectedBill.invoiceDate}</span>
-                <span className="text-amber-700 block text-[11px] font-medium mt-0.5">Jatuh Tempo: {selectedBill.dueDate}</span>
+                <span className="text-amber-700 block text-[11px] font-medium mt-0.5">Deadline: {selectedBill.dueDate}</span>
               </div>
               <div className="text-right">
                 <span className="text-slate-500 block text-[11px]">Grand Total Tagihan</span>
@@ -846,7 +851,7 @@ export default function FakturPembelianPage() {
               />
             </div>
             <div>
-              <label className="block text-slate-700 font-bold mb-1">Tanggal Jatuh Tempo *</label>
+              <label className="block text-slate-700 font-bold mb-1">Tanggal Deadline *</label>
               <input
                 type="date"
                 value={dueDate}

@@ -301,8 +301,19 @@ export function useCashInOperations() {
     }
   };
 
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [printReceiptData, setPrintReceiptData] = useState<any | null>(null);
+
   const handlePrintItem = (item: CashInItem) => {
-    toast.success(`Mencetak Bukti Kas Masuk ${item.code}...`);
+    setPrintReceiptData({
+      code: item.code,
+      date: item.date,
+      customerName: item.from,
+      amount: item.amount,
+      paymentMethod: item.account,
+      notes: item.description,
+    });
+    setIsPrintModalOpen(true);
   };
 
   const handleApplyDateFilter = () => {
@@ -329,6 +340,9 @@ export function useCashInOperations() {
     handleResetAll,
     isCreateModalOpen,
     setIsCreateModalOpen,
+    isPrintModalOpen,
+    setIsPrintModalOpen,
+    printReceiptData,
     selectedDetail,
     setSelectedDetail,
     formData,
@@ -340,6 +354,10 @@ export function useCashInOperations() {
     totalUnreconciled,
     isLoading,
     refetch,
+    dateRange: {
+      start: startDate || "Semua",
+      end: endDate || "Semua",
+    },
     handleSave,
     handlePrintItem,
   };

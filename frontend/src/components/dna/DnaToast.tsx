@@ -23,6 +23,22 @@ export interface DnaToastOptions {
   duration?: number;
 }
 
+const normalizeTitle = (title: unknown): string => {
+  if (typeof title === "string") return title;
+  if (title && typeof title === "object") {
+    const t = title as any;
+    if (typeof t.message === "string") return t.message;
+    if (typeof t.detail === "string") return t.detail;
+    if (typeof t.title === "string") return t.title;
+    try {
+      return JSON.stringify(t);
+    } catch {
+      return String(t);
+    }
+  }
+  return String(title ?? "Notification");
+};
+
 const normalizeOpts = (msgOrOpts?: string | DnaToastOptions): DnaToastOptions | undefined => {
   if (msgOrOpts === undefined) return undefined;
   if (typeof msgOrOpts === "string") return { description: msgOrOpts };
@@ -30,22 +46,23 @@ const normalizeOpts = (msgOrOpts?: string | DnaToastOptions): DnaToastOptions | 
 };
 
 const dnaToast = {
-  default: (title: string, msgOrOpts?: string | DnaToastOptions) =>
-    sonnerToast(title, normalizeOpts(msgOrOpts)),
-  success: (title: string, msgOrOpts?: string | DnaToastOptions) =>
-    sonnerToast.success(title, normalizeOpts(msgOrOpts)),
-  error: (title: string, msgOrOpts?: string | DnaToastOptions) =>
-    sonnerToast.error(title, normalizeOpts(msgOrOpts)),
-  info: (title: string, msgOrOpts?: string | DnaToastOptions) =>
-    sonnerToast.info(title, normalizeOpts(msgOrOpts)),
-  warning: (title: string, msgOrOpts?: string | DnaToastOptions) =>
-    sonnerToast.warning(title, normalizeOpts(msgOrOpts)),
+  default: (title: unknown, msgOrOpts?: string | DnaToastOptions) =>
+    sonnerToast(normalizeTitle(title), normalizeOpts(msgOrOpts)),
+  success: (title: unknown, msgOrOpts?: string | DnaToastOptions) =>
+    sonnerToast.success(normalizeTitle(title), normalizeOpts(msgOrOpts)),
+  error: (title: unknown, msgOrOpts?: string | DnaToastOptions) =>
+    sonnerToast.error(normalizeTitle(title), normalizeOpts(msgOrOpts)),
+  info: (title: unknown, msgOrOpts?: string | DnaToastOptions) =>
+    sonnerToast.info(normalizeTitle(title), normalizeOpts(msgOrOpts)),
+  warning: (title: unknown, msgOrOpts?: string | DnaToastOptions) =>
+    sonnerToast.warning(normalizeTitle(title), normalizeOpts(msgOrOpts)),
   promise: sonnerToast.promise,
   dismiss: sonnerToast.dismiss,
-  loading: sonnerToast.loading,
+  loading: (title: unknown, msgOrOpts?: string | DnaToastOptions) =>
+    sonnerToast.loading(normalizeTitle(title), normalizeOpts(msgOrOpts)),
   // Direct callable form: dnaToast("title", "message") or dnaToast("title", { description })
-  __call__: (title: string, msgOrOpts?: string | DnaToastOptions) =>
-    sonnerToast(title, normalizeOpts(msgOrOpts)),
+  __call__: (title: unknown, msgOrOpts?: string | DnaToastOptions) =>
+    sonnerToast(normalizeTitle(title), normalizeOpts(msgOrOpts)),
 };
 
 // Proxy makes `dnaToast("title", "msg")` callable as a function AND

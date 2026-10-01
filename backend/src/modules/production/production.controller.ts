@@ -130,6 +130,11 @@ export class ProductionController {
     return this.productionService.getAllRequisitions();
   }
 
+  @Post('requisitions')
+  async createRequisition(@Body() dto: any) {
+    return this.productionService.createRequisition(dto);
+  }
+
   @Post('requisitions/:id/issue')
   async issueReq(@Param('id') id: string) {
     return this.productionService.issueMaterial(id);

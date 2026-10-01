@@ -45,7 +45,9 @@ import {
   DnaTableRow,
   DnaTh,
   DnaTd,
+  GoodsRequestPrintModal,
 } from "@/components/dna";
+import { Printer } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 export interface MrpItemRecord {
@@ -84,6 +86,7 @@ function KebutuhanBarangMRPContent() {
   const [selectedItem, setSelectedItem] = useState<MrpItemRecord | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(searchParams.get("action") === "create");
   const [manualNeeds, setManualNeeds] = useState<MrpItemRecord[]>([]);
+  const [isPrintGrqOpen, setIsPrintGrqOpen] = useState(false);
 
   // Live query from backend /scm/materials
   const {
@@ -378,6 +381,17 @@ function KebutuhanBarangMRPContent() {
                       </DnaTd>
                       <DnaTd className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                          <DnaButton
+                            size="sm"
+                            variant="ghost"
+                            icon={<Printer className="w-3.5 h-3.5 text-blue-600" />}
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setIsPrintGrqOpen(true);
+                            }}
+                            className="h-7 w-7 p-0 text-slate-400 hover:text-blue-600"
+                            title="Cetak Permintaan Barang (GRQ)"
+                          />
                           {item.netNeedQty > 0 && (
                             <DnaButton
                               size="sm"
@@ -422,9 +436,19 @@ function KebutuhanBarangMRPContent() {
         }
         footer={
           <div className="flex items-center justify-between w-full">
-            <DnaButton variant="outline" size="sm" onClick={() => setSelectedItem(null)}>
-              Tutup
-            </DnaButton>
+            <div className="flex items-center gap-2">
+              <DnaButton
+                variant="outline"
+                size="sm"
+                icon={<Printer className="w-4 h-4 text-blue-600" />}
+                onClick={() => setIsPrintGrqOpen(true)}
+              >
+                Cetak Permintaan (GRQ)
+              </DnaButton>
+              <DnaButton variant="outline" size="sm" onClick={() => setSelectedItem(null)}>
+                Tutup
+              </DnaButton>
+            </div>
             {selectedItem && selectedItem.netNeedQty > 0 && (
               <DnaButton
                 variant="primary"
@@ -646,6 +670,38 @@ function KebutuhanBarangMRPContent() {
           </div>
         </form>
       </DnaModal>
+
+      {/* Modal Cetak Permintaan Barang GRQ (Landscape 10-Kolom Standar Dreamlab) */}
+      <GoodsRequestPrintModal
+        isOpen={isPrintGrqOpen}
+        onClose={() => setIsPrintGrqOpen(false)}
+        data={
+          selectedItem
+            ? {
+                requestNumber: `GRQ-${selectedItem.salesOrderRef.replace("SO-", "")}`,
+                requestDate: new Date().toISOString().slice(0, 10),
+                status: "APPROVED",
+                requestingDept: "Produksi Pabrik CPKB",
+                sourceWarehouse: "Gudang Bahan Baku Utama",
+                createdBy: "Perencana Kebutuhan Material (MRP)",
+                notes: `Alokasi batch produksi ${selectedItem.brandProduct} (${selectedItem.clientName})`,
+                items: [
+                  {
+                    itemCode: selectedItem.materialCode,
+                    itemName: selectedItem.materialName,
+                    unit: selectedItem.unit,
+                    qtyRequested: selectedItem.grossRequirement,
+                    qtyApproved: selectedItem.grossRequirement,
+                    qtyIssued: selectedItem.realStockQty,
+                    qtyUsed: selectedItem.realStockQty,
+                    qtyReturned: 0,
+                    qtyDifference: selectedItem.netNeedQty,
+                  },
+                ],
+              }
+            : null
+        }
+      />
     </DnaPageContainer>
   );
 }

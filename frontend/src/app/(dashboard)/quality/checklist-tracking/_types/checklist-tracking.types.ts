@@ -64,6 +64,7 @@ export interface ProjectChecklistTrackingItem {
   customerName: string;
   brandName: string;
   productName: string;
+  productImageUrl?: string;
   busdevPic: string;
   orderDate: string;
   deadlineFinal: string;

@@ -225,7 +225,7 @@ export function ProcessInvoiceModal({
                   <p className="text-[10px] text-slate-500 mt-1">Tidak boleh melebihi hari ini</p>
                 </div>
                 <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Jatuh Tempo Pembayaran</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Deadline Pembayaran</label>
                   <input
                     type="date"
                     value={dueDate}

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, extractApiError } from "@/lib/api";
 import {
   FileText,
   Calendar,
@@ -138,13 +138,16 @@ export default function HrTicketsPage() {
       });
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Gagal membuat pengajuan tiket!");
+      toast.error("Gagal membuat pengajuan tiket!", extractApiError(err));
     },
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      return (await api.patch(`/hr/tickets/${id}`, { status })).data;
+      if (status === "APPROVED") {
+        return (await api.patch(`/hr/tickets/${id}/approve`, {})).data;
+      }
+      return (await api.patch(`/hr/tickets/${id}/reject`, {})).data;
     },
     onSuccess: (_, vars) => {
       toast.success(`Tiket berhasil di-${vars.status === "APPROVED" ? "setujui" : "tolak"}!`);
@@ -152,7 +155,7 @@ export default function HrTicketsPage() {
       setSelectedTicket(null);
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Gagal memperbarui status tiket!");
+      toast.error("Gagal memperbarui status tiket!", extractApiError(err));
     },
   });
 

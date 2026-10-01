@@ -43,7 +43,9 @@ import {
   DnaTh,
   DnaTd,
   DnaCell,
+  PoWarehousePrintModal,
 } from "@/components/dna";
+import { Printer } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -90,6 +92,7 @@ export default function PurchaseOrdersModernPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPo, setSelectedPo] = useState<PurchaseOrderRecord | null>(null);
+  const [isPrintWarehouseModalOpen, setIsPrintWarehouseModalOpen] = useState(false);
 
   // Live query from backend /scm/purchase-orders
   const {
@@ -352,7 +355,18 @@ export default function PurchaseOrdersModernPage() {
                         </span>
                       </DnaTd>
                       <DnaTd className="pr-4 py-2.5 text-right">
-                        <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                          <DnaButton
+                            variant="ghost"
+                            className="h-7 w-7 p-0 rounded hover:bg-slate-100 text-slate-400 hover:text-blue-600"
+                            onClick={() => {
+                              setSelectedPo(po);
+                              setIsPrintWarehouseModalOpen(true);
+                            }}
+                            title="Cetak PO (Gudang Copy)"
+                          >
+                            <Printer className="w-3.5 h-3.5 text-blue-600" />
+                          </DnaButton>
                           <DnaButton
                             variant="ghost"
                             className="h-7 w-7 p-0 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600"
@@ -390,9 +404,19 @@ export default function PurchaseOrdersModernPage() {
             <div className="text-xs text-slate-500">
               Dibuat oleh: <span className="font-semibold text-slate-700">{selectedPo?.creatorName}</span>
             </div>
-            <DnaButton variant="outline" size="sm" onClick={() => setSelectedPo(null)}>
-              Tutup
-            </DnaButton>
+            <div className="flex items-center gap-2">
+              <DnaButton
+                variant="outline"
+                size="sm"
+                icon={<Printer className="w-3.5 h-3.5 text-blue-600" />}
+                onClick={() => setIsPrintWarehouseModalOpen(true)}
+              >
+                Cetak PO (Gudang)
+              </DnaButton>
+              <DnaButton variant="outline" size="sm" onClick={() => setSelectedPo(null)}>
+                Tutup
+              </DnaButton>
+            </div>
           </div>
         }
       >
@@ -501,6 +525,29 @@ export default function PurchaseOrdersModernPage() {
           </div>
         )}
       </DnaDetailDrawer>
+      {/* Modal Cetak PO Khusus Gudang (Non-Price) */}
+      <PoWarehousePrintModal
+        isOpen={isPrintWarehouseModalOpen}
+        onClose={() => setIsPrintWarehouseModalOpen(false)}
+        data={
+          selectedPo
+            ? {
+                poNumber: selectedPo.poCode,
+                orderDate: selectedPo.date,
+                dueDate: selectedPo.deadlineDate,
+                vendorName: selectedPo.supplierName,
+                warehouseName: selectedPo.warehouseTarget,
+                notes: selectedPo.notes,
+                items: selectedPo.items.map((it) => ({
+                  itemCode: it.materialCode,
+                  itemName: it.materialName,
+                  qty: it.orderedQty,
+                  unit: it.unit,
+                })),
+              }
+            : null
+        }
+      />
     </DnaPageContainer>
   );
 }

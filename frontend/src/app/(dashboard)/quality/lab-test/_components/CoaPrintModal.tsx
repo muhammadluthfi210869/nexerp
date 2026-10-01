@@ -115,38 +115,38 @@ export function CoaPrintModal({ isOpen, onClose, result }: CoaPrintModalProps) {
           header: "No",
           align: "center",
           width: "35px",
-          render: (_, i) => i + 1,
+          render: (_: any, i: number) => i + 1,
         },
         {
           key: "parameter",
           header: "Parameter Pengujian",
-          render: (r) => <span className="font-bold text-slate-800">{r.parameter}</span>,
+          render: (r: any) => <span className="font-bold text-slate-800">{r.parameter}</span>,
         },
         {
           key: "specification",
           header: "Spesifikasi Standar",
           width: "180px",
-          render: (r) => <span className="text-slate-600 text-[11px]">{r.specification}</span>,
+          render: (r: any) => <span className="text-slate-600 text-[11px]">{r.specification}</span>,
         },
         {
           key: "method",
           header: "Metode Uji",
           width: "160px",
-          render: (r) => <span className="text-slate-500 text-[10.5px]">{r.method}</span>,
+          render: (r: any) => <span className="text-slate-500 text-[10.5px]">{r.method}</span>,
         },
         {
           key: "result",
           header: "Hasil Uji Aktual",
           align: "right",
           width: "120px",
-          render: (r) => <span className="font-bold text-slate-900">{r.result}</span>,
+          render: (r: any) => <span className="font-bold text-slate-900">{r.result}</span>,
         },
         {
           key: "evaluation",
           header: "Evaluasi",
           align: "center",
           width: "80px",
-          render: (r) => (
+          render: (r: any) => (
             <span className="font-bold text-emerald-600 text-[10.5px]">MS</span>
           ),
         },

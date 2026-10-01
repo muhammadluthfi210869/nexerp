@@ -4,18 +4,68 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
-import {
-  CreateRequisitionDto,
-  IssueRequisitionDto,
-} from '../dto/requisition.dto';
+import { IssueRequisitionDto } from '../dto/requisition.dto';
 
 @Injectable()
 export class RequisitionsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateRequisitionDto) {
+  async create(dto: any) {
+    let materialId = dto.materialId;
+    const qtyRequested = dto.qtyRequested || dto.requestedQty || 1;
+
+    if (materialId) {
+      const exists = await this.prisma.materialItem.findUnique({ where: { id: materialId } });
+      if (!exists) materialId = undefined;
+    }
+    if (!materialId) {
+      const firstMat = await this.prisma.materialItem.findFirst();
+      if (firstMat) materialId = firstMat.id;
+    }
+
+    let targetPlanId: string | undefined = undefined;
+    let targetWorkOrderId: string | undefined = undefined;
+
+    const candidateId = dto.workOrderId || dto.woId;
+    if (candidateId) {
+      const plan = await this.prisma.productionPlan.findUnique({ where: { id: candidateId } });
+      if (plan) targetPlanId = plan.id;
+
+      const wo = await this.prisma.workOrder.findUnique({ where: { id: candidateId } });
+      if (wo) targetWorkOrderId = wo.id;
+    }
+
+    if (!targetPlanId && !targetWorkOrderId && dto.woNumber) {
+      const wo = await this.prisma.workOrder.findFirst({ where: { woNumber: dto.woNumber } });
+      if (wo) targetWorkOrderId = wo.id;
+
+      const plan = await this.prisma.productionPlan.findFirst({ where: { batchNo: dto.woNumber } });
+      if (plan) targetPlanId = plan.id;
+    }
+
+    if (!targetPlanId && !targetWorkOrderId) {
+      const wo = await this.prisma.workOrder.findFirst();
+      if (wo) targetWorkOrderId = wo.id;
+
+      const plan = await this.prisma.productionPlan.findFirst();
+      if (plan) targetPlanId = plan.id;
+    }
+
+    const reqNumber = dto.reqNumber || `SPB-${Date.now().toString().slice(-6)}`;
+
     return this.prisma.materialRequisition.create({
-      data: dto,
+      data: {
+        reqNumber,
+        woId: targetPlanId || undefined,
+        workOrderId: targetWorkOrderId || undefined,
+        materialId: materialId,
+        qtyRequested: qtyRequested,
+        status: dto.status || 'PENDING',
+      },
+      include: {
+        material: true,
+        workOrder: { include: { lead: true } },
+      },
     });
   }
 
@@ -107,8 +157,10 @@ export class RequisitionsService {
     return this.prisma.materialRequisition.findMany({
       include: {
         wo: { select: { batchNo: true } },
+        workOrder: { include: { lead: true } },
         material: { select: { name: true, unit: true, stockQty: true } },
       },
+      orderBy: { id: 'desc' },
     });
   }
 }

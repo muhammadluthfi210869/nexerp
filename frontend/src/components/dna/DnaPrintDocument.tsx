@@ -82,7 +82,9 @@ export interface DnaPrintDocumentProps {
   termsAndConditions?: string[];
   signatures?: PrintSignature[];
   qrVerificationCode?: string;
+  stampBadge?: string; // e.g. "LUNAS", "VOID", "SAMPLE ONLY"
   paperMode?: "A4" | "THERMAL" | "HALF_LETTER";
+  orientation?: "portrait" | "landscape";
   customSections?: React.ReactNode;
   children?: React.ReactNode;
 }
@@ -122,7 +124,9 @@ export function DnaPrintDocument({
     { title: "Diterima Oleh", name: "...................", role: "Penerima" },
   ],
   qrVerificationCode,
+  stampBadge,
   paperMode = "A4",
+  orientation = "portrait",
   customSections,
   children,
 }: DnaPrintDocumentProps) {
@@ -161,6 +165,47 @@ export function DnaPrintDocument({
 
   const modalContent = (
     <div id="dna-print-document-modal" className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-2 md:p-6 overflow-y-auto print:static print:inset-auto print:p-0 print:m-0 print:bg-white print:overflow-visible">
+      {/* ── DEDICATED PRINT STYLESHEET WITH @PAGE ORIENTATION ── */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            @media print {
+              @page {
+                size: ${paperMode} ${orientation};
+                margin: 8mm;
+              }
+              body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              body > *:not(#dna-print-document-modal) {
+                display: none !important;
+              }
+              .no-print {
+                display: none !important;
+              }
+              #dna-print-document-modal {
+                position: static !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: transparent !important;
+                display: block !important;
+              }
+              .dna-printable-container {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: auto !important;
+              }
+            }
+          `,
+        }}
+      />
       {/* ── PREVIEW WINDOW CONTAINER ── */}
       <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl flex flex-col my-auto overflow-hidden animate-in zoom-in-95 duration-150 max-h-[92vh] print:max-h-none print:shadow-none print:border-none print:rounded-none print:m-0 print:p-0 print:w-full print:max-w-none print:overflow-visible">
         {/* ── TOP ACTION BAR (HIDDEN IN ACTUAL PRINT) ── */}
@@ -201,8 +246,20 @@ export function DnaPrintDocument({
         <div className="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-slate-100 flex justify-center print:p-0 print:m-0 print:bg-white print:overflow-visible print:block">
           <div
             ref={printAreaRef}
-            className="dna-printable-container bg-white w-full max-w-[210mm] min-h-[297mm] p-8 md:p-10 shadow-md md:rounded-lg text-slate-900 text-[11px] leading-relaxed flex flex-col justify-between border border-slate-200 print:border-none print:shadow-none print:p-0 print:m-0 print:w-full print:max-w-none print:min-h-0"
+            className={cn(
+              "dna-printable-container relative bg-white w-full p-8 md:p-10 shadow-md md:rounded-lg text-slate-900 text-[11px] leading-relaxed flex flex-col justify-between border border-slate-200 print:border-none print:shadow-none print:p-0 print:m-0 print:w-full print:max-w-none print:min-h-0",
+              orientation === "landscape"
+                ? "max-w-[297mm] min-h-[210mm]"
+                : "max-w-[210mm] min-h-[297mm]"
+            )}
           >
+            {stampBadge && (
+              <div className="absolute top-28 right-12 pointer-events-none select-none z-20 print:block">
+                <div className="border-[3.5px] border-rose-600 text-rose-600 font-black text-2xl tracking-widest px-6 py-1 rounded-lg -rotate-12 uppercase opacity-90 shadow-sm bg-white/70">
+                  {stampBadge}
+                </div>
+              </div>
+            )}
             {/* ══ 1. OFFICIAL COMPANY LETTERHEAD (KOP SURAT) ══ */}
             <div>
               <div className="flex items-start justify-between pb-4 border-b-2 border-slate-900 gap-4">

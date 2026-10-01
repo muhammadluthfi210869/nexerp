@@ -42,6 +42,7 @@ import {
   DnaTh,
   DnaTd,
   DnaCell,
+  StockOpnamePrintModal,
 } from "@/components/dna";
 
 interface AdjustmentItem {
@@ -85,6 +86,7 @@ export default function StockAdjustmentPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedAdjustment, setSelectedAdjustment] = useState<StockAdjustment | null>(null);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
   // Live catalog for materials in adjustments
   const { data: rawCatalog = [] } = useQuery({
@@ -416,14 +418,29 @@ export default function StockAdjustmentPage() {
 
                     {/* Kolom 9: Aksi */}
                     <DnaTd className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
-                      <DnaButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedAdjustment(adj)}
-                        className="text-slate-400 hover:text-blue-600"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </DnaButton>
+                      <div className="flex items-center justify-end gap-1">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedAdjustment(adj);
+                            setIsPrintModalOpen(true);
+                          }}
+                          className="text-slate-400 hover:text-blue-600 h-7 w-7 p-0"
+                          title="Cetak Stock Opname (STO)"
+                        >
+                          <Printer className="w-3.5 h-3.5 text-blue-600" />
+                        </DnaButton>
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedAdjustment(adj)}
+                          className="text-slate-400 hover:text-blue-600 h-7 w-7 p-0"
+                          title="Lihat Detail"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </DnaButton>
+                      </div>
                     </DnaTd>
                   </DnaTableRow>
                 ))
@@ -445,7 +462,7 @@ export default function StockAdjustmentPage() {
             <DnaButton
               variant="outline"
               size="sm"
-              onClick={() => toast.success(`Mencetak Bukti Adjustment ${selectedAdjustment?.adjustmentNumber}...`)}
+              onClick={() => setIsPrintModalOpen(true)}
             >
               <Printer className="w-4 h-4 mr-1.5" />
               Cetak Dokumen
@@ -635,6 +652,31 @@ export default function StockAdjustmentPage() {
           </div>
         </div>
       </DnaModal>
+      {/* Modal Cetak Dokumen Stock Opname Standar Landscape */}
+      <StockOpnamePrintModal
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        data={
+          selectedAdjustment
+            ? {
+                opnameNumber: selectedAdjustment.adjustmentNumber,
+                date: selectedAdjustment.adjustmentDate,
+                warehouseName: selectedAdjustment.warehouseName,
+                createdBy: selectedAdjustment.createdBy,
+                notes: selectedAdjustment.notes,
+                items: selectedAdjustment.items.map((it) => ({
+                  itemCode: it.itemCode,
+                  itemName: it.itemName,
+                  unit: it.unit,
+                  systemStock: it.systemQty,
+                  actualStock: it.actualQty,
+                  difference: it.differenceQty,
+                  notes: it.itemNotes,
+                })),
+              }
+            : null
+        }
+      />
     </DnaPageContainer>
   );
 }

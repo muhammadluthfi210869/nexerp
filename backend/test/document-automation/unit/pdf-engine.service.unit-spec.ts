@@ -167,6 +167,84 @@ describe('PdfEngineService — Unit Tests', () => {
       );
       expect(isPdfBuffer(result)).toBe(true);
     });
+
+    it('B9: SALES_ORDER → valid PDF', async () => {
+      const result = await service.generatePdf(
+        'SALES_ORDER',
+        baseData,
+        'SO-2609-001',
+      );
+      expect(isPdfBuffer(result)).toBe(true);
+    });
+
+    it('B10: BATCH_RECORD → valid PDF & template matches', async () => {
+      const html = service.renderTemplate('BATCH_RECORD', baseData, 'BR-2609-001');
+      expect(html).toContain('BATCH RECORD');
+      expect(html).toContain('Informasi Sales');
+      const result = await service.generatePdf('BATCH_RECORD', baseData, 'BR-2609-001');
+      expect(isPdfBuffer(result)).toBe(true);
+    });
+
+    it('B11: SCHEDULE_MIXING → valid PDF & includes upscale formula', async () => {
+      const html = service.renderTemplate('SCHEDULE_MIXING', { ...baseData, targetQty: 100, nettoPerPcs: 50 }, 'SM-2609-001');
+      expect(html).toContain('JADWAL MIXING');
+      expect(html).toContain('Perhitungan Upscale');
+      const result = await service.generatePdf('SCHEDULE_MIXING', baseData, 'SM-2609-001');
+      expect(isPdfBuffer(result)).toBe(true);
+    });
+
+    it('B12: SCHEDULE_PACKAGING → valid PDF & includes secondary packaging', async () => {
+      const html = service.renderTemplate('SCHEDULE_PACKAGING', baseData, 'SP-2609-001');
+      expect(html).toContain('JADWAL PACKAGING');
+      expect(html).toContain('Detail Kemasan Sekunder');
+      const result = await service.generatePdf('SCHEDULE_PACKAGING', baseData, 'SP-2609-001');
+      expect(isPdfBuffer(result)).toBe(true);
+    });
+
+    it('B13: KWITANSI → valid PDF & contains LUNAS stamp', async () => {
+      const html = service.renderTemplate('KWITANSI', baseData, 'KWT-2609-001');
+      expect(html).toContain('LUNAS');
+      expect(html).toContain('KWITANSI PEMBAYARAN');
+      const result = await service.generatePdf('KWITANSI', baseData, 'KWT-2609-001');
+      expect(isPdfBuffer(result)).toBe(true);
+    });
+
+    it('B14: REQUEST_COGS → valid PDF & contains HPP calculation', async () => {
+      const html = service.renderTemplate('REQUEST_COGS', baseData, 'RCG-2609-001');
+      expect(html).toContain('HARGA POKOK PENJUALAN (HPP)');
+      const result = await service.generatePdf('REQUEST_COGS', baseData, 'RCG-2609-001');
+      expect(isPdfBuffer(result)).toBe(true);
+    });
+
+    it('B15: SALES_SAMPLE → valid PDF & contains sensory characteristics', async () => {
+      const html = service.renderTemplate('SALES_SAMPLE', baseData, 'SS-2609-001');
+      expect(html).toContain('SALES SAMPLE');
+      expect(html).toContain('Deskripsi Sales Sample');
+      const result = await service.generatePdf('SALES_SAMPLE', baseData, 'SS-2609-001');
+      expect(isPdfBuffer(result)).toBe(true);
+    });
+
+    it('B16: GOODS_TRANSFER → valid PDF', async () => {
+      const html = service.renderTemplate('GOODS_TRANSFER', baseData, 'GT-2609-001');
+      expect(html).toContain('BUKTI TRANSFER BARANG');
+      const result = await service.generatePdf('GOODS_TRANSFER', baseData, 'GT-2609-001');
+      expect(isPdfBuffer(result)).toBe(true);
+    });
+
+    it('B17: STOCK_OPNAME → valid PDF & contains summary box', async () => {
+      const html = service.renderTemplate('STOCK_OPNAME', baseData, 'STO-2609-001');
+      expect(html).toContain('STOCK OPNAME');
+      expect(html).toContain('Ringkasan');
+      const result = await service.generatePdf('STOCK_OPNAME', baseData, 'STO-2609-001');
+      expect(isPdfBuffer(result)).toBe(true);
+    });
+
+    it('B18: PO_WAREHOUSE → valid PDF & is warehouse copy', async () => {
+      const html = service.renderTemplate('PO_WAREHOUSE', baseData, 'PO-2609-001');
+      expect(html).toContain('Warehouse Copy');
+      const result = await service.generatePdf('PO_WAREHOUSE', baseData, 'PO-2609-001');
+      expect(isPdfBuffer(result)).toBe(true);
+    });
   });
 
   describe('edge cases', () => {

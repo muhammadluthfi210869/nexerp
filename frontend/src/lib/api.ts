@@ -17,9 +17,30 @@ export const api = axios.create({
 
 export function extractApiError(error: unknown): { status: number; message: string; code: string } {
   if (axios.isAxiosError(error)) {
+    const data = error.response?.data;
+    let message = "Unknown error";
+    if (data) {
+      if (typeof data.message === "string") {
+        message = data.message;
+      } else if (Array.isArray(data.message)) {
+        message = data.message.map((m: unknown) => (typeof m === "string" ? m : JSON.stringify(m))).join(", ");
+      } else if (typeof data.detail === "string") {
+        message = data.detail;
+      } else if (typeof data.title === "string") {
+        message = data.title;
+      } else if (data.details?.fieldErrors && Array.isArray(data.details.fieldErrors)) {
+        message = data.details.fieldErrors.map((fe: any) => fe.message || fe.property || JSON.stringify(fe)).join(", ");
+      } else if (typeof data === "string") {
+        message = data;
+      } else if (typeof data === "object") {
+        message = JSON.stringify(data);
+      }
+    } else if (error.message) {
+      message = error.message;
+    }
     return {
       status: error.response?.status ?? 500,
-      message: error.response?.data?.message ?? error.message ?? "Unknown error",
+      message,
       code: error.response?.data?.code ?? "UNKNOWN_ERROR",
     };
   }

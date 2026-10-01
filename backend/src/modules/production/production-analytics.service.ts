@@ -28,12 +28,20 @@
  * dependency.
  */
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma/prisma.service';
+import { ProductionOeeService } from './services/production-oee.service';
+import { ProductionKpiService } from './services/production-kpi.service';
+import { ProductionCapacityService } from './services/production-capacity.service';
 
 @Injectable()
 export class ProductionAnalyticsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Optional() _oeeService?: ProductionOeeService,
+    @Optional() _kpiService?: ProductionKpiService,
+    @Optional() _capacityService?: ProductionCapacityService,
+  ) {}
 
   async getDashboardAnalytics() {
     const now = new Date();
@@ -546,7 +554,7 @@ export class ProductionAnalyticsService {
 
     const stages = ['WAITING_MATERIAL', 'MIXING', 'FILLING', 'PACKING'];
 
-    return stages.map((stage, idx) => {
+    return stages.map((stage) => {
       const wosAtStage = activeWOs.filter((wo) => wo.stage === stage);
       const batchCount = wosAtStage.length;
       const totalUnits = wosAtStage.reduce((sum, wo) => sum + wo.targetQty, 0);
@@ -1135,6 +1143,7 @@ export class ProductionAnalyticsService {
       targetQty: wo.targetQty,
       targetCompletion: wo.targetCompletion,
       currentStage: wo.stage,
+      totalDowntime,
       timeline,
       massBalance: {
         totalInput,

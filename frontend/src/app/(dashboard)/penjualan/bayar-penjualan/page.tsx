@@ -40,7 +40,9 @@ import {
   DnaTableRow,
   DnaTh,
   DnaTd,
+  KwitansiPrintModal,
 } from "@/components/dna";
+import { Printer } from "lucide-react";
 
 interface ReceivablePayment {
   id: string;
@@ -74,6 +76,8 @@ export default function BayarPenjualanPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedPayment, setSelectedPayment] = useState<ReceivablePayment | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isPrintReceiptOpen, setIsPrintReceiptOpen] = useState(false);
+  const [printReceiptData, setPrintReceiptData] = useState<any | null>(null);
 
   // Payment Input Form State
   const [formPayAmount, setFormPayAmount] = useState("");
@@ -361,10 +365,18 @@ export default function BayarPenjualanPage() {
                               variant="ghost"
                               className="h-7 px-2 text-[11px] text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
                               onClick={() => {
-                                toast.info("Bukti Pembayaran", `Faktur ${p.invoiceNumber} telah lunas.`);
+                                setPrintReceiptData({
+                                  code: `KWT-${p.invoiceNumber.replace("INV-", "")}`,
+                                  date: p.paymentDate,
+                                  customerName: p.customerName,
+                                  amount: p.paidAmount || p.totalAmount,
+                                  paymentMethod: p.bankAccount,
+                                  notes: `Pelunasan Faktur ${p.invoiceNumber} (${p.brandName || "Maklon"})`,
+                                });
+                                setIsPrintReceiptOpen(true);
                               }}
                             >
-                              <FileCheck2 className="w-3.5 h-3.5 mr-1" /> Lunas
+                              <Printer className="w-3.5 h-3.5 mr-1" /> Cetak Kwitansi
                             </DnaButton>
                           )}
                         </div>
@@ -525,6 +537,12 @@ export default function BayarPenjualanPage() {
           </form>
         )}
       </DnaDetailDrawer>
+      {/* Modal Cetak Kwitansi Standar (Stempel LUNAS Merah) */}
+      <KwitansiPrintModal
+        isOpen={isPrintReceiptOpen}
+        onClose={() => setIsPrintReceiptOpen(false)}
+        data={printReceiptData}
+      />
     </div>
   );
 }

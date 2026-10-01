@@ -27,6 +27,9 @@ interface GuestTableProps {
   cityFilter: string;
   onCityChange: (val: string) => void;
   cityOptions: string[];
+  monthFilter?: string;
+  onMonthChange?: (val: string) => void;
+  monthOptions?: string[];
   onSelectGuest: (guest: GuestBookEntry) => void;
   onOpenCreate: () => void;
 }
@@ -42,6 +45,9 @@ export function GuestTable({
   cityFilter,
   onCityChange,
   cityOptions,
+  monthFilter = "ALL",
+  onMonthChange,
+  monthOptions = [],
   onSelectGuest,
   onOpenCreate,
 }: GuestTableProps) {
@@ -52,6 +58,16 @@ export function GuestTable({
       type: "select" as const,
       options: ["BRANDED", "KLINIK", "PEMULA", "DISTRIBUTOR"],
     },
+    ...(monthOptions.length > 0
+      ? [
+          {
+            key: "month",
+            label: "Bulan Kunjungan",
+            type: "select" as const,
+            options: monthOptions,
+          },
+        ]
+      : []),
     ...(cityOptions.length > 0
       ? [
           {
@@ -67,6 +83,8 @@ export function GuestTable({
   const selectedColumn =
     categoryFilter !== "ALL"
       ? "category"
+      : monthFilter !== "ALL"
+      ? "month"
       : cityFilter !== "ALL"
       ? "city"
       : undefined;
@@ -74,6 +92,8 @@ export function GuestTable({
   const filterValue =
     categoryFilter !== "ALL"
       ? categoryFilter
+      : monthFilter !== "ALL"
+      ? monthFilter
       : cityFilter !== "ALL"
       ? cityFilter
       : "";
@@ -82,6 +102,7 @@ export function GuestTable({
     if (!colKey) {
       onCategoryChange("ALL");
       onCityChange("ALL");
+      onMonthChange?.("ALL");
     }
   };
 
@@ -89,8 +110,11 @@ export function GuestTable({
     if (!val || val === "ALL") {
       onCategoryChange("ALL");
       onCityChange("ALL");
+      onMonthChange?.("ALL");
     } else if (["BRANDED", "KLINIK", "PEMULA", "DISTRIBUTOR"].includes(val)) {
       onCategoryChange(val);
+    } else if (val.match(/^\d{4}-\d{2}$/)) {
+      onMonthChange?.(val);
     } else {
       onCityChange(val);
     }

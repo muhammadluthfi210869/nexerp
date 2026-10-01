@@ -139,6 +139,7 @@ model Supplier {
   addressDetail    String?
   termOfPayment    Int                      @default(0)
   categoryId       String?                  @db.Uuid
+  tax              Decimal?                 @db.Decimal(10, 2)
   performanceScore Float                    @default(0)
   deletedAt        DateTime?
   createdAt        DateTime                 @default(now())

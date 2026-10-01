@@ -309,6 +309,7 @@ const PURCHASE_SECTIONS: NavSection[] = [
       { name: "Permintaan Pembelian", href: "/pembelian/purchase-requests", icon: ClipboardList },
       { name: "Buat Pembelian (PO)", href: "/pembelian/scm-pembelian", icon: PlusCircle, badge: "PO", badgeVariant: "default" },
       { name: "Penerimaan Barang", href: "/pembelian/receiving", icon: PackageCheck },
+      { name: "Report Penerimaan", href: "/pembelian/report-penerimaan", icon: BarChart3, badge: "NEW", badgeVariant: "info" },
       { name: "Retur Pembelian", href: "/pembelian/purchase-returns", icon: XCircle },
       { name: "Kebutuhan Barang", href: "/pembelian/kebutuhan", icon: Layers },
       { name: "Faktur Pembelian", href: "/pembelian/faktur-pembelian", icon: CreditCard },
@@ -545,7 +546,7 @@ const SUPERADMIN_SECTIONS: NavSection[] = [
       { name: "Penjualan Sample", href: "/penjualan/sample-sales", icon: FlaskConical },
       { name: "DP Penjualan", href: "/penjualan/down-payment", icon: DollarSign },
       { name: "Faktur Penjualan", href: "/penjualan/faktur-penjualan", icon: FileSpreadsheet },
-      { name: "Bayar Penjualan", href: "/penjualan/bayar-penjualan", icon: Wallet },
+      { name: "Report Penjualan", href: "/penjualan/bayar-penjualan", icon: Wallet },
       { name: "Retur Penjualan", href: "/penjualan/retur-penjualan", icon: XCircle },
       { name: "Target Penjualan", href: "/penjualan/sales-target", icon: Gauge },
     ]

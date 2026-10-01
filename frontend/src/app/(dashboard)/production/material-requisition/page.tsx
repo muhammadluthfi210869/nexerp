@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, extractApiError } from "@/lib/api";
 import { unwrapResponse } from "@/lib/unwrap-response";
 import {
   Layers,
@@ -84,7 +84,7 @@ export default function MaterialRequisitionPage() {
   const [formRequester, setFormRequester] = useState("Hendra Wijaya");
   const [formNotes, setFormNotes] = useState("");
 
-  const { data: serverRequisitions, isLoading } = useQuery<MaterialRequisitionItem[]>({
+  const { data: serverRequisitions, refetch } = useQuery<MaterialRequisitionItem[]>({
     queryKey: ["production-material-requisitions"],
     queryFn: async () => {
       try {
@@ -93,7 +93,7 @@ export default function MaterialRequisitionPage() {
         if (Array.isArray(unwrapped)) {
           return unwrapped.map((item: any, idx: number) => ({
             id: item.id || `spb-${idx}`,
-            code: item.code || item.spbNumber || `SPB-PRD-2026-${String(idx + 1).padStart(4, "0")}`,
+            code: item.code || item.spbNumber || item.reqNumber || `SPB-PRD-2026-${String(idx + 1).padStart(4, "0")}`,
             date: item.date ? String(item.date).slice(0, 10) : new Date().toISOString().slice(0, 10),
             spkCode: item.spkCode || item.workOrder?.woNumber || "SPK-2026-0001",
             batchNumber: item.batchNumber || item.workOrder?.batchNumber || "BATCH-2026-0001",
@@ -101,10 +101,10 @@ export default function MaterialRequisitionPage() {
             brandName: item.brandName || item.workOrder?.lead?.brandName || "GlowGoddess",
             productName: item.productName || item.workOrder?.lead?.productInterest || "Brightening Serum 30ml",
             requestType: (item.requestType || "RAW_MATERIAL") as MaterialRequisitionItem["requestType"],
-            totalItems: Number(item.totalItems) || (Array.isArray(item.items) ? item.items.length : 3),
+            totalItems: Number(item.totalItems) || (Array.isArray(item.items) ? item.items.length : 1),
             itemsSummary: item.itemsSummary || (Array.isArray(item.items) ? item.items.map((i: any) => i.material?.name || i.materialName).filter(Boolean).join(", ") : "Niacinamide, Aqua, Glycerin"),
             sourceWarehouse: item.sourceWarehouse || "WH-01 (Gudang Bahan Baku)",
-            status: (item.status || "SUBMITTED") as MaterialRequisitionItem["status"],
+            status: (item.status === 'PENDING' ? 'SUBMITTED' : item.status || "SUBMITTED") as MaterialRequisitionItem["status"],
             requestedBy: item.requestedBy || "Hendra Wijaya",
             issuedBy: item.issuedBy || undefined,
             notes: item.notes || "",
@@ -117,46 +117,9 @@ export default function MaterialRequisitionPage() {
     },
   });
 
-  const [localRequisitions, setLocalRequisitions] = useState<MaterialRequisitionItem[]>([
-    {
-      id: "spb-demo-1",
-      code: "SPB-PRD-2026-0001",
-      date: "2026-09-02",
-      spkCode: "SPK-2026-0043",
-      batchNumber: "BATCH-890123",
-      customerName: "PT Glow Skin Global",
-      brandName: "Glow Skin",
-      productName: "Acne Clarifying Serum 30ml",
-      requestType: "RAW_MATERIAL",
-      totalItems: 4,
-      itemsSummary: "Centella Extract, Niacinamide, Aqua, Glycerin",
-      sourceWarehouse: "WH-01 (Gudang Bahan Baku)",
-      status: "SUBMITTED",
-      requestedBy: "Hendra Wijaya",
-      notes: "Prioritas batch utama.",
-    },
-    {
-      id: "spb-demo-2",
-      code: "SPB-PRD-2026-0002",
-      date: "2026-09-03",
-      spkCode: "SPK-2026-0044",
-      batchNumber: "BATCH-890124",
-      customerName: "CV Cantika Ayu",
-      brandName: "Cantika Beauty",
-      productName: "Hydrating Barrier Toner 100ml",
-      requestType: "PRIMARY_PACKAGING",
-      totalItems: 2,
-      itemsSummary: "Botol Toner 100ml Doff, Cap Flip Top Gold",
-      sourceWarehouse: "WH-02 (Gudang Kemas)",
-      status: "FULLY_ISSUED",
-      requestedBy: "Siti Rahma",
-      notes: "Selesai ditimbang dan dirilis gudang.",
-    },
-  ]);
-
   const requisitions = useMemo(() => {
-    return [...localRequisitions, ...(serverRequisitions || [])];
-  }, [localRequisitions, serverRequisitions]);
+    return serverRequisitions || [];
+  }, [serverRequisitions]);
 
   const filteredRequisitions = useMemo(() => {
     return requisitions.filter((r) => {
@@ -188,38 +151,43 @@ export default function MaterialRequisitionPage() {
   const totalIssued = requisitions.filter((r) => r.status === "FULLY_ISSUED").length;
   const rawMaterialReqs = requisitions.filter((r) => r.requestType === "RAW_MATERIAL").length;
 
-  const handleCreateRequisition = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleCreateRequisition = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formSpk || !formProduct) {
       toast.error("Validasi Gagal", "Harap lengkapi No. SPK dan nama produk.");
       return;
     }
 
-    const newReq: MaterialRequisitionItem = {
-      id: `spb-${Date.now()}`,
-      code: `SPB-PRD-2026-${String(requisitions.length + 95).padStart(4, "0")}`,
-      date: new Date().toISOString().slice(0, 10),
-      spkCode: formSpk,
-      batchNumber: `BATCH-${String(Date.now()).slice(-6)}`,
-      customerName: formCustomer || "Klien Internal",
-      brandName: formBrand || "Aurora Glow",
-      productName: formProduct,
-      requestType: formType,
-      totalItems: formItems.split(",").filter((i) => i.trim()).length || 1,
-      itemsSummary: formItems || "Bahan Formulir Baru",
-      sourceWarehouse: formWarehouse,
-      status: "SUBMITTED",
-      requestedBy: formRequester,
-      notes: formNotes,
-    };
+    setIsSubmitting(true);
+    try {
+      await api.post("/production/requisitions", {
+        woNumber: formSpk,
+        productName: formProduct,
+        brandName: formBrand,
+        customerName: formCustomer,
+        requestType: formType,
+        sourceWarehouse: formWarehouse,
+        itemsSummary: formItems,
+        requestedBy: formRequester,
+        notes: formNotes,
+      });
 
-    setLocalRequisitions((prev) => [newReq, ...prev]);
-    setIsCreateModalOpen(false);
-    setFormSpk("");
-    setFormProduct("");
-    setFormItems("");
-    setFormNotes("");
-    toast.success("SPB Berhasil Diterbitkan", `Surat Permintaan ${newReq.code} berhasil diajukan.`);
+      await refetch();
+      setIsCreateModalOpen(false);
+      setFormSpk("");
+      setFormProduct("");
+      setFormBrand("");
+      setFormCustomer("");
+      setFormItems("");
+      setFormNotes("");
+      toast.success("SPB Berhasil Diterbitkan", "Surat Permintaan Bahan berhasil diajukan ke sistem.");
+    } catch (err: any) {
+      toast.error("Gagal Mengajukan SPB", extractApiError(err));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -430,8 +398,8 @@ export default function MaterialRequisitionPage() {
             <DnaButton variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
               Batal
             </DnaButton>
-            <DnaButton variant="primary" onClick={handleCreateRequisition}>
-              Ajukan SPB
+            <DnaButton variant="primary" disabled={isSubmitting} onClick={handleCreateRequisition}>
+              {isSubmitting ? "Mengajukan..." : "Ajukan SPB"}
             </DnaButton>
           </div>
         }

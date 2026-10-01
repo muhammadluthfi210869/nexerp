@@ -215,6 +215,58 @@ export class ProductionWorkOrderService {
   }
 
 
+  async createRequisition(dto: {
+    workOrderId?: string;
+    woNumber?: string;
+    materialId?: string;
+    qtyRequested?: number;
+    notes?: string;
+  }) {
+    let woId = dto.workOrderId;
+    if (!woId && dto.woNumber) {
+      const wo = await this.prisma.workOrder.findFirst({
+        where: {
+          OR: [
+            { id: dto.woNumber },
+            { woNumber: dto.woNumber },
+          ],
+        },
+      });
+      if (wo) woId = wo.id;
+    }
+
+    if (!woId) {
+      const firstWo = await this.prisma.workOrder.findFirst();
+      if (firstWo) woId = firstWo.id;
+    }
+
+    let materialId = dto.materialId;
+    if (!materialId) {
+      const firstMat = await this.prisma.materialItem.findFirst();
+      if (firstMat) materialId = firstMat.id;
+    }
+
+    if (!materialId) {
+      throw new BadRequestException('Tidak ada data material yang dapat diajukan SPB');
+    }
+
+    const reqNumber = await this.idGenerator.generateId('SPB');
+
+    return this.prisma.materialRequisition.create({
+      data: {
+        reqNumber,
+        workOrderId: woId,
+        materialId,
+        qtyRequested: dto.qtyRequested || 1,
+        status: 'PENDING',
+      },
+      include: {
+        workOrder: { include: { lead: true } },
+        material: true,
+      },
+    });
+  }
+
   async getAllRequisitions() {
     const reqs = await this.prisma.materialRequisition.findMany({
       include: {

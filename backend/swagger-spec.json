@@ -2447,7 +2447,32 @@
     "/v1/lead-capture/kommo-webhook": {
       "post": {
         "operationId": "LeadCaptureController_kommoWebhook",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-kommo-secret",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-webhook-token",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "secret",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -4831,6 +4856,23 @@
         "operationId": "LeadsController_list",
         "parameters": [
           {
+            "name": "stage",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LEADS_MASUK",
+                "FOLLOW_UP",
+                "INTERESTED",
+                "DEAL_NEGOTIATION",
+                "DEAL_WON",
+                "DEAL_LOST",
+                "NURTURING"
+              ]
+            }
+          },
+          {
             "name": "assignedToId",
             "required": true,
             "in": "query",
@@ -4907,6 +4949,23 @@
       "get": {
         "operationId": "LeadsController_listLive",
         "parameters": [
+          {
+            "name": "stage",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LEADS_MASUK",
+                "FOLLOW_UP",
+                "INTERESTED",
+                "DEAL_NEGOTIATION",
+                "DEAL_WON",
+                "DEAL_LOST",
+                "NURTURING"
+              ]
+            }
+          },
           {
             "name": "assignedToId",
             "required": true,
@@ -6106,6 +6165,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePoStatusDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -6116,7 +6185,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update PO status (approve/reject)",
+        "summary": "Update PO status (state machine transition)",
         "tags": [
           "purchase"
         ]
@@ -6135,6 +6204,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePoStatusDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -6145,7 +6224,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update PO status (approve/reject)",
+        "summary": "Update PO status (state machine transition)",
         "tags": [
           "purchase"
         ]
@@ -7446,6 +7525,33 @@
         "tags": [
           "purchase"
         ]
+      },
+      "patch": {
+        "operationId": "PurchaseInvoicesController_update[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update purchase invoice details",
+        "tags": [
+          "purchase"
+        ]
       }
     },
     "/v1/scm/purchase-invoices/{id}": {
@@ -7472,6 +7578,149 @@
           }
         ],
         "summary": "Get a single Purchase Invoice by ID",
+        "tags": [
+          "purchase"
+        ]
+      },
+      "patch": {
+        "operationId": "PurchaseInvoicesController_update[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update purchase invoice details",
+        "tags": [
+          "purchase"
+        ]
+      }
+    },
+    "/v1/purchase/invoices/{id}/unpaid-reason": {
+      "patch": {
+        "operationId": "PurchaseInvoicesController_updateUnpaidReason[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update unpaid reason notes for purchase invoice",
+        "tags": [
+          "purchase"
+        ]
+      }
+    },
+    "/v1/purchase/invoices/{id}/reason": {
+      "patch": {
+        "operationId": "PurchaseInvoicesController_updateUnpaidReason[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update unpaid reason notes for purchase invoice",
+        "tags": [
+          "purchase"
+        ]
+      }
+    },
+    "/v1/scm/purchase-invoices/{id}/unpaid-reason": {
+      "patch": {
+        "operationId": "PurchaseInvoicesController_updateUnpaidReason[2]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update unpaid reason notes for purchase invoice",
+        "tags": [
+          "purchase"
+        ]
+      }
+    },
+    "/v1/scm/purchase-invoices/{id}/reason": {
+      "patch": {
+        "operationId": "PurchaseInvoicesController_updateUnpaidReason[3]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update unpaid reason notes for purchase invoice",
         "tags": [
           "purchase"
         ]
@@ -8169,7 +8418,7 @@
     },
     "/v1/material-requisitions": {
       "post": {
-        "operationId": "RequisitionsController_create",
+        "operationId": "RequisitionsController_create[0]",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -8191,7 +8440,7 @@
         ]
       },
       "get": {
-        "operationId": "RequisitionsController_findAll",
+        "operationId": "RequisitionsController_findAll[0]",
         "parameters": [],
         "responses": {
           "200": {
@@ -8203,9 +8452,35 @@
         ]
       }
     },
+    "/v1/production/requisitions": {
+      "post": {
+        "operationId": "ProductionController_createRequisition",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Production"
+        ]
+      },
+      "get": {
+        "operationId": "ProductionController_getRequisitions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Production"
+        ]
+      }
+    },
     "/v1/material-requisitions/{id}/issue": {
       "patch": {
-        "operationId": "RequisitionsController_issue",
+        "operationId": "RequisitionsController_issue[0]",
         "parameters": [
           {
             "name": "id",
@@ -8236,9 +8511,77 @@
         ]
       }
     },
+    "/v1/production/requisitions/{id}/issue": {
+      "patch": {
+        "operationId": "RequisitionsController_issue[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueRequisitionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Requisitions"
+        ]
+      },
+      "post": {
+        "operationId": "ProductionController_issueReq",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Production"
+        ]
+      }
+    },
     "/v1/material-requisitions/aggregated": {
       "get": {
-        "operationId": "RequisitionsController_getAggregated",
+        "operationId": "RequisitionsController_getAggregated[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Requisitions"
+        ]
+      }
+    },
+    "/v1/production/requisitions/aggregated": {
+      "get": {
+        "operationId": "RequisitionsController_getAggregated[1]",
         "parameters": [],
         "responses": {
           "200": {
@@ -11051,6 +11394,20 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "PAID",
+                "PARTIAL",
+                "OVERDUE"
+              ]
+            }
           }
         ],
         "responses": {
@@ -11254,6 +11611,20 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "PAID",
+                "PARTIAL",
+                "OVERDUE"
+              ]
+            }
           }
         ],
         "responses": {
@@ -11436,6 +11807,20 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "PAID",
+                "PARTIAL",
+                "OVERDUE"
+              ]
             }
           }
         ],
@@ -17570,43 +17955,6 @@
         ]
       }
     },
-    "/v1/production/requisitions": {
-      "get": {
-        "operationId": "ProductionController_getRequisitions",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Production"
-        ]
-      }
-    },
-    "/v1/production/requisitions/{id}/issue": {
-      "post": {
-        "operationId": "ProductionController_issueReq",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Production"
-        ]
-      }
-    },
     "/v1/production/requisitions/{id}/shortage": {
       "post": {
         "operationId": "ProductionController_shortageReq",
@@ -18645,6 +18993,33 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "APPROVED",
+                "REJECTED",
+                "DISBURSED"
+              ]
+            }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LEAVE",
+                "OVERTIME",
+                "REIMBURSE"
+              ]
             }
           }
         ],
@@ -23435,6 +23810,19 @@
             }
           },
           {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "OPEN",
+                "CLOSED",
+                "ARCHIVED"
+              ]
+            }
+          },
+          {
             "name": "mine",
             "required": true,
             "in": "query",
@@ -24819,12 +25207,25 @@
     }
   },
   "info": {
-    "title": "Porto Aureon ERP API",
+    "title": "NexERP API",
     "description": "The ultimate manufacturing ERP system API documentation",
     "version": "4.0",
     "contact": {}
   },
-  "tags": [],
+  "tags": [
+    {
+      "name": "rnd",
+      "description": ""
+    },
+    {
+      "name": "finance",
+      "description": ""
+    },
+    {
+      "name": "bussdev",
+      "description": ""
+    }
+  ],
   "servers": [],
   "components": {
     "schemas": {
@@ -25297,6 +25698,10 @@
         "required": [
           "supplierId"
         ]
+      },
+      "UpdatePoStatusDto": {
+        "type": "object",
+        "properties": {}
       },
       "CreatePurchaseRequestDto": {
         "type": "object",

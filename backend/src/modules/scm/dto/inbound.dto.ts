@@ -37,6 +37,14 @@ export class InboundItemDto {
 
   @IsOptional()
   @IsString()
+  batchNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  expDate?: string;
+
+  @IsOptional()
+  @IsString()
   notes?: string;
 }
 

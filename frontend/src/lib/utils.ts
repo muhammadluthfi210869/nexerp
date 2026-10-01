@@ -46,3 +46,37 @@ export function calendarDayDiff(from?: Date | null, to?: Date | null): number {
 export function formatRupiah(value: number): string {
   return `Rp ${Number(value || 0).toLocaleString("id-ID")}`
 }
+
+export function terbilangRupiah(value: number): string {
+  const bilangan = [
+    "",
+    "Satu",
+    "Dua",
+    "Tiga",
+    "Empat",
+    "Lima",
+    "Enam",
+    "Tujuh",
+    "Delapan",
+    "Sembilan",
+    "Sepuluh",
+    "Sebelas",
+  ];
+
+  function toWords(n: number): string {
+    const num = Math.floor(Math.abs(n));
+    if (num < 12) return bilangan[num];
+    if (num < 20) return `${toWords(num - 10)} Belas`;
+    if (num < 100) return `${toWords(Math.floor(num / 10))} Puluh ${toWords(num % 10)}`.trim();
+    if (num < 200) return `Seratus ${toWords(num - 100)}`.trim();
+    if (num < 1000) return `${toWords(Math.floor(num / 100))} Ratus ${toWords(num % 100)}`.trim();
+    if (num < 2000) return `Seribu ${toWords(num - 1000)}`.trim();
+    if (num < 1000000) return `${toWords(Math.floor(num / 1000))} Ribu ${toWords(num % 1000)}`.trim();
+    if (num < 1000000000) return `${toWords(Math.floor(num / 1000000))} Juta ${toWords(num % 1000000)}`.trim();
+    if (num < 1000000000000) return `${toWords(Math.floor(num / 1000000000))} Miliar ${toWords(num % 1000000000)}`.trim();
+    return `${toWords(Math.floor(num / 1000000000000))} Triliun ${toWords(num % 1000000000000)}`.trim();
+  }
+
+  if (value === 0) return "Nol Rupiah";
+  return `${toWords(value)} Rupiah`;
+}

@@ -34,6 +34,7 @@ import {
   DnaTableRow,
   DnaTh,
   DnaTd,
+  CogsRequestPrintModal,
 } from "@/components/dna";
 
 interface ArchivedFormula {
@@ -101,6 +102,7 @@ export default function RndRepositoryPage() {
   const [activeTab, setActiveTab] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFormula, setSelectedFormula] = useState<ArchivedFormula | null>(null);
+  const [isPrintCogsOpen, setIsPrintCogsOpen] = useState(false);
 
   const { data: serverFormulas, isLoading } = useQuery({
     queryKey: ["master-formulas"],
@@ -257,14 +259,27 @@ export default function RndRepositoryPage() {
                       <DnaCell.Badge status={formula.status} />
                     </DnaTd>
                     <DnaTd className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedFormula(formula)}
-                        className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors border-none bg-transparent cursor-pointer"
-                        title="Lihat Detail Formula Vault"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedFormula(formula);
+                            setIsPrintCogsOpen(true);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors border-none bg-transparent cursor-pointer"
+                          title="Cetak RCG (HPP)"
+                        >
+                          <Printer className="w-3.5 h-3.5 text-blue-600" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFormula(formula)}
+                          className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors border-none bg-transparent cursor-pointer"
+                          title="Lihat Detail Formula Vault"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </DnaTd>
                   </DnaTableRow>
                 ))
@@ -292,9 +307,16 @@ export default function RndRepositoryPage() {
             <DnaButton
               variant="outline"
               size="sm"
+              onClick={() => setIsPrintCogsOpen(true)}
+            >
+              <Printer className="w-4 h-4 mr-1.5 text-blue-600" />
+              Cetak RCG (HPP)
+            </DnaButton>
+            <DnaButton
+              variant="secondary"
+              size="sm"
               onClick={() => toast.success(`Mencetak Bukti Arsip Vault ${selectedFormula?.id}...`)}
             >
-              <Printer className="w-4 h-4 mr-1.5" />
               Cetak Dokumen
             </DnaButton>
           </div>
@@ -340,6 +362,38 @@ export default function RndRepositoryPage() {
           </div>
         )}
       </DnaDetailDrawer>
+
+      {/* Modal Cetak Request COGS (HPP) Standar Dreamlab */}
+      <CogsRequestPrintModal
+        isOpen={isPrintCogsOpen}
+        onClose={() => setIsPrintCogsOpen(false)}
+        data={
+          selectedFormula
+            ? {
+                requestCode: `RCG-${selectedFormula.id.replace("FORM-", "")}`,
+                date: selectedFormula.releasedAt,
+                customerName: "PT Cantika Glow Nusantara",
+                sampleCode: selectedFormula.sampleCode,
+                productName: selectedFormula.name,
+                nettoSample: "30 ml",
+                formulaRevision: selectedFormula.activeVersion,
+                createdBy: selectedFormula.createdBy,
+                items: [
+                  {
+                    netto: 30,
+                    moq: 1000,
+                    hppProduk: 12500,
+                    marginOp: 2500,
+                    hppPrimer1: 3500,
+                    hppPrimer2: 500,
+                    hppSekunder: 1500,
+                    totalHpp: 20500,
+                  },
+                ],
+              }
+            : null
+        }
+      />
     </DnaPageContainer>
   );
 }

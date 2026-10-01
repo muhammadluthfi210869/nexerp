@@ -63,7 +63,7 @@ export function SpkPrintModal({ isOpen, onClose, schedule }: SpkPrintModalProps)
           header: "No",
           align: "center",
           width: "40px",
-          render: (_, i) => i + 1,
+          render: (_: any, i: number) => i + 1,
         },
         {
           key: "productName",

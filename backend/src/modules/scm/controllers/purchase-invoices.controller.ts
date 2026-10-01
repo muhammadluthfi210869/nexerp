@@ -6,6 +6,7 @@ import {
   Param,
   Query,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -57,5 +58,27 @@ export class PurchaseInvoicesController {
   @ApiOperation({ summary: 'Get a single Purchase Invoice by ID' })
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
+  }
+
+  @Patch([':id/unpaid-reason', ':id/reason'])
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Update unpaid reason notes for purchase invoice' })
+  updateUnpaidReason(
+    @Param('id') id: string,
+    @Body('unpaidReason') unpaidReason: string,
+    @Body('notes') notes?: string,
+  ) {
+    return this.service.updateUnpaidReason(id, unpaidReason, notes);
+  }
+
+  @Patch(':id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PURCHASING, UserRole.FINANCE)
+  @ApiOperation({ summary: 'Update purchase invoice details' })
+  update(
+    @Param('id') id: string,
+    @Body('unpaidReason') unpaidReason?: string,
+    @Body('notes') notes?: string,
+  ) {
+    return this.service.updateUnpaidReason(id, unpaidReason || '', notes);
   }
 }

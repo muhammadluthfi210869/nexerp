@@ -8,6 +8,7 @@ import {
   Query,
   Param,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -164,19 +165,23 @@ export class HrController {
   @ApiOperation({ summary: 'Approve a ticket' })
   approveTicket(
     @Param('id') id: string,
-    @Body('authorizedById') authorizedById: string,
+    @Body('authorizedById') authorizedById?: string,
+    @Req() req?: any,
   ) {
-    return this.hrService.approveTicket(id, authorizedById);
+    const approver = authorizedById || req?.user?.userId || req?.user?.id;
+    return this.hrService.approveTicket(id, approver);
   }
 
   @Patch('tickets/:id/reject')
   @ApiOperation({ summary: 'Reject a ticket' })
   rejectTicket(
     @Param('id') id: string,
-    @Body('authorizedById') authorizedById: string,
+    @Body('authorizedById') authorizedById?: string,
     @Body('reason') reason?: string,
+    @Req() req?: any,
   ) {
-    return this.hrService.rejectTicket(id, authorizedById, reason);
+    const approver = authorizedById || req?.user?.userId || req?.user?.id;
+    return this.hrService.rejectTicket(id, approver, reason);
   }
 
   // --- RECRUITMENT & CANDIDATES ATS (BUS-RULE-115) ---
@@ -342,8 +347,10 @@ export class HrController {
   @Post('payroll/authorize/:id')
   authorizePayroll(
     @Param('id') id: string,
-    @Body('authorizedById') authorizedById: string,
+    @Body('authorizedById') authorizedById?: string,
+    @Req() req?: any,
   ) {
-    return this.hrService.authorizePayroll(id, authorizedById);
+    const authorizer = authorizedById || req?.user?.userId || req?.user?.id;
+    return this.hrService.authorizePayroll(id, authorizer);
   }
 }

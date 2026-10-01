@@ -273,26 +273,46 @@ export function ProjectChecklistTable({
                         {idx + 1}
                       </DnaTd>
 
-                      {/* 2: Projek & Pelanggan (Penggabungan SO, Pelanggan, Brand & Produk) */}
+                      {/* 2: Projek & Pelanggan (Penggabungan SO, Pelanggan, Brand & Produk + Thumbnail Kemasan) */}
                       <DnaTd className="p-2.5 border-r border-slate-100">
-                        <div className="flex items-center gap-1.5 leading-tight">
-                          <span className="tabular-nums font-bold text-blue-600 text-xs font-mono bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 shrink-0">
-                            {proj.soCode}
-                          </span>
-                          <span
-                            className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate max-w-[150px]"
-                            title={proj.customerName}
-                          >
-                            {proj.customerName}
-                          </span>
-                        </div>
-                        <div
-                          className="text-[10.5px] text-slate-500 truncate mt-1"
-                          title={`${proj.brandName} — ${proj.productName}`}
-                        >
-                          <span className="font-semibold text-slate-800">{proj.brandName}</span>
-                          <span className="text-slate-400 mx-1">•</span>
-                          <span className="text-blue-700 font-medium">{proj.productName}</span>
+                        <div className="flex items-start gap-2.5">
+                          {/* Foto / Thumbnail Kemasan Produk */}
+                          <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 mt-0.5">
+                            {proj.productImageUrl ? (
+                              <img
+                                src={proj.productImageUrl}
+                                alt={proj.productName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400">
+                                <Sparkles className="w-4 h-4 text-purple-400" />
+                                <span className="text-[8px] font-bold uppercase mt-0.5">Pack</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 leading-tight">
+                              <span className="tabular-nums font-bold text-blue-600 text-xs font-mono bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 shrink-0">
+                                {proj.soCode}
+                              </span>
+                              <span
+                                className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate max-w-[150px]"
+                                title={proj.customerName}
+                              >
+                                {proj.customerName}
+                              </span>
+                            </div>
+                            <div
+                              className="text-[10.5px] text-slate-500 truncate mt-1"
+                              title={`${proj.brandName} — ${proj.productName}`}
+                            >
+                              <span className="font-semibold text-slate-800">{proj.brandName}</span>
+                              <span className="text-slate-400 mx-1">•</span>
+                              <span className="text-blue-700 font-medium">{proj.productName}</span>
+                            </div>
+                          </div>
                         </div>
                       </DnaTd>
 

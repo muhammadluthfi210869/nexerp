@@ -18,6 +18,8 @@ const INITIAL_FORM_DATA: GuestBookFormData = {
   busDev: "Irma Safarina",
 };
 
+const DRAFT_STORAGE_KEY = "nexerp_guest_book_draft";
+
 export function useGuestBookOperations() {
   const toast = useDnaToast();
   const searchParams = useSearchParams();
@@ -30,12 +32,36 @@ export function useGuestBookOperations() {
   // Filters
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [cityFilter, setCityFilter] = useState("ALL");
+  const [monthFilter, setMonthFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState<GuestBookEntry | null>(null);
 
-  // Form input
-  const [formData, setFormData] = useState<GuestBookFormData>(INITIAL_FORM_DATA);
+  // Form input with auto-save draft
+  const [formData, setFormData] = useState<GuestBookFormData>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+        if (savedDraft) {
+          return { ...INITIAL_FORM_DATA, ...JSON.parse(savedDraft) };
+        }
+      } catch {
+        // fallback
+      }
+    }
+    return INITIAL_FORM_DATA;
+  });
+
+  // Save draft whenever formData changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(formData));
+      } catch {
+        // ignore quota errors
+      }
+    }
+  }, [formData]);
 
   const fetchGuests = useCallback(async () => {
     setLoading(true);
@@ -88,6 +114,18 @@ export function useGuestBookOperations() {
     return Array.from(set);
   }, [guests]);
 
+  // Unique months for filter (format YYYY-MM)
+  const monthOptions = useMemo(() => {
+    const set = new Set<string>();
+    guests.forEach((g) => {
+      if (g.dateTime) {
+        const yyyymm = g.dateTime.slice(0, 7);
+        if (yyyymm) set.add(yyyymm);
+      }
+    });
+    return Array.from(set).sort().reverse();
+  }, [guests]);
+
   const filteredGuests = useMemo(() => {
     return guests.filter((g) => {
       const matchSearch =
@@ -101,10 +139,11 @@ export function useGuestBookOperations() {
 
       const matchCategory = categoryFilter === "ALL" || g.category === categoryFilter;
       const matchCity = cityFilter === "ALL" || g.city.toLowerCase() === cityFilter.toLowerCase();
+      const matchMonth = monthFilter === "ALL" || (g.dateTime && g.dateTime.startsWith(monthFilter));
 
-      return matchSearch && matchCategory && matchCity;
+      return matchSearch && matchCategory && matchCity && matchMonth;
     });
-  }, [guests, searchQuery, categoryFilter, cityFilter]);
+  }, [guests, searchQuery, categoryFilter, cityFilter, monthFilter]);
 
   const handleSave = async () => {
     if (!formData.clientName.trim() || !formData.phone.trim() || !formData.instansi.trim()) {
@@ -129,6 +168,9 @@ export function useGuestBookOperations() {
       toast.success("Catatan kunjungan tamu berhasil disimpan!");
       setIsModalOpen(false);
       setFormData(INITIAL_FORM_DATA);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+      }
       await fetchGuests();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || err?.message || "Gagal menyimpan buku tamu");
@@ -153,6 +195,9 @@ export function useGuestBookOperations() {
     cityFilter,
     setCityFilter,
     cityOptions,
+    monthFilter,
+    setMonthFilter,
+    monthOptions,
     searchQuery,
     setSearchQuery,
     isModalOpen,

@@ -434,4 +434,18 @@ export class PurchaseInvoicesService {
     }
     return results;
   }
+
+  async updateUnpaidReason(id: string, unpaidReason: string, notes?: string) {
+    const existing = await this.prisma.bill.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException(`Faktur Pembelian ${id} tidak ditemukan`);
+    }
+    return this.prisma.bill.update({
+      where: { id },
+      data: {
+        unpaidReason,
+        ...(notes !== undefined ? { notes } : {}),
+      },
+    });
+  }
 }

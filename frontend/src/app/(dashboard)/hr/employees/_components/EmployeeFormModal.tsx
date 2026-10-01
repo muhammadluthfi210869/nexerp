@@ -72,10 +72,10 @@ export function EmployeeFormModal({
         contractType: (editingEmployee.contractType as any) || "PKWT",
         division: editingEmployee.division || "PRODUCTION",
         position: editingEmployee.position || "Staff",
-        baseSalary: editingEmployee.baseSalary || "4500000",
-        positionAllowance: editingEmployee.positionAllowance || "500000",
-        transportFlat: editingEmployee.transportFlat || "300000",
-        transportTentativeDaily: editingEmployee.transportTentativeDaily || "25000",
+        baseSalary: editingEmployee.baseSalary || "",
+        positionAllowance: editingEmployee.positionAllowance || "",
+        transportFlat: editingEmployee.transportFlat || "",
+        transportTentativeDaily: editingEmployee.transportTentativeDaily || "",
       });
     } else {
       setForm({
@@ -322,10 +322,13 @@ export function EmployeeFormModal({
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Gaji Pokok (Rp) *</label>
+                    <label className="text-xs font-bold text-slate-700">
+                      Gaji Pokok (Rp) {editingEmployee ? "(Opsional)" : "*"}
+                    </label>
                     <DnaInput
                       type="number"
-                      required
+                      required={!editingEmployee}
+                      placeholder={editingEmployee ? "Tersimpan aman & terenkripsi" : "4500000"}
                       value={form.baseSalary}
                       onChange={(e) => setForm({ ...form, baseSalary: e.target.value })}
                     />
@@ -334,6 +337,7 @@ export function EmployeeFormModal({
                     <label className="text-xs font-bold text-slate-700">Tunjangan Jabatan (Rp)</label>
                     <DnaInput
                       type="number"
+                      placeholder={editingEmployee ? "Tersimpan" : "500000"}
                       value={form.positionAllowance}
                       onChange={(e) => setForm({ ...form, positionAllowance: e.target.value })}
                     />

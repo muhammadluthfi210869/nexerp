@@ -67,12 +67,12 @@ export function TransferPrintModal({
           header: "No",
           align: "center",
           width: "35px",
-          render: (_, i) => i + 1,
+          render: (_: any, i: number) => i + 1,
         },
         {
           key: "item",
           header: "Nama Material / Produk & Kode SKU",
-          render: (r) => (
+          render: (r: any) => (
             <div>
               <div className="font-bold text-slate-800">{r.materialName}</div>
               <div className="text-[10px] text-slate-500 font-mono">Kode: {r.materialCode}</div>
@@ -83,14 +83,14 @@ export function TransferPrintModal({
           key: "lot",
           header: "No. Bets / Lot",
           width: "140px",
-          render: (r) => <span className="font-mono text-xs font-semibold">{r.batchLot}</span>,
+          render: (r: any) => <span className="font-mono text-xs font-semibold">{r.batchLot}</span>,
         },
         {
           key: "qty",
           header: "Kuantitas Transfer",
           align: "right",
           width: "130px",
-          render: (r) => (
+          render: (r: any) => (
             <span className="font-bold text-slate-900">
               {r.transferQty.toLocaleString("id-ID")} {r.unit}
             </span>

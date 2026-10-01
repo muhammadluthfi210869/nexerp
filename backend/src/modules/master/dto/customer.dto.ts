@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsNumber } from 'class-validator';
 
 export class CreateCustomerDto {
   @IsString()
@@ -58,6 +58,22 @@ export class CreateCustomerDto {
 
   @IsOptional()
   @IsString()
+  brandName?: string;
+
+  @IsOptional()
+  @IsString()
+  brandCode?: string;
+
+  @IsOptional()
+  @IsString()
+  contact?: string;
+
+  @IsOptional()
+  @IsNumber()
+  termOfPayment?: number;
+
+  @IsOptional()
+  @IsString()
   taxId?: string;
 }
 
@@ -69,6 +85,22 @@ export class UpdateCustomerDto {
   @IsOptional()
   @IsString()
   name?: string;
+
+  @IsOptional()
+  @IsString()
+  brandName?: string;
+
+  @IsOptional()
+  @IsString()
+  brandCode?: string;
+
+  @IsOptional()
+  @IsString()
+  contact?: string;
+
+  @IsOptional()
+  @IsNumber()
+  termOfPayment?: number;
 
   @IsOptional()
   @IsString()

@@ -30,6 +30,21 @@ export class FinanceFundRequestService {
    * Create a new Fund Request (OPEX Protocol / Petty Cash).
    */
   async createFundRequest(requesterId: string, dto: CreateFundRequestDto) {
+    const requester = await this.prisma.user.findUnique({
+      where: { id: requesterId },
+      select: { roles: true },
+    });
+    const isHead = requester?.roles?.some((r) =>
+      ['HEAD_OPS', 'DIRECTOR', 'SUPER_ADMIN', 'FINANCE'].includes(r),
+    );
+
+    // Requirement 7.2:
+    // If Staff -> must be approved by Head first (PENDING_APPROVAL_MGR)
+    // If Head -> bypass Head approval, straight to Accounting/Dir (APPROVED_BY_MGR)
+    const status = isHead
+      ? FundRequestStatus.APPROVED_BY_MGR
+      : FundRequestStatus.PENDING_APPROVAL_MGR;
+
     const created = await this.prisma.fundRequest.create({
       data: {
         requesterId,
@@ -37,7 +52,7 @@ export class FinanceFundRequestService {
         amount: dto.amount,
         reason: dto.reason,
         attachmentUrls: dto.attachmentUrls || [],
-        status: FundRequestStatus.PENDING_APPROVAL_MGR,
+        status,
       },
     });
 

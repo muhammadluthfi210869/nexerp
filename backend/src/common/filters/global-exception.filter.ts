@@ -38,7 +38,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const status =
+    let status =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
@@ -47,7 +47,26 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     let detail = 'Internal Server Error';
     let details: any = undefined;
 
-    if (exception instanceof HttpException) {
+    const prismaError = exception as any;
+    if (prismaError?.code === 'P2002') {
+      status = HttpStatus.CONFLICT;
+      code = 'DUPLICATE_RESOURCE';
+      const target = Array.isArray(prismaError.meta?.target)
+        ? prismaError.meta.target.join(', ')
+        : (prismaError.meta?.target || 'field');
+      detail = `Duplicate entry for ${target}. This resource already exists.`;
+      details = { target: prismaError.meta?.target };
+    } else if (prismaError?.code === 'P2003') {
+      status = HttpStatus.BAD_REQUEST;
+      code = 'FOREIGN_KEY_VIOLATION';
+      const field = prismaError.meta?.field_name || 'referenced record';
+      detail = `Referenced record (${field}) does not exist.`;
+      details = { field: prismaError.meta?.field_name };
+    } else if (prismaError?.code === 'P2025') {
+      status = HttpStatus.NOT_FOUND;
+      code = 'NOT_FOUND';
+      detail = prismaError.meta?.cause || 'Requested record was not found.';
+    } else if (exception instanceof HttpException) {
       const res = exception.getResponse();
       if (typeof res === 'object' && res !== null) {
         const r = res as any;
@@ -62,6 +81,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         } else {
           detail = r.message ?? detail;
           if (r.details !== undefined) details = r.details;
+          if (r.fieldErrors !== undefined) details = { ...details, fieldErrors: r.fieldErrors };
         }
       } else if (typeof res === 'string') {
         detail = res;

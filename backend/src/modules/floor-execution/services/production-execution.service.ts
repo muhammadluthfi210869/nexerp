@@ -1,12 +1,11 @@
 import {
   Injectable,
   BadRequestException,
-  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateStepLogDto } from '../dto/create-step-log.dto';
-import { LifecycleStatus, QCStatus } from '@prisma/client';
+import { LifecycleStatus, QCStatus, ProdStage } from '@prisma/client';
 
 import { IdGeneratorService } from '../../system/id-generator.service';
 
@@ -17,6 +16,16 @@ export class ProductionExecutionService {
     private eventEmitter: EventEmitter2,
     private idGenerator: IdGeneratorService,
   ) {}
+
+  private toProdStage(stage: LifecycleStatus | string): ProdStage {
+    const map: Record<string, ProdStage> = {
+      MIXING: ProdStage.MIXING,
+      FILLING: ProdStage.FILLING,
+      PACKING: ProdStage.PACKING,
+      BATCHING: ProdStage.BATCHING,
+    };
+    return map[String(stage)] || ProdStage.MIXING;
+  }
 
   async executeStep(dto: CreateStepLogDto) {
     const logNumber = await this.idGenerator.generateStageId(dto.stage);
@@ -34,25 +43,82 @@ export class ProductionExecutionService {
     // 4. [COSTING ENGINE]
     const { laborCost, overheadCost } = await this.calculateCosts(dto);
 
-    // 5. [ATOMIC EXECUTION]
-    const log = await this.prisma.productionLog.create({
-      data: {
-        logNumber,
-        workOrderId: dto.workOrderId,
-        stage: dto.stage,
-        inputQty: dto.inputQty,
-        goodQty: dto.goodQty,
-        rejectQty: dto.rejectQty,
-        quarantineQty: dto.quarantineQty,
-        machineId: dto.machineId,
-        operatorId: dto.operatorId,
-        startTime: dto.startTime ? new Date(dto.startTime) : null,
-        endTime: dto.endTime ? new Date(dto.endTime) : null,
-        machineParams: dto.machineParams,
-        laborCost,
-        overheadCost,
-        notes: dto.notes,
-      },
+    // 5. [ATOMIC EXECUTION - SYNCHRONIZE BOTH PRODUCTION_LOG AND PRODUCTION_STEP_LOG]
+    const log = await this.prisma.$transaction(async (tx) => {
+      const wo = await tx.workOrder.findUnique({
+        where: { id: dto.workOrderId },
+      });
+
+      let planId = wo?.planId;
+      if (!planId && wo) {
+        const so = await tx.salesOrder.findFirst({
+          where: { leadId: wo.leadId },
+        });
+        const admin = await tx.user.findFirst();
+        if (so && admin) {
+          const batchNo = `BMR-${wo.woNumber.replace(/[^A-Za-z0-9]/g, '').slice(-8)}-${Date.now().toString().slice(-4)}`;
+          const newPlan = await tx.productionPlan.create({
+            data: {
+              soId: so.id,
+              adminId: admin.id,
+              batchNo,
+              status: LifecycleStatus.MIXING,
+            },
+          });
+          planId = newPlan.id;
+          await tx.workOrder.update({
+            where: { id: wo.id },
+            data: { planId },
+          });
+        }
+      }
+
+      const shrinkage = Math.max(
+        0,
+        Number(dto.inputQty) -
+          (Number(dto.goodQty) + Number(dto.rejectQty) + Number(dto.quarantineQty)),
+      );
+
+      let stepLog: any = null;
+      if (planId) {
+        stepLog = await tx.productionStepLog.create({
+          data: {
+            woId: planId,
+            stage: this.toProdStage(dto.stage),
+            inputQty: dto.inputQty,
+            qtyResult: dto.goodQty,
+            qtyReject: dto.rejectQty,
+            qtyQuarantine: dto.quarantineQty,
+            shrinkageQty: shrinkage,
+          },
+        });
+      }
+
+      const prodLog = await tx.productionLog.create({
+        data: {
+          logNumber,
+          workOrderId: dto.workOrderId,
+          planId,
+          stage: dto.stage,
+          inputQty: dto.inputQty,
+          goodQty: dto.goodQty,
+          rejectQty: dto.rejectQty,
+          quarantineQty: dto.quarantineQty,
+          machineId: dto.machineId,
+          operatorId: dto.operatorId,
+          startTime: dto.startTime ? new Date(dto.startTime) : null,
+          endTime: dto.endTime ? new Date(dto.endTime) : null,
+          machineParams: dto.machineParams,
+          laborCost,
+          overheadCost,
+          notes: dto.notes,
+        },
+      });
+
+      return {
+        ...prodLog,
+        stepLogId: stepLog?.id,
+      };
     });
 
     // 6. [PROTOCOL: MULTI-DIVISION COMMUNICATION]
@@ -71,10 +137,11 @@ export class ProductionExecutionService {
 
     if (currentIndex > 0) {
       const prevStage = stages[currentIndex - 1];
+      const prevProdStage = this.toProdStage(prevStage);
       const prevStepLog = await this.prisma.productionStepLog.findFirst({
         where: {
           wo: { workOrders: { some: { id: dto.workOrderId } } },
-          stage: prevStage as any,
+          stage: prevProdStage,
         },
         include: { qcAudits: { where: { status: QCStatus.GOOD }, take: 1 } },
         orderBy: { createdAt: 'desc' },

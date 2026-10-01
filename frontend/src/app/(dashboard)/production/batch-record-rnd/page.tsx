@@ -34,6 +34,7 @@ import {
   DnaTableRow,
   DnaTh,
   DnaTd,
+  BatchRecordPrintModal,
 } from "@/components/dna";
 
 interface BatchRecord {
@@ -89,6 +90,7 @@ function BatchRecordContent() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<BatchRecord | null>(null);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
   // Create Form State
   const [formData, setFormData] = useState({
@@ -275,17 +277,32 @@ function BatchRecordContent() {
                       {getStatusBadge(row.status)}
                     </DnaTd>
                     <DnaTd className="py-3 px-4 text-right">
-                      <DnaButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedRecord(row);
-                          setIsDetailDrawerOpen(true);
-                        }}
-                        title="Lihat Detail Batch Record"
-                      >
-                        <Eye className="w-4 h-4 text-slate-600" />
-                      </DnaButton>
+                      <div className="flex items-center justify-end gap-1">
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedRecord(row);
+                            setIsPrintModalOpen(true);
+                          }}
+                          className="h-7 w-7 p-0 text-slate-400 hover:text-blue-600"
+                          title="Cetak Batch Record (BMR)"
+                        >
+                          <Printer className="w-3.5 h-3.5 text-blue-600" />
+                        </DnaButton>
+                        <DnaButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedRecord(row);
+                            setIsDetailDrawerOpen(true);
+                          }}
+                          className="h-7 w-7 p-0 text-slate-400 hover:text-slate-600"
+                          title="Lihat Detail Batch Record"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </DnaButton>
+                      </div>
                     </DnaTd>
                   </DnaTableRow>
                 ))
@@ -456,15 +473,34 @@ function BatchRecordContent() {
             </DnaButton>
             <DnaButton
               variant="primary"
-              onClick={() => {
-                toast.success("Cetak Dokumen", "Batch record berhasil dikirim ke antrian pencetakan.");
-                setIsDetailDrawerOpen(false);
-              }}
+              onClick={() => setIsPrintModalOpen(true)}
             >
               <Printer className="w-4 h-4 mr-1.5" />
               Cetak Dokumen
             </DnaButton>
           </div>
+        }
+      />
+
+      {/* Modal Cetak Batch Record CPKB */}
+      <BatchRecordPrintModal
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        data={
+          selectedRecord
+            ? {
+                batchNumber: selectedRecord.batchRecordCode,
+                date: selectedRecord.tanggal,
+                status: selectedRecord.statusLabel,
+                soCode: selectedRecord.salesCode,
+                salesDate: selectedRecord.tanggalSales,
+                customerName: selectedRecord.customerName,
+                category: selectedRecord.category,
+                createdBy: selectedRecord.creatorName,
+                productName: selectedRecord.productName,
+                productCode: selectedRecord.salesCode,
+              }
+            : null
         }
       />
     </DnaPageContainer>

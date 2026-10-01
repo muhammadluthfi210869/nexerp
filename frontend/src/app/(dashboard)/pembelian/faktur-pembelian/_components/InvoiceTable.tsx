@@ -70,7 +70,7 @@ export function InvoiceTable({
                   <DnaTh className="px-4 py-2.5 w-[110px]">Tgl Faktur</DnaTh>
                   <DnaTh className="px-4 py-2.5 w-[170px]">No. Faktur</DnaTh>
                   <DnaTh className="px-4 py-2.5 w-[160px]">No. Purchase Order</DnaTh>
-                  <DnaTh className="px-4 py-2.5 w-[110px]">Jatuh Tempo</DnaTh>
+                  <DnaTh className="px-4 py-2.5 w-[110px]">Deadline</DnaTh>
                   <DnaTh className="px-4 py-2.5 min-w-[180px]">Supplier</DnaTh>
                   <DnaTh className="px-4 py-2.5 w-[160px]">Kategori Pengadaan</DnaTh>
                   <DnaTh className="px-4 py-2.5 w-[140px] text-right">Nilai Tagihan</DnaTh>

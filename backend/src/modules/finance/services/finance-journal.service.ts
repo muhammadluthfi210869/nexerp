@@ -148,12 +148,18 @@ export class FinanceJournalService {
       );
     }
 
-    const totalDebit = dto.lines.reduce((sum, l) => sum + l.debit, 0);
-    const totalCredit = dto.lines.reduce((sum, l) => sum + l.credit, 0);
+    if (!dto.lines || dto.lines.length === 0) {
+      throw new BadRequestException(
+        'Jurnal transaksi wajib memiliki minimal dua baris akun (Debit & Kredit).',
+      );
+    }
+
+    const totalDebit = dto.lines.reduce((sum, l) => sum + Number(l.debit || 0), 0);
+    const totalCredit = dto.lines.reduce((sum, l) => sum + Number(l.credit || 0), 0);
 
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
       throw new BadRequestException(
-        `Journal is not balanced. Debit: ${totalDebit}, Credit: ${totalCredit} [JOURNAL_UNBALANCED]`,
+        `Total Debit (Rp ${totalDebit.toLocaleString()}) harus sama dengan Total Kredit (Rp ${totalCredit.toLocaleString()}). Jurnal tidak seimbang. [UNBALANCED_JOURNAL_ENTRY]`,
       );
     }
 

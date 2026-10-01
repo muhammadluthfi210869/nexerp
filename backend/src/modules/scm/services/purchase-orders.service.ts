@@ -14,7 +14,7 @@ import { LegalityService } from '../../legality/legality.service';
 
 import { IdGeneratorService } from '../../system/id-generator.service';
 import { logBestEffort } from '../../../common/helpers/best-effort';
-import { UserRole } from '@prisma/client';
+import { UserRole, POStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 
@@ -308,18 +308,61 @@ export class PurchaseOrdersService {
     });
   }
 
-  async updateStatus(id: string, status: string, reason?: string) {
+  async updateStatus(id: string, status: POStatus | string, reason?: string) {
     const po = await this.prisma.purchaseOrder.findUnique({
       where: { id },
     });
     if (!po) throw new NotFoundException('Purchase Order not found');
 
+    const currentStatus = po.status as POStatus;
+    const targetStatus = status as POStatus;
+
+    if (targetStatus === POStatus.APPROVED) {
+      throw new BadRequestException(
+        'Status APPROVED hanya dapat diproses melalui endpoint persetujuan resmi (POST /purchase/orders/:id/approve) dengan tanda tangan digital dan validasi otorisasi.',
+      );
+    }
+
+    if (currentStatus === targetStatus) {
+      return po;
+    }
+
+    const terminalStates: POStatus[] = [
+      POStatus.CLOSED,
+      POStatus.CANCELLED,
+      POStatus.REJECTED,
+    ];
+    if (terminalStates.includes(currentStatus)) {
+      throw new BadRequestException(
+        `Purchase Order sudah berstatus ${currentStatus} dan tidak dapat diubah lagi.`,
+      );
+    }
+
+    const allowedTransitions: Record<string, POStatus[]> = {
+      [POStatus.DRAFT]: [POStatus.PENDING, POStatus.PENDING_APPROVAL, POStatus.CANCELLED],
+      [POStatus.PENDING]: [POStatus.PENDING_APPROVAL, POStatus.CANCELLED, POStatus.REJECTED],
+      [POStatus.PENDING_APPROVAL]: [POStatus.REJECTED, POStatus.CANCELLED],
+      [POStatus.APPROVED]: [POStatus.ORDERED, POStatus.PARTIAL, POStatus.SHIPPED, POStatus.RECEIVED, POStatus.CANCELLED],
+      [POStatus.ORDERED]: [POStatus.PARTIAL, POStatus.SHIPPED, POStatus.RECEIVED, POStatus.CANCELLED],
+      [POStatus.PARTIAL]: [POStatus.SHIPPED, POStatus.RECEIVED, POStatus.CANCELLED],
+      [POStatus.SHIPPED]: [POStatus.RECEIVED, POStatus.PARTIAL, POStatus.RETURNED],
+      [POStatus.RECEIVED]: [POStatus.CLOSED, POStatus.RETURNED],
+      [POStatus.RETURNED]: [POStatus.CLOSED],
+    };
+
+    const allowed = allowedTransitions[currentStatus] || [];
+    if (!allowed.includes(targetStatus)) {
+      throw new BadRequestException(
+        `Transisi status tidak valid: dari ${currentStatus} ke ${targetStatus}.`,
+      );
+    }
+
     return this.prisma.purchaseOrder.update({
       where: { id },
       data: {
-        status: status as any,
+        status: targetStatus as any,
         notes: reason
-          ? `${po.notes || ''}\n[${status}] ${reason}`.trim()
+          ? `${po.notes || ''}\n[${targetStatus}] ${reason}`.trim()
           : undefined,
       },
     });
@@ -446,21 +489,6 @@ export class PurchaseOrdersService {
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-    const result = await this.prisma.purchaseOrderItem.aggregate({
-      where: {
-        materialId,
-        po: {
-          status: 'APPROVED',
-          updatedAt: { gte: ninetyDaysAgo },
-        },
-      },
-      _sum: { totalPrice: true },
-      _count: true,
-    });
-
-    // Note: This uses totalPrice which includes qty * unitPrice
-    // For proper HPP we need qtyBagus, but since we don't have that field yet,
-    // we use the item-level data
     const approvedItems = await this.prisma.purchaseOrderItem.findMany({
       where: {
         materialId,

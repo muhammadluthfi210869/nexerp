@@ -80,31 +80,61 @@ export class CustomersService {
     const {
       instansi,
       phone,
-      address,
+      address: _address,
       alamatDetail,
       provinsi,
       kota,
-      kecamatan,
+      kecamatan: _kecamatan,
       salesAssignee,
       creditLimit,
-      taxId,
-      ...rest
+      taxId: _taxId,
     } = dto;
-    return this.prisma.salesLead.create({
-      data: {
-        clientName: dto.clientName,
-        brandName: instansi || null,
-        contactInfo: phone || '',
-        email: dto.email || null,
-        city: kota || null,
-        province: provinsi || null,
-        addressDetail: alamatDetail || null,
-        status: (dto.status as any) || 'NEW_LEAD',
-        source: 'DIRECT',
-        productInterest: '',
-        estimatedValue: creditLimit || 0,
-        picId: salesAssignee || (await this.getDefaultPicId()),
-      },
+    const defaultPicId = salesAssignee || (await this.getDefaultPicId());
+
+    return this.prisma.$transaction(async (tx) => {
+      const lead = await tx.salesLead.create({
+        data: {
+          clientName: dto.clientName,
+          brandName: instansi || null,
+          contactInfo: phone || '',
+          email: dto.email || null,
+          city: kota || null,
+          province: provinsi || null,
+          addressDetail: alamatDetail || null,
+          status: (dto.status as any) || 'NEW_LEAD',
+          source: 'DIRECT',
+          productInterest: '',
+          estimatedValue: creditLimit || 0,
+          picId: defaultPicId,
+        },
+      });
+
+      const code = `CUST-${lead.id.substring(0, 8).toUpperCase()}`;
+      await tx.customer.upsert({
+        where: { id: lead.id },
+        update: {
+          name: lead.clientName,
+          brand: lead.brandName,
+          email: lead.email,
+          phone: lead.contactInfo,
+          address: lead.addressDetail,
+          creditLimit: lead.estimatedValue,
+          isActive: true,
+        },
+        create: {
+          id: lead.id,
+          code,
+          name: lead.clientName,
+          brand: lead.brandName,
+          email: lead.email,
+          phone: lead.contactInfo,
+          address: lead.addressDetail,
+          creditLimit: lead.estimatedValue,
+          isActive: true,
+        },
+      });
+
+      return lead;
     });
   }
 
@@ -115,33 +145,62 @@ export class CustomersService {
     const {
       instansi,
       phone,
-      address,
+      address: _address,
       alamatDetail,
       provinsi,
       kota,
-      kecamatan,
+      kecamatan: _kecamatan,
       salesAssignee,
       creditLimit,
-      taxId,
-      ...rest
+      taxId: _taxId,
     } = dto;
-    return this.prisma.salesLead.update({
-      where: { id },
-      data: {
-        ...(dto.clientName !== undefined && { clientName: dto.clientName }),
-        ...(instansi !== undefined && { brandName: instansi }),
-        ...(phone !== undefined && { contactInfo: phone }),
-        ...(dto.email !== undefined && { email: dto.email }),
-        ...(kota !== undefined && { city: kota }),
-        ...(provinsi !== undefined && { province: provinsi }),
-        ...(alamatDetail !== undefined && { addressDetail: alamatDetail }),
-        ...(dto.status !== undefined && { status: dto.status as any }),
-        ...(creditLimit !== undefined && { estimatedValue: creditLimit }),
-        ...(dto.categoryId !== undefined && {
-          categoryId: dto.categoryId || null,
-        }),
-        ...(salesAssignee !== undefined && { picId: salesAssignee }),
-      },
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.salesLead.update({
+        where: { id },
+        data: {
+          ...(dto.clientName !== undefined && { clientName: dto.clientName }),
+          ...(instansi !== undefined && { brandName: instansi }),
+          ...(phone !== undefined && { contactInfo: phone }),
+          ...(dto.email !== undefined && { email: dto.email }),
+          ...(kota !== undefined && { city: kota }),
+          ...(provinsi !== undefined && { province: provinsi }),
+          ...(alamatDetail !== undefined && { addressDetail: alamatDetail }),
+          ...(dto.status !== undefined && { status: dto.status as any }),
+          ...(creditLimit !== undefined && { estimatedValue: creditLimit }),
+          ...(dto.categoryId !== undefined && {
+            categoryId: dto.categoryId || null,
+          }),
+          ...(salesAssignee !== undefined && { picId: salesAssignee }),
+        },
+      });
+
+      const code = `CUST-${updated.id.substring(0, 8).toUpperCase()}`;
+      await tx.customer.upsert({
+        where: { id: updated.id },
+        update: {
+          name: updated.clientName,
+          brand: updated.brandName,
+          email: updated.email,
+          phone: updated.contactInfo,
+          address: updated.addressDetail,
+          creditLimit: updated.estimatedValue,
+          isActive: updated.status !== 'LOST',
+        },
+        create: {
+          id: updated.id,
+          code,
+          name: updated.clientName,
+          brand: updated.brandName,
+          email: updated.email,
+          phone: updated.contactInfo,
+          address: updated.addressDetail,
+          creditLimit: updated.estimatedValue,
+          isActive: updated.status !== 'LOST',
+        },
+      });
+
+      return updated;
     });
   }
 

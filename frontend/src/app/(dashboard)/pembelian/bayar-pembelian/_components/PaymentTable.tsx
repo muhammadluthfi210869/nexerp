@@ -112,7 +112,8 @@ export function PaymentTable({
                       </DnaTd>
                       <DnaTd className="px-4 py-2.5 text-center">
                         {row.daysToDue < 0 ? (
-                          <span className="inline-flex items-center gap-1 bg-red-100 text-red-800 border border-red-200 px-2 py-0.5 rounded text-[10px] font-bold">
+                          <span className="inline-flex items-center gap-1.5 bg-red-100 text-red-900 border border-red-300 px-2 py-0.5 rounded text-[10px] font-black tracking-tight shadow-2xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-bounce inline-block" />
                             Overdue {Math.abs(row.daysToDue)} Hari
                           </span>
                         ) : row.daysToDue <= 3 ? (

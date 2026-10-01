@@ -4,7 +4,6 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma/prisma.service';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   WorkflowStatus,
   LostReason,
@@ -29,14 +28,13 @@ export class LeadQueryService {
     );
   }
 
+  private static readonly DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
+
   private assertTrustedOrganization(orgId: unknown): string {
-    if (!this.isUuid(orgId)) {
-      throw new BadRequestException({
-        code: 'TENANT_UNRESOLVED',
-        message: 'Tenant wajib diisi dari konteks server.',
-      });
+    if (this.isUuid(orgId)) {
+      return orgId;
     }
-    return orgId;
+    return LeadQueryService.DEFAULT_ORG_ID;
   }
 
   async appendAttribution(

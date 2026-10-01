@@ -21,6 +21,7 @@ import { Roles } from '../../auth/roles.decorator';
 import { UserRole, User } from '@prisma/client';
 import { PurchaseOrdersService } from '../services/purchase-orders.service';
 import { CreatePurchaseOrderDto } from '../dto/create-po.dto';
+import { UpdatePoStatusDto } from '../dto/update-po-status.dto';
 
 @ApiTags('purchase')
 @ApiBearerAuth()
@@ -108,12 +109,12 @@ export class PurchaseOrdersController {
     UserRole.DIRECTOR,
     UserRole.FINANCE,
   )
-  @ApiOperation({ summary: 'Update PO status (approve/reject)' })
+  @ApiOperation({ summary: 'Update PO status (state machine transition)' })
   updateStatus(
     @Param('id') id: string,
-    @Body() dto: { status: string; reason?: string },
+    @Body() dto: UpdatePoStatusDto,
   ) {
-    return this.poService.updateStatus(id, dto.status as any, dto.reason);
+    return this.poService.updateStatus(id, dto.status, dto.reason);
   }
 
   @Post(':id/down-payment')

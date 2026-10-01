@@ -65,9 +65,9 @@ export function InvoiceDetailDrawer({
           {/* Summary Cards */}
           <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
             <div>
-              <span className="text-slate-500 block text-[11px]">Tgl Faktur / Jatuh Tempo</span>
+              <span className="text-slate-500 block text-[11px]">Tgl Faktur / Deadline</span>
               <span className="font-bold text-slate-900 tabular-nums text-sm block">{selectedBill.invoiceDate}</span>
-              <span className="text-amber-700 block text-[11px] font-medium mt-0.5">Jatuh Tempo: {selectedBill.dueDate}</span>
+              <span className="text-amber-700 block text-[11px] font-medium mt-0.5">Deadline: {selectedBill.dueDate}</span>
             </div>
             <div className="text-right">
               <span className="text-slate-500 block text-[11px]">Grand Total Tagihan</span>

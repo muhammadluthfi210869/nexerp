@@ -11,6 +11,8 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Headers,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Type } from 'class-transformer';
 import {
@@ -186,7 +188,18 @@ export class LeadCaptureController {
 
   @Post('kommo-webhook')
   @HttpCode(HttpStatus.OK)
-  async kommoWebhook(@Body() body: any) {
+  async kommoWebhook(
+    @Body() body: any,
+    @Headers('x-kommo-secret') headerSecret?: string,
+    @Headers('x-webhook-token') tokenSecret?: string,
+    @Query('secret') querySecret?: string,
+  ) {
+    const expectedSecret = process.env.KOMMO_WEBHOOK_SECRET || 'kommo-secret-key';
+    const provided = headerSecret || tokenSecret || querySecret;
+    if (!provided || provided !== expectedSecret) {
+      throw new UnauthorizedException('Invalid or missing Kommo webhook secret');
+    }
+
     const result = await this.kommo.processWebhook(body);
 
     // Process each contact: find lead by phone, update name
